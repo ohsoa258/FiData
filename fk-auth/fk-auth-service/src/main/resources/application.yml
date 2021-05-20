@@ -1,0 +1,39 @@
+server:
+  port: 8087
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://fk-mysql:3306/fisk?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root
+
+  redis:
+    host: fk-redis
+
+# 配置秘钥,给Jwt加密的私钥,可定期更改
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
+
+
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto #主键自增
+      insert-strategy: not_empty #insert操作时,字段值不为空
+      update-strategy: not_empty
+  type-aliases-package: com.fisk.auth.entity #包扫描
+
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://fk-registry:8082/eureka
+logging:
+  level:
+    com.fisk: debug
