@@ -1,0 +1,41 @@
+server:
+  port: 8088
+spring:
+  application:
+    name: chartvisual-service
+  datasource:
+    url: jdbc:mysql://192.168.11.130:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+
+  redis:
+    host: 192.168.11.130
+
+
+fk:
+  encoder:
+    crypt:
+      secret: ${random.uuid} # 随机的密钥，使用uuid
+      strength: 6 # 加密强度4~31，决定盐加密时的运算强度，超过10以后加密耗时会显著增加
+
+  # 配置此条信息,当前服务开启时会调用feign接口,去授权中心获取秘钥
+  auth:
+    clientId: chartvisual-service
+    secret: 1234
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+logging:
+  level:
+    com.fisk: debug
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      update-strategy: not_null
+#  type-aliases-package: com.fisk.user.entity  实体类的包扫描
