@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.joda.time.DateTime;
+
+import java.util.Date;
 
 /**
  * 数据源配置
@@ -23,11 +23,11 @@ public class DataSourceConPO {
 
     public String conPassword;
 
-    public DateTime createTime;
+    public Date createTime;
 
     public String createUser;
 
-    public DateTime updateTime;
+    public Date updateTime;
 
     public String updateUser;
 
