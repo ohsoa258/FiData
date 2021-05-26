@@ -16,7 +16,7 @@ spring:
 fk:
   encoder:
     crypt:
-      secret: ${random.uuid} # 随机的密钥，使用uuid
+      secret: ${random.uuid} # 随机的密钥，使用uuid .
       strength: 6 # 加密强度4~31，决定盐加密时的运算强度，超过10以后加密耗时会显著增加
 
   # 配置此条信息,当前服务开启时会调用feign接口,去授权中心获取秘钥
