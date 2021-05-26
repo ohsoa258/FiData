@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.dto;
 
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
