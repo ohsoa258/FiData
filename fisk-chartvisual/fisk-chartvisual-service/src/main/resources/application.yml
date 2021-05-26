@@ -4,7 +4,7 @@ spring:
   application:
     name: chartvisual-service
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    url: jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
@@ -38,4 +38,5 @@ mybatis-plus:
       id-type: auto
       insert-strategy: not_null
       update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
 #  type-aliases-package: com.fisk.user.entity  实体类的包扫描
