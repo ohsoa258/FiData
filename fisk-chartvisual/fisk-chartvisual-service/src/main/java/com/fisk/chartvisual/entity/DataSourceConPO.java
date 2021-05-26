@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.joda.time.DateTime;
 
@@ -16,7 +17,7 @@ public class DataSourceConPO {
 
     public String conStr;
 
-    public byte conType;
+    public int conType;
 
     public String conAccount;
 
@@ -30,5 +31,6 @@ public class DataSourceConPO {
 
     public String updateUser;
 
-    public byte delFlag;
+    public int delFlag;
+
 }
