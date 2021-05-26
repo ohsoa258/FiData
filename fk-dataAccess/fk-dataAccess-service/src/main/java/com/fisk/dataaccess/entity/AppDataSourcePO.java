@@ -11,7 +11,7 @@ import org.joda.time.DateTime;
  */
 @Data
 @TableName("tb_app_datasource")
-public class AppDatasourcePO {
+public class AppDataSourcePO {
     /**
      * 主键
      */

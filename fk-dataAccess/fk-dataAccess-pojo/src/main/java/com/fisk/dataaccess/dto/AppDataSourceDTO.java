@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class AppDatasourceDTO extends BaseDTO {
+public class AppDataSourceDTO extends BaseDTO {
 //    private String id;
 
 //    private String appId;
@@ -42,7 +42,7 @@ public class AppDatasourceDTO extends BaseDTO {
      */
     private String connectPwd;
 
-    public AppDatasourceDTO(BaseEntity entity) {
+    public AppDataSourceDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -52,8 +52,8 @@ public class AppDatasourceDTO extends BaseDTO {
      * @param <T> PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<AppDatasourceDTO> convertEntityList(Collection<T> list){
-        return list.stream().map(AppDatasourceDTO::new).collect(Collectors.toList());
+    public static <T extends BaseEntity> List<AppDataSourceDTO> convertEntityList(Collection<T> list){
+        return list.stream().map(AppDataSourceDTO::new).collect(Collectors.toList());
     }
 
 }
