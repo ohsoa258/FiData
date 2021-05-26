@@ -3,6 +3,7 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataSourceCon;
 import com.fisk.chartvisual.vo.DataSourceConVO;
@@ -30,12 +31,7 @@ public class DataSourceConImpl extends ServiceImpl<DataSourceConMapper, DataSour
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
-        DataSourceConPO model = new DataSourceConPO() {{
-            conStr = dto.conStr;
-            conType = (byte) dto.conType.getCode();
-            conAccount = dto.conAccount;
-            conPassword = dto.conPassword;
-        }};
+        DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }
