@@ -1,6 +1,6 @@
-package com.fisk.data.config;
+package com.fisk.dataaccess.config;
 
-import com.fisk.data.FkDataAccessApplication;
+import com.fisk.dataaccess.FkDataAccessApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
