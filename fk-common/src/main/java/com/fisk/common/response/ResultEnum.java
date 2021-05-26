@@ -8,18 +8,21 @@ package com.fisk.common.response;
 public enum ResultEnum {
 
     /**
-     * 请求成功
+     * 返回码
      */
     SUCCESS(0, "成功"),
+    NOTFOUND(404,"未找到资源"),
+    ERROR(500, "系统报错"),
 
     /**
-     * 请求成功
+     * 平台级错误码，1000开始
      */
-    NOTFOUND(404,"未找到资源"),
+    SAVE_DATA_ERROR(1001, "数据保存失败"),
+    SAVE_VERIFY_ERROR(1002, "数据验证失败")
+
     /**
-     * 请求失败，系统报错
-     */
-    ERROR(500, "系统报错");
+     * 报表可视化服务，错误码从2000开始
+     */;
 
     ResultEnum(int code, String msg) {
         this.code = code;
