@@ -2,6 +2,7 @@ package com.fisk.chartvisual.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
+import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEnum;
@@ -23,7 +24,22 @@ public interface IDataSourceCon extends IService<DataSourceConPO> {
 
     /**
      * 保存数据
-     * @return
+     * @param dto dto
+     * @return 执行结果
      */
     ResultEnum saveDataSourceCon(DataSourceConDTO dto);
+
+    /**
+     * 更新数据
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum updateDataSourceCon(DataSourceConEditDTO dto);
+
+    /**
+     * 删除数据
+     * @param id id
+     * @return 执行结果
+     */
+    ResultEnum deleteDataSourceCon(int id);
 }
