@@ -14,6 +14,7 @@
         <module>fk-user</module>
         <module>fk-auth</module>
         <module>fisk-chartvisual</module>
+        <module>fk-dataAccess</module>
     </modules>
 
 
