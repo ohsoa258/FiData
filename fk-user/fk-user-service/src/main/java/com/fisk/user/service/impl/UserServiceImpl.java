@@ -32,7 +32,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Boolean exist(String data, Integer type) {
 
         // type只能是1,2 type=2时,手机号必须符合格式要求(测试阶段不要求)
-        if ((type != 1 && type != 2) || StringUtils.isEmpty(data)/* || (type == 2 && !RegexUtils.isPhone(data))*/) {
+        if ((type != 1 && type != 2) || StringUtils.isEmpty(data)/* || (type == 2 && !RegexUtils.isPhone(dataaccess))*/) {
 
             throw new FkException(400, "请求参数有误");
         }

@@ -35,7 +35,7 @@ logging:
 mybatis-plus:
   global-config:
     db-config:
-      id-type: auto
+      id-type: input # 主键以用户插入为准
       insert-strategy: not_null
       update-strategy: not_null
-  type-aliases-package: com.fisk.data.entity  实体类的包扫描
+  type-aliases-package: com.fisk.dataaccess.entity  # 实体类的包扫描
