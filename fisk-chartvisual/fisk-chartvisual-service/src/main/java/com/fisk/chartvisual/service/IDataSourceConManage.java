@@ -14,7 +14,7 @@ import com.fisk.common.response.ResultEnum;
  *
  * @author gy
  */
-public interface IDataSourceCon extends IService<DataSourceConPO> {
+public interface IDataSourceConManage extends IService<DataSourceConPO> {
 
     /**
      * 获取权限内所有的数据源

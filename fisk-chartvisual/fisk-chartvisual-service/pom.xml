@@ -76,6 +76,7 @@
     </dependencies>
 
     <build>
+        <finalName>chart-visual</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

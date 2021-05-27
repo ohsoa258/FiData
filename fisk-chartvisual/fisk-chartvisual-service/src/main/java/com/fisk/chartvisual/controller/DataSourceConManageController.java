@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
-import com.fisk.chartvisual.service.IDataSourceCon;
+import com.fisk.chartvisual.service.IDataSourceConManage;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class DataSourceConManageController {
 
     @Autowired
-    private IDataSourceCon service;
+    private IDataSourceConManage service;
 
     @GetMapping("/get")
     public ResultEntity<Page<DataSourceConVO>> getData(Page<DataSourceConVO> page, DataSourceConQuery query) {

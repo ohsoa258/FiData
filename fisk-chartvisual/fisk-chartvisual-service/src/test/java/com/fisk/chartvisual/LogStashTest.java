@@ -13,6 +13,9 @@ public class LogStashTest {
 
     @Test
     public void CreateLog(){
-        log.info("111");
+        log.debug("======ELK2测试=======");
+        log.info("======ELK2测试=======");
+        log.warn("======ELK2测试=======");
+        log.error("======ELK2测试=======");
     }
 }

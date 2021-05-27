@@ -1,12 +1,10 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.service.IDataSourceCon;
 import com.fisk.chartvisual.vo.DataServiceVO;
-import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/data")
+@Slf4j
 public class DataServiceController {
 
     @GetMapping("/get")
