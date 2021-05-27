@@ -5,8 +5,10 @@ import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,30 +25,25 @@ public class AppRegistrationDTO extends BaseDTO {
 
     private String id;
 
-    /**
-     * 应用名称
-     */
     private String appName;
 
-    /**
-     * 应用描述
-     */
     private String appDes;
 
-    /**
-     * 应用类型
-     */
     private byte appType;
 
-    /**
-     * 应用负责人
-     */
     private String appPrincipal;
 
-    /**
-     * 应用负责人邮箱
-     */
     private String appPrincipalEmail;
+
+    private DateTime createTime;
+
+    private String createUser;
+
+    private DateTime updateTime;
+
+    private String updateUser;
+
+    private byte delFlag;
 
     /**
      * 数据源
@@ -60,11 +57,15 @@ public class AppRegistrationDTO extends BaseDTO {
 
     /**
      * 将PO集合转为DTO对象
+     *
      * @param list PO对象集合
-     * @param <T> PO的类型
+     * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<AppRegistrationDTO> convertEntityList(Collection<T> list){
+    public static <T extends BaseEntity> List<AppRegistrationDTO> convertEntityList(Collection<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
         return list.stream().map(AppRegistrationDTO::new).collect(Collectors.toList());
     }
 

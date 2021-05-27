@@ -1,7 +1,9 @@
 package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.vo.PageVO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -15,6 +17,6 @@ import java.util.List;
 public interface IAppRegistration extends IService<AppRegistrationPO> {
     ResultEnum addData(AppRegistrationDTO appRegistrationDTO);
 
-    List<AppRegistrationVO> listAppRegistration();
+    PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows);
 
 }

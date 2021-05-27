@@ -2,6 +2,7 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 
 /**
@@ -10,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_app_drivetype")
-public class AppDriveTypePO {
+public class AppDriveTypePO extends BaseEntity {
 
     /**
      * 主键

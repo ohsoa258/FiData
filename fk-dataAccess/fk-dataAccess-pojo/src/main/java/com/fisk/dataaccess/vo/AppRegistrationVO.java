@@ -2,6 +2,7 @@ package com.fisk.dataaccess.vo;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.vo.BaseVO;
 import com.fisk.dataaccess.dto.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class AppRegistrationVO extends  BaseDTO{
+public class AppRegistrationVO extends BaseVO {
 
     private String id;
 
@@ -56,7 +58,25 @@ public class AppRegistrationVO extends  BaseDTO{
      */
     private DateTime createTime;
 
-    private String connectPwd;
+    /**
+     * 创建人
+     */
+    private String createUser;
+
+    /**
+     * 更新时间
+     */
+    private DateTime updateTime;
+
+    /**
+     * 更新人
+     */
+    private String updateUser;
+
+    /**
+     * 逻辑删除(1: 未删除; 0: 删除)
+     */
+    private byte delFlag;
     public AppRegistrationVO(BaseEntity entity) {
         super(entity);
     }
@@ -68,6 +88,11 @@ public class AppRegistrationVO extends  BaseDTO{
      * @return DTO集合
      */
     public static <T extends BaseEntity> List<AppRegistrationVO> convertEntityList(Collection<T> list){
+
+        if (list == null) {
+            return Collections.emptyList();
+        }
+
         return list.stream().map(AppRegistrationVO::new).collect(Collectors.toList());
     }
 
