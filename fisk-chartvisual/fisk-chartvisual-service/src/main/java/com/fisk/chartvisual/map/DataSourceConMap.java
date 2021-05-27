@@ -19,7 +19,7 @@ public interface DataSourceConMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "conType.code", target = "conType"),
+            @Mapping(source = "conType.value", target = "conType"),
             @Mapping(target = "delFlag", constant = SqlConstants.NOT_DEL),
             @Mapping(target = "createTime", expression = "java(new java.util.Date())")
     })
@@ -34,7 +34,7 @@ public interface DataSourceConMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(source = "conType.code", target = "conType"),
+            @Mapping(source = "conType.value", target = "conType"),
             @Mapping(target = "delFlag", constant = SqlConstants.NOT_DEL),
             @Mapping(target = "updateTime", expression = "java(new java.util.Date())")
     })

@@ -29,9 +29,11 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka
+#logging:
+#  config: classpath:logback-spring.xml
 logging:
   level:
-    com.fisk: debug
+    com.fisk.chartvisual.mapper: debug
 mybatis-plus:
   global-config:
     db-config:
@@ -39,4 +41,6 @@ mybatis-plus:
       insert-strategy: not_null
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
+  configuration:
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
 #  type-aliases-package: com.fisk.user.entity  实体类的包扫描
