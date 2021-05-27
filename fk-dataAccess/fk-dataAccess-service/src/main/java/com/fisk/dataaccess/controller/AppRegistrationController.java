@@ -1,9 +1,11 @@
 package com.fisk.dataaccess.controller;
 
 import com.fisk.auth.utils.UserContext;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.vo.PageVO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -34,9 +36,21 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(service.addData(appRegistrationDTO));
     }
 
-    @GetMapping("/get")
-    public ResultEntity<Object> getData() {
-        List<AppRegistrationVO> data = service.listAppRegistration();
+    /**
+     * 分页查询
+     * @param key 搜索条件
+     * @param page 当前页码
+     * @param rows 每页显示条数
+     * @return
+     */
+    @GetMapping("/page")
+    public ResultEntity<Object> queryByPageAppRes(
+            // 过滤条件条件非必要
+            @RequestParam(value = "key",required = false)String key,
+            // 给个默认值,防止不传值时查询全表
+            @RequestParam(value = "page",defaultValue = "1")Integer page,
+            @RequestParam(value = "rows",defaultValue = "5")Integer rows) {
+        PageDTO<AppRegistrationDTO> data = service.listAppRegistration(key,page,rows);
         return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
     }
 

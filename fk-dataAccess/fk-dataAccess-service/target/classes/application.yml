@@ -4,14 +4,15 @@ spring:
   application:
     name: dataAccess-service
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    url: jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
 
   redis:
     host: 192.168.11.130
-
+  jackson:
+    joda-date-time-format: yyyy-MM-dd HH:mm:ss
 
 fk:
   encoder:

@@ -2,6 +2,7 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import org.joda.time.DateTime;
 
@@ -11,7 +12,7 @@ import org.joda.time.DateTime;
  */
 @Data
 @TableName("tb_app_registration")
-public class AppRegistrationPO {
+public class AppRegistrationPO extends BaseEntity {
 
     /**
      * 主键
@@ -47,7 +48,7 @@ public class AppRegistrationPO {
     /**
      * 创建时间
      */
-    private DateTime createTime;
+//    private DateTime createTime;
 
     /**
      * 创建人
@@ -57,7 +58,7 @@ public class AppRegistrationPO {
     /**
      * 更新时间
      */
-    private DateTime updateTime;
+//    private DateTime updateTime;
 
     /**
      * 更新人

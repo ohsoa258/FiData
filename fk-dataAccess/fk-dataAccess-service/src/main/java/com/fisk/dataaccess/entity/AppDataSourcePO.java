@@ -2,6 +2,7 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import org.joda.time.DateTime;
 
@@ -11,7 +12,7 @@ import org.joda.time.DateTime;
  */
 @Data
 @TableName("tb_app_datasource")
-public class AppDataSourcePO {
+public class AppDataSourcePO extends BaseEntity {
     /**
      * 主键
      */
@@ -56,7 +57,7 @@ public class AppDataSourcePO {
     /**
      * 创建时间
      */
-    private DateTime createTime;
+//    private DateTime createTime;
 
     /**
      * 创建人(id)
@@ -66,7 +67,7 @@ public class AppDataSourcePO {
     /**
      * 更新时间
      */
-    private DateTime updateTime;
+//    private DateTime updateTime;
 
     /**
      * 更新人(id)

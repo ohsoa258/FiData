@@ -2,11 +2,9 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.vo.AppDataSourceVO;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
+import org.apache.ibatis.annotations.Options;
 
 /**
  * @author: Lock
@@ -14,5 +12,15 @@ import java.util.List;
  */
 @Mapper
 public interface AppDataSourceMapper extends BaseMapper<AppDataSourcePO> {
+
+    //
+    @Insert("insert into tb_app_datasource values(#{id},#{appId},#{driveType}," +
+            "#{connectStr},#{connectAccount},#{connectPwd},#{realtimeAccount}," +
+            "#{realtimePwd},#{createTime},#{createUser},#{updateTime},#{updateUser},#{delFlag})")
+    @Options(
+            keyProperty = "id",
+            keyColumn = "id"
+    )
+    int insert(AppDataSourcePO appDataSourcePO);
 
 }
