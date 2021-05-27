@@ -20,6 +20,7 @@
     </dependencies>
     <!-- 启动、运行子工程的打包插件 -->
     <build>
+        <finalName>registry</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

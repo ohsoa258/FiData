@@ -29,11 +29,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka
-#logging:
-#  config: classpath:logback-spring.xml
 logging:
   level:
     com.fisk.chartvisual.mapper: debug
+  config: classpath:logback-spring.xml
 mybatis-plus:
   global-config:
     db-config:

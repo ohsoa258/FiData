@@ -55,6 +55,7 @@
 
     <!-- 打包插件 -->
     <build>
+        <finalName>gate-way</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

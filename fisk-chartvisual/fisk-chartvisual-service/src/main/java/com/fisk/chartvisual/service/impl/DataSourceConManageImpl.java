@@ -8,7 +8,7 @@ import com.fisk.chartvisual.dto.DataSourceConQuery;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
-import com.fisk.chartvisual.service.IDataSourceCon;
+import com.fisk.chartvisual.service.IDataSourceConManage;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.constants.SqlConstants;
 import com.fisk.common.response.ResultEnum;
@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @author gy
  */
 @Service
-public class DataSourceConImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceCon {
+public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManage {
 
     //TODO: 未获取登录人信息
 
