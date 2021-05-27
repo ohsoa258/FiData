@@ -18,5 +18,11 @@
                create_time
         from tb_datasource_con
         where del_flag = 1
+        <if test="query.conType != null">
+            and con_type = #{query.conType}
+        </if>
+        <if test="query.conAccount != null and query.conAccount != '' ">
+            and con_account like concat('%', #{query.conAccount}, '%')
+        </if>
     </select>
 </mapper>

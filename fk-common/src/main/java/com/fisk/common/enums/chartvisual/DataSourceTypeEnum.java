@@ -1,5 +1,7 @@
 package com.fisk.common.enums.chartvisual;
 
+import com.fisk.common.enums.BaseEnum;
+
 import java.util.Arrays;
 
 /**
@@ -8,7 +10,7 @@ import java.util.Arrays;
  * @author gy
  */
 
-public enum DataSourceTypeEnum {
+public enum DataSourceTypeEnum implements BaseEnum {
 
     /**
      * 支持的所有数据源类型
@@ -19,24 +21,21 @@ public enum DataSourceTypeEnum {
     SQLSERVER(1, "SQLSERVER");
 
 
-    DataSourceTypeEnum(int code, String msg) {
-        this.msg = msg;
-        this.code = code;
+    DataSourceTypeEnum(int value, String name) {
+        this.name = name;
+        this.value = value;
     }
 
-    private final String msg;
-    private final int code;
+    private final String name;
+    private final int value;
 
-    public int getCode() {
-        return code;
+    @Override
+    public String getName() {
+        return name;
     }
 
-    public String getMsg() {
-        return msg;
-    }
-
-
-    public static DataSourceTypeEnum getByCode(Integer code) {
-        return Arrays.stream(values()).filter(x -> code.equals(x.getCode())).findFirst().orElse(null);
+    @Override
+    public int getValue() {
+        return value;
     }
 }

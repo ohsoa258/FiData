@@ -1,8 +1,10 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.DataSourceConQuery;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
@@ -13,7 +15,6 @@ import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * 数据源管理实现类
@@ -29,8 +30,8 @@ public class DataSourceConImpl extends ServiceImpl<DataSourceConMapper, DataSour
     DataSourceConMapper mapper;
 
     @Override
-    public List<DataSourceConVO> listDataSourceCons() {
-        return mapper.listDataSourceConByUserId();
+    public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
+        return mapper.listDataSourceConByUserId(page, query);
     }
 
     @Override
