@@ -22,3 +22,4 @@ gen
 hs_err_pid*
 /fisk-chartvisual/fisk-chartvisual-service/target/
 /fisk-chartvisual/target/
+/fisk-chartvisual/fisk-chartvisual-service/target/
