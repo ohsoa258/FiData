@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 数据源管理
+ *
  * @author gy
  */
 @RestController
@@ -45,4 +46,13 @@ public class DataSourceConManageController {
         return ResultEntityBuild.build(service.deleteDataSourceCon(id));
     }
 
+    @GetMapping("/test")
+    public ResultEntity<Object> testConnection(DataSourceConDTO dto) {
+        return ResultEntityBuild.build(service.testConnection(dto));
+    }
+
+    @GetMapping("/getDataDomain")
+    public ResultEntity<Object> getDataDomain(int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataDomain(id));
+    }
 }

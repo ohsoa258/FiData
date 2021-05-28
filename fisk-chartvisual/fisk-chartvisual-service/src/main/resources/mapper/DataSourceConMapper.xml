@@ -12,6 +12,7 @@
     <select id="listDataSourceConByUserId" resultMap="DataSourceConVOMap">
         select id,
                con_str,
+               con_dbname,
                con_type,
                con_account,
                con_password,
@@ -24,5 +25,18 @@
         <if test="query.conAccount != null and query.conAccount != '' ">
             and con_account like concat('%', #{query.conAccount}, '%')
         </if>
+    </select>
+
+    <select id="getDataSourceConByUserId" resultMap="DataSourceConVOMap">
+        select id,
+        con_str,
+        con_type,
+        con_dbname,
+        con_account,
+        con_password,
+        create_time
+        from tb_datasource_con
+        where del_flag = 1
+        and id = #{id}
     </select>
 </mapper>
