@@ -3,6 +3,8 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.auth.dto.UserDetail;
+import com.fisk.auth.utils.UserContext;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -98,6 +100,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         rows = Math.max(rows, 5);    // 每页至少5条
 
         IPage<AppRegistrationPO> registrationPOPage = new Page<>(page, rows);
+
+        UserDetail user = UserContext.getUser();
 
         boolean isKeyExists = StringUtils.isNoneBlank(key);
 

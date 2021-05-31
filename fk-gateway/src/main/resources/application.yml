@@ -77,7 +77,7 @@ spring:
       - id: dataAccess-service # 数据接入服务
         uri: lb://dataAccess-service
         predicates:
-        - Path=/dataAccess/**
+          - Path=/dataAccess/**
 
   redis:
     host: 192.168.11.130

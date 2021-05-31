@@ -62,7 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public UserDTO queryUserByPhoneAndPassword(String username, String password) {
+    public UserDTO queryUser(String username, String password) {
 
         // 1.根据用户名查询用户,不能根据密码,参数是明文,数据库中的是加密后的
         User user = this.query().eq("username", username).one();

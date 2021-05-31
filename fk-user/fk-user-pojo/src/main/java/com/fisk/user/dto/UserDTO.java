@@ -16,13 +16,12 @@ import java.util.stream.Collectors;
  */
 @Data
 @NoArgsConstructor
-// 此类是为了存储用户名和密码,并没有数据库中tb_user的其他属性,
-// 所以要重写父类方法,只比较UserDTO中的具体中,不牵扯tb_user表的其他属性
+// 此类是为了存储用户名和密码,并没有数据库中tb_user_info的其他属性,
+// 所以要重写父类方法,只比较UserDTO中的具体中,不牵扯tb_user_info表的其他属性
 @EqualsAndHashCode(callSuper = true)
 public class UserDTO extends BaseDTO {
 
     private Long id;
-    private String phone;
     private String username;
 
     public UserDTO(BaseEntity entity) {

@@ -13,5 +13,5 @@ public interface UserService extends IService<User> {
 
     void register(User user);
 
-    UserDTO queryUserByPhoneAndPassword(String username, String password);
+    UserDTO queryUser(String username, String password);
 }
