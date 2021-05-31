@@ -31,12 +31,12 @@ public class UserController {
      * @param type 数据类型：1是用户名；2是手机；其它是参数有误
      * @return true：可以使用; false：不可使用
      */
-    @GetMapping("/exists/{data}/{type}")
-    public ResponseEntity<Boolean> exist(
-            @PathVariable("data") String data,
-            @PathVariable("type") Integer type) {
-        return ResponseEntity.ok(userService.exist(data, type));
-    }
+//    @GetMapping("/exists/{data}/{type}")
+//    public ResponseEntity<Boolean> exist(
+//            @PathVariable("data") String data,
+//            @PathVariable("type") Integer type) {
+//        return ResponseEntity.ok(userService.exist(data, type));
+//    }
 
     /**
      * 注册功能
@@ -65,11 +65,11 @@ public class UserController {
      * 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping
-    public ResponseEntity<UserDTO> queryUserByPhoneAndPassword(
+    public ResponseEntity<UserDTO> queryUser(
             @RequestParam("username") String username,
             @RequestParam("password") String password) {
 
-        return ResponseEntity.ok(userService.queryUserByPhoneAndPassword(username, password));
+        return ResponseEntity.ok(userService.queryUser(username, password));
     }
 
     /**
