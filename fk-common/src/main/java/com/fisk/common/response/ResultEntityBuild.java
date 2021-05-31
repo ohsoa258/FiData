@@ -64,7 +64,7 @@ public class ResultEntityBuild {
         }
         ResultEntity<T> res = new ResultEntity<T>();
         res.code = enums.getCode();
-        res.msg = enums.getMsg() + "。" + msg;
+        res.msg = enums.getMsg() + "。错误信息：" + msg;
 
         return res;
     }

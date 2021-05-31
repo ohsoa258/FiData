@@ -3,6 +3,7 @@ package com.fisk.common.exception;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
@@ -47,6 +48,20 @@ public abstract class AbstractGlobalExceptionHandler {
         } else {
             return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
         }
+    }
+
+    /**
+     * 系统自定义异常
+     *
+     * @param ex 异常信息
+     * @return 请求响应对象
+     */
+    @ExceptionHandler(value = FkException.class)
+    public ResultEntity<Object> handle1(FkException ex) {
+        if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
+            return ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
+        }
+        return ResultEntityBuild.build(ex.getResultEnum());
     }
 
     /**

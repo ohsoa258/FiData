@@ -1,14 +1,16 @@
 package com.fisk.chartvisual.util.dscon;
 
-import com.alibaba.fastjson.JSON;
+import com.fisk.chartvisual.service.IBuildSQLCommand;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.BeanHelper;
-import com.fisk.common.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StopWatch;
 
 import java.sql.*;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 数据源连接接口
@@ -16,7 +18,7 @@ import java.util.List;
  * @author gy
  */
 @Slf4j
-public abstract class AbstractUseDataBase {
+public abstract class AbstractUseDataBase implements IBuildSQLCommand {
 
     private final DataSourceTypeEnum type;
 
@@ -33,10 +35,11 @@ public abstract class AbstractUseDataBase {
             return getConnectionByType(connectionStr, acc, pwd);
         } catch (SQLException e) {
             log.error("【connection】数据库连接获取失败, ex", e);
+            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, e.getLocalizedMessage());
         } catch (Exception e) {
-            log.error("【connection】" + type.getName() + "数据库连接报错, ex", e);
+            log.error("【connection】" + type.getName() + "数据库驱动加载失败, ex", e);
+            throw new FkException(ResultEnum.VISUAL_LOADDRIVER_ERROR, e.getLocalizedMessage());
         }
-        return null;
     }
 
     /**
@@ -48,25 +51,55 @@ public abstract class AbstractUseDataBase {
      */
     public <T> List<T> execQuery(String sql, Connection con, Class<T> tClass) {
         Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
         try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
             st = con.createStatement();
             ResultSet res = st.executeQuery(sql);
-            return BeanHelper.resultSetToList(res, tClass);
+            List<T> data = BeanHelper.resultSetToList(res, tClass);
+            log.info("【execQuery】【" + code + "】Total: 【" + data.size() + "】");
+            return data;
         } catch (SQLException ex) {
-            log.error("【execQuery】执行sql查询报错, ex", ex);
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
         } finally {
-            if (st != null) {
-                try {
-                    st.close();
-                } catch (SQLException ex) {
-                    log.error("【execQuery】关闭Statement对象报错, ex", ex);
-                }
-            }
+            closeStatement(st);
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }
-        return null;
     }
 
-    public abstract String buildDataDomainQuery(String dbName);
+    /**
+     * 关闭连接
+     *
+     * @param connection 连接对象
+     */
+    public void closeConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException ex) {
+                log.error("【closeConnection】数据库连接关闭失败, ex", ex);
+            }
+        }
+    }
+
+    /**
+     * 关闭Statement对象
+     *
+     * @param st Statement对象
+     */
+    public void closeStatement(Statement st) {
+        if (st != null) {
+            try {
+                st.close();
+            } catch (SQLException ex) {
+                log.error("【closeStatement】数据库操作对象关闭失败, ex", ex);
+            }
+        }
+    }
 
     /* ---------------------------------------------------- */
 

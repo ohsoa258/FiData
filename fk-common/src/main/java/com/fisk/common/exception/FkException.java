@@ -10,6 +10,8 @@ public class FkException extends RuntimeException {
      * 异常状态码信息
      */
     private int status;
+    private ResultEnum resultEnum;
+    private String errorMsg;
 
     public FkException(int status) {
         this.status = status;
@@ -32,6 +34,13 @@ public class FkException extends RuntimeException {
 
     public FkException(ResultEnum resultEnum) {
         super(resultEnum.getMsg());
+        this.resultEnum = resultEnum;
         this.status = resultEnum.getCode();
+    }
+
+    public FkException(ResultEnum resultEnum, String msg) {
+        super(resultEnum.getMsg());
+        this.resultEnum = resultEnum;
+        this.errorMsg = msg;
     }
 }

@@ -3,6 +3,8 @@ package com.fisk.chartvisual.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.auth.dto.UserDetail;
+import com.fisk.auth.utils.UserContext;
 import com.fisk.chartvisual.dto.DataDomainDTO;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
@@ -18,6 +20,7 @@ import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataServiceVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.constants.SqlConstants;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.JsonUtils;
 import org.springframework.stereotype.Service;
@@ -48,14 +51,21 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Resource
     IUseDataBase useDataBase;
 
+    private final UserDetail context;
+    public DataSourceConManageImpl(){
+        context = UserContext.getUser();
+    }
+
     @Override
     public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
+        query.userId = context.getId();
         return mapper.listDataSourceConByUserId(page, query);
     }
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
+        model.createUser = context.getId().toString();
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -67,6 +77,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
 
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
+        model.updateUser = context.getId().toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -78,6 +89,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
 
         model.delFlag = Integer.parseInt(SqlConstants.DEL);
+        model.updateUser = context.getId().toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -92,13 +104,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public Object listDataDomain(int id) {
         //获取连接信息
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
+        if(model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         //创建连接
         AbstractUseDataBase db = DataSourceConFactory.getConnection(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
         //执行查询
         List<DataDomainDTO> data = db.execQuery(db.buildDataDomainQuery(model.conDbname), connection, DataDomainDTO.class);
         if (data != null) {
-            //格式化结果
+            //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息
             return data.stream()
                     .collect(Collectors.collectingAndThen(
                             Collectors.toCollection(
@@ -118,6 +133,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                                         .collect(Collectors.toList());
                             }});
         }
+        db.closeConnection(connection);
         return null;
     }
 }

@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class DataServiceVO {
     public String name;
-    public Integer value;
+    public Long value;
 }

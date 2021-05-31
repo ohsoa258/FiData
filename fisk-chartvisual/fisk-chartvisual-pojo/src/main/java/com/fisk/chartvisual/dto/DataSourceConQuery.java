@@ -10,4 +10,5 @@ import lombok.Data;
 public class DataSourceConQuery {
     public DataSourceTypeEnum conType;
     public String conAccount;
+    public Long userId;
 }

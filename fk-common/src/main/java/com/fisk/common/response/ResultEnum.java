@@ -25,7 +25,10 @@ public enum ResultEnum {
     /**
      * 报表可视化服务，错误码从2000开始
      */
-    VISUAL_CONNECTION_ERROR(2001, "数据源连接失败");
+    VISUAL_CONNECTION_ERROR(2001, "数据源连接失败"),
+    VISUAL_LOADDRIVER_ERROR(2001, "数据库驱动加载失败"),
+    VISUAL_PARAMTER_ERROR(2002, "缺少参数"),
+    VISUAL_QUERY_ERROR(2003, "查询失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

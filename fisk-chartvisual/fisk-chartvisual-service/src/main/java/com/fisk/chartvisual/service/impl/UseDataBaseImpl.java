@@ -1,16 +1,21 @@
 package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IUseDataBase;
 import com.fisk.chartvisual.util.dscon.AbstractUseDataBase;
 import com.fisk.chartvisual.util.dscon.DataSourceConFactory;
+import com.fisk.chartvisual.vo.DataServiceVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
+import java.util.List;
 import javax.annotation.Resource;
 
 /**
@@ -27,14 +32,20 @@ public class UseDataBaseImpl extends ServiceImpl<DataSourceConMapper, DataSource
         AbstractUseDataBase db = DataSourceConFactory.getConnection(type);
         Connection connection = db.connection(con, acc, pwd);
         boolean res = connection != null;
-        try {
-            if(res) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            log.error("【testConnection】数据库连接关闭报错, ex", e);
-        }
+        db.closeConnection(connection);
         return res;
+    }
+
+    @Override
+    public List<DataServiceVO> query(ChartQueryObject query) {
+        DataSourceConVO model = mapper.getDataSourceConByUserId(query.id);
+        if (model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        AbstractUseDataBase db = DataSourceConFactory.getConnection(model.conType);
+        Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
+        return db.execQuery(db.buildQueryData(query), connection, DataServiceVO.class);
     }
 
 

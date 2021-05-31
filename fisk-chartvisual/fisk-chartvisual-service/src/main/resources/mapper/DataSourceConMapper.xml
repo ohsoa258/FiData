@@ -19,6 +19,9 @@
                create_time
         from tb_datasource_con
         where del_flag = 1
+        <if test="query.userId != null">
+            and create_user = #{query.userId}
+        </if>
         <if test="query.conType != null">
             and con_type = #{query.conType}
         </if>

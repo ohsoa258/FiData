@@ -26,7 +26,7 @@ public class DataSourceConManageController {
     @Autowired
     private IDataSourceConManage service;
 
-    @GetMapping("/get")
+    @GetMapping("/page")
     public ResultEntity<Page<DataSourceConVO>> getData(Page<DataSourceConVO> page, DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(page, query));
     }

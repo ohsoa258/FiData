@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.util.dscon;
 
+import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,5 +45,10 @@ public class UseSqlServerDataBase extends AbstractUseDataBase {
         str.append("AND props.minor_id = columns.column_id  ");
         str.append(") col ON col.table_name = objects.name ");
         return str.toString();
+    }
+
+    @Override
+    public String buildQueryData(ChartQueryObject query) {
+        return null;
     }
 }

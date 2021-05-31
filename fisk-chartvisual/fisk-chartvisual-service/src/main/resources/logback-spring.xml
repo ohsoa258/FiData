@@ -5,9 +5,28 @@
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <!--配置logstash的ip和端口，在logstash配置文件中-->
         <destination>192.168.11.130:5044</destination>
-        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder" />
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "logLevel": "%level",
+                        "serviceName": "${springAppName:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
     </appender>
 
+    <!-- TODO: 日志配置不详细 -->
     <root level="INFO">
         <appender-ref ref="LOGSTASH" />
         <appender-ref ref="CONSOLE" />
