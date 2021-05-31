@@ -8,6 +8,7 @@ out
 gen
 *.class
 /*/target/
+target/
 
 # Log file
 *.log
@@ -22,4 +23,7 @@ gen
 hs_err_pid*
 /fisk-chartvisual/fisk-chartvisual-service/target/
 /fisk-chartvisual/target/
-/fisk-chartvisual/fisk-chartvisual-service/target/
+/fk-user/fk-user-service/target/
+/fk-user/fk-user-pojo/target/
+/fk-user/fk-user-api/target/
+/fk-dataAccess/fk-dataAccess-service/target/
