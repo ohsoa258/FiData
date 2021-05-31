@@ -9,6 +9,11 @@ gen
 *.class
 /*/target/
 target/
+/target/
+
+.classpath
+.project
+target
 
 # Log file
 *.log
