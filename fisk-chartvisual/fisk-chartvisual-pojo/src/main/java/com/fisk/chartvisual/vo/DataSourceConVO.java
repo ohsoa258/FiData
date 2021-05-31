@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.vo;
 
+import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
 
 /**
@@ -10,8 +11,9 @@ import lombok.Data;
 public class DataSourceConVO {
     public int id;
     public String conStr;
-    public String conType;
+    public DataSourceTypeEnum conType;
+    public String conDbname;
     public String conAccount;
     public String conPassword;
-    public String conCreateTime;
+    public String createTime;
 }

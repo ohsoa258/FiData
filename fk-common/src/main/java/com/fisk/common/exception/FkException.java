@@ -1,5 +1,6 @@
 package com.fisk.common.exception;
 
+import com.fisk.common.response.ResultEnum;
 import lombok.Getter;
 
 
@@ -27,5 +28,10 @@ public class FkException extends RuntimeException {
     public FkException(int status, Throwable cause) {
         super(cause);
         this.status = status;
+    }
+
+    public FkException(ResultEnum resultEnum) {
+        super(resultEnum.getMsg());
+        this.status = resultEnum.getCode();
     }
 }

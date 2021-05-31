@@ -22,4 +22,11 @@ public interface DataSourceConMapper extends BaseMapper<DataSourceConPO> {
      * @return 查询结果
      */
     Page<DataSourceConVO> listDataSourceConByUserId(Page<DataSourceConVO> page, @Param("query") DataSourceConQuery query);
+
+    /**
+     * 根据id查询数据
+     * @param id id
+     * @return 数据对象
+     */
+    DataSourceConVO getDataSourceConByUserId(int id);
 }

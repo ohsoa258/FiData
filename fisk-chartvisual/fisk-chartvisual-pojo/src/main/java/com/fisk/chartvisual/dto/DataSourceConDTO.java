@@ -22,4 +22,7 @@ public class DataSourceConDTO {
 
     @Length(min = 0, max = 50, message = "长度最多50")
     public String conPassword;
+
+    @Length(min = 0, max = 50, message = "长度最多50")
+    public String conDbname;
 }

@@ -19,6 +19,8 @@ public class DataSourceConPO {
 
     public int conType;
 
+    public String conDbname;
+
     public String conAccount;
 
     public String conPassword;

@@ -18,6 +18,8 @@ public interface IDataSourceConManage extends IService<DataSourceConPO> {
 
     /**
      * 获取权限内所有的数据源
+     * @param page 分页对象
+     * @param query 查询参数
      * @return 查询结果
      */
     Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query);
@@ -42,4 +44,18 @@ public interface IDataSourceConManage extends IService<DataSourceConPO> {
      * @return 执行结果
      */
     ResultEnum deleteDataSourceCon(int id);
+
+    /**
+     * 测试数据库连接
+     * @param dto 连接信息
+     * @return 是否连接成功
+     */
+    ResultEnum testConnection(DataSourceConDTO dto);
+
+    /**
+     * 获取数据域连接下的所有数据源
+     * @param id 数据源连接地址
+     * @return 数据源下的数据域
+     */
+    Object listDataDomain(int id);
 }
