@@ -1,10 +1,10 @@
 package com.fisk.chartvisual.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.common.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -14,7 +14,7 @@ import org.apache.ibatis.annotations.Param;
  * @author gy
  */
 @Mapper
-public interface DataSourceConMapper extends BaseMapper<DataSourceConPO> {
+public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
 
     /**
      * 获取权限下所有数据源连接
