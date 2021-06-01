@@ -22,7 +22,7 @@ public class AppDataSourcePO extends BaseEntity {
     /**
      * tb_app_registration表id
      */
-    private String appId;
+    private String appid;
 
     /**
      * tb_app_drivetype表type

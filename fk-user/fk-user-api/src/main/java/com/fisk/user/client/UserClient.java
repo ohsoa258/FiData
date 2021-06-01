@@ -26,7 +26,7 @@ public interface UserClient {
      * @return 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping("/info")
-    UserDTO queryUserByPhoneAndPassword(
+    UserDTO queryUser(
             @RequestParam("username") String username,
             @RequestParam("password") String password);
 

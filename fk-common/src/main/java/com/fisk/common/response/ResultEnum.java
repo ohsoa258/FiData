@@ -21,6 +21,7 @@ public enum ResultEnum {
     SAVE_VERIFY_ERROR(1002, "数据验证失败"),
     DATA_NOTEXISTS(1003, "数据不存在"),
     ENUM_TYPE_ERROR(1004, "错误的枚举类型"),
+    UPDATE_DATA_ERROR(1005, "数据更新失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始

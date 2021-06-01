@@ -5,6 +5,7 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.vo.PageVO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 
@@ -19,4 +20,5 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows);
 
+    ResultEnum updateAppRegistration(AppRegistrationEditDTO dto);
 }

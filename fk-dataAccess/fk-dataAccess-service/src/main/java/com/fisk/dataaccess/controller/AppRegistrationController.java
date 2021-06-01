@@ -7,10 +7,12 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.vo.PageVO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +58,14 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
     }
 
-
+    /**
+     * 应用注册-修改
+     * @param dto
+     * @return
+     */
+    @PutMapping("/edit")
+    public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
+        return ResultEntityBuild.build(service.updateAppRegistration(dto));
+    }
 
 }

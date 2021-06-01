@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author: Lock
  * @data: 2021/5/17 17:16
@@ -34,6 +36,9 @@ public class LoginFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         // 2.获取cookie
         HttpCookie cookie = request.getCookies().getFirst(JwtConstants.COOKIE_NAME);
+//        String auth = request.getHeaders().get("Authorization");Authorization
+//        String token = HttpServletRequest.getHeader("Authorization");
+//        ((ReactorServerHttpRequest) request).request.requestHeaders().get("Authorization").replace("Bearer ", "");
         if (cookie == null) {
             // 没有登录，放行
             return chain.filter(exchange);

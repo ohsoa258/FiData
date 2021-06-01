@@ -49,7 +49,7 @@ public class UserAuthServiceImpl implements UserAuthService {
         UserDTO userDTO = null;
 
         try {
-            userDTO = userClient.queryUserByPhoneAndPassword(username, password);
+            userDTO = userClient.queryUser(username, password);
         } catch (Exception e) {
             throw new FkException(400, "用户名或密码不正确");
         }
