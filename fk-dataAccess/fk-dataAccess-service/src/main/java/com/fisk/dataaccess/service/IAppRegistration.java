@@ -21,4 +21,6 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows);
 
     ResultEnum updateAppRegistration(AppRegistrationEditDTO dto);
+
+    ResultEnum deleteAppRegistration(String id);
 }

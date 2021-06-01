@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
-import org.joda.time.DateTime;
 
 /**
  * @author: Lock
@@ -31,7 +30,7 @@ public class AppRegistrationPO extends BaseEntity {
     private String appDes;
 
     /**
-     * 应用类型
+     * 应用类型: 0: 实时应用   1: 非实时应用
      */
     private byte appType;
 

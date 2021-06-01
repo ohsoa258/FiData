@@ -45,6 +45,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 添加应用
+     *
      * @param appRegistrationDTO
      * @return
      */
@@ -58,14 +59,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 保存基本信息
         String appId = UUID.randomUUID().toString();
         appRegistrationPO.setId(appId);
-        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
 
         Date date1 = new Date(System.currentTimeMillis());
         appRegistrationPO.setCreateTime(date1);
         appRegistrationPO.setUpdateTime(date1);
         // 保存应用注册表数据
         boolean save1 = this.save(appRegistrationPO);
-
 
 
         AppDataSourcePO appDatasourcePO = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
@@ -81,7 +81,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         int insert = appDataSourceMapper.insert(appDatasourcePO);
 
-        return insert>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -90,7 +90,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @return
      */
     @Override
-    public PageDTO<AppRegistrationDTO> listAppRegistration(String key,Integer page,Integer rows) {
+    public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
         // 1.分页信息的健壮性处理
         page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
@@ -104,16 +104,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .or()
                 .eq(isKeyExists, "app_des", key)
                 .or()
-                .eq(isKeyExists,"app_type",key)
+                .eq(isKeyExists, "app_type", key)
                 .or()
-                .eq(isKeyExists,"app_principal",key)
+                .eq(isKeyExists, "app_principal", key)
                 .page(registrationPOPage);
 
         // 取出数据列表
         List<AppRegistrationPO> records = registrationPOPage.getRecords();
 
         PageDTO<AppRegistrationDTO> pageDTO = new PageDTO<>();
-        pageDTO.setTotal((long)records.size());
+        pageDTO.setTotal((long) records.size());
         long totalPage = (long) (records.size() + rows - 1) / rows;
         pageDTO.setTotalPage(totalPage);
         pageDTO.setItems(AppRegistrationDTO.convertEntityList(records));
@@ -123,6 +123,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 应用注册-修改
+     *
      * @param dto
      * @return
      */
@@ -157,11 +158,42 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppDataSourcePO appDataSourcePO = appDatasourceDTO.toEntity(AppDataSourcePO.class);
 
         // 2.2修改数据
-//        String appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
+        String appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
+        appDataSourcePO.setId(appDataSid);
+        appDataSourcePO.setUpdateTime(date);
         int update = appDataSourceMapper.updateById(appDataSourcePO);
 
 
-        return update>0?ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return update > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
 
+    }
+
+    /**
+     * 删除应用注册
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public ResultEnum deleteAppRegistration(String id) {
+
+        AppRegistrationPO model = this.getById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 1.删除tb_app_registration表数据
+        model.setDelFlag((byte) 1);
+        boolean updateReg = this.updateById(model);
+        if (!updateReg) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+        }
+
+        // 2.删除tb_app_datasource表数据
+        AppDataSourcePO appDataSourcePO = appDataSourceImpl.query().eq("appid", id).one();
+        appDataSourcePO.setDelFlag((byte) 1);
+        int updateData = appDataSourceMapper.updateById(appDataSourcePO);
+
+        return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

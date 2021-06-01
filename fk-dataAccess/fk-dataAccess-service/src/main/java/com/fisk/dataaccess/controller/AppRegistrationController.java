@@ -22,7 +22,7 @@ import java.util.List;
  * @data: 2021/5/26 14:15
  */
 @RestController
-@RequestMapping("/data")
+@RequestMapping("/appRegistration")
 @Slf4j
 public class AppRegistrationController {
 
@@ -35,7 +35,7 @@ public class AppRegistrationController {
      * @return
      */
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO appRegistrationDTO) throws Exception{
+    public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO appRegistrationDTO){
 
         return ResultEntityBuild.build(service.addData(appRegistrationDTO));
     }
@@ -66,6 +66,11 @@ public class AppRegistrationController {
     @PutMapping("/edit")
     public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
+    }
+
+    @DeleteMapping("/delete")
+    public ResultEntity<Object> deleteData(String id) {
+        return ResultEntityBuild.build(service.deleteAppRegistration(id));
     }
 
 }

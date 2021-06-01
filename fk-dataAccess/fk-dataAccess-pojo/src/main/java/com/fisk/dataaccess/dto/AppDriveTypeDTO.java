@@ -13,37 +13,19 @@ import java.util.stream.Collectors;
 
 /**
  * @author: Lock
- * @data: 2021/5/26 14:41
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class AppDataSourceDTO extends BaseDTO {
-//    private String id;
+public class AppDriveTypeDTO extends BaseDTO {
 
-//    private String appid;
+    private String id;
 
-    /**
-     * 驱动类型
-     */
-    private String driveType;
+    private String name;
 
-    /**
-     * 连接字符串
-     */
-    private String connectStr;
+    private String type;
 
-    /**
-     * 连接账号
-     */
-    private String connectAccount;
-
-    /**
-     * 连接密码
-     */
-    private String connectPwd;
-
-    public AppDataSourceDTO(BaseEntity entity) {
+    public AppDriveTypeDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -54,11 +36,11 @@ public class AppDataSourceDTO extends BaseDTO {
      * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<AppDataSourceDTO> convertEntityList(Collection<T> list) {
+    public static <T extends BaseEntity> List<AppDriveTypeDTO> convertEntityList(Collection<T> list) {
         if (list == null) {
             return Collections.emptyList();
         }
-        return list.stream().map(AppDataSourceDTO::new).collect(Collectors.toList());
+        return list.stream().map(AppDriveTypeDTO::new).collect(Collectors.toList());
     }
 
 }

@@ -24,11 +24,5 @@ public interface AppDataSourceMapper extends BaseMapper<AppDataSourcePO> {
     )
     int insert(AppDataSourcePO appDataSourcePO);
 
-
-    @Update("UPDATE tb_app_datasource  SET drive_type=#{driveType}," +
-            "connect_str=#{connectStr}, connect_account=#{connectAccount}, connect_pwd=#{connectPwd}," +
-            "realtime_account=#{realtimeAccount}, realtime_pwd=#{realtimePwd}, create_time=#{createTime}," +
-            "create_user=#{createUser}, update_time=#{updateTime}, update_user=#{updateUser}," +
-            "del_flag=#{delFlag}, WHERE appid=#{appId}")
     int update(AppDataSourcePO appDataSourcePO);
 }

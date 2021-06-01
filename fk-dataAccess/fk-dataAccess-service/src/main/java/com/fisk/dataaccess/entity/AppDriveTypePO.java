@@ -20,12 +20,12 @@ public class AppDriveTypePO extends BaseEntity {
     private String id;
 
     /**
-     * 数据源名称
+     * 数据源名称: key
      */
     private String name;
 
     /**
-     * 数据源类型标识
+     * 数据源类型标识: value,到时候用的也是type
      */
     private String type;
 }
