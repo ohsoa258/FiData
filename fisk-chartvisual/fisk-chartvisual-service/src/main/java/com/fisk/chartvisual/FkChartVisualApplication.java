@@ -13,7 +13,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication(scanBasePackages = {"com.fisk.chartvisual", "com.fisk.common.advice"})
 @MapperScan("com.fisk.chartvisual.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
-//@EnableJwtVerification // 开启自定义的jwt验证开关
+// 开启自定义的jwt验证开关
+//@EnableJwtVerification
 public class FkChartVisualApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkChartVisualApplication.class, args);

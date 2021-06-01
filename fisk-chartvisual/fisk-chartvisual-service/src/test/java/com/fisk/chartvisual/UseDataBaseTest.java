@@ -1,85 +1,116 @@
 package com.fisk.chartvisual;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ColumnDetails;
+import com.fisk.chartvisual.dto.DataDomainDTO;
+import com.fisk.chartvisual.dto.DataSourceConDTO;
+import com.fisk.chartvisual.service.IDataSourceConManage;
+import com.fisk.chartvisual.service.IUseDataBase;
 import com.fisk.chartvisual.util.dscon.AbstractUseDataBase;
 import com.fisk.chartvisual.util.dscon.DataSourceConFactory;
+import com.fisk.chartvisual.vo.DataDomainVO;
+import com.fisk.chartvisual.vo.DataServiceVO;
+import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
+import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.response.ResultEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.sql.*;
+import javax.annotation.Resource;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class UseDataBaseTest {
 
+    private final DataSourceConDTO dto = new DataSourceConDTO() {{
+        conType = DataSourceTypeEnum.MYSQL;
+        conAccount = "root";
+        conPassword = "root123";
+        conStr = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+        conDbname = "dmp_chartvisual_db";
+    }};
 
+    @Resource
+    IDataSourceConManage con;
+    @Resource
+    IUseDataBase use;
+
+    /**
+     * 测试数据库连接
+     */
     @Test
-    public void getConnection_SQLServer() {
-        Connection con = null;
-        Statement st = null;
-        String sqlServerConnection = "jdbc:sqlserver://192.168.3.16:1433;databaseName=WorkOrder;user=sa;password=zxc19981213";
-        String sql = "select * from Tb_WorkOrder";
-        try {
-            AbstractUseDataBase db = DataSourceConFactory.getConnection(DataSourceTypeEnum.SQLSERVER);
-            con = db.connection(sqlServerConnection, null, null);
-            st = con.createStatement();
-            ResultSet rs = st.executeQuery(sql);
-            while (rs.next()) {
-                System.out.println(rs.getString("WorkOrderNumber") + ", " + rs.getString("WorkOrderName"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (con != null) {
-                try {
-                    con.close();
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-            }
-            if (st != null) {
-                try {
-                    st.close();
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-            }
-        }
+    public void testConnection() {
+        assert con.testConnection(dto) == ResultEnum.SUCCESS;
+    }
+
+    /**
+     * mysql 测试获取数据域
+     */
+    @Test
+    public void getDataDomainMysql() {
+        List<DataDomainVO> data = con.listDataDomain(1);
+        System.out.println(data.toString());
+        assert data.size() > 0;
     }
 
     @Test
-    public void getConnection_Mysql() {
-        Connection con = null;
-        Statement st = null;
-        String sqlServerConnection = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
-        String sql = "select * from tb_datasource_con";
-        try {
-            AbstractUseDataBase db = DataSourceConFactory.getConnection(DataSourceTypeEnum.MYSQL);
-            con = db.connection(sqlServerConnection, "root", "root123");
-            st = con.createStatement();
-            ResultSet rs = st.executeQuery(sql);
-            while (rs.next()) {
-                System.out.println(rs.getString("con_type") + ", " + rs.getString("con_str"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (con != null) {
-                try {
-                    con.close();
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-            }
-            if (st != null) {
-                try {
-                    st.close();
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-            }
-        }
+    public void getServiceDataMysql() {
+        ChartQueryObject query = new ChartQueryObject() {{
+            id = 1;
+            tableName = "tb_test_data";
+            columnDetails = new ArrayList<ColumnDetails>() {{
+                add(new ColumnDetails() {{
+                    columnName = "name";
+                    columnType = ColumnTypeEnum.NAME;
+                }});
+                add(new ColumnDetails() {{
+                    columnName = "value";
+                    columnType = ColumnTypeEnum.VALUE;
+                    aggregationType = AggregationTypeEnum.COUNT;
+                }});
+            }};
+        }};
+        List<DataServiceVO> data = use.query(query);
+        System.out.println(data.toString());
+        assert data.size() > 0;
+    }
+
+    /**
+     * sqlserver 测试获取数据域
+     */
+    @Test
+    public void getDataDomainSqlServer() {
+        List<DataDomainVO> data = con.listDataDomain(2);
+        System.out.println(data.toString());
+        assert data.size() > 0;
+    }
+
+    @Test
+    public void getServiceDataSqlServer() {
+        ChartQueryObject query = new ChartQueryObject() {{
+            id = 2;
+            tableName = "Tb_WorkOrderDetails";
+            columnDetails = new ArrayList<ColumnDetails>() {{
+                add(new ColumnDetails() {{
+                    columnName = "SubTypeName";
+                    columnType = ColumnTypeEnum.NAME;
+                }});
+                add(new ColumnDetails() {{
+                    columnName = "ID";
+                    columnType = ColumnTypeEnum.VALUE;
+                    aggregationType = AggregationTypeEnum.COUNT;
+                }});
+            }};
+        }};
+        List<DataServiceVO> data = use.query(query);
+        System.out.println(data.toString());
+        assert data.size() > 0;
     }
 }

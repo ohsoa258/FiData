@@ -1,8 +1,15 @@
 package com.fisk.chartvisual.util.dscon;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ColumnDetails;
+import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * sqlserver
@@ -49,6 +56,21 @@ public class UseSqlServerDataBase extends AbstractUseDataBase {
 
     @Override
     public String buildQueryData(ChartQueryObject query) {
-        return null;
+        List<ColumnDetails> values = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.VALUE).collect(Collectors.toList());
+        ColumnDetails names = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.NAME).findFirst().orElse(null);
+        if (values.size() == 0 || names == null) {
+            throw new FkException(ResultEnum.VISUAL_PARAMTER_ERROR);
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append(names.columnName).append(" as name ");
+        values.forEach(e -> {
+            str.append(",").append(e.aggregationType.getName()).append("(").append(e.columnName).append(") as value ");
+        });
+        str.append("FROM ").append(query.tableName).append(" ");
+        str.append("GROUP BY ");
+        str.append(names.columnName);
+        return str.toString();
     }
 }

@@ -23,6 +23,7 @@ import com.fisk.common.constants.SqlConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.JsonUtils;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -51,21 +52,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Resource
     IUseDataBase useDataBase;
 
-    private final UserDetail context;
-    public DataSourceConManageImpl(){
-        context = UserContext.getUser();
-    }
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
-        query.userId = context.getId();
+        UserDetail context = UserContext.getUser();
+//        query.userId = context.getId();
         return mapper.listDataSourceConByUserId(page, query);
     }
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
+        UserDetail context = UserContext.getUser();
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
-        model.createUser = context.getId().toString();
+//        model.createUser = context.getId().toString();
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -76,8 +75,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        UserDetail context = UserContext.getUser();
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
-        model.updateUser = context.getId().toString();
+//        model.updateUser = context.getId().toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -88,8 +88,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        UserDetail context = UserContext.getUser();
         model.delFlag = Integer.parseInt(SqlConstants.DEL);
-        model.updateUser = context.getId().toString();
+//        model.updateUser = context.getId().toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -101,7 +102,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public Object listDataDomain(int id) {
+    public List<DataDomainVO> listDataDomain(int id) {
         //获取连接信息
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if(model == null) {
@@ -131,7 +132,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                                         .filter(c -> c.tableName.equals(e.tableName))
                                         .map(item -> new DataDomainVO(item.columnName, item.columnDetails))
                                         .collect(Collectors.toList());
-                            }});
+                            }})
+                    .collect(Collectors.toList());
         }
         db.closeConnection(connection);
         return null;
