@@ -39,6 +39,8 @@ public class LoginFilter implements GlobalFilter, Ordered {
 //        String auth = request.getHeaders().get("Authorization");Authorization
 //        String token = HttpServletRequest.getHeader("Authorization");
 //        ((ReactorServerHttpRequest) request).request.requestHeaders().get("Authorization").replace("Bearer ", "");
+
+
         if (cookie == null) {
             // 没有登录，放行
             return chain.filter(exchange);

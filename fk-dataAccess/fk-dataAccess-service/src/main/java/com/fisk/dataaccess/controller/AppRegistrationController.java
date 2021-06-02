@@ -48,7 +48,7 @@ public class AppRegistrationController {
      * @return
      */
     @GetMapping("/page")
-    public ResultEntity<Object> queryByPageAppRes(
+    public ResultEntity<PageDTO<AppRegistrationDTO>> queryByPageAppRes(
             // 过滤条件条件非必要
             @RequestParam(value = "key",required = false)String key,
             // 给个默认值,防止不传值时查询全表
@@ -69,7 +69,7 @@ public class AppRegistrationController {
     }
 
     @DeleteMapping("/delete")
-    public ResultEntity<Object> deleteData(String id) {
+    public ResultEntity<Object> deleteData(long id) {
         return ResultEntityBuild.build(service.deleteAppRegistration(id));
     }
 

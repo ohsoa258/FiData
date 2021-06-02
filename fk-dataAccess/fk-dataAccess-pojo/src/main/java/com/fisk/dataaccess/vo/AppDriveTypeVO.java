@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppDriveTypeVO extends BaseVO {
 
-    private String id;
+//    private long id;
 
     private String name;
 

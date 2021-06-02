@@ -15,6 +15,6 @@ import javax.validation.constraints.NotNull;
 public class AppRegistrationEditDTO extends AppRegistrationDTO {
 
     @NotNull(message = "id不可为null")
-    public String id;
+    public long id;
 }
 

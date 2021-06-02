@@ -22,5 +22,5 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     ResultEnum updateAppRegistration(AppRegistrationEditDTO dto);
 
-    ResultEnum deleteAppRegistration(String id);
+    ResultEnum deleteAppRegistration(long id);
 }

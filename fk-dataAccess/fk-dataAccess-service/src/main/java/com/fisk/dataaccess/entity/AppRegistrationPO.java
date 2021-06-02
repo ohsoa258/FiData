@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author: Lock
@@ -11,13 +12,14 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_app_registration")
+@EqualsAndHashCode(callSuper = true)
 public class AppRegistrationPO extends BaseEntity {
 
     /**
      * 主键
      */
     @TableId
-    private String id;
+    private long id;
 
     /**
      * 应用名称
@@ -67,6 +69,6 @@ public class AppRegistrationPO extends BaseEntity {
     /**
      * 逻辑删除(1: 未删除; 0: 删除)
      */
-    private byte delFlag;
+    private int delFlag;
 
 }

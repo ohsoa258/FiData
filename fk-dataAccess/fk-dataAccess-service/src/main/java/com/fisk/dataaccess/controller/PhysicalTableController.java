@@ -1,12 +1,11 @@
 package com.fisk.dataaccess.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author: Lock
@@ -14,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/physicalTable")
 public class PhysicalTableController {
+
+//    public ResultEntity<>
 
     /**
      * 添加物理表
@@ -25,6 +26,7 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(service.addData(appRegistrationDTO));
     }*/
+
 
 
 

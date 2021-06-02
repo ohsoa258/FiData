@@ -17,12 +17,12 @@ public class AppDataSourcePO extends BaseEntity {
      * 主键
      */
     @TableId
-    private String id;
+    private long id;
 
     /**
      * tb_app_registration表id
      */
-    private String appid;
+    private long appid;
 
     /**
      * tb_app_drivetype表type
@@ -77,5 +77,5 @@ public class AppDataSourcePO extends BaseEntity {
     /**
      * 逻辑删除(1: 未删除; 0: 删除)
      */
-    private byte delFlag;
+    private int delFlag;
 }
