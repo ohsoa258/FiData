@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppRegistrationDTO extends BaseDTO {
 
-    private String id;
+//    private String id;
 
     private String appName;
 
@@ -37,13 +37,13 @@ public class AppRegistrationDTO extends BaseDTO {
 
     private DateTime createTime;
 
-    private String createUser;
+//    private String createUser;
 
-    private DateTime updateTime;
+//    private DateTime updateTime;
 
-    private String updateUser;
+//    private String updateUser;
 
-    private byte delFlag;
+//    private byte delFlag;
 
     /**
      * 数据源
