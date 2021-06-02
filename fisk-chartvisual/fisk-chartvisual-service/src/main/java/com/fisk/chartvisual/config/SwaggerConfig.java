@@ -1,19 +1,20 @@
 package com.fisk.chartvisual.config;
 
 import com.fisk.chartvisual.FkChartVisualApplication;
+import com.google.common.collect.Lists;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.ApiKey;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
- * @author: Lock
- * @data: 2021/5/25 11:31
+ * @author gy
  */
 @Configuration
 @EnableSwagger2
@@ -27,7 +28,14 @@ public class SwaggerConfig {
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
-                .build();
+                .build()
+                .securitySchemes(Lists.newArrayList());
+
+    }
+
+    private ApiKey apiKey() {
+        //配置输入token的备注 TOKEN_HEADER_STRING = "Authorization"
+        return new ApiKey("Authorization", "Authorization", "header");
     }
 
     private ApiInfo apiInfo() {
