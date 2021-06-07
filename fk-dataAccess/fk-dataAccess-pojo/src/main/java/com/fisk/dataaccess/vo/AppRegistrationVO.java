@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppRegistrationVO extends BaseVO {
 
-    private String id;
+//    private long id;
 
     /**
      * 应用名称
@@ -41,7 +41,7 @@ public class AppRegistrationVO extends BaseVO {
     /**
      * 应用类型
      */
-    private byte appType;
+    private int appType;
 
     /**
      * 应用负责人

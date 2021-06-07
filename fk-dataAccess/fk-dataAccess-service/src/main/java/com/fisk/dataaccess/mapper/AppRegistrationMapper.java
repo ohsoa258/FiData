@@ -18,4 +18,7 @@ public interface AppRegistrationMapper extends BaseMapper<AppRegistrationPO> {
     @Select("select * from tb_app_registration")
     List<AppRegistrationVO> getData();
 
+    @Select("select * from tb_app_registration limit (#{page}-1)*{rows},rows")
+    List<AppRegistrationPO> pageAppReg(Integer page, Integer rows);
+
 }

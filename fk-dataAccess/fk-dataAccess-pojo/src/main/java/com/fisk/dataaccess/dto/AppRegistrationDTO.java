@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppRegistrationDTO extends BaseDTO {
 
-//    private String id;
+    private long id;
 
     private String appName;
 
     private String appDes;
 
-    private byte appType;
+    private int appType;
 
     private String appPrincipal;
 

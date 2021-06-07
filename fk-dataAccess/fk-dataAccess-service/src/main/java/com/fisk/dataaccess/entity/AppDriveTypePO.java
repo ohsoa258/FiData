@@ -17,15 +17,11 @@ public class AppDriveTypePO extends BaseEntity {
      * 主键
      */
     @TableId
-    private String id;
+    private long id;
 
     /**
      * 数据源名称: key
      */
     private String name;
 
-    /**
-     * 数据源类型标识: value,到时候用的也是type
-     */
-    private String type;
 }
