@@ -1,0 +1,39 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.chartvisual.mapper.ChartMapper">
+
+    <select id="listChartDataByUserId" resultType="com.fisk.chartvisual.vo.ChartPropertyVO">
+        select id,
+        name,
+        content,
+        details,
+        create_time,
+        0 as chartType
+        from tb_chart
+        where del_flag = 1
+        and create_user = #{query.id}
+        <if test=" query.name != null ">
+            and name like concat('%', #{query.name}, '%')
+        </if>
+        <if test=" query.details != null ">
+            and details like concat('%', #{query.details}, '%')
+        </if>
+        union all
+        select id,
+        name,
+        content,
+        details,
+        create_time,
+        1 as chartType
+        from tb_draft_chart
+        where del_flag = 1
+        and create_user = #{query.id}
+        <if test=" query.name != null ">
+            and name like concat('%', #{query.name}, '%')
+        </if>
+        <if test=" query.details != null ">
+            and details like concat('%', #{query.details}, '%')
+        </if>
+    </select>
+</mapper>

@@ -6,6 +6,7 @@ import com.fisk.common.constants.SqlConstants;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -20,12 +21,12 @@ public class BasePO {
     public long id;
 
     @TableField(value = "create_time", fill = FieldFill.INSERT)
-    public Date createTime;
+    public LocalDateTime createTime;
 
     public String createUser;
 
     @TableField(value = "update_time", fill = FieldFill.UPDATE)
-    public Date updateTime;
+    public LocalDateTime updateTime;
 
     public String updateUser;
 

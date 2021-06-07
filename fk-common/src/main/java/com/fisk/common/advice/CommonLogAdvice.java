@@ -1,6 +1,7 @@
 package com.fisk.common.advice;
 
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -37,7 +38,7 @@ public class CommonLogAdvice {
                 throw throwable;
             }else{
                 // 如果不是，转为LyException
-                throw new FkException(500, throwable);
+                throw new FkException(ResultEnum.ERROR.getCode(), throwable);
             }
         }
     }

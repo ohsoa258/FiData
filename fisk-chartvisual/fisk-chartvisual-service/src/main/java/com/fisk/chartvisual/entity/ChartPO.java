@@ -1,7 +1,6 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,6 +11,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("tb_chart")
-public class ChartPO extends BasePO {
-    public String content;
+public class ChartPO extends BaseChartProperty {
+
 }
