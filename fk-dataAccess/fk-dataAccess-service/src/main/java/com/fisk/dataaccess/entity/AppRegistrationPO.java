@@ -34,7 +34,7 @@ public class AppRegistrationPO extends BaseEntity {
     /**
      * 应用类型: 0: 实时应用   1: 非实时应用
      */
-    private byte appType;
+    private int appType;
 
     /**
      * 应用负责人

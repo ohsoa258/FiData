@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppDriveTypeDTO extends BaseDTO {
 
-//    private String id;
+//    private long id;
 
     private String name;
 

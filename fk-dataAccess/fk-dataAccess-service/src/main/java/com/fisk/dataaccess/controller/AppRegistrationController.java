@@ -68,8 +68,9 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
     }
 
-    @DeleteMapping("/delete")
-    public ResultEntity<Object> deleteData(long id) {
+    @DeleteMapping("/delete/{id}")
+    public ResultEntity<Object> deleteData(
+            @PathVariable("id") long id) {
         return ResultEntityBuild.build(service.deleteAppRegistration(id));
     }
 

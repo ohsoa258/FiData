@@ -29,7 +29,7 @@ public class AppRegistrationDTO extends BaseDTO {
 
     private String appDes;
 
-    private byte appType;
+    private int appType;
 
     private String appPrincipal;
 

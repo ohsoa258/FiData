@@ -14,6 +14,7 @@ import com.fisk.dataaccess.dto.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
@@ -27,6 +28,7 @@ import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.sql.Wrapper;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +49,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Autowired
     private AppDataSourceImpl appDataSourceImpl;
 
+    @Autowired
+    private AppDriveTypeImpl appDriveTypeImpl;
+
     Date date = new Date(System.currentTimeMillis());
 
     /**
@@ -62,7 +67,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // dto->po
         AppRegistrationPO appRegistrationPO = appRegistrationDTO.toEntity(AppRegistrationPO.class);
 
-        // 保存基本信息
+        // 保存tb_app_registration数据
 /*        String appId = UUID.randomUUID().toString();
         appRegistrationPO.setId(appId);*/
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
@@ -71,13 +76,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appRegistrationPO.setCreateTime(date1);
         appRegistrationPO.setUpdateTime(date1);
         appRegistrationPO.setDelFlag(1);
-        // 保存应用注册表数据
+        // 保存
         this.save(appRegistrationPO);
+
 
 
         AppDataSourcePO appDatasourcePO = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
 
-//        appDatasourcePO.setId(UUID.randomUUID().toString());
+
+        // 保存tb_app_datasource数据
         appDatasourcePO.setAppid(appRegistrationPO.getId());
 
         Date date2 = new Date(System.currentTimeMillis());
@@ -88,6 +95,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //        boolean save = appDataSourceImpl.save(appDatasourcePO);
 
         int insert = appDataSourceMapper.insert(appDatasourcePO);
+
+/*        // 保存tb_app_drivetype数据
+        AppDriveTypePO appDriveTypePO = new AppDriveTypePO();
+        appDriveTypePO.setId(1);
+        appDriveTypePO.setName(appDatasourcePO.getDriveType());
+        appDriveTypeImpl.save(appDriveTypePO);*/
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -215,5 +228,26 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         int updateData = appDataSourceMapper.updateById(appDataSourcePO);
 
         return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 根据是否为实时,查询应用名称集合
+     * @param appType
+     * @return
+     */
+    @Override
+    public List<String> queryAppName(byte appType) {
+
+        List<AppRegistrationPO> list = this.query()
+                .eq("app_type", appType)
+                .eq("del_flag",1)
+                .list();
+
+        List<String> appName = new ArrayList<>();
+        for (AppRegistrationPO appRegistrationPO : list) {
+            appName.add(appRegistrationPO.getAppName());
+        }
+
+        return appName;
     }
 }

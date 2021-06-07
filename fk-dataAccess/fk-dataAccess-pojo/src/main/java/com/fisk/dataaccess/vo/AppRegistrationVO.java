@@ -41,7 +41,7 @@ public class AppRegistrationVO extends BaseVO {
     /**
      * 应用类型
      */
-    private byte appType;
+    private int appType;
 
     /**
      * 应用负责人
