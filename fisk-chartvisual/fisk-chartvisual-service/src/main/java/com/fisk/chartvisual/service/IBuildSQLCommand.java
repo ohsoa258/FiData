@@ -17,6 +17,7 @@ public interface IBuildSQLCommand {
 
     /**
      * 创建sql：获取所有表/字段
+     * @param query 查询参数
      * @return sql
      */
     String buildQueryData(ChartQueryObject query);

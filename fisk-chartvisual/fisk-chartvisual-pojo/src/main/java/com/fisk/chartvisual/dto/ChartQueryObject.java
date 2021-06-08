@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -19,4 +20,6 @@ public class ChartQueryObject {
     @NotNull
     public String tableName;
     public List<ColumnDetails> columnDetails;
+    public List<ChartQueryFilter> queryFilters;
+    public InteractiveTypeEnum interactiveType;
 }

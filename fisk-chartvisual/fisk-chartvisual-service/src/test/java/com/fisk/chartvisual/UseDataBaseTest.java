@@ -24,6 +24,7 @@ import javax.annotation.Resource;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -77,7 +78,7 @@ public class UseDataBaseTest {
                 }});
             }};
         }};
-        List<DataServiceVO> data = use.query(query);
+        List<Map<String, Object>> data = use.query(query);
         System.out.println(data.toString());
         assert data.size() > 0;
     }
@@ -109,7 +110,7 @@ public class UseDataBaseTest {
                 }});
             }};
         }};
-        List<DataServiceVO> data = use.query(query);
+        List<Map<String, Object>> data = use.query(query);
         System.out.println(data.toString());
         assert data.size() > 0;
     }

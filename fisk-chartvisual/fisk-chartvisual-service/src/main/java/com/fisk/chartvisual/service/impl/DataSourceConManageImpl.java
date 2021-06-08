@@ -1,5 +1,7 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.dto.UserDetail;
@@ -19,6 +21,7 @@ import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import jdk.nashorn.internal.objects.NativeNumber;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -49,6 +52,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name);
+        //queryWrapper.eq(DataSourceConPO::getCreateUser,"用户id");
+        DataSourceConPO data = mapper.selectOne(queryWrapper);
+        if (data != null) {
+            return ResultEnum.NAME_EXISTS;
+        }
+
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

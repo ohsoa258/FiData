@@ -5,6 +5,7 @@ import com.fisk.chartvisual.vo.DataServiceVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 使用数据库
@@ -23,11 +24,10 @@ public interface IUseDataBase {
      */
     boolean testConnection(DataSourceTypeEnum type, String con, String acc, String pwd);
 
-
     /**
      * 根据表/字段信息，查询数据
      * @param query 表/字段信息
      * @return 查询结果
      */
-    List<DataServiceVO> query(ChartQueryObject query);
+    List<Map<String, Object>> query(ChartQueryObject query);
 }

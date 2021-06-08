@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class DataSourceConVO {
     public int id;
+    public String name;
     public String conStr;
     public DataSourceTypeEnum conType;
     public String conDbname;

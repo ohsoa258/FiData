@@ -18,6 +18,8 @@ import java.util.Date;
 @TableName("tb_datasource_con")
 public class DataSourceConPO extends BasePO {
 
+    public String name;
+
     public String conStr;
 
     public int conType;

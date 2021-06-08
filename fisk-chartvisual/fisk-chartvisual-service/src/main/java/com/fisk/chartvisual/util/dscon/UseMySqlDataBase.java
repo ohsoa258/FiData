@@ -7,6 +7,7 @@ import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.statement.select.Join;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,20 +45,39 @@ public class UseMySqlDataBase extends AbstractUseDataBase {
     @Override
     public String buildQueryData(ChartQueryObject query) {
         List<ColumnDetails> values = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.VALUE).collect(Collectors.toList());
-        ColumnDetails names = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.NAME).findFirst().orElse(null);
-        if (values.size() == 0 || names == null) {
+        List<ColumnDetails> names = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.NAME).collect(Collectors.toList());
+        if (values.size() == 0 || names.size() == 0) {
             throw new FkException(ResultEnum.VISUAL_PARAMTER_ERROR);
         }
 
+        ColumnDetails queryColumns = names.get(names.size() - 1);
+
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
-        str.append(names.columnName).append(" as name ");
+        switch (query.interactiveType) {
+            case DRILL:
+            case DEFAULT:
+                str.append("`").append(queryColumns.columnName).append("`").append(" as `").append(queryColumns.columnLabel).append("` ");
+                break;
+            case LINKAGE:
+                str.append(names.stream().map(e -> "`" + e.columnName + "` as `" + e.columnLabel + "`").collect(Collectors.joining(",")));
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
         values.forEach(e -> {
-            str.append(",").append(e.aggregationType.getName()).append("(").append(e.columnName).append(") as value ");
+            str.append(",").append(e.aggregationType.getName()).append("(`").append(e.columnName).append("`) as ").append("`").append(e.columnLabel).append("` ");
         });
         str.append("FROM ").append(query.tableName).append(" ");
+        if (query.queryFilters != null) {
+            str.append("WHERE 1 = 1 ");
+            query.queryFilters.forEach(e -> {
+                str.append("AND `").append(e.columnName).append("` = '").append(e.value).append("' ");
+            });
+        }
         str.append("GROUP BY ");
-        str.append(names.columnName);
+        str.append(names.stream().map(e -> "`" + e.columnName + "`").collect(Collectors.joining(",")));
+
         return str.toString();
     }
 }

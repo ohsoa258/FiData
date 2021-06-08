@@ -7,13 +7,12 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 数据服务
@@ -29,7 +28,7 @@ public class DataServiceController {
     IUseDataBase db;
 
     @PostMapping("/get")
-    public ResultEntity<List<DataServiceVO>> getData(@Validated @RequestBody ChartQueryObject query) {
+    public ResultEntity<List<Map<String, Object>>> getMap(@Validated @RequestBody ChartQueryObject query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.query(query));
     }
 }

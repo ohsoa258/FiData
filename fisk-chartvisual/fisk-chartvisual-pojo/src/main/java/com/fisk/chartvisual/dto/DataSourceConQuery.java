@@ -8,6 +8,7 @@ import lombok.Data;
  */
 @Data
 public class DataSourceConQuery {
+    public String name;
     public DataSourceTypeEnum conType;
     public String conAccount;
     public Long userId;

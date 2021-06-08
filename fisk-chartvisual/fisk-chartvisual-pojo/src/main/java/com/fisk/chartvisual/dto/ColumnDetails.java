@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 public class ColumnDetails {
     @NotNull
     public String columnName;
+    public String columnLabel;
     @NotNull
     public ColumnTypeEnum columnType;
 

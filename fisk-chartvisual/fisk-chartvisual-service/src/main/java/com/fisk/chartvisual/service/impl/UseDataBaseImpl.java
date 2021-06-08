@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Resource;
 
 /**
@@ -37,7 +38,7 @@ public class UseDataBaseImpl extends ServiceImpl<DataSourceConMapper, DataSource
     }
 
     @Override
-    public List<DataServiceVO> query(ChartQueryObject query) {
+    public List<Map<String, Object>> query(ChartQueryObject query) {
         DataSourceConVO model = mapper.getDataSourceConByUserId(query.id);
         if (model == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -45,7 +46,7 @@ public class UseDataBaseImpl extends ServiceImpl<DataSourceConMapper, DataSource
 
         AbstractUseDataBase db = DataSourceConFactory.getConnection(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return db.execQuery(db.buildQueryData(query), connection, DataServiceVO.class);
+        return db.execQuery(db.buildQueryData(query), connection);
     }
 
 

@@ -7,8 +7,15 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * @author gy
+ */
 @Data
 public class DataSourceConDTO {
+
+    @Length(min = 0, max = 50, message = "长度最多50")
+    @NotNull()
+    public String name;
 
     @Length(min = 0, max = 500, message = "长度最多500")
     @NotNull()
