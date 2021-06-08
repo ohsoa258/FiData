@@ -76,9 +76,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appRegistrationPO.setCreateTime(date1);
         appRegistrationPO.setUpdateTime(date1);
         appRegistrationPO.setDelFlag(1);
-        // 保存
-        this.save(appRegistrationPO);
 
+        /**
+         * 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
+         */
+        List<String> appNameList = baseMapper.getAppName();
+        String appName = appRegistrationPO.getAppName();
+        boolean contains = appNameList.contains(appName);
+        if (contains) {
+            throw new FkException(500, "当前数据已存在");
+        }
+
+        // 保存
+        boolean save = this.save(appRegistrationPO);
+        if (!save) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+        }
 
 
         AppDataSourcePO appDatasourcePO = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
@@ -249,5 +262,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         return appName;
+    }
+
+    /**
+     * 根据id查询数据,用于数据回显
+     * @param id
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getData(long id) {
+
+        AppRegistrationPO registrationPO = this.query()
+                .eq("id", id)
+                .eq("del_flag",1)
+                .one();
+        AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(registrationPO);
+//        appRegistrationDTO.setCreateTime(registrationPO.getCreateTime());
+
+        AppDataSourcePO appDataSourcePO = appDataSourceImpl.query()
+                .eq("appid", id)
+                .eq("del_flag",1)
+                .one();
+        AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(appDataSourcePO);
+        appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
+
+        return appRegistrationDTO;
+    }
+
+
+    @Override
+    public List<AppRegistrationDTO> getDescDate() {
+
+        List<AppRegistrationPO> descDate = baseMapper.getDescDate();
+
+        return AppRegistrationDTO.convertEntityList(descDate);
     }
 }
