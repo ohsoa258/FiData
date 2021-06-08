@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class AppRegistrationDTO extends BaseDTO {
 
     private String appPrincipalEmail;
 
-    private DateTime createTime;
+    private Date createTime;
 
 //    private String createUser;
 
