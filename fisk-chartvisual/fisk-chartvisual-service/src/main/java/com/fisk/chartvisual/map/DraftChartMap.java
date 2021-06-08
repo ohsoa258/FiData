@@ -1,12 +1,13 @@
 package com.fisk.chartvisual.map;
 
 import com.fisk.chartvisual.dto.ChartPropertyDTO;
+import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
+import com.fisk.chartvisual.entity.BaseChartProperty;
+import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
+import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.constants.SqlConstants;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -19,8 +20,26 @@ public interface DraftChartMap {
 
     /**
      * dto => po
+     *
      * @param dto source
      * @return target
      */
     DraftChartPO dtoToPo(ChartPropertyDTO dto);
+
+    /**
+     * @param po source
+     * @return target vo
+     */
+    ChartPropertyVO poToVo(DraftChartPO po);
+
+    /**
+     * editDto => po
+     *
+     * @param dto source
+     * @param po target
+     */
+    @Mappings({
+            @Mapping(target = "id", ignore = true)
+    })
+    void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 }
