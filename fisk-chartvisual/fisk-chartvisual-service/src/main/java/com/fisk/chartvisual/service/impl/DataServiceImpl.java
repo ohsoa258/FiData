@@ -11,8 +11,10 @@ import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.common.enums.TraceTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.mdc.TraceType;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     @Resource
     private DataSourceConMapper mapper;
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
     public boolean testConnection(DataSourceTypeEnum type, String con, String acc, String pwd) {
         AbstractDbHelper db = DbHelperFactory.getDbHelper(type);
@@ -39,6 +42,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         return res;
     }
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public List<Map<String, Object>> query(ChartQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);
@@ -47,6 +51,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         return DbHelper.execQueryResultMap(command.buildQueryData(query), model);
     }
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public List<Map<String, Object>> querySlicer(SlicerQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);

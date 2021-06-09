@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.config;
+package com.fisk.common.mybatis.config;
 
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.optimize.JsqlParserCountOptimize;
