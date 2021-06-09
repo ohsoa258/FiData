@@ -1,31 +1,24 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.auth.dto.UserDetail;
-import com.fisk.auth.utils.UserContext;
-import com.fisk.chartvisual.dto.DataDomainDTO;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataSourceConManage;
-import com.fisk.chartvisual.service.IUseDataBase;
-import com.fisk.chartvisual.util.dscon.AbstractUseDataBase;
-import com.fisk.chartvisual.util.dscon.DataSourceConFactory;
+import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.util.dbhelper.DbHelper;
+import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
+import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import jdk.nashorn.internal.objects.NativeNumber;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +35,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Resource
     DataSourceConMapper mapper;
     @Resource
-    IUseDataBase useDataBase;
+    IDataService useDataBase;
 
 
     @Override
@@ -71,6 +64,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getName, dto.name)
+                .ne(DataSourceConPO::getId, dto.id);
+        //queryWrapper.eq(DataSourceConPO::getCreateUser,"用户id");
+        DataSourceConPO data = mapper.selectOne(queryWrapper);
+        if (data != null) {
+            return ResultEnum.NAME_EXISTS;
+        }
+
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -86,7 +89,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public ResultEnum testConnection(DataSourceConDTO dto) {
+    public ResultEnum testConnection(TestConnectionDTO dto) {
         return useDataBase.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
                 ?
                 ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
@@ -100,10 +103,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //创建连接
-        AbstractUseDataBase db = DataSourceConFactory.getConnection(model.conType);
-        Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        //执行查询
-        List<DataDomainDTO> data = db.execQuery(db.buildDataDomainQuery(model.conDbname), connection, DataDomainDTO.class);
+        IBuildSQLCommand command = DbHelperFactory.getSqlBuilder(model.conType);
+        List<DataDomainDTO> data = DbHelper.execQueryResultList(command.buildDataDomainQuery(model.conDbname), model, DataDomainDTO.class);
         if (data != null) {
             //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息
             return data.stream()
@@ -126,7 +127,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             }})
                     .collect(Collectors.toList());
         }
-        db.closeConnection(connection);
         return null;
     }
 }

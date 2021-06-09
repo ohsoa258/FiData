@@ -3,13 +3,11 @@ package com.fisk.chartvisual.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ChartQuery;
+import com.fisk.chartvisual.vo.ChartQueryVO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.response.ResultEnum;
-
-import java.util.List;
 
 /**
  * 图表管理
@@ -63,5 +61,5 @@ public interface IChartManage {
     /**
      * @return 数据
      */
-    Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQuery query);
+    Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryVO query);
 }

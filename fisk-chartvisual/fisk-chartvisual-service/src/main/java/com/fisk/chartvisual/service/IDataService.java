@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.service;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.vo.DataServiceVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 
@@ -8,11 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 使用数据库
- *
+ * 数据服务
  * @author gy
  */
-public interface IUseDataBase {
+public interface IDataService {
 
     /**
      * 测试数据库连接
@@ -30,4 +30,11 @@ public interface IUseDataBase {
      * @return 查询结果
      */
     List<Map<String, Object>> query(ChartQueryObject query);
+
+    /**
+     * 获取切片器的数据
+     * @param query 表/字段信息
+     * @return 查询结果
+     */
+    List<Map<String, Object>> querySlicer(SlicerQueryObject query);
 }

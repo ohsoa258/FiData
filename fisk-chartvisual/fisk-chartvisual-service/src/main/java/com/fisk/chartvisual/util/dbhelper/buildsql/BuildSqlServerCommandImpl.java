@@ -1,25 +1,19 @@
-package com.fisk.chartvisual.util.dscon;
+package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
+import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * sqlserver
  * @author gy
  */
-@Slf4j
-public class UseSqlServerDataBase extends AbstractUseDataBase {
-    public UseSqlServerDataBase() {
-        super(DataSourceTypeEnum.SQLSERVER);
-    }
+public class BuildSqlServerCommandImpl implements IBuildSQLCommand {
 
     @Override
     public String buildDataDomainQuery(String dbName) {
@@ -91,5 +85,10 @@ public class UseSqlServerDataBase extends AbstractUseDataBase {
         str.append(names.stream().map(e -> "[" + e.columnName + "]").collect(Collectors.joining(",")));
 
         return str.toString();
+    }
+
+    @Override
+    public String buildQuerySlicer(SlicerQueryObject query) {
+        return null;
     }
 }

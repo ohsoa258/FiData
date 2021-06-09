@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
+import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
@@ -53,7 +54,7 @@ public interface IDataSourceConManage extends IService<DataSourceConPO> {
      * @param dto 连接信息
      * @return 是否连接成功
      */
-    ResultEnum testConnection(DataSourceConDTO dto);
+    ResultEnum testConnection(TestConnectionDTO dto);
 
     /**
      * 获取数据域连接下的所有数据源

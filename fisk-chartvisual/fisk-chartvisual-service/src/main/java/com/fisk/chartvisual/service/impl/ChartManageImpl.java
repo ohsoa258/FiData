@@ -3,11 +3,9 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ChartQuery;
+import com.fisk.chartvisual.vo.ChartQueryVO;
 import com.fisk.chartvisual.dto.ReleaseChart;
-import com.fisk.chartvisual.entity.BaseChartProperty;
 import com.fisk.chartvisual.entity.ChartPO;
-import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.map.ChartMap;
@@ -20,10 +18,8 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author gy
@@ -115,7 +111,7 @@ public class ChartManageImpl implements IChartManage {
     }
 
     @Override
-    public Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQuery query) {
+    public Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryVO query) {
         return chartMapper.listChartDataByUserId(page, query);
     }
 

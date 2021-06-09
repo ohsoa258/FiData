@@ -1,27 +1,20 @@
 package com.fisk.chartvisual;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.dto.DataDomainDTO;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.service.IDataSourceConManage;
-import com.fisk.chartvisual.service.IUseDataBase;
-import com.fisk.chartvisual.util.dscon.AbstractUseDataBase;
-import com.fisk.chartvisual.util.dscon.DataSourceConFactory;
+import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataDomainVO;
-import com.fisk.chartvisual.vo.DataServiceVO;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.response.ResultEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +34,14 @@ public class UseDataBaseTest {
     @Resource
     IDataSourceConManage con;
     @Resource
-    IUseDataBase use;
+    IDataService use;
 
     /**
      * 测试数据库连接
      */
     @Test
     public void testConnection() {
-        assert con.testConnection(dto) == ResultEnum.SUCCESS;
+        //assert con.testConnection(dto) == ResultEnum.SUCCESS;
     }
 
     /**

@@ -5,14 +5,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
+import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManage;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * 数据源管理
@@ -23,35 +28,41 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/dscon")
 public class DataSourceConManageController {
 
-    @Autowired
+    @Resource
     private IDataSourceConManage service;
 
     @GetMapping("/page")
+    @ApiOperation("获取所有数据源连接信息")
     public ResultEntity<Page<DataSourceConVO>> getData(Page<DataSourceConVO> page, DataSourceConQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(page, query));
     }
 
     @PostMapping("/add")
+    @ApiOperation("添加数据源连接信息")
     public ResultEntity<Object> addData(@Validated @RequestBody DataSourceConDTO dto) {
         return ResultEntityBuild.build(service.saveDataSourceCon(dto));
     }
 
     @PutMapping("/edit")
+    @ApiOperation("编辑数据源连接信息")
     public ResultEntity<Object> editData(@Validated @RequestBody DataSourceConEditDTO dto) {
         return ResultEntityBuild.build(service.updateDataSourceCon(dto));
     }
 
     @DeleteMapping("/delete")
+    @ApiOperation("删除数据源连接信息")
     public ResultEntity<Object> deleteData(int id) {
         return ResultEntityBuild.build(service.deleteDataSourceCon(id));
     }
 
-    @GetMapping("/test")
-    public ResultEntity<Object> testConnection(DataSourceConDTO dto) {
+    @PostMapping("/test")
+    @ApiOperation("测试数据源连接")
+    public ResultEntity<Object> testConnection(@Validated @RequestBody TestConnectionDTO dto) {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
     @GetMapping("/getDataDomain")
+    @ApiOperation("根据数据源连接获取数据域")
     public ResultEntity<Object> getDataDomain(int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataDomain(id));
     }

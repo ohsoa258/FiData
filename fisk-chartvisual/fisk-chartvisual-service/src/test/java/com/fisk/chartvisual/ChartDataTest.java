@@ -1,11 +1,9 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.ChartQuery;
 import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.service.IChartManage;
-import com.fisk.chartvisual.service.IUseDataBase;
+import com.fisk.chartvisual.service.IDataService;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
@@ -27,7 +25,7 @@ import java.util.Map;
 public class ChartDataTest {
 
     @Resource
-    IUseDataBase dbService;
+    IDataService dbService;
 
     /**
      * 单x轴y轴，无交互操作

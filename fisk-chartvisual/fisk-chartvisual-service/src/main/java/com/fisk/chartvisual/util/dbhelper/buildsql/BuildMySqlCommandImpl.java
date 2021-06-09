@@ -1,27 +1,19 @@
-package com.fisk.chartvisual.util.dscon;
+package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
+import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.statement.select.Join;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * mysql
- *
  * @author gy
  */
-@Slf4j
-public class UseMySqlDataBase extends AbstractUseDataBase {
-    public UseMySqlDataBase() {
-        super(DataSourceTypeEnum.MYSQL);
-    }
+public class BuildMySqlCommandImpl implements IBuildSQLCommand {
 
     @Override
     public String buildDataDomainQuery(String dbName) {
@@ -78,6 +70,21 @@ public class UseMySqlDataBase extends AbstractUseDataBase {
         str.append("GROUP BY ");
         str.append(names.stream().map(e -> "`" + e.columnName + "`").collect(Collectors.joining(",")));
 
+        return str.toString();
+    }
+
+    @Override
+    public String buildQuerySlicer(SlicerQueryObject query) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT `").append(query.columnName).append("` FROM ").append(query.tableName);
+        if (query.queryFilters != null) {
+            str.append(" WHERE 1 = 1 ");
+            query.queryFilters.forEach(e -> {
+                str.append("AND `").append(e.columnName).append("` = '").append(e.value).append("' ");
+            });
+        }
+        str.append(" GROUP BY ");
+        str.append("`").append(query.columnName).append("`");
         return str.toString();
     }
 }

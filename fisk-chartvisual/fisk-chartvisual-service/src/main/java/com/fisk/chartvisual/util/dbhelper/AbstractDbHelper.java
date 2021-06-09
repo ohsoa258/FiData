@@ -1,6 +1,8 @@
-package com.fisk.chartvisual.util.dscon;
+package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.service.IBuildSQLCommand;
+import com.fisk.chartvisual.util.dbhelper.buildsql.BuildMySqlCommandImpl;
+import com.fisk.chartvisual.util.dbhelper.buildsql.BuildSqlServerCommandImpl;
+import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -20,13 +22,14 @@ import java.util.function.Function;
  * @author gy
  */
 @Slf4j
-public abstract class AbstractUseDataBase implements IBuildSQLCommand {
+public abstract class AbstractDbHelper {
 
     private final DataSourceTypeEnum type;
 
-    public AbstractUseDataBase(DataSourceTypeEnum type) {
+    public AbstractDbHelper(DataSourceTypeEnum type) {
         this.type = type;
     }
+
 
     /**
      * 连接
@@ -51,7 +54,7 @@ public abstract class AbstractUseDataBase implements IBuildSQLCommand {
      * @param con 数据库连接
      * @return 查询结果List
      */
-    public <T> List<T> execQuery(String sql, Connection con, Class<T> tClass) {
+    public <T> List<T> execQueryResultList(String sql, Connection con, Class<T> tClass) {
         return query(sql, con, e -> BeanHelper.resultSetToList(e, tClass));
     }
 
@@ -62,7 +65,7 @@ public abstract class AbstractUseDataBase implements IBuildSQLCommand {
      * @param con 数据库连接
      * @return 查询结果Map
      */
-    public List<Map<String, Object>> execQuery(String sql, Connection con) {
+    public List<Map<String, Object>> execQueryResultMap(String sql, Connection con) {
         return query(sql, con, BeanHelper::resultSetToMaps);
     }
 
