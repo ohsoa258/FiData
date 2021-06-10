@@ -1,20 +1,13 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppDataSourceDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
@@ -25,13 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotNull;
-import java.sql.Wrapper;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author: Lock
@@ -248,21 +236,51 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param appType
      * @return
      */
-    @Override
-    public List<String> queryAppName(byte appType) {
+/*    @Override
+    public List<TableAppNameDTO> queryAppName(byte appType) {
 
         List<AppRegistrationPO> list = this.query()
                 .eq("app_type", appType)
                 .eq("del_flag",1)
                 .list();
 
-        List<String> appName = new ArrayList<>();
+//        List<String> appName = new ArrayList<>();
+        List<TableAppNameDTO> appNameDTOList = new ArrayList<>();
+
+
         for (AppRegistrationPO appRegistrationPO : list) {
-            appName.add(appRegistrationPO.getAppName());
+
+            TableAppNameDTO appName = new TableAppNameDTO();
+//            appName.add(appRegistrationPO.getAppName());
+            appName.setAppName(appRegistrationPO.getAppName());
+
+            appNameDTOList.add(appName);
         }
 
-        return appName;
+        return appNameDTOList;
+    }*/
+    @Override
+    public List<AppNameDTO> queryAppName(byte appType) {
+
+        List<AppRegistrationPO> list = this.query()
+                .eq("app_type", appType)
+                .eq("del_flag", 1)
+                .list();
+        List<AppNameDTO> appNameDTOS = new ArrayList<>();
+        for (AppRegistrationPO appRegistrationPO : list) {
+
+            AppNameDTO appNameDTO = new AppNameDTO();
+            String appName = appRegistrationPO.getAppName();
+            appNameDTO.setAppName(appName);
+            appNameDTO.setAppType(appType);
+
+            appNameDTOS.add(appNameDTO);
+        }
+
+        return appNameDTOS;
     }
+
+
 
     /**
      * 根据id查询数据,用于数据回显
@@ -290,9 +308,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
 
+    /**
+     *
+     * @return
+     */
     @Override
     public List<AppRegistrationDTO> getDescDate() {
 
+        // 按时间倒叙,查询top10的数据
         List<AppRegistrationPO> descDate = baseMapper.getDescDate();
 
         return AppRegistrationDTO.convertEntityList(descDate);
