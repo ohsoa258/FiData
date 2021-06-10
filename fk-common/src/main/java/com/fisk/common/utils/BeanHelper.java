@@ -7,10 +7,7 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -76,9 +73,28 @@ public class BeanHelper {
         return instance;
     }
 
+    public static List<Map<String, Object>> resultSetToMaps(ResultSet rs) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        try {
+            ResultSetMetaData md = rs.getMetaData();
+            int columnCount = md.getColumnCount();
+            while (rs.next()) {
+                Map<String, Object> rowData = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    rowData.put(md.getColumnLabel(i), rs.getObject(i));
+                }
+                list.add(rowData);
+            }
+        } catch (SQLException e) {
+            log.error("【resultSetToMaps】转换bean报错, ex", e);
+            return null;
+        }
+        return list;
+    }
+
     private static <T> void setFieldValue(ResultSet resultSet, ResultSetMetaData metaData, Field[] fields, T instance) throws SQLException, IllegalAccessException {
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
-            String fieldName = metaData.getColumnName(i);
+            String fieldName = metaData.getColumnLabel(i);
             Field field = Arrays.stream(fields).filter(e -> e.getName().equals(fieldName)).findFirst().orElse(null);
             if (field != null) {
                 Object result = resultSet.getObject(fieldName);

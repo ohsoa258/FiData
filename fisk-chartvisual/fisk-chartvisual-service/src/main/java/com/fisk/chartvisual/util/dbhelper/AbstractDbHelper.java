@@ -1,6 +1,8 @@
-package com.fisk.chartvisual.util.dscon;
+package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.service.IBuildSQLCommand;
+import com.fisk.chartvisual.util.dbhelper.buildsql.BuildMySqlCommandImpl;
+import com.fisk.chartvisual.util.dbhelper.buildsql.BuildSqlServerCommandImpl;
+import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -10,7 +12,9 @@ import org.springframework.util.StopWatch;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * 数据源连接接口
@@ -18,13 +22,14 @@ import java.util.UUID;
  * @author gy
  */
 @Slf4j
-public abstract class AbstractUseDataBase implements IBuildSQLCommand {
+public abstract class AbstractDbHelper {
 
     private final DataSourceTypeEnum type;
 
-    public AbstractUseDataBase(DataSourceTypeEnum type) {
+    public AbstractDbHelper(DataSourceTypeEnum type) {
         this.type = type;
     }
+
 
     /**
      * 连接
@@ -47,28 +52,21 @@ public abstract class AbstractUseDataBase implements IBuildSQLCommand {
      *
      * @param sql 查询语句
      * @param con 数据库连接
-     * @return 查询结果
+     * @return 查询结果List
      */
-    public <T> List<T> execQuery(String sql, Connection con, Class<T> tClass) {
-        Statement st = null;
-        String code = UUID.randomUUID().toString();
-        StopWatch stopWatch = new StopWatch();
-        try {
-            stopWatch.start();
-            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
-            st = con.createStatement();
-            ResultSet res = st.executeQuery(sql);
-            List<T> data = BeanHelper.resultSetToList(res, tClass);
-            log.info("【execQuery】【" + code + "】Total: 【" + data.size() + "】");
-            return data;
-        } catch (SQLException ex) {
-            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
-        } finally {
-            closeStatement(st);
-            stopWatch.stop();
-            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
-        }
+    public <T> List<T> execQueryResultList(String sql, Connection con, Class<T> tClass) {
+        return query(sql, con, e -> BeanHelper.resultSetToList(e, tClass));
+    }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
+     * @return 查询结果Map
+     */
+    public List<Map<String, Object>> execQueryResultMap(String sql, Connection con) {
+        return query(sql, con, BeanHelper::resultSetToMaps);
     }
 
     /**
@@ -140,4 +138,25 @@ public abstract class AbstractUseDataBase implements IBuildSQLCommand {
         }
     }
 
+    private <T> List<T> query(String sql, Connection con, Function<ResultSet, List<T>> func) {
+        Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+            st = con.createStatement();
+            ResultSet res = st.executeQuery(sql);
+            List<T> data = func.apply(res);
+            log.info("【execQuery】【" + code + "】Total: 【" + (data == null ? 0 : data.size()) + "】");
+            return data;
+        } catch (SQLException ex) {
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            closeStatement(st);
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+    }
 }

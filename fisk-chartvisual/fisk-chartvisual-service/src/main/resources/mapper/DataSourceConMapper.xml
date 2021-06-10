@@ -6,21 +6,25 @@
     <resultMap id="DataSourceConVOMap" type="com.fisk.chartvisual.vo.DataSourceConVO">
         <id column="id" property="id"/>
         <result property="con_type" column="conType"
-                typeHandler="org.apache.ibatis.type.EnumTypeHandler" />
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
     </resultMap>
 
     <select id="listDataSourceConByUserId" resultMap="DataSourceConVOMap">
         select id,
-               con_str,
-               con_dbname,
-               con_type,
-               con_account,
-               con_password,
-               create_time
+        `name`,
+        con_str,
+        con_type,
+        con_dbname,
+        con_account,
+        con_password,
+        create_time
         from tb_datasource_con
         where del_flag = 1
         <if test="query.userId != null">
             and create_user = #{query.userId}
+        </if>
+        <if test="query.name != null and query.name != '' ">
+            and name like concat('%', #{query.name}, '%')
         </if>
         <if test="query.conType != null">
             and con_type = #{query.conType}
@@ -32,14 +36,15 @@
 
     <select id="getDataSourceConByUserId" resultMap="DataSourceConVOMap">
         select id,
-        con_str,
-        con_type,
-        con_dbname,
-        con_account,
-        con_password,
-        create_time
+               `name`,
+               con_str,
+               con_type,
+               con_dbname,
+               con_account,
+               con_password,
+               create_time
         from tb_datasource_con
         where del_flag = 1
-        and id = #{id}
+          and id = #{id}
     </select>
 </mapper>

@@ -10,16 +10,11 @@ import java.util.List;
  * @author gy
  */
 @Data
-public class ChartQueryObject {
-
-    /**
-     * 数据源连接id
-     */
+public class SlicerQueryObject {
     @NotNull
     public Integer id;
     @NotNull
     public String tableName;
-    public List<ColumnDetails> columnDetails;
+    public String columnName;
     public List<ChartQueryFilter> queryFilters;
-    public InteractiveTypeEnum interactiveType;
 }

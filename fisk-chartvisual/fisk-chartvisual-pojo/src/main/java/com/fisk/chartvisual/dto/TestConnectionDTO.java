@@ -1,20 +1,26 @@
-package com.fisk.chartvisual.vo;
+package com.fisk.chartvisual.dto;
 
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
+
+import javax.validation.constraints.NotNull;
 
 /**
- * 数据源连接视图
  * @author gy
  */
 @Data
-public class DataSourceConVO {
-    public int id;
-    public String name;
+public class TestConnectionDTO {
+
+    @NotNull()
     public String conStr;
+
+    @NotNull
     public DataSourceTypeEnum conType;
-    public String conDbname;
+
+    @NotNull()
     public String conAccount;
+
+    @NotNull()
     public String conPassword;
-    public String createTime;
 }
