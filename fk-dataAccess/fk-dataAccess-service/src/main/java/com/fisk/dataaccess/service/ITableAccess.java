@@ -22,11 +22,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO);
 
-    ResultEnum updateRTData(TableAccessDTO dto);
+    ResultEnum updateRTData(TableAccessDTO dto) throws SQLException, ClassNotFoundException;
 
     ResultEnum updateNRTData(TableAccessNDTO dto);
 
     Map<String, List<String>> queryDataBase(String appName) throws SQLException, ClassNotFoundException;
 
     PageDTO<TablePhyHomeDTO> queryByPage(String key, Integer page, Integer rows);
+
+    TableAccessDTO getData(long id);
 }

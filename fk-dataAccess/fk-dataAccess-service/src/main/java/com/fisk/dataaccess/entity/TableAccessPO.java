@@ -1,9 +1,14 @@
 package com.fisk.dataaccess.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * @author: Lock
@@ -11,7 +16,10 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_access")
-public class TableAccessPO extends BasePO {
+public class TableAccessPO extends BaseEntity {
+
+    @TableId
+    public long id;
 
     /**
      *  tb_app_registration表id
@@ -37,4 +45,15 @@ public class TableAccessPO extends BasePO {
      *  0是实时物理表，1是非实时物理表
      */
     public int isRealtime;
+
+//    public LocalDateTime createTime;
+
+    public String createUser;
+
+//    public LocalDateTime updateTime;
+
+    public String updateUser;
+
+    public int delFlag;
+
 }

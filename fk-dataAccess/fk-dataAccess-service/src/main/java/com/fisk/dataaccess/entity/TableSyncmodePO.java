@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,7 +12,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_syncmode")
-public class TableSyncmodePO extends BasePO {
+public class TableSyncmodePO extends BaseEntity {
 
     /**
      * 1：全量、2：时间戳增量、3：业务时间覆盖、4：自定义覆盖；

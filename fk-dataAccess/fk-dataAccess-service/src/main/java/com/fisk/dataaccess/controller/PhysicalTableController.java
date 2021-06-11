@@ -32,35 +32,13 @@ public class PhysicalTableController {
 
     /**
      * 根据是否为实时,查询应用名称集合
-     * @param appType
      * @return
      */
-/*    @GetMapping("/getAppType/{appType}")
-    @ApiOperation(value = "根据是否为实时,查询应用名称集合")
-    public ResultEntity<List<String>> queryAppName(
-            @PathVariable("appType") byte appType) {
+    @GetMapping("/getAppType")
+    @ApiOperation(value = "查询应用名称集合及是否实时")
+    public ResultEntity<List<AppNameDTO>> queryAppName() {
 
-        List<String> data = appRService.queryAppName(appType);
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,data);
-    }*/
-
-/*    @GetMapping("/getAppType/{appType}")
-    @ApiOperation(value = "根据是否为实时,查询应用名称集合")
-    public ResultEntity<List<TableAppNameDTO>> queryAppName(
-            @PathVariable("appType") byte appType) {
-
-        List<TableAppNameDTO> appNameDTO = appRService.queryAppName(appType);
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, appNameDTO);
-    }*/
-
-    @GetMapping("/getAppType/{appType}")
-    @ApiOperation(value = "根据是否为实时,查询应用名称集合")
-    public ResultEntity<List<AppNameDTO>> queryAppName(
-            @PathVariable("appType") byte appType) {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryAppName(appType));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryAppName());
     }
 
     /**
@@ -91,12 +69,25 @@ public class PhysicalTableController {
     }
 
     /**
+     * 根据id查询数据,回显实时表
+     * @param id
+     * @return
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation("修改接口的回显数据")
+    public ResultEntity<TableAccessDTO> getData(
+            @PathVariable("id") long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
+    }
+
+    /**
      * 修改物理表(实时)
      * @param dto
      * @return
      */
-//    @PutMapping("/editRealTime")
-    public ResultEntity<Object> editRTData(@RequestBody TableAccessDTO dto) {
+    @PutMapping("/editRealTime")
+    @ApiOperation(value = "修改物理表")
+    public ResultEntity<Object> editRTData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateRTData(dto));
     }
 

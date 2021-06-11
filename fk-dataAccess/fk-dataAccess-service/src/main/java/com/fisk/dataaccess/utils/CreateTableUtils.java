@@ -16,6 +16,10 @@ import java.util.List;
  */
 public class CreateTableUtils {
 
+    String url = "jdbc:mysql://192.168.206.99:3306/fisk?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+    String user = "root";
+    String pwd = "root";
+
     /**
      * 创建表方法(mysql版本)
      *
@@ -26,9 +30,9 @@ public class CreateTableUtils {
     public int createMysqlTB(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
 
         // 要拉取到本地的服务器地址
-        String url = "jdbc:mysql://192.168.206.99:3306/fisk?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+        String url = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
         String user = "root";
-        String pwd = "root";
+        String pwd = "root123";
 
         // 1.连接数据库
         Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -57,6 +61,47 @@ public class CreateTableUtils {
 
         // 生成的SQL语句
 //        System.out.println(sb.toString());
+        int i = stat.executeUpdate(sb.toString());
+
+        // 释放资源
+        stat.close();
+        conn.close();
+        return i;
+    }
+
+
+    /**
+     * 创建表方法(mysql版本)
+     *
+     * @param tableAccessDTO
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    public int updateMysqlTB(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+
+        // 1.连接数据库
+        Connection conn = DriverManager.getConnection(url, user, pwd);
+        Statement stat = conn.createStatement();
+
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+
+//        StringBuilder sb_PRIMARYKEY = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE `" + tableAccessDTO.getTableName() + "` add(");
+        for (TableFieldsDTO dto : tableFieldsDTOS) {
+            /*if (dto.getIsPrimarykey() == 1) {
+                sb_PRIMARYKEY.append("PRIMARY KEY (`" + dto.getFieldName() + "`)");
+            }*/
+            sb.append(dto.getFieldName()+" " + dto.getFieldType() +" COMMENT '" + dto.getFieldDes() + "',");
+        }
+//        sb.append(sb_PRIMARYKEY.toString() + ");");
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);// 去掉最后的逗号
+        }
+        sb.append(");");
+
+        // 生成的SQL语句
+        System.out.println(sb.toString());
         int i = stat.executeUpdate(sb.toString());
 
         // 释放资源

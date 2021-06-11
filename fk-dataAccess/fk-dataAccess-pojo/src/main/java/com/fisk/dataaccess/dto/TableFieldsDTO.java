@@ -22,6 +22,11 @@ import java.util.stream.Collectors;
 public class TableFieldsDTO extends BaseDTO {
 
     /**
+     * 主键id
+     */
+    public long id;
+
+    /**
      * table_access（id）
      */
     public long tableAccessId;

@@ -17,9 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -76,11 +78,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
         // 时间字段有问题,待定
-        LocalDateTime dateTime = LocalDateTime.now();
-        String  date = DateTimeFormatter.ofPattern("yyyy-MM-dd 00:00:00").format(dateTime);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date1 = new Date(System.currentTimeMillis());
 
-        tableAccessPO.setCreateTime(dateTime);
-        tableAccessPO.setUpdateTime(dateTime);
+        tableAccessPO.setCreateTime(date1);
+        tableAccessPO.setUpdateTime(date1);
 
         // 2.保存tb_table_access数据
         boolean save1 = this.save(tableAccessPO);
@@ -104,8 +106,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             tableFieldsPO.setDelFlag(1);
 
             // 时间
-            tableFieldsPO.setCreateTime(dateTime);
-            tableFieldsPO.setUpdateTime(dateTime);
+            Date date2 = new Date(System.currentTimeMillis());
+            tableFieldsPO.setCreateTime(date2);
+            tableFieldsPO.setUpdateTime(date2);
 
             save2 = tableFieldsImpl.save(tableFieldsPO);
         }
@@ -166,15 +169,51 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 修改物理表(实时)
      *
-     * @param dto
+     * @param tableAccessDTO
      * @return
      */
     @Override
-    public ResultEnum updateRTData(TableAccessDTO dto) {
+    public ResultEnum updateRTData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
 
+        // 1.dto->po
+        TableAccessPO tableAccessPO = tableAccessDTO.toEntity(TableAccessPO.class);
 
+        // 时间字段
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date1 = new Date(System.currentTimeMillis());
 
-        return null;
+        tableAccessPO.setUpdateTime(date1);
+
+        // 2.保存tb_table_access数据
+        boolean update1 = this.updateById(tableAccessPO);
+
+        if (!update1) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+        }
+
+        // 保存tb_table_fields数据
+        boolean update2 = true;
+        Date date2 = new Date(System.currentTimeMillis());
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
+            TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+
+            // 时间
+            tableFieldsPO.setUpdateTime(date2);
+
+            update2 = tableFieldsImpl.updateById(tableFieldsPO);
+        }
+
+        if (!update2) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+        }
+
+        CreateTableUtils createTableUtils = new CreateTableUtils();
+
+        int i = createTableUtils.updateMysqlTB(tableAccessDTO);
+//        System.out.println(i);
+
+        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -290,5 +329,42 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        pageDTO.setItems();
 
         return pageDTO;
+    }
+
+    /**
+     * 回显实时表
+     * @param id
+     * @return
+     */
+    @Override
+    public TableAccessDTO getData(long id) {
+
+        // 查询tb_table_access数据
+        TableAccessPO accessPO = this.query()
+                .eq("id", id)
+                .eq("del_flag",1)
+                .one();
+
+        TableAccessDTO accessDTO = new TableAccessDTO(accessPO);
+
+        // 将应用名称封装进去
+        AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("id", accessPO.getAppid()).one();
+        accessDTO.setAppName(registrationPO.getAppName());
+
+        // 查询tb_table_fields数据
+        List<TableFieldsPO> fieldsPOS = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+
+        List<TableFieldsDTO> tableFieldsDTOS = new ArrayList<>();
+        for (TableFieldsPO fieldsPO : fieldsPOS) {
+            TableFieldsDTO tableFieldsDTO = new TableFieldsDTO(fieldsPO);
+            tableFieldsDTOS.add(tableFieldsDTO);
+        }
+
+        accessDTO.setTableFieldsDTOS(tableFieldsDTOS);
+
+        return accessDTO;
     }
 }

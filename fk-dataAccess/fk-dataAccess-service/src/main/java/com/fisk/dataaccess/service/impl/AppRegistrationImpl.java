@@ -231,39 +231,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 根据是否为实时,查询应用名称集合
-     * @param appType
-     * @return
-     */
-/*    @Override
-    public List<TableAppNameDTO> queryAppName(byte appType) {
-
-        List<AppRegistrationPO> list = this.query()
-                .eq("app_type", appType)
-                .eq("del_flag",1)
-                .list();
-
-//        List<String> appName = new ArrayList<>();
-        List<TableAppNameDTO> appNameDTOList = new ArrayList<>();
-
-
-        for (AppRegistrationPO appRegistrationPO : list) {
-
-            TableAppNameDTO appName = new TableAppNameDTO();
-//            appName.add(appRegistrationPO.getAppName());
-            appName.setAppName(appRegistrationPO.getAppName());
-
-            appNameDTOList.add(appName);
-        }
-
-        return appNameDTOList;
-    }*/
     @Override
-    public List<AppNameDTO> queryAppName(byte appType) {
+    public List<AppNameDTO> queryAppName() {
 
         List<AppRegistrationPO> list = this.query()
-                .eq("app_type", appType)
                 .eq("del_flag", 1)
                 .list();
         List<AppNameDTO> appNameDTOS = new ArrayList<>();
@@ -272,7 +243,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             AppNameDTO appNameDTO = new AppNameDTO();
             String appName = appRegistrationPO.getAppName();
             appNameDTO.setAppName(appName);
-            appNameDTO.setAppType(appType);
+            appNameDTO.setAppType((byte) appRegistrationPO.getAppType());
 
             appNameDTOS.add(appNameDTO);
         }

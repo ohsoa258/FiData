@@ -26,7 +26,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     //    List<String> queryAppName(byte appType);
 //List<TableAppNameDTO> queryAppName(byte appType);
-    List<AppNameDTO> queryAppName(byte appType);
+    List<AppNameDTO> queryAppName();
 
     AppRegistrationDTO getData(long id);
 
