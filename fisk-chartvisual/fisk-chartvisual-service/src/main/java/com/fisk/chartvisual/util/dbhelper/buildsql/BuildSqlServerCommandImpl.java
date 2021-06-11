@@ -89,6 +89,16 @@ public class BuildSqlServerCommandImpl implements IBuildSQLCommand {
 
     @Override
     public String buildQuerySlicer(SlicerQueryObject query) {
-        return null;
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT [").append(query.columnName).append("] FROM ").append(query.tableName);
+        if (query.queryFilters != null) {
+            str.append(" WHERE 1 = 1 ");
+            query.queryFilters.forEach(e -> {
+                str.append("AND [").append(e.columnName).append("] = '").append(e.value).append("' ");
+            });
+        }
+        str.append(" GROUP BY ");
+        str.append("[").append(query.columnName).append("]");
+        return str.toString();
     }
 }
