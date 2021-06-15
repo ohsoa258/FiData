@@ -3,6 +3,7 @@ package com.fisk.common.exception;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -26,6 +27,7 @@ import java.util.Set;
  */
 @RestControllerAdvice
 @ResponseBody
+@Slf4j
 public abstract class AbstractGlobalExceptionHandler {
 
     //TODO: 缺少日志记录
@@ -44,6 +46,7 @@ public abstract class AbstractGlobalExceptionHandler {
             for (FieldError allError : bindingResult.getFieldErrors()) {
                 str.append("字段：【").append(allError.getField()).append("】，").append("错误信息：【").append(allError.getDefaultMessage()).append("】。");
             }
+            log.error(str.toString());
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR, str.toString());
         } else {
             return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
@@ -58,6 +61,7 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = FkException.class)
     public ResultEntity<Object> handle1(FkException ex) {
+        log.error(ex.getErrorMsg());
         if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
             return ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
         }
@@ -72,6 +76,7 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public ResultEntity<Object> handle1(Exception ex) {
+        log.error(ex.toString());
         return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
     }
 

@@ -1,8 +1,5 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.util.dbhelper.buildsql.BuildMySqlCommandImpl;
-import com.fisk.chartvisual.util.dbhelper.buildsql.BuildSqlServerCommandImpl;
-import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;

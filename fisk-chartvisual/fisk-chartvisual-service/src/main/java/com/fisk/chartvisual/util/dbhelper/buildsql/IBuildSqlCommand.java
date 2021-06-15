@@ -7,7 +7,7 @@ import com.fisk.chartvisual.dto.SlicerQueryObject;
  * 构建sql命令
  * @author gy
  */
-public interface IBuildSQLCommand {
+public interface IBuildSqlCommand {
 
     /**
      * 创建sql：获取所有表/字段
