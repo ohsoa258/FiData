@@ -1,17 +1,10 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.util.dbhelper.buildsql.BuildMySqlCommandImpl;
-import com.fisk.chartvisual.util.dbhelper.buildsql.BuildSqlServerCommandImpl;
-import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
-import com.fisk.common.enums.TraceTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.mdc.MDCHelper;
-import com.fisk.common.mdc.TraceType;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.BeanHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.util.StopWatch;
 
 import java.sql.*;

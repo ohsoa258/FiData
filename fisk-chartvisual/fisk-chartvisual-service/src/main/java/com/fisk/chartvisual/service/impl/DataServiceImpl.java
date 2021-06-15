@@ -9,7 +9,7 @@ import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
-import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
+import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.enums.TraceTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
@@ -47,7 +47,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     public List<Map<String, Object>> query(ChartQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);
 
-        IBuildSQLCommand command = DbHelperFactory.getSqlBuilder(model.conType);
+        IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
         return DbHelper.execQueryResultMap(command.buildQueryData(query), model);
     }
 
@@ -56,7 +56,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     public List<Map<String, Object>> querySlicer(SlicerQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);
 
-        IBuildSQLCommand command = DbHelperFactory.getSqlBuilder(model.conType);
+        IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
         return DbHelper.execQueryResultMap(command.buildQuerySlicer(query), model);
     }
 

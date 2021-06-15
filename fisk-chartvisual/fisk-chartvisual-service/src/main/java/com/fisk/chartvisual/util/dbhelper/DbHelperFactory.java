@@ -2,7 +2,7 @@ package com.fisk.chartvisual.util.dbhelper;
 
 import com.fisk.chartvisual.util.dbhelper.buildsql.BuildMySqlCommandImpl;
 import com.fisk.chartvisual.util.dbhelper.buildsql.BuildSqlServerCommandImpl;
-import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSQLCommand;
+import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -23,7 +23,7 @@ public class DbHelperFactory {
         }
     }
 
-    public static IBuildSQLCommand getSqlBuilder(DataSourceTypeEnum type){
+    public static IBuildSqlCommand getSqlBuilder(DataSourceTypeEnum type){
         switch (type){
             case SQLSERVER:
                 return new BuildSqlServerCommandImpl();
