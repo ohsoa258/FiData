@@ -3,11 +3,11 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.vo.PageVO;
+import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
+import com.fisk.dataaccess.dto.TableAppNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
-import com.fisk.dataaccess.vo.AppRegistrationVO;
 
 import java.util.List;
 
@@ -24,7 +24,9 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     ResultEnum deleteAppRegistration(long id);
 
-    List<String> queryAppName(byte appType);
+    //    List<String> queryAppName(byte appType);
+//List<TableAppNameDTO> queryAppName(byte appType);
+    List<AppNameDTO> queryAppName();
 
     AppRegistrationDTO getData(long id);
 
