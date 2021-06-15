@@ -1,32 +1,29 @@
-package com.fisk.dataaccess.test;
+package com.fisk.dataaccess.utils;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.aspectj.lang.annotation.Before;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: Lock
+ *
+ * SqlServer 连接工具
  */
-@SpringBootTest
-@RunWith(SpringRunner.class)
-public class SqlServerTest {
+public class SqlServerConUtils {
 
     //这里可以设置数据库名称
-    private final static String URL = "jdbc:sqlserver://192.168.1.35:1433";
+    private final static String URL = "jdbc:sqlserver://192.168.1.35:1433/";
     private static final String USER="sa";
     private static final String PASSWORD="password01!";
     private static Connection conn= null;
     private static Statement stmt = null;
 
-
     /**
      *加载驱动、连接数据库
      */
-    @Before
+//    @Before
     public void init(){
         try {
             //1.加载驱动程序
@@ -42,7 +39,7 @@ public class SqlServerTest {
     /**
      * 查询获取所有数据库名
      */
-    @Test
+//    @Test
     public void findAllDatabases(){
         try {
             ResultSet resultSet = stmt.executeQuery("SELECT name FROM  master..sysdatabases WHERE name NOT IN ( 'master', 'model', 'msdb', 'tempdb', 'northwind','pubs' )");
@@ -57,10 +54,9 @@ public class SqlServerTest {
     /**
      * 查询获取数据库所有表名
      */
-    @Test
+//    @Test
     public void findAllTables(){
         try {
-            // 库名studb
             ResultSet resultSet = stmt.executeQuery("SELECT name FROM studb..sysobjects Where xtype='U' ORDER BY name");
             while(resultSet.next()){//如果对象中有数据，就会循环打印出来
                 System.out.println(resultSet.getString("name"));
@@ -74,15 +70,14 @@ public class SqlServerTest {
     /**
      * 查询获取数据库表的所有字段
      */
-    @Test
+//    @Test
     public void findAllColumns(){
 
         try {
-            // SELECT name FROM syscolumns WHERE id=Object_Id('表名');
-            ResultSet resultSet = stmt.executeQuery("SELECT name FROM syscolumns WHERE id=Object_Id('classinfo')");
-            /*while(resultSet.next()){//如果对象中有数据，就会循环打印出来
-                System.out.println(resultSet.getString("name"));
-            }*/
+            ResultSet resultSet = stmt.executeQuery("SELECT * FROM syscolumns WHERE id=Object_Id('表名')");
+//            while(resultSet.next()){//如果对象中有数据，就会循环打印出来
+//                System.out.println(resultSet.getString("name"));
+//            }
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
             for (int i = 0; i < columnCount; i++){

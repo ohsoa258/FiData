@@ -27,6 +27,12 @@ public class TableFieldsDTO extends BaseDTO {
     public long id;
 
     /**
+     * 功能类型
+     * 0:新增表字段  1:修改表字段
+     */
+    public int funcType;
+
+    /**
      * table_access（id）
      */
     public long tableAccessId;

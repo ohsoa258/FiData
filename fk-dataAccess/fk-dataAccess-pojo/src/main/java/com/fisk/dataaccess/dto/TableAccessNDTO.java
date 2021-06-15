@@ -26,7 +26,12 @@ public class TableAccessNDTO extends BaseDTO {
     /**
      *  tb_app_registration表id
      */
-//    public long appid;
+    public long appid;
+
+    /**
+     * 应用名称
+     */
+    public String appName;
 
     /**
      *  物理表名
@@ -41,7 +46,7 @@ public class TableAccessNDTO extends BaseDTO {
     /**
      *  如果是实时物理表，需要提供数据同步地址
      */
-//    public String syncSrc;
+    public String syncSrc;
 
     /**
      *  0是实时物理表，1是非实时物理表
@@ -51,7 +56,7 @@ public class TableAccessNDTO extends BaseDTO {
     /**
      * 表字段对象
      */
-    public TableFieldsNDTO tableFieldsNDTO;
+    public List<TableFieldsDTO> tableFieldsDTOS;
 
     /**
      * 同步方式对象

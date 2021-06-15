@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -56,6 +57,16 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,map);
     }
 
+/*    @GetMapping("/getDataBase/{appName}")
+    @ApiOperation(value = "根据应用名称,获取物理表")
+    public ResultEntity<TablePyhNameDTO> queryDataBase(
+            @PathVariable("appName") String appName) throws SQLException, ClassNotFoundException {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.queryPhyName(appName));
+    }*/
+
+
+
     /**
      * 添加物理表(实时)
      * @param tableAccessDTO
@@ -86,7 +97,7 @@ public class PhysicalTableController {
      * @return
      */
     @PutMapping("/editRealTime")
-    @ApiOperation(value = "修改物理表")
+    @ApiOperation(value = "修改物理表(实时)")
     public ResultEntity<Object> editRTData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateRTData(dto));
     }
@@ -96,15 +107,15 @@ public class PhysicalTableController {
      * @param tableAccessNDTO
      * @return
      */
-//    @PostMapping("/addNonRealTime")
-//    @ApiOperation(value="添加物理表(非实时)")
-    public ResultEntity<Object> addNRTData(@RequestBody TableAccessNDTO tableAccessNDTO) {
+    @PostMapping("/addNonRealTime")
+    @ApiOperation(value="添加物理表(非实时)")
+    public ResultEntity<Object> addNRTData(@RequestBody TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
 
         return ResultEntityBuild.build(tableAccess.addNRTData(tableAccessNDTO));
     }
 
 //    @PutMapping("/editNonRealTime")
-    public ResultEntity<Object> editNRTData(@RequestBody TableAccessNDTO dto) {
+    public ResultEntity<Object> editNRTData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateNRTData(dto));
     }
 
@@ -116,18 +127,15 @@ public class PhysicalTableController {
      * @param rows 每页显示条数
      * @return
      */
-//    @GetMapping("/page")
-//    @ApiOperation(value = "物理表接口首页分页查询")
-    public ResultEntity<PageDTO<TablePhyHomeDTO>> queryByPage(
+    @GetMapping("/page")
+    @ApiOperation(value = "物理表接口首页分页查询")
+    public ResultEntity<Page<Map<String,Object>>> queryByPage(
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
 
-        PageDTO<TablePhyHomeDTO> data = tableAccess.queryByPage(key, page, rows);
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, data);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.queryByPage(key, page, rows));
     }
-
 
     /**
      * 删除数据

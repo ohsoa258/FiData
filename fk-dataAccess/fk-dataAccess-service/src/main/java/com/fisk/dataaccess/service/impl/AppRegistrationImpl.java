@@ -137,16 +137,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
 
+        // 分页封装
         Page<AppRegistrationPO> registrationPOPage2 = new Page<>(page, rows);
 
 
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
 
+
+        // 查询数据
         queryWrapper.like(isKeyExists, "app_name", key)
                 .eq("del_flag", 1);// 未删除
         baseMapper.selectPage(registrationPOPage2, queryWrapper);
+
         List<AppRegistrationPO> records2 = registrationPOPage2.getRecords();
         PageDTO<AppRegistrationDTO> pageDTO = new PageDTO<>();
+
         pageDTO.setTotal(registrationPOPage1.getTotal());// 总条数
         long totalPage = (long) (records1.size() + rows - 1) / rows;// 总页数
         pageDTO.setTotalPage(registrationPOPage1.getPages());

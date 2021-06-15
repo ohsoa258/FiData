@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
@@ -9,7 +10,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.ITableAccess;
-import com.fisk.dataaccess.utils.CreateTableUtils;
+import com.fisk.dataaccess.utils.MysqlTableUtils;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -55,6 +54,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     @Transactional
     public ResultEnum addRTData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+
+        // 先创建表
+        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+
+        int i = mysqlTableUtils.createMysqlTB(tableAccessDTO);
+        if (i != 0) {
+            throw new FkException(500, "创建"+tableAccessDTO.getTableName()+"表失败");
+        }
 
         // 1.dto->po
         TableAccessPO tableAccessPO = tableAccessDTO.toEntity(TableAccessPO.class);
@@ -113,16 +120,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             save2 = tableFieldsImpl.save(tableFieldsPO);
         }
 
-        if (!save2) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
-        }
+//        if (!save2) {
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+//        }
 
-        CreateTableUtils createTableUtils = new CreateTableUtils();
+/*        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 
-        int i = createTableUtils.createMysqlTB(tableAccessDTO);
-        System.out.println(i);
+        int i = createMysqlTableUtils.createMysqlTB(tableAccessDTO);*/
+//        System.out.println(i);
 
-        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -162,8 +170,95 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO) {
-        return null;
+    public ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+
+        // 先创建表
+        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+
+        int i = mysqlTableUtils.createMysqlTB(tableAccessNDTO);
+        if (i != 0) {
+            throw new FkException(500, "创建"+tableAccessNDTO.getTableName()+"表失败");
+        }
+
+        // 1.dto->po
+        TableAccessPO tableAccessPO = tableAccessNDTO.toEntity(TableAccessPO.class);
+
+        AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("app_name", tableAccessNDTO.getAppName()).one();
+
+        long id = registrationPO.getId();
+        if (id < 0) {
+            throw new FkException(500, "保存失败");
+        }
+        tableAccessPO.setAppid(id);
+
+        // 0是实时物理表，1是非实时物理表
+        tableAccessPO.setIsRealtime(0);
+        // 实时物理表，需要提供数据同步地址(先来个硬编码)
+//        tableAccessPO.setSyncSrc("jdbc:mysql://192.168.11.130:3306/dmp_datainput_db");
+//        List<String> conn = tableAccessDTO.getConn();
+        tableAccessPO.setSyncSrc(tableAccessNDTO.getSyncSrc());
+        tableAccessPO.setDelFlag(1);
+
+
+
+        // 时间字段有问题,待定
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date1 = new Date(System.currentTimeMillis());
+
+        tableAccessPO.setCreateTime(date1);
+        tableAccessPO.setUpdateTime(date1);
+
+        // 2.保存tb_table_access数据
+        boolean save1 = this.save(tableAccessPO);
+
+        if (!save1) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+        }
+
+        // 保存tb_table_fields数据
+        boolean save2 = true;
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getTableFieldsDTOS();
+        for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
+            TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+            tableFieldsPO.setTableAccessId(tableAccessPO.getId());
+            // 1是业务时间，0非业务时间
+            tableFieldsPO.setIsBusinesstime(0);
+            // 1是时间戳，0非时间戳
+            tableFieldsPO.setIsTimestamp(0);
+            // 1是实时物理表的字段，0是非实时物理表的字段
+            tableFieldsPO.setIsRealtime(1);
+            tableFieldsPO.setDelFlag(1);
+
+            // 时间
+            Date date2 = new Date(System.currentTimeMillis());
+            tableFieldsPO.setCreateTime(date2);
+            tableFieldsPO.setUpdateTime(date2);
+
+            save2 = tableFieldsImpl.save(tableFieldsPO);
+        }
+
+        if (!save2) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+        }
+
+        // 保存tb_table_syncmode数据
+        TableSyncmodeDTO syncmodeDTO = tableAccessNDTO.getTableSyncmodeDTO();
+        TableSyncmodePO syncmodePO = syncmodeDTO.toEntity(TableSyncmodePO.class);
+        syncmodePO.setId(id);
+
+        boolean save3 = syncmodeImpl.save(syncmodePO);
+//        if (!save3) {
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+//        }
+//
+//        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
+//
+//        int i = createMysqlTableUtils.createMysqlTB(tableAccessNDTO);
+//        System.out.println(i);
+
+//        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
     }
 
     /**
@@ -174,6 +269,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     public ResultEnum updateRTData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+
+        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+
+        int i = mysqlTableUtils.updateMysqlTB(tableAccessDTO);
+        if (i != 0) {
+            throw new FkException(500, "操作数据库失败");
+        }
 
         // 1.dto->po
         TableAccessPO tableAccessPO = tableAccessDTO.toEntity(TableAccessPO.class);
@@ -204,16 +306,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             update2 = tableFieldsImpl.updateById(tableFieldsPO);
         }
 
-        if (!update2) {
+/*        if (!update2) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
-        }
+        }*/
 
-        CreateTableUtils createTableUtils = new CreateTableUtils();
+        /*CreateTableUtils createTableUtils = new CreateTableUtils();
 
-        int i = createTableUtils.updateMysqlTB(tableAccessDTO);
+        int i = createTableUtils.updateMysqlTB(tableAccessDTO);*/
 //        System.out.println(i);
 
-        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return update2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -223,8 +326,56 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum updateNRTData(TableAccessNDTO dto) {
-        return null;
+    public ResultEnum updateNRTData(TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
+
+
+        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+
+        int i = mysqlTableUtils.updateMysqlTB(dto);
+        if (i != 0) {
+            throw new FkException(500, "操作数据库失败");
+        }
+
+        // 1.dto->po
+        TableAccessPO tableAccessPO = dto.toEntity(TableAccessPO.class);
+
+        // 时间字段
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date1 = new Date(System.currentTimeMillis());
+
+        tableAccessPO.setUpdateTime(date1);
+
+        // 2.保存tb_table_access数据
+        boolean update1 = this.updateById(tableAccessPO);
+
+        if (!update1) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+        }
+
+        // 保存tb_table_fields数据
+        boolean update2 = true;
+        Date date2 = new Date(System.currentTimeMillis());
+        List<TableFieldsDTO> tableFieldsDTOS = dto.getTableFieldsDTOS();
+        for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
+            TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+
+            // 时间
+            tableFieldsPO.setUpdateTime(date2);
+
+            update2 = tableFieldsImpl.updateById(tableFieldsPO);
+        }
+
+/*        if (!update2) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+        }*/
+
+        /*CreateTableUtils createTableUtils = new CreateTableUtils();
+
+        int i = createTableUtils.updateMysqlTB(tableAccessDTO);*/
+//        System.out.println(i);
+
+//        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return update2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -274,13 +425,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public PageDTO<TablePhyHomeDTO> queryByPage(String key, Integer page, Integer rows) {
+    public Page<Map<String,Object>> queryByPage(String key, Integer page, Integer rows) {
 
         // 1.分页信息的健壮性处理
         page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
         rows = Math.max(rows, 1);    // 每页至少1条
 
-        Page<TableAccessPO> accessPOPage = new Page<>(page, rows);
+/*        Page<TableAccessPO> accessPOPage = new Page<>(page, rows);
         PageDTO<TablePhyHomeDTO> pageDTO = new PageDTO<>();
 
         // 分页对象集合
@@ -328,7 +479,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         pageDTO.setTotalPage(accessPOPage.getPages());
 //        pageDTO.setItems();
 
-        return pageDTO;
+        return pageDTO;*/
+
+//        List<TablePhyHomeDTO> homeDTOList = baseMapper.queryByPage(key);
+
+        // 新建分页
+        Page<Map<String,Object>> pageMap = new Page<>(page, rows);
+
+       return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
     }
 
     /**
@@ -366,5 +524,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         accessDTO.setTableFieldsDTOS(tableFieldsDTOS);
 
         return accessDTO;
+    }
+
+
+    /**
+     * 根据应用名称,获取物理表
+     * @param appName
+     * @return
+     */
+    @Override
+    public TablePyhNameDTO queryPhyName(String appName) {
+        return null;
     }
 }
