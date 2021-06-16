@@ -2,10 +2,7 @@ package com.fisk.common.mdc;
 
 
 import com.fisk.common.constants.TraceConstant;
-import com.fisk.common.enums.TraceTypeEnum;
 import org.slf4j.MDC;
-
-import javax.print.attribute.standard.MediaSize;
 
 /**
  * @author gy

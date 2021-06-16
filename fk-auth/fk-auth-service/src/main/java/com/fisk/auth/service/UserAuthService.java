@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
  * @data: 2021/5/17 13:48
  */
 public interface UserAuthService {
-    void login(String username, String password, HttpServletResponse response);
+    String login(String username, String password, HttpServletResponse response);
 
     void logout(HttpServletRequest request, HttpServletResponse response);
 }

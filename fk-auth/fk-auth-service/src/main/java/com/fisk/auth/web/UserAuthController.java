@@ -1,6 +1,9 @@
 package com.fisk.auth.web;
 
 import com.fisk.auth.service.UserAuthService;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,15 +35,13 @@ public class UserAuthController {
      * @return
      */
     @PostMapping("/login")
-    public ResponseEntity<Void> login(
+    public ResultEntity<String> login(
             @RequestParam("username")String username,
             @RequestParam("password")String password,
             HttpServletResponse response) {
 
-        userAuthService.login(username,password,response);
-
         // 登录成功,无返回值,204状态码
-        return ResponseEntity.noContent().build();
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userAuthService.login(username,password,response));
     }
 
     /**

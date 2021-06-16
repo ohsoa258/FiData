@@ -3,7 +3,7 @@ package com.fisk.chartvisual;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.service.IDataSourceConManage;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
@@ -32,7 +32,7 @@ public class UseDataBaseTest {
     }};
 
     @Resource
-    IDataSourceConManage con;
+    IDataSourceConManageService con;
     @Resource
     IDataService use;
 

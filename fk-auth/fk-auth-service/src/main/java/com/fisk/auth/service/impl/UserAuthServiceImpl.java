@@ -1,4 +1,4 @@
-package com.fisk.auth.service.ipml;
+package com.fisk.auth.service.impl;
 
 import com.fisk.auth.constants.JwtConstants;
 import com.fisk.auth.constants.RedisConstants;
@@ -42,7 +42,7 @@ public class UserAuthServiceImpl implements UserAuthService {
      * @param response
      */
     @Override
-    public void login(String username, String password, HttpServletResponse response) {
+    public String login(String username, String password, HttpServletResponse response) {
 
         // 1.授权中心携带用户名密码，到用户中心(数据库)查询用户
         //请求user服务获取用户信息
@@ -58,10 +58,10 @@ public class UserAuthServiceImpl implements UserAuthService {
         // 准备数据: 自定义荷载对象
         UserDetail userDetail = UserDetail.of(userDTO.getId(), userDTO.getUsername());
         // 生成jwt: token
-        String token = jwtUtils.createJwt(userDetail);
+        return "Bearer " + jwtUtils.createJwt(userDetail);
 
         // 4.将token写入用户Cookie
-        writeCookie(response, token);
+        //writeCookie(response, token);
     }
 
     @Override

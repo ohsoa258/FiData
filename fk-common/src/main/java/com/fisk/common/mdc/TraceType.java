@@ -1,7 +1,5 @@
 package com.fisk.common.mdc;
 
-import com.fisk.common.enums.TraceTypeEnum;
-
 import java.lang.annotation.*;
 
 /**

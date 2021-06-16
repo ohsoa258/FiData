@@ -1,6 +1,6 @@
-package com.fisk.chartvisual.config;
+package com.fisk.auth.config;
 
-import com.fisk.chartvisual.FkChartVisualApplication;
+import com.fisk.auth.FkAuthApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -27,7 +27,7 @@ public class SwaggerConfig {
 
     @Bean
     public Docket createRestApi() {
-        String basePck = FkChartVisualApplication.class.getPackage().getName();
+        String basePck = FkAuthApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .select()

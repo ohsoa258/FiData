@@ -7,14 +7,14 @@ import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
-import com.fisk.chartvisual.service.IDataSourceConManage;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.enums.TraceTypeEnum;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.response.ResultEnum;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * @author gy
  */
 @Service
-public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManage {
+public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManageService {
 
     //TODO: 未获取登录人信息
 

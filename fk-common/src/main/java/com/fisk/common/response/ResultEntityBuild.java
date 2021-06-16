@@ -1,8 +1,5 @@
 package com.fisk.common.response;
 
-import com.fisk.common.exception.FkException;
-import org.springframework.util.StringUtils;
-
 /**
  * 请求结果对象帮助类
  *
@@ -30,6 +27,18 @@ public class ResultEntityBuild {
         }
 
         return res;
+    }
+
+    /**
+     * 创建请求结果对象
+     *
+     * @param enums 返回结果
+     * @param data  返回数据
+     * @param <T>   返回数据的类型
+     * @return 请求结果对象
+     */
+    public static <T> ResultEntity<T> buildData(ResultEnum enums, T data) {
+        return build(enums, data);
     }
 
     /**

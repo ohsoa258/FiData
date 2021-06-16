@@ -4,6 +4,8 @@ spring:
   application:
     name: fk-registry  # 当前服务的名称(自定义),也是注册进Eureka中的名称
 eureka:
+#  server:
+#    enable-self-preservation: false
   client:
     fetch-registry: false # 不注册自己
     register-with-eureka: false  # 不去注册中心获取其他服务的地址

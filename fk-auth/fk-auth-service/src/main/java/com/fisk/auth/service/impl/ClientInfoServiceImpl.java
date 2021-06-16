@@ -1,4 +1,4 @@
-package com.fisk.auth.service.ipml;
+package com.fisk.auth.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.entity.ClientInfo;

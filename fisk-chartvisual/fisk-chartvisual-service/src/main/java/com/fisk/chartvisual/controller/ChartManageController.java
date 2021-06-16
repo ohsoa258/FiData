@@ -3,7 +3,7 @@ package com.fisk.chartvisual.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
-import com.fisk.chartvisual.service.IChartManage;
+import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.chartvisual.vo.ChartQueryVO;
 import com.fisk.common.response.ResultEntity;
@@ -27,7 +27,7 @@ import javax.annotation.Resource;
 public class ChartManageController {
 
     @Resource
-    IChartManage service;
+    IChartManageService service;
 
     @ApiOperation("添加草稿报表")
     @PostMapping("/addDraft")
