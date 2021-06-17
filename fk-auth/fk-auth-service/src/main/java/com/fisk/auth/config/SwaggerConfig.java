@@ -1,6 +1,7 @@
 package com.fisk.auth.config;
 
 import com.fisk.auth.FkAuthApplication;
+import com.fisk.common.constants.SystemConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -52,13 +53,13 @@ public class SwaggerConfig {
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
         List<SecurityReference> securityReferences = new ArrayList<>();
-        securityReferences.add(new SecurityReference("Authorization", authorizationScopes));
+        securityReferences.add(new SecurityReference(SystemConstants.HTTP_HEADER_AUTH, authorizationScopes));
         return securityReferences;
     }
 
     private List<ApiKey> apiKey() {
         List<ApiKey> list = new ArrayList<>();
-        list.add(new ApiKey("Authorization", "Authorization", "header"));
+        list.add(new ApiKey(SystemConstants.HTTP_HEADER_AUTH, SystemConstants.HTTP_HEADER_AUTH, "header"));
         //配置输入token的备注 TOKEN_HEADER_STRING = "Authorization"
         return list;
     }

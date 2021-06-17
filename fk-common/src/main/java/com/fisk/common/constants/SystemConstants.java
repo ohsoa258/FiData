@@ -1,0 +1,11 @@
+package com.fisk.common.constants;
+
+/**
+ * @author gy
+ */
+public class SystemConstants {
+
+    public static final String AUTH_TOKEN_HEADER = "Bearer ";
+
+    public static final String HTTP_HEADER_AUTH = "Authorization";
+}
