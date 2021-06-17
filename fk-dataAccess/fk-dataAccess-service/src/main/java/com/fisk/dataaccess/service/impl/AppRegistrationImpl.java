@@ -8,6 +8,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
@@ -96,14 +97,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //        boolean save = appDataSourceImpl.save(appDatasourcePO);
 
         int insert = appDataSourceMapper.insert(appDatasourcePO);
+        if (insert < 0) {
+            throw new FkException(500, "保存tb_app_datasource数据失败");
+        }
 
-/*        // 保存tb_app_drivetype数据
+        // 保存tb_app_drivetype数据
         AppDriveTypePO appDriveTypePO = new AppDriveTypePO();
-        appDriveTypePO.setId(1);
+        appDriveTypePO.setId(appRegistrationPO.getId());
         appDriveTypePO.setName(appDatasourcePO.getDriveType());
-        appDriveTypeImpl.save(appDriveTypePO);*/
+        boolean save2 = appDriveTypeImpl.save(appDriveTypePO);
 
-        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+/*        if (!save2) {
+            throw new FkException(500, "保存tb_app_drivetype数据失败");
+        }*/
+
+//        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**

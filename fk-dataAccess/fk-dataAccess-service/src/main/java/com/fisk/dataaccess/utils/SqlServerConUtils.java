@@ -14,7 +14,7 @@ import java.util.List;
 public class SqlServerConUtils {
 
     //这里可以设置数据库名称
-    private final static String URL = "jdbc:sqlserver://192.168.1.35:1433/";
+    private final static String URL = "jdbc:sqlserver://192.168.1.35:1433";
     private static final String USER="sa";
     private static final String PASSWORD="password01!";
     private static Connection conn= null;

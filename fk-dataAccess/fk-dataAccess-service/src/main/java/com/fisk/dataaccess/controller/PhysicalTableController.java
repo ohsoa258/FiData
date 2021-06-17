@@ -80,18 +80,6 @@ public class PhysicalTableController {
     }
 
     /**
-     * 根据id查询数据,回显实时表
-     * @param id
-     * @return
-     */
-    @GetMapping("/get/{id}")
-    @ApiOperation("修改接口的回显数据")
-    public ResultEntity<TableAccessDTO> getData(
-            @PathVariable("id") long id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
-    }
-
-    /**
      * 修改物理表(实时)
      * @param dto
      * @return
@@ -114,9 +102,29 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(tableAccess.addNRTData(tableAccessNDTO));
     }
 
-//    @PutMapping("/editNonRealTime")
+    /**
+     * 修改物理表(非实时)
+     * @param dto
+     * @return
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
+    @PutMapping("/editNonRealTime")
+    @ApiOperation(value = "修改物理表(非实时)")
     public ResultEntity<Object> editNRTData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateNRTData(dto));
+    }
+
+    /**
+     * 根据id查询数据,回显实时表
+     * @param id
+     * @return
+     */
+    @GetMapping("/get/{id}")
+    @ApiOperation("修改接口的回显数据")
+    public ResultEntity<TableAccessDTO> getData(
+            @PathVariable("id") long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
     }
 
     /**

@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_table_syncmode")
 public class TableSyncmodePO extends BaseEntity {
 
-    @TableId
+    @TableId(value = "id",type = IdType.INPUT)
     public long id;
 
     /**

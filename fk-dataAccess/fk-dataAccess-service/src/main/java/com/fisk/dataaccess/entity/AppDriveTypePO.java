@@ -1,9 +1,13 @@
 package com.fisk.dataaccess.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
 
 /**
  * @author: Lock
@@ -11,12 +15,12 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_app_drivetype")
-public class AppDriveTypePO extends BaseEntity {
+public class AppDriveTypePO implements Serializable {
 
     /**
      * 主键
      */
-    @TableId
+    @TableId(value = "id",type = IdType.INPUT)
     private long id;
 
     /**

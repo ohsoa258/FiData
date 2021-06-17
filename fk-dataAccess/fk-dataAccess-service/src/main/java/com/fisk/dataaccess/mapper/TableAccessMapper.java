@@ -30,9 +30,16 @@ public interface TableAccessMapper extends BaseMapper<TableAccessPO> {
             "ON a.id = f.id\n" +
             ")LEFT JOIN `tb_table_syncmode` s\n" +
             "ON s.id=a.appid\n" +
-            "WHERE a.del_flag=1\n" +
-            "AND table_name LIKE '%input%'")
+            "WHERE table_name like concat('%',#{key},'%')\n" +
+            "AND a.del_flag = 1")
 //    List<TablePhyHomeDTO> queryByPage(@Param("key") String key);
-    List<Map<String, Object>> queryByPage(Page<Map<String,Object>> page, String key);
+    List<Map<String, Object>> queryByPage(Page<Map<String,Object>> page,@Param("key") String key);
 
+
+    /**
+     * 查询表中所有的table_name
+     * @return
+     */
+    @Select("select table_name from tb_table_access")
+    List<String> getTableName();
 }

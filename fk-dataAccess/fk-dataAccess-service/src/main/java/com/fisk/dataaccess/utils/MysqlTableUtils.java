@@ -68,7 +68,7 @@ public class MysqlTableUtils {
         sb.append(sb_PRIMARYKEY.toString() + ");");
 
         // 生成的SQL语句
-//        System.out.println(sb.toString());
+        System.out.println(sb.toString());
         int i = stat.executeUpdate(sb.toString());
 
         // 释放资源
@@ -117,7 +117,7 @@ public class MysqlTableUtils {
         sb.append(sb_PRIMARYKEY.toString() + ");");
 
         // 生成的SQL语句
-//        System.out.println(sb.toString());
+        System.out.println(sb.toString());
         int i = stat.executeUpdate(sb.toString());
 
         // 释放资源
