@@ -17,4 +17,14 @@
         <module>fk-auth-api</module>
     </modules>
 
+    <dependencies>
+
+        <!-- fk-common -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-common</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
 </project>

@@ -22,4 +22,12 @@ public interface AuthClient {
             @RequestParam("clientId") String clientId,
             @RequestParam("secret") String secret);
 
+    /**
+     * 判断请求路径是否在白名单内
+     * @param path 请求地址
+     * @return 返回结果
+     */
+    @GetMapping("/client/pathIsExists")
+    boolean pathIsExists(@RequestParam("path") String path);
+
 }

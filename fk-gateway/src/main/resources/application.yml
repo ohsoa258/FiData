@@ -82,6 +82,7 @@ spring:
 logging:
   level:
     com.fisk: debug
+    com.tairan.chapter.feign.api.HelloService: debug
 fk:
   auth:
     clientId: api-gateway

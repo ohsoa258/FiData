@@ -11,8 +11,8 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("tb_chart")
-public class AuthenticateWhiteList extends BasePO {
+@TableName("tb_authenticate_whitelist")
+public class AuthenticateWhiteListPO extends BasePO {
     public String path;
     public String details;
 }
