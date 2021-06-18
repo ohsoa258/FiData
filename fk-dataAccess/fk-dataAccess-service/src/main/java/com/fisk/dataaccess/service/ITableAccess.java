@@ -28,11 +28,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     ResultEnum updateNRTData(TableAccessNDTO dto) throws SQLException, ClassNotFoundException;
 
-    Map<String, List<String>> queryDataBase(String appName) throws SQLException, ClassNotFoundException;
+        Map<String, List<String>> queryDataBase(String appName) throws SQLException, ClassNotFoundException;
+//    TablePyhNameDTO queryDataBase(String appName) throws SQLException, ClassNotFoundException;
 
-    Page<Map<String,Object>> queryByPage(String key, Integer page, Integer rows);
+    Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows);
 
     TableAccessDTO getData(long id);
 
-    TablePyhNameDTO queryPhyName(String appName);
+    List<TablePyhNameDTO> getTableFields(String appName);
 }

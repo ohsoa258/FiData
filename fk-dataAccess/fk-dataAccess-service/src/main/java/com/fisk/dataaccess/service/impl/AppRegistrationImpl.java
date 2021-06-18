@@ -245,6 +245,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * 查询所有应用名称(实时  非实时)
+     * @return
+     */
     @Override
     public List<AppNameDTO> queryAppName() {
 
@@ -304,5 +308,30 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> descDate = baseMapper.getDescDate();
 
         return AppRegistrationDTO.convertEntityList(descDate);
+    }
+
+    /**
+     * 查询所有非实时应用名称
+     * @return
+     */
+    @Override
+    public List<AppNameDTO> queryNRTAppName() {
+
+        List<AppRegistrationPO> list = this.query()
+                .eq("del_flag", 1)
+                .eq("app_type", 1)
+                .list();
+        List<AppNameDTO> appNameDTOS = new ArrayList<>();
+        for (AppRegistrationPO appRegistrationPO : list) {
+
+            AppNameDTO appNameDTO = new AppNameDTO();
+            String appName = appRegistrationPO.getAppName();
+            appNameDTO.setAppName(appName);
+            appNameDTO.setAppType((byte) 1);
+
+            appNameDTOS.add(appNameDTO);
+        }
+
+        return appNameDTOS;
     }
 }

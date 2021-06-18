@@ -31,4 +31,6 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     AppRegistrationDTO getData(long id);
 
     List<AppRegistrationDTO> getDescDate();
+
+    List<AppNameDTO> queryNRTAppName();
 }

@@ -55,7 +55,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     @Transactional
-    public ResultEnum addRTData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+    public ResultEnum addRTData(TableAccessDTO tableAccessDTO) {
 
         // TODO: 原始SQL表创建(暂时不用集成)
         // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
@@ -106,7 +106,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         long id = registrationPO.getId();
         if (id < 0) {
-            throw new FkException(500, "保存失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         tableAccessPO.setAppid(id);
 
@@ -117,7 +117,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        List<String> conn = tableAccessDTO.getConn();
         tableAccessPO.setSyncSrc(tableAccessDTO.getSyncSrc());
         tableAccessPO.setDelFlag(1);
-
+        tableAccessPO.setIsRealtime(0); // 实时
 
         // 时间字段有问题,待定
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
@@ -175,7 +175,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+    public ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO) {
 
         // 先创建表
 /*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
@@ -229,12 +229,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         AppRegistrationPO registrationPO = appRegistrationImpl.query()
                 .eq("app_name", tableAccessNDTO.getAppName())
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
 
         long id = registrationPO.getId();
         if (id < 0) {
-            throw new FkException(500, "保存失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         tableAccessPO.setAppid(id);
 
@@ -245,6 +245,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        List<String> conn = tableAccessDTO.getConn();
         tableAccessPO.setSyncSrc(tableAccessNDTO.getSyncSrc());
         tableAccessPO.setDelFlag(1);
+        tableAccessPO.setIsRealtime(1); // 非实时
 
 
         // 时间字段有问题,待定
@@ -315,7 +316,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum updateRTData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+    public ResultEnum updateRTData(TableAccessDTO tableAccessDTO) {
 
         // TODO: 原始SQL表修改(暂时不用集成)
 /*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
@@ -341,22 +342,55 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
-        // 保存tb_table_fields数据
+        /**
+         * 保存tb_table_fields数据: 分为更新和添加数据
+         */
         boolean update2 = true;
-        Date date2 = new Date(System.currentTimeMillis());
+        boolean saveField = true;
+
+//        Date date2 = new Date(System.currentTimeMillis());
         List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
-        for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
+       /* for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
             TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
             // 时间
             tableFieldsPO.setUpdateTime(date2);
 
             update2 = tableFieldsImpl.updateById(tableFieldsPO);
+        }*/
+
+
+        for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
+
+            // 0: 新增  1: 修改
+            int funcType = tableFieldsDTO.getFuncType();
+            if (funcType == 1) { // 修改
+                TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                Date date2 = new Date(System.currentTimeMillis());
+                tableFieldsPO.setUpdateTime(date2);
+
+                update2 = tableFieldsImpl.updateById(tableFieldsPO);
+            } else { // 新增
+                TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+
+                // 还要绑定tb_table_access id
+                /*long fid = tableFieldsPO.getId();
+                // 根据已传的field查询tb_table_access id
+                TableFieldsPO one = tableFieldsImpl.query().eq("id", fid).eq("del_flag", 1).one();
+                long accessId = one.getTableAccessId();*/
+                tableFieldsPO.setTableAccessId(tableAccessPO.getId());
+
+                Date date3 = new Date(System.currentTimeMillis());
+                tableFieldsPO.setCreateTime(date3);
+                tableFieldsPO.setUpdateTime(date3);
+                saveField = tableFieldsImpl.save(tableFieldsPO);
+
+            }
         }
 
-/*        if (!update2) {
+        if (!update2) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
-        }*/
+        }
 
         /*CreateTableUtils createTableUtils = new CreateTableUtils();
 
@@ -364,7 +398,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        System.out.println(i);
 
 //        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        return update2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return saveField ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -374,7 +408,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum updateNRTData(TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEnum updateNRTData(TableAccessNDTO dto) {
 
         // TODO: 原始SQL表修改(暂时不用集成)
         // 1.先修改表
@@ -401,21 +435,45 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
-        // 3.保存tb_table_fields数据
+        /**
+         * 保存tb_table_fields数据: 分为更新和添加数据
+         */
         boolean update2 = true;
-        Date date2 = new Date(System.currentTimeMillis());
+        boolean saveField = true;
+
         List<TableFieldsDTO> tableFieldsDTOS = dto.getTableFieldsDTOS();
+
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
-            TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
-            // 时间
-            tableFieldsPO.setUpdateTime(date2);
+            // 0: 新增  1: 修改
+            int funcType = tableFieldsDTO.getFuncType();
+            if (funcType == 1) { // 修改
+                TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                Date date2 = new Date(System.currentTimeMillis());
+                tableFieldsPO.setUpdateTime(date2);
 
-            update2 = tableFieldsImpl.updateById(tableFieldsPO);
+                update2 = tableFieldsImpl.updateById(tableFieldsPO);
+            } else { // 新增
+                TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+
+                // 还要绑定tb_table_access id
+                tableFieldsPO.setTableAccessId(tableAccessPO.getId());
+
+                Date date3 = new Date(System.currentTimeMillis());
+                tableFieldsPO.setCreateTime(date3);
+                tableFieldsPO.setUpdateTime(date3);
+                saveField = tableFieldsImpl.save(tableFieldsPO);
+
+            }
         }
+
         if (!update2) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
+        if (!saveField) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+        }
+
 
         // 4.保存tb_table_syncmode数据
         boolean update3 = true;
@@ -428,7 +486,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
-     * 根据应用名称,获取远程数据库的表及表对应的字段
+     * TODO: 暂时不需要此方法
+     * 根据非实时应用名称,获取远程数据库的表及表对应的字段
      *
      * @param appName
      * @return
@@ -459,7 +518,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        conn.add(pwd);
         table.put("conn", conn);
         if (table.isEmpty()) {
-            throw new FkException(500, "获取表字段失败");
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
 
         return table;
@@ -578,14 +637,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
     /**
-     * 根据应用名称,获取物理表
+     * 根据应用名称,获取物理表名及表对应的字段(非实时)
      *
      * @param appName
      * @return
      */
     @Override
-    public TablePyhNameDTO queryPhyName(String appName) {
-        return null;
+    public List<TablePyhNameDTO> getTableFields(String appName) {
+
+        // 1.根据应用名称查询表id
+        AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("app_name", appName).one();
+
+        // tb_app_registration表id
+        long appid = registrationPO.getId();
+
+        // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
+        AppDataSourcePO dataSourcePO = appDataSourceImpl.query().eq("appid", appid).one();
+        String url = dataSourcePO.getConnectStr();
+        String user = dataSourcePO.getConnectAccount();
+        String pwd = dataSourcePO.getConnectPwd();
+
+        // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+        MysqlConUtils mysqlConUtils = new MysqlConUtils();
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        try {
+
+            list = mysqlConUtils.getNRTTable(url, user, pwd);
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS,"数据不存在");
+        }
+
+        return list;
     }
 
     /**

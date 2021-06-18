@@ -42,29 +42,42 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryAppName());
     }
 
+
+    /**
+     * 获取非实时应用名称
+     * @return
+     */
+    @GetMapping("/getNonRTName")
+    @ApiOperation(value = "获取非实时应用名称")
+    public ResultEntity<List<AppNameDTO>> queryNRTAppName() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryNRTAppName());
+    }
+
     /**
      * 根据应用名称,获取远程数据库的表及表对应的字段
      * @param appName
      * @return
      */
-    @GetMapping("/getDataBase/{appName}")
-    @ApiOperation(value = "根据应用名称,获取远程数据库的表及表对应的字段")
+/*    @GetMapping("/getDataBase/{appName}")
+    @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
     public ResultEntity<Map<String, List<String>>> queryDataBase(
             @PathVariable("appName") String appName) throws SQLException, ClassNotFoundException {
 
-        Map<String, List<String>> map = tableAccess.queryDataBase(appName);
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,map);
-    }
-
-/*    @GetMapping("/getDataBase/{appName}")
-    @ApiOperation(value = "根据应用名称,获取物理表")
-    public ResultEntity<TablePyhNameDTO> queryDataBase(
-            @PathVariable("appName") String appName) throws SQLException, ClassNotFoundException {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.queryPhyName(appName));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.queryDataBase(appName));
     }*/
 
+    /**
+     * 根据应用名称,获取远程数据库的表及表对应的字段
+     * @param appName
+     * @return
+     */
+    @GetMapping("/getFields/{appName}")
+    @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
+    public ResultEntity<List<TablePyhNameDTO>> queryNRTTable(@PathVariable("appName") String appName) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.getTableFields(appName));
+    }
 
 
     /**
@@ -122,8 +135,7 @@ public class PhysicalTableController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation("修改接口的回显数据")
-    public ResultEntity<TableAccessDTO> getData(
-            @PathVariable("id") long id) {
+    public ResultEntity<TableAccessDTO> getData(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
     }
 
@@ -152,9 +164,16 @@ public class PhysicalTableController {
      */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除物理表")
-    public ResultEntity<Object> deleteData(
-            @PathVariable("id") long id) {
+    public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
         return ResultEntityBuild.build(tableAccess.deleteData(id));
     }
+
+
+    /*@GetMapping("/getTableAndField/{appName}")
+    @ApiOperation(value = "测试获取表及表字段")
+    public ResultEntity<Object> listTableAndField(@PathVariable("appName")String appName) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS*//*,tableAccess.listTableAndField(appName)*//*);
+    }*/
 
 }
