@@ -1,5 +1,7 @@
 package com.fisk.auth.service;
 
+import com.fisk.common.response.ResultEntity;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -8,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
  * @data: 2021/5/17 13:48
  */
 public interface UserAuthService {
-    String login(String username, String password, HttpServletResponse response);
+    ResultEntity<String> login(String username, String password, HttpServletResponse response);
 
     void logout(HttpServletRequest request, HttpServletResponse response);
 }

@@ -1,7 +1,9 @@
 package com.fisk.gateway.web;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @data: 2021/5/14 15:14
  */
 @RestController
+@Slf4j
 public class FallbackController {
     /**
      *
@@ -17,8 +20,8 @@ public class FallbackController {
      * @return
      */
     @GetMapping("/hystrix/fallback")
-    public ResponseEntity<String> fallbackController() {
-
-        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body("请求超时!");
+    public ResultEntity<Object> fallbackController() {
+        log.error("---------------熔断---------------");
+        return ResultEntityBuild.build(ResultEnum.SERVER_FUSE);
     }
 }

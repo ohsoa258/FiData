@@ -1,6 +1,7 @@
 package com.fisk.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.user.dto.UserDTO;
 import com.fisk.user.entity.User;
 
@@ -13,5 +14,5 @@ public interface UserService extends IService<User> {
 
     void register(User user);
 
-    UserDTO queryUser(String username, String password);
+    ResultEntity<UserDTO> queryUser(String username, String password);
 }

@@ -1,5 +1,6 @@
 package com.fisk.user.client;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.user.dto.UserDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public interface UserClient {
      * @return 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping("/info")
-    UserDTO queryUser(
+    ResultEntity<UserDTO> queryUser(
             @RequestParam("username") String username,
             @RequestParam("password") String password);
 

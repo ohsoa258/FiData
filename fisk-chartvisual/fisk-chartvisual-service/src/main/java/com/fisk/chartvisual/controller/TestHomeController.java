@@ -20,4 +20,21 @@ public class TestHomeController {
     public void testAuthorization() {
 
     }
+
+    @GetMapping("/delay5s")
+    public void delay5s() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    @GetMapping("/delay10s")
+    public void delay10s() {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

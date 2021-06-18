@@ -15,6 +15,8 @@ public enum ResultEnum {
     UNAUTHORIZED(401, "未授权"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
+    TIMEOUT(504, "请求超时"),
+    UNKNOWN(999, "未知类型"),
 
     /**
      * 平台级错误码，1000开始
@@ -27,6 +29,8 @@ public enum ResultEnum {
     NAME_EXISTS(1006, "名称已存在"),
     PARAMTER_ERROR(1007, "请求参数有误"),
     DATA_EXISTS(1008, "数据已存在"),
+    REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
+    SERVER_FUSE(1010, "服务熔断"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -68,5 +72,14 @@ public enum ResultEnum {
 
     public String getMsg() {
         return msg;
+    }
+
+    public static ResultEnum getEnum(int code) {
+        for (ResultEnum enums : ResultEnum.values()) {
+            if (enums.getCode() == code) {
+                return enums;
+            }
+        }
+        return ResultEnum.UNKNOWN;
     }
 }

@@ -2,6 +2,8 @@ package com.fisk.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.user.dto.UserDTO;
 import com.fisk.user.entity.User;
@@ -24,7 +26,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private BCryptPasswordEncoder passwordEncoder;
 
     /**
-     *  校验手机号或用户名是否存在
+     * 校验手机号或用户名是否存在
+     *
      * @param data 用户名或手机号
      * @param type 数据类型：1是用户名；2是手机；其它是参数有误
      * @return true：可以使用; false：不可使用
@@ -58,27 +61,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * 登录: 根据用户名和密码查询用户
+     *
      * @param username
      * @param password
      * @return
      */
     @Override
-    public UserDTO queryUser(String username, String password) {
+    public ResultEntity<UserDTO> queryUser(String username, String password) {
 
         // 1.根据用户名查询用户,不能根据密码,参数是明文,数据库中的是加密后的
         User user = this.query().eq("username", username).one();
         // 2.判断是否存在
         if (user == null) {
             // 用户名错误
-            throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
         }
 
         // 3.校验密码(原理)先根据密文推算出盐值,然后明文+盐值,密码,再次比较新密文和密文
-        if(!passwordEncoder.matches(password, user.getPassword())){
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             // 密码错误
-            throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
         }
         // 4.转换DTO
-        return new UserDTO(user);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, new UserDTO(user));
     }
 }

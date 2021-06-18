@@ -10,11 +10,16 @@ eureka:
 hystrix:
   command:
     default:
-      execution.isolation.thread.timeoutInMilliseconds: 6000 # 熔断超时时长：6000ms
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000 # 请求超时时长：6000ms
 
 ribbon:
-  ConnectTimeout: 500 # ribbon链接超时时长
-  ReadTimeout: 2000 # ribbon读取超时时长
+  ConnectTimeout: 500 # 连接超时时间,毫秒
+  ReadTimeout: 2000 # 逻辑处理超时时间,毫秒
 
 spring:
   application:
@@ -38,13 +43,14 @@ spring:
             allowCredentials: true # 是否允许携带cookie
             maxAge: 360000 # 这次跨域检测的有效期
 
-      # ============限流令牌桶=================
       default-filters: # 默认过滤项,作用于所有的路由规则
       - StripPrefix=1 # 去除路由前缀
+      # ============Hystrix=================
       - name: Hystrix # 指定过滤工厂名称（可以是任意过滤工厂类型）
         args: # 指定过滤的参数
           name: fallbackcmd  # hystrix的指令名
           fallbackUri: forward:/hystrix/fallback # 失败后的跳转路径
+      # ============限流令牌桶=================
       - name: RequestRateLimiter #请求数限流 名称固定,不能随便写
         args:
           key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式

@@ -10,6 +10,8 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
 import com.fisk.user.client.UserClient;
@@ -46,16 +48,21 @@ public class UserAuthServiceImpl implements UserAuthService {
      * @param response
      */
     @Override
-    public String login(String username, String password, HttpServletResponse response) {
+    public ResultEntity<String> login(String username, String password, HttpServletResponse response) {
 
         // 1.授权中心携带用户名密码，到用户中心(数据库)查询用户
-        //请求user服务获取用户信息
+        // 请求user服务获取用户信息
         UserDTO userDTO = null;
 
         try {
-            userDTO = userClient.queryUser(username, password);
+            ResultEntity<UserDTO> res = userClient.queryUser(username, password);
+            if (res.code == ResultEnum.SUCCESS.getCode()) {
+                userDTO = res.data;
+            } else {
+                return ResultEntityBuild.build(ResultEnum.getEnum(res.code));
+            }
         } catch (Exception e) {
-            throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
 
         // 创建自定义荷载对象
@@ -65,7 +72,7 @@ public class UserAuthServiceImpl implements UserAuthService {
         UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUsername(), token);
         boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
 
-        return token;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
     }
 
     @Override

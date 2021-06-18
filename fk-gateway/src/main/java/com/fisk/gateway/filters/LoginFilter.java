@@ -54,6 +54,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         } else if (res.code != ResultEnum.SUCCESS.getCode()) {
             log.error("远程调用失败，方法名：【auth-service:pathIsExists】");
+            return buildResult(response, exchange, ResultEnum.REMOTE_SERVICE_CALLFAILED.getMsg());
         }
 
         // 2. 获取token
