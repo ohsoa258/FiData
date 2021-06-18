@@ -49,8 +49,11 @@ public class LoginFilter implements GlobalFilter, Ordered {
         if (request.getPath().value().contains("/v2/api-docs")) {
             return chain.filter(exchange);
         }
-        if (authClient.pathIsExists(request.getPath().value())) {
+        ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());
+        if (res.code == ResultEnum.SUCCESS.getCode() && res.data) {
             return chain.filter(exchange);
+        } else if (res.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("远程调用失败，方法名：【auth-service:pathIsExists】");
         }
 
         // 2. 获取token

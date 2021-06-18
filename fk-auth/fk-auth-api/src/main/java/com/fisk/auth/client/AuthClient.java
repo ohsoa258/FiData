@@ -1,5 +1,6 @@
 package com.fisk.auth.client;
 
+import com.fisk.common.response.ResultEntity;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +29,6 @@ public interface AuthClient {
      * @return 返回结果
      */
     @GetMapping("/client/pathIsExists")
-    boolean pathIsExists(@RequestParam("path") String path);
+    ResultEntity<Boolean> pathIsExists(@RequestParam("path") String path);
 
 }

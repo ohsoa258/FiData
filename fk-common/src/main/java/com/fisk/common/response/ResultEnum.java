@@ -2,6 +2,7 @@ package com.fisk.common.response;
 
 /**
  * 请求返回结果类型
+ *
  * @author gy
  */
 
@@ -11,8 +12,8 @@ public enum ResultEnum {
      * 返回码
      */
     SUCCESS(0, "成功"),
-    UNAUTHORIZED(401,"未授权"),
-    NOTFOUND(404,"未找到资源"),
+    UNAUTHORIZED(401, "未授权"),
+    NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
 
     /**
@@ -24,6 +25,8 @@ public enum ResultEnum {
     ENUM_TYPE_ERROR(1004, "错误的枚举类型"),
     UPDATE_DATA_ERROR(1005, "数据更新失败"),
     NAME_EXISTS(1006, "名称已存在"),
+    PARAMTER_ERROR(1007, "请求参数有误"),
+    DATA_EXISTS(1008, "数据已存在"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -31,7 +34,25 @@ public enum ResultEnum {
     VISUAL_CONNECTION_ERROR(2001, "数据源连接失败"),
     VISUAL_LOADDRIVER_ERROR(2001, "数据库驱动加载失败"),
     VISUAL_PARAMTER_ERROR(2002, "缺少参数"),
-    VISUAL_QUERY_ERROR(2003, "查询失败");
+    VISUAL_QUERY_ERROR(2003, "查询失败"),
+
+    /**
+     * 授权中心
+     */
+    AUTH_CLIENTINFO_ERROR(3001, ""),
+    AUTH_SECRET_ERROR(3002, "客户端的信息有误,secret错误"),
+    AUTH_JWT_ERROR(3003, "JWT无效或已过期"),
+    AUTH_USER_NOTLOGIN(3004, "用户未登录"),
+
+    /**
+     * 用户中心
+     */
+    USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
+
+    /**
+     * 数据接入模块
+     */
+    DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

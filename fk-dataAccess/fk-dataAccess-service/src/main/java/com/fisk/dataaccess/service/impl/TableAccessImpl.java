@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.TablePhyHomeDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -18,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -63,7 +64,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         long id = registrationPO.getId();
         if (id < 0) {
-            throw new FkException(500, "保存失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         tableAccessPO.setAppid(id);
 
@@ -259,7 +260,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        conn.add(pwd);
         table.put("conn", conn);
         if (table.isEmpty()) {
-            throw new FkException(500, "获取表字段失败");
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
 
         return table;

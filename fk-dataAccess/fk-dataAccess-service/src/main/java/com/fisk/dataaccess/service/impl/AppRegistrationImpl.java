@@ -72,13 +72,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String appName = appRegistrationPO.getAppName();
         boolean contains = appNameList.contains(appName);
         if (contains) {
-            throw new FkException(500, "当前数据已存在");
+            throw new FkException(ResultEnum.DATA_EXISTS);
         }
 
         // 保存
         boolean save = this.save(appRegistrationPO);
         if (!save) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
 

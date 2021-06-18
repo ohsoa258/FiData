@@ -2,6 +2,9 @@ package com.fisk.auth.web;
 
 import com.fisk.auth.service.ClientInfoService;
 import com.fisk.auth.service.IAuthenticateWhiteListService;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,13 +42,18 @@ public class ClientController {
         return ResponseEntity.ok(clientInfoService.getSecretKey(clientId, secret));
     }
 
+//    @GetMapping("/pathIsExists")
+//    public ResponseEntity<Boolean> pathIsExists(String path) {
+//        return ResponseEntity.ok(service.pathIsExists(path));
+//    }
+
     @GetMapping("/pathIsExists")
-    public ResponseEntity<Boolean> pathIsExists(String path) {
-        return ResponseEntity.ok(service.pathIsExists(path));
+    public ResultEntity<Boolean> pathIsExists(String path) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.pathIsExists(path));
     }
 
     @GetMapping("/refreshWhiteList")
-    public ResponseEntity<Boolean> refreshWhiteList() {
-        return ResponseEntity.ok(service.loadDataToRedis(null));
+    public ResultEntity<Object> refreshWhiteList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDataToRedis(null));
     }
 }

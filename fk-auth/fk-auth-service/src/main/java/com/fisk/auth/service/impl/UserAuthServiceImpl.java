@@ -10,6 +10,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
 import com.fisk.user.client.UserClient;
 import com.fisk.user.dto.UserDTO;
@@ -54,7 +55,7 @@ public class UserAuthServiceImpl implements UserAuthService {
         try {
             userDTO = userClient.queryUser(username, password);
         } catch (Exception e) {
-            throw new FkException(400, "用户名或密码不正确");
+            throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
         }
 
         // 创建自定义荷载对象

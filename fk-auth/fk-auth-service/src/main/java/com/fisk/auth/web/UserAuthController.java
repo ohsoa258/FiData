@@ -40,7 +40,6 @@ public class UserAuthController {
             @RequestParam("password")String password,
             HttpServletResponse response) {
 
-        // 登录成功,无返回值,204状态码
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userAuthService.login(username,password,response));
     }
 

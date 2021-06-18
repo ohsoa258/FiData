@@ -5,20 +5,12 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
-import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import java.util.Set;
 
 /**
  * 统一异常处理

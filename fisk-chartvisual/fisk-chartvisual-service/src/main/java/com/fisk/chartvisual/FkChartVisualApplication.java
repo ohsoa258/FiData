@@ -13,6 +13,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.advice",
         "com.fisk.common.mdc",
         "com.fisk.common.mybatis",
+        "com.fisk.common.redis",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
