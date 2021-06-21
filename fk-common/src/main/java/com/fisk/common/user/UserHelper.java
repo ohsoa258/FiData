@@ -29,16 +29,17 @@ public class UserHelper {
 
     /**
      * 获取当前登录的用户
-     *
-     * //@param redis redis帮助类
      * @return 用户信息
      */
     public UserInfo getLoginUserInfo() {
+        //获取token
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH).replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        //解析token
         SecretKey key = Keys.hmacShaKeyFor("helloWorldJavaLeyouAuthServiceSecretKey".getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-        return (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(Long.parseLong(claims.get("id", String.class))));
+        //根据token中的id查询用户信息
+        return (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class))));
     }
 }

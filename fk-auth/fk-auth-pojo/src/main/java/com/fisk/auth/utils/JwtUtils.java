@@ -65,8 +65,8 @@ public class JwtUtils {
             // 2.生成token
             return Jwts.builder().signWith(secretKey)
                     .setId(jti)
-                    .claim("user", mapper.writeValueAsString(userDetail))
-                    .claim("id", userDetail.getId().toString())
+                    .claim(SystemConstants.CLAIM_ATTR_USERINFO, mapper.writeValueAsString(userDetail))
+                    .claim(SystemConstants.CLAIM_ATTR_ID, userDetail.getId().toString())
                     .compact();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -91,10 +91,10 @@ public class JwtUtils {
         // 2.解析载荷数据
         Payload payload = new Payload();
         payload.setJti(claims.getId());
-        payload.setId(Long.parseLong(claims.get("id", String.class)));
+        payload.setId(Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class)));
         UserDetail userDetail;
         try {
-            userDetail = mapper.readValue(claims.get("user", String.class), UserDetail.class);
+            userDetail = mapper.readValue(claims.get(SystemConstants.CLAIM_ATTR_USERINFO, String.class), UserDetail.class);
             payload.setUserDetail(userDetail);
         } catch (IOException e) {
             throw new RuntimeException("用户信息解析失败！");
@@ -102,7 +102,7 @@ public class JwtUtils {
 
         // 3.验证是否过期
         // 3.1.取出redis中jwt
-        UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(userDetail.getId()));
+        UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(payload.getId()));
         // 3.3.比较
         if (userInfo == null || StringUtils.isEmpty(userInfo.token)) {
             throw new RuntimeException("登录已经过期!");

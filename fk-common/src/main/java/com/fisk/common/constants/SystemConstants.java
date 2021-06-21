@@ -8,4 +8,8 @@ public class SystemConstants {
     public static final String AUTH_TOKEN_HEADER = "Bearer ";
 
     public static final String HTTP_HEADER_AUTH = "Authorization";
+
+    public static final String CLAIM_ATTR_ID = "id";
+
+    public static final String CLAIM_ATTR_USERINFO = "user";
 }
