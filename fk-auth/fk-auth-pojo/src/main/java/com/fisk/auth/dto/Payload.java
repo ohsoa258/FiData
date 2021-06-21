@@ -11,6 +11,8 @@ import lombok.Data;
 @Data
 public class Payload {
 
+    private long id;
+
     /**
      * jwt的唯一标识id
      */

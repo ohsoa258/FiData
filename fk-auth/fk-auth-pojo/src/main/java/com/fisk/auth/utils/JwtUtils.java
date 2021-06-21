@@ -66,6 +66,7 @@ public class JwtUtils {
             return Jwts.builder().signWith(secretKey)
                     .setId(jti)
                     .claim("user", mapper.writeValueAsString(userDetail))
+                    .claim("id", userDetail.getId().toString())
                     .compact();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -83,20 +84,21 @@ public class JwtUtils {
         // 1.验证并解析jwt
         try {
             claimsJws = jwtParser.parseClaimsJws(jwt);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             throw new RuntimeException("token格式不正确");
         }
         Claims claims = claimsJws.getBody();
         // 2.解析载荷数据
         Payload payload = new Payload();
         payload.setJti(claims.getId());
-        UserDetail userDetail = null;
+        payload.setId(Long.parseLong(claims.get("id", String.class)));
+        UserDetail userDetail;
         try {
             userDetail = mapper.readValue(claims.get("user", String.class), UserDetail.class);
+            payload.setUserDetail(userDetail);
         } catch (IOException e) {
             throw new RuntimeException("用户信息解析失败！");
         }
-        payload.setUserDetail(userDetail);
 
         // 3.验证是否过期
         // 3.1.取出redis中jwt
