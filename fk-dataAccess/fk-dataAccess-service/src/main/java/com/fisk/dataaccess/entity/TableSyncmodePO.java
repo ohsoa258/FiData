@@ -16,6 +16,9 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_table_syncmode")
 public class TableSyncmodePO extends BaseEntity {
 
+    /**
+     * 注入的是tb_table_access表的id
+     */
     @TableId(value = "id",type = IdType.INPUT)
     public long id;
 

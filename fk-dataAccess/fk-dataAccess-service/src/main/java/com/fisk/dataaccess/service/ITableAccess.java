@@ -33,7 +33,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows);
 
-    TableAccessDTO getData(long id);
+    TableAccessNDTO getData(long id);
 
     List<TablePyhNameDTO> getTableFields(String appName);
 }

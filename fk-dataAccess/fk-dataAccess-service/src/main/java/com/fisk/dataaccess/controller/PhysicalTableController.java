@@ -135,7 +135,7 @@ public class PhysicalTableController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation("修改接口的回显数据")
-    public ResultEntity<TableAccessDTO> getData(@PathVariable("id") long id) {
+    public ResultEntity<TableAccessNDTO> getData(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
     }
 

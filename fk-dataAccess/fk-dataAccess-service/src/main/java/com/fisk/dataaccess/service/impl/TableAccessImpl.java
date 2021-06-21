@@ -9,6 +9,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
+import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlTableUtils;
 import com.fisk.dataaccess.utils.MysqlConUtils;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,6 +44,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Autowired
     private TableSyncmodeImpl syncmodeImpl;
+
+    @Resource
+    private TableSyncmodeMapper syncmodeMapper;
 
     @Autowired
     private AppDriveTypeImpl appDriveTypeImpl;
@@ -139,10 +144,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
             TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
             tableFieldsPO.setTableAccessId(tableAccessPO.getId());
-            // 1是业务时间，0非业务时间
+            /*// 1是业务时间，0非业务时间
             tableFieldsPO.setIsBusinesstime(0);
             // 1是时间戳，0非时间戳
-            tableFieldsPO.setIsTimestamp(0);
+            tableFieldsPO.setIsTimestamp(0);*/
             // 1是实时物理表的字段，0是非实时物理表的字段
             tableFieldsPO.setIsRealtime(1);
             tableFieldsPO.setDelFlag(1);
@@ -247,11 +252,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableAccessPO.setDelFlag(1);
         tableAccessPO.setIsRealtime(1); // 非实时
 
-
-        // 时间字段有问题,待定
+        // 时间
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date1 = new Date(System.currentTimeMillis());
-
         tableAccessPO.setCreateTime(date1);
         tableAccessPO.setUpdateTime(date1);
 
@@ -268,10 +271,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
             TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
             tableFieldsPO.setTableAccessId(tableAccessPO.getId());
-            // 1是业务时间，0非业务时间
+/*            // 1是业务时间，0非业务时间
             tableFieldsPO.setIsBusinesstime(0);
             // 1是时间戳，0非时间戳
-            tableFieldsPO.setIsTimestamp(0);
+            tableFieldsPO.setIsTimestamp(0);*/
             // 1是实时物理表的字段，0是非实时物理表的字段
             tableFieldsPO.setIsRealtime(1);
             tableFieldsPO.setDelFlag(1);
@@ -604,7 +607,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public TableAccessDTO getData(long id) {
+    public TableAccessNDTO getData(long id) {
 
         // 查询tb_table_access数据
         TableAccessPO accessPO = this.query()
@@ -612,11 +615,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
 
-        TableAccessDTO accessDTO = new TableAccessDTO(accessPO);
+        TableAccessNDTO accessNDTO = new TableAccessNDTO(accessPO);
 
         // 将应用名称封装进去
         AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("id", accessPO.getAppid()).one();
-        accessDTO.setAppName(registrationPO.getAppName());
+        accessNDTO.setAppName(registrationPO.getAppName());
 
         // 查询tb_table_fields数据
         List<TableFieldsPO> fieldsPOS = tableFieldsImpl.query()
@@ -630,9 +633,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             tableFieldsDTOS.add(tableFieldsDTO);
         }
 
-        accessDTO.setTableFieldsDTOS(tableFieldsDTOS);
+        accessNDTO.setTableFieldsDTOS(tableFieldsDTOS);
 
-        return accessDTO;
+        int isRealtime = accessPO.getIsRealtime();
+
+        // 非实时数据比实时数据多了个tb_table_syncmode表数据
+        // 当要回显的数据是非实时的时候,要将tb_table_syncmode表数据封装进去
+        if (isRealtime == 1) {// 非实时数据
+//            TableSyncmodePO syncmodePO = this.syncmodeImpl.query().eq("id", id).one();
+            TableSyncmodePO syncmodePO = this.syncmodeMapper.getData(id);
+            TableSyncmodeDTO syncmodeDTO = new TableSyncmodeDTO(syncmodePO);
+
+            accessNDTO.setTableSyncmodeDTO(syncmodeDTO);
+        }
+
+        return accessNDTO;
     }
 
 

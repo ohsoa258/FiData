@@ -58,9 +58,19 @@ public class TableFieldsDTO extends BaseDTO {
     public int isPrimarykey;
 
     /**
+     * 1是业务时间，0非业务时间
+     */
+    public int isBusinesstime;
+
+    /**
+     * 1：实时物理表的字段，0：非实时物理表的字段
+     */
+    public long isRealtime;
+
+    /**
      * 1是时间戳，0非时间戳
      */
-//    public long isRealtime;
+    public int isTimestamp;
 
     /**
      * 1：实时物理表的字段，0：非实时物理表的字段

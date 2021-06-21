@@ -55,7 +55,7 @@ public class TableAccessDTO extends BaseDTO {
     /**
      *  0是实时物理表，1是非实时物理表
      */
-//    public int isRealtime;
+    public int isRealtime;
 
     /**
      * 表字段对象
