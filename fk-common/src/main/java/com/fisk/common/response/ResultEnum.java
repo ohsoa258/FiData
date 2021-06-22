@@ -47,6 +47,8 @@ public enum ResultEnum {
     AUTH_SECRET_ERROR(3002, "客户端的信息有误,secret错误"),
     AUTH_JWT_ERROR(3003, "JWT无效或已过期"),
     AUTH_USER_NOTLOGIN(3004, "用户未登录"),
+    AUTH_TOKEN_PARSER_ERROR(3005, "token解析失败"),
+    AUTH_TOKEN_IS_NOTNULL(3006, "token不能为空"),
 
     /**
      * 用户中心

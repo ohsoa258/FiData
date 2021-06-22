@@ -9,13 +9,15 @@ import com.fisk.common.enums.BaseEnum;
 public enum TraceTypeEnum implements BaseEnum {
 
     /**
-     * 查询字段类型
+     *
      */
     CHARTVISUAL_QUERY(0, "ChartVisual_Query"),
     CHARTVISUAL_CONNECTION(1, "ChartVisual_Connection"),
     CHARTVISUAL_SERVICE(2, "ChartVisual_Service"),
     CHARTVISUAL_SHUTDOWN(3, "ChartVisual_Shutdown"),
     CHARTVISUAL_START(4, "ChartVisual_Start"),
+    TASK_MQ_PRODUCER_CONFIRM(4, "Task_MQ_Producer_Confirm"),
+    TASK_WS_SEND_MESSAGE(4, "Task_WS_Send_Message"),
     UNKNOWN(-1, "UNKNOWN");
 
     TraceTypeEnum(int value, String name) {
