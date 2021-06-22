@@ -79,6 +79,11 @@ spring:
         predicates:
           - Path=/dataAccess/**
 
+      - id: datamodel-service # 数据建模服务
+        uri: lb://datamodel-service
+        predicates:
+          - Path=/datamodel/**
+
   redis:
     host: 192.168.11.130
 

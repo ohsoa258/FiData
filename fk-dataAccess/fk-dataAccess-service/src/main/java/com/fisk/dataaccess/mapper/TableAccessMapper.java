@@ -37,9 +37,9 @@ public interface TableAccessMapper extends BaseMapper<TableAccessPO> {
 
 
     /**
-     * 查询表中所有的table_name
+     * 查询表中所有的table_name(未删除的)
      * @return
      */
-    @Select("select table_name from tb_table_access")
+    @Select("select table_name from tb_table_access where del_flag=1")
     List<String> getTableName();
 }
