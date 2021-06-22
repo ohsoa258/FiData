@@ -56,7 +56,7 @@
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-dataAccess-pojo</artifactId>
+            <artifactId>fk-datamodel-pojo</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 

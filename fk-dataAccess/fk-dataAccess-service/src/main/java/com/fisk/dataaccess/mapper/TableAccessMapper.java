@@ -31,7 +31,8 @@ public interface TableAccessMapper extends BaseMapper<TableAccessPO> {
             ")LEFT JOIN `tb_table_syncmode` s\n" +
             "ON s.id=a.appid\n" +
             "WHERE table_name like concat('%',#{key},'%')\n" +
-            "AND a.del_flag = 1")
+            "AND a.del_flag = 1 " +
+            "ORDER BY CAST(f.update_time AS datetime) DESC")
 //    List<TablePhyHomeDTO> queryByPage(@Param("key") String key);
     List<Map<String, Object>> queryByPage(Page<Map<String,Object>> page,@Param("key") String key);
 
