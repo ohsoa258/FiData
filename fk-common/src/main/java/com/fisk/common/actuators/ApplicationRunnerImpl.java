@@ -20,7 +20,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         MDCHelper.setClass(ApplicationRunnerImpl.class.getName());
         MDCHelper.setFunction("run");
-        MDCHelper.setAppLogType(TraceTypeEnum.CHARTVISUAL_START);
+        MDCHelper.setAppLogType(TraceTypeEnum.PROJECT_START);
         log.info("------------【" + LocalDateTime.now() + "】项目开始运行------------");
     }
 }

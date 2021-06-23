@@ -4,6 +4,7 @@ import com.fisk.common.enums.BaseEnum;
 
 /**
  * MDC类型
+ *
  * @author gy
  */
 public enum TraceTypeEnum implements BaseEnum {
@@ -11,13 +12,14 @@ public enum TraceTypeEnum implements BaseEnum {
     /**
      *
      */
-    CHARTVISUAL_QUERY(0, "ChartVisual_Query"),
-    CHARTVISUAL_CONNECTION(1, "ChartVisual_Connection"),
-    CHARTVISUAL_SERVICE(2, "ChartVisual_Service"),
-    CHARTVISUAL_SHUTDOWN(3, "ChartVisual_Shutdown"),
-    CHARTVISUAL_START(4, "ChartVisual_Start"),
-    TASK_MQ_PRODUCER_CONFIRM(4, "Task_MQ_Producer_Confirm"),
-    TASK_WS_SEND_MESSAGE(4, "Task_WS_Send_Message"),
+    PROJECT_START(1, "Project_Start"),
+    PROJECT_SHUTDOWN(2, "Project_Shutdown"),
+    CHARTVISUAL_QUERY(1000, "ChartVisual_Query"),
+    CHARTVISUAL_CONNECTION(1001, "ChartVisual_Connection"),
+    CHARTVISUAL_SERVICE(1002, "ChartVisual_Service"),
+    TASK_MQ_PRODUCER_CONFIRM(2001, "Task_MQ_Producer_Confirm"),
+    TASK_WS_SEND_MESSAGE(2002, "Task_WS_Send_Message"),
+    TASK_NIFI_ERROR(2003, "Task_Nifi_Error"),
     UNKNOWN(-1, "UNKNOWN");
 
     TraceTypeEnum(int value, String name) {

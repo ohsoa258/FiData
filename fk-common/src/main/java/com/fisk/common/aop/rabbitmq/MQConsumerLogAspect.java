@@ -41,11 +41,20 @@ public class MQConsumerLogAspect {
             MDCHelper.setClass(tClass.getName());
         } catch (Exception ex) {
             ex.printStackTrace();
+            log.error("方法元数据获取失败");
         }
+
         String code = UUID.randomUUID().toString();
         log.info("【{}】【{}】【{}】开始执行", LocalDateTime.now(), code, name);
-        Object res = joinPoint.proceed();
-        log.info("【{}】【{}】【{}】执行结束", LocalDateTime.now(), code, name);
-        return res;
+        Object res = null;
+        boolean isSuccess = false;
+        try {
+            res = joinPoint.proceed();
+            isSuccess = true;
+        } catch (Exception ex) {
+            log.error("消费者处理报错，", ex);
+        }
+        log.info("【{}】【{}】【{}】执行结束，执行结果【{}】", LocalDateTime.now(), code, name, isSuccess);
+        return null;
     }
 }

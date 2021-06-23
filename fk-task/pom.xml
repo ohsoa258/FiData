@@ -60,5 +60,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+
+        <!-- nifi api -->
+        <!-- https://mvnrepository.com/artifact/io.github.samuel-davis/nifi-api-client-java -->
+        <dependency>
+            <groupId>io.github.samuel-davis</groupId>
+            <artifactId>nifi-api-client-java</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
+
+
+
+
     </dependencies>
 </project>
