@@ -1,0 +1,101 @@
+package com.fisk.task.service.impl;
+
+import com.davis.client.model.ConnectionEntity;
+import com.davis.client.model.ControllerServiceEntity;
+import com.davis.client.model.ProcessGroupEntity;
+import com.davis.client.model.ProcessorEntity;
+import com.fisk.common.constants.NifiConstants;
+import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
+import com.fisk.common.enums.task.nifi.DriverTypeEnum;
+import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
+import com.fisk.task.entity.dto.nifi.*;
+import com.fisk.task.service.INifiComponentsBuild;
+import com.fisk.task.service.INifiFlowBuild;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * @author gy
+ */
+@Service
+@Slf4j
+public class NifiFlowBuildImpl implements INifiFlowBuild {
+
+    @Resource
+    INifiComponentsBuild componentsBuild;
+
+    @Override
+    public BusinessResult<Object> buildSourceToTargetDataFlow() {
+        //创建组
+        BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
+        groupDTO.name = "GY-Test-Flow";
+        groupDTO.details = "java程序通过调用RESTAPI创建Nifi流程";
+        BusinessResult<ProcessGroupEntity> groupRes = componentsBuild.buildProcessGroup(groupDTO);
+        String groupId = groupRes.data.getId();
+
+        //创建数据源连接池
+        BuildDbControllerServiceDTO dbCsDTO = new BuildDbControllerServiceDTO();
+        dbCsDTO.groupId = groupId;
+        dbCsDTO.enabled = true;
+        dbCsDTO.name = "Source Data Connection Pool";
+        dbCsDTO.details = "源系统jdbc连接池";
+        dbCsDTO.conUrl = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+        dbCsDTO.driverName = DriverTypeEnum.MYSQL.getName();
+        dbCsDTO.driverLocation = NifiConstants.DirverConstants.MYSQL_DIRVER_PATH;
+        dbCsDTO.user = "root";
+        dbCsDTO.pwd = "root123";
+        BusinessResult<ControllerServiceEntity> csRes = componentsBuild.buildDbControllerService(dbCsDTO);
+        String dbConPoolId = csRes.data.getId();
+
+        //创建 执行sql 组件
+        BuildExecuteSqlProcessorDTO execSqlDTO = new BuildExecuteSqlProcessorDTO();
+        execSqlDTO.groupId = groupId;
+        execSqlDTO.dbConnectionId = csRes.data.getId();
+        execSqlDTO.name = "Exec Query";
+        execSqlDTO.details = "在源执行sql";
+        execSqlDTO.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        execSqlDTO.scheduleExpression = "0/30 * * * * ? ";
+        execSqlDTO.querySql = "select id as source_id,name,type,sub_type,value from tb_test_data";
+        BusinessResult<ProcessorEntity> execSqlRes = componentsBuild.buildExecuteSqlProcess(execSqlDTO);
+
+        //创建 数据转json 组件
+        BuildConvertToJsonProcessorDTO toJsonDTO = new BuildConvertToJsonProcessorDTO();
+        toJsonDTO.groupId = groupId;
+        toJsonDTO.name = "Convert Data To Json";
+        toJsonDTO.details = "源数据转换为json";
+        BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDTO);
+
+        //创建 连接器 连接 执行sql 和 数据转json
+        BusinessResult<ConnectionEntity> conRes = componentsBuild.buildConnectProcessors(groupId, execSqlRes.data.getId(), toJsonRes.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+        //创建 json转sql 组件
+        BuildConvertJsonToSqlProcessorDTO toSqlDTO = new BuildConvertJsonToSqlProcessorDTO();
+        toSqlDTO.groupId = groupId;
+        toSqlDTO.dbConnectionId = dbConPoolId;
+        toSqlDTO.tableName = "tb_test_data3";
+        toSqlDTO.sqlType = StatementSqlTypeEnum.INSERT;
+        toSqlDTO.name = "Convert Json To Sql";
+        toSqlDTO.details = "json转化为sql语句";
+        BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDTO);
+
+        //连接 数据转json 和 json转sql
+        BusinessResult<ConnectionEntity> jsonSqlCon = componentsBuild.buildConnectProcessors(groupId, toJsonRes.data.getId(), toSqlRes.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+        BuildPutSqlProcessorDTO putSqlDTO = new BuildPutSqlProcessorDTO();
+        putSqlDTO.groupId = groupId;
+        putSqlDTO.dbConnectionId = dbConPoolId;
+        putSqlDTO.name = "Put Sql To Target";
+        putSqlDTO.details = "将生成的sql在目标系统执行";
+        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDTO);
+
+        //连接 数据转json 和 json转sql
+        BusinessResult<ConnectionEntity> sqlPutRes = componentsBuild.buildConnectProcessors(groupId, toSqlRes.data.getId(), putSqlRes.data.getId(), AutoEndBranchTypeEnum.SQL);
+
+
+        return BusinessResult.of(true, "nifi流程创建成功", null);
+    }
+}

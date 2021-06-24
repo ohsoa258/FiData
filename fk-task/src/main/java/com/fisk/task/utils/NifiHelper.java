@@ -1,7 +1,10 @@
 package com.fisk.task.utils;
 
 import com.davis.client.ApiClient;
+import com.davis.client.api.ControllerservicesApi;
 import com.davis.client.api.ProcessgroupsApi;
+import com.davis.client.api.ProcessorsApi;
+import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.RevisionDTO;
 import com.fisk.common.constants.NifiConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -15,10 +18,29 @@ public class NifiHelper {
 
     /**
      * 获取process组的api操作类
+     *
      * @return api操作类
      */
-    public static ProcessgroupsApi getProcessGroupsApi(){
+    public static ProcessgroupsApi getProcessGroupsApi() {
         return new ProcessgroupsApi(getApiClient());
+    }
+
+    /**
+     * 获取controller-service的api操作类
+     *
+     * @return api操作类
+     */
+    public static ControllerservicesApi getControllerServicesApi() {
+        return new ControllerservicesApi(getApiClient());
+    }
+
+    /**
+     * 获取controller-service的api操作类
+     *
+     * @return api操作类
+     */
+    public static ProcessorsApi getProcessorsApi() {
+        return new ProcessorsApi(getApiClient());
     }
 
     /**
@@ -43,6 +65,7 @@ public class NifiHelper {
 
     /**
      * 创建Revision对象
+     *
      * @return Revision对象
      */
     public static RevisionDTO buildRevisionDTO() {
@@ -50,5 +73,13 @@ public class NifiHelper {
         revisionDTO.setVersion(0L);
         revisionDTO.setClientId(UUID.randomUUID().toString());
         return revisionDTO;
+    }
+
+    public static ConnectableDTO buildConnectableDTO(String groupId,String id){
+        ConnectableDTO dto = new ConnectableDTO();
+        dto.setGroupId(groupId);
+        dto.setId(id);
+        dto.setType(ConnectableDTO.TypeEnum.PROCESSOR);
+        return dto;
     }
 }

@@ -11,7 +11,9 @@ public class NifiConstants {
 
         public static final String ROOT_NODE = "root";
 
-        public static final String DBCP_CONNECTION_POOL ="org.apache.nifi.dbcp.DBCPConnectionPool";
+    }
 
+    public static final class DirverConstants{
+        public static final String MYSQL_DIRVER_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
     }
 }
