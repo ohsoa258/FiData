@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessAreaDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
@@ -13,8 +11,7 @@ import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,6 +31,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
      * @return
      */
     @Override
+    @Transactional
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
 
         // 1.dto->po
@@ -78,6 +76,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
      * @return
      */
     @Override
+    @Transactional
     public ResultEnum updateBusinessArea(BusinessAreaDTO businessAreaDTO) {
 
         // 修改时前端传来的id
