@@ -1,5 +1,7 @@
 package com.fisk.datamodel.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Lock
@@ -81,11 +84,28 @@ public class DataAreaController {
      * @return
      */
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除业务域")
+    @ApiOperation(value = "删除数据域")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteDataArea(id));
     }
 
+    /**
+     * 分页查询
+     *
+     * @param key  搜索条件
+     * @param page 当前页码
+     * @param rows 每页显示条数
+     * @return
+     */
+    @GetMapping("/page")
+    @ApiOperation(value = "数据域首页分页查询")
+    public ResultEntity<Page<Map<String,Object>>> queryByPage(
+            @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
+    }
 
 }

@@ -1,6 +1,8 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessNameDTO;
@@ -19,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Lock
@@ -186,7 +189,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
      * @return
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)// 任何异常都回滚数据
     public ResultEnum deleteDataArea(long id) {
 
         // 删除数据域表信息
@@ -203,6 +206,26 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
         boolean update = this.updateById(areaPO);
 
         return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 数据域分页查询
+     * @param key
+     * @param page
+     * @param rows
+     * @return
+     */
+    @Override
+    public Page<Map<String,Object>> queryByPage(String key, Integer page, Integer rows) {
+
+        // 1.分页信息的健壮性处理
+        page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单次查询太多数据影响效率
+        rows = Math.max(rows, 1);    // 每页至少1条
+
+        // 新建分页
+        Page<Map<String, Object>> pageMap = new Page<>(page, rows);
+
+        return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
     }
 
 

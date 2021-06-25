@@ -145,7 +145,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> records1 = registrationPOPage1.getRecords();
 
 
-
         // 分页封装
         Page<AppRegistrationPO> registrationPOPage2 = new Page<>(page, rows);
 
@@ -155,7 +154,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 查询数据
         queryWrapper.like(isKeyExists, "app_name", key)
-                .eq("del_flag", 1);// 未删除
+                .eq("del_flag", 1)
+                .orderByDesc("create_time");// 未删除
         baseMapper.selectPage(registrationPOPage2, queryWrapper);
 
         List<AppRegistrationPO> records2 = registrationPOPage2.getRecords();
@@ -247,6 +247,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 查询所有应用名称(实时  非实时)
+     *
      * @return
      */
     @Override
@@ -270,9 +271,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
 
-
     /**
      * 根据id查询数据,用于数据回显
+     *
      * @param id
      * @return
      */
@@ -281,14 +282,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         AppRegistrationPO registrationPO = this.query()
                 .eq("id", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
         AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(registrationPO);
 //        appRegistrationDTO.setCreateTime(registrationPO.getCreateTime());
 
         AppDataSourcePO appDataSourcePO = appDataSourceImpl.query()
                 .eq("appid", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
         AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(appDataSourcePO);
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
@@ -298,7 +299,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     /**
-     *
      * @return
      */
     @Override
@@ -312,6 +312,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 查询所有非实时应用名称
+     *
      * @return
      */
     @Override

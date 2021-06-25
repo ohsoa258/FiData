@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
+import com.fisk.common.enums.TraceTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.mdc.TraceType;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
@@ -535,6 +537,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param rows
      * @return
      */
+//    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
 
@@ -692,6 +695,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(long id) {
 
         // 1.删除tb_table_access数据
@@ -708,7 +712,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         // 2.删除tb_table_fields数据
-        List<TableFieldsPO> fieldsPOList = tableFieldsImpl.query().eq("table_access_id", id).list();
+        List<TableFieldsPO> fieldsPOList = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag",1)
+                .list();
         for (TableFieldsPO tableFieldsPO : fieldsPOList) {
             tableFieldsPO.setDelFlag(0);
         }
