@@ -48,8 +48,8 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
         List<BusinessAreaPO> businessNames = businessAreaMapper.getName();
 
         List<BusinessNameDTO> list = new ArrayList<>();
-        BusinessNameDTO businessNameDTO = new BusinessNameDTO();
         for (BusinessAreaPO businessAreaPO : businessNames) {
+            BusinessNameDTO businessNameDTO = new BusinessNameDTO();
 
             businessNameDTO.setId(businessAreaPO.getId());
             businessNameDTO.setBusinessName(businessAreaPO.getBusinessName());

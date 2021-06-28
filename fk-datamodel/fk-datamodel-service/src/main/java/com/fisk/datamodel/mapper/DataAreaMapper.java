@@ -21,8 +21,8 @@ public interface DataAreaMapper extends BaseMapper<DataAreaPO> {
             "\ta.business_name,\n" +
             "\tb.data_name,\n" +
             "\tb.date_des\n" +
-            "FROM `业务域表名` a\n" +
-            "LEFT JOIN `数据域表名` AS b\n" +
+            "FROM `tb_business_area` a\n" +
+            "LEFT JOIN `tb_data_area` AS b\n" +
             "ON a.id = f.id\n" +
             "WHERE business_name LIKE concat('%',#{key},'%') \n" +
             "AND a.del_flag = 1\n" +

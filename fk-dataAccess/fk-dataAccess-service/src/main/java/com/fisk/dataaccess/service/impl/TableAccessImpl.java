@@ -143,6 +143,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 保存tb_table_fields数据
         boolean save2 = true;
         List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+
+        //TODO: 这一块判断先不加
+        // 表字段不为空判断
+//        if (tableFieldsDTOS == null||tableFieldsDTOS.isEmpty()) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
             TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
             tableFieldsPO.setTableAccessId(tableAccessPO.getId());
@@ -270,6 +277,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 保存tb_table_fields数据
         boolean save2 = true;
         List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getTableFieldsDTOS();
+
+        // TODO: 这一块判断先不加
+        // 表字段不为空判断
+//        if (tableFieldsDTOS == null||tableFieldsDTOS.isEmpty()) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
             TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
             tableFieldsPO.setTableAccessId(tableAccessPO.getId());
@@ -716,6 +730,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("table_access_id", id)
                 .eq("del_flag",1)
                 .list();
+
+        // 判断是否存在表字段
+        if (fieldsPOList == null || fieldsPOList.isEmpty()) {
+            return ResultEnum.SUCCESS;
+        }
+
         for (TableFieldsPO tableFieldsPO : fieldsPOList) {
             tableFieldsPO.setDelFlag(0);
         }

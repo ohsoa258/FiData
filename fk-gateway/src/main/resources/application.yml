@@ -10,7 +10,11 @@ eureka:
 hystrix:
   command:
     default:
-      execution.isolation.thread.timeoutInMilliseconds: 6000 # 熔断超时时长：6000ms
+      execution.isolation.thread.timeoutInMilliseconds: 15000 # 熔断超时时长：1500ms=15s
+#      circuitBreaker:
+#        errorThresholdPercentage: 50 # 触发熔断错误比例阈值，默认值50%
+#        sleepWindowInMilliseconds: 10000 # 熔断后休眠时长，默认值5秒
+#        requestVolumeThreshold: 10 # 触发熔断的最小请求次数，默认20
 
 ribbon:
   ConnectTimeout: 500 # ribbon链接超时时长
@@ -52,8 +56,8 @@ spring:
           key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式
           # 每一个IP地址，每秒钟最多发起2次请求
           # 每秒钟超过2次请求，则返回429的异常状态码
-          redis-rate-limiter.replenishRate: 5  # 生成令牌的速率
-          redis-rate-limiter.burstCapacity: 5 # 桶的容量
+          redis-rate-limiter.replenishRate: 30  # 生成令牌的速率
+          redis-rate-limiter.burstCapacity: 30 # 桶的容量
 
       # 添加网关路由
       routes:

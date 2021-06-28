@@ -1,5 +1,6 @@
 package com.fisk.datamodel.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * @author: Lock
@@ -85,12 +88,12 @@ public class BusinessAreaController {
      */
     @GetMapping("/page")
     @ApiOperation(value = "分页查询")
-    public ResultEntity<PageDTO<BusinessAreaDTO>> queryByPageAppRes(
+    public ResultEntity<Page<Map<String, Object>>> queryByPage(
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listBusinessArea(key, page, rows));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }
 
 

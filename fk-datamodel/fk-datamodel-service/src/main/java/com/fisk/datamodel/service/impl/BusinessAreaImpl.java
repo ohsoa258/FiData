@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Lock
@@ -129,37 +131,14 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
      * @return
      */
     @Override
-    public PageDTO<BusinessAreaDTO> listBusinessArea(String key, Integer page, Integer rows) {
+    public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
         // 1.分页信息的健壮性处理
         page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
-        rows = Math.max(rows, 5);    // 每页至少5条
+        rows = Math.max(rows, 1);    // 每页至少5条
 
-        // 2.使用mybatis-plus自带的分页功能
-        Page<BusinessAreaPO> dtoPage = new Page<>(page, rows);
+        Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 
-        // 可以排空空格字符的查询
-        boolean isKeyExists = StringUtils.isNoneBlank(key);
-
-//        this.query().like(isKeyExists, "name", key)
-//                .or()
-//                .eq(isKeyExists, "letter", key)
-//                .page(brandPage);
-        this.query().like(isKeyExists, "business_name", isKeyExists)
-//                .or()
-                .eq("del_flag", 1)
-                .orderByDesc("update_time")
-                .page(dtoPage);
-
-        // 取出数据列表
-        List<BusinessAreaPO> brandList = dtoPage.getRecords();
-
-        // pojo->dto
-
-        return new PageDTO<>(
-                dtoPage.getTotal(), // 总条数
-                dtoPage.getSize(),  // 总页数
-                BusinessAreaDTO.convertEntityList(brandList) // 当前页数据
-        );
+        return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
     }
 
 }
