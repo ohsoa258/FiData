@@ -47,7 +47,7 @@ public class DataAreaController {
      * @return
      */
     @PostMapping("/add")
-    @ApiOperation(value = "添加数据域")
+    @ApiOperation(value = "添加数据域(对象)")
     public ResultEntity<Object> addData(@RequestBody DataAreaDTO dataAreaDTO) {
 
         return ResultEntityBuild.build(service.addData(dataAreaDTO));
@@ -59,7 +59,7 @@ public class DataAreaController {
      * @return
      */
     @GetMapping("/get/{id}")
-    @ApiOperation(value = "回显数据: 根据id查询")
+    @ApiOperation(value = "回显数据: 根据id查询(url拼接)")
     public ResultEntity<DataAreaDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
@@ -72,7 +72,7 @@ public class DataAreaController {
      * @return
      */
     @PutMapping("/edit")
-    @ApiOperation(value = "业务域修改")
+    @ApiOperation(value = "业务域修改(对象)")
     public ResultEntity<Object> editData(@RequestBody DataAreaDTO dataAreaDTO) {
 
         return ResultEntityBuild.build(service.updateDataArea(dataAreaDTO));
@@ -84,7 +84,7 @@ public class DataAreaController {
      * @return
      */
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除数据域")
+    @ApiOperation(value = "删除数据域(url拼接)")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteDataArea(id));
@@ -99,11 +99,11 @@ public class DataAreaController {
      * @return
      */
     @GetMapping("/page")
-    @ApiOperation(value = "数据域首页分页查询")
+    @ApiOperation(value = "数据域首页分页查询(url拼接)")
     public ResultEntity<Page<Map<String,Object>>> queryByPage(
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
+            @RequestParam(value = "rows", defaultValue = "1") Integer rows) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }

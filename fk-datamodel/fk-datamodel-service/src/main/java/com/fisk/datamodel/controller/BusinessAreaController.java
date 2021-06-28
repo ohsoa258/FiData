@@ -34,7 +34,7 @@ public class BusinessAreaController {
      * @return
      */
     @PostMapping("/add")
-    @ApiOperation(value = "添加业务域")
+    @ApiOperation(value = "添加业务域[对象]")
     public ResultEntity<Object> addData(@RequestBody BusinessAreaDTO businessAreaDTO) {
 
         return ResultEntityBuild.build(service.addData(businessAreaDTO));
@@ -46,7 +46,7 @@ public class BusinessAreaController {
      * @return
      */
     @GetMapping("/get/{id}")
-    @ApiOperation(value = "回显数据: 根据id查询")
+    @ApiOperation(value = "回显数据: 根据id查询(url拼接)")
     public ResultEntity<BusinessAreaDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
@@ -59,7 +59,7 @@ public class BusinessAreaController {
      * @return
      */
     @PutMapping("/edit")
-    @ApiOperation(value = "业务域修改")
+    @ApiOperation(value = "业务域修改(对象)")
     public ResultEntity<Object> editData(@RequestBody BusinessAreaDTO businessAreaDTO) {
 
         return ResultEntityBuild.build(service.updateBusinessArea(businessAreaDTO));
@@ -71,7 +71,7 @@ public class BusinessAreaController {
      * @return
      */
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除业务域")
+    @ApiOperation(value = "删除业务域(url拼接)")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteBusinessArea(id));
@@ -87,11 +87,11 @@ public class BusinessAreaController {
      * @return
      */
     @GetMapping("/page")
-    @ApiOperation(value = "分页查询")
+    @ApiOperation(value = "分页查询(url拼接)")
     public ResultEntity<Page<Map<String, Object>>> queryByPage(
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
+            @RequestParam(value = "rows", defaultValue = "1") Integer rows) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }

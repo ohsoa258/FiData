@@ -17,13 +17,13 @@ import java.util.Map;
 public interface DataAreaMapper extends BaseMapper<DataAreaPO> {
 
     @Select("SELECT \n" +
-            "\ta.id,\n" +
+            "\tb.id,\n" +
             "\ta.business_name,\n" +
             "\tb.data_name,\n" +
-            "\tb.date_des\n" +
-            "FROM `tb_business_area` a\n" +
-            "LEFT JOIN `tb_data_area` AS b\n" +
-            "ON a.id = f.id\n" +
+            "\tb.data_des\n" +
+            "FROM `tb_area_business` a\n" +
+            "LEFT JOIN `tb_area_data` AS b\n" +
+            "ON a.id = b.businessid\n" +
             "WHERE business_name LIKE concat('%',#{key},'%') \n" +
             "AND a.del_flag = 1\n" +
             "ORDER BY a.update_time DESC;")

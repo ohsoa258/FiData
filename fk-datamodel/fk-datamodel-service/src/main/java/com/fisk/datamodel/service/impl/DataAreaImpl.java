@@ -175,6 +175,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
                 .one();
 
         po.setBusinessid(businessAreaPO.getId());
+        po.setDelFlag(1);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date = new Date(System.currentTimeMillis());

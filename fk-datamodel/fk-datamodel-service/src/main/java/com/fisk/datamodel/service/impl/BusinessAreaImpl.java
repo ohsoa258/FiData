@@ -89,6 +89,10 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
 
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
+
+        // 设置删除状态
+        po.setDelFlag(1);
+
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);

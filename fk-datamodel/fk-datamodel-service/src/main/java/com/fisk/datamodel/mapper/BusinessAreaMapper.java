@@ -16,12 +16,12 @@ import java.util.Map;
 @Mapper
 public interface BusinessAreaMapper extends BaseMapper<BusinessAreaPO> {
 
-    @Select("select id,business_name from tb_business_area where del_flag=1")
+    @Select("select id,business_name from tb_area_business where del_flag=1")
     List<BusinessAreaPO> getName();
 
-    @Select("SELECT id,business_name,business_des,business_admin,business_email FROM tb_business_area\n" +
+    @Select("SELECT id,business_name,business_des,business_admin,business_email FROM tb_area_business\n" +
             "WHERE business_name LIKE CONCAT('%',#{key},'%')\n" +
             "AND del_flag = 1\n" +
-            "ORDER BY update_time DESC")
-    List<Map<String, Object>> queryByPage(Page<Map<String, Object>> pageMap, @Param("key") String key);
+            "ORDER BY update_time DESC;")
+    List<Map<String, Object>> queryByPage(Page<Map<String, Object>> page, @Param("key") String key);
 }

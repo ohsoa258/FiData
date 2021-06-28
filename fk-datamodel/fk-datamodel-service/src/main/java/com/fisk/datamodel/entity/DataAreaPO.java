@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
  * @author: Lock
  */
 @Data
-@TableName("tb_data_area") // 表名
+@TableName("tb_area_data") // 表名
 @EqualsAndHashCode(callSuper = true)
 public class DataAreaPO extends BaseEntity {
 
