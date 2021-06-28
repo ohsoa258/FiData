@@ -7,21 +7,24 @@ import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
-import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -110,13 +113,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
         List<DataDomainDTO> data = DbHelper.execQueryResultList(command.buildDataDomainQuery(model.conDbname), model, DataDomainDTO.class);
         if (data != null) {
-            //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息
+            //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息 + "#" + StringUtils.defaultString(o.getTableDetails())
             return data.stream()
                     .collect(Collectors.collectingAndThen(
                             Collectors.toCollection(
                                     () -> new TreeSet<>(
-                                            Comparator.comparing(
-                                                    o -> o.getTableName() + "#" + o.getTableDetails()))),
+                                            Comparator.comparing(DataDomainDTO::getTableName))),
                             ArrayList::new)
                     )
                     .stream()

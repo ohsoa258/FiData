@@ -16,7 +16,7 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("SELECT DISTINCT ");
         str.append("objects.name as tableName, ");
-        str.append("props.value as tableDetails, ");
+        str.append("cast(props.value as nvarchar(50)) as tableDetails, ");
         str.append("col.columnName, ");
         str.append("col.columnDetails ");
         str.append("FROM ");
