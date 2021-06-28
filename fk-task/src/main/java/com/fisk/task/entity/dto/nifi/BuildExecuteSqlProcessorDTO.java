@@ -14,6 +14,7 @@ public class BuildExecuteSqlProcessorDTO {
     public String name;
     public String details;
     public PositionDTO positionDTO;
+
     public SchedulingStrategyTypeEnum scheduleType;
     public String scheduleExpression;
 

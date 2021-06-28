@@ -1,7 +1,9 @@
 package com.fisk.task.service.impl;
 
 import com.davis.client.ApiException;
+import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
+import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
@@ -9,12 +11,16 @@ import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.entity.dto.nifi.*;
+import com.fisk.task.entity.vo.ProcessGroupsVO;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +32,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class NifiComponentsBuildImpl implements INifiComponentsBuild {
+
+    @Resource
+    RestTemplate httpClient;
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -156,7 +165,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
 
         //组件属性
-        Map<String, String> map = new HashMap<>(3);
+        Map<String, String> map = new HashMap<>(4);
         map.put("Database Connection Pooling Service", data.dbConnectionId);
         map.put("sql-pre-query", data.preSql);
         map.put("SQL select query", data.querySql);
@@ -174,21 +183,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         dto.setName(data.name);
         dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
-        dto.setConfig(config);
+        dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
-        entity.setPosition(data.getPositionDTO());
-        entity.setComponent(dto);
 
-        try {
-            ProcessorEntity res = NifiHelper.getProcessGroupsApi().createProcessor(data.groupId, entity);
-            return BusinessResult.of(true, "ExecuteSQL组件创建完成", res);
-        } catch (ApiException e) {
-            log.error("组件创建失败，【" + e.getResponseBody() + "】: ", e);
-            return BusinessResult.of(false, "ExecuteSQL组件创建失败" + e.getMessage(), null);
-        }
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override
@@ -207,21 +208,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         dto.setName(data.name);
         dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ConvertAvroToJSON.getName());
-        dto.setConfig(config);
+        dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
-        entity.setPosition(data.getPositionDTO());
-        entity.setComponent(dto);
 
-        try {
-            ProcessorEntity res = NifiHelper.getProcessGroupsApi().createProcessor(data.groupId, entity);
-            return BusinessResult.of(true, "ConvertAvroToJSON组件创建完成", res);
-        } catch (ApiException e) {
-            log.error("组件创建失败，【" + e.getResponseBody() + "】: ", e);
-            return BusinessResult.of(false, "ConvertAvroToJSON组件创建失败" + e.getMessage(), null);
-        }
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override
@@ -248,21 +241,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         dto.setName(data.name);
         dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ConvertJSONToSQL.getName());
-        dto.setConfig(config);
+        dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
-        entity.setPosition(data.getPositionDTO());
-        entity.setComponent(dto);
 
-        try {
-            ProcessorEntity res = NifiHelper.getProcessGroupsApi().createProcessor(data.groupId, entity);
-            return BusinessResult.of(true, "ConvertJSONToSQL组件创建完成", res);
-        } catch (ApiException e) {
-            log.error("组件创建失败，【" + e.getResponseBody() + "】: ", e);
-            return BusinessResult.of(false, "ConvertJSONToSQL组件创建失败" + e.getMessage(), null);
-        }
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override
@@ -288,21 +273,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         dto.setName(data.name);
         dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.PutSQL.getName());
-        dto.setConfig(config);
+        dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
-        entity.setPosition(data.getPositionDTO());
-        entity.setComponent(dto);
 
-        try {
-            ProcessorEntity res = NifiHelper.getProcessGroupsApi().createProcessor(data.groupId, entity);
-            return BusinessResult.of(true, "PutSQL组件创建完成", res);
-        } catch (ApiException e) {
-            log.error("组件创建失败，【" + e.getResponseBody() + "】: ", e);
-            return BusinessResult.of(false, "PutSQL组件创建失败" + e.getMessage(), null);
-        }
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override
@@ -336,4 +313,88 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         }
     }
 
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ProcessGroupsVO> getAllGroups(String groupId) {
+        try {
+            groupId = StringUtils.isEmpty(groupId) ? NifiConstants.ApiConstants.ROOT_NODE : groupId;
+            String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.ALL_GROUP_RUN_STATUS.replace("{id}", groupId);
+            ResponseEntity<ProcessGroupsVO> res = httpClient.exchange(url, HttpMethod.GET, null, ProcessGroupsVO.class);
+            if (res.getStatusCode() == HttpStatus.OK) {
+                return BusinessResult.of(true, "查询成功", res.getBody());
+            } else {
+                return BusinessResult.of(false, "查询分组报错", null);
+            }
+        } catch (Exception e) {
+            log.error("查询分组报错，【" + e.getMessage() + "】", e);
+            return BusinessResult.of(false, "查询分组报错，【" + e.getMessage() + "】", null);
+        }
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public int getGroupCount(String groupId) {
+        try {
+            BusinessResult<ProcessGroupsVO> res = getAllGroups(groupId);
+            return res.data == null ? 0 : getAllGroups(groupId).data.processGroups.size();
+        }catch (Exception ex){
+            return 0;
+        }
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public List<BusinessResult<ProcessorEntity>> enabledProcessor(String groupId, ProcessorEntity... entities) {
+        List<BusinessResult<ProcessorEntity>> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+
+        for (ProcessorEntity item : entities) {
+            try {
+                ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                    continue;
+                }
+
+                ProcessorRunStatusEntity dto = new ProcessorRunStatusEntity();
+                dto.state = ProcessorDTO.StateEnum.RUNNING.toString();
+                dto.disconnectedNodeAcknowledged = true;
+                dto.revision = entity.getRevision();
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+                HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
+
+                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    System.out.println("");
+                }
+            } catch (ApiException e) {
+                log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return res;
+    }
+
+
+    /**
+     * 创建Processor组件
+     *
+     * @param groupId 组id
+     * @param entity  组件基础信息
+     * @param dto     具体组件信息
+     * @param config  组件配置
+     * @return 调用结果
+     */
+    private BusinessResult<ProcessorEntity> buildProcessor(String groupId, ProcessorEntity entity, ProcessorDTO dto, ProcessorConfigDTO config) {
+        try {
+            dto.setConfig(config);
+            entity.setComponent(dto);
+            ProcessorEntity res = NifiHelper.getProcessGroupsApi().createProcessor(groupId, entity);
+            return BusinessResult.of(true, "【" + dto.getType() + "】组件创建完成", res);
+        } catch (ApiException e) {
+            log.error("【" + dto.getType() + "】组件创建失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "【" + dto.getType() + "】组件创建失败" + e.getMessage(), null);
+        }
+    }
 }

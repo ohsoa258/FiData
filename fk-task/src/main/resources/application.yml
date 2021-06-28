@@ -21,6 +21,8 @@ spring:
     publisher-returns: true
   redis:
     host: 192.168.11.130
+  jackson:
+    time-zone: GMT+8
 
 
 eureka:

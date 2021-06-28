@@ -1,18 +1,24 @@
 package com.fisk.task;
 
 import com.alibaba.fastjson.JSON;
+import com.davis.client.ApiException;
 import com.davis.client.model.*;
+import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.task.entity.dto.nifi.*;
+import com.fisk.task.entity.vo.ProcessGroupsVO;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.INifiFlowBuild;
+import com.fisk.task.utils.NifiHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 
@@ -20,8 +26,8 @@ import javax.annotation.Resource;
 @RunWith(SpringRunner.class)
 public class NifiBuildTest {
 
-    private final String groupPid = "017a1105-82a2-134f-66e1-bb374545c2c1";
-    private final String dbConId = "017a10c0-82a2-134f-e980-dfd547c8f73e";
+    private final String groupPid = "017a11b8-82a2-134f-ee9c-3b4c1425b0b3";
+    private final String dbConId = "017a11b9-82a2-134f-2f7e-12b3e8ef41d2";
 
     @Resource
     INifiComponentsBuild service;
@@ -83,13 +89,13 @@ public class NifiBuildTest {
 
     @Test
     public void getConnectionPool() {
-        ControllerServiceEntity res = service.getDbControllerService("017a1111-82a2-134f-1998-a9e4aa19b5cf");
+        ControllerServiceEntity res = service.getDbControllerService(groupPid);
         System.out.println(JSON.toJSONString(res));
     }
 
     @Test
     public void enableConnectionPool() {
-        BusinessResult<ControllerServiceEntity> res = service.updateDbControllerServiceState("017a10c0-82a2-134f-e980-dfd547c8f73e");
+        BusinessResult<ControllerServiceEntity> res = service.updateDbControllerServiceState(groupPid);
         System.out.println(JSON.toJSONString(res));
     }
 
@@ -159,7 +165,65 @@ public class NifiBuildTest {
     INifiFlowBuild flowBuild;
 
     @Test
-    public void buildSourceToTargetDataFlowTest(){
-        flowBuild.buildSourceToTargetDataFlow();
+    public void buildSourceToTargetDataFlowTest() {
+        for (int i = 0; i < 3; i++) {
+            flowBuild.buildSourceToTargetDataFlow();
+        }
     }
+
+    @Resource
+    RestTemplate httpClient;
+
+    @Test
+    public void enabledProcessor() {
+        String id = "017a118e-82a2-134f-08ab-1422202dd7b2";
+        try {
+            ProcessorEntity res = NifiHelper.getProcessorsApi().getProcessor(id);
+            if (res.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                System.out.println("");
+            }
+            ProcessorRunStatusEntity dto = new ProcessorRunStatusEntity();
+            dto.state = "RUNNING";
+            dto.disconnectedNodeAcknowledged = true;
+            dto.revision = res.getRevision();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+            HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
+
+            String url = NifiConstants.ApiConstants.BASE_PATH + "/processors/" + id + "/run-status";
+            ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                ProcessorEntity resEntity = JSON.parseObject(response.getBody(), ProcessorEntity.class);
+                System.out.println(JSON.toJSONString(resEntity));
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void getAllProcessor() {
+        String id = "017a11f5-82a2-134f-121c-fcc1fdeba097";
+        try {
+            String url = NifiConstants.ApiConstants.BASE_PATH + "/process-groups/" + id + "/process-groups";
+            ResponseEntity<ProcessGroupsVO> res = httpClient.exchange(url, HttpMethod.GET, null, ProcessGroupsVO.class);
+            if (res.getStatusCode() == HttpStatus.OK) {
+                System.out.println(res);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void getAllProcessor1() {
+        String id = "";
+        try {
+            System.out.println(service.getGroupCount(id));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

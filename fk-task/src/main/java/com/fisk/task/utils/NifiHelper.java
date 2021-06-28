@@ -64,7 +64,7 @@ public class NifiHelper {
     }
 
     /**
-     * 创建Revision对象
+     * 创建Revision对象(修改记录)
      *
      * @return Revision对象
      */
@@ -75,7 +75,14 @@ public class NifiHelper {
         return revisionDTO;
     }
 
-    public static ConnectableDTO buildConnectableDTO(String groupId,String id){
+    /**
+     * 创建连接器对象
+     *
+     * @param groupId groupid
+     * @param id      id
+     * @return 连接器对象
+     */
+    public static ConnectableDTO buildConnectableDTO(String groupId, String id) {
         ConnectableDTO dto = new ConnectableDTO();
         dto.setGroupId(groupId);
         dto.setId(id);

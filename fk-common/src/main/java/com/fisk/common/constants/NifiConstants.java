@@ -11,9 +11,18 @@ public class NifiConstants {
 
         public static final String ROOT_NODE = "root";
 
+        public static final String PROCESSOR_RUN_STATUS = "/processors/{id}/run-status";
+
+        public static final String ALL_GROUP_RUN_STATUS = "/process-groups/{id}/process-groups";
+
     }
 
     public static final class DirverConstants{
         public static final String MYSQL_DIRVER_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
+    }
+
+    public static final class AttrConstants{
+        public static final double POSITION_X = 500;
+        public static final double POSITION_Y = 300;
     }
 }

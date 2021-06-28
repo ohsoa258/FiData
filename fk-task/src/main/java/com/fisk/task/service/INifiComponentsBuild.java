@@ -1,12 +1,12 @@
 package com.fisk.task.service;
 
-import com.davis.client.model.ConnectionEntity;
-import com.davis.client.model.ControllerServiceEntity;
-import com.davis.client.model.ProcessGroupEntity;
-import com.davis.client.model.ProcessorEntity;
+import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.task.entity.dto.nifi.*;
+import com.fisk.task.entity.vo.ProcessGroupsVO;
+
+import java.util.List;
 
 /**
  * Nifi组件创建
@@ -111,4 +111,27 @@ public interface INifiComponentsBuild {
      */
     BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);
 
+    /**
+     * 查询所有的分组
+     *
+     * @param groupId  组id
+     * @return 所有的分组
+     */
+    BusinessResult<ProcessGroupsVO> getAllGroups(String groupId);
+
+    /**
+     * 查询分组个数
+     *
+     * @param groupId  组id
+     * @return 所有的分组
+     */
+    int getGroupCount(String groupId);
+
+    /**
+     * Processor组件状态设置为开启
+     * @param groupId 组id
+     * @param entity 需要设置的组件
+     * @return 设置结果
+     */
+    List<BusinessResult<ProcessorEntity>> enabledProcessor(String groupId, ProcessorEntity... entity);
 }
