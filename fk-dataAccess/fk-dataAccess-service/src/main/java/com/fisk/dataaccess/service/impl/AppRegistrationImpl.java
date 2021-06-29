@@ -193,6 +193,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 1.3修改主表数据
         appRegistrationPO.setUpdateTime(date);
+        appRegistrationPO.setDelFlag(1);
         boolean edit = this.updateById(appRegistrationPO);
         if (!edit) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
@@ -209,6 +210,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
         appDataSourcePO.setId(appDataSid);
         appDataSourcePO.setUpdateTime(date);
+        appDataSourcePO.setDelFlag(1);
         int update = appDataSourceMapper.updateById(appDataSourcePO);
 
 

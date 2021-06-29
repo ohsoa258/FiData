@@ -353,6 +353,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Date date1 = new Date(System.currentTimeMillis());
 
         tableAccessPO.setUpdateTime(date1);
+        tableAccessPO.setDelFlag(1);
 
         // 2.保存tb_table_access数据
         boolean update1 = this.updateById(tableAccessPO);
@@ -387,6 +388,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
                 Date date2 = new Date(System.currentTimeMillis());
                 tableFieldsPO.setUpdateTime(date2);
+                tableFieldsPO.setDelFlag(1);
 
                 update2 = tableFieldsImpl.updateById(tableFieldsPO);
             } else { // 新增
@@ -402,6 +404,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Date date3 = new Date(System.currentTimeMillis());
                 tableFieldsPO.setCreateTime(date3);
                 tableFieldsPO.setUpdateTime(date3);
+                tableFieldsPO.setDelFlag(1);
                 saveField = tableFieldsImpl.save(tableFieldsPO);
 
             }
@@ -446,6 +449,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Date date1 = new Date(System.currentTimeMillis());
 
         tableAccessPO.setUpdateTime(date1);
+        tableAccessPO.setDelFlag(1);
 
         // 2.保存tb_table_access数据
         boolean update1 = this.updateById(tableAccessPO);
@@ -470,6 +474,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
                 Date date2 = new Date(System.currentTimeMillis());
                 tableFieldsPO.setUpdateTime(date2);
+                tableFieldsPO.setDelFlag(1);
 
                 update2 = tableFieldsImpl.updateById(tableFieldsPO);
             } else { // 新增
@@ -481,6 +486,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Date date3 = new Date(System.currentTimeMillis());
                 tableFieldsPO.setCreateTime(date3);
                 tableFieldsPO.setUpdateTime(date3);
+                tableFieldsPO.setDelFlag(1);
                 saveField = tableFieldsImpl.save(tableFieldsPO);
 
             }

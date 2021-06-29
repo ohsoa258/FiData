@@ -25,8 +25,8 @@ public interface DataAreaMapper extends BaseMapper<DataAreaPO> {
             "LEFT JOIN `tb_area_data` AS b\n" +
             "ON a.id = b.businessid\n" +
             "WHERE business_name LIKE concat('%',#{key},'%') \n" +
-            "AND a.del_flag = 1\n" +
-            "ORDER BY a.update_time DESC;")
+            "AND b.del_flag = 1\n" +
+            "ORDER BY a.update_time DESC ")
     List<Map<String, Object>> queryByPage(Page<Map<String,Object>> page, @Param("key") String key);
 
 }
