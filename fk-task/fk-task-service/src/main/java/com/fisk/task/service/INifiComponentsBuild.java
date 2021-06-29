@@ -3,8 +3,8 @@ package com.fisk.task.service;
 import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.task.entity.dto.nifi.*;
-import com.fisk.task.entity.vo.ProcessGroupsVO;
+import com.fisk.task.dto.nifi.*;
+import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
 

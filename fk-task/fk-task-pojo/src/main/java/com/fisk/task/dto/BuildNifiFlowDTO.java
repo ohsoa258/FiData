@@ -1,4 +1,4 @@
-package com.fisk.task.entity.dto;
+package com.fisk.task.dto;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

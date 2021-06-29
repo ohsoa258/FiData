@@ -1,4 +1,4 @@
-package com.fisk.task.entity.vo;
+package com.fisk.task.vo;
 
 import com.davis.client.model.ProcessGroupDTO;
 import lombok.Data;

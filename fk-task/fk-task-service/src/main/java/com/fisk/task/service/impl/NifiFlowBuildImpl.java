@@ -7,7 +7,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
-import com.fisk.task.entity.dto.nifi.*;
+import com.fisk.task.dto.nifi.*;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.INifiFlowBuild;
 import com.fisk.task.utils.NifiPositionHelper;

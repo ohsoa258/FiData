@@ -1,4 +1,4 @@
-package com.fisk.task.entity.dto.nifi;
+package com.fisk.task.dto.nifi;
 
 import com.davis.client.model.PositionDTO;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;

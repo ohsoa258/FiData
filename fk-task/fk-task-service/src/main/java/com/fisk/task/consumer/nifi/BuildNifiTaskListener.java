@@ -3,7 +3,7 @@ package com.fisk.task.consumer.nifi;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.aop.rabbitmq.MQConsumerLog;
 import com.fisk.common.constants.MQConstants;
-import com.fisk.task.entity.dto.BuildNifiFlowDTO;
+import com.fisk.task.dto.BuildNifiFlowDTO;
 import com.fisk.task.utils.WsSessionManager;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
