@@ -16,6 +16,8 @@
         <module>fisk-chartvisual</module>
         <module>fk-dataAccess</module>
         <module>fk-task</module>
+        <module>fk-task</module>
+        <module>fk-task-service</module>
     </modules>
 
 

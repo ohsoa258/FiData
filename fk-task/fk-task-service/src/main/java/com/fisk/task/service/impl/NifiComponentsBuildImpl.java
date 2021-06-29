@@ -348,6 +348,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<BusinessResult<ProcessorEntity>> res = new ArrayList<>();
         ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+
         for (ProcessorEntity item : entities) {
             try {
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
@@ -360,8 +363,6 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 dto.disconnectedNodeAcknowledged = true;
                 dto.revision = entity.getRevision();
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
                 HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
 
                 String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
