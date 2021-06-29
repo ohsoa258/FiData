@@ -1,6 +1,7 @@
 package com.fisk.task.controller;
 
 import com.fisk.common.constants.MQConstants;
+import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.task.dto.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
@@ -25,6 +26,9 @@ public class PublishTaskController {
 
     @PostMapping("/nifiFlow")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
-        return service.publishTask(MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MQConstants.QueueConstants.BUILD_NIFI_FLOW, data);
+        return service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
+                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MQConstants.QueueConstants.BUILD_NIFI_FLOW,
+                data);
     }
 }

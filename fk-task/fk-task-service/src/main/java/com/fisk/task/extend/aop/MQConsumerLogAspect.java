@@ -57,6 +57,7 @@ public class MQConsumerLogAspect {
 
         TaskLogPO model = null;
         MQBaseDTO data = null;
+        String taskName = "";
         //获取日志，修改状态
         try {
             Object[] args = joinPoint.getArgs();
@@ -65,8 +66,8 @@ public class MQConsumerLogAspect {
             }
             //获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
-
             model = mapper.selectById(data.logId);
+            taskName = model == null ? "" : model.taskName;
         } catch (Exception ex) {
             log.error("任务状态更新失败");
         }
@@ -76,7 +77,7 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
         if (data != null) {
-            WsSessionManager.sendMsgById("后台任务开始处理", data.userId);
+            WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId);
         }
 
         String code = UUID.randomUUID().toString();
@@ -97,7 +98,7 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
         if (data != null) {
-            WsSessionManager.sendMsgById("后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
+            WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
         }
         return res;
     }

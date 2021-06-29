@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_task_log")
 public class TaskLogPO extends BasePO {
+    public String taskName;
     public String taskExchange;
     public String taskQueue;
     public TaskStatusEnum taskStatus;

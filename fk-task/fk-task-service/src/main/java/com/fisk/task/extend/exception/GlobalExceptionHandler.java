@@ -1,4 +1,4 @@
-package com.fisk.task.ExceptionHandler;
+package com.fisk.task.extend.exception;
 
 import com.fisk.common.exception.AbstractGlobalExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

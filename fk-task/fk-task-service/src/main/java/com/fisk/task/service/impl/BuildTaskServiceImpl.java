@@ -30,14 +30,15 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
     RabbitTemplate rabbitTemplate;
 
     @Override
-    public ResultEntity<Object> publishTask(String exchange, String queue, BuildNifiFlowDTO data) {
+    public ResultEntity<Object> publishTask(String name, String exchange, String queue, BuildNifiFlowDTO data) {
         String str = JSON.toJSONString(data);
 
         TaskLogPO model = new TaskLogPO();
+        model.taskName = name;
         model.taskExchange = exchange;
         model.taskQueue = queue;
         model.taskStatus = TaskStatusEnum.TASK_BUILD;
-        if (str.length() <= dataMaxLength){
+        if (str.length() <= dataMaxLength) {
             model.taskData = str;
         }
         this.save(model);
