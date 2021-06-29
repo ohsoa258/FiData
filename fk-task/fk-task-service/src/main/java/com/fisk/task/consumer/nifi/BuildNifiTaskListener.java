@@ -1,9 +1,9 @@
 package com.fisk.task.consumer.nifi;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.aop.rabbitmq.MQConsumerLog;
 import com.fisk.common.constants.MQConstants;
 import com.fisk.task.dto.BuildNifiFlowDTO;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.utils.WsSessionManager;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +20,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class BuildNifiTaskListener {
 
-    @MQConsumerLog
     @RabbitHandler
+    @MQConsumerLog
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         WsSessionManager.sendMsgById("---------数据流开始创建---------", dto.userId);

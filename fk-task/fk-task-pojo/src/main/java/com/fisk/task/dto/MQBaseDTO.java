@@ -11,4 +11,5 @@ import java.time.LocalDateTime;
 public class MQBaseDTO {
     public Long userId;
     public LocalDateTime sendTime;
+    public Long logId;
 }

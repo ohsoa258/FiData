@@ -14,7 +14,6 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.mybatis",
         "com.fisk.common.redis",
         "com.fisk.common.user",
-        "com.fisk.common.aop.rabbitmq",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.task.mapper")
 public class FkTaskApplication {

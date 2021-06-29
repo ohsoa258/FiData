@@ -1,6 +1,14 @@
-package com.fisk.common.aop.rabbitmq;
+package com.fisk.task.extend.aop;
 
+import com.alibaba.fastjson.JSON;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.MDCHelper;
+import com.fisk.common.response.ResultEnum;
+import com.fisk.task.dto.MQBaseDTO;
+import com.fisk.task.entity.TaskLogPO;
+import com.fisk.task.enums.TaskStatusEnum;
+import com.fisk.task.mapper.TaskLogMapper;
+import com.fisk.task.utils.WsSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,6 +17,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,8 +29,11 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class MQConsumerLogAspect {
-    @Pointcut("@annotation(com.fisk.common.aop.rabbitmq.MQConsumerLog)")
 
+    @Resource
+    TaskLogMapper mapper;
+
+    @Pointcut("@annotation(com.fisk.task.extend.aop.MQConsumerLog)")
     public void traceType() {
     }
 
@@ -40,8 +52,31 @@ public class MQConsumerLogAspect {
             MDCHelper.setFunction(name);
             MDCHelper.setClass(tClass.getName());
         } catch (Exception ex) {
-            ex.printStackTrace();
             log.error("方法元数据获取失败");
+        }
+
+        TaskLogPO model = null;
+        MQBaseDTO data = null;
+        //获取日志，修改状态
+        try {
+            Object[] args = joinPoint.getArgs();
+            if (args == null) {
+                throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+            }
+            //获取方法参数
+            data = JSON.parseObject((String) args[0], MQBaseDTO.class);
+
+            model = mapper.selectById(data.logId);
+        } catch (Exception ex) {
+            log.error("任务状态更新失败");
+        }
+
+        if (model != null) {
+            model.taskStatus = TaskStatusEnum.PROCESSING;
+            mapper.updateById(model);
+        }
+        if (data != null) {
+            WsSessionManager.sendMsgById("后台任务开始处理", data.userId);
         }
 
         String code = UUID.randomUUID().toString();
@@ -55,6 +90,16 @@ public class MQConsumerLogAspect {
             log.error("消费者处理报错，", ex);
         }
         log.info("【{}】【{}】【{}】执行结束，执行结果【{}】", LocalDateTime.now(), code, name, isSuccess);
-        return null;
+
+        TaskStatusEnum statusEnum = isSuccess ? TaskStatusEnum.SUCCESS : TaskStatusEnum.FAILURE;
+        if (model != null) {
+            model.taskStatus = statusEnum;
+            mapper.updateById(model);
+        }
+        if (data != null) {
+            WsSessionManager.sendMsgById("后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
+        }
+        return res;
     }
+
 }

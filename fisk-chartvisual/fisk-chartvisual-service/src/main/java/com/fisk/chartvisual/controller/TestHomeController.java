@@ -1,8 +1,11 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.BuildNifiFlowDTO;
 import com.netflix.discovery.DiscoveryManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/home")
@@ -22,6 +26,8 @@ public class TestHomeController {
 
     @Resource
     UserHelper userInfo;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @GetMapping("/offline")
     public void offline() {
@@ -56,5 +62,14 @@ public class TestHomeController {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @GetMapping("/publishTask")
+    public ResultEntity<Object> publishTask() {
+        BuildNifiFlowDTO dto = new BuildNifiFlowDTO();
+        dto.appId = 11L;
+        dto.sendTime = LocalDateTime.now();
+        dto.userId = userInfo.getLoginUserInfo().id;
+        return publishTaskClient.publishBuildNifiFlowTask(dto);
     }
 }

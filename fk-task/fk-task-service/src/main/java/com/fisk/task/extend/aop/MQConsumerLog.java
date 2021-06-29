@@ -1,4 +1,4 @@
-package com.fisk.common.aop.rabbitmq;
+package com.fisk.task.extend.aop;
 
 import com.fisk.common.mdc.TraceTypeEnum;
 

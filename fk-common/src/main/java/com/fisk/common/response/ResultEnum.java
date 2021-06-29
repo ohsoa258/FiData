@@ -31,6 +31,7 @@ public enum ResultEnum {
     DATA_EXISTS(1008, "数据已存在"),
     REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
     SERVER_FUSE(1010, "服务熔断"),
+    PARAMTER_NOTNULL(1011, "参数不能为空"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -58,7 +59,12 @@ public enum ResultEnum {
     /**
      * 数据接入模块
      */
-    DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败");
+    DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败"),
+
+    /**
+     * 后台任务模块
+     */
+    TASK_PUBLISH_ERROR(6001,"任务发布失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

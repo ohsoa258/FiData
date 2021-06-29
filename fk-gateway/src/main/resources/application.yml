@@ -82,6 +82,11 @@ spring:
         predicates:
           - Path=/dataAccess/**
 
+      - id: task-center # 可视化服务
+        uri: lb://task-center
+        predicates:
+          - Path=/task/**
+
   redis:
     host: 192.168.11.130
 

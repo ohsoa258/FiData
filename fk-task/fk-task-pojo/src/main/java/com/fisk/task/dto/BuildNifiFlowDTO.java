@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BuildNifiFlowDTO extends MQBaseDTO{
-    public Long id;
+public class BuildNifiFlowDTO extends MQBaseDTO {
+    public Long appId;
 }
