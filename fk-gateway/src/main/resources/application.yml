@@ -25,7 +25,9 @@ spring:
   application:
     name: fk-gateway
   cloud:
+
     gateway:
+
       # =============跨域============
       globalcors: # 全局的跨域处理
         add-to-simple-url-handler-mapping: true # 是否将当前cors配置加入到SimpleUrlHandlerMapping中，解决options请求被拦截问题
@@ -43,6 +45,7 @@ spring:
             allowCredentials: true # 是否允许携带cookie
             maxAge: 360000 # 这次跨域检测的有效期
 
+      # ============限流令牌桶=================
       default-filters: # 默认过滤项,作用于所有的路由规则
       - StripPrefix=1 # 去除路由前缀
       # ============Hystrix=================
@@ -67,6 +70,7 @@ spring:
         predicates: # 断言  判断 前端浏览器发送url和当前path是否匹配
           - Path=/auth/** # 按照路径匹配的规则
 
+
       - id: user-service # 用户服务
         uri: lb://user-service
         predicates:
@@ -87,13 +91,18 @@ spring:
         predicates:
           - Path=/task/**
 
+      - id: datamodel-service # 数据建模服务
+        uri: lb://datamodel-service
+        predicates:
+          - Path=/datamodel/**
+
   redis:
     host: 192.168.11.130
+
 
 logging:
   level:
     com.fisk: debug
-    com.tairan.chapter.feign.api.HelloService: debug
 fk:
   auth:
     clientId: api-gateway

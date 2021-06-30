@@ -51,12 +51,12 @@ public class TableFieldsPO extends BaseEntity {
     public int isBusinesstime;
 
     /**
-     * 1是时间戳，0非时间戳
+     * 1：实时物理表的字段，0：非实时物理表的字段
      */
     public long isRealtime;
 
     /**
-     * 1：实时物理表的字段，0：非实时物理表的字段
+     * 1是时间戳，0非时间戳
      */
     public int isTimestamp;
 

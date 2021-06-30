@@ -16,9 +16,9 @@ import java.sql.*;
 public class SqlServerTest {
 
     //这里可以设置数据库名称
-    private final static String URL = "jdbc:sqlserver://数据库服务器IP:1433";
-    private static final String USER="用户名";
-    private static final String PASSWORD="密码";
+    private final static String URL = "jdbc:sqlserver://192.168.1.35:1433";
+    private static final String USER="sa";
+    private static final String PASSWORD="password01!";
     private static Connection conn= null;
     private static Statement stmt = null;
 
@@ -60,7 +60,8 @@ public class SqlServerTest {
     @Test
     public void findAllTables(){
         try {
-            ResultSet resultSet = stmt.executeQuery("SELECT name FROM 数据库名..sysobjects Where xtype='U' ORDER BY name");
+            // 库名studb
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM studb..sysobjects Where xtype='U' ORDER BY name");
             while(resultSet.next()){//如果对象中有数据，就会循环打印出来
                 System.out.println(resultSet.getString("name"));
             }
@@ -77,10 +78,11 @@ public class SqlServerTest {
     public void findAllColumns(){
 
         try {
-            ResultSet resultSet = stmt.executeQuery("SELECT * FROM syscolumns WHERE id=Object_Id('表名')");
-//            while(resultSet.next()){//如果对象中有数据，就会循环打印出来
-//                System.out.println(resultSet.getString("name"));
-//            }
+            // SELECT name FROM syscolumns WHERE id=Object_Id('表名');
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM syscolumns WHERE id=Object_Id('classinfo')");
+            /*while(resultSet.next()){//如果对象中有数据，就会循环打印出来
+                System.out.println(resultSet.getString("name"));
+            }*/
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
             for (int i = 0; i < columnCount; i++){

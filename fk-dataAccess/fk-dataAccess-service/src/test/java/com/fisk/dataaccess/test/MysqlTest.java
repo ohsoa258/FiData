@@ -23,7 +23,7 @@ public class MysqlTest {
     @Test
     public void test() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.jdbc.Driver");
-//        Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.206.99:3306/heima", "root", "root");
+//        Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.206.99:3306/fisk", "root", "root");
         Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.11.130:3306/dmp_datainput_db", "root", "root123");
         List<String> tableNames = getTables(conn);
 //        System.out.println(tableNames);

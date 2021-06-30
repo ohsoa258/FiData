@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
 import com.fisk.common.entity.BasePO;
@@ -13,6 +15,12 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_syncmode")
 public class TableSyncmodePO extends BaseEntity {
+
+    /**
+     * 注入的是tb_table_access表的id
+     */
+    @TableId(value = "id",type = IdType.INPUT)
+    public long id;
 
     /**
      * 1：全量、2：时间戳增量、3：业务时间覆盖、4：自定义覆盖；

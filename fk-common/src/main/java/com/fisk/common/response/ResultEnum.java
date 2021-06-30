@@ -2,7 +2,6 @@ package com.fisk.common.response;
 
 /**
  * 请求返回结果类型
- *
  * @author gy
  */
 
@@ -32,6 +31,7 @@ public enum ResultEnum {
     REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
     SERVER_FUSE(1010, "服务熔断"),
     PARAMTER_NOTNULL(1011, "参数不能为空"),
+    Table_NAME_EXISTS(1012, "表名已存在"),
 
     /**
      * 报表可视化服务，错误码从2000开始

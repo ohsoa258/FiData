@@ -8,6 +8,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
@@ -96,14 +97,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //        boolean save = appDataSourceImpl.save(appDatasourcePO);
 
         int insert = appDataSourceMapper.insert(appDatasourcePO);
+        if (insert < 0) {
+            throw new FkException(500, "保存tb_app_datasource数据失败");
+        }
 
-/*        // 保存tb_app_drivetype数据
+        // 保存tb_app_drivetype数据
         AppDriveTypePO appDriveTypePO = new AppDriveTypePO();
-        appDriveTypePO.setId(1);
+        appDriveTypePO.setId(appRegistrationPO.getId());
         appDriveTypePO.setName(appDatasourcePO.getDriveType());
-        appDriveTypeImpl.save(appDriveTypePO);*/
+        boolean save2 = appDriveTypeImpl.save(appDriveTypePO);
 
-        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+/*        if (!save2) {
+            throw new FkException(500, "保存tb_app_drivetype数据失败");
+        }*/
+
+//        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -136,17 +145,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> records1 = registrationPOPage1.getRecords();
 
 
-
+        // 分页封装
         Page<AppRegistrationPO> registrationPOPage2 = new Page<>(page, rows);
 
 
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
 
+
+        // 查询数据
         queryWrapper.like(isKeyExists, "app_name", key)
-                .eq("del_flag", 1);// 未删除
+                .eq("del_flag", 1)
+                .orderByDesc("create_time");// 未删除
         baseMapper.selectPage(registrationPOPage2, queryWrapper);
+
         List<AppRegistrationPO> records2 = registrationPOPage2.getRecords();
         PageDTO<AppRegistrationDTO> pageDTO = new PageDTO<>();
+
         pageDTO.setTotal(registrationPOPage1.getTotal());// 总条数
         long totalPage = (long) (records1.size() + rows - 1) / rows;// 总页数
         pageDTO.setTotalPage(registrationPOPage1.getPages());
@@ -179,6 +193,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 1.3修改主表数据
         appRegistrationPO.setUpdateTime(date);
+        appRegistrationPO.setDelFlag(1);
         boolean edit = this.updateById(appRegistrationPO);
         if (!edit) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
@@ -194,7 +209,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
         appDataSourcePO.setId(appDataSid);
-        appDataSourcePO.setUpdateTime(date);
+
+        appDataSourcePO.setAppid(id);
+
+        Date date1 = new Date(System.currentTimeMillis());
+        appDataSourcePO.setUpdateTime(date1);
+        appDataSourcePO.setDelFlag(1);
         int update = appDataSourceMapper.updateById(appDataSourcePO);
 
 
@@ -231,6 +251,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * 查询所有应用名称(实时  非实时)
+     *
+     * @return
+     */
     @Override
     public List<AppNameDTO> queryAppName() {
 
@@ -252,9 +277,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
 
-
     /**
      * 根据id查询数据,用于数据回显
+     *
      * @param id
      * @return
      */
@@ -263,14 +288,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         AppRegistrationPO registrationPO = this.query()
                 .eq("id", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
         AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(registrationPO);
 //        appRegistrationDTO.setCreateTime(registrationPO.getCreateTime());
 
         AppDataSourcePO appDataSourcePO = appDataSourceImpl.query()
                 .eq("appid", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
         AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(appDataSourcePO);
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
@@ -280,7 +305,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     /**
-     *
      * @return
      */
     @Override
@@ -290,5 +314,31 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> descDate = baseMapper.getDescDate();
 
         return AppRegistrationDTO.convertEntityList(descDate);
+    }
+
+    /**
+     * 查询所有非实时应用名称
+     *
+     * @return
+     */
+    @Override
+    public List<AppNameDTO> queryNRTAppName() {
+
+        List<AppRegistrationPO> list = this.query()
+                .eq("del_flag", 1)
+                .eq("app_type", 1)
+                .list();
+        List<AppNameDTO> appNameDTOS = new ArrayList<>();
+        for (AppRegistrationPO appRegistrationPO : list) {
+
+            AppNameDTO appNameDTO = new AppNameDTO();
+            String appName = appRegistrationPO.getAppName();
+            appNameDTO.setAppName(appName);
+            appNameDTO.setAppType((byte) 1);
+
+            appNameDTOS.add(appNameDTO);
+        }
+
+        return appNameDTOS;
     }
 }
