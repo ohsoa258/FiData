@@ -15,6 +15,6 @@ public class BuildAtlasTaskListener {
     @MQConsumerLog
     public void msg(String settingid, Channel channel, Message message) {
         ReceiveDataConfigDTO dto = JSON.parseObject(settingid, ReceiveDataConfigDTO.class);
-        
+        String A=";";
     }
 }
