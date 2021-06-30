@@ -1,7 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.task.dto.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

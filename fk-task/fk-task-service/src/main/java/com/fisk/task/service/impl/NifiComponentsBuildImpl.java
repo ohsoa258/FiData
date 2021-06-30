@@ -11,9 +11,9 @@ import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.vo.ProcessGroupsVO;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.vo.ProcessGroupsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.*;
@@ -126,8 +126,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             return NifiHelper.getControllerServicesApi().getControllerService(id);
         } catch (ApiException e) {
             log.error("获取控制器服务失败，id【" + id + "】，【" + e.getResponseBody() + "】: ", e);
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -177,11 +177,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         config.setSchedulingStrategy(data.scheduleType.getName());
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoRes);
+        config.setComments(data.details);
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
         dto.setPosition(data.getPositionDTO());
 
@@ -202,11 +202,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
+        config.setComments(data.details);
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ConvertAvroToJSON.getName());
         dto.setPosition(data.getPositionDTO());
 
@@ -235,11 +235,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
+        config.setComments(data.details);
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.ConvertJSONToSQL.getName());
         dto.setPosition(data.getPositionDTO());
 
@@ -267,11 +267,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
+        config.setComments(data.details);
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setDescription(data.details);
         dto.setType(ProcessorTypeEnum.PutSQL.getName());
         dto.setPosition(data.getPositionDTO());
 
@@ -337,7 +337,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         try {
             BusinessResult<ProcessGroupsVO> res = getAllGroups(groupId);
             return res.data == null ? 0 : getAllGroups(groupId).data.processGroups.size();
-        }catch (Exception ex){
+        } catch (Exception ex) {
             return 0;
         }
     }

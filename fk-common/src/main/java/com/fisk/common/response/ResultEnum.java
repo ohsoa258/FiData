@@ -64,7 +64,8 @@ public enum ResultEnum {
     /**
      * 后台任务模块
      */
-    TASK_PUBLISH_ERROR(6001,"任务发布失败");
+    TASK_PUBLISH_ERROR(6001,"任务发布失败"),
+    TASK_NIFI_BUILD_COMPONENTS_ERROR(6002,"Nifi组件创建失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

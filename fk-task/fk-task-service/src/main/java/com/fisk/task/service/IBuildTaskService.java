@@ -1,7 +1,7 @@
 package com.fisk.task.service;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.task.dto.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 
 /**
  * @author gy

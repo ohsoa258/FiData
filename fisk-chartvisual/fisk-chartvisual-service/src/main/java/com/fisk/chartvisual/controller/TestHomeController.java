@@ -5,7 +5,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.netflix.discovery.DiscoveryManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -22,6 +22,7 @@ public class NifiConstants {
     }
 
     public static final class AttrConstants{
+        public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
         public static final double POSITION_Y = 300;
     }
