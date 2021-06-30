@@ -2,6 +2,7 @@ package com.fisk.auth.service.impl;
 
 import com.fisk.auth.constants.JwtConstants;
 import com.fisk.auth.dto.Payload;
+import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.auth.utils.JwtUtils;
@@ -43,19 +44,19 @@ public class UserAuthServiceImpl implements UserAuthService {
     private RedisUtil redis;
 
     /**
-     * @param username
-     * @param password
-     * @param response
+     * 登录
+     * @param userAuthDTO
+     * @return
      */
     @Override
-    public ResultEntity<String> login(String username, String password, HttpServletResponse response) {
+    public ResultEntity<String> login(UserAuthDTO userAuthDTO) {
 
         // 1.授权中心携带用户名密码，到用户中心(数据库)查询用户
         // 请求user服务获取用户信息
         UserDTO userDTO = null;
 
         try {
-            ResultEntity<UserDTO> res = userClient.queryUser(username, password);
+            ResultEntity<UserDTO> res = userClient.queryUser(userAuthDTO.getUsername(), userAuthDTO.getPassword());
             if (res.code == ResultEnum.SUCCESS.getCode()) {
                 userDTO = res.data;
             } else {
