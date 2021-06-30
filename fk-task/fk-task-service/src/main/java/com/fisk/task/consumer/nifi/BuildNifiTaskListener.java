@@ -47,19 +47,17 @@ public class BuildNifiTaskListener {
     @MQConsumerLog
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
-        try {
-            //获取数据接入配置项
-            DataAccessConfigDTO configDTO = getConfigData(dto.appId);
+        //获取数据接入配置项
+        DataAccessConfigDTO configDTO = getConfigData(dto.appId);
 
-            //1. 创建应用
-            ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
-            //2. 创建jdbc连接池
-            List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId());
-            //3. 创建组件
-            buildProcessor(configDTO, groupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId());
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
-        }
+        //1. 创建应用
+        ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
+        //2. 创建jdbc连接池
+        List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId());
+        //3. 创建组件
+        List<ProcessorEntity> processors = buildProcessor(configDTO, groupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId());
+        //4. 启动组件
+        enabledProcessor(groupEntity.getId(), processors);
     }
 
     /**
@@ -88,6 +86,7 @@ public class BuildNifiTaskListener {
         dto.scheduleType = SchedulingStrategyTypeEnum.CRON;
         dto.scheduleExpression = "0/30 * * * * ?";
         dto.sourceExecSqlQuery = "select * from tb_test_data";
+        dto.targetTableName = "tb_test_data";
         return dto;
     }
 
@@ -173,7 +172,7 @@ public class BuildNifiTaskListener {
         dto.driverName = dsConfig.type.getName();
         dto.user = dsConfig.user;
         dto.pwd = dsConfig.password;
-        dto.enabled = false;
+        dto.enabled = true;
         dto.groupId = groupId;
         dto.name = target ? "Target Data Source Connection" : "Source Data Source Connection";
         dto.details = dto.name;
@@ -195,7 +194,109 @@ public class BuildNifiTaskListener {
      * @param sourceDbPoolId 数据源连接池id
      * @param targetDbPoolId 目标连接池id
      */
-    private void buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId) {
+    private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId) {
+        //创建查询组件
+        ProcessorEntity querySqlRes = execSqlProcessor(config, groupId, sourceDbPoolId);
+        //创建数据转换json组件
+        ProcessorEntity toJsonRes = convertJsonProcessor(groupId);
+        //连接器
+        componentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //创建json转sql组件
+        ProcessorEntity toSqlRes = convertJsonToSqlProcessor(config, groupId, targetDbPoolId);
+        //连接器
+        componentConnector(groupId, toJsonRes.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //创建执行sql组件
+        ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
+        //连接器
+        componentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
+
+        List<ProcessorEntity> res = new ArrayList<>();
+        res.add(querySqlRes);
+        res.add(toJsonRes);
+        res.add(toSqlRes);
+        res.add(putSqlRes);
+        return res;
+    }
+
+    /**
+     * 组件连接器
+     * @param groupId 组id
+     * @param sourceId 连接器上方组件id
+     * @param targetId 连接器下方组件id
+     * @param type 连接类型
+     */
+    private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
+        BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
+        verifyProcessorResult(sqlToPutRes);
+    }
+
+    /**
+     * 执行sql组件
+     *
+     * @param groupId        组id
+     * @param targetDbPoolId 连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity putSqlProcessor(String groupId, String targetDbPoolId) {
+        BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
+        putSqlDto.name = "Put sql to target data source";
+        putSqlDto.details = "Put sql to target data source";
+        putSqlDto.groupId = groupId;
+        putSqlDto.dbConnectionId = targetDbPoolId;
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
+        verifyProcessorResult(putSqlRes);
+        return putSqlRes.data;
+    }
+
+    /**
+     * json转sql组件
+     *
+     * @param config         数据接入配置
+     * @param groupId        组id
+     * @param targetDbPoolId 目标数据库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity convertJsonToSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+        BuildConvertJsonToSqlProcessorDTO toSqlDto = new BuildConvertJsonToSqlProcessorDTO();
+        toSqlDto.name = "Convert Json To Sql";
+        toSqlDto.details = "Convert data to sql";
+        toSqlDto.dbConnectionId = targetDbPoolId;
+        toSqlDto.groupId = groupId;
+        toSqlDto.tableName = config.targetTableName;
+        toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
+        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
+        verifyProcessorResult(toSqlRes);
+        return toSqlRes.data;
+    }
+
+    /**
+     * data转json组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity convertJsonProcessor(String groupId) {
+        BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
+        toJsonDto.name = "Convert Data To Json";
+        toJsonDto.details = "Convert data source to json";
+        toJsonDto.groupId = groupId;
+        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
+        verifyProcessorResult(toJsonRes);
+        return toJsonRes.data;
+    }
+
+    /**
+     * 执行sql query组件
+     *
+     * @param config         数据接入配置
+     * @param groupId        组id
+     * @param sourceDbPoolId 数据源连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity execSqlProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
@@ -206,66 +307,31 @@ public class BuildNifiTaskListener {
         querySqlDto.scheduleType = config.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
-        if (!querySqlRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, querySqlRes.msg);
-        }
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
 
-        BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
-        toJsonDto.name = "Convert Data To Json";
-        toJsonDto.details = "Convert data source to json";
-        toJsonDto.groupId = groupId;
-        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
-        BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
-        if (!toJsonRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, toJsonRes.msg);
+    /**
+     * 验证是否执行成功
+     *
+     * @param result 判断条件
+     */
+    private void verifyProcessorResult(BusinessResult<?> result) {
+        if (!result.success) {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, result.msg);
         }
+    }
 
-        BusinessResult<ConnectionEntity> queryToJsonRes = componentsBuild.buildConnectProcessors(groupId,
-                querySqlRes.data.getId(),
-                toJsonRes.data.getId(),
-                AutoEndBranchTypeEnum.SUCCESS);
-        if (!queryToJsonRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, queryToJsonRes.msg);
-        }
-
-        BuildConvertJsonToSqlProcessorDTO toSqlDto = new BuildConvertJsonToSqlProcessorDTO();
-        toSqlDto.name = "Convert Json To Sql";
-        toSqlDto.details = "Convert data to sql";
-        toSqlDto.dbConnectionId = targetDbPoolId;
-        toSqlDto.groupId = groupId;
-        toSqlDto.tableName = config.targetTableName;
-        toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
-        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
-        BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
-        if (!toSqlRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, toSqlRes.msg);
-        }
-
-        BusinessResult<ConnectionEntity> jsonToSqlRes = componentsBuild.buildConnectProcessors(groupId,
-                toJsonRes.data.getId(),
-                toSqlRes.data.getId(),
-                AutoEndBranchTypeEnum.SUCCESS);
-        if (!jsonToSqlRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, jsonToSqlRes.msg);
-        }
-
-        BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
-        putSqlDto.name = "Put sql to target data source";
-        putSqlDto.details = "Put sql to target data source";
-        putSqlDto.groupId = groupId;
-        putSqlDto.dbConnectionId = targetDbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
-        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
-        if (!putSqlRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, putSqlRes.msg);
-        }
-
-        BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId,
-                toSqlRes.data.getId(),
-                putSqlRes.data.getId(),
-                AutoEndBranchTypeEnum.SUCCESS);
-        if (!sqlToPutRes.success) {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, sqlToPutRes.msg);
+    /**
+     * 启用组件
+     *
+     * @param groupId    groupId
+     * @param processors 需要启用的组件
+     */
+    private void enabledProcessor(String groupId, List<ProcessorEntity> processors) {
+        List<ProcessorEntity> enableRes = componentsBuild.enabledProcessor(groupId, processors);
+        if (enableRes.size() != processors.size()) {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
     }
 }
