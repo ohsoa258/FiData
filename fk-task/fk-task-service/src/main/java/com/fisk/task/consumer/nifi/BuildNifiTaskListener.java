@@ -196,19 +196,19 @@ public class BuildNifiTaskListener {
      */
     private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId) {
         //创建查询组件
-        ProcessorEntity querySqlRes = ExecSqlProcessor(config, groupId, sourceDbPoolId);
+        ProcessorEntity querySqlRes = execSqlProcessor(config, groupId, sourceDbPoolId);
         //创建数据转换json组件
-        ProcessorEntity toJsonRes = ConvertJsonProcessor(groupId);
+        ProcessorEntity toJsonRes = convertJsonProcessor(groupId);
         //连接器
-        ComponentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建json转sql组件
-        ProcessorEntity toSqlRes = ConvertJsonToSqlProcessor(config, groupId, targetDbPoolId);
+        ProcessorEntity toSqlRes = convertJsonToSqlProcessor(config, groupId, targetDbPoolId);
         //连接器
-        ComponentConnector(groupId, toJsonRes.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, toJsonRes.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建执行sql组件
-        ProcessorEntity putSqlRes = PutSqlProcessor(groupId, targetDbPoolId);
+        ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
         //连接器
-        ComponentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
+        componentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
 
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(querySqlRes);
@@ -225,9 +225,9 @@ public class BuildNifiTaskListener {
      * @param targetId 连接器下方组件id
      * @param type 连接类型
      */
-    private void ComponentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
+    private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
-        VerifyProcessorResult(sqlToPutRes);
+        verifyProcessorResult(sqlToPutRes);
     }
 
     /**
@@ -237,7 +237,7 @@ public class BuildNifiTaskListener {
      * @param targetDbPoolId 连接池id
      * @return 组件对象
      */
-    private ProcessorEntity PutSqlProcessor(String groupId, String targetDbPoolId) {
+    private ProcessorEntity putSqlProcessor(String groupId, String targetDbPoolId) {
         BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
         putSqlDto.name = "Put sql to target data source";
         putSqlDto.details = "Put sql to target data source";
@@ -245,7 +245,7 @@ public class BuildNifiTaskListener {
         putSqlDto.dbConnectionId = targetDbPoolId;
         putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
-        VerifyProcessorResult(putSqlRes);
+        verifyProcessorResult(putSqlRes);
         return putSqlRes.data;
     }
 
@@ -257,7 +257,7 @@ public class BuildNifiTaskListener {
      * @param targetDbPoolId 目标数据库连接池id
      * @return 组件对象
      */
-    private ProcessorEntity ConvertJsonToSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+    private ProcessorEntity convertJsonToSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
         BuildConvertJsonToSqlProcessorDTO toSqlDto = new BuildConvertJsonToSqlProcessorDTO();
         toSqlDto.name = "Convert Json To Sql";
         toSqlDto.details = "Convert data to sql";
@@ -267,7 +267,7 @@ public class BuildNifiTaskListener {
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
         toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
-        VerifyProcessorResult(toSqlRes);
+        verifyProcessorResult(toSqlRes);
         return toSqlRes.data;
     }
 
@@ -277,14 +277,14 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity ConvertJsonProcessor(String groupId) {
+    private ProcessorEntity convertJsonProcessor(String groupId) {
         BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
         toJsonDto.name = "Convert Data To Json";
         toJsonDto.details = "Convert data source to json";
         toJsonDto.groupId = groupId;
         toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
         BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
-        VerifyProcessorResult(toJsonRes);
+        verifyProcessorResult(toJsonRes);
         return toJsonRes.data;
     }
 
@@ -296,7 +296,7 @@ public class BuildNifiTaskListener {
      * @param sourceDbPoolId 数据源连接池id
      * @return 组件对象
      */
-    private ProcessorEntity ExecSqlProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId) {
+    private ProcessorEntity execSqlProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
@@ -307,7 +307,7 @@ public class BuildNifiTaskListener {
         querySqlDto.scheduleType = config.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
-        VerifyProcessorResult(querySqlRes);
+        verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
 
@@ -316,7 +316,7 @@ public class BuildNifiTaskListener {
      *
      * @param result 判断条件
      */
-    private void VerifyProcessorResult(BusinessResult<?> result) {
+    private void verifyProcessorResult(BusinessResult<?> result) {
         if (!result.success) {
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, result.msg);
         }
