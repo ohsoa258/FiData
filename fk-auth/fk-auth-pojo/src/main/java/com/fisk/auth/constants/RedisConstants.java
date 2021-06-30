@@ -8,7 +8,7 @@ public class RedisConstants {
     /**
      * 用户登录时记录TokenID的key前缀
      */
-    public static final String JTI_KEY_PREFIX = "auth:login:uid:";
+    public static final String JTI_KEY_PREFIX = "Auth:Login:Uid:";
     /**
      * 用户登录时记录TokenID的超时时间
      */

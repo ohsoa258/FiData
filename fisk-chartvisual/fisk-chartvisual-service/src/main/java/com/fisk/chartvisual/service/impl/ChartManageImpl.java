@@ -12,7 +12,7 @@ import com.fisk.chartvisual.map.ChartMap;
 import com.fisk.chartvisual.map.DraftChartMap;
 import com.fisk.chartvisual.mapper.ChartMapper;
 import com.fisk.chartvisual.mapper.DraftChartMapper;
-import com.fisk.chartvisual.service.IChartManage;
+import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -25,7 +25,7 @@ import javax.annotation.Resource;
  * @author gy
  */
 @Service
-public class ChartManageImpl implements IChartManage {
+public class ChartManageImpl implements IChartManageService {
 
     @Resource
     ChartMapper chartMapper;

@@ -1,16 +1,8 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author gy

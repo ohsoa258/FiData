@@ -2,6 +2,7 @@ package com.fisk.user.web;
 
 import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.utils.UserContext;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.user.dto.UserDTO;
 import com.fisk.user.entity.User;
 import com.fisk.user.service.UserService;
@@ -40,10 +41,11 @@ public class UserController {
 
     /**
      * 注册功能
+     *
      * @param user
      * @return
      * @Valid: 被注释的元素是一个对象，需要检查此对象的所有字段值
-     *
+     * <p>
      * 表单提交的方式,不需要加@RequestBody来接对象,如果是json格式就需要了
      */
     @PostMapping
@@ -58,26 +60,25 @@ public class UserController {
     /**
      * 根据用户名和密码查询用户
      *
-     * @param username
-     * @param password
-     * @return
-     *
-     * 前端json格式传来的,@RequestParam接对象
+     * @param username account
+     * @param password password
+     * @return 用户实体 为null说明不存在
      */
     @GetMapping
-    public ResponseEntity<UserDTO> queryUser(
+    public ResultEntity<UserDTO> queryUser(
             @RequestParam("username") String username,
             @RequestParam("password") String password) {
 
-        return ResponseEntity.ok(userService.queryUser(username, password));
+        return userService.queryUser(username, password);
     }
 
     /**
      * 获取当前登录的用户信息
+     *
      * @return 用户信息
      */
     @GetMapping("/me")
-    public ResponseEntity<UserDetail> me(){
+    public ResponseEntity<UserDetail> me() {
         return ResponseEntity.ok(UserContext.getUser());
     }
 

@@ -2,6 +2,7 @@ package com.fisk.auth.config;
 
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.utils.JwtUtils;
+import com.fisk.common.redis.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -9,7 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
 
@@ -31,12 +31,12 @@ public class AuthConfiguration {
 
     @Bean
     @Primary
-    public JwtUtils jwtUtils(StringRedisTemplate redisTemplate){
+    public JwtUtils jwtUtils(RedisUtil redis){
         try {
             // 查询秘钥
             String key = authClient.getSecretKey(properties.getClientId(), properties.getSecret());
             // 创建JwtUtils
-            JwtUtils jwtUtils = new JwtUtils(key, redisTemplate);
+            JwtUtils jwtUtils = new JwtUtils(key, redis);
             log.info("秘钥加载成功。");
             return jwtUtils;
         } catch (Exception e) {

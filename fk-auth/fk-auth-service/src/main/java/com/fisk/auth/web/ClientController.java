@@ -1,12 +1,18 @@
 package com.fisk.auth.web;
 
 import com.fisk.auth.service.ClientInfoService;
+import com.fisk.auth.service.IAuthenticateWhiteListService;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 /**
  * @author: Lock
@@ -18,11 +24,14 @@ public class ClientController {
 
     @Autowired
     private ClientInfoService clientInfoService;
+    @Resource
+    private IAuthenticateWhiteListService service;
 
     /**
      * 调用此接口,获取秘钥fk-auth-service配置文件中的秘钥(fk.jwt.key)
+     *
      * @param clientId 服务名称
-     * @param secret 每个服务自己的秘钥
+     * @param secret   每个服务自己的秘钥
      * @return
      */
     @GetMapping("/key")
@@ -30,7 +39,21 @@ public class ClientController {
             @RequestParam("clientId") String clientId,
             @RequestParam("secret") String secret) {
 
-        return ResponseEntity.ok(clientInfoService.getSecretKey(clientId,secret));
+        return ResponseEntity.ok(clientInfoService.getSecretKey(clientId, secret));
     }
 
+//    @GetMapping("/pathIsExists")
+//    public ResponseEntity<Boolean> pathIsExists(String path) {
+//        return ResponseEntity.ok(service.pathIsExists(path));
+//    }
+
+    @GetMapping("/pathIsExists")
+    public ResultEntity<Boolean> pathIsExists(String path) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.pathIsExists(path));
+    }
+
+    @GetMapping("/refreshWhiteList")
+    public ResultEntity<Object> refreshWhiteList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDataToRedis(null));
+    }
 }

@@ -6,10 +6,10 @@ import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.utils.JwtUtils;
 import com.fisk.auth.utils.UserContext;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.CookieUtils;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,9 +41,9 @@ public class LoginInterceptor implements HandlerInterceptor {
             UserContext.setUser(userDetails);
             return true;
         } catch (JwtException e) {
-            throw new FkException(401, "JWT无效或过期!", e);
+            throw new FkException(ResultEnum.AUTH_JWT_ERROR, e);
         } catch (IllegalArgumentException e){
-            throw new FkException(401, "用户未登录!", e);
+            throw new FkException(ResultEnum.AUTH_USER_NOTLOGIN, e);
         }
     }
 

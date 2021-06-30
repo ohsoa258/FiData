@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author gy
  */
-public interface IDataSourceConManage extends IService<DataSourceConPO> {
+public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 获取权限内所有的数据源

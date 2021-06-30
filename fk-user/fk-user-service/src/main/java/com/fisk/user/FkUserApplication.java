@@ -11,7 +11,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @data: 2021/5/14 16:24
  */
 // 第二包扫描: 为了让统一日志类生效
-@SpringBootApplication(scanBasePackages = {"com.fisk.user", "com.fisk.common.advice"})
+@SpringBootApplication(scanBasePackages = {"com.fisk.user", "com.fisk.common.advice", "com.fisk.common.redis"})
 @MapperScan("com.fisk.user.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
 @EnableJwtVerification // 开启自定义的jwt验证开关

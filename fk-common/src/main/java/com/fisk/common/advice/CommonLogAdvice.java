@@ -38,7 +38,7 @@ public class CommonLogAdvice {
                 throw throwable;
             }else{
                 // 如果不是，转为LyException
-                throw new FkException(ResultEnum.ERROR.getCode(), throwable);
+                throw new FkException(ResultEnum.ERROR, throwable);
             }
         }
     }

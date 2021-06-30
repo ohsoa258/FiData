@@ -1,16 +1,8 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -24,7 +16,7 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("SELECT DISTINCT ");
         str.append("objects.name as tableName, ");
-        str.append("props.value as tableDetails, ");
+        str.append("cast(props.value as nvarchar(50)) as tableDetails, ");
         str.append("col.columnName, ");
         str.append("col.columnDetails ");
         str.append("FROM ");

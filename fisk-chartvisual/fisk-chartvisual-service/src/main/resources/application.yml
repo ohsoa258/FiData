@@ -8,10 +8,29 @@ spring:
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
-
+  rabbitmq:
+    host: 192.168.11.130
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: my_vhost
   redis:
     host: 192.168.11.130
+#  security:
+#    user:
+#      name: admin
+#      password: zxc19981213
 
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 fk:
   encoder:
@@ -29,6 +48,12 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka
+  instance:
+    #eureka客户端发送心跳间隔，默认30秒
+    lease-renewal-interval-in-seconds: 5
+    #eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除
+    lease-expiration-duration-in-seconds: 5
+
 logging:
   level:
     com.fisk.chartvisual.mapper: debug

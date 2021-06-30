@@ -49,12 +49,6 @@
             <artifactId>fk-auth-pojo</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-        <!-- fk-common -->
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fk-common</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>

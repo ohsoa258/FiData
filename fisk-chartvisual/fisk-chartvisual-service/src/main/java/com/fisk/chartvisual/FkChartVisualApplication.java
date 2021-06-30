@@ -1,6 +1,5 @@
 package com.fisk.chartvisual;
 
-import com.fisk.auth.annotation.EnableJwtVerification;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,11 +12,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication(scanBasePackages = {"com.fisk.chartvisual",
         "com.fisk.common.advice",
         "com.fisk.common.mdc",
-        "com.fisk.common.mybatis"})
+        "com.fisk.common.mybatis",
+        "com.fisk.common.redis",
+        "com.fisk.common.user",
+        "com.fisk.common.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
-@EnableFeignClients(basePackages = "com.fisk.auth.client")
-// 开启自定义的jwt验证开关
-//@EnableJwtVerification
+@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
 public class FkChartVisualApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkChartVisualApplication.class, args);

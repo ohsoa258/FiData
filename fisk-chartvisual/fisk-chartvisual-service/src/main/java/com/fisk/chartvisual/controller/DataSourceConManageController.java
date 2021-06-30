@@ -6,14 +6,12 @@ import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
 import com.fisk.chartvisual.dto.TestConnectionDTO;
-import com.fisk.chartvisual.service.IDataSourceConManage;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +27,7 @@ import javax.annotation.Resource;
 public class DataSourceConManageController {
 
     @Resource
-    private IDataSourceConManage service;
+    private IDataSourceConManageService service;
 
     @GetMapping("/page")
     @ApiOperation("获取所有数据源连接信息")

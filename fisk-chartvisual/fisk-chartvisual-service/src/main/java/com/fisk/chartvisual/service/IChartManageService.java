@@ -14,7 +14,7 @@ import com.fisk.common.response.ResultEnum;
  *
  * @author gy
  */
-public interface IChartManage {
+public interface IChartManageService {
 
     /**
      * 保存图表到草稿箱
