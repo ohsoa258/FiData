@@ -1,13 +1,11 @@
 package com.fisk.auth.web;
 
+import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.common.response.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,14 +23,14 @@ public class UserAuthController {
     @Autowired
     private UserAuthService userAuthService;
 
-    /**
+/*    *//**
      * 登录
      *
      * @param username
      * @param password
      * @param response
      * @return
-     */
+     *//*
     @PostMapping("/login")
     public ResultEntity<String> login(
             @RequestParam("username") String username,
@@ -40,6 +38,18 @@ public class UserAuthController {
             HttpServletResponse response) {
 
         return userAuthService.login(username, password, response);
+    }*/
+
+    /**
+     * 登录
+     * @param userAuthDTO
+     * @return
+     */
+    @PostMapping("/login")
+    public ResultEntity<String> login(
+            @RequestBody UserAuthDTO userAuthDTO) {
+
+        return userAuthService.login(userAuthDTO);
     }
 
     /**

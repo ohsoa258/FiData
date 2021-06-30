@@ -1,5 +1,6 @@
-package com.fisk.task.dto;
+package com.fisk.task.dto.task;
 
+import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
