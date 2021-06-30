@@ -209,7 +209,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
         appDataSourcePO.setId(appDataSid);
-        appDataSourcePO.setUpdateTime(date);
+
+        appDataSourcePO.setAppid(id);
+
+        Date date1 = new Date(System.currentTimeMillis());
+        appDataSourcePO.setUpdateTime(date1);
         appDataSourcePO.setDelFlag(1);
         int update = appDataSourceMapper.updateById(appDataSourcePO);
 

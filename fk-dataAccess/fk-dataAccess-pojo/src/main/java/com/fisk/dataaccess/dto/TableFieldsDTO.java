@@ -28,7 +28,7 @@ public class TableFieldsDTO extends BaseDTO {
 
     /**
      * 功能类型
-     * 0:新增表字段  1:修改表字段
+     * 0:旧数据不操作  1:修改表字段  2:新增表字段
      */
     public int funcType;
 

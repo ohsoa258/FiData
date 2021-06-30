@@ -382,7 +382,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
 
-            // 0: 新增  1: 修改
+            // 0: 旧数据不操作  2: 新增  1: 修改
             int funcType = tableFieldsDTO.getFuncType();
             if (funcType == 1) { // 修改
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
@@ -391,7 +391,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 tableFieldsPO.setDelFlag(1);
 
                 update2 = tableFieldsImpl.updateById(tableFieldsPO);
-            } else { // 新增
+            } else if (funcType == 2) { // 新增
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
                 // 还要绑定tb_table_access id
@@ -468,7 +468,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
 
-            // 0: 新增  1: 修改
+            // 0:旧数据不操作  1:修改表字段  2:新增表字段
             int funcType = tableFieldsDTO.getFuncType();
             if (funcType == 1) { // 修改
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
@@ -477,7 +477,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 tableFieldsPO.setDelFlag(1);
 
                 update2 = tableFieldsImpl.updateById(tableFieldsPO);
-            } else { // 新增
+            } else if (funcType == 2) { // 新增
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
                 // 还要绑定tb_table_access id
@@ -702,7 +702,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             list = mysqlConUtils.getNRTTable(url, user, pwd);
         } catch (ClassNotFoundException | SQLException e) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS,"数据不存在");
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
 
         return list;
@@ -734,7 +734,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 2.删除tb_table_fields数据
         List<TableFieldsPO> fieldsPOList = tableFieldsImpl.query()
                 .eq("table_access_id", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .list();
 
         // 判断是否存在表字段
