@@ -13,6 +13,8 @@ public abstract class MQConstants {
 
         public static final String BUILD_NIFI_FLOW = "task.build.nifi_flow";
 
+        public static final String BUILD_ATLAS_FLOW = "task.build.atlas_flow";
+
     }
 
     public static final class RouterConstants{
