@@ -21,10 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -344,8 +342,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
-    public List<BusinessResult<ProcessorEntity>> enabledProcessor(String groupId, ProcessorEntity... entities) {
-        List<BusinessResult<ProcessorEntity>> res = new ArrayList<>();
+    public List<ProcessorEntity> enabledProcessor(String groupId, ProcessorEntity... entities) {
+        return enabledProcessor(groupId, Arrays.stream(entities).collect(Collectors.toList()));
+    }
+
+    @Override
+    public List<ProcessorEntity> enabledProcessor(String groupId, List<ProcessorEntity> entities) {
+        List<ProcessorEntity> res = new ArrayList<>();
         ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
 
         HttpHeaders headers = new HttpHeaders();
@@ -368,7 +371,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
-                    System.out.println("");
+                    ProcessorEntity newEntity = getProcessor(item.getId());
+                    if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                        res.add(newEntity);
+                    }
                 }
             } catch (ApiException e) {
                 log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
@@ -377,6 +383,15 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         return res;
     }
 
+    @Override
+    public ProcessorEntity getProcessor(String id) {
+        try {
+            return NifiHelper.getProcessorsApi().getProcessor(id);
+        } catch (ApiException e) {
+            log.error("【" + id + "】查询组件报错，", e);
+            return null;
+        }
+    }
 
     /**
      * 创建Processor组件
@@ -398,4 +413,5 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             return BusinessResult.of(false, "【" + dto.getType() + "】组件创建失败" + e.getMessage(), null);
         }
     }
+
 }

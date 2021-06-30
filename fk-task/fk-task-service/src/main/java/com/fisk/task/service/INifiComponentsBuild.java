@@ -133,5 +133,20 @@ public interface INifiComponentsBuild {
      * @param entity 需要设置的组件
      * @return 设置结果
      */
-    List<BusinessResult<ProcessorEntity>> enabledProcessor(String groupId, ProcessorEntity... entity);
+    List<ProcessorEntity> enabledProcessor(String groupId, ProcessorEntity... entity);
+
+    /**
+     * Processor组件状态设置为开启
+     * @param groupId 组id
+     * @param entity 需要设置的组件
+     * @return 设置结果
+     */
+    List<ProcessorEntity> enabledProcessor(String groupId, List<ProcessorEntity> entity);
+
+    /**
+     * 查询组件
+     * @param id 组件id
+     * @return 组件entity
+     */
+    ProcessorEntity getProcessor(String id);
 }

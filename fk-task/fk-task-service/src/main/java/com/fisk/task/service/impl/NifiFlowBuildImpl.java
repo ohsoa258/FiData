@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -112,12 +111,7 @@ public class NifiFlowBuildImpl implements INifiFlowBuild {
         //连接 数据转json 和 json转sql
         BusinessResult<ConnectionEntity> sqlPutRes = componentsBuild.buildConnectProcessors(groupId, toSqlRes.data.getId(), putSqlRes.data.getId(), AutoEndBranchTypeEnum.SQL);
 
-        List<BusinessResult<ProcessorEntity>> list = componentsBuild.enabledProcessor(groupId, execSqlRes.data, toJsonRes.data, toSqlRes.data, putSqlRes.data);
-        if (list.stream().anyMatch(e -> !e.success)) {
-            return BusinessResult.of(false,
-                    list.stream().filter(e -> !e.success).map(e -> e.msg).collect(Collectors.joining(",")),
-                    null);
-        }
+        List<ProcessorEntity> list = componentsBuild.enabledProcessor(groupId, execSqlRes.data, toJsonRes.data, toSqlRes.data, putSqlRes.data);
 
         return BusinessResult.of(true, "nifi流程创建成功", null);
     }
