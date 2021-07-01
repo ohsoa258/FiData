@@ -9,8 +9,8 @@ spring:
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
 
-#  redis:
-#    host: 192.168.11.130
+  redis:
+    host: 192.168.11.130
   jackson:
     joda-date-time-format: yyyy-MM-dd HH:mm:ss
 
