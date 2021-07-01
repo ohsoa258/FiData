@@ -8,12 +8,12 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
+import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.service.IAtlasBuild;
-import com.fisk.task.vo.ProcessGroupsVO;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.INifiFlowBuild;
 import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.vo.ProcessGroupsVO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FkTaskApplication.class)
 @RunWith(SpringRunner.class)
 public class NifiBuildTest {
 
@@ -227,4 +227,8 @@ public class NifiBuildTest {
         }
     }
 
+    @Test
+    public void testData() {
+        System.out.println(1);
+    }
 }

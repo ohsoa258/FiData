@@ -73,8 +73,8 @@ public class BuildNifiTaskListener {
         GroupConfig groupConfig = new GroupConfig();
         groupConfig.appName = "Rabbit Consumer Build Nifi Data Flow";
         groupConfig.appDetails = "...";
-        groupConfig.newApp = false;
-        groupConfig.componentId = "017a120b-4f36-11d6-c4fc-56ddd99c3345";
+        groupConfig.newApp = true;
+        groupConfig.componentId = "017a121f-4f36-11d6-6dbb-07fd97574e96";
         dto.groupConfig = groupConfig;
         TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
         taskGroupConfig.appName = "Task1";
@@ -85,14 +85,14 @@ public class BuildNifiTaskListener {
         config1.user = "root";
         config1.password = "root123";
         config1.jdbcStr = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db";
-        config1.componentId = "017a120d-4f36-11d6-5a52-515e8a2e3463";
+        config1.componentId = "017a1221-4f36-11d6-116e-33e37592ccd8";
         dto.sourceDsConfig = config1;
         DataSourceConfig config2 = new DataSourceConfig();
         config2.type = DriverTypeEnum.MYSQL;
         config2.user = "root";
         config2.password = "Password01!";
         config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
-        config2.componentId = "017a120c-4f36-11d6-b321-5378851c768e";
+        config2.componentId = "017a1220-4f36-11d6-9384-d2fdf9557105";
         dto.targetDsConfig = config2;
         ProcessorConfig processorConfig = new ProcessorConfig();
         processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
