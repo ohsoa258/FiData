@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 /**
  * @author: Lock
  */
-@SpringBootApplication(scanBasePackages = {"com.fisk.datamodel", "com.fisk.common.advice"})
+@SpringBootApplication(scanBasePackages = {"com.fisk.datamodel", "com.fisk.common.advice", "com.fisk.common.redis"})
 @MapperScan("com.fisk.datamodel.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
 public class FkDataModelApplication {
