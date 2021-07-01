@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 13:46
+ * @author Lock
  * <p>
  * 对外提供登录服务
  */
@@ -20,36 +20,19 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/user")
 public class UserAuthController {
 
-    @Autowired
+    @Resource
     private UserAuthService userAuthService;
-
-/*    *//**
-     * 登录
-     *
-     * @param username
-     * @param password
-     * @param response
-     * @return
-     *//*
-    @PostMapping("/login")
-    public ResultEntity<String> login(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password,
-            HttpServletResponse response) {
-
-        return userAuthService.login(username, password, response);
-    }*/
 
     /**
      * 登录
-     * @param userAuthDTO
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PostMapping("/login")
     public ResultEntity<String> login(
-            @RequestBody UserAuthDTO userAuthDTO) {
+            @RequestBody UserAuthDTO dto) {
 
-        return userAuthService.login(userAuthDTO);
+        return userAuthService.login(dto);
     }
 
     /**

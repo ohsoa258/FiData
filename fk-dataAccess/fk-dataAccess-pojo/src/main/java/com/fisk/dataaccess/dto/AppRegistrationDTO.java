@@ -5,7 +5,6 @@ import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,8 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:59
+ * @author Lock
  *
  * 应用注册添加应用
  */
@@ -38,17 +36,7 @@ public class AppRegistrationDTO extends BaseDTO {
 
     private Date createTime;
 
-//    private String createUser;
-
-//    private DateTime updateTime;
-
-//    private String updateUser;
-
-//    private byte delFlag;
-
-    /**
-     * 数据源
-     */
+    // 数据源
     private AppDataSourceDTO appDatasourceDTO;
 
 

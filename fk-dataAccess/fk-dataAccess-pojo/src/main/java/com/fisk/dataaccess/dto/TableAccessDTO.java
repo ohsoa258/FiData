@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  *
  * 实时对象
  */
@@ -41,11 +41,6 @@ public class TableAccessDTO extends BaseDTO {
      *  物理表描述
      */
     public String tableDes;
-
-    /**
-     *  数据同步地址(url)  user  pwd
-     */
-//    public List<String> conn;
 
     /**
      *  如果是实时物理表，需要提供数据同步地址

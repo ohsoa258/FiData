@@ -7,8 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 13:48
+ * @author Lock
  */
 public interface UserAuthService {
 //    ResultEntity<String> login(String username, String password, HttpServletResponse response);

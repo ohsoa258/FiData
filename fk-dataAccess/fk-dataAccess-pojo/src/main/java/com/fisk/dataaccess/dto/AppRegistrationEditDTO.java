@@ -7,8 +7,7 @@ import javax.validation.constraints.NotNull;
 
 /**
  *
- * @author: Lock
- * @data: 2021/5/31 15:56
+ * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

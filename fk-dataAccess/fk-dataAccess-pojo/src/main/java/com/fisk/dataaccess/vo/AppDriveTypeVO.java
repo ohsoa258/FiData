@@ -13,14 +13,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AppDriveTypeVO extends BaseVO {
-
-//    private long id;
 
     private String name;
 

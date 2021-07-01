@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  *
  * 实时对象
  */
@@ -56,7 +56,7 @@ public class TableAccessNDTO extends BaseDTO {
     /**
      * 表字段对象
      */
-    public List<TableFieldsDTO> tableFieldsDTOS;
+    public List<TableFieldsDTO> list;
 
     /**
      * 同步方式对象

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  * <p>
  * 物理表接口首页对象
  */

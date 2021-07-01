@@ -1,80 +1,69 @@
 package com.fisk.dataaccess.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.AppNameDTO;
+import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Api(description = "物理表接口")
 @RestController
 @RequestMapping("/physicalTable")
 public class PhysicalTableController {
 
-    @Autowired
-    private IAppRegistration appRService;
+    @Resource
+    private IAppRegistration appRegService;
 
-    @Autowired
+    @Resource
     private ITableAccess tableAccess;
 
     /**
      * 根据是否为实时,查询应用名称集合
-     * @return
+     * @return 返回值
      */
     @GetMapping("/getAppType")
     @ApiOperation(value = "查询应用名称集合及是否实时")
     public ResultEntity<List<AppNameDTO>> queryAppName() {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryAppName());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRegService.queryAppName());
     }
 
 
     /**
      * 获取非实时应用名称
-     * @return
+     * @return 返回值
      */
     @GetMapping("/getNonRTName")
     @ApiOperation(value = "获取非实时应用名称")
-    public ResultEntity<List<AppNameDTO>> queryNRTAppName() {
+    public ResultEntity<List<AppNameDTO>> queryNonTimeAppName() {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRService.queryNRTAppName());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRegService.queryNRTAppName());
     }
 
     /**
      * 根据应用名称,获取远程数据库的表及表对应的字段
-     * @param appName
-     * @return
-     */
-/*    @GetMapping("/getDataBase/{appName}")
-    @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
-    public ResultEntity<Map<String, List<String>>> queryDataBase(
-            @PathVariable("appName") String appName) throws SQLException, ClassNotFoundException {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.queryDataBase(appName));
-    }*/
-
-    /**
-     * 根据应用名称,获取远程数据库的表及表对应的字段
-     * @param appName
-     * @return
+     * @param appName 请求参数
+     * @return 返回值
      */
     @GetMapping("/getFields/{appName}")
     @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
-    public ResultEntity<List<TablePyhNameDTO>> queryNRTTable(@PathVariable("appName") String appName) {
+    public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.getTableFields(appName));
     }
@@ -82,56 +71,54 @@ public class PhysicalTableController {
 
     /**
      * 添加物理表(实时)
-     * @param tableAccessDTO
-     * @return
+     * @param tableAccessDTO 请求参数
+     * @return 返回值
      */
     @PostMapping("/addRealTime")
     @ApiOperation(value = "添加物理表(实时)")
-    public ResultEntity<Object> addRTData(@RequestBody TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> addRealTimeData(@RequestBody TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
 
         return ResultEntityBuild.build(tableAccess.addRTData(tableAccessDTO));
     }
 
     /**
      * 修改物理表(实时)
-     * @param dto
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PutMapping("/editRealTime")
     @ApiOperation(value = "修改物理表(实时)")
-    public ResultEntity<Object> editRTData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> editRealTimeData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateRTData(dto));
     }
 
     /**
      * 添加物理表(非实时)
-     * @param tableAccessNDTO
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PostMapping("/addNonRealTime")
     @ApiOperation(value="添加物理表(非实时)")
-    public ResultEntity<Object> addNRTData(@RequestBody TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
 
-        return ResultEntityBuild.build(tableAccess.addNRTData(tableAccessNDTO));
+        return ResultEntityBuild.build(tableAccess.addNRTData(dto));
     }
 
     /**
      * 修改物理表(非实时)
-     * @param dto
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PutMapping("/editNonRealTime")
     @ApiOperation(value = "修改物理表(非实时)")
-    public ResultEntity<Object> editNRTData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateNRTData(dto));
     }
 
     /**
      * 根据id查询数据,回显实时表
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @GetMapping("/get/{id}")
     @ApiOperation("修改接口的回显数据")
@@ -145,7 +132,7 @@ public class PhysicalTableController {
      * @param key  搜索条件
      * @param page 当前页码
      * @param rows 每页显示条数
-     * @return
+     * @return 返回值
      */
     @GetMapping("/page")
     @ApiOperation(value = "物理表接口首页分页查询")
@@ -159,8 +146,8 @@ public class PhysicalTableController {
 
     /**
      * 删除数据
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除物理表")

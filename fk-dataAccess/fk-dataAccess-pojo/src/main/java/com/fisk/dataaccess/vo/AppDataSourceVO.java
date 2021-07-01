@@ -11,16 +11,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:41
+ * @author Lock
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AppDataSourceVO extends BaseDTO {
-//    private String id;
-
-//    private String appId;
 
     /**
      * 驱动类型

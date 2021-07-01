@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:59
+ * @author Lock
  *
  * 应用注册添加应用
  */

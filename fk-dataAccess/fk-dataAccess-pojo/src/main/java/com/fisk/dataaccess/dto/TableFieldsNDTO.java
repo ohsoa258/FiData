@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  *
  * 实时对象
  */
@@ -37,11 +37,6 @@ public class TableFieldsNDTO extends BaseDTO {
     public String fieldDes;
 
     /**
-     * 字段类型
-     */
-//    public String fieldType;
-
-    /**
      * 1是主键，0非主键
      */
     public int isPrimarykey;
@@ -55,11 +50,6 @@ public class TableFieldsNDTO extends BaseDTO {
      * 1是时间戳，0非时间戳
      */
     public long isRealtime;
-
-    /**
-     * 1：实时物理表的字段，0：非实时物理表的字段
-     */
-//    public int isTimestamp;
 
     public TableFieldsNDTO(BaseEntity entity) {
         super(entity);

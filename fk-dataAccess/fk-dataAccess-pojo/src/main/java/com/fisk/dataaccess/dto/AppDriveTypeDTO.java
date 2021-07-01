@@ -12,14 +12,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AppDriveTypeDTO extends BaseDTO {
-
-//    private long id;
 
     private String name;
 

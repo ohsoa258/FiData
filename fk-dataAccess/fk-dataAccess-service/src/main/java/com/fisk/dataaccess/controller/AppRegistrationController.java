@@ -9,15 +9,14 @@ import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:15
+ * @author Lock
  */
 @Api(description = "应用注册接口")
 @RestController
@@ -25,25 +24,25 @@ import java.util.List;
 @Slf4j
 public class AppRegistrationController {
 
-    @Autowired
+    @Resource
     private IAppRegistration service;
 
     /**
      * 添加应用
      *
-     * @param appRegistrationDTO
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO appRegistrationDTO) {
+    public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
 
-        return ResultEntityBuild.build(service.addData(appRegistrationDTO));
+        return ResultEntityBuild.build(service.addData(dto));
     }
 
     /**
      * 根据id查询数据,用于数据回显
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @GetMapping("/get/{id}")
     public ResultEntity<AppRegistrationDTO> getData(
@@ -58,7 +57,7 @@ public class AppRegistrationController {
      * @param key  搜索条件
      * @param page 当前页码
      * @param rows 每页显示条数
-     * @return
+     * @return 返回值
      */
     @GetMapping("/page")
     public ResultEntity<PageDTO<AppRegistrationDTO>> queryByPageAppRes(
@@ -74,8 +73,8 @@ public class AppRegistrationController {
     /**
      * 应用注册-修改
      *
-     * @param dto
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @PutMapping("/edit")
     public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
@@ -84,8 +83,8 @@ public class AppRegistrationController {
 
     /**
      * 删除
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(
@@ -95,7 +94,7 @@ public class AppRegistrationController {
 
     /**
      * 查询应用数据，按照创建时间倒序排序，查出top 10的数据
-     * @return
+     * @return 返回值
      */
     @GetMapping("/getDescDate")
     public ResultEntity<List<AppRegistrationDTO>> getDescDate() {

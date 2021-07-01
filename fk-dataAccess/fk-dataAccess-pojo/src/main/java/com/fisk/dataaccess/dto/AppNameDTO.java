@@ -5,16 +5,14 @@ import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.ibatis.annotations.Mapper;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @NoArgsConstructor
