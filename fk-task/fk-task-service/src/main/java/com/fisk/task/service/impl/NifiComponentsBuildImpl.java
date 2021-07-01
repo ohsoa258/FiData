@@ -171,8 +171,12 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
-        config.setSchedulingPeriod(data.scheduleExpression);
-        config.setSchedulingStrategy(data.scheduleType.getName());
+        if (data.scheduleType != null) {
+            config.setSchedulingStrategy(data.scheduleType.getName());
+        }
+        if (StringUtils.isNotEmpty(data.scheduleExpression)) {
+            config.setSchedulingPeriod(data.scheduleExpression);
+        }
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoRes);
         config.setComments(data.details);

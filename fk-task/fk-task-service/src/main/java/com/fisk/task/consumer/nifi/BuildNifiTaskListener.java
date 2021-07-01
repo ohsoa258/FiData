@@ -231,8 +231,12 @@ public class BuildNifiTaskListener {
      * @param targetDbPoolId 目标连接池id
      */
     private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId) {
+        //创建执行删除组件
+        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
         //创建查询组件
         ProcessorEntity querySqlRes = execSqlProcessor(config, groupId, sourceDbPoolId);
+        //连接器
+        componentConnector(groupId, delSqlRes.getId(), querySqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建数据转换json组件
         ProcessorEntity toJsonRes = convertJsonProcessor(groupId);
         //连接器
@@ -247,6 +251,7 @@ public class BuildNifiTaskListener {
         componentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
 
         List<ProcessorEntity> res = new ArrayList<>();
+        res.add(delSqlRes);
         res.add(querySqlRes);
         res.add(toJsonRes);
         res.add(toSqlRes);
@@ -280,7 +285,7 @@ public class BuildNifiTaskListener {
         putSqlDto.details = "Put sql to target data source";
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = targetDbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
         verifyProcessorResult(putSqlRes);
         return putSqlRes.data;
@@ -302,7 +307,7 @@ public class BuildNifiTaskListener {
         toSqlDto.groupId = groupId;
         toSqlDto.tableName = config.processorConfig.targetTableName;
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
-        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
         verifyProcessorResult(toSqlRes);
         return toSqlRes.data;
@@ -319,7 +324,7 @@ public class BuildNifiTaskListener {
         toJsonDto.name = "Convert Data To Json";
         toJsonDto.details = "Convert data source to json";
         toJsonDto.groupId = groupId;
-        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
         verifyProcessorResult(toJsonRes);
         return toJsonRes.data;
@@ -340,6 +345,27 @@ public class BuildNifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery;
         querySqlDto.dbConnectionId = sourceDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    /**
+     * 执行sql delete组件
+     *
+     * @param config         数据接入配置
+     * @param groupId        组id
+     * @param targetDbPoolId ods连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity execDeleteSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Exec Target Delete";
+        querySqlDto.details = "Execute Delete SQL in the data target";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = "TRUNCATE table tb_test_data";
+        querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);

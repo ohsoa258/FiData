@@ -1,6 +1,7 @@
 package com.fisk.task.service;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 
 /**
@@ -17,5 +18,5 @@ public interface IBuildTaskService {
      * @param data     任务参数（json）
      * @return 结果
      */
-    public ResultEntity<Object> publishTask(String name, String exchange, String queue, BuildNifiFlowDTO data);
+    public ResultEntity<Object> publishTask(String name, String exchange, String queue, MQBaseDTO data);
 }

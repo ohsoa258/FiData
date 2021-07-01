@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.TaskStatusEnum;
 import com.fisk.task.mapper.TaskLogMapper;
@@ -30,7 +30,7 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
     RabbitTemplate rabbitTemplate;
 
     @Override
-    public ResultEntity<Object> publishTask(String name, String exchange, String queue, BuildNifiFlowDTO data) {
+    public ResultEntity<Object> publishTask(String name, String exchange, String queue, MQBaseDTO data) {
         String str = JSON.toJSONString(data);
 
         TaskLogPO model = new TaskLogPO();
