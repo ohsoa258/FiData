@@ -20,7 +20,8 @@ public enum TraceTypeEnum implements BaseEnum {
     TASK_MQ_PRODUCER_CONFIRM(2001, "Task_MQ_Producer_Confirm"),
     TASK_WS_SEND_MESSAGE(2002, "Task_WS_Send_Message"),
     TASK_NIFI_ERROR(2003, "Task_Nifi_Error"),
-    UNKNOWN(-1, "UNKNOWN");
+    UNKNOWN(-1, "UNKNOWN"),
+    ATLAS_MQ_BUILD(2004,"Atlas_MQ_Build");
 
     TraceTypeEnum(int value, String name) {
         this.value = value;

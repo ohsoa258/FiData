@@ -5,32 +5,30 @@ import com.fisk.task.service.IAtlasBuild;
 import com.fisk.task.utils.DorisHelper;
 import com.fisk.task.utils.YamlReader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.Statement;
 
 /**
- * Author:DennyHui
- * CreateTime: 2021/7/1 11:55
+ * @author:DennyHui CreateTime: 2021/7/1 11:55
  * Description:
  */
+@Service
 @Slf4j
 public class AtlasBuildImpl implements IAtlasBuild {
     @Resource
     IAtlasBuild doris;
 
-    public BusinessResult dorisBuildTable(String executsql){
-        boolean re=false;
-        String msg=null;
+    @Override
+    public BusinessResult dorisBuildTable(String executsql) {
+        boolean re = false;
+        String msg = null;
         String dorisconstr = YamlReader.instance.getValueByKey("dorisconstr.url").toString();
         String username = YamlReader.instance.getValueByKey("dorisconstr.username").toString();
         String pwd = YamlReader.instance.getValueByKey("dorisconstr.password").toString();
         String Driver = YamlReader.instance.getValueByKey("dorisconstr.driver_class_name").toString();
-        System.out.println("dorisconstr:" + dorisconstr);
-        System.out.println("username:" + username);
-        System.out.println("pwd:" + pwd);
-        System.out.println("Driver:" + Driver);
         Connection conn = null;
         Statement stmt = null;
         int result = 0;
@@ -50,20 +48,22 @@ public class AtlasBuildImpl implements IAtlasBuild {
             stmt = conn.createStatement();
             // 3执行
             result = stmt.executeUpdate(executsql);
-            re=true;
+            re = true;
 
         } catch (Exception e) {
             //捕捉错误
             //e.printStackTrace();
             log.error(e.getMessage());
-            msg=e.getMessage();
+            msg = e.getMessage();
         } finally {
             //关闭操作对象
             DorisHelper.closeStatement(stmt);
             //关闭连接
             DorisHelper.closeConn(conn);
         }
-        BusinessResult res=new BusinessResult(re,msg);
+        BusinessResult res = new BusinessResult(re, msg);
         return res;
-    };
+    }
+
+    ;
 }
