@@ -14,11 +14,8 @@ import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.task.dto.daconfig.GroupConfig;
-import com.fisk.task.dto.daconfig.ProcessorConfig;
+import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.INifiComponentsBuild;
@@ -52,14 +49,16 @@ public class BuildNifiTaskListener {
         //获取数据接入配置项
         DataAccessConfigDTO configDTO = getConfigData(dto.appId);
 
-        //1. 创建应用
+        //1. 创建应用组
         ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
         //2. 创建jdbc连接池
         List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId());
-        //3. 创建组件
-        List<ProcessorEntity> processors = buildProcessor(configDTO, groupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId());
-        //4. 启动组件
-        enabledProcessor(groupEntity.getId(), processors);
+        //3. 创建任务组
+        ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
+        //4. 创建组件
+        List<ProcessorEntity> processors = buildProcessor(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId());
+        //5. 启动组件
+        enabledProcessor(taskGroupEntity.getId(), processors);
     }
 
     /**
@@ -74,24 +73,33 @@ public class BuildNifiTaskListener {
         GroupConfig groupConfig = new GroupConfig();
         groupConfig.appName = "Rabbit Consumer Build Nifi Data Flow";
         groupConfig.appDetails = "...";
-        groupConfig.newApp = true;
+        groupConfig.newApp = false;
+        groupConfig.componentId = "017a120b-4f36-11d6-c4fc-56ddd99c3345";
+        dto.groupConfig = groupConfig;
+        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+        taskGroupConfig.appName = "Task1";
+        taskGroupConfig.appDetails = "...";
+        dto.taskGroupConfig = taskGroupConfig;
         DataSourceConfig config1 = new DataSourceConfig();
         config1.type = DriverTypeEnum.MYSQL;
         config1.user = "root";
         config1.password = "root123";
         config1.jdbcStr = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db";
+        config1.componentId = "017a120d-4f36-11d6-5a52-515e8a2e3463";
         dto.sourceDsConfig = config1;
         DataSourceConfig config2 = new DataSourceConfig();
         config2.type = DriverTypeEnum.MYSQL;
         config2.user = "root";
         config2.password = "Password01!";
         config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
+        config2.componentId = "017a120c-4f36-11d6-b321-5378851c768e";
         dto.targetDsConfig = config2;
         ProcessorConfig processorConfig = new ProcessorConfig();
         processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
         processorConfig.scheduleExpression = "0/30 * * * * ?";
         processorConfig.sourceExecSqlQuery = "select * from tb_test_data";
         processorConfig.targetTableName = "tb_test_data";
+        dto.processorConfig = processorConfig;
         return dto;
     }
 
@@ -119,12 +127,35 @@ public class BuildNifiTaskListener {
             }
         } else {
             //说明组件已存在，查询组件并返回
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.getProcessGroupById(config.groupConfig.appDetails);
+            BusinessResult<ProcessGroupEntity> res = componentsBuild.getProcessGroupById(config.groupConfig.componentId);
             if (res.success) {
                 return res.data;
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
             }
+        }
+    }
+
+    /**
+     * 创建任务组
+     *
+     * @param config 数据接入配置
+     * @return 组信息
+     */
+    private ProcessGroupEntity buildTaskGroup(DataAccessConfigDTO config, String groupId) {
+        BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+        dto.name = config.taskGroupConfig.appName;
+        dto.details = config.taskGroupConfig.appDetails;
+        dto.pid = groupId;
+        //根据组个数，定义坐标
+        int count = componentsBuild.getGroupCount(groupId);
+        dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+        //创建组件
+        BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+        if (res.success) {
+            return res.data;
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
         }
     }
 
@@ -225,10 +256,11 @@ public class BuildNifiTaskListener {
 
     /**
      * 组件连接器
-     * @param groupId 组id
+     *
+     * @param groupId  组id
      * @param sourceId 连接器上方组件id
      * @param targetId 连接器下方组件id
-     * @param type 连接类型
+     * @param type     连接类型
      */
     private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
@@ -336,6 +368,7 @@ public class BuildNifiTaskListener {
     private void enabledProcessor(String groupId, List<ProcessorEntity> processors) {
         List<ProcessorEntity> enableRes = componentsBuild.enabledProcessor(groupId, processors);
         if (enableRes.size() != processors.size()) {
+            //TODO
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
     }
