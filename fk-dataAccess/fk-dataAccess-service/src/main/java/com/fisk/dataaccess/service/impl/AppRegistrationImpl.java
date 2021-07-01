@@ -98,7 +98,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         int insert = appDataSourceMapper.insert(appDatasourcePO);
         if (insert < 0) {
-            throw new FkException(500, "保存tb_app_datasource数据失败");
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // 保存tb_app_drivetype数据

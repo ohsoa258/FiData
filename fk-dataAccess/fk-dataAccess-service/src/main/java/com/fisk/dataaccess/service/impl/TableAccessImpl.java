@@ -462,7 +462,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
 
-            // 0:旧数据不操作  1:修改表字段  2:新增表字段
+            /*// 0:旧数据不操作  1:修改表字段  2:新增表字段
             int funcType = tableFieldsDTO.getFuncType();
             if (funcType == 1) { // 修改
                 TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
@@ -483,7 +483,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 tableFieldsPO.setDelFlag(1);
                 saveField = tableFieldsImpl.save(tableFieldsPO);
 
-            }
+            }*/
+            TableFieldsPO tableFieldsPO = tableFieldsDTO.toEntity(TableFieldsPO.class);
+            Date date2 = new Date(System.currentTimeMillis());
+            tableFieldsPO.setUpdateTime(date2);
+            tableFieldsPO.setDelFlag(1);
+
+            update2 = tableFieldsImpl.updateById(tableFieldsPO);
         }
 
         if (!update2) {

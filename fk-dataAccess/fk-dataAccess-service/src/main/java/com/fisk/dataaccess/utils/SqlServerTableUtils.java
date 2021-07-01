@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.utils;
 
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessNDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
@@ -223,7 +224,7 @@ public class SqlServerTableUtils {
                     name = rs.getString(1);
                 }
                 if (name == null) {
-                    throw new FkException(500, "不存在此字段");
+                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
                 }
                 System.out.println(name);
 
