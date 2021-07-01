@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
-import org.joda.time.DateTime;
+import lombok.EqualsAndHashCode;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:20
+ * @author Lock
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("tb_app_datasource")
 public class AppDataSourcePO extends BaseEntity {
     /**
@@ -54,20 +54,11 @@ public class AppDataSourcePO extends BaseEntity {
      */
     private String realtimePwd;
 
-    /**
-     * 创建时间
-     */
-//    private DateTime createTime;
 
     /**
      * 创建人(id)
      */
     private String createUser;
-
-    /**
-     * 更新时间
-     */
-//    private DateTime updateTime;
 
     /**
      * 更新人(id)

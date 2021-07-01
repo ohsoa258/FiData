@@ -4,8 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 16:08
+ * @author Lock
  */
 public interface IAppDataSource extends IService<AppDataSourcePO> {
 }

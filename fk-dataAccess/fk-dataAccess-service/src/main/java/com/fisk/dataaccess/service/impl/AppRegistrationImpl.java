@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.AppNameDTO;
+import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
@@ -14,98 +17,86 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:13
+ * @author Lock
  */
 @Service
 public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO> implements IAppRegistration {
 
     @Resource
-    private AppRegistrationMapper mapper;
-
-    @Resource
     private AppDataSourceMapper appDataSourceMapper;
 
-    @Autowired
+    @Resource
     private AppDataSourceImpl appDataSourceImpl;
 
-    @Autowired
+    @Resource
     private AppDriveTypeImpl appDriveTypeImpl;
 
-    Date date = new Date(System.currentTimeMillis());
+    private Date date = new Date(System.currentTimeMillis());
 
     /**
      * 添加应用
      *
-     * @param appRegistrationDTO
-     * @return
+     * @param appRegistrationDTO 请求参数
+     * @return 返回值
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
         // dto->po
-        AppRegistrationPO appRegistrationPO = appRegistrationDTO.toEntity(AppRegistrationPO.class);
+        AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
 
         // 保存tb_app_registration数据
-/*        String appId = UUID.randomUUID().toString();
-        appRegistrationPO.setId(appId);*/
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-
         Date date1 = new Date(System.currentTimeMillis());
-        appRegistrationPO.setCreateTime(date1);
-        appRegistrationPO.setUpdateTime(date1);
-        appRegistrationPO.setDelFlag(1);
+        po.setCreateTime(date1);
+        po.setUpdateTime(date1);
+        po.setDelFlag(1);
 
-        /**
-         * 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
-         */
+        // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         List<String> appNameList = baseMapper.getAppName();
-        String appName = appRegistrationPO.getAppName();
+        String appName = po.getAppName();
         boolean contains = appNameList.contains(appName);
         if (contains) {
             throw new FkException(ResultEnum.DATA_EXISTS);
         }
 
         // 保存
-        boolean save = this.save(appRegistrationPO);
+        boolean save = this.save(po);
         if (!save) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
 
-        AppDataSourcePO appDatasourcePO = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
+        AppDataSourcePO po1 = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
 
 
         // 保存tb_app_datasource数据
-        appDatasourcePO.setAppid(appRegistrationPO.getId());
+        po1.setAppid(po.getId());
 
         Date date2 = new Date(System.currentTimeMillis());
-        appDatasourcePO.setCreateTime(date2);
-        appDatasourcePO.setUpdateTime(date2);
-        appDatasourcePO.setDelFlag(1);
+        po1.setCreateTime(date2);
+        po1.setUpdateTime(date2);
+        po1.setDelFlag(1);
 
-//        boolean save = appDataSourceImpl.save(appDatasourcePO);
-
-        int insert = appDataSourceMapper.insert(appDatasourcePO);
+        int insert = appDataSourceMapper.insert(po1);
         if (insert < 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // 保存tb_app_drivetype数据
-        AppDriveTypePO appDriveTypePO = new AppDriveTypePO();
-        appDriveTypePO.setId(appRegistrationPO.getId());
-        appDriveTypePO.setName(appDatasourcePO.getDriveType());
-        boolean save2 = appDriveTypeImpl.save(appDriveTypePO);
+        AppDriveTypePO po2 = new AppDriveTypePO();
+        po2.setId(po.getId());
+        po2.setName(po1.getDriveType());
+        boolean save2 = appDriveTypeImpl.save(po2);
 
 /*        if (!save2) {
             throw new FkException(500, "保存tb_app_drivetype数据失败");
@@ -116,18 +107,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
-     * 分页查询应用注册表
+     * 分页查询
      *
-     * @return
+     * @param key  搜索条件
+     * @param page 当前页码
+     * @param rows 每页显示条数
+     * @return 返回值
      */
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
         // 1.分页信息的健壮性处理
-        page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
-        rows = Math.max(rows, 1);    // 每页至少1条
+        // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
+        page = Math.min(page, 100);
+        // 每页至少1条
+        rows = Math.max(rows, 1);
 
-        Page<AppRegistrationPO> registrationPOPage1 = new Page<>(page, rows);
+        Page<AppRegistrationPO> page1 = new Page<>(page, rows);
 
         boolean isKeyExists = StringUtils.isNoneBlank(key);
         query().like(isKeyExists, "app_name", key)
@@ -138,15 +134,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //                .or()
 //                .eq(isKeyExists, "app_principal", key)
 //                .or()
-                .eq("del_flag", 1)// 未删除
-                .page(registrationPOPage1);
-
-        // 取出数据列表
-        List<AppRegistrationPO> records1 = registrationPOPage1.getRecords();
-
+                // 未删除
+                .eq("del_flag", 1)
+                .page(page1);
 
         // 分页封装
-        Page<AppRegistrationPO> registrationPOPage2 = new Page<>(page, rows);
+        Page<AppRegistrationPO> poPage = new Page<>(page, rows);
 
 
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
@@ -155,15 +148,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 查询数据
         queryWrapper.like(isKeyExists, "app_name", key)
                 .eq("del_flag", 1)
-                .orderByDesc("create_time");// 未删除
-        baseMapper.selectPage(registrationPOPage2, queryWrapper);
+                // 未删除
+                .orderByDesc("create_time");
+        baseMapper.selectPage(poPage, queryWrapper);
 
-        List<AppRegistrationPO> records2 = registrationPOPage2.getRecords();
+        List<AppRegistrationPO> records2 = poPage.getRecords();
         PageDTO<AppRegistrationDTO> pageDTO = new PageDTO<>();
 
-        pageDTO.setTotal(registrationPOPage1.getTotal());// 总条数
-        long totalPage = (long) (records1.size() + rows - 1) / rows;// 总页数
-        pageDTO.setTotalPage(registrationPOPage1.getPages());
+        // 总条数
+        pageDTO.setTotal(page1.getTotal());
+        // 总页数
+//        long totalPage = (long) (records1.size() + rows - 1) / rows;
+        pageDTO.setTotalPage(page1.getPages());
         pageDTO.setItems(AppRegistrationDTO.convertEntityList(records2));
 
         return pageDTO;
@@ -172,11 +168,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 应用注册-修改
      *
-     * @param dto
-     * @return
+     * @param dto 请求参数
+     * @return 返回值
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
 
         // 1.0前端应用注册传来的id
@@ -189,12 +185,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 1.2dto->po
-        AppRegistrationPO appRegistrationPO = dto.toEntity(AppRegistrationPO.class);
+        AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
 
         // 1.3修改主表数据
-        appRegistrationPO.setUpdateTime(date);
-        appRegistrationPO.setDelFlag(1);
-        boolean edit = this.updateById(appRegistrationPO);
+        po.setUpdateTime(date);
+        po.setDelFlag(1);
+        boolean edit = this.updateById(po);
         if (!edit) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
@@ -204,18 +200,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 2.1dto->po
         AppDataSourceDTO appDatasourceDTO = dto.getAppDatasourceDTO();
 
-        AppDataSourcePO appDataSourcePO = appDatasourceDTO.toEntity(AppDataSourcePO.class);
+        AppDataSourcePO dpo = appDatasourceDTO.toEntity(AppDataSourcePO.class);
 
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
-        appDataSourcePO.setId(appDataSid);
+        dpo.setId(appDataSid);
 
-        appDataSourcePO.setAppid(id);
+        dpo.setAppid(id);
 
         Date date1 = new Date(System.currentTimeMillis());
-        appDataSourcePO.setUpdateTime(date1);
-        appDataSourcePO.setDelFlag(1);
-        int update = appDataSourceMapper.updateById(appDataSourcePO);
+        dpo.setUpdateTime(date1);
+        dpo.setDelFlag(1);
+        int update = appDataSourceMapper.updateById(dpo);
 
 
         return update > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -225,8 +221,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 删除应用注册
      *
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @Override
     public ResultEnum deleteAppRegistration(long id) {
@@ -244,9 +240,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 2.删除tb_app_datasource表数据
-        AppDataSourcePO appDataSourcePO = appDataSourceImpl.query().eq("appid", id).one();
-        appDataSourcePO.setDelFlag(0);
-        int updateData = appDataSourceMapper.updateById(appDataSourcePO);
+        AppDataSourcePO po1 = appDataSourceImpl.query().eq("appid", id).one();
+        po1.setDelFlag(0);
+        int updateData = appDataSourceMapper.updateById(po1);
 
         return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -254,7 +250,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 查询所有应用名称(实时  非实时)
      *
-     * @return
+     * @return 返回值
      */
     @Override
     public List<AppNameDTO> queryAppName() {
@@ -262,42 +258,41 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> list = this.query()
                 .eq("del_flag", 1)
                 .list();
-        List<AppNameDTO> appNameDTOS = new ArrayList<>();
-        for (AppRegistrationPO appRegistrationPO : list) {
+        List<AppNameDTO> list1 = new ArrayList<>();
+        for (AppRegistrationPO po : list) {
 
             AppNameDTO appNameDTO = new AppNameDTO();
-            String appName = appRegistrationPO.getAppName();
+            String appName = po.getAppName();
             appNameDTO.setAppName(appName);
-            appNameDTO.setAppType((byte) appRegistrationPO.getAppType());
+            appNameDTO.setAppType((byte) po.getAppType());
 
-            appNameDTOS.add(appNameDTO);
+            list1.add(appNameDTO);
         }
 
-        return appNameDTOS;
+        return list1;
     }
 
 
     /**
      * 根据id查询数据,用于数据回显
      *
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @Override
     public AppRegistrationDTO getData(long id) {
 
-        AppRegistrationPO registrationPO = this.query()
+        AppRegistrationPO po1 = this.query()
                 .eq("id", id)
                 .eq("del_flag", 1)
                 .one();
-        AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(registrationPO);
-//        appRegistrationDTO.setCreateTime(registrationPO.getCreateTime());
+        AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(po1);
 
-        AppDataSourcePO appDataSourcePO = appDataSourceImpl.query()
+        AppDataSourcePO po2 = appDataSourceImpl.query()
                 .eq("appid", id)
                 .eq("del_flag", 1)
                 .one();
-        AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(appDataSourcePO);
+        AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(po2);
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
 
         return appRegistrationDTO;
@@ -305,7 +300,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     /**
-     * @return
+     * @return 返回值
      */
     @Override
     public List<AppRegistrationDTO> getDescDate() {
@@ -319,26 +314,26 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * 查询所有非实时应用名称
      *
-     * @return
+     * @return 返回值
      */
     @Override
-    public List<AppNameDTO> queryNRTAppName() {
+    public List<AppNameDTO> queryNoneRealTimeAppName() {
 
         List<AppRegistrationPO> list = this.query()
                 .eq("del_flag", 1)
                 .eq("app_type", 1)
                 .list();
-        List<AppNameDTO> appNameDTOS = new ArrayList<>();
-        for (AppRegistrationPO appRegistrationPO : list) {
+        List<AppNameDTO> list1 = new ArrayList<>();
+        for (AppRegistrationPO po : list) {
 
             AppNameDTO appNameDTO = new AppNameDTO();
-            String appName = appRegistrationPO.getAppName();
+            String appName = po.getAppName();
             appNameDTO.setAppName(appName);
             appNameDTO.setAppType((byte) 1);
 
-            appNameDTOS.add(appNameDTO);
+            list1.add(appNameDTO);
         }
 
-        return appNameDTOS;
+        return list1;
     }
 }

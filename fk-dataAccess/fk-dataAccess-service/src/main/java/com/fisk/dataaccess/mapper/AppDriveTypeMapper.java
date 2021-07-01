@@ -1,12 +1,11 @@
 package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
 public interface AppDriveTypeMapper extends BaseMapper<AppDriveTypePO> {

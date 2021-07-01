@@ -3,14 +3,11 @@ package com.fisk.dataaccess.entity;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BaseEntity;
-import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

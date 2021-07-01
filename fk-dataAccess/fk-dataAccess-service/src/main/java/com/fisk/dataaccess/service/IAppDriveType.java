@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 public interface IAppDriveType extends IService<AppDriveTypePO> {
 }

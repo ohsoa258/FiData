@@ -6,11 +6,16 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
 public interface TableSyncmodeMapper extends BaseMapper<TableSyncmodePO> {
 
+    /**
+     * 查询
+     * @param id 请求参数
+     * @return 返回值
+     */
     @Select("select id,sync_mode,custom_delete_condition,custom_insert_condition from tb_table_syncmode where id =#{id}")
     TableSyncmodePO getData(long id);
 

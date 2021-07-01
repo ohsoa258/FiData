@@ -5,7 +5,7 @@ import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
 public interface TableFieldsMapper extends BaseMapper<TableFieldsPO> {

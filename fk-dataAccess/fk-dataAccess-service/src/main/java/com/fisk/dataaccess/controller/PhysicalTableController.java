@@ -53,7 +53,7 @@ public class PhysicalTableController {
     @ApiOperation(value = "获取非实时应用名称")
     public ResultEntity<List<AppNameDTO>> queryNonTimeAppName() {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRegService.queryNRTAppName());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, appRegService.queryNoneRealTimeAppName());
     }
 
     /**

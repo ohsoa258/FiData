@@ -94,7 +94,7 @@ public class SqlServerTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getList();
 
         StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();

@@ -7,8 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 13:56
+ * @author Lock
  */
 @Data
 @TableName("tb_app_registration")
@@ -47,19 +46,9 @@ public class AppRegistrationPO extends BaseEntity {
     private String appPrincipalEmail;
 
     /**
-     * 创建时间
-     */
-//    private DateTime createTime;
-
-    /**
      * 创建人
      */
     private String createUser;
-
-    /**
-     * 更新时间
-     */
-//    private DateTime updateTime;
 
     /**
      * 更新人

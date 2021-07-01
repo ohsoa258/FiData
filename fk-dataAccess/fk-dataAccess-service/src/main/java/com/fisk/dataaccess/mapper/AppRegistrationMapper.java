@@ -9,21 +9,30 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 14:10
+ * @author Lock
  */
 @Mapper
 public interface AppRegistrationMapper extends BaseMapper<AppRegistrationPO> {
 
+    /**
+     * 查询表信息
+     *
+     * @return 返回值
+     */
     @Select("select * from tb_app_registration")
     List<AppRegistrationVO> getData();
 
-    @Select("select * from tb_app_registration limit (#{page}-1)*{rows},rows")
-    List<AppRegistrationPO> pageAppReg(Integer page, Integer rows);
-
+    /**
+     * 查询appName
+     * @return 返回值
+     */
     @Select("select app_name from tb_app_registration")
     List<String> getAppName();
 
+    /**
+     * 倒序查询
+     * @return 返回值
+     */
     @Select("select app_name,app_des,create_time from tb_app_registration order by create_time desc limit 0,10")
     List<AppRegistrationPO> getDescDate();
 }
