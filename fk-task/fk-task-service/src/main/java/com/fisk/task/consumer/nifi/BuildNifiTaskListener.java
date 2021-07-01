@@ -14,6 +14,8 @@ import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.task.dto.daconfig.GroupConfig;
+import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
@@ -68,9 +70,11 @@ public class BuildNifiTaskListener {
      */
     private DataAccessConfigDTO getConfigData(long appId) {
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
-        dto.appName = "Rabbit Consumer Build Nifi Data Flow";
-        dto.appDetails = "...";
-        dto.newApp = true;
+
+        GroupConfig groupConfig = new GroupConfig();
+        groupConfig.appName = "Rabbit Consumer Build Nifi Data Flow";
+        groupConfig.appDetails = "...";
+        groupConfig.newApp = true;
         DataSourceConfig config1 = new DataSourceConfig();
         config1.type = DriverTypeEnum.MYSQL;
         config1.user = "root";
@@ -83,10 +87,11 @@ public class BuildNifiTaskListener {
         config2.password = "Password01!";
         config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
         dto.targetDsConfig = config2;
-        dto.scheduleType = SchedulingStrategyTypeEnum.CRON;
-        dto.scheduleExpression = "0/30 * * * * ?";
-        dto.sourceExecSqlQuery = "select * from tb_test_data";
-        dto.targetTableName = "tb_test_data";
+        ProcessorConfig processorConfig = new ProcessorConfig();
+        processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        processorConfig.scheduleExpression = "0/30 * * * * ?";
+        processorConfig.sourceExecSqlQuery = "select * from tb_test_data";
+        processorConfig.targetTableName = "tb_test_data";
         return dto;
     }
 
@@ -98,10 +103,10 @@ public class BuildNifiTaskListener {
      */
     private ProcessGroupEntity buildAppGroup(DataAccessConfigDTO config) {
         //判断是否需要新建组
-        if (config.newApp) {
+        if (config.groupConfig.newApp) {
             BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-            dto.name = config.appName;
-            dto.details = config.appDetails;
+            dto.name = config.groupConfig.appName;
+            dto.details = config.groupConfig.appDetails;
             //根据组个数，定义坐标
             int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
             dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
@@ -114,7 +119,7 @@ public class BuildNifiTaskListener {
             }
         } else {
             //说明组件已存在，查询组件并返回
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.getProcessGroupById(config.appDetails);
+            BusinessResult<ProcessGroupEntity> res = componentsBuild.getProcessGroupById(config.groupConfig.appDetails);
             if (res.success) {
                 return res.data;
             } else {
@@ -131,7 +136,7 @@ public class BuildNifiTaskListener {
      */
     private List<ControllerServiceEntity> buildDsConnectionPool(DataAccessConfigDTO config, String groupId) {
         List<ControllerServiceEntity> list = new ArrayList<>();
-        if (config.newApp) {
+        if (config.groupConfig.newApp) {
             BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, groupId, true);
             BusinessResult<ControllerServiceEntity> targetRes = componentsBuild.buildDbControllerService(targetDto);
 
@@ -263,7 +268,7 @@ public class BuildNifiTaskListener {
         toSqlDto.details = "Convert data to sql";
         toSqlDto.dbConnectionId = targetDbPoolId;
         toSqlDto.groupId = groupId;
-        toSqlDto.tableName = config.targetTableName;
+        toSqlDto.tableName = config.processorConfig.targetTableName;
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
         toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
@@ -301,10 +306,10 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = config.sourceExecSqlQuery;
+        querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery;
         querySqlDto.dbConnectionId = sourceDbPoolId;
-        querySqlDto.scheduleExpression = config.scheduleExpression;
-        querySqlDto.scheduleType = config.scheduleType;
+        querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
+        querySqlDto.scheduleType = config.processorConfig.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
         verifyProcessorResult(querySqlRes);
