@@ -227,8 +227,4 @@ public class NifiBuildTest {
         }
     }
 
-    @Test
-    public void testData() {
-        System.out.println(1);
-    }
 }

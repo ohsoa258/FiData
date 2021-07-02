@@ -14,7 +14,8 @@ public enum ProcessorTypeEnum implements BaseEnum {
     ExecuteSQL(0, "org.apache.nifi.processors.standard.ExecuteSQL"),
     ConvertAvroToJSON(1, "org.apache.nifi.processors.avro.ConvertAvroToJSON"),
     ConvertJSONToSQL(2, "org.apache.nifi.processors.standard.ConvertJSONToSQL"),
-    PutSQL(3, "org.apache.nifi.processors.standard.PutSQL");
+    PutSQL(3, "org.apache.nifi.processors.standard.PutSQL"),
+    EvaluateJsonPath(4, "org.apache.nifi.processors.standard.EvaluateJsonPath");
 
     ProcessorTypeEnum(int value, String name) {
         this.value = value;

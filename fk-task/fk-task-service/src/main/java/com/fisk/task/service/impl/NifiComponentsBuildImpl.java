@@ -285,6 +285,36 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     }
 
     @Override
+    public BusinessResult<ProcessorEntity> buildEvaluateJsonPathProcess(BuildProcessEvaluateJsonPathDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.UNNMATCHED.getName());
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+
+        Map<String, String> map = new HashMap<>(1);
+        map.put(NifiConstants.AttrConstants.INCREMENT_NAME, data.fieldName);
+
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.EvaluateJsonPath.getName());
+        dto.setPosition(null);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         //目标组件

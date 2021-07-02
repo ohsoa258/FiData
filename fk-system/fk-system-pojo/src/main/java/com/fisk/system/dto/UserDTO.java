@@ -1,4 +1,4 @@
-package com.fisk.user.dto;
+package com.fisk.system.dto;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;

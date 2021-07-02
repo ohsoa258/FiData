@@ -231,6 +231,16 @@ public class BuildNifiTaskListener {
      * @param targetDbPoolId 目标连接池id
      */
     private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId) {
+        //读取增量字段组件
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, sourceDbPoolId);
+        //创建数据转换json组件
+        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 2);
+        //连接器
+        componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //字段转换nifi变量
+        ProcessorEntity evaluateJson = evaluateJsonPathProcessor(config, groupId);
+        //连接器
+        componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建执行删除组件
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
         //创建查询组件
@@ -238,7 +248,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, delSqlRes.getId(), querySqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建数据转换json组件
-        ProcessorEntity toJsonRes = convertJsonProcessor(groupId);
+        ProcessorEntity toJsonRes = convertJsonProcessor(groupId, 6);
         //连接器
         componentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建json转sql组件
@@ -285,7 +295,7 @@ public class BuildNifiTaskListener {
         putSqlDto.details = "Put sql to target data source";
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = targetDbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
         verifyProcessorResult(putSqlRes);
         return putSqlRes.data;
@@ -307,7 +317,7 @@ public class BuildNifiTaskListener {
         toSqlDto.groupId = groupId;
         toSqlDto.tableName = config.processorConfig.targetTableName;
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
-        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
         verifyProcessorResult(toSqlRes);
         return toSqlRes.data;
@@ -319,12 +329,12 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity convertJsonProcessor(String groupId) {
+    private ProcessorEntity convertJsonProcessor(String groupId, int level) {
         BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
         toJsonDto.name = "Convert Data To Json";
         toJsonDto.details = "Convert data source to json";
         toJsonDto.groupId = groupId;
-        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        toJsonDto.positionDTO = NifiPositionHelper.buildYPositionDTO(level);
         BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
         verifyProcessorResult(toJsonRes);
         return toJsonRes.data;
@@ -345,7 +355,7 @@ public class BuildNifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery;
         querySqlDto.dbConnectionId = sourceDbPoolId;
-        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -366,6 +376,45 @@ public class BuildNifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "TRUNCATE table tb_test_data";
         querySqlDto.dbConnectionId = targetDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    /**
+     * 执行sql 查询增量字段组件
+     *
+     * @param config  数据接入配置
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity evaluateJsonPathProcessor(DataAccessConfigDTO config, String groupId) {
+        BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
+        dto.name = "Set Increment Field";
+        dto.details = "Set Increment Field to Nifi Data flow";
+        dto.groupId = groupId;
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    /**
+     * 执行sql 查询增量字段组件
+     *
+     * @param config         数据接入配置
+     * @param groupId        组id
+     * @param sourceDbPoolId 数据源连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity queryIncrementFieldProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query Increment Field";
+        querySqlDto.details = "Query Increment Field in the data source";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = "select max(id) as " + NifiConstants.AttrConstants.INCREMENT_NAME + " from tb_test_data";
+        querySqlDto.dbConnectionId = sourceDbPoolId;
         querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
