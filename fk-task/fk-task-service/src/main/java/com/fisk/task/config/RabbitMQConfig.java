@@ -33,12 +33,29 @@ public class RabbitMQConfig {
     }
 
     /**
+     * 声明队列
+     */
+    @Bean("atlasQueue")
+    public Queue atlasQueue() {
+        return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_ATLAS_FLOW).build();
+    }
+
+    /**
      * 绑定队列和交换机
      */
     @Bean
     public Binding itemQueueExchange(@Qualifier("itemQueue") Queue queue,
                                      @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_NIFI_ROUTER).noargs();
+    }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding atlasQueueExchange(@Qualifier("atlasQueue") Queue queue,
+                                     @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_ATLAS_ROUTER).noargs();
     }
 
     @Bean

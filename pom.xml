@@ -11,7 +11,7 @@
         <module>fk-registry</module>
         <module>fk-gateway</module>
         <module>fk-common</module>
-        <module>fk-user</module>
+        <module>fk-system</module>
         <module>fk-auth</module>
         <module>fisk-chartvisual</module>
         <module>fk-dataAccess</module>

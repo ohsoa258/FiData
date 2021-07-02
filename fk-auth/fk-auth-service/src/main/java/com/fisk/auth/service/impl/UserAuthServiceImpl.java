@@ -15,8 +15,8 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
-import com.fisk.user.client.UserClient;
-import com.fisk.user.dto.UserDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -9,9 +9,14 @@ import lombok.Data;
 @Data
 public class DataAccessConfigDTO {
     /**
-     * 组配置
+     * app组配置
      */
     public GroupConfig groupConfig;
+
+    /**
+     * 任务组配置
+     */
+    public TaskGroupConfig taskGroupConfig;
 
     /**
      * 数据源jdbc连接

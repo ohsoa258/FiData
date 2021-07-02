@@ -17,11 +17,14 @@ public class NifiConstants {
 
     }
 
-    public static final class DirverConstants{
+    public static final class DirverConstants {
         public static final String MYSQL_DIRVER_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
     }
 
-    public static final class AttrConstants{
+    public static final class AttrConstants {
+
+        public static final String INCREMENT_NAME = "Increment";
+
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
         public static final double POSITION_Y = 300;

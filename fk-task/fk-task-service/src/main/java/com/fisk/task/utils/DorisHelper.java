@@ -11,12 +11,12 @@ public class DorisHelper {
     //DorisSqlHelper类
     //定义了数据库连接函数，关闭查询结果集，关闭Statement对象，关闭数据库连接
     //这样的做法是执行上述4个操作时可以直接调用函数（面向对象的思想），可以好好理解一下
-    public static Connection getConnection() {
+    public static Connection getConnection(String _jdbcurl,String _driver,String _username,String _pwd) {
         Connection conn = null;
-        String driver = "com.mysql.jdbc.Driver";// 驱动
-        String url = "jdbc:mysql://127.0.0.1:3306/banksystem";// SqlServer链接地址
-        String username = "sa";// 用户名
-        String password = "sa";// 密码
+        String driver = _driver;// 驱动
+        String url = _jdbcurl;// SqlServer链接地址
+        String username = _username;// 用户名
+        String password = _pwd;// 密码
         try {
             Class.forName(driver);// 加载驱动类
             conn = DriverManager.getConnection(url, username, password);

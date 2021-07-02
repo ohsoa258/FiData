@@ -28,7 +28,7 @@ target
 hs_err_pid*
 /fisk-chartvisual/fisk-chartvisual-service/target/
 /fisk-chartvisual/target/
-/fk-user/fk-user-service/target/
-/fk-user/fk-user-pojo/target/
-/fk-user/fk-user-api/target/
+/fk-system/fk-system-service/target/
+/fk-system/fk-system-pojo/target/
+/fk-system/fk-system-api/target/
 /fk-dataAccess/fk-dataAccess-service/target/

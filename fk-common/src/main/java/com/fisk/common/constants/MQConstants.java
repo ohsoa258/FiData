@@ -11,15 +11,16 @@ public abstract class MQConstants {
 
     public static final class QueueConstants{
 
-        public static final String BUILD_NIFI_FLOW = "task.build.nifi_flow";
+        public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
-        public static final String BUILD_ATLAS_FLOW = "task.build.atlas_flow";
+        public static final String BUILD_ATLAS_FLOW = "task.build.atlas.flow";
 
     }
 
     public static final class RouterConstants{
 
-        public static final String TASK_BUILD_NIFI_ROUTER = "task.#";
+        public static final String TASK_BUILD_NIFI_ROUTER = "task.build.nifi.#";
+        public static final String TASK_BUILD_ATLAS_ROUTER = "task.build.atlas.#";
 
     }
 }

@@ -102,6 +102,13 @@ public interface INifiComponentsBuild {
     BusinessResult<ProcessorEntity> buildPutSqlProcess(BuildPutSqlProcessorDTO data);
 
     /**
+     * 创建EvaluateJsonPath组件
+     * @param dto dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildEvaluateJsonPathProcess(BuildProcessEvaluateJsonPathDTO dto);
+
+    /**
      * 连接两个Processor组件
      *
      * @param groupId  组id
