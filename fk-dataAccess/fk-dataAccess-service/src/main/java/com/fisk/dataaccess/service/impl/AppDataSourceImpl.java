@@ -7,8 +7,7 @@ import com.fisk.dataaccess.service.IAppDataSource;
 import org.springframework.stereotype.Service;
 
 /**
- * @author: Lock
- * @data: 2021/5/26 16:08
+ * @author Lock
  */
 @Service
 public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataSourcePO> implements IAppDataSource {

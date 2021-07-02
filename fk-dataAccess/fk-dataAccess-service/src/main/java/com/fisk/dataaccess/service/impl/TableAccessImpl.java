@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessPO> implements ITableAccess {
@@ -50,12 +50,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 添加物理表(实时)
      *
-     * @param tableAccessDTO
-     * @return
+     * @param tableAccessDTO 请求参数
+     * @return 返回值
      */
     @Override
     @Transactional
-    public ResultEnum addRTData(TableAccessDTO tableAccessDTO) {
+    public ResultEnum addRealTimeData(TableAccessDTO tableAccessDTO) {
 
         // TODO: 原始SQL表创建(暂时不用集成)
         // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
@@ -172,6 +172,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        System.out.println(i);
 
 //        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
         return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -182,7 +183,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum addNRTData(TableAccessNDTO tableAccessNDTO) {
+    public ResultEnum addNonRealTimeData(TableAccessNDTO tableAccessNDTO) {
 
         // 先创建表
 /*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
@@ -269,7 +270,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 保存tb_table_fields数据
         boolean save2 = true;
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getList();
 
         // TODO: 这一块判断先不加
         // 表字段不为空判断
@@ -328,7 +329,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum updateRTData(TableAccessDTO tableAccessDTO) {
+    public ResultEnum updateRealTimeData(TableAccessDTO tableAccessDTO) {
 
         // TODO: 原始SQL表修改(暂时不用集成)
 /*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
@@ -423,7 +424,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public ResultEnum updateNRTData(TableAccessNDTO dto) {
+    public ResultEnum updateNonRealTimeData(TableAccessNDTO dto) {
 
         // TODO: 原始SQL表修改(暂时不用集成)
         // 1.先修改表
@@ -457,7 +458,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean update2 = true;
         boolean saveField = true;
 
-        List<TableFieldsDTO> tableFieldsDTOS = dto.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = dto.getList();
 
 
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
@@ -626,8 +627,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 回显实时表
      *
-     * @param id
-     * @return
+     * @param id 请求参数
+     * @return 返回值
      */
     @Override
     public TableAccessNDTO getData(long id) {
@@ -656,7 +657,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             tableFieldsDTOS.add(tableFieldsDTO);
         }
 
-        accessNDTO.setTableFieldsDTOS(tableFieldsDTOS);
+        accessNDTO.setList(tableFieldsDTOS);
 
         int isRealtime = accessPO.getIsRealtime();
 

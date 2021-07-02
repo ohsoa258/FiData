@@ -7,7 +7,7 @@ import com.fisk.dataaccess.service.ITableFields;
 import org.springframework.stereotype.Service;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsPO> implements ITableFields {

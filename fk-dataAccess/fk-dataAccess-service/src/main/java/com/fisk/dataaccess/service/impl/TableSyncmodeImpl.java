@@ -7,7 +7,7 @@ import com.fisk.dataaccess.service.ITableSyncmode;
 import org.springframework.stereotype.Service;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class TableSyncmodeImpl extends ServiceImpl<TableSyncmodeMapper, TableSyncmodePO> implements ITableSyncmode {

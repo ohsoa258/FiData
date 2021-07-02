@@ -7,7 +7,7 @@ import com.fisk.dataaccess.service.IAppDriveType;
 import org.springframework.stereotype.Service;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class AppDriveTypeImpl extends ServiceImpl<AppDriveTypeMapper, AppDriveTypePO> implements IAppDriveType {

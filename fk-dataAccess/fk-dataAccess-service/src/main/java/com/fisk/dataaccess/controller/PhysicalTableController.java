@@ -78,7 +78,7 @@ public class PhysicalTableController {
     @ApiOperation(value = "添加物理表(实时)")
     public ResultEntity<Object> addRealTimeData(@RequestBody TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
 
-        return ResultEntityBuild.build(tableAccess.addRTData(tableAccessDTO));
+        return ResultEntityBuild.build(tableAccess.addRealTimeData(tableAccessDTO));
     }
 
     /**
@@ -89,7 +89,7 @@ public class PhysicalTableController {
     @PutMapping("/editRealTime")
     @ApiOperation(value = "修改物理表(实时)")
     public ResultEntity<Object> editRealTimeData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
-        return ResultEntityBuild.build(tableAccess.updateRTData(dto));
+        return ResultEntityBuild.build(tableAccess.updateRealTimeData(dto));
     }
 
     /**
@@ -101,7 +101,7 @@ public class PhysicalTableController {
     @ApiOperation(value="添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
 
-        return ResultEntityBuild.build(tableAccess.addNRTData(dto));
+        return ResultEntityBuild.build(tableAccess.addNonRealTimeData(dto));
     }
 
     /**
@@ -112,7 +112,7 @@ public class PhysicalTableController {
     @PutMapping("/editNonRealTime")
     @ApiOperation(value = "修改物理表(非实时)")
     public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
-        return ResultEntityBuild.build(tableAccess.updateNRTData(dto));
+        return ResultEntityBuild.build(tableAccess.updateNonRealTimeData(dto));
     }
 
     /**
