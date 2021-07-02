@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MQConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.ReceiveDataConfigDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
@@ -38,11 +39,14 @@ public class BuildAtlasTaskListener {
     IAtlasBuild atlas;
 
     @RabbitHandler
-    @MQConsumerLog
-    public void msg(String settingid, Channel channel, Message message) {
-        ReceiveDataConfigDTO dto = JSON.parseObject(settingid, ReceiveDataConfigDTO.class);
+    @MQConsumerLog(type = TraceTypeEnum.ATLAS_MQ_BUILD)
+    public void msg(String tableSchema, Channel channel, Message message) {
+        ReceiveDataConfigDTO dto = JSON.parseObject(tableSchema, ReceiveDataConfigDTO.class);
         StringBuilder sql = new StringBuilder();
-        sql.append("CREATE TABLE denny_table");
+        String tableName="denny_table";
+        String stg_table="stg_"+tableName;
+        String ods_table="ods"+tableName;
+        sql.append("CREATE TABLE tableName");
         sql.append("{");
         sql.append("id INT DEFAULT '10',");
         sql.append("username VARCHAR(32) DEFAULT '',");
@@ -52,8 +56,12 @@ public class BuildAtlasTaskListener {
         sql.append("DISTRIBUTED BY HASH(siteid) BUCKETS 10");
         sql.append("\n" + "PROPERTIES(\"replication_num\" = \"1\");");
         int result = 0;
-       BusinessResult sqlresult= atlas.dorisBuildTable(sql.toString());
-        System.out.println(JSON.toJSONString(sqlresult));
+        String stg_sql=sql.toString().replace("tableName",stg_table);
+        String ods_sql=sql.toString().replace("tableName",ods_table);
+        BusinessResult sqlresult_stg= atlas.dorisBuildTable(stg_sql);
+        BusinessResult sqlresult_ods= atlas.dorisBuildTable(ods_sql);
+        System.out.println(JSON.toJSONString(sqlresult_stg));
+        System.out.println(JSON.toJSONString(sqlresult_ods));
         //BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
  /*       bb.appId = 123L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
