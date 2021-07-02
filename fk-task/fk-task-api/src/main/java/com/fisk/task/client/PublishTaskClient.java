@@ -21,6 +21,11 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/nifiFlow")
     ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data);
 
-    @PostMapping("/publishTask/atlasbuild")
-    ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data);
+    /**
+     * 元数据构建
+     * @param data dto
+     * @return 构建结果
+     */
+    @PostMapping("/publishTask/atlasBuild")
+    ResultEntity<Object> publishBuildAtlasTask(@RequestBody BuildNifiFlowDTO data);
 }
