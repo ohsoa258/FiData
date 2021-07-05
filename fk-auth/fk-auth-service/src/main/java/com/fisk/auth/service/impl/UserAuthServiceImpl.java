@@ -34,7 +34,7 @@ import static com.fisk.auth.constants.JwtConstants.COOKIE_NAME;
 @Service
 public class UserAuthServiceImpl implements UserAuthService {
 
-    @Autowired
+    @Resource
     private UserClient userClient;
 
     @Autowired
