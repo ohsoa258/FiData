@@ -45,8 +45,8 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryData(ChartQueryObject query) {
-        return baseBuildQueryData(query, dsType);
+    public String buildQueryData(ChartQueryObject query, boolean aggregation) {
+        return baseBuildQueryData(query, dsType, aggregation);
     }
 
     @Override

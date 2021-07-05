@@ -92,6 +92,22 @@ public class BeanHelper {
         return list;
     }
 
+    public static Map<String, Object> resultSetToMap(ResultSet rs) {
+        Map<String, Object> rowData = new HashMap<>();
+        try {
+            ResultSetMetaData md = rs.getMetaData();
+            while (rs.next()) {
+                for (int i = 1; i < 2; i++) {
+                    rowData.put(md.getColumnLabel(i), rs.getObject(i));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("【resultSetToMap】转换bean报错, ex", e);
+            return null;
+        }
+        return rowData;
+    }
+
     private static <T> void setFieldValue(ResultSet resultSet, ResultSetMetaData metaData, Field[] fields, T instance) throws SQLException, IllegalAccessException {
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             String fieldName = metaData.getColumnLabel(i);

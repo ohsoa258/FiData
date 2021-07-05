@@ -97,8 +97,9 @@ public class BuildNifiTaskListener {
         ProcessorConfig processorConfig = new ProcessorConfig();
         processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
         processorConfig.scheduleExpression = "0/30 * * * * ?";
-        processorConfig.sourceExecSqlQuery = "select * from tb_test_data";
+        processorConfig.sourceExecSqlQuery = "select * from tb_test_data where id = ${Increment}";
         processorConfig.targetTableName = "tb_test_data";
+        processorConfig.fieldName = "$.Increment";
         dto.processorConfig = processorConfig;
         return dto;
     }
@@ -243,6 +244,8 @@ public class BuildNifiTaskListener {
         componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建执行删除组件
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
+        //连接器
+        componentConnector(groupId, evaluateJson.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.MATCHED);
         //创建查询组件
         ProcessorEntity querySqlRes = execSqlProcessor(config, groupId, sourceDbPoolId);
         //连接器
@@ -261,6 +264,9 @@ public class BuildNifiTaskListener {
         componentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
 
         List<ProcessorEntity> res = new ArrayList<>();
+        res.add(queryField);
+        res.add(jsonRes);
+        res.add(evaluateJson);
         res.add(delSqlRes);
         res.add(querySqlRes);
         res.add(toJsonRes);
@@ -389,11 +395,12 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity evaluateJsonPathProcessor(DataAccessConfigDTO config, String groupId) {
+    private ProcessorEntity evaluateJsonPathProcessor(DataAccessConfigDTO config, String groupId)   {
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
         dto.details = "Set Increment Field to Nifi Data flow";
         dto.groupId = groupId;
+        dto.fieldName = config.processorConfig.fieldName;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
         verifyProcessorResult(querySqlRes);

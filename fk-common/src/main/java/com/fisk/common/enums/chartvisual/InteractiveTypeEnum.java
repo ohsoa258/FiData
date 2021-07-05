@@ -15,6 +15,7 @@ public enum InteractiveTypeEnum implements BaseEnum {
      */
     DRILL(0, "下钻"),
     LINKAGE(1, "钻取"),
+    TABLE(2, "表格"),
     DEFAULT(99, "默认");
 
     InteractiveTypeEnum(int value, String name) {

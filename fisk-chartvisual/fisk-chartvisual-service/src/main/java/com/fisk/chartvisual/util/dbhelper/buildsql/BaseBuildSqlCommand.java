@@ -18,11 +18,12 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
 
     /**
      * 根据数据源类型，查询参数对象动态创建sql语句(图表数据)
+     *
      * @param query 查询参数对象
-     * @param type 数据源类型
+     * @param type  数据源类型
      * @return 查询语句
      */
-    protected String baseBuildQueryData(ChartQueryObject query, DataSourceTypeEnum type) {
+    protected String baseBuildQueryData(ChartQueryObject query, DataSourceTypeEnum type, boolean aggregation) {
         List<ColumnDetails> values = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.VALUE).collect(Collectors.toList());
         List<ColumnDetails> names = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.NAME).collect(Collectors.toList());
 
@@ -34,37 +35,50 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
 
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
-        switch (query.interactiveType) {
-            case DRILL:
-            case DEFAULT:
-                str.append(arr[0]).append(queryColumns.columnName).append(arr[1]).append(" as ").append(arr[0]).append(queryColumns.columnLabel).append(arr[1]);
-                break;
-            case LINKAGE:
-                str.append(names.stream().map(e -> arr[0] + e.columnName + arr[1] + " as " + arr[0] + e.columnLabel + arr[1]).collect(Collectors.joining(",")));
-                break;
-            default:
-                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        //select
+        if (aggregation) {
+            String columns = values.stream()
+                    .map(e -> e.aggregationType.getName() + "(" + arr[0] + e.columnName + arr[1] + ") as " + e.columnLabel)
+                    .collect(Collectors.joining(","));
+            str.append(columns);
+        } else {
+            switch (query.interactiveType) {
+                case DRILL:
+                case DEFAULT:
+                    str.append(arr[0]).append(queryColumns.columnName).append(arr[1]).append(" as ").append(arr[0]).append(queryColumns.columnLabel).append(arr[1]);
+                    break;
+                case LINKAGE:
+                case TABLE:
+                    str.append(names.stream().map(e -> arr[0] + e.columnName + arr[1] + " as " + arr[0] + e.columnLabel + arr[1]).collect(Collectors.joining(",")));
+                    break;
+                default:
+                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            }
+            values.forEach(e -> {
+                str.append(",").append(e.aggregationType.getName()).append("(").append(arr[0]).append(e.columnName).append(arr[1]).append(") as ").append(arr[0]).append(e.columnLabel).append(arr[1]);
+            });
         }
-        values.forEach(e -> {
-            str.append(",").append(e.aggregationType.getName()).append("(").append(arr[0]).append(e.columnName).append(arr[1]).append(") as ").append(arr[0]).append(e.columnLabel).append(arr[1]);
-        });
-        str.append("FROM ").append(query.tableName).append(" ");
+        str.append(" FROM ").append(query.tableName).append(" ");
+        //where
         if (query.queryFilters != null) {
             str.append("WHERE 1 = 1 ");
             query.queryFilters.forEach(e -> {
                 str.append("AND ").append(arr[0]).append(e.columnName).append(arr[1]).append(" = '").append(e.value).append("' ");
             });
         }
-        str.append("GROUP BY ");
-        str.append(names.stream().map(e -> arr[0] + e.columnName + arr[1]).collect(Collectors.joining(",")));
-
+        //group
+        if(!aggregation) {
+            str.append("GROUP BY ");
+            str.append(names.stream().map(e -> arr[0] + e.columnName + arr[1]).collect(Collectors.joining(",")));
+        }
         return str.toString();
     }
 
     /**
      * 根据数据源类型，查询参数对象动态创建sql语句(切片器数据)
+     *
      * @param query 查询参数对象
-     * @param type 数据源类型
+     * @param type  数据源类型
      * @return 查询语句
      */
     protected String baseBuildQuerySlicer(SlicerQueryObject query, DataSourceTypeEnum type) {
@@ -84,6 +98,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
 
     /**
      * 根据数据源类型获取转义字符
+     *
      * @param type 数据源类型
      * @return 转义字符
      */

@@ -3,6 +3,7 @@ package com.fisk.chartvisual.controller;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -30,7 +31,7 @@ public class DataServiceController {
 
     @ApiOperation("获取图表数据")
     @PostMapping("/get")
-    public ResultEntity<List<Map<String, Object>>> get(@Validated @RequestBody ChartQueryObject query) {
+    public ResultEntity<DataServiceResult> get(@Validated @RequestBody ChartQueryObject query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.query(query));
     }
 

@@ -7,21 +7,22 @@ import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
-import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
+import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
-import java.sql.*;
+import javax.annotation.Resource;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Resource;
 
 /**
  * @author gy
@@ -44,11 +45,9 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public List<Map<String, Object>> query(ChartQueryObject query) {
+    public DataServiceResult query(ChartQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);
-
-        IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
-        return DbHelper.execQueryResultMap(command.buildQueryData(query), model);
+        return DbHelper.getDataService(query, model);
     }
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
@@ -57,7 +56,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         DataSourceConVO model = getDataSourceCon(query.id);
 
         IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
-        return DbHelper.execQueryResultMap(command.buildQuerySlicer(query), model);
+        return DbHelper.execQueryResultMaps(command.buildQuerySlicer(query), model);
     }
 
 

@@ -4,6 +4,7 @@ import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
@@ -14,8 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 测试报表数据获取
@@ -49,9 +48,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -82,9 +81,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -120,9 +119,9 @@ public class ChartDataTest {
                 value = "智能发现";
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -164,9 +163,9 @@ public class ChartDataTest {
                 value = "智能发现";
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -196,9 +195,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -234,9 +233,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /*-----------------------------------------------*/
@@ -263,9 +262,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.COUNT;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -296,9 +295,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -334,9 +333,9 @@ public class ChartDataTest {
                 value = "主动上报";
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -378,9 +377,9 @@ public class ChartDataTest {
                 value = "主动上报";
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -410,9 +409,9 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.COUNT;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 
     /**
@@ -448,8 +447,8 @@ public class ChartDataTest {
                 aggregationType = AggregationTypeEnum.SUM;
             }});
         }};
-        List<Map<String, Object>> res = dbService.query(query);
+        DataServiceResult res = dbService.query(query);
         System.out.println(res.toString());
-        assert res.size() > 0;
+        assert res.data.size() > 0;
     }
 }

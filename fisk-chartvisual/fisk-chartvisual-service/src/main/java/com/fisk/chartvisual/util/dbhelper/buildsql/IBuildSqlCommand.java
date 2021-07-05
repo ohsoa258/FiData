@@ -5,12 +5,14 @@ import com.fisk.chartvisual.dto.SlicerQueryObject;
 
 /**
  * 构建sql命令
+ *
  * @author gy
  */
 public interface IBuildSqlCommand {
 
     /**
      * 创建sql：获取所有表/字段
+     *
      * @param dbName 数据库名称
      * @return sql
      */
@@ -18,13 +20,16 @@ public interface IBuildSqlCommand {
 
     /**
      * 创建sql：获取所有表/字段
+     *
      * @param query 查询参数
+     * @param aggregation 是否是汇总查询
      * @return sql
      */
-    String buildQueryData(ChartQueryObject query);
+    String buildQueryData(ChartQueryObject query, boolean aggregation);
 
     /**
      * 获取切片器数据
+     *
      * @param query 查询参数
      * @return sql
      */
