@@ -18,10 +18,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Author:DennyHui
+ * @Author:yhxu
  * CreateTime: 2021/7/1 10:19
  * Description:
  */
@@ -64,21 +63,25 @@ public class AtlasTest {
         sql.append("(");
         StringBuilder sqlFileds=new StringBuilder();
         StringBuilder sqlAggregate=new StringBuilder("AGGREGATE KEY(");
+        StringBuilder sqlSelectStrBuild=new StringBuilder();
         StringBuilder sqlDistributed=new StringBuilder("DISTRIBUTED BY HASH(");
         ltc.forEach((l) -> {
-            if(l.isKey=="1")
+            if(l.isKey.equals("1"))
             {
                 sqlDistributed.append(l.columnName);
             }
             sqlFileds.append(l.columnName+" "+ l.type+" comment "+"'"+l.comment+"' ,");
             sqlAggregate.append(l.columnName+",");
+            sqlSelectStrBuild.append(l.columnName+",");
         });
         sqlDistributed.append(") BUCKETS 10");
         String aggregateStr=sqlAggregate.toString();
         aggregateStr=aggregateStr.substring(0,aggregateStr.lastIndexOf(","))+")";
+        String selectStr=sqlSelectStrBuild.toString();
+        selectStr=selectStr.substring(0,selectStr.lastIndexOf(","))+")";
         String filedStr=sqlFileds.toString();
-
         sql.append(filedStr.substring(0,filedStr.lastIndexOf(",")));
+        String sqlSelectStr="select "+selectStr+" from "+tab.tableName;
 /*        sql.append("id INT DEFAULT '10',,");
         sql.append("username VARCHAR(32) DEFAULT '',");
         sql.append("citycode SMALLINT");*/
@@ -96,6 +99,7 @@ public class AtlasTest {
         BusinessResult sqlResult_ods= atlas.dorisBuildTable(ods_sql);
         System.out.println(JSON.toJSONString(sqlResult_stg));
         System.out.println(JSON.toJSONString(sqlResult_ods));
+        System.out.println(sqlSelectStr);
         BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
         bb.appId = 123L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),

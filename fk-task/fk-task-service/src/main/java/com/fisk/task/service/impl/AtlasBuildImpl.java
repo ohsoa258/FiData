@@ -12,7 +12,8 @@ import java.sql.Connection;
 import java.sql.Statement;
 
 /**
- * @author:DennyHui CreateTime: 2021/7/1 11:55
+ * @author:yhxu
+ * CreateTime: 2021/7/1 11:55
  * Description:
  */
 @Service
@@ -31,7 +32,6 @@ public class AtlasBuildImpl implements IAtlasBuild {
         String Driver = YamlReader.instance.getValueByKey("dorisconstr.driver_class_name").toString();
         Connection conn = null;
         Statement stmt = null;
-        int result = 0;
         //PreparedStatement和Statement的区别在于
         //PreparedStatement接口继承Statement，
         //PreparedStatement 实例包含已编译的 SQL 语句，所以其执行速度要快于 Statement 对象。
@@ -47,12 +47,11 @@ public class AtlasBuildImpl implements IAtlasBuild {
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行
-            result = stmt.executeUpdate(executsql);
+            stmt.executeUpdate(executsql);
             re = true;
 
         } catch (Exception e) {
             //捕捉错误
-            //e.printStackTrace();
             log.error(e.getMessage());
             msg = e.getMessage();
         } finally {
@@ -65,5 +64,4 @@ public class AtlasBuildImpl implements IAtlasBuild {
         return res;
     }
 
-    ;
 }
