@@ -1,6 +1,5 @@
 package com.fisk.datamodel.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -11,23 +10,17 @@ import com.fisk.datamodel.service.IDataSourceArea;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.xml.crypto.Data;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSourceAreaPO> implements IDataSourceArea {
 
-    /**
-     * 添加计算数据源
-     * @param dto
-     * @return
-     */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataSourceAreaDTO dto) {
 
         DataSourceAreaPO po = dto.toEntity(DataSourceAreaPO.class);
@@ -41,11 +34,6 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         return this.save(po) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 回显
-     * @param id
-     * @return
-     */
     @Override
     public DataSourceAreaDTO getData(long id) {
 
@@ -61,13 +49,7 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         return new DataSourceAreaDTO(po);
     }
 
-    /**
-     * 修改
-     * @param dto
-     * @return
-     */
     @Override
-    @Transactional
     public ResultEnum updateDataSourceArea(DataSourceAreaDTO dto) {
 
         long id = dto.getId();
@@ -87,11 +69,6 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         return this.updateById(po)?ResultEnum.SUCCESS:ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    /**
-     * 删除
-     * @param id
-     * @return
-     */
     @Override
     public ResultEnum deleteDataSourceArea(long id) {
 
@@ -107,10 +84,6 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         return this.updateById(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 计算数据源首页展示
-     * @return
-     */
     @Override
     public List<DataSourceAreaDTO> listDataSource() {
 

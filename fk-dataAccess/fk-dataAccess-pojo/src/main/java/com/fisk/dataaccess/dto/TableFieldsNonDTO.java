@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 /**
  * @author Lock
  *
- * 实时对象
+ * 非实时对象
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class TableFieldsNDTO extends BaseDTO {
+public class TableFieldsNonDTO extends BaseDTO {
 
     /**
      * table_access（id）
@@ -37,6 +37,16 @@ public class TableFieldsNDTO extends BaseDTO {
     public String fieldDes;
 
     /**
+     * 字段类型
+     */
+    public String fieldType;
+
+    /**
+     * 字段长度
+     */
+    public long fieldLength;
+
+    /**
      * 1是主键，0非主键
      */
     public int isPrimarykey;
@@ -51,7 +61,7 @@ public class TableFieldsNDTO extends BaseDTO {
      */
     public long isRealtime;
 
-    public TableFieldsNDTO(BaseEntity entity) {
+    public TableFieldsNonDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -62,11 +72,11 @@ public class TableFieldsNDTO extends BaseDTO {
      * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<TableFieldsNDTO> convertEntityList(Collection<T> list) {
+    public static <T extends BaseEntity> List<TableFieldsNonDTO> convertEntityList(Collection<T> list) {
         if (list == null) {
             return Collections.emptyList();
         }
-        return list.stream().map(TableFieldsNDTO::new).collect(Collectors.toList());
+        return list.stream().map(TableFieldsNonDTO::new).collect(Collectors.toList());
     }
 
 }

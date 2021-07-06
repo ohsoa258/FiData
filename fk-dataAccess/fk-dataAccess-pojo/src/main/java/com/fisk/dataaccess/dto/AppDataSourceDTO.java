@@ -18,29 +18,26 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class AppDataSourceDTO extends BaseDTO {
-//    private String id;
-
-//    private String appid;
 
     /**
      * 驱动类型
      */
-    private String driveType;
+    public String driveType;
 
     /**
      * 连接字符串
      */
-    private String connectStr;
+    public String connectStr;
 
     /**
      * 连接账号
      */
-    private String connectAccount;
+    public String connectAccount;
 
     /**
      * 连接密码
      */
-    private String connectPwd;
+    public String connectPwd;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);

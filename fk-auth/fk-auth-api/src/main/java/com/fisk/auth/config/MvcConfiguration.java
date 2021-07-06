@@ -9,8 +9,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 15:43
+ * @author Lock
+ * @date 2021/5/17 15:43
  *
  * 此配置类是为了配置登录拦截器,LoginInterceptor
  */

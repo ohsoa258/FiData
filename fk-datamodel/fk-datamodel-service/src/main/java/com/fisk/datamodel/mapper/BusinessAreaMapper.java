@@ -11,14 +11,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
 public interface BusinessAreaMapper extends BaseMapper<BusinessAreaPO> {
 
+    /**
+     *  查询
+     * @return 查询结果
+     */
     @Select("select id,business_name from tb_area_business where del_flag=1")
     List<BusinessAreaPO> getName();
 
+    /**
+     * 分页
+     *
+     * @param page page
+     * @param key key
+     * @return 查询结果
+     */
     @Select("SELECT id,business_name,business_des,business_admin,business_email FROM tb_area_business\n" +
             "WHERE business_name LIKE CONCAT('%',#{key},'%')\n" +
             "AND del_flag = 1\n" +

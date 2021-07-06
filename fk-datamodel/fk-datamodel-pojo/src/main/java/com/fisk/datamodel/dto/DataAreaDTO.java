@@ -37,7 +37,7 @@ public class DataAreaDTO extends BaseDTO {
     /**
      *  1true  0false
      */
-    public boolean isShare;
+    public boolean share;
 
     /**
      *  数据域描述

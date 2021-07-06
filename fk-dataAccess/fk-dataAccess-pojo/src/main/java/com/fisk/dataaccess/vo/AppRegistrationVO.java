@@ -1,10 +1,7 @@
 package com.fisk.dataaccess.vo;
 
-import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
 import com.fisk.common.vo.BaseVO;
-import com.fisk.dataaccess.dto.AppDataSourceDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,47 +22,45 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppRegistrationVO extends BaseVO {
 
-//    private long id;
-
     /**
      * 应用名称
      */
-    private String appName;
+    public String appName;
 
     /**
      * 应用描述
      */
-    private String appDes;
+    public String appDes;
 
     /**
      * 应用类型
      */
-    private int appType;
+    public int appType;
 
     /**
      * 应用负责人
      */
-    private String appPrincipal;
+    public String appPrincipal;
 
     /**
      * 应用负责人邮箱
      */
-    private String appPrincipalEmail;
+    public String appPrincipalEmail;
 
     /**
      * 创建时间
      */
-    private DateTime createTime;
+    public DateTime createTime;
 
     /**
      * 创建人
      */
-    private String createUser;
+    public String createUser;
 
     /**
      * 更新时间
      */
-    private DateTime updateTime;
+    public DateTime updateTime;
 
     /**
      * 更新人
@@ -75,7 +70,8 @@ public class AppRegistrationVO extends BaseVO {
     /**
      * 逻辑删除(1: 未删除; 0: 删除)
      */
-    private byte delFlag;
+    public byte delFlag;
+
     public AppRegistrationVO(BaseEntity entity) {
         super(entity);
     }

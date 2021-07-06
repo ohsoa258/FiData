@@ -10,7 +10,6 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -25,15 +24,15 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 17:16
+ * @author Lock
+ * @date 2021/5/17 17:16
  * 拦截器: 用于拦截用户请求,并刷新有效期
  */
 @Slf4j
 @Component
 public class LoginFilter implements GlobalFilter, Ordered {
 
-    @Autowired
+    @Resource
     private JwtUtils jwtUtils;
     @Resource
     AuthClient authClient;
@@ -45,8 +44,11 @@ public class LoginFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
+        // 白名单
+        String whiteList = "/v2/api-docs";
+
         // 判断请求路径是否在白名单中
-        if (request.getPath().value().contains("/v2/api-docs")) {
+        if (request.getPath().value().contains(whiteList)) {
             return chain.filter(exchange);
         }
         ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());

@@ -11,11 +11,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
 public interface DataAreaMapper extends BaseMapper<DataAreaPO> {
 
+    /**
+     * 分页
+     * @param page page
+     * @param key key
+     * @return 查询结果
+     */
     @Select("SELECT \n" +
             "\tb.id,\n" +
             "\ta.business_name,\n" +

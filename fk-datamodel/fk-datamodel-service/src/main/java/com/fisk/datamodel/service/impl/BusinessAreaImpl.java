@@ -1,45 +1,32 @@
 package com.fisk.datamodel.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessAreaDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Service
 public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAreaPO> implements IBusinessArea {
 
-
-    /**
-     * 添加业务域
-     *
-     * @param businessAreaDTO
-     * @return
-     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
 
         // 1.dto->po
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date = new Date(System.currentTimeMillis());
         po.setCreateTime(date);
         po.setUpdateTime(date);
@@ -50,12 +37,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 回显数据: 根据id查询
-     *
-     * @param id
-     * @return
-     */
     @Override
     public BusinessAreaDTO getData(long id) {
 
@@ -71,14 +52,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return new BusinessAreaDTO(po);
     }
 
-    /**
-     * 修改业务域
-     *
-     * @param businessAreaDTO
-     * @return
-     */
     @Override
-    @Transactional
     public ResultEnum updateBusinessArea(BusinessAreaDTO businessAreaDTO) {
 
         // 修改时前端传来的id
@@ -93,7 +67,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         // 设置删除状态
         po.setDelFlag(1);
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);
 
@@ -102,12 +75,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return update ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    /**
-     * 删除业务域
-     *
-     * @param id
-     * @return
-     */
     @Override
     public ResultEnum deleteBusinessArea(long id) {
 
@@ -126,19 +93,12 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 分页查询
-     *
-     * @param key
-     * @param page
-     * @param rows
-     * @return
-     */
     @Override
     public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
+
         // 1.分页信息的健壮性处理
-        page = Math.min(page, 100);  // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
-        rows = Math.max(rows, 1);    // 每页至少5条
+        page = Math.min(page, 100);
+        rows = Math.max(rows, 1);
 
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 

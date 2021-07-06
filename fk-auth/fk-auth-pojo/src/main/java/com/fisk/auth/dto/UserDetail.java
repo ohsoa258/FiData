@@ -5,13 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 10:55
+ * @author Lock
+ * @date 2021/5/17 10:55
  * <p>
  * 用户数据,jwt载荷数据的一部分
  */
 @Data
-// 不用new对象,如: UserDetail.of(1L, "Jack")
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 public class UserDetail {

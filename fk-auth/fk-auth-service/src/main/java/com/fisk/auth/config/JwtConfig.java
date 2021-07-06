@@ -9,8 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 11:36
+ * @author Lock
+ * @date 2021/5/17 11:36
  */
 @Configuration
 public class JwtConfig {

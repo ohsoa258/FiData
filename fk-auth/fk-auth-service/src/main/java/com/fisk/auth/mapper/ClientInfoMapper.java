@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.auth.entity.ClientInfo;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 14:49
+ * @author Lock
+ * @date 2021/5/17 14:49
  */
 public interface ClientInfoMapper extends BaseMapper<ClientInfo> {
 }

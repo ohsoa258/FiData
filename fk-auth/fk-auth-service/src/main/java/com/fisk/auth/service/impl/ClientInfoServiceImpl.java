@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 /**
  * @author: Lock
  * @data: 2021/5/17 14:50
@@ -21,17 +23,9 @@ public class ClientInfoServiceImpl extends ServiceImpl<ClientInfoMapper, ClientI
     @Value("${fk.jwt.key}")
     private String key;
 
-    @Autowired
+    @Resource
     private PasswordEncoder passwordEncoder;
 
-
-
-    /**
-     * 调用此接口,获取秘钥fk-auth-service配置文件中的秘钥(fk.jwt.key)
-     * @param clientId 服务名称
-     * @param secret 每个服务自己的秘钥
-     * @return
-     */
     @Override
     public String getSecretKey(String clientId, String secret) {
 

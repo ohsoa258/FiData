@@ -7,10 +7,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
-@TableName("tb_area_data") // 表名
+@TableName("tb_area_data")
 @EqualsAndHashCode(callSuper = true)
 public class DataAreaPO extends BaseEntity {
 
@@ -30,7 +30,7 @@ public class DataAreaPO extends BaseEntity {
     /**
      *  1true  0false
      */
-    public boolean isShare;
+    public boolean share;
 
     /**
      *  数据域描述

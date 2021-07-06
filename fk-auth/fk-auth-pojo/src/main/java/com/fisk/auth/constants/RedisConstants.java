@@ -1,8 +1,8 @@
 package com.fisk.auth.constants;
 
 /**
- * @author: Lock
- * @date: 2021/5/10 13:10
+ * @author Lock
+ * @date 2021/5/10 13:10
  */
 public class RedisConstants {
     /**

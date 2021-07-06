@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppDriveTypeDTO extends BaseDTO {
 
-    private String name;
+    public String name;
 
-    private String type;
+    public String type;
 
     public AppDriveTypeDTO(BaseEntity entity) {
         super(entity);

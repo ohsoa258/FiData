@@ -16,8 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 15:42
+ * @author Lock
+ * @date 2021/5/17 15:42
  */
 @Slf4j
 public class LoginInterceptor implements HandlerInterceptor {

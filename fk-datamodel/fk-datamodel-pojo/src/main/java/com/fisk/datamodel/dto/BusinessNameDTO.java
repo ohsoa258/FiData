@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @NoArgsConstructor

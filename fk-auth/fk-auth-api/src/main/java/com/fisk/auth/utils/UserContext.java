@@ -3,8 +3,8 @@ package com.fisk.auth.utils;
 import com.fisk.auth.dto.UserDetail;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 16:54
+ * @author Lock
+ * @date 2021/5/17 16:54
  */
 public class UserContext {
     private static final ThreadLocal<UserDetail> TL = new ThreadLocal<>();

@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 /**
  * @author Lock
  *
- * 实时对象
+ * 非实时对象
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class TableAccessNDTO extends BaseDTO {
+public class TableAccessNonDTO extends BaseDTO {
 
     public long id;
 
@@ -63,7 +63,7 @@ public class TableAccessNDTO extends BaseDTO {
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
 
-    public TableAccessNDTO(BaseEntity entity) {
+    public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -74,10 +74,10 @@ public class TableAccessNDTO extends BaseDTO {
      * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<TableAccessNDTO> convertEntityList(Collection<T> list) {
+    public static <T extends BaseEntity> List<TableAccessNonDTO> convertEntityList(Collection<T> list) {
         if (list == null) {
             return Collections.emptyList();
         }
-        return list.stream().map(TableAccessNDTO::new).collect(Collectors.toList());
+        return list.stream().map(TableAccessNonDTO::new).collect(Collectors.toList());
     }
 }

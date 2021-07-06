@@ -1,8 +1,8 @@
 package com.fisk.auth.constants;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 13:55
+ * @author Lock
+ * @date 2021/5/17 13:55
  *
  * 定义cookie的属性
  */

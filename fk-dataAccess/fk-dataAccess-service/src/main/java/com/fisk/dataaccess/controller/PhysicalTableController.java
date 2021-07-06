@@ -6,7 +6,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -99,7 +99,7 @@ public class PhysicalTableController {
      */
     @PostMapping("/addNonRealTime")
     @ApiOperation(value="添加物理表(非实时)")
-    public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) throws SQLException, ClassNotFoundException {
 
         return ResultEntityBuild.build(tableAccess.addNonRealTimeData(dto));
     }
@@ -111,7 +111,7 @@ public class PhysicalTableController {
      */
     @PutMapping("/editNonRealTime")
     @ApiOperation(value = "修改物理表(非实时)")
-    public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNonDTO dto) throws SQLException, ClassNotFoundException {
         return ResultEntityBuild.build(tableAccess.updateNonRealTimeData(dto));
     }
 
@@ -122,7 +122,7 @@ public class PhysicalTableController {
      */
     @GetMapping("/get/{id}")
     @ApiOperation("修改接口的回显数据")
-    public ResultEntity<TableAccessNDTO> getData(@PathVariable("id") long id) {
+    public ResultEntity<TableAccessNonDTO> getData(@PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
     }
 

@@ -22,8 +22,8 @@ import java.nio.charset.Charset;
 import java.util.UUID;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 11:09
+ * @author Lock
+ * @date 2021/5/17 11:09
  * <p>
  * Jwt工具类: 用于生成、验证并解析Jwt
  */
@@ -41,7 +41,7 @@ public class JwtUtils {
 
     private final RedisUtil redis;
 
-    private final static ObjectMapper mapper = new ObjectMapper();
+    private final static ObjectMapper MAPPER = new ObjectMapper();
 
     public JwtUtils(String key, RedisUtil redis) {
         // 生成秘钥
@@ -65,7 +65,7 @@ public class JwtUtils {
             // 2.生成token
             return Jwts.builder().signWith(secretKey)
                     .setId(jti)
-                    .claim(SystemConstants.CLAIM_ATTR_USERINFO, mapper.writeValueAsString(userDetail))
+                    .claim(SystemConstants.CLAIM_ATTR_USERINFO, MAPPER.writeValueAsString(userDetail))
                     .claim(SystemConstants.CLAIM_ATTR_ID, userDetail.getId().toString())
                     .compact();
         } catch (JsonProcessingException e) {
@@ -94,7 +94,7 @@ public class JwtUtils {
         payload.setId(Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class)));
         UserDetail userDetail;
         try {
-            userDetail = mapper.readValue(claims.get(SystemConstants.CLAIM_ATTR_USERINFO, String.class), UserDetail.class);
+            userDetail = MAPPER.readValue(claims.get(SystemConstants.CLAIM_ATTR_USERINFO, String.class), UserDetail.class);
             payload.setUserDetail(userDetail);
         } catch (IOException e) {
             throw new RuntimeException("用户信息解析失败！");

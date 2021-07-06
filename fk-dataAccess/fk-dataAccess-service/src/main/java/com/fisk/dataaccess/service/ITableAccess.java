@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 
@@ -40,7 +40,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @throws SQLException a
      * @throws ClassNotFoundException b
      */
-    ResultEnum addNonRealTimeData(TableAccessNDTO dto) throws SQLException, ClassNotFoundException;
+    ResultEnum addNonRealTimeData(TableAccessNonDTO dto) throws SQLException, ClassNotFoundException;
 
     /**
      * 修改物理表(实时)
@@ -58,7 +58,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @throws SQLException a
      * @throws ClassNotFoundException b
      */
-    ResultEnum updateNonRealTimeData(TableAccessNDTO dto) throws SQLException, ClassNotFoundException;
+    ResultEnum updateNonRealTimeData(TableAccessNonDTO dto) throws SQLException, ClassNotFoundException;
 
     /**
      * 根据非实时应用名称,获取远程数据库的表及表对应的字段
@@ -85,7 +85,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id 请求参数
      * @return 返回值
      */
-    TableAccessNDTO getData(long id);
+    TableAccessNonDTO getData(long id);
 
     /**
      * 根据应用名称,获取远程数据库的表及表对应的字段

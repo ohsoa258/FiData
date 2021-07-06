@@ -14,19 +14,18 @@ import org.springframework.context.annotation.Primary;
 import javax.annotation.Resource;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 15:21
+ * @author Lock
+ * @date 2021/5/17 15:21
  */
 @Slf4j
 @Configuration
-// 读取微服务的密钥
 @ConditionalOnProperty(prefix = "fk.auth", name = {"clientId", "secret"})
 @EnableConfigurationProperties(ClientProperties.class)
 public class AuthConfiguration {
 
     @Resource
     private AuthClient authClient;
-    @Autowired
+    @Resource
     private ClientProperties properties;
 
     @Bean

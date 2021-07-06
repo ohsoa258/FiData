@@ -1,6 +1,5 @@
 package com.fisk.datamodel.dto;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
 @NoArgsConstructor

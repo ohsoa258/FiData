@@ -22,22 +22,21 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppRegistrationDTO extends BaseDTO {
 
-    private long id;
+    public long id;
 
-    private String appName;
+    public String appName;
 
-    private String appDes;
+    public String appDes;
 
-    private int appType;
+    public int appType;
 
-    private String appPrincipal;
+    public String appPrincipal;
 
-    private String appPrincipalEmail;
+    public String appPrincipalEmail;
 
-    private Date createTime;
+    public Date createTime;
 
-    // 数据源
-    private AppDataSourceDTO appDatasourceDTO;
+    public AppDataSourceDTO appDatasourceDTO;
 
 
     public AppRegistrationDTO(BaseEntity entity) {

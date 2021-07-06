@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @author: Lock
+ * @author Lock
  *
  * 用于接收白泽登录对象
  */

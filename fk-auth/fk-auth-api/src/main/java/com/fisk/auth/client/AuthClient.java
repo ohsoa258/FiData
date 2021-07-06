@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 15:00
+ * @author Lock
+ * @date 2021/5/17 15:00
  */
-@FeignClient("auth-service") // 指定具体的服务
+@FeignClient("auth-service")
 public interface AuthClient {
 
     /**

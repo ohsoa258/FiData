@@ -78,7 +78,7 @@ public class CreateTableTest {
             return;
         }*/
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getList();
         for (TableFieldsDTO tableFieldsDTO : tableFieldsDTOS) {
 
         }

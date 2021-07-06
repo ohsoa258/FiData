@@ -3,15 +3,10 @@ package com.fisk.dataaccess.utils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
-import com.fisk.dataaccess.entity.TableFieldsPO;
-import com.fisk.dataaccess.service.impl.TableFieldsImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +50,7 @@ public class MysqlTableUtils {
             return;
         }*/
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getList();
 
         StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();
@@ -80,12 +75,12 @@ public class MysqlTableUtils {
 
     /**
      * 创建表方法(mysql版本  非实时)
-     * @param tableAccessNDTO
+     * @param tableAccessNonDTO
      * @return
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public int createMysqlTB(TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+    public int createMysqlTB(TableAccessNonDTO tableAccessNonDTO) throws SQLException, ClassNotFoundException {
 
         // 要拉取到本地的服务器地址
 /*        String url = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
@@ -104,11 +99,11 @@ public class MysqlTableUtils {
             return;
         }*/
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getList();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNonDTO.getList();
 
         StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE `" + tableAccessNDTO.getTableName() + "` (");
+        sb.append("CREATE TABLE `" + tableAccessNonDTO.getTableName() + "` (");
         for (TableFieldsDTO dto : tableFieldsDTOS) {
             if (dto.getIsPrimarykey() == 1) {
                 sb_PRIMARYKEY.append("PRIMARY KEY (`" + dto.getFieldName() + "`)");
@@ -148,7 +143,7 @@ public class MysqlTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getList();
 
 //        StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();
@@ -309,11 +304,11 @@ public class MysqlTableUtils {
     /**
      * 更新表方法(mysql版本  非实时)
      *
-     * @param tableAccessNDTO
+     * @param tableAccessNonDTO
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public int updateMysqlTB(TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+    public int updateMysqlTB(TableAccessNonDTO tableAccessNonDTO) throws SQLException, ClassNotFoundException {
 
         // 远程数据库
         String url1 = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
@@ -326,7 +321,7 @@ public class MysqlTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getList();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNonDTO.getList();
 
 
 //        StringBuilder sb_PRIMARYKEY = new StringBuilder();
@@ -352,7 +347,7 @@ public class MysqlTableUtils {
         // 只有新增字段
         // ALTER TABLE input_test1 ADD b1 varchar(15) COMMENT '电话',ADD b2 varchar(15) COMMENT '地址',
         if (!tb0.isEmpty() && tb1.isEmpty()) {
-            sb.append("ALTER TABLE `" + tableAccessNDTO.getTableName() + "` add(");
+            sb.append("ALTER TABLE `" + tableAccessNonDTO.getTableName() + "` add(");
             for (TableFieldsDTO dto : tb0) {
 
                 sb.append(dto.getFieldName() + " " + dto.getFieldType() + " COMMENT '" + dto.getFieldDes() + "',");
@@ -374,7 +369,7 @@ public class MysqlTableUtils {
 
             String name = null;
 
-            sb.append("ALTER TABLE `" + tableAccessNDTO.getTableName() + "` CHANGE ");
+            sb.append("ALTER TABLE `" + tableAccessNonDTO.getTableName() + "` CHANGE ");
             for (TableFieldsDTO dto : tb1) {
 
 
@@ -408,7 +403,7 @@ public class MysqlTableUtils {
 
             String name = null;
 
-            sb.append("ALTER TABLE `" + tableAccessNDTO.getTableName() + "` add(");
+            sb.append("ALTER TABLE `" + tableAccessNonDTO.getTableName() + "` add(");
             for (TableFieldsDTO dto : tb0) {
 
                 sb.append(dto.getFieldName() + " " + dto.getFieldType() + " COMMENT '" + dto.getFieldDes() + "',");

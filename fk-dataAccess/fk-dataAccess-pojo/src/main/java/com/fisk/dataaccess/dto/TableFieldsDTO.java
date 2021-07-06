@@ -53,6 +53,11 @@ public class TableFieldsDTO extends BaseDTO {
     public String fieldType;
 
     /**
+     * 字段长度
+     */
+    public long fieldLength;
+
+    /**
      * 1是主键，0非主键
      */
     public int isPrimarykey;

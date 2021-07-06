@@ -12,7 +12,17 @@ import javax.servlet.http.HttpServletResponse;
 public interface UserAuthService {
 //    ResultEntity<String> login(String username, String password, HttpServletResponse response);
 
+    /**
+     * 登录
+     * @param userAuthDTO dto
+     * @return 登录结果
+     */
     ResultEntity<String> login(UserAuthDTO userAuthDTO);
 
+    /**
+     * 登出
+     * @param request 请求参数
+     * @param response 响应数据，写cookie用
+     */
     void logout(HttpServletRequest request, HttpServletResponse response);
 }

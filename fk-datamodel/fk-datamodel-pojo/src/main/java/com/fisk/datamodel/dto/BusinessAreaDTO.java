@@ -1,6 +1,5 @@
 package com.fisk.datamodel.dto;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
@@ -23,52 +22,28 @@ public class BusinessAreaDTO extends BaseDTO {
     /**
      * 主键
      */
-    private long id;
+    public long id;
 
     /**
      * 业务域名称
      */
-    private String businessName;
+    public String businessName;
 
     /**
      * 业务域描述
      */
-    private String businessDes;
+    public String businessDes;
 
     /**
      * 业务需求管理员
      */
-    private String businessAdmin;
+    public String businessAdmin;
 
     /**
      * 应用负责人邮箱
      */
-    private String businessEmail;
+    public String businessEmail;
 
-    /**
-     * 创建时间
-     */
-//    private DateTime createTime;
-
-    /**
-     * 创建人
-     */
-//    private String createUser;
-
-    /**
-     * 更新时间
-     */
-//    private DateTime updateTime;
-
-    /**
-     * 更新人
-     */
-//    private String updateUser;
-
-    /**
-     * 逻辑删除(1: 未删除; 0: 删除)
-     */
-//    private int delFlag;
 
     public BusinessAreaDTO(BaseEntity entity) {
         super(entity);

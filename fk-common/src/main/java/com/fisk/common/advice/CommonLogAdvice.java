@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 
 /**
+ * @author Lock
  * 统一日志记录,利用AOP拦截所有的service方法,对执行结果日志进行记录
  */
 @Slf4j

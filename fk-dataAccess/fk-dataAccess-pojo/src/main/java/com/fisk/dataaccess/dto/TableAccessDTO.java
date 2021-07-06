@@ -55,7 +55,7 @@ public class TableAccessDTO extends BaseDTO {
     /**
      * 表字段对象
      */
-    public List<TableFieldsDTO> tableFieldsDTOS;
+    public List<TableFieldsDTO> list;
 
     public TableAccessDTO(BaseEntity entity) {
         super(entity);

@@ -6,15 +6,26 @@ import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 14:41
+ * @author Lock
+ * @date 2021/5/17 14:41
  */
 @Data
 @TableName("tb_client_info")
 public class ClientInfo extends BaseEntity {
     @TableId
     private Long id;
-    private String clientId; // 服务名称
-    private String secret;   // 客户端秘钥,用于微服务身份验证
-    private String info;     // 服务介绍
+    /**
+     * 服务名称
+     */
+    private String clientId;
+
+    /**
+     * 客户端秘钥,用于微服务身份验证
+     */
+    private String secret;
+
+    /**
+     * 服务介绍
+     */
+    private String info;
 }

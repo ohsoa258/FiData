@@ -3,9 +3,8 @@ package com.fisk.dataaccess.utils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNDTO;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
-import net.sf.jsqlparser.statement.alter.Alter;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -45,7 +44,7 @@ public class SqlServerTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getList();
 
         StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();
@@ -79,11 +78,11 @@ public class SqlServerTableUtils {
     /**
      * 创建表方法(SQL server版本  非实时)
      *
-     * @param tableAccessNDTO
+     * @param tableAccessNonDTO
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public int createSqlServerTB(TableAccessNDTO tableAccessNDTO) throws SQLException, ClassNotFoundException {
+    public int createSqlServerTB(TableAccessNonDTO tableAccessNonDTO) throws SQLException, ClassNotFoundException {
 
         // 将表创建到的数据库地址
         String user = "sa";
@@ -94,11 +93,11 @@ public class SqlServerTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNDTO.getList();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessNonDTO.getList();
 
         StringBuilder sb_PRIMARYKEY = new StringBuilder();
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE [" + tableAccessNDTO.getTableName() + "](");
+        sb.append("CREATE TABLE [" + tableAccessNonDTO.getTableName() + "](");
         for (TableFieldsDTO dto : tableFieldsDTOS) {
             if (dto.getIsPrimarykey() == 1) {
                 sb_PRIMARYKEY.append("PRIMARY KEY(" + dto.getFieldName() + ")");
@@ -112,7 +111,7 @@ public class SqlServerTableUtils {
 
             // execute sp_addextendedproperty 'MS_Description','字段备注信息','user','dbo','table','字段所属的表名','column','添加注释的字段名';  
             sb.append("execute sp_addextendedproperty 'MS_Description','"+dto.getFieldDes()+"','user','dbo','table'," +
-                    "'"+tableAccessNDTO.getTableName()+"','column','"+dto.getFieldName()+"';");
+                    "'"+ tableAccessNonDTO.getTableName()+"','column','"+dto.getFieldName()+"';");
         }
 
         // 生成的SQL语句
@@ -143,7 +142,7 @@ public class SqlServerTableUtils {
         Connection conn = DriverManager.getConnection(url, user, pwd);
         Statement stat = conn.createStatement();
 
-        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getTableFieldsDTOS();
+        List<TableFieldsDTO> tableFieldsDTOS = tableAccessDTO.getList();
 
         // 封装的是sql语句
         StringBuilder sb = new StringBuilder();

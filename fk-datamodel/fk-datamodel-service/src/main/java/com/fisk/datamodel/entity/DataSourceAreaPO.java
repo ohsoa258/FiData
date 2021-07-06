@@ -7,12 +7,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: Lock
+ * @author Lock
  *
  * 计算数据源实体类
  */
 @Data
-@TableName("tb_area_datasource") // 表名
+@TableName("tb_area_datasource")
 @EqualsAndHashCode(callSuper = true)
 public class DataSourceAreaPO extends BaseEntity {
 
