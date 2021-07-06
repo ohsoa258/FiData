@@ -5,7 +5,7 @@ import com.davis.client.model.ConnectionEntity;
 import com.davis.client.model.ControllerServiceEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
@@ -35,7 +35,7 @@ import java.util.List;
  * @author gy
  */
 @Component
-@RabbitListener(queues = MQConstants.QueueConstants.BUILD_NIFI_FLOW)
+@RabbitListener(queues = MqConstants.QueueConstants.BUILD_NIFI_FLOW)
 @Slf4j
 public class BuildNifiTaskListener {
 

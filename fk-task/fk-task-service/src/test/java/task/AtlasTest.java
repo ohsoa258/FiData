@@ -1,7 +1,7 @@
 package task;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.task.FkTaskApplication;
@@ -18,7 +18,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Author:DennyHui
@@ -99,8 +98,8 @@ public class AtlasTest {
         BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
         bb.appId = 123L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_NIFI_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 bb);
     }
 }

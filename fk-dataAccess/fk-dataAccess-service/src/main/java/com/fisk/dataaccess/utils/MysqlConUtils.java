@@ -9,24 +9,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 public class MysqlConUtils {
 
     /**
      * 获取实时及非实时的表 表字段
-     * @param url
-     * @param user
-     * @param pwd
-     * @return
-     * @throws ClassNotFoundException
-     * @throws SQLException
+     * @param url url
+     * @param user user
+     * @param pwd pwd
+     * @return 查询结果
+     * @throws ClassNotFoundException 异常
+     * @throws SQLException 异常
      */
     public Map<String, List<String>> getTable(String url,String user,String pwd) throws ClassNotFoundException, SQLException {
 
-//        url = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db";
-//        user = "root";
-//        pwd = "root123";
+
 
         Class.forName("com.mysql.jdbc.Driver");
 //        Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.206.99:3306/fisk", "root", "root");
@@ -58,14 +56,14 @@ public class MysqlConUtils {
 
     /**
      * 获取非实时 表及表字段
-     * @param url
-     * @param user
-     * @param pwd
-     * @return
-     * @throws ClassNotFoundException
-     * @throws SQLException
+     * @param url url
+     * @param user user
+     * @param pwd pwd
+     * @return 查询结果
+     * @throws ClassNotFoundException 异常
+     * @throws SQLException 异常
      */
-    public List<TablePyhNameDTO> getNRTTable(String url,String user,String pwd) throws ClassNotFoundException, SQLException {
+    public List<TablePyhNameDTO> getnrttable(String url, String user, String pwd) throws ClassNotFoundException, SQLException {
 
         Class.forName("com.mysql.jdbc.Driver");
         Connection conn = DriverManager.getConnection(url, user, pwd);

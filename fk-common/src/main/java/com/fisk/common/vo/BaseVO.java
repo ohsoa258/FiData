@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 /**
+ * @author gy
  * 基本的DVO，提供了VO和Entity之间的互相转换功能
  */
 @Data

@@ -1,7 +1,9 @@
 package com.fisk.common.constants;
 
-
-public abstract class RegexPatterns {
+/**
+ * @author Lock
+ */
+public class RegexPatterns {
     /**
      * 手机号正则
      */

@@ -4,8 +4,8 @@ import com.fisk.common.constants.RegexPatterns;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * @author: Lock
- * @date: 2021/5/10 10:13
+ * @author Lock
+ * @date 2021/5/10 10:13
  */
 public class RegexUtils {
 

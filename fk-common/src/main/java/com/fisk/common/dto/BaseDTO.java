@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 /**
+ * @author Lock
  * 基本的DTO，提供了DTO和Entity之间的互相转换功能
  */
 @Data

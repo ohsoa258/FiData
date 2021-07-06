@@ -1,7 +1,9 @@
 package com.fisk.common.constants;
 
-
-public abstract class MQConstants {
+/**
+ * @author Lock
+ */
+public class MqConstants {
 
     public static final class ExchangeConstants {
 

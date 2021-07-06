@@ -1,6 +1,6 @@
 package com.fisk.task.controller;
 
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.task.utils.WsSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -24,7 +24,7 @@ public class TestController {
     @GetMapping
     public void sendMsg(String msg) {
         System.out.println("主线程id：" + Thread.currentThread().getId());
-        rabbitTemplate.convertAndSend(MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MQConstants.QueueConstants.BUILD_NIFI_FLOW, msg);
+        rabbitTemplate.convertAndSend(MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_NIFI_FLOW, msg);
     }
 
     @GetMapping("/test")

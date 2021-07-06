@@ -3,7 +3,9 @@ package com.fisk.common.exception;
 import com.fisk.common.response.ResultEnum;
 import lombok.Getter;
 
-
+/**
+ * @author Lock
+ */
 @Getter
 public class FkException extends RuntimeException {
     /**

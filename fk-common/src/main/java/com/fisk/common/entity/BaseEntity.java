@@ -4,7 +4,9 @@ import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
-
+/**
+ * @author Lock
+ */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BaseEntity {
     private Date createTime;

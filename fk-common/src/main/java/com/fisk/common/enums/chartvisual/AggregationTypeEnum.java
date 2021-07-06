@@ -2,6 +2,9 @@ package com.fisk.common.enums.chartvisual;
 
 import com.fisk.common.enums.BaseEnum;
 
+/**
+ * @author Lock
+ */
 public enum AggregationTypeEnum implements BaseEnum {
 
     /**

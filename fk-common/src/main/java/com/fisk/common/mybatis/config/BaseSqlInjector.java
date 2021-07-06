@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * @author gy
+ */
 @Component
 public class BaseSqlInjector extends DefaultSqlInjector {
 

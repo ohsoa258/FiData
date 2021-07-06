@@ -1,5 +1,8 @@
 package com.fisk.common.constants;
 
+/**
+ * @author gy
+ */
 public class TraceConstant {
 
     public static final String APP_LOGTYPE = "App_LogType";

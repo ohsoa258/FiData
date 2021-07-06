@@ -10,7 +10,9 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+/**
+ * @author Lock
+ */
 @Slf4j
 public class BeanHelper {
 

@@ -1,10 +1,8 @@
 package com.fisk.common.mybatis.config;
 
 import com.fisk.common.enums.BaseEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.apache.ibatis.type.TypeHandler;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -12,6 +10,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
+/**
+ * @author gy
+ * @param <T>
+ */
 public class BaseEnumTypeHandler<T extends BaseEnum> extends BaseTypeHandler<T> {
 
     /**
@@ -40,11 +42,12 @@ public class BaseEnumTypeHandler<T extends BaseEnum> extends BaseTypeHandler<T> 
 
     /**
      * 用于定义设置参数时，该如何把Java类型的参数转换为对应的数据库类型；
-     * @param preparedStatement
-     * @param i
-     * @param t
-     * @param jdbcType
-     * @throws SQLException
+     *
+     * @param preparedStatement preparedStatement
+     * @param i i
+     * @param t t
+     * @param jdbcType jdbcType
+     * @throws SQLException 异常
      */
     @Override
     public void setNonNullParameter(PreparedStatement preparedStatement, int i, T t, JdbcType jdbcType) throws SQLException {
@@ -57,10 +60,11 @@ public class BaseEnumTypeHandler<T extends BaseEnum> extends BaseTypeHandler<T> 
 
     /**
      * 用于定义通过字段名称获取字段数据时，如何把数据库类型转换为对应的Java类型
-     * @param resultSet
-     * @param s
-     * @return
-     * @throws SQLException
+     *
+     * @param resultSet resultSet
+     * @param s s
+     * @return 返回值
+     * @throws SQLException 异常
      */
     @Override
     public T getNullableResult(ResultSet resultSet, String s) throws SQLException {
@@ -74,10 +78,10 @@ public class BaseEnumTypeHandler<T extends BaseEnum> extends BaseTypeHandler<T> 
 
     /**
      * 用于定义通过字段索引获取字段数据时，如何把数据库类型转换为对应的Java类型
-     * @param resultSet
-     * @param i
-     * @return
-     * @throws SQLException
+     * @param resultSet resultSet
+     * @param i i
+     * @return 返回值
+     * @throws SQLException 异常
      */
     @Override
     public T getNullableResult(ResultSet resultSet, int i) throws SQLException {
@@ -91,10 +95,10 @@ public class BaseEnumTypeHandler<T extends BaseEnum> extends BaseTypeHandler<T> 
 
     /**
      * 用定义调用存储过程后，如何把数据库类型转换为对应的Java类型
-     * @param callableStatement
-     * @param i
-     * @return
-     * @throws SQLException
+     * @param callableStatement callableStatement
+     * @param i i
+     * @return 返回值
+     * @throws SQLException 异常
      */
     @Override
     public T getNullableResult(CallableStatement callableStatement, int i) throws SQLException {
