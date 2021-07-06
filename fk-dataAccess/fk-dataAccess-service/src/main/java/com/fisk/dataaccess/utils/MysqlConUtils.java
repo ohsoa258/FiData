@@ -34,7 +34,7 @@ public class MysqlConUtils {
 //        System.out.println("====================================================");
         Statement st = conn.createStatement();
 
-        Map<String, List<String>> map = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>(1000);
         for (String tableName : tableNames) {
             ResultSet rs = st.executeQuery("select * from " + tableName);
 //            System.out.print(tableName+":  ");
@@ -100,9 +100,9 @@ public class MysqlConUtils {
     /**
      * 获取数据库中所有表名称
      *
-     * @param conn
-     * @return
-     * @throws SQLException
+     * @param conn conn
+     * @return 返回值
+     * @throws SQLException 异常
      */
     private List<String> getTables(Connection conn) throws SQLException {
         DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -117,8 +117,8 @@ public class MysqlConUtils {
     /**
      * 获取表中所有字段名称
      *
-     * @param rs
-     * @throws SQLException
+     * @param rs rs
+     * @throws SQLException  异常
      */
     private List<String> getColNames(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
