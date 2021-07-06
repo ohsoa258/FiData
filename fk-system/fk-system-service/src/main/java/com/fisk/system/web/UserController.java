@@ -7,44 +7,30 @@ import com.fisk.system.dto.UserDTO;
 import com.fisk.system.entity.User;
 import com.fisk.system.service.UserService;
 import io.swagger.annotations.Api;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 
 /**
- * @author: Lock
- * @data: 2021/5/14 16:42
+ * @author Lock
  */
 @Api(description = "用户中心服务")
 @RestController
 @RequestMapping("/info")
 public class UserController {
 
-    @Autowired
+    @Resource
     private UserService userService;
 
-    /**
-     * 校验手机号或用户名是否存在
-     * @param data 用户名或手机号
-     * @param type 数据类型：1是用户名；2是手机；其它是参数有误
-     * @return true：可以使用; false：不可使用
-     */
-//    @GetMapping("/exists/{data}/{type}")
-//    public ResponseEntity<Boolean> exist(
-//            @PathVariable("data") String data,
-//            @PathVariable("type") Integer type) {
-//        return ResponseEntity.ok(userService.exist(data, type));
-//    }
 
     /**
      * 注册功能
      *
-     * @param user
-     * @return
-     * @Valid: 被注释的元素是一个对象，需要检查此对象的所有字段值
+     * @param user user
+     * @return 执行结果
      * <p>
      * 表单提交的方式,不需要加@RequestBody来接对象,如果是json格式就需要了
      */

@@ -9,20 +9,19 @@ import com.fisk.system.dto.UserDTO;
 import com.fisk.system.entity.User;
 import com.fisk.system.mapper.UserMapper;
 import com.fisk.system.service.UserService;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+
 /**
- * @author: Lock
- * @data: 2021/5/14 16:40
+ * @author Lock
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    @Autowired
+    @Resource
     private BCryptPasswordEncoder passwordEncoder;
 
     /**
@@ -36,7 +35,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Boolean exist(String data, Integer type) {
 
         // type只能是1,2 type=2时,手机号必须符合格式要求(测试阶段不要求)
-        if ((type != 1 && type != 2) || StringUtils.isEmpty(data)/* || (type == 2 && !RegexUtils.isPhone(dataaccess))*/) {
+
+        int a = 1, b = 2;
+
+        if (type != a && type != b) {
 
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
@@ -49,7 +51,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Override
-    @Transactional  // 方法执行失败回滚机制
+    @Transactional(rollbackFor = Exception.class)
     public void register(User user) {
 
         // 1.对密码进行加密
@@ -62,9 +64,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 登录: 根据用户名和密码查询用户
      *
-     * @param username
-     * @param password
-     * @return
+     * @param username username
+     * @param password password
+     * @return 执行结果
      */
     @Override
     public ResultEntity<UserDTO> queryUser(String username, String password) {

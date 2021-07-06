@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class DataAreaDTO extends BaseDTO {
+public class ProjectInfoDTO extends BaseDTO {
 
     /**
-     * 表主键
+     * 主键
      */
     public long id;
 
@@ -30,22 +30,31 @@ public class DataAreaDTO extends BaseDTO {
     public String businessName;
 
     /**
-     *  数据域名称
+     * 项目空间模式
      */
-    public String dataName;
+    public String projectPattern;
 
     /**
-     *  1true  0false
+     * 项目名称
      */
-    public boolean isShare;
+    public String projectName;
 
     /**
-     *  数据域描述
+     * 项目描述
      */
-    public String dataDes;
+    public String projectDes;
 
+    /**
+     * 项目负责人
+     */
+    public String projectPrincipal;
 
-    public DataAreaDTO(BaseEntity entity) {
+    /**
+     * 负责人邮箱
+     */
+    public String principalEmail;
+
+    public ProjectInfoDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -56,10 +65,10 @@ public class DataAreaDTO extends BaseDTO {
      * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<DataAreaDTO> convertEntityList(Collection<T> list) {
+    public static <T extends BaseEntity> List<ProjectInfoDTO> convertEntityList(Collection<T> list) {
         if (list == null) {
             return Collections.emptyList();
         }
-        return list.stream().map(DataAreaDTO::new).collect(Collectors.toList());
+        return list.stream().map(ProjectInfoDTO::new).collect(Collectors.toList());
     }
 }

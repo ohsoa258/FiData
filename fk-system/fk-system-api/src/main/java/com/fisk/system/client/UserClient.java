@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 13:28
+ * @author Lock
  *
  * 对外开放的是controller层里的方法,注意:
  *  1.没有方法体
@@ -21,8 +20,8 @@ public interface UserClient {
     /**
      * 根据用户名和密码查询用户
      *
-     * @param username
-     * @param password
+     * @param username 用户名
+     * @param password 密码
      * @return 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping("/info")

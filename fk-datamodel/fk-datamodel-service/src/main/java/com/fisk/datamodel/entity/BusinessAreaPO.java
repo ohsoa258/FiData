@@ -7,10 +7,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Data
-@TableName("tb_area_business") // 表名
+@TableName("tb_area_business")
 @EqualsAndHashCode(callSuper = true)
 public class BusinessAreaPO extends BaseEntity {
 
@@ -41,19 +41,10 @@ public class BusinessAreaPO extends BaseEntity {
     private String businessEmail;
 
     /**
-     * 创建时间
-     */
-//    private DateTime createTime;
-
-    /**
      * 创建人
      */
     private String createUser;
 
-    /**
-     * 更新时间
-     */
-//    private DateTime updateTime;
 
     /**
      * 更新人

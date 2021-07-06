@@ -4,8 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.system.entity.User;
 
 /**
- * @author: Lock
- * @data: 2021/5/14 16:39
+ * @author Lock
  */
 public interface UserMapper extends BaseMapper<User> {
 }

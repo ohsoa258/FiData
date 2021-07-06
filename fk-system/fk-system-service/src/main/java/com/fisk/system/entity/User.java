@@ -11,23 +11,22 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 /**
- * @author: Lock
- * @data: 2021/5/14 16:31
+ * @author Lock
+ *
+ * 确保对象比较时部分属性值不同,Lombok判定对象不相等
  */
 @TableName("tb_user_info")
 @Data
-@EqualsAndHashCode(callSuper = false) // 确保对象比较时部分属性值不同,Lombok判定对象不相等
+@EqualsAndHashCode(callSuper = false)
 public class User extends BaseEntity {
 
     @TableId
     private Long id;
 
     @NotNull(message = "用户名不能为空")
-//    @Pattern(regexp = , message = "用户名格式不正确")
     private String username;
 
     @NotNull(message = "密码不能为空")
-    // 密码正则。4~32位的字母、数字、下划线
     @Pattern(regexp = RegexPatterns.PASSWORD_REGEX, message = "密码格式不正确")
     private String password;
 

@@ -7,14 +7,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
- * @author: Lock
- * @data: 2021/5/14 16:24
+ * @author Lock
  */
-// 第二包扫描: 为了让统一日志类生效
 @SpringBootApplication(scanBasePackages = {"com.fisk.system", "com.fisk.common.advice", "com.fisk.common.redis"})
 @MapperScan("com.fisk.system.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
-@EnableJwtVerification // 开启自定义的jwt验证开关
+@EnableJwtVerification
 public class FkSystemApplication {
 
     public static void main(String[] args) {
