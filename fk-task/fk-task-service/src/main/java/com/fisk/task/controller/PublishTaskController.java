@@ -32,8 +32,26 @@ public class PublishTaskController {
                 MQConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
     }
+
+    /** 在Doris中生成stg&ods数据表
+     * @param data
+     * @param buildType
+     * @return
+     */
+    @PostMapping("/dorisBuild")
+    public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data,String buildType) {
+        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
+                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MQConstants.QueueConstants.BUILD_DORIS_FLOW,
+                data);
+    }
+    /** 在Atlas中生成元数据的血缘关系
+     * @param data
+     * @param buildType
+     * @return
+     */
     @PostMapping("/atlasBuild")
-    public ResultEntity<Object> publishBuildAtlasTask(@RequestBody TableInfoDTO data) {
+    public ResultEntity<Object> publishBuildAtlasTask(@RequestBody TableInfoDTO data,String buildType) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MQConstants.QueueConstants.BUILD_ATLAS_FLOW,

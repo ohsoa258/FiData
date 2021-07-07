@@ -3,7 +3,7 @@ package com.fisk.task.utils;
 import java.sql.*;
 
 /**
- * Author:DennyHui
+ * @Author:DennyHui
  * CreateTime: 2021/6/30 16:13
  * Description:
  */
@@ -13,12 +13,17 @@ public class DorisHelper {
     //这样的做法是执行上述4个操作时可以直接调用函数（面向对象的思想），可以好好理解一下
     public static Connection getConnection(String _jdbcurl,String _driver,String _username,String _pwd) {
         Connection conn = null;
-        String driver = _driver;// 驱动
-        String url = _jdbcurl;// SqlServer链接地址
-        String username = _username;// 用户名
-        String password = _pwd;// 密码
+        // 驱动
+        String driver = _driver;
+        // SqlServer链接地址
+        String url = _jdbcurl;
+        // 用户名
+        String username = _username;
+        // 密码
+        String password = _pwd;
         try {
-            Class.forName(driver);// 加载驱动类
+            // 加载驱动类
+            Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
             System.out.println("找不到驱动程序类 ，加载驱动失败！");
@@ -27,7 +32,6 @@ public class DorisHelper {
             System.out.println("数据库连接失败！");
             e.printStackTrace();
         }
-        // System.out.println("连接成功");
         return conn;
     }
 

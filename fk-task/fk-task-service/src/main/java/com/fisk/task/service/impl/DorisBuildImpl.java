@@ -1,7 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.fisk.common.entity.BusinessResult;
-import com.fisk.task.service.IAtlasBuild;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
 import com.fisk.task.utils.YamlReader;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +18,11 @@ import java.sql.Statement;
  */
 @Service
 @Slf4j
-public class AtlasBuildImpl implements IAtlasBuild {
+public class DorisBuildImpl implements IDorisBuild {
     @Resource
-    IAtlasBuild doris;
+    IDorisBuild doris;
+
+
 
     @Override
     public BusinessResult dorisBuildTable(String executsql) {
@@ -63,5 +65,7 @@ public class AtlasBuildImpl implements IAtlasBuild {
         BusinessResult res = new BusinessResult(re, msg);
         return res;
     }
+
+
 
 }

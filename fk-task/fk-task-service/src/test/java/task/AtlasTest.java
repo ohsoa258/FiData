@@ -8,7 +8,7 @@ import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.atlas.TableColumnInfoDTO;
 import com.fisk.task.dto.atlas.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.service.IAtlasBuild;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IBuildTaskService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +29,7 @@ import java.util.List;
 @RunWith(SpringRunner.class)
 public class AtlasTest {
     @Resource
-    IAtlasBuild atlas;
+    IDorisBuild atlas;
     IBuildTaskService service;
     @Test
     public void testdoriscreatetable() {
