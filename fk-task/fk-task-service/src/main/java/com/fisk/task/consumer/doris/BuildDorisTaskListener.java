@@ -5,7 +5,7 @@ import com.fisk.common.constants.MQConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.task.dto.atlas.TableInfoDTO;
+import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;

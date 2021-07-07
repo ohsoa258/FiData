@@ -3,7 +3,7 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MQConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.task.dto.atlas.TableInfoDTO;
+import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;

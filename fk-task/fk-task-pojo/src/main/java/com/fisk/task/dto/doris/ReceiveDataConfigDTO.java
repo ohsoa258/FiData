@@ -1,4 +1,4 @@
-package com.fisk.task.dto.atlas;
+package com.fisk.task.dto.doris;
 
 import com.fisk.task.dto.MQBaseDTO;
 
