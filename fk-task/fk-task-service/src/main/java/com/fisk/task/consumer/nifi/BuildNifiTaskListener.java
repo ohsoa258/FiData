@@ -48,7 +48,7 @@ public class BuildNifiTaskListener {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         //获取数据接入配置项
         DataAccessConfigDTO configDTO = getConfigData(dto.appId);
-
+        
         //1. 创建应用组
         ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
         //2. 创建jdbc连接池
@@ -395,7 +395,7 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity evaluateJsonPathProcessor(DataAccessConfigDTO config, String groupId)   {
+    private ProcessorEntity evaluateJsonPathProcessor(DataAccessConfigDTO config, String groupId) {
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
         dto.details = "Set Increment Field to Nifi Data flow";

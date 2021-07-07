@@ -13,6 +13,7 @@ import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.excel.ExcelUtil;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -20,6 +21,7 @@ import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,14 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     public DataServiceResult query(ChartQueryObject query) {
         DataSourceConVO model = getDataSourceCon(query.id);
         return DbHelper.getDataService(query, model);
+    }
+
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
+    @Override
+    public void downLoad(ChartQueryObject query, HttpServletResponse response) {
+        DataSourceConVO model = getDataSourceCon(query.id);
+        DataServiceResult res = DbHelper.getDataService(query, model);
+        ExcelUtil.uploadExcelAboutUser(response, "test.xlsx", res.data);
     }
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)

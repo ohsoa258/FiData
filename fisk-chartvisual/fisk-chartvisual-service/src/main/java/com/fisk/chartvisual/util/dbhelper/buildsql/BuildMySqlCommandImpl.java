@@ -32,7 +32,12 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
 
     @Override
     public String buildQueryData(ChartQueryObject query, boolean aggregation) {
-        return baseBuildQueryData(query, dsType, aggregation);
+        String sql = baseBuildQueryData(query, dsType, aggregation);
+        //拼装分页信息
+        if (query.pagination != null && query.pagination.enablePage && !aggregation) {
+            sql += " LIMIT " + (query.pagination.pageNum - 1) * query.pagination.pageSize + "," + query.pagination.pageSize;
+        }
+        return sql;
     }
 
     @Override

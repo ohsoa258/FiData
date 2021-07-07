@@ -28,5 +28,10 @@ public class DataAccessConfigDTO {
      */
     public DataSourceConfig targetDsConfig;
 
+    /**
+     * 增量配置库源jdbc连接
+     */
+    public DataSourceConfig cfgDsConfig;
+
     public ProcessorConfig processorConfig;
 }
