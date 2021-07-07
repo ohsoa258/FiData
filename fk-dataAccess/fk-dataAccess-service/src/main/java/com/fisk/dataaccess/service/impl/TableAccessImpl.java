@@ -69,7 +69,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            // 先创建表
 //            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
 //
-//            int i = mysqlTableUtils.createMysqlTB(tableAccessDTO);
+//            int i = mysqlTableUtils.createmysqltb(tableAccessDTO);
 //            if (i != 0) {
 //                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
 //            }
@@ -156,7 +156,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 /*        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 
-        int i = createMysqlTableUtils.createMysqlTB(tableAccessDTO);*/
+        int i = createMysqlTableUtils.createmysqltb(tableAccessDTO);*/
 //        System.out.println(i);
 
 //        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -176,7 +176,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 先创建表
 //        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
 //
-//        int i = mysqlTableUtils.createMysqlTB(tableAccessNonDTO);
+//        int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //        if (i != 0) {
 //            throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
 //        }
@@ -198,7 +198,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            // 先创建表
 //            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
 //
-//            int i = mysqlTableUtils.createMysqlTB(tableAccessNonDTO);
+//            int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //            if (i != 0) {
 //                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
 //            }
@@ -294,7 +294,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //
 //        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 //
-//        int i = createMysqlTableUtils.createMysqlTB(tableAccessNonDTO);
+//        int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //        System.out.println(i);
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -313,7 +313,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO: 原始SQL表修改(暂时不用集成)
 //        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
 //
-//        int i = mysqlTableUtils.updateMysqlTB(tableAccessDTO);
+//        int i = mysqlTableUtils.updatemysqltb(tableAccessDTO);
 //        if (i != 0) {
 //            throw new FkException(500, "操作数据库失败");
 //        }
@@ -376,7 +376,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
 //
-//        int i = createTableUtils.updateMysqlTB(tableAccessDTO);
+//        int i = createTableUtils.updatemysqltb(tableAccessDTO);
 //        System.out.println(i);
 
         return saveField ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -395,7 +395,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.先修改表
 /*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
 
-        int i = mysqlTableUtils.updateMysqlTB(dto);
+        int i = mysqlTableUtils.updatemysqltb(dto);
         if (i != 0) {
             throw new FkException(500, "操作数据库失败");
         }*/

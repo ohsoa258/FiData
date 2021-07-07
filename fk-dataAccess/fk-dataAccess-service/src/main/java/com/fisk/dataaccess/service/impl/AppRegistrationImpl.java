@@ -16,6 +16,7 @@ import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.task.dto.daconfig.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -335,5 +336,63 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         return list1;
+    }
+
+    @Override
+    public ResultEnum dataAccessConfig(long id) {
+
+        DataAccessConfigDTO dto = new DataAccessConfigDTO();
+
+        // app组配置
+        GroupConfig groupConfig = dto.getGroupConfig();
+
+        //任务组配置
+        TaskGroupConfig taskGroupConfig = dto.getTaskGroupConfig();
+
+        // 数据源jdbc配置
+        DataSourceConfig sourceDsConfig = dto.getSourceDsConfig();
+
+        // 目标源jdbc连接
+        DataSourceConfig targetDsConfig = dto.getTargetDsConfig();
+
+        // 表及表sql
+        ProcessorConfig processorConfig = dto.getProcessorConfig();
+
+        // 1.app组配置
+        // select * from tb_app_registration where id=id and del_flag=1;
+        AppRegistrationPO rpo = this.query()
+                .eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+        if (rpo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        groupConfig.setAppName(rpo.getAppName());
+        groupConfig.setAppDetails(rpo.getAppDes());
+        // TODO: 缺失字段
+        groupConfig.setNewApp(false);
+
+        // 2.任务组配置
+        taskGroupConfig.setAppName(rpo.getAppName());
+        taskGroupConfig.setAppDetails(rpo.getAppDes());
+
+        //3.数据源jdbc配置
+        AppDataSourcePO dpo = appDataSourceImpl.query()
+                .eq("appid", id)
+                .eq("del_flag", 1)
+                .one();
+        if (dpo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        sourceDsConfig.setJdbcStr(dpo.getConnectStr());
+//        sourceDsConfig.setType(); // 先硬编码
+        sourceDsConfig.setUser(dpo.getConnectAccount());
+        sourceDsConfig.setPassword(dpo.getConnectPwd());
+
+        // 4.目标源jdbc连接
+
+        // 5.表及表sql
+
+        return null;
     }
 }

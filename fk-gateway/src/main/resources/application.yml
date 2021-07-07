@@ -15,7 +15,7 @@ hystrix:
           enabled: true
         isolation:
           thread:
-            timeoutInMilliseconds: 15000 # 请求超时时长：6000ms
+            timeoutInMilliseconds: 20000 # 请求超时时长：6000ms
 
 ribbon:
   ConnectTimeout: 500 # 连接超时时间,毫秒

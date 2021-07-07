@@ -101,4 +101,10 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDescDate());
     }
 
+    @GetMapping("/dataAccess")
+    public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataAccessConfig(id));
+    }
+
 }

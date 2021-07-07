@@ -72,4 +72,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 返回值
      */
     List<AppNameDTO> queryNoneRealTimeAppName();
+
+    /**
+     *
+     * 给task模块提供数据源等信息
+     *
+     * @param id appid
+     * @return task模块调用接口返回值
+     */
+    ResultEnum dataAccessConfig(long id);
 }
