@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.utils;
 
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 
 import java.sql.*;
@@ -19,37 +21,38 @@ public class MysqlConUtils {
      * @param user user
      * @param pwd pwd
      * @return 查询结果
-     * @throws ClassNotFoundException 异常
-     * @throws SQLException 异常
      */
-    public Map<String, List<String>> getTable(String url,String user,String pwd) throws ClassNotFoundException, SQLException {
+    public Map<String, List<String>> getTable(String url,String user,String pwd) {
 
 
-
-        Class.forName("com.mysql.jdbc.Driver");
-//        Connection conn = DriverManager.getConnection("jdbc:mysql://192.168.206.99:3306/fisk", "root", "root");
-        Connection conn = DriverManager.getConnection(url, user, pwd);
-        List<String> tableNames = getTables(conn);
+        Map<String, List<String>> map = null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(url, user, pwd);
+            List<String> tableNames = getTables(conn);
 //        System.out.println(tableNames);
 //        System.out.println("====================================================");
-        Statement st = conn.createStatement();
+            Statement st = conn.createStatement();
 
-        Map<String, List<String>> map = new HashMap<>(1000);
-        for (String tableName : tableNames) {
-            ResultSet rs = st.executeQuery("select * from " + tableName);
-//            System.out.print(tableName+":  ");
-            List<String> colNames = getColNames(rs);
-//            System.out.println(colNames);
+            map = new HashMap<>(1000);
+            for (String tableName : tableNames) {
+                ResultSet rs = st.executeQuery("select * from " + tableName);
+    //            System.out.print(tableName+":  ");
+                List<String> colNames = getColNames(rs);
+    //            System.out.println(colNames);
 
-//            System.out.println("==================================================");
+    //            System.out.println("==================================================");
 
-            map.put(tableName, colNames);
-//            System.out.println(map);
-            rs.close();
+                map.put(tableName, colNames);
+    //            System.out.println(map);
+                rs.close();
+            }
+
+            st.close();
+            conn.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
-
-        st.close();
-        conn.close();
 
         return map;
     }
@@ -60,39 +63,42 @@ public class MysqlConUtils {
      * @param user user
      * @param pwd pwd
      * @return 查询结果
-     * @throws ClassNotFoundException 异常
-     * @throws SQLException 异常
      */
-    public List<TablePyhNameDTO> getnrttable(String url, String user, String pwd) throws ClassNotFoundException, SQLException {
+    public List<TablePyhNameDTO> getnrttable(String url, String user, String pwd){
 
-        Class.forName("com.mysql.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(url, user, pwd);
-        List<String> tableNames = getTables(conn);
-        Statement st = conn.createStatement();
+        List<TablePyhNameDTO> list = null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(url, user, pwd);
+            List<String> tableNames = getTables(conn);
+            Statement st = conn.createStatement();
 
-        List<TablePyhNameDTO> list = new ArrayList<>();
+            list = new ArrayList<>();
 
-        int tag = 0;
+            int tag = 0;
 
-        for (String tableName : tableNames) {
-            ResultSet rs = st.executeQuery("select * from " + tableName);
+            for (String tableName : tableNames) {
+                ResultSet rs = st.executeQuery("select * from " + tableName);
 
-            List<String> colNames = getColNames(rs);
+                List<String> colNames = getColNames(rs);
 
-            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-            tablePyhNameDTO.setTableName(tableName);
-            tablePyhNameDTO.setFields(colNames);
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(tableName);
+                tablePyhNameDTO.setFields(colNames);
 
-            tag++;
-            tablePyhNameDTO.setTag(tag);
+                tag++;
+                tablePyhNameDTO.setTag(tag);
 
-            list.add(tablePyhNameDTO);
+                list.add(tablePyhNameDTO);
 
-            rs.close();
+                rs.close();
+            }
+
+            st.close();
+            conn.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
-
-        st.close();
-        conn.close();
 
         return list;
     }
@@ -102,14 +108,18 @@ public class MysqlConUtils {
      *
      * @param conn conn
      * @return 返回值
-     * @throws SQLException 异常
      */
-    private List<String> getTables(Connection conn) throws SQLException {
-        DatabaseMetaData databaseMetaData = conn.getMetaData();
-        ResultSet tables = databaseMetaData.getTables(null, null, "%", null);
-        ArrayList<String> tablesList = new ArrayList<String>();
-        while (tables.next()) {
-            tablesList.add(tables.getString("TABLE_NAME"));
+    private List<String> getTables(Connection conn){
+        ArrayList<String> tablesList = null;
+        try {
+            DatabaseMetaData databaseMetaData = conn.getMetaData();
+            ResultSet tables = databaseMetaData.getTables(null, null, "%", null);
+            tablesList = new ArrayList<String>();
+            while (tables.next()) {
+                tablesList.add(tables.getString("TABLE_NAME"));
+            }
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
         }
         return tablesList;
     }
@@ -118,20 +128,24 @@ public class MysqlConUtils {
      * 获取表中所有字段名称
      *
      * @param rs rs
-     * @throws SQLException  异常
      */
-    private List<String> getColNames(ResultSet rs) throws SQLException {
-        ResultSetMetaData metaData = rs.getMetaData();
-        int count = metaData.getColumnCount();
+    private List<String> getColNames(ResultSet rs){
+        List<String> colNameList = null;
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
 
-        List<String> colNameList = new ArrayList<String>();
-        for (int i = 1; i <= count; i++) {
-            colNameList.add(metaData.getColumnName(i));
-        }
-        // 打印
+            colNameList = new ArrayList<String>();
+            for (int i = 1; i <= count; i++) {
+                colNameList.add(metaData.getColumnName(i));
+            }
+            // 打印
 //        System.out.println(colNameList);
 //		rs.close();
-        rs.first();
+            rs.first();
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
         return colNameList;
     }
 

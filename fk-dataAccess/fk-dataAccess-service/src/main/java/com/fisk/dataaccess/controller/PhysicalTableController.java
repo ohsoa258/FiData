@@ -15,7 +15,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +75,7 @@ public class PhysicalTableController {
      */
     @PostMapping("/addRealTime")
     @ApiOperation(value = "添加物理表(实时)")
-    public ResultEntity<Object> addRealTimeData(@RequestBody TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> addRealTimeData(@RequestBody TableAccessDTO tableAccessDTO) {
 
         return ResultEntityBuild.build(tableAccess.addRealTimeData(tableAccessDTO));
     }
@@ -88,7 +87,7 @@ public class PhysicalTableController {
      */
     @PutMapping("/editRealTime")
     @ApiOperation(value = "修改物理表(实时)")
-    public ResultEntity<Object> editRealTimeData(@RequestBody TableAccessDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> editRealTimeData(@RequestBody TableAccessDTO dto) {
         return ResultEntityBuild.build(tableAccess.updateRealTimeData(dto));
     }
 
@@ -99,7 +98,7 @@ public class PhysicalTableController {
      */
     @PostMapping("/addNonRealTime")
     @ApiOperation(value="添加物理表(非实时)")
-    public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
 
         return ResultEntityBuild.build(tableAccess.addNonRealTimeData(dto));
     }
@@ -111,7 +110,7 @@ public class PhysicalTableController {
      */
     @PutMapping("/editNonRealTime")
     @ApiOperation(value = "修改物理表(非实时)")
-    public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNonDTO dto) throws SQLException, ClassNotFoundException {
+    public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(tableAccess.updateNonRealTimeData(dto));
     }
 

@@ -8,7 +8,6 @@ import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +20,8 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * 添加物理表(实时)
      * @param tableAccessDTO 请求参数
      * @return 返回值
-     * @throws SQLException a
-     * @throws ClassNotFoundException b
      */
-    ResultEnum addRealTimeData(TableAccessDTO tableAccessDTO) throws SQLException, ClassNotFoundException;
+    ResultEnum addRealTimeData(TableAccessDTO tableAccessDTO);
 
     /**
      * 删除数据
@@ -37,38 +34,30 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * 添加物理表(非实时)
      * @param dto 请求参数
      * @return 返回值
-     * @throws SQLException a
-     * @throws ClassNotFoundException b
      */
-    ResultEnum addNonRealTimeData(TableAccessNonDTO dto) throws SQLException, ClassNotFoundException;
+    ResultEnum addNonRealTimeData(TableAccessNonDTO dto);
 
     /**
      * 修改物理表(实时)
      * @param dto 请求参数
      * @return 返回值
-     * @throws SQLException a
-     * @throws ClassNotFoundException b
      */
-    ResultEnum updateRealTimeData(TableAccessDTO dto) throws SQLException, ClassNotFoundException;
+    ResultEnum updateRealTimeData(TableAccessDTO dto);
 
     /**
      * 修改物理表(非实时)
      * @param dto 请求参数
      * @return 返回值
-     * @throws SQLException a
-     * @throws ClassNotFoundException b
      */
-    ResultEnum updateNonRealTimeData(TableAccessNonDTO dto) throws SQLException, ClassNotFoundException;
+    ResultEnum updateNonRealTimeData(TableAccessNonDTO dto);
 
     /**
      * 根据非实时应用名称,获取远程数据库的表及表对应的字段
      *
      * @param appName 请求参数
      * @return 返回值
-     * @throws SQLException 异常
-     * @throws ClassNotFoundException 异常
      */
-    Map<String, List<String>> queryDataBase(String appName) throws SQLException, ClassNotFoundException;
+    Map<String, List<String>> queryDataBase(String appName);
 
     /**
      * 物理表接口首页分页查询

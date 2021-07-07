@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -111,7 +110,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tpo.setIsRealtime(0);
 
         // 时间字段有问题,待定
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date1 = new Date(System.currentTimeMillis());
 
         tpo.setCreateTime(date1);
@@ -239,7 +237,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tapo.setIsRealtime(1);
 
         // 时间
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date1 = new Date(System.currentTimeMillis());
         tapo.setCreateTime(date1);
         tapo.setUpdateTime(date1);
@@ -322,7 +319,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO tapo = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 时间字段
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date1 = new Date(System.currentTimeMillis());
 
         tapo.setUpdateTime(date1);
@@ -404,7 +400,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO tapo = dto.toEntity(TableAccessPO.class);
 
         // 时间字段
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
         Date date1 = new Date(System.currentTimeMillis());
 
         tapo.setUpdateTime(date1);
@@ -460,7 +455,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return 返回值
      */
     @Override
-    public Map<String, List<String>> queryDataBase(String appName) throws SQLException, ClassNotFoundException {
+    public Map<String, List<String>> queryDataBase(String appName) {
 
         // 1.根据应用名称查询表id
         AppRegistrationPO arpo = appRegistrationImpl.query().eq("app_name", appName).one();
@@ -587,12 +582,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         List<TablePyhNameDTO> list = new ArrayList<>();
-        try {
 
-            list = mysqlConUtils.getnrttable(url, user, pwd);
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
-        }
+        list = mysqlConUtils.getnrttable(url, user, pwd);
 
         return list;
     }
