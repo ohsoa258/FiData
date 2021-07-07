@@ -4,6 +4,7 @@ import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
 
 import java.sql.Connection;
 import java.util.List;
@@ -45,7 +46,10 @@ public class DbHelper {
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
         //执行sql
         res.data = db.execQueryResultMaps(command.buildQueryData(query, false), connection);
-        res.aggregation = db.execQueryResultMap(command.buildQueryData(query, true), connection);
+        //table查询需要统计列
+        if(query.interactiveType == InteractiveTypeEnum.TABLE) {
+            res.aggregation = db.execQueryResultMap(command.buildQueryData(query, true), connection);
+        }
         //关闭连接
         db.closeConnection(connection);
         return res;

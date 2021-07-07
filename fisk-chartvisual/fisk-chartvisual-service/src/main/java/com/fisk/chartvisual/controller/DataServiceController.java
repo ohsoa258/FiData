@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,12 @@ public class DataServiceController {
     @PostMapping("/get")
     public ResultEntity<DataServiceResult> get(@Validated @RequestBody ChartQueryObject query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.query(query));
+    }
+
+    @ApiOperation("下载图表数据")
+    @GetMapping("/downLoad")
+    public void downLoad(ChartQueryObject query, HttpServletResponse response) {
+        db.downLoad(query, response);
     }
 
     @ApiOperation("获取切片器数据")
