@@ -4,10 +4,12 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +36,7 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @PostMapping("/add")
+    @ApiOperation(value = "添加")
     public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
 
         return ResultEntityBuild.build(service.addData(dto));
@@ -45,6 +48,7 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @GetMapping("/get/{id}")
+    @ApiOperation(value = "回显")
     public ResultEntity<AppRegistrationDTO> getData(
             @PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
@@ -60,6 +64,7 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @GetMapping("/page")
+    @ApiOperation(value = "分页")
     public ResultEntity<PageDTO<AppRegistrationDTO>> queryByPageAppRes(
             // 过滤条件条件非必要
             @RequestParam(value = "key", required = false) String key,
@@ -77,6 +82,7 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @PutMapping("/edit")
+    @ApiOperation(value = "修改")
     public ResultEntity<Object> editData(@Validated @RequestBody AppRegistrationEditDTO dto) {
         return ResultEntityBuild.build(service.updateAppRegistration(dto));
     }
@@ -87,6 +93,7 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @DeleteMapping("/delete/{id}")
+    @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
             @PathVariable("id") long id) {
         return ResultEntityBuild.build(service.deleteAppRegistration(id));
@@ -97,9 +104,18 @@ public class AppRegistrationController {
      * @return 返回值
      */
     @GetMapping("/getDescDate")
+    @ApiOperation(value = "查询应用数据，按照创建时间倒序排序，查出top 10的数据")
     public ResultEntity<List<AppRegistrationDTO>> getDescDate() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDescDate());
     }
+
+    @GetMapping("/getDriveType")
+    @ApiOperation(value = "数据源驱动类型")
+    public ResultEntity<List<AppDriveTypeDTO>> getDriveType() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveType());
+    }
+
+
 
     @GetMapping("/dataAccess")
     public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {

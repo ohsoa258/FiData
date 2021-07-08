@@ -3,7 +3,10 @@ package com.fisk.dataaccess.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
@@ -12,7 +15,8 @@ import java.io.Serializable;
  */
 @Data
 @TableName("tb_app_drivetype")
-public class AppDriveTypePO implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class AppDriveTypePO extends BaseEntity {
 
     /**
      * 主键

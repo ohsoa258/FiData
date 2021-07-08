@@ -3,21 +3,15 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.auth.dto.UserDetail;
-import com.fisk.auth.utils.UserContext;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
-import com.fisk.dataaccess.dto.AppDataSourceDTO;
-import com.fisk.dataaccess.dto.AppNameDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
+import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.dto.daconfig.*;
@@ -44,6 +38,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Resource
     private AppDriveTypeImpl appDriveTypeImpl;
+
+    @Resource
+    private AppDriveTypeMapper appDriveTypeMapper;
 
     private Date date = new Date(System.currentTimeMillis());
 
@@ -99,17 +96,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 保存tb_app_drivetype数据
-        AppDriveTypePO po2 = new AppDriveTypePO();
-        po2.setId(po.getId());
-        po2.setName(po1.getDriveType());
-        boolean save2 = appDriveTypeImpl.save(po2);
+//        AppDriveTypePO po2 = new AppDriveTypePO();
+//        po2.setId(po.getId());
+//        po2.setName(po1.getDriveType());
+//        boolean save2 = appDriveTypeImpl.save(po2);
 
 /*        if (!save2) {
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
 
-//        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -399,5 +396,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 5.表及表sql
 
         return null;
+    }
+
+    @Override
+    public List<AppDriveTypeDTO> getDriveType() {
+
+        List<AppDriveTypePO> list = appDriveTypeMapper.listData();
+
+        return AppDriveTypeDTO.convertEntityList(list);
     }
 }

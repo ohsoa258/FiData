@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
@@ -81,4 +82,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return task模块调用接口返回值
      */
     ResultEnum dataAccessConfig(long id);
+
+    /**
+     * 查询数据源驱动类型
+     *
+     * @return 驱动类型
+     */
+    List<AppDriveTypeDTO> getDriveType();
 }
