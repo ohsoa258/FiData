@@ -497,7 +497,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     /**
      * 物理表接口首页分页查询
      *
-     * @param key key
+     * @param key  key
      * @param page page
      * @param rows rows
      * @return 查询结果
@@ -550,17 +550,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         dto.setList(list1);
 
-        int isRealtime = tapo.getIsRealtime();
+//        int isRealtime = tapo.getIsRealtime();
 
         // 非实时数据比实时数据多了个tb_table_syncmode表数据
         // 当要回显的数据是非实时的时候,要将tb_table_syncmode表数据封装进去
         // 非实时数据
-        if (isRealtime == 1) {
-            TableSyncmodePO spo = this.syncmodeMapper.getData(id);
-            TableSyncmodeDTO sdto = new TableSyncmodeDTO(spo);
+//        if (isRealtime == 1) {
+        TableSyncmodePO spo = this.syncmodeMapper.getData(id);
+        TableSyncmodeDTO sdto = new TableSyncmodeDTO(spo);
 
-            dto.setTableSyncmodeDTO(sdto);
-        }
+        dto.setTableSyncmodeDTO(sdto);
+//        }
 
         return dto;
     }
