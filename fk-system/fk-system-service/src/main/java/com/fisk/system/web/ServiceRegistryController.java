@@ -73,4 +73,11 @@ public class ServiceRegistryController {
         return  service.getDataDetail(id);
     }
 
+    @PutMapping("/edit")
+    @ApiOperation(value = "修改服务注册(对象)")
+    public ResultEntity<Object> editData(@RequestBody ServiceRegistryDTO dto) {
+
+        return ResultEntityBuild.build(service.updateServiceRegistry(dto));
+    }
+
 }
