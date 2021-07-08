@@ -3,6 +3,8 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.auth.dto.UserDetail;
+import com.fisk.auth.utils.UserContext;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -53,8 +55,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
+//        UserDetail user = UserContext.getUser();
+
+//        int a = 1 / 0;
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
+//        po.setCreateUser(user.getUsername());
+
 
         // 保存tb_app_registration数据
         Date date1 = new Date(System.currentTimeMillis());

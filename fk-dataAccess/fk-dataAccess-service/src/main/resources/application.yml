@@ -24,6 +24,8 @@ fk:
   auth:
     clientId: dataAccess-service
     secret: 1234
+#    includeFilterPaths:
+#      - /appRegistration/** # 拦截用户信息
 
 
 eureka:
