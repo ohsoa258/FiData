@@ -39,6 +39,16 @@ public class TableSyncmodeDTO extends BaseDTO {
      */
     public String customInsertCondition;
 
+    /**
+     * timer driver
+     */
+    public String timerDriver;
+
+    /**
+     * corn表达式
+     */
+    public String cornExpression;
+
     public TableSyncmodeDTO(BaseEntity entity) {
         super(entity);
     }

@@ -8,6 +8,8 @@ import com.fisk.auth.utils.UserContext;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
@@ -55,12 +57,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
-//        UserDetail user = UserContext.getUser();
-
-//        int a = 1 / 0;
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
-//        po.setCreateUser(user.getUsername());
 
 
         // 保存tb_app_registration数据

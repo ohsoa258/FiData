@@ -147,18 +147,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             save2 = tableFieldsImpl.save(tfpo);
         }
 
-//        if (!save2) {
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
-//        }
+        if (!save2) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
 
-/*        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
+        // 保存同步频率
+        TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
+        TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
+        boolean save3 = syncmodeImpl.save(po);
 
-        int i = createMysqlTableUtils.createmysqltb(tableAccessDTO);*/
-//        System.out.println(i);
-
-//        return i == 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-
-        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -369,12 +367,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
 
+        if (!saveField) {
+            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+        }
+
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
 //
 //        int i = createTableUtils.updatemysqltb(tableAccessDTO);
 //        System.out.println(i);
 
-        return saveField ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 修改同步频率
+        TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
+        TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
+        boolean update = syncmodeImpl.updateById(po);
+
+
+        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**

@@ -57,6 +57,11 @@ public class TableAccessDTO extends BaseDTO {
      */
     public List<TableFieldsDTO> list;
 
+    /**
+     * 同步频率
+     */
+    public TableSyncmodeDTO tableSyncmodeDTO;
+
     public TableAccessDTO(BaseEntity entity) {
         super(entity);
     }

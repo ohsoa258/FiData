@@ -36,4 +36,14 @@ public class TableSyncmodePO extends BaseEntity {
      */
     public String customInsertCondition;
 
+    /**
+     * timer driver
+     */
+    public String timerDriver;
+
+    /**
+     * corn表达式
+     */
+    public String cornExpression;
+
 }
