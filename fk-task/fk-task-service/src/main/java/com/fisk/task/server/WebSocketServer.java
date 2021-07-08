@@ -48,7 +48,7 @@ public class WebSocketServer {
         } else {
             msg += res.msg;
         }
-        WsSessionManager.sendMsgBySession(msg, session);
+        WsSessionManager.sendMsgBySession(msg, session, res.data.id);
     }
 
     /**
@@ -73,7 +73,6 @@ public class WebSocketServer {
     public void onMessage(String message, Session session, @PathParam("token") String token) throws Exception {
         token = parseToken(token);
         log.info("服务端收到客户端[{}]的消息:{}", token, message);
-        WsSessionManager.sendMsgBySession("消息已接收", session);
     }
 
     @OnError

@@ -1,9 +1,15 @@
 package com.fisk.task.utils;
 
+import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.task.entity.MessageLogPO;
+import com.fisk.task.mapper.MessageLogMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -16,7 +22,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author gy
  */
 @Slf4j
+@Component
 public class WsSessionManager {
+
+    @Resource
+    MessageLogMapper mapper;
+
+    static MessageLogMapper mapperService;
+
+    @PostConstruct
+    public void init() {
+        mapperService = mapper;
+    }
+
+
     /**
      * 保存连接 session 的地方
      */
@@ -131,8 +150,8 @@ public class WsSessionManager {
      * @param session session
      * @param msg     msg
      */
-    public static void sendMsgBySession(String msg, Session session) {
-        sendMsg(session, msg, null);
+    public static void sendMsgBySession(String msg, Session session, Long id) {
+        sendMsg(session, msg, id);
     }
 
     /**
@@ -145,6 +164,17 @@ public class WsSessionManager {
         MDCHelper.setClass(WsSessionManager.class.getName());
         MDCHelper.setFunction("sendMsg");
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_WS_SEND_MESSAGE);
+
+        try {
+            MessageLogPO model = new MessageLogPO();
+            model.createUser = id.toString();
+            model.status = MessageStatusEnum.UNREAD;
+            model.msg = msg;
+            mapperService.insert(model);
+        } catch (Exception ex) {
+            log.error("消息保存失败, ex", ex);
+        }
+
         try {
             if (session != null) {
                 session.getBasicRemote().sendText(msg);
