@@ -1,6 +1,6 @@
 package com.fisk.task.controller;
 
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -34,7 +34,7 @@ public class TestController {
     @GetMapping
     public void sendMsg(String msg) {
         System.out.println("主线程id：" + Thread.currentThread().getId());
-        rabbitTemplate.convertAndSend(MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MQConstants.QueueConstants.BUILD_NIFI_FLOW, msg);
+        rabbitTemplate.convertAndSend(MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_NIFI_FLOW, msg);
     }
 
     @GetMapping("/test")
@@ -88,6 +88,6 @@ public class TestController {
         ltc.add(tl2);
         ltc.add(tl3);
         tab.columns = ltc;
-        service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(), MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MQConstants.QueueConstants.BUILD_DORIS_FLOW, tab);
+        service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DORIS_FLOW, tab);
     }
 }

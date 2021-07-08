@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.doris;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -77,8 +77,8 @@ public class BuildDorisTaskListener {
         bb.appId = 123L;
         bb.userId = 37L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_NIFI_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 bb);
     }
 

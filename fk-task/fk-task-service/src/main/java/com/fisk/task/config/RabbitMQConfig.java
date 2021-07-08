@@ -1,6 +1,6 @@
 package com.fisk.task.config;
 
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -21,7 +21,7 @@ public class RabbitMQConfig {
      */
     @Bean("itemTopicExchange")
     public Exchange topicExchange() {
-        return ExchangeBuilder.topicExchange(MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME).durable(true).build();
+        return ExchangeBuilder.topicExchange(MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME).durable(true).build();
     }
 
     /**
@@ -29,7 +29,7 @@ public class RabbitMQConfig {
      */
     @Bean("itemQueue")
     public Queue itemQueue() {
-        return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_NIFI_FLOW).build();
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_NIFI_FLOW).build();
     }
 
     /**
@@ -37,7 +37,7 @@ public class RabbitMQConfig {
      */
     @Bean("atlasInstanceQueue")
     public Queue atlasInstanceQueue() {
-        return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW).build();
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW).build();
     }
 
     /**
@@ -45,7 +45,7 @@ public class RabbitMQConfig {
      */
     @Bean("atlasTableColumnQueue")
     public Queue atlasTableColumnQueue() {
-        return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW).build();
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW).build();
     }
 
     /**
@@ -54,7 +54,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding itemQueueExchange(@Qualifier("itemQueue") Queue queue,
                                      @Qualifier("itemTopicExchange") Exchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_NIFI_ROUTER).noargs();
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_NIFI_ROUTER).noargs();
     }
 
     /**
@@ -63,7 +63,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding atlasInstanceQueueExchange(@Qualifier("atlasInstanceQueue") Queue queue,
                                      @Qualifier("itemTopicExchange") Exchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_ATLAS_INSTANCE_ROUTER).noargs();
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_ATLAS_INSTANCE_ROUTER).noargs();
     }
 
     /**
@@ -72,7 +72,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding atlasTableColumnQueueExchange(@Qualifier("atlasTableColumnQueue") Queue queue,
                                       @Qualifier("itemTopicExchange") Exchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER).noargs();
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER).noargs();
     }
 
     @Bean

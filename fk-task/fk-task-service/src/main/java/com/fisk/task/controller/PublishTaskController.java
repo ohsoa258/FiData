@@ -1,6 +1,6 @@
 package com.fisk.task.controller;
 
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
@@ -30,8 +30,8 @@ public class PublishTaskController {
     @PostMapping("/nifiFlow")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
         return service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_NIFI_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
     }
 
@@ -43,8 +43,8 @@ public class PublishTaskController {
     @PostMapping("/dorisBuild")
     public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data,String buildType) {
         return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_DORIS_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
                 data);
     }
 
@@ -63,8 +63,8 @@ public class PublishTaskController {
         eidto.entityDb=dbData;
         eidto.entityProcess=processData;
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,
                 eidto);
     }
 
@@ -81,8 +81,8 @@ public class PublishTaskController {
         eidto.entityTable=entity_rdbms_table;
         eidto.entityTableColumn=entity_rdbms_column;
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
-                MQConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MQConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
                 eidto);
     }
 }

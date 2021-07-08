@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MQConstants;
+import com.fisk.common.constants.MqConstants;
 import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
@@ -18,7 +18,7 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-@RabbitListener(queues = MQConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW)
+@RabbitListener(queues = MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW)
 @Slf4j
 public class BuildAtlasInstanceTaskListener {
 
