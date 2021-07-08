@@ -4,6 +4,9 @@ import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataServiceResult;
+import com.fisk.common.redis.RedisKeyBuild;
+import com.fisk.common.redis.RedisKeyEnum;
+import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -29,6 +32,8 @@ public class DataServiceController {
 
     @Resource
     IDataService db;
+    @Resource
+    RedisUtil redis;
 
     @ApiOperation("获取图表数据")
     @PostMapping("/get")
@@ -38,8 +43,16 @@ public class DataServiceController {
 
     @ApiOperation("下载图表数据")
     @GetMapping("/downLoad")
-    public void downLoad(ChartQueryObject query, HttpServletResponse response) {
-        db.downLoad(query, response);
+    public void downLoad(String key, HttpServletResponse response) {
+        db.downLoad(key, response);
+    }
+
+    @ApiOperation("获取下载令牌")
+    @PostMapping("/getDownLoadToken")
+    public ResultEntity<String> downLoad(@RequestBody ChartQueryObject query) {
+        String key = RedisKeyBuild.buildDownLoadToken();
+        boolean res = redis.set(key, query, RedisKeyEnum.CHARTVISUAL_DOWNLOAD_TOKEN.getValue());
+        return ResultEntityBuild.buildData(res ? ResultEnum.SUCCESS : ResultEnum.ERROR, key);
     }
 
     @ApiOperation("获取切片器数据")

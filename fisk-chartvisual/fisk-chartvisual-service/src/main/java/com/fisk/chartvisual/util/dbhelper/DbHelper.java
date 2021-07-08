@@ -48,7 +48,7 @@ public class DbHelper {
         res.data = db.execQueryResultMaps(command.buildQueryData(query, false), connection);
         //table查询需要统计列
         if(query.interactiveType == InteractiveTypeEnum.TABLE) {
-            res.aggregation = db.execQueryResultMap(command.buildQueryData(query, true), connection);
+            res.aggregation = db.execQueryResultMap(command.buildQueryAggregation(query), connection);
         }
         //关闭连接
         db.closeConnection(connection);
