@@ -49,9 +49,10 @@ public class PublishTaskController {
     }
 
     /**
-     * 在Atlas中生成instance
+     * 在Atlas中生成数据的血缘关系
      * @param instanceData
      * @param dbData
+     * @param processData
      * @param buildType
      * @return
      */
