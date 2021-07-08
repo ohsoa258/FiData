@@ -6,6 +6,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka #注册中心的地址
+      #eureka客户端发送心跳间隔，默认30秒
+      lease-renewal-interval-in-seconds: 5
+      #eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除
+      lease-expiration-duration-in-seconds: 5
 
 hystrix:
   command:

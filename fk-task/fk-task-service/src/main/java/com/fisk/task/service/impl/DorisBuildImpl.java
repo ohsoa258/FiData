@@ -1,7 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.fisk.common.entity.BusinessResult;
-import com.fisk.task.service.IAtlasBuild;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
 import com.fisk.task.utils.YamlReader;
 import lombok.extern.slf4j.Slf4j;
@@ -12,14 +12,17 @@ import java.sql.Connection;
 import java.sql.Statement;
 
 /**
- * @author:DennyHui CreateTime: 2021/7/1 11:55
+ * @author:yhxu
+ * CreateTime: 2021/7/1 11:55
  * Description:
  */
 @Service
 @Slf4j
-public class AtlasBuildImpl implements IAtlasBuild {
+public class DorisBuildImpl implements IDorisBuild {
     @Resource
-    IAtlasBuild doris;
+    IDorisBuild doris;
+
+
 
     @Override
     public BusinessResult dorisBuildTable(String executsql) {
@@ -31,7 +34,6 @@ public class AtlasBuildImpl implements IAtlasBuild {
         String Driver = YamlReader.instance.getValueByKey("dorisconstr.driver_class_name").toString();
         Connection conn = null;
         Statement stmt = null;
-        int result = 0;
         //PreparedStatement和Statement的区别在于
         //PreparedStatement接口继承Statement，
         //PreparedStatement 实例包含已编译的 SQL 语句，所以其执行速度要快于 Statement 对象。
@@ -47,12 +49,11 @@ public class AtlasBuildImpl implements IAtlasBuild {
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行
-            result = stmt.executeUpdate(executsql);
+            stmt.executeUpdate(executsql);
             re = true;
 
         } catch (Exception e) {
             //捕捉错误
-            //e.printStackTrace();
             log.error(e.getMessage());
             msg = e.getMessage();
         } finally {
@@ -65,5 +66,6 @@ public class AtlasBuildImpl implements IAtlasBuild {
         return res;
     }
 
-    ;
+
+
 }

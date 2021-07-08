@@ -5,10 +5,10 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.task.FkTaskApplication;
-import com.fisk.task.dto.atlas.TableColumnInfoDTO;
-import com.fisk.task.dto.atlas.TableInfoDTO;
+import com.fisk.task.dto.doris.TableColumnInfoDTO;
+import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.service.IAtlasBuild;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IBuildTaskService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Author:DennyHui
+ * @Author:yhxu
  * CreateTime: 2021/7/1 10:19
  * Description:
  */
@@ -29,7 +29,7 @@ import java.util.List;
 @RunWith(SpringRunner.class)
 public class AtlasTest {
     @Resource
-    IAtlasBuild atlas;
+    IDorisBuild atlas;
     IBuildTaskService service;
     @Test
     public void testdoriscreatetable() {
@@ -63,21 +63,25 @@ public class AtlasTest {
         sql.append("(");
         StringBuilder sqlFileds=new StringBuilder();
         StringBuilder sqlAggregate=new StringBuilder("AGGREGATE KEY(");
+        StringBuilder sqlSelectStrBuild=new StringBuilder();
         StringBuilder sqlDistributed=new StringBuilder("DISTRIBUTED BY HASH(");
         ltc.forEach((l) -> {
-            if(l.isKey=="1")
+            if(l.isKey.equals("1"))
             {
                 sqlDistributed.append(l.columnName);
             }
             sqlFileds.append(l.columnName+" "+ l.type+" comment "+"'"+l.comment+"' ,");
             sqlAggregate.append(l.columnName+",");
+            sqlSelectStrBuild.append(l.columnName+",");
         });
         sqlDistributed.append(") BUCKETS 10");
         String aggregateStr=sqlAggregate.toString();
         aggregateStr=aggregateStr.substring(0,aggregateStr.lastIndexOf(","))+")";
+        String selectStr=sqlSelectStrBuild.toString();
+        selectStr=selectStr.substring(0,selectStr.lastIndexOf(","))+")";
         String filedStr=sqlFileds.toString();
-
         sql.append(filedStr.substring(0,filedStr.lastIndexOf(",")));
+        String sqlSelectStr="select "+selectStr+" from "+tab.tableName;
 /*        sql.append("id INT DEFAULT '10',,");
         sql.append("username VARCHAR(32) DEFAULT '',");
         sql.append("citycode SMALLINT");*/
@@ -95,6 +99,7 @@ public class AtlasTest {
         BusinessResult sqlResult_ods= atlas.dorisBuildTable(ods_sql);
         System.out.println(JSON.toJSONString(sqlResult_stg));
         System.out.println(JSON.toJSONString(sqlResult_ods));
+        System.out.println(sqlSelectStr);
         BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
         bb.appId = 123L;
         service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),

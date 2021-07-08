@@ -1,6 +1,7 @@
 package com.fisk.common.user;
 
 import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
@@ -43,6 +44,10 @@ public class UserHelper {
     public UserInfo getLoginUserInfo() {
         //获取token
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if(requestAttributes == null)
+        {
+            throw new FkException(ResultEnum.NOTFOUND_REQUEST);
+        }
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH).replace(SystemConstants.AUTH_TOKEN_HEADER, "");
         //解析token

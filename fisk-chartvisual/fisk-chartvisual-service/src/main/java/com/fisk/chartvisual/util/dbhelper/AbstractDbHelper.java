@@ -34,7 +34,9 @@ public abstract class AbstractDbHelper {
     public Connection connection(String connectionStr, String acc, String pwd) {
         try {
             loadDriver();
-            return getConnectionByType(connectionStr, acc, pwd);
+            Connection connection = getConnectionByType(connectionStr, acc, pwd);
+            log.info("【connection】数据库连接成功, 连接信息【" + connectionStr + "】");
+            return connection;
         } catch (SQLException e) {
             log.error("【connection】数据库连接获取失败, ex", e);
             throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, e.getLocalizedMessage());
@@ -62,8 +64,19 @@ public abstract class AbstractDbHelper {
      * @param con 数据库连接
      * @return 查询结果Map
      */
-    public List<Map<String, Object>> execQueryResultMap(String sql, Connection con) {
+    public List<Map<String, Object>> execQueryResultMaps(String sql, Connection con) {
         return query(sql, con, BeanHelper::resultSetToMaps);
+    }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
+     * @return 查询结果Map
+     */
+    public Map<String, Object> execQueryResultMap(String sql, Connection con) {
+        return query(sql, con, BeanHelper::resultSetToMap);
     }
 
     /**
@@ -75,6 +88,7 @@ public abstract class AbstractDbHelper {
         if (connection != null) {
             try {
                 connection.close();
+                log.info("【connection】数据库连接已关闭");
             } catch (SQLException ex) {
                 log.error("【closeConnection】数据库连接关闭失败, ex", ex);
             }
@@ -135,7 +149,7 @@ public abstract class AbstractDbHelper {
         }
     }
 
-    private <T> List<T> query(String sql, Connection con, Function<ResultSet, List<T>> func) {
+    private <T> T query(String sql, Connection con, Function<ResultSet, T> func) {
         Statement st = null;
         String code = UUID.randomUUID().toString();
         StopWatch stopWatch = new StopWatch();
@@ -144,9 +158,7 @@ public abstract class AbstractDbHelper {
             log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
             st = con.createStatement();
             ResultSet res = st.executeQuery(sql);
-            List<T> data = func.apply(res);
-            log.info("【execQuery】【" + code + "】Total: 【" + (data == null ? 0 : data.size()) + "】");
-            return data;
+            return func.apply(res);
         } catch (SQLException ex) {
             log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());

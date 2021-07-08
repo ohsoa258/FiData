@@ -18,6 +18,8 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,12 +37,13 @@ import java.util.stream.Collectors;
 @Service
 public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, DataSourceConPO> implements IDataSourceConManageService {
 
-    //TODO: 未获取登录人信息
 
     @Resource
     DataSourceConMapper mapper;
     @Resource
     IDataService useDataBase;
+    @Resource
+    UserHelper userHelper;
 
 
     @Override
@@ -50,20 +53,22 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name);
-        //queryWrapper.eq(DataSourceConPO::getCreateUser,"用户id");
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
+        model.createUser = userInfo.id.toString();
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum updateDataSourceCon(DataSourceConEditDTO dto) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         DataSourceConPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -73,13 +78,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getName, dto.name)
                 .ne(DataSourceConPO::getId, dto.id);
-        //queryWrapper.eq(DataSourceConPO::getCreateUser,"用户id");
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
+        model.updateUser = userInfo.id.toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -89,7 +94,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

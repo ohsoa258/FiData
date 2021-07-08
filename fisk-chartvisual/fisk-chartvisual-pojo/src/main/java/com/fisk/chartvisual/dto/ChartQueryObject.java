@@ -22,4 +22,5 @@ public class ChartQueryObject {
     public List<ColumnDetails> columnDetails;
     public List<ChartQueryFilter> queryFilters;
     public InteractiveTypeEnum interactiveType;
+    public PaginationQuery pagination;
 }

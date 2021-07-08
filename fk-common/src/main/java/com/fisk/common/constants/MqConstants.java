@@ -15,14 +15,20 @@ public class MqConstants {
 
         public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
-        public static final String BUILD_ATLAS_FLOW = "task.build.atlas.flow";
+        public static final String BUILD_ATLAS_INSTANCE_FLOW = "task.build.atlas.instance.flow";
+
+        public static final String BUILD_ATLAS_TABLECOLUMN_FLOW = "task.build.atlas.tableclolumn.flow";
+
+        public static final String BUILD_DORIS_FLOW= "task.build.doris.flow";
 
     }
 
     public static final class RouterConstants{
 
         public static final String TASK_BUILD_NIFI_ROUTER = "task.build.nifi.#";
-        public static final String TASK_BUILD_ATLAS_ROUTER = "task.build.atlas.#";
+        public static final String TASK_BUILD_ATLAS_INSTANCE_ROUTER = "task.build.atlas.instance.#";
+        public static final String TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER = "task.build.atlas.tablecolumn.#";
+        public static final String TASK_BUILD_DORIS_ROUTER = "task.build.doris.#";
 
     }
 }

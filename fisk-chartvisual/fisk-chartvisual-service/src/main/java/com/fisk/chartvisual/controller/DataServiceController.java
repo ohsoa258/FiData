@@ -3,6 +3,10 @@ package com.fisk.chartvisual.controller;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.vo.DataServiceResult;
+import com.fisk.common.redis.RedisKeyBuild;
+import com.fisk.common.redis.RedisKeyEnum;
+import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -12,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +32,27 @@ public class DataServiceController {
 
     @Resource
     IDataService db;
+    @Resource
+    RedisUtil redis;
 
     @ApiOperation("获取图表数据")
     @PostMapping("/get")
-    public ResultEntity<List<Map<String, Object>>> get(@Validated @RequestBody ChartQueryObject query) {
+    public ResultEntity<DataServiceResult> get(@Validated @RequestBody ChartQueryObject query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.query(query));
+    }
+
+    @ApiOperation("下载图表数据")
+    @GetMapping("/downLoad")
+    public void downLoad(String key, HttpServletResponse response) {
+        db.downLoad(key, response);
+    }
+
+    @ApiOperation("获取下载令牌")
+    @PostMapping("/getDownLoadToken")
+    public ResultEntity<String> downLoad(@RequestBody ChartQueryObject query) {
+        String key = RedisKeyBuild.buildDownLoadToken();
+        boolean res = redis.set(key, query, RedisKeyEnum.CHARTVISUAL_DOWNLOAD_TOKEN.getValue());
+        return ResultEntityBuild.buildData(res ? ResultEnum.SUCCESS : ResultEnum.ERROR, key);
     }
 
     @ApiOperation("获取切片器数据")

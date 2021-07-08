@@ -3,9 +3,10 @@ package com.fisk.chartvisual;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataDomainVO;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
@@ -17,7 +18,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -71,9 +71,9 @@ public class UseDataBaseTest {
                 }});
             }};
         }};
-        List<Map<String, Object>> data = use.query(query);
+        DataServiceResult data = use.query(query);
         System.out.println(data.toString());
-        assert data.size() > 0;
+        assert data.data.size() > 0;
     }
 
     /**
@@ -103,8 +103,8 @@ public class UseDataBaseTest {
                 }});
             }};
         }};
-        List<Map<String, Object>> data = use.query(query);
+        DataServiceResult data = use.query(query);
         System.out.println(data.toString());
-        assert data.size() > 0;
+        assert data.data.size() > 0;
     }
 }

@@ -16,6 +16,8 @@ import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,18 +33,23 @@ public class ChartManageImpl implements IChartManageService {
     ChartMapper chartMapper;
     @Resource
     DraftChartMapper draftChartMapper;
+    @Resource
+    UserHelper userHelper;
 
     //TODO: 登录人
 
     @Override
     public ResultEnum saveChartToDraft(ChartPropertyDTO dto) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         DraftChartPO model = DraftChartMap.INSTANCES.dtoToPo(dto);
+        model.createUser = userInfo.id.toString();
         return draftChartMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum saveChart(ReleaseChart dto) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         //判断是不是发布草稿
         if (dto.draftId != null) {
             DraftChartPO draftModel = getDraftChartById(dto.draftId);
@@ -52,6 +59,7 @@ public class ChartManageImpl implements IChartManageService {
         }
 
         ChartPO model = ChartMap.INSTANCES.dtoToPo(dto);
+        model.createUser = userInfo.id.toString();
 
         int res = chartMapper.insert(model);
         if (res == 0) {
@@ -75,16 +83,19 @@ public class ChartManageImpl implements IChartManageService {
 
     @Override
     public ResultEnum updateChart(ChartPropertyEditDTO dto) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         int res = 0;
         switch (dto.type) {
             case DRAFT:
                 DraftChartPO draft = getDraftChartById(dto.id);
                 ChartMap.INSTANCES.editDtoToPo(dto, draft);
+                draft.updateUser = userInfo.id.toString();
                 res = draftChartMapper.updateById(draft);
                 break;
             case RELEASE:
                 ChartPO release = getReleaseChartById(dto.id);
                 ChartMap.INSTANCES.editDtoToPo(dto, release);
+                release.updateUser = userInfo.id.toString();
                 res = chartMapper.updateById(release);
                 break;
             default:

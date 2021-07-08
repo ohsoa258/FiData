@@ -3,10 +3,10 @@ package com.fisk.task.service;
 import com.fisk.common.entity.BusinessResult;
 
 /**
- * Author:DennyHui
+ * @author yhxu
  * CreateTime: 2021/7/1 10:43
  * Description:
  */
-public interface IAtlasBuild {
-    public BusinessResult dorisBuildTable(String executsql);
+public interface IDorisBuild {
+     BusinessResult dorisBuildTable(String executsql);
 }

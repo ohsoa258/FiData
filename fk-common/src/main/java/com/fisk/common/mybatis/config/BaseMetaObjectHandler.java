@@ -6,13 +6,13 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author gy
  */
 @Component
 public class BaseMetaObjectHandler implements MetaObjectHandler {
+
     /**
      * 插入时的填充策略
      * @param metaObject

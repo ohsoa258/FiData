@@ -2,9 +2,10 @@ package com.fisk.chartvisual.service;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.chartvisual.vo.DataServiceVO;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,14 @@ public interface IDataService {
      * @param query 表/字段信息
      * @return 查询结果
      */
-    List<Map<String, Object>> query(ChartQueryObject query);
+    DataServiceResult query(ChartQueryObject query);
+
+    /**
+     * 下载数据
+     * @param query 表/字段信息
+     * @return 查询结果
+     */
+    void downLoad(String key, HttpServletResponse response);
 
     /**
      * 获取切片器的数据

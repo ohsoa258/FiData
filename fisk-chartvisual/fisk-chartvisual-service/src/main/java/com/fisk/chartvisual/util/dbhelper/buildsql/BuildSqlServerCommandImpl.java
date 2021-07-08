@@ -9,7 +9,7 @@ import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
  */
 public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
 
-    private final DataSourceTypeEnum dsType = DataSourceTypeEnum.MYSQL;
+    private final DataSourceTypeEnum dsType = DataSourceTypeEnum.SQLSERVER;
 
     @Override
     public String buildDataDomainQuery(String dbName) {
@@ -45,12 +45,33 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
     }
 
     @Override
-    public String buildQueryData(ChartQueryObject query) {
-        return baseBuildQueryData(query, dsType);
+    public String buildQueryData(ChartQueryObject query, boolean aggregation) {
+        String sql = baseBuildQueryData(query, dsType, aggregation);
+        if (query.pagination != null && query.pagination.enablePage && !aggregation) {
+            return paginationSql(sql, query);
+        }
+        return sql;
+    }
+
+    @Override
+    public String buildQueryAggregation(ChartQueryObject query) {
+        return bseBuildQueryAggregation(query, DataSourceTypeEnum.SQLSERVER);
     }
 
     @Override
     public String buildQuerySlicer(SlicerQueryObject query) {
         return baseBuildQuerySlicer(query, dsType);
+    }
+
+    /**
+     * sql追加分页
+     *
+     * @param sql   查询语句
+     * @param query 查询对象
+     * @return 带分页的sql
+     */
+    private String paginationSql(String sql, ChartQueryObject query) {
+        return "SELECT TOP " + query.pagination.pageSize + " * FROM (" + sql + ") AS tab WHERE RowNumber > " + (query.pagination.pageNum - 1) * query.pagination.pageSize;
+
     }
 }

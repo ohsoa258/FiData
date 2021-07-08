@@ -291,7 +291,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         autoRes.add(AutoEndBranchTypeEnum.UNNMATCHED.getName());
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
 
-        Map<String, String> map = new HashMap<>(1);
+        Map<String, String> map = new HashMap<>(2);
+        map.put("Destination", "flowfile-attribute");
         map.put(NifiConstants.AttrConstants.INCREMENT_NAME, data.fieldName);
 
 
@@ -305,7 +306,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
         dto.setType(ProcessorTypeEnum.EvaluateJsonPath.getName());
-        dto.setPosition(null);
+        dto.setPosition(data.positionDTO);
 
         //组件传输对象
         ProcessorEntity entity = new ProcessorEntity();
