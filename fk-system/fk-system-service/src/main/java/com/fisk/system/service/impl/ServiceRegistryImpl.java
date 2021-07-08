@@ -36,14 +36,13 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
             // 查询数据
             List<ServiceRegistryPO> list = this.query()
                     .eq("del_flag",1).list();
-
-            List<ServiceRegistryPO> list_parent=list.stream().filter(e->e.getParentServeCode().equals("1"))
-
+            String code="1";
+            List<ServiceRegistryPO> list_Parent=list.stream().filter(e->code.equals(e.getParentServeCode()))
                     .collect(Collectors.toList());
 
             List<ServiceRegistryDTO> dtos = new ArrayList<>();
 
-            for (ServiceRegistryPO po : list_parent) {
+            for (ServiceRegistryPO po : list_Parent) {
                 ServiceRegistryDTO dto = new ServiceRegistryDTO();
                 dto.setId(po.getId());
                 dto.setIcon(po.getIcon());
@@ -54,8 +53,8 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
                 dto.setSequenceNo(po.getSequenceNo());
 
                 List<ServiceRegistryDTO> data=new ArrayList<>();
-                List<ServiceRegistryPO> list_child=list.stream().filter(e->e.getParentServeCode().equals(po.getServeCode())).collect(Collectors.toList());
-                for (ServiceRegistryPO item : list_child)
+                List<ServiceRegistryPO> list_Child=list.stream().filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
+                for (ServiceRegistryPO item : list_Child)
                 {
                     ServiceRegistryDTO obj=new ServiceRegistryDTO();
                     obj.setId(item.getId());
@@ -71,12 +70,12 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
                 dto.setDtos(data);
                 dtos.add(dto);
             }
-            result.code=200;
+            result.code=ResultEnum.SUCCESS.getCode();
             result.data=dtos;
         }
         catch (Exception e)
         {
-            result.code=500;
+            result.code=ResultEnum.ERROR.getCode();
             result.data=null;
             result.msg="查询失败！";
         }
@@ -168,19 +167,55 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
             if (po==null)
             {
                 result.msg="数据不存在！";
-                result.code=1003;
+                result.code=ResultEnum.DATA_NOTEXISTS.getCode();
                 return result;
             }
             ServiceRegistryDTO dto = new ServiceRegistryDTO(po);
             result.data=dto;
-            result.code=200;
-
+            result.code=ResultEnum.SUCCESS.getCode();
         }
         catch (Exception e)
         {
             result.data=null;
-            result.code=500;
+            result.msg="保存失败！";
+            result.code=ResultEnum.ERROR.getCode();
         }
         return result;
+    }
+
+
+    @Override
+    public ResultEnum updateServiceRegistry(ServiceRegistryDTO dto) {
+        try {
+            int id = dto.getId();
+            /*判断是否为空*/
+            ServiceRegistryPO model = this.getById(id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            /*判断名称是否重复*/
+            ServiceRegistryPO bpo = this.query()
+                    .eq("serve_cn_name", dto.getServeCnName())
+                    .eq("del_flag", 1)
+                    .one();
+            if (bpo !=null && model.getId() != bpo.getId())
+            {
+                return ResultEnum.NAME_EXISTS;
+            }
+
+            /*修改数据*/
+            model.setSequenceNo(dto.getSequenceNo());
+            Date date = new Date(System.currentTimeMillis());
+            model.setUpdateTime(date);
+            model.setIcon(dto.getIcon());
+            model.setServeCnName(dto.getServeCnName());
+            model.setServeEnName(dto.getServeEnName());
+            model.setServeUrl(dto.getServeUrl());
+
+            return this.updateById(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        }
+        catch (Exception e){
+            return  ResultEnum.ERROR;
+        }
     }
 }
