@@ -36,8 +36,16 @@ public class RabbitMQConfig {
      * 声明队列
      */
     @Bean("atlasInstanceQueue")
-    public Queue atlasQueue() {
+    public Queue atlasInstanceQueue() {
         return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW).build();
+    }
+
+    /**
+     * 声明队列
+     */
+    @Bean("atlasTableColumnQueue")
+    public Queue atlasTableColumnQueue() {
+        return QueueBuilder.durable(MQConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW).build();
     }
 
     /**
@@ -53,9 +61,18 @@ public class RabbitMQConfig {
      * 绑定队列和交换机
      */
     @Bean
-    public Binding atlasQueueExchange(@Qualifier("atlasInstanceQueue") Queue queue,
+    public Binding atlasInstanceQueueExchange(@Qualifier("atlasInstanceQueue") Queue queue,
                                      @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_ATLAS_INSTANCE_ROUTER).noargs();
+    }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding atlasTableColumnQueueExchange(@Qualifier("atlasTableColumnQueue") Queue queue,
+                                      @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MQConstants.RouterConstants.TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER).noargs();
     }
 
     @Bean
