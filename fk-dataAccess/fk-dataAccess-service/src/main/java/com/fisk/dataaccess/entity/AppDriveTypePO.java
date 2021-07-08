@@ -21,7 +21,7 @@ public class AppDriveTypePO extends BaseEntity {
     /**
      * 主键
      */
-    @TableId(value = "id",type = IdType.INPUT)
+    @TableId
     private long id;
 
     /**

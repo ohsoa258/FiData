@@ -154,6 +154,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 保存同步频率
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
         TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
+        po.setId(tpo.getId());
         boolean save3 = syncmodeImpl.save(po);
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

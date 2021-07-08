@@ -116,7 +116,6 @@ public class AppRegistrationController {
     }
 
 
-
     @GetMapping("/dataAccess")
     public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {
 
