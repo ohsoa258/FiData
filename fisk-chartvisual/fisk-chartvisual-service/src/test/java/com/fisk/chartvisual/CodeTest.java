@@ -2,14 +2,11 @@ package com.fisk.chartvisual;
 
 import org.junit.Test;
 
-import java.util.Optional;
+import java.util.HashMap;
 
 public class CodeTest {
 
     @Test
-    public void Test(){
-        Integer a = null;
-        Optional<Integer> b = Optional.ofNullable(a);
-        System.out.println(b.orElse(0));
+    public void Test() {
     }
 }

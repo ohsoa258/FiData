@@ -37,7 +37,7 @@ public interface IDataService {
      * @param query 表/字段信息
      * @return 查询结果
      */
-    void downLoad(ChartQueryObject query, HttpServletResponse response);
+    void downLoad(String key, HttpServletResponse response);
 
     /**
      * 获取切片器的数据

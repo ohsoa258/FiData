@@ -17,6 +17,7 @@ import com.fisk.common.excel.ExcelUtil;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,8 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
 
     @Resource
     private DataSourceConMapper mapper;
+    @Resource
+    RedisUtil redis;
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
@@ -54,7 +57,12 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public void downLoad(ChartQueryObject query, HttpServletResponse response) {
+    public void downLoad(String key, HttpServletResponse response) {
+        ChartQueryObject query = (ChartQueryObject) redis.get(key);
+        if(query == null){
+            return;
+        }
+        //redis.del(key);
         DataSourceConVO model = getDataSourceCon(query.id);
         DataServiceResult res = DbHelper.getDataService(query, model);
         ExcelUtil.uploadExcelAboutUser(response, "test.xlsx", res.data);

@@ -97,7 +97,7 @@ public class BeanHelper {
         try {
             ResultSetMetaData md = rs.getMetaData();
             while (rs.next()) {
-                for (int i = 1; i < 2; i++) {
+                for (int i = 1; i <= md.getColumnCount(); i++) {
                     rowData.put(md.getColumnLabel(i), rs.getObject(i));
                 }
             }

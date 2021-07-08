@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
  */
 public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
 
-
     /**
      * 根据数据源类型，查询参数对象动态创建sql语句(图表数据)
      *
@@ -65,18 +64,24 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
                 str.append(",").append(e.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(e.columnName, arr))).append(" as ").append(getColumn(e.columnLabel, arr));
             });
         }
-        if (query.pagination != null && query.pagination.enablePage && type == DataSourceTypeEnum.SQLSERVER) {
+        if (query.pagination != null && query.pagination.enablePage && type == DataSourceTypeEnum.SQLSERVER && !aggregation) {
             String orderColumn = "";
             //根据排序字段类型拼接
-            switch (query.pagination.orderType) {
-                case NAME:
-                    orderColumn = getColumn(query.pagination.orderColumn, arr);
-                    break;
-                case VALUE:
-                    orderColumn = query.pagination.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(query.pagination.orderColumn, arr));
-                    break;
-                default:
-                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+            if (query.pagination.enableOrder) {
+                switch (query.pagination.orderType) {
+                    case NAME:
+                        orderColumn = getColumn(query.pagination.orderColumn, arr);
+                        break;
+                    case VALUE:
+                        orderColumn = query.pagination.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(query.pagination.orderColumn, arr));
+                        break;
+                    default:
+                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+                }
+            } else {
+                //说明没有开启排序，默认取值字段的最后一个
+                ColumnDetails valueDetails = values.get(values.size() - 1);
+                orderColumn = valueDetails.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(valueDetails.columnName, arr));
             }
             str.append(",ROW_NUMBER() OVER (ORDER BY ").append(orderColumn).append(" ").append(query.pagination.ascType).append(") AS RowNumber");
         }
@@ -89,12 +94,10 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             });
         }
         //group
-        if (!aggregation) {
-            str.append("GROUP BY ");
-            str.append(names.stream().map(e -> getColumn(e.columnName, arr)).collect(Collectors.joining(",")));
-        }
+        str.append("GROUP BY ");
+        str.append(names.stream().map(e -> getColumn(e.columnName, arr)).collect(Collectors.joining(",")));
         //order
-        if (query.pagination != null && query.pagination.enableOrder) {
+        if (query.pagination != null && query.pagination.enableOrder && !aggregation) {
             switch (type) {
                 case SQLSERVER:
                     //查询sqlserver时，如果开启了分页，那么就不需要排序了，row_number中已经排序了
@@ -112,6 +115,23 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             }
         }
         return str.toString();
+    }
+
+    /**
+     * 根据数据源类型，查询参数对象动态创建sql语句（统计查询）
+     *
+     * @param query 查询条件
+     * @param type  数据源类型
+     * @return sql
+     */
+    protected String bseBuildQueryAggregation(ChartQueryObject query, DataSourceTypeEnum type) {
+        String[] arr = getEscapeStr(type);
+        String columns = query.columnDetails.stream()
+                .filter(e -> e.columnType == ColumnTypeEnum.VALUE)
+                .map(e -> "SUM(" + getColumn(e.columnLabel, arr)     + ")" + " as " + getColumn(e.columnLabel, arr))
+                .collect(Collectors.joining(","));
+        String sql = baseBuildQueryData(query, type, true);
+        return "SELECT " + columns + " FROM (" + sql + ") AS tab";
     }
 
     /**
@@ -142,7 +162,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
      * @param type 数据源类型
      * @return 转义字符
      */
-    private String[] getEscapeStr(DataSourceTypeEnum type) {
+    protected String[] getEscapeStr(DataSourceTypeEnum type) {
         String[] arr = new String[2];
         switch (type) {
             case MYSQL:
@@ -166,7 +186,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
      * @param escapeStr 转义字符
      * @return 转义后的字段名 case： [name]
      */
-    private String getColumn(String column, String[] escapeStr) {
+    protected String getColumn(String column, String[] escapeStr) {
         if (column == null) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }

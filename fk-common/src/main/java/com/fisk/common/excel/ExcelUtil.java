@@ -75,7 +75,7 @@ public class ExcelUtil {
                         }
                         Class<?> type = columnType.get(item.getKey());
                         if (Integer.class.equals(type)) {
-                            cell.setCellValue((Double) item.getValue());
+                            cell.setCellValue(((Integer) item.getValue()).doubleValue());
                         } else if (Long.class.equals(type)) {
                             cell.setCellValue(new Double((Long) item.getValue()));
                         } else if (String.class.equals(type)) {
@@ -86,6 +86,8 @@ public class ExcelUtil {
                             cell.setCellValue(sdf.format((Timestamp) item.getValue()));
                         } else if (BigDecimal.class.equals(type)) {
                             cell.setCellValue(((BigDecimal) item.getValue()).doubleValue());
+                        } else if (Double.class.equals(type)) {
+                            cell.setCellValue((Double) item.getValue());
                         }
                     }
                 }
