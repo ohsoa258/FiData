@@ -14,7 +14,11 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.*;
+import fk.atlas.api.model.EntityProcess;
+import fk.atlas.api.model.EntityRdbmsDB;
+import fk.atlas.api.model.EnttityRdbmsInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +46,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private AppDriveTypeMapper appDriveTypeMapper;
 
+    @Resource
+    private PublishTaskClient publishTaskClient;
+
     private Date date = new Date(System.currentTimeMillis());
+
 
     /**
      * 添加应用
@@ -104,6 +112,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 /*        if (!save2) {
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
+
+        EnttityRdbmsInstance.entity_rdbms_instance instanceData = new EnttityRdbmsInstance.entity_rdbms_instance();
+        EntityRdbmsDB.entity_rdbms_db dbData = new EntityRdbmsDB.entity_rdbms_db();
+        EntityProcess.entity_rdbms_process processData = new EntityProcess.entity_rdbms_process();
+
+
+
+
+//        publishTaskClient.publishBuildAtlasInstanceTask(instanceData,dbData,processData,"test");
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

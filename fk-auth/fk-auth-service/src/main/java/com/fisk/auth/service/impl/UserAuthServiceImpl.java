@@ -28,8 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 import static com.fisk.auth.constants.JwtConstants.COOKIE_NAME;
 
 /**
- * @author: Lock
- * @data: 2021/5/17 13:53
+ * @author Lock
+ * @date 2021/5/17 13:53
  */
 @Service
 public class UserAuthServiceImpl implements UserAuthService {
@@ -37,17 +37,12 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Resource
     private UserClient userClient;
 
-    @Autowired
+    @Resource
     private JwtUtils jwtUtils;
 
     @Resource
     private RedisUtil redis;
 
-    /**
-     * 登录
-     * @param userAuthDTO
-     * @return
-     */
     @Override
     public ResultEntity<String> login(UserAuthDTO userAuthDTO) {
 
