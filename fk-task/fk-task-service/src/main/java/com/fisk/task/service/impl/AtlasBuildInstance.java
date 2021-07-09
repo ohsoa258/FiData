@@ -19,11 +19,11 @@ import javax.annotation.Resource;
 @Service
 @Slf4j
 public class AtlasBuildInstance implements IAtlasBuildInstance {
-
     private String atlas_url = YamlReader.instance.getValueByKey("atlasconstr.url").toString();
     private String atlas_username = YamlReader.instance.getValueByKey("atlasconstr.username").toString();
     private String atlas_pwd = YamlReader.instance.getValueByKey("atlasconstr.password").toString();
     private AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
+
     @Resource
     IAtlasBuildInstance atlas;
 

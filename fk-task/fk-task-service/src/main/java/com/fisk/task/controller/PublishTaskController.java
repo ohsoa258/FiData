@@ -7,7 +7,6 @@ import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
-import fk.atlas.api.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,11 +36,10 @@ public class PublishTaskController {
 
     /** 在Doris中生成stg&ods数据表
      * @param data
-     * @param buildType
      * @return
      */
     @PostMapping("/dorisBuild")
-    public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data,String buildType) {
+    public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data) {
         return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DORIS_FLOW,
@@ -50,39 +48,27 @@ public class PublishTaskController {
 
     /**
      * 在Atlas中生成数据的血缘关系
-     * @param instanceData
-     * @param dbData
-     * @param processData
-     * @param buildType
+     * @param ArDto
      * @return
      */
     @PostMapping("/atlasBuildInstance")
-    public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody EnttityRdbmsInstance.entity_rdbms_instance instanceData, EntityRdbmsDB.entity_rdbms_db dbData, EntityProcess.entity_rdbms_process processData, String buildType) {
-        AtlasEntityRdbmsDTO eidto=new AtlasEntityRdbmsDTO();
-        eidto.entityInstance=instanceData;
-        eidto.entityDb=dbData;
-        eidto.entityProcess=processData;
+    public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityRdbmsDTO ArDto) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,
-                eidto);
+                ArDto);
     }
 
     /**
      * 在Atlas中生成数据的血缘关系
-     * @param entity_rdbms_table
-     * @param entity_rdbms_column
-     * @param buildType
+     * @param ArDto
      * @return
      */
     @PostMapping("/atlasBuildTableAndColumn")
-    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody EntityRdbmsTable.entity_rdbms_table entity_rdbms_table, EntityRdbmsColumn.entity_rdbms_column entity_rdbms_column, String buildType) {
-        AtlasEntityRdbmsDTO eidto=new AtlasEntityRdbmsDTO();
-        eidto.entityTable=entity_rdbms_table;
-        eidto.entityTableColumn=entity_rdbms_column;
+    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityRdbmsDTO ArDto) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
-                eidto);
+                ArDto);
     }
 }
