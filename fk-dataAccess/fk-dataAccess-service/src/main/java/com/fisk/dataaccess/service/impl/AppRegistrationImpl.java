@@ -358,6 +358,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
+    public List<AppDriveTypeDTO> getDriveType() {
+
+        List<AppDriveTypePO> list = appDriveTypeMapper.listData();
+
+        return AppDriveTypeDTO.convertEntityList(list);
+    }
+
+    @Override
     public ResultEnum dataAccessConfig(long id) {
 
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -388,7 +396,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
         groupConfig.setAppName(rpo.getAppName());
         groupConfig.setAppDetails(rpo.getAppDes());
-        // TODO: 缺失字段
+        // TODO: 缺失字段(给个默认值)
         groupConfig.setNewApp(false);
 
         // 2.任务组配置
@@ -415,11 +423,4 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return null;
     }
 
-    @Override
-    public List<AppDriveTypeDTO> getDriveType() {
-
-        List<AppDriveTypePO> list = appDriveTypeMapper.listData();
-
-        return AppDriveTypeDTO.convertEntityList(list);
-    }
 }
