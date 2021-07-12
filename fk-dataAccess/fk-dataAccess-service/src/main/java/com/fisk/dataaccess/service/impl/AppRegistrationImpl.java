@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
@@ -15,6 +18,7 @@ import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.dto.daconfig.*;
 import fk.atlas.api.model.EntityProcess;
 import fk.atlas.api.model.EntityRdbmsDB;
@@ -49,7 +53,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private PublishTaskClient publishTaskClient;
 
-    private Date date = new Date(System.currentTimeMillis());
+    @Resource
+    UserHelper userHelper;
 
 
     /**
@@ -61,6 +66,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
+
+        UserInfo info = userHelper.getLoginUserInfo();
+        Long id = info.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -113,14 +121,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
 
-        EnttityRdbmsInstance.entity_rdbms_instance instanceData = new EnttityRdbmsInstance.entity_rdbms_instance();
-        EntityRdbmsDB.entity_rdbms_db dbData = new EntityRdbmsDB.entity_rdbms_db();
-        EntityProcess.entity_rdbms_process processData = new EntityProcess.entity_rdbms_process();
 
+        AtlasEntityRdbmsDTO dto = new AtlasEntityRdbmsDTO();
 
+        EntityRdbmsDB.entity_rdbms_db entityDb = dto.entityDb;
 
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
 
-//        publishTaskClient.publishBuildAtlasInstanceTask(instanceData,dbData,processData,"test");
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -208,6 +215,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
 
         // 1.3修改主表数据
+        Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);
         po.setDelFlag(1);
         boolean edit = this.updateById(po);

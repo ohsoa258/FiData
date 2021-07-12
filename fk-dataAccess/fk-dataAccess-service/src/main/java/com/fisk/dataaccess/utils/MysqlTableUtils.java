@@ -19,18 +19,18 @@ import java.util.List;
 @Component
 public class MysqlTableUtils {
 
-    /**
-     * url
-     */
-    String url = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
-    /**
-     * user
-     */
-    String user = "root";
-    /**
-     * password
-     */
-    String pwd = "root123";
+//    /**
+//     * url
+//     */
+//    String url = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+//    /**
+//     * user
+//     */
+//    String user = "root";
+//    /**
+//     * password
+//     */
+//    String pwd = "root123";
 
 //    /**
 //     * 创建表方法(mysql版本  实时)
