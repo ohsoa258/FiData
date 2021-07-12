@@ -15,13 +15,14 @@ import org.springframework.stereotype.Component;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.net.URLDecoder;
 import java.time.LocalDateTime;
 
 /**
  * @author gy
  */
 @Slf4j
-@ServerEndpoint(value = "/task/server/{token}")
+@ServerEndpoint(value = "/ws/server/{token}")
 @Component
 public class WebSocketServer {
 
@@ -48,7 +49,7 @@ public class WebSocketServer {
         } else {
             msg += res.msg;
         }
-        WsSessionManager.sendMsgBySession(msg, session, res.data.id);
+        WsSessionManager.sendMsgBySession(msg, session);
     }
 
     /**
@@ -86,6 +87,8 @@ public class WebSocketServer {
         if (StringUtils.isEmpty(token)) {
             throw new FkException(ResultEnum.AUTH_TOKEN_IS_NOTNULL);
         }
+        //网关路由过来的请求，token会被url编码，直接访问服务不会被编码
+        token = URLDecoder.decode(token, "UTF-8");
         return token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
     }
 }
