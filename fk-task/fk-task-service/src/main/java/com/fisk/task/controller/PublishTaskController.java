@@ -3,6 +3,7 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -65,7 +66,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasBuildTableAndColumn")
-    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityRdbmsDTO ArDto) {
+    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityDTO ArDto) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
