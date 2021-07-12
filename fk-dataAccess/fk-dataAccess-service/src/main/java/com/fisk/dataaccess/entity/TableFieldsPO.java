@@ -23,6 +23,11 @@ public class TableFieldsPO extends BaseEntity {
     public long tableAccessId;
 
     /**
+     * 添加数据时后台生成
+     */
+    public String atlasFieldId;
+
+    /**
      * 字段名称
      */
     public String fieldName;
