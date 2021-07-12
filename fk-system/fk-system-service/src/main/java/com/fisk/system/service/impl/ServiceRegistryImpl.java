@@ -5,13 +5,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
+import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.ServiceRegistryMapper;
 import com.fisk.system.service.IServiceRegistryService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +27,9 @@ import java.util.UUID;
  */
 @Service
 public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, ServiceRegistryPO> implements IServiceRegistryService {
+
+    @Resource
+    UserHelper userHelper;
 
     /**
      * 获取服务注册树形结构
@@ -43,28 +50,14 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
             List<ServiceRegistryDTO> dtos = new ArrayList<>();
 
             for (ServiceRegistryPO po : list_Parent) {
-                ServiceRegistryDTO dto = new ServiceRegistryDTO();
-                dto.setId(po.getId());
-                dto.setIcon(po.getIcon());
-                dto.setServeCode(po.getServeCode());
-                dto.setServeCnName(po.getServeCnName());
-                dto.setServeEnName(po.getServeEnName());
-                dto.setParentServeCode(po.getParentServeCode());
-                dto.setSequenceNo(po.getSequenceNo());
+
+                ServiceRegistryDTO dto=ServiceRegistryMap.INSTANCES.poToDto(po);
 
                 List<ServiceRegistryDTO> data=new ArrayList<>();
                 List<ServiceRegistryPO> list_Child=list.stream().filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
                 for (ServiceRegistryPO item : list_Child)
                 {
-                    ServiceRegistryDTO obj=new ServiceRegistryDTO();
-                    obj.setId(item.getId());
-                    obj.setServeCode(item.getServeCode());
-                    obj.setParentServeCode(item.getParentServeCode());
-                    obj.setServeEnName(item.getServeEnName());
-                    obj.setServeCnName(item.getServeCnName());
-                    obj.setIcon(item.getIcon());
-                    obj.setSequenceNo(item.getSequenceNo());
-                    obj.setServeUrl(item.getServeUrl());
+                    ServiceRegistryDTO obj=ServiceRegistryMap.INSTANCES.poToDto(item);
                     data.add(obj);
                 }
                 dto.setDtos(data);
@@ -91,8 +84,10 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
     public ResultEnum addServiceRegistry(ServiceRegistryDTO dto)
     {
         try {
-            ServiceRegistryPO po = dto.toEntity(ServiceRegistryPO.class);
 
+            ServiceRegistryPO po=ServiceRegistryMap.INSTANCES.dtoToPo(dto);
+            /*获取登录信息*/
+            /*UserInfo userInfo = userHelper.getLoginUserInfo();*/
             // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
             List<String> nameList = baseMapper.getServiceName();
             String appName = po.getServeCnName();
@@ -100,15 +95,8 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
             if (contains) {
                 return ResultEnum.DATA_EXISTS;
             }
-
-            // 保存tb_app_registration数据
-            Date date1 = new Date(System.currentTimeMillis());
-            po.setCreateTime(date1);
-            po.setUpdateTime(date1);
-            po.setDelFlag(1);
-
-            String appId = UUID.randomUUID().toString();
-            po.setServeCode(appId);
+            /*po.setCreateUser(userInfo.id.toString());*/
+            po.setServeCode(UUID.randomUUID().toString());
 
             // 保存
             boolean save = this.save(po);
@@ -116,7 +104,7 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
 
-            return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return ResultEnum.SUCCESS;
 
         }
         catch (Exception e)
@@ -138,11 +126,12 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
                 return ResultEnum.DATA_NOTEXISTS;
             }
             model.setDelFlag(0);
+
             boolean updateReg = this.updateById(model);
             if (!updateReg) {
                 throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
             }
-            return updateReg ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return ResultEnum.SUCCESS;
         }
         catch (Exception e)
         {
@@ -202,15 +191,7 @@ public class ServiceRegistryImpl extends ServiceImpl<ServiceRegistryMapper, Serv
             {
                 return ResultEnum.NAME_EXISTS;
             }
-
-            /*修改数据*/
-            model.setSequenceNo(dto.getSequenceNo());
-            Date date = new Date(System.currentTimeMillis());
-            model.setUpdateTime(date);
-            model.setIcon(dto.getIcon());
-            model.setServeCnName(dto.getServeCnName());
-            model.setServeEnName(dto.getServeEnName());
-            model.setServeUrl(dto.getServeUrl());
+            model=ServiceRegistryMap.INSTANCES.dtoToPo(dto);
 
             return this.updateById(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }

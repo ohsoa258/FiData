@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @author: JianWenYang
+ * @author JianWenYang
  * @data: 2021/7/06 13:52
  */
 @TableName("tb_service_registry")
@@ -57,5 +57,15 @@ public class ServiceRegistryPO extends BaseEntity {
      *是否删除
      */
     private  int delFlag;
+
+    /**
+     *创建人
+     */
+    private  String createUser;
+
+    /**
+     *更新人
+     */
+    private  String updateUser;
 
 }
