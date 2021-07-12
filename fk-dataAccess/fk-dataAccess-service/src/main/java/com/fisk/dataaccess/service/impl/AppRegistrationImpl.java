@@ -18,6 +18,7 @@ import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.dto.daconfig.*;
 import fk.atlas.api.model.EntityRdbmsDB;
@@ -29,6 +30,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Lock
@@ -65,8 +67,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
-        UserInfo info = userHelper.getLoginUserInfo();
-        Long id = info.id;
+//        UserInfo info = userHelper.getLoginUserInfo();
+//        Long id = info.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -120,12 +122,25 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }*/
 
 
-        AtlasEntityRdbmsDTO dto = new AtlasEntityRdbmsDTO();
-
-        EntityRdbmsDB.entity_rdbms_db entityDb = dto.entityDb;
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
-
+//        AtlasEntityDTO dto = new AtlasEntityDTO();
+//
+////        dto.setAppid();
+//        dto.setAppName("test");
+//        dto.setAppDes("test");
+//        dto.setDriveType("MySQL");
+//        dto.setCreateUser("41");
+//        dto.setHost("192.168.11.130");
+//        dto.setPort("3306");
+//        dto.setDbName("dmp_system_db");
+//        dto.setDbId(UUID.randomUUID().toString());
+//
+//
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
+//
+//        System.out.println(task);
+//
+//
+//        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
