@@ -19,7 +19,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author: DennyHui
@@ -62,7 +61,7 @@ public class BuildAtlasInstanceTaskListener {
         EntityRdbmsDB.attributes_rdbms_db attributes_rdbms_db = new EntityRdbmsDB.attributes_rdbms_db();
         EntityRdbmsDB.attributes_field_rdbms_db attributes_field_rdbms_db = new EntityRdbmsDB.attributes_field_rdbms_db();
         EntityRdbmsDB.instance_rdbms_db instance_rdbms_db = new EntityRdbmsDB.instance_rdbms_db();
-        instance_rdbms_db.guid = UUID.randomUUID().toString();
+        instance_rdbms_db.guid = insRes.data.toString();
         instance_rdbms_db.entityStatus = "ACTIVE";
         attributes_field_rdbms_db.owner = ae.createUser;
         attributes_field_rdbms_db.ownerName = ae.createUser;
@@ -73,7 +72,7 @@ public class BuildAtlasInstanceTaskListener {
         attributes_field_rdbms_db.instance = instance_rdbms_db;
         attributes_rdbms_db.attributes = attributes_field_rdbms_db;
         rdbms_db.entity = attributes_rdbms_db;
-        atlas.atlasBuildDb(rdbms_db);
+        BusinessResult dbRes = atlas.atlasBuildDb(rdbms_db);
         //endregion
         //region 创建实例与数据库的连接
         EntityProcess.entity_rdbms_process entity_rdbms_process = new EntityProcess.entity_rdbms_process();
@@ -87,7 +86,7 @@ public class BuildAtlasInstanceTaskListener {
         inputentity.guid = insRes.data.toString();
         inputentity.typeName = "rdbms_instance";
         inputs.add(inputentity);
-        ouputentity.guid = ae.dbId;
+        ouputentity.guid = dbRes.data.toString();
         ouputentity.typeName = "rdbms_db";
         outputs.add(ouputentity);
         attributes_field_rdbms_process.owner = ae.createUser;
@@ -106,6 +105,9 @@ public class BuildAtlasInstanceTaskListener {
         earps.add(attributes_rdbms_process);
         entity_rdbms_process.entities = earps;
         atlas.atlasBuildProcess(entity_rdbms_process);
+        //endregion
+        //region 返回instance id & DB id
+        //。。。。。。
         //endregion
     }
 }

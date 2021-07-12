@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * @author JianWenYang
- * * @data: 2021/7/06 13:55
  */
 @Mapper
 public interface ServiceRegistryMapper extends BaseMapper<ServiceRegistryPO> {

@@ -46,8 +46,9 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildDb(EntityRdbmsDB.entity_rdbms_db data) {
         BusinessResult resDB;
         try {
-            ac.CreateEntity_rdbms_db(data);
-            resDB = new BusinessResult(true, "atlas DB 创建成功");
+            String res = ac.CreateEntity_rdbms_db(data);
+            res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
+            resDB = BusinessResult.of(true,"atlas db 创建成功",res);
         } catch (Exception e) {
             resDB = new BusinessResult(false, e.getMessage());
             log.error(e.getMessage());
@@ -59,8 +60,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data) {
         BusinessResult resProcess;
         try {
-            ac.CreateEntityProcess(data);
-            resProcess = new BusinessResult(true, "atlas Process 创建成功");
+            resProcess = new BusinessResult(true, ac.CreateEntityProcess(data));
         } catch (Exception e) {
             resProcess = new BusinessResult(false, e.getMessage());
             log.error(e.getMessage());
