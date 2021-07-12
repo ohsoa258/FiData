@@ -47,7 +47,7 @@ public class PublishTaskController {
     }
 
     /**
-     * 在Atlas中生成数据的血缘关系
+     * 在Atlas中生成实例与数据库的血缘关系
      * @param ArDto
      * @return
      */
@@ -60,7 +60,7 @@ public class PublishTaskController {
     }
 
     /**
-     * 在Atlas中生成数据的血缘关系
+     * 在Atlas中生成数据库、表、字段的血缘关系
      * @param ArDto
      * @return
      */

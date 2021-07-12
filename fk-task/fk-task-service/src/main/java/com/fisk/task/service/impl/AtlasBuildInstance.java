@@ -4,9 +4,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.utils.YamlReader;
 import fk.atlas.api.AtlasClient;
-import fk.atlas.api.model.EntityProcess;
-import fk.atlas.api.model.EntityRdbmsDB;
-import fk.atlas.api.model.EnttityRdbmsInstance;
+import fk.atlas.api.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -66,5 +64,31 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
             log.error(e.getMessage());
         }
         return resProcess;
+    }
+    @Override
+    public BusinessResult atlasBuildTable(EntityRdbmsTable.entity_rdbms_table data){
+        BusinessResult resTb;
+        try {
+            String res = ac.CreateEntity_rdbms_table(data);
+            res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
+            resTb = BusinessResult.of(true,"atlas table 创建成功",res);
+        } catch (Exception e) {
+            resTb = new BusinessResult(false, e.getMessage());
+            log.error(e.getMessage());
+        }
+        return resTb;
+    }
+    @Override
+    public BusinessResult atlasBuildTableColumn(EntityRdbmsColumn.entity_rdbms_column data){
+        BusinessResult resCl;
+        try {
+            String res = ac.CreateEntity_rdbms_table_column(data);
+            res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
+            resCl = BusinessResult.of(true,"atlas table 创建成功",res);
+        } catch (Exception e) {
+            resCl = new BusinessResult(false, e.getMessage());
+            log.error(e.getMessage());
+        }
+        return resCl;
     }
 }
