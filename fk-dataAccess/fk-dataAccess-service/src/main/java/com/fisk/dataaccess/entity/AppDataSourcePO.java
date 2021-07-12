@@ -45,43 +45,48 @@ public class AppDataSourcePO extends BaseEntity {
     public String dbName;
 
     /**
+     * 添加数据时后台生成
+     */
+    public String atlasDbId;
+
+    /**
      * 数据源连接字符串
      */
-    private String connectStr;
+    public String connectStr;
 
     /**
      * 连接账号
      */
-    private String connectAccount;
+    public String connectAccount;
 
     /**
      * 连接密码
      */
-    private String connectPwd;
+    public String connectPwd;
 
     /**
      * 验证方式（实时） 登录账号
      */
-    private String realtimeAccount;
+    public String realtimeAccount;
 
     /**
      * 验证方式（实时） 登录密码
      */
-    private String realtimePwd;
+    public String realtimePwd;
 
 
     /**
      * 创建人(id)
      */
-    private String createUser;
+    public String createUser;
 
     /**
      * 更新人(id)
      */
-    private String updateUser;
+    public String updateUser;
 
     /**
      * 逻辑删除(1: 未删除; 0: 删除)
      */
-    private int delFlag;
+    public int delFlag;
 }
