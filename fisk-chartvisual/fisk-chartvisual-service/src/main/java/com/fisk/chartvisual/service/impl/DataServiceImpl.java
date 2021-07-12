@@ -62,7 +62,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         if(query == null){
             return;
         }
-        //redis.del(key);
+        redis.del(key);
         DataSourceConVO model = getDataSourceCon(query.id);
         DataServiceResult res = DbHelper.getDataService(query, model);
         ExcelUtil.uploadExcelAboutUser(response, "test.xlsx", res.data);

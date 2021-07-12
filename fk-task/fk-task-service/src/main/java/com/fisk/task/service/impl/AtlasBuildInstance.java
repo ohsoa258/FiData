@@ -9,6 +9,7 @@ import fk.atlas.api.model.EntityRdbmsDB;
 import fk.atlas.api.model.EnttityRdbmsInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
 
 /**
@@ -28,38 +29,40 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     IAtlasBuildInstance atlas;
 
     @Override
-    public BusinessResult atlasBuildInstance(EnttityRdbmsInstance.entity_rdbms_instance data){
+    public BusinessResult atlasBuildInstance(EnttityRdbmsInstance.entity_rdbms_instance data) {
         BusinessResult resInstance;
         try {
-            ac.CreateEntity_rdbms_instance(data);
-            resInstance=new BusinessResult(true,"atlas instance 创建成功");
+            String res = ac.CreateEntity_rdbms_instance(data);
+            res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
+            resInstance = BusinessResult.of(true, "atlas instance 创建成功", res);
         } catch (Exception e) {
-            resInstance=new BusinessResult(false,e.getMessage());
+            resInstance = new BusinessResult(false, e.getMessage());
             log.error(e.getMessage());
         }
         return resInstance;
     }
+
     @Override
-    public BusinessResult atlasBuildDb(EntityRdbmsDB.entity_rdbms_db data){
+    public BusinessResult atlasBuildDb(EntityRdbmsDB.entity_rdbms_db data) {
         BusinessResult resDB;
         try {
             ac.CreateEntity_rdbms_db(data);
-            resDB=new BusinessResult(true,"atlas DB 创建成功");
+            resDB = new BusinessResult(true, "atlas DB 创建成功");
         } catch (Exception e) {
-            resDB=new BusinessResult(false,e.getMessage());
+            resDB = new BusinessResult(false, e.getMessage());
             log.error(e.getMessage());
         }
         return resDB;
     }
+
     @Override
-    public BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data)
-    {
+    public BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data) {
         BusinessResult resProcess;
         try {
             ac.CreateEntityProcess(data);
-            resProcess=new BusinessResult(true,"atlas Process 创建成功");
+            resProcess = new BusinessResult(true, "atlas Process 创建成功");
         } catch (Exception e) {
-            resProcess=new BusinessResult(false,e.getMessage());
+            resProcess = new BusinessResult(false, e.getMessage());
             log.error(e.getMessage());
         }
         return resProcess;
