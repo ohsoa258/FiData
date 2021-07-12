@@ -1,6 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.utils.YamlReader;
 import fk.atlas.api.AtlasClient;
@@ -25,7 +26,11 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
 
     @Resource
     IAtlasBuildInstance atlas;
-
+    /**
+     * Atlas 创建实例
+     * @param data
+     * @return
+     */
     @Override
     public BusinessResult atlasBuildInstance(EnttityRdbmsInstance.entity_rdbms_instance data) {
         BusinessResult resInstance;
@@ -39,7 +44,11 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
         }
         return resInstance;
     }
-
+    /**
+     * Atlas 创建DB
+     * @param data
+     * @return
+     */
     @Override
     public BusinessResult atlasBuildDb(EntityRdbmsDB.entity_rdbms_db data) {
         BusinessResult resDB;
@@ -53,7 +62,11 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
         }
         return resDB;
     }
-
+    /**
+     * Atlas 创建实体连接
+     * @param data
+     * @return
+     */
     @Override
     public BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data) {
         BusinessResult resProcess;
@@ -65,6 +78,12 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
         }
         return resProcess;
     }
+
+    /**
+     * Atlas 创建表
+     * @param data
+     * @return
+     */
     @Override
     public BusinessResult atlasBuildTable(EntityRdbmsTable.entity_rdbms_table data){
         BusinessResult resTb;
@@ -78,6 +97,12 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
         }
         return resTb;
     }
+
+    /**
+     * atlas 创建表字段
+     * @param data
+     * @return
+     */
     @Override
     public BusinessResult atlasBuildTableColumn(EntityRdbmsColumn.entity_rdbms_column data){
         BusinessResult resCl;
@@ -90,5 +115,23 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
             log.error(e.getMessage());
         }
         return resCl;
+    }
+
+    /**
+     * atlas 删除实体
+     * @param data
+     * @return
+     */
+    @Override
+    public BusinessResult atlasEntityDelete(AtlasEntityDeleteDTO data){
+        BusinessResult resDel;
+        try{
+            String res = ac.DeleteEntity(data.entityId);
+            resDel =new BusinessResult(true,"atlas entity 删除成功");
+        }catch(Exception e){
+            resDel = new BusinessResult(false, e.getMessage());
+            log.error(e.getMessage());
+        }
+        return  resDel;
     }
 }

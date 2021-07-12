@@ -1,6 +1,7 @@
 package com.fisk.task.service;
 
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import fk.atlas.api.model.*;
 
 /**
@@ -14,4 +15,5 @@ public interface IAtlasBuildInstance {
     BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data);
     BusinessResult atlasBuildTable(EntityRdbmsTable.entity_rdbms_table data);
     BusinessResult atlasBuildTableColumn(EntityRdbmsColumn.entity_rdbms_column data);
+    BusinessResult atlasEntityDelete(AtlasEntityDeleteDTO data);
 }

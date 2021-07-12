@@ -21,6 +21,8 @@ public class MqConstants {
 
         public static final String BUILD_DORIS_FLOW= "task.build.doris.flow";
 
+        public static final String BUILD_ATLAS_ENTITYDELETE_FLOW="task.build.atlas.entitydelete.flow";
+
     }
 
     public static final class RouterConstants{
@@ -28,6 +30,7 @@ public class MqConstants {
         public static final String TASK_BUILD_NIFI_ROUTER = "task.build.nifi.#";
         public static final String TASK_BUILD_ATLAS_INSTANCE_ROUTER = "task.build.atlas.instance.#";
         public static final String TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER = "task.build.atlas.tablecolumn.#";
+        public static final String TASK_BUILD_ATLAS_ENTITYDELETE_ROUTER = "task.build.atlas.entitydelete.#";
         public static final String TASK_BUILD_DORIS_ROUTER = "task.build.doris.#";
 
     }
