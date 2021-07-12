@@ -10,7 +10,6 @@ import lombok.Data;
  */
 @Data
 public class AtlasEntityDTO extends MQBaseDTO {
-    public String appid;
     public String appName;
     public String driveType;
     public String createUser;
@@ -18,5 +17,4 @@ public class AtlasEntityDTO extends MQBaseDTO {
     public String host;
     public String port;
     public String dbName;
-    public String dbId;
 }
