@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.dto.*;
@@ -118,20 +117,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }*/
 
 
-        AtlasEntityDTO dto = new AtlasEntityDTO();
-
-        dto.setAppName("test");
-        dto.setDriveType("MySQL");
-        dto.setCreateUser("41");
-        dto.setAppDes("test");
-        dto.setHost("192.168.11.130");
-        dto.setPort("3306");
-        dto.setDbName("dmp_system_db");
-
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
-
-        System.out.println(task);
+//        AtlasEntityDTO dto = new AtlasEntityDTO();
+//
+//        dto.setAppName("test");
+//        dto.setDriveType("MySQL");
+//        dto.setCreateUser("41");
+//        dto.setAppDes("test");
+//        dto.setHost("192.168.11.130");
+//        dto.setPort("3306");
+//        dto.setDbName("dmp_system_db");
+//
+//
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
+//
+//        System.out.println(task);
 
 
 //        int a = 1 / 0;

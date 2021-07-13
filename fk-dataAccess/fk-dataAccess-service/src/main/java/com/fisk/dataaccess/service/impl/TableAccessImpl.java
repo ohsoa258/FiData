@@ -11,8 +11,9 @@ import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
-import fk.atlas.api.model.*;
+import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -654,45 +655,128 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
     @Override
-    public AtlasEntityRdbmsDTO getAtlasBuildTableAndColumn(long id, long appid) {
+    public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
 
-        TableAccessPO po1 = this.query().eq("id", id)
+        TableAccessPO accesspo = this.query().eq("id", id)
                 .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
 
-        AtlasEntityRdbmsDTO dto = new AtlasEntityRdbmsDTO();
+        if (accesspo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
-        // 实例
-        EnttityRdbmsInstance.attributes_rdbms_instance entityInstance =  dto.getEntityInstance().entity;
-        EnttityRdbmsInstance.attributes_field_rdbms_instance instance = entityInstance.attributes;
-//        instance.qualifiedName =
-//        instance.name =
-//        instance.rdbms_type =
-//        instance.platform =
-//        instance.hostname =
-//        instance.port =
-//        instance.protocol =
-//        instance.contact_info =
-//        instance.description =
-//        instance.owner =
-//        instance.ownerName =
+        AppDataSourcePO sourcepo = appDataSourceImpl.query().
+                eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
 
-        // DB
-        EntityRdbmsDB.attributes_rdbms_db entitydb = dto.entityDb.entity;
-        EntityRdbmsDB.attributes_field_rdbms_db db = entitydb.attributes;
+        if (sourcepo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
-        // entityTable
-        EntityRdbmsTable.attributes_rdbms_table entityTable = dto.getEntityTable().entity;
-        EntityRdbmsTable.attributes_field_rdbms_table table = entityTable.attributes;
+        AtlasEntityDbTableColumnDTO dto = new AtlasEntityDbTableColumnDTO();
 
-        // entityColumn
-        EntityRdbmsColumn.attributes_rdbms_column entityColumn = dto.getEntityTableColumn().entity;
-        EntityRdbmsColumn.attributes_field_rdbms_column column = entityColumn.attributes;
+        dto.dbId = sourcepo.getAtlasDbId();
+        dto.tableName = accesspo.getTableName();
+        dto.createUser = accesspo.getCreateUser();
 
-        // entitiesProcess
-        List<EntityProcess.attributes_rdbms_process> entitiesProcess = dto.getEntityProcess().entities;
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag",1)
+                .list();
+
+        if (list.isEmpty()) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        for (TableFieldsPO po : list) {
+
+            AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
+
+            atlasEntityColumnDTO.setColumnName(po.getFieldName());
+            atlasEntityColumnDTO.setComment(po.getFieldDes());
+            if (po.fieldLength == 0) {
+                atlasEntityColumnDTO.setDataType(po.getFieldType());
+            } else {
+
+                atlasEntityColumnDTO.setDataType(po.getFieldType()+"("+po.fieldLength+")");
+            }
+            atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
+
+            columns.add(atlasEntityColumnDTO);
+        }
+
+        dto.columns = columns;
+
+        return dto;
+    }
+
+
+    @Override
+    public DataAccessConfigDTO dataAccessConfig(long id) {
+        DataAccessConfigDTO dto = new DataAccessConfigDTO();
+
+        // app组配置
+        GroupConfig groupConfig = new GroupConfig();
+
+        //任务组配置
+        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+
+        // 数据源jdbc配置
+        DataSourceConfig sourceDsConfig = new DataSourceConfig();
+
+        // 目标源jdbc连接
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+
+        // 表及表sql
+        ProcessorConfig processorConfig = new ProcessorConfig();
+
+        // 1.app组配置
+        // select * from tb_app_registration where id=id and del_flag=1;
+        AppRegistrationPO registrationpo = this.appRegistrationImpl.query()
+                .eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+        if (registrationpo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        groupConfig.setAppName(registrationpo.getAppName());
+        groupConfig.setAppDetails(registrationpo.getAppDes());
+        // TODO: 缺失字段(给个默认值)
+        groupConfig.setNewApp(false);
+
+        // 2.任务组配置
+        taskGroupConfig.setAppName(registrationpo.getAppName());
+        taskGroupConfig.setAppDetails(registrationpo.getAppDes());
+
+        //3.数据源jdbc配置
+        AppDataSourcePO datasourcepo = appDataSourceImpl.query()
+                .eq("appid", id)
+                .eq("del_flag", 1)
+                .one();
+        if (datasourcepo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        sourceDsConfig.setJdbcStr(datasourcepo.getConnectStr());
+//        sourceDsConfig.setType(); // 先硬编码
+        sourceDsConfig.setUser(datasourcepo.getConnectAccount());
+        sourceDsConfig.setPassword(datasourcepo.getConnectPwd());
+
+        // 4.目标源jdbc连接
+
+
+
+        // 5.表及表sql
+
+
+        dto.groupConfig = groupConfig;
+        dto.taskGroupConfig = taskGroupConfig;
+        dto.sourceDsConfig = sourceDsConfig;
+        dto.targetDsConfig = targetDsConfig;
+        dto.processorConfig = processorConfig;
 
         return dto;
     }

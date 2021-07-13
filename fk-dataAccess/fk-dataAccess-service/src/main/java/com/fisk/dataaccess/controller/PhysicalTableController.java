@@ -10,7 +10,8 @@ import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
-import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class PhysicalTableController {
 
     /**
      * 根据是否为实时,查询应用名称集合
+     *
      * @return 返回值
      */
     @GetMapping("/getAppType")
@@ -47,6 +49,7 @@ public class PhysicalTableController {
 
     /**
      * 获取非实时应用名称
+     *
      * @return 返回值
      */
     @GetMapping("/getNonRTName")
@@ -58,6 +61,7 @@ public class PhysicalTableController {
 
     /**
      * 根据应用名称,获取远程数据库的表及表对应的字段
+     *
      * @param appName 请求参数
      * @return 返回值
      */
@@ -65,12 +69,13 @@ public class PhysicalTableController {
     @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
     public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.getTableFields(appName));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getTableFields(appName));
     }
 
 
     /**
      * 添加物理表(实时)
+     *
      * @param tableAccessDTO 请求参数
      * @return 返回值
      */
@@ -83,6 +88,7 @@ public class PhysicalTableController {
 
     /**
      * 修改物理表(实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -94,11 +100,12 @@ public class PhysicalTableController {
 
     /**
      * 添加物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
     @PostMapping("/addNonRealTime")
-    @ApiOperation(value="添加物理表(非实时)")
+    @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
 
         return ResultEntityBuild.build(tableAccess.addNonRealTimeData(dto));
@@ -106,6 +113,7 @@ public class PhysicalTableController {
 
     /**
      * 修改物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -117,6 +125,7 @@ public class PhysicalTableController {
 
     /**
      * 根据id查询数据,回显实时表
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -136,7 +145,7 @@ public class PhysicalTableController {
      */
     @GetMapping("/page")
     @ApiOperation(value = "物理表接口首页分页查询")
-    public ResultEntity<Page<Map<String,Object>>> queryByPage(
+    public ResultEntity<Page<Map<String, Object>>> queryByPage(
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
@@ -146,6 +155,7 @@ public class PhysicalTableController {
 
     /**
      * 删除数据
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -165,11 +175,16 @@ public class PhysicalTableController {
 
 
     @GetMapping("/getAtlasBuildTableAndColumn")
-    @ApiOperation("修改接口的回显数据")
-    public ResultEntity<AtlasEntityRdbmsDTO> getAtlasBuildTableAndColumn(
-            @RequestParam("id") long id,@RequestParam("appid")long appid) {
+    public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
+            @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getAtlasBuildTableAndColumn(id,appid));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getAtlasBuildTableAndColumn(id, appid));
     }
 
+
+    @GetMapping("/dataAccessConfig")
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.dataAccessConfig(id));
+    }
 }
