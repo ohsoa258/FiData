@@ -34,6 +34,7 @@ public class BuildAtlasInstanceTaskListener {
     IAtlasBuildInstance atlas;
 
     public void msg(String dataInfo, Channel channel, Message message) {
+        log.info(dataInfo);
         AtlasEntityDTO ae = JSON.parseObject(dataInfo, AtlasEntityDTO.class);
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
