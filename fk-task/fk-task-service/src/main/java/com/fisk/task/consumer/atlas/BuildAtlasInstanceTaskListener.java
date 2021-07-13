@@ -40,6 +40,7 @@ public class BuildAtlasInstanceTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
+        log.info("data:"+dataInfo);
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         AtlasEntityDTO ae = JSON.parseObject(dataInfo, AtlasEntityDTO.class);
         //设置日期格式
