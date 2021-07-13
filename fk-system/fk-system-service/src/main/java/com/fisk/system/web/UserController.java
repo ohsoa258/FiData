@@ -54,16 +54,16 @@ public class UserController {
     /**
      * 根据用户名和密码查询用户
      *
-     * @param userAccount userAccount
+     * @param username username
      * @param password password
      * @return 用户实体 为null说明不存在
      */
     @GetMapping
     public ResultEntity<Object> queryUser(
-            @RequestParam("userAccount") String userAccount,
+            @RequestParam("username") String username,
             @RequestParam("password") String password)
     {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryUser(userAccount,password));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryUser(username,password));
     }
     /**
      * 编辑用户保存
@@ -79,14 +79,14 @@ public class UserController {
 
     @ApiOperation("删除用户")
     @DeleteMapping("/deleteUser/{id}")
-    public ResultEntity<Object> deleteUser(int id)
+    public ResultEntity<Object> deleteUser(@PathVariable("id") int id)
     {
         return ResultEntityBuild.build(service.deleteUser(id));
     }
 
     @ApiOperation("根据id获取用户详情")
     @GetMapping("/getUser/{id}")
-    public ResultEntity<Object> getUser(int id) {
+    public ResultEntity<Object> getUser(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUser(id));
     }
 

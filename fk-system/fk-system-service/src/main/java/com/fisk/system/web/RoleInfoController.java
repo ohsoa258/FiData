@@ -39,13 +39,13 @@ public class RoleInfoController {
 
     @ApiOperation("删除角色")
     @DeleteMapping("/deleteRole/{id}")
-    public ResultEntity<Object> deleteRole(int id) {
+    public ResultEntity<Object> deleteRole(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteRole(id));
     }
 
     @ApiOperation("根据id获取角色详情")
     @GetMapping("/getRole/{id}")
-    public ResultEntity<Object> getRole(int id) {
+    public ResultEntity<Object> getRole(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleById(id));
     }
 
