@@ -42,4 +42,7 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/atlasBuildTableAndColumn")
     ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityRdbmsDTO ArDto);
+
+    @PostMapping("/publishTask/atlasEntityDelete")
+    ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody String entityId);
 }

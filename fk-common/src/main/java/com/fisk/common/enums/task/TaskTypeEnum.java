@@ -19,7 +19,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * doris create stg&ods table
      */
-    BUILD_DORIS_TASK(2,"Doris生成");
+    BUILD_DORIS_TASK(2,"Doris生成"),
+    /**
+     * atlas 删除实体
+     */
+    BUILD_ATLAS_ENTITYDELETE_TASK(3,"元数据删除");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;
