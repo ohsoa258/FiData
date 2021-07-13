@@ -20,6 +20,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 添加物理表(实时)
+     *
      * @param tableAccessDTO 请求参数
      * @return 返回值
      */
@@ -27,6 +28,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 删除数据
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -34,6 +36,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 添加物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -41,6 +44,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 修改物理表(实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -48,6 +52,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 修改物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -73,6 +78,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据id查询数据,回显实时表
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -87,13 +93,20 @@ public interface ITableAccess extends IService<TableAccessPO> {
     List<TablePyhNameDTO> getTableFields(String appName);
 
     /**
-     *  atlas
+     * atlas
      *
-     * @param id id
+     * @param id    id
      * @param appid appid
      * @return atlas
      */
     AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid);
 
-    DataAccessConfigDTO dataAccessConfig(long id);
+    /**
+     * 提供给nifi的数据
+     *
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return DataAccessConfigDTO
+     */
+    DataAccessConfigDTO dataAccessConfig(long id, long appid);
 }

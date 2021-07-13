@@ -183,8 +183,9 @@ public class PhysicalTableController {
 
 
     @GetMapping("/dataAccessConfig")
-    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id) {
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
+            @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.dataAccessConfig(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.dataAccessConfig(id,appid));
     }
 }

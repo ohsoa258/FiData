@@ -63,8 +63,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
-//        UserInfo info = userHelper.getLoginUserInfo();
-//        Long id = info.id;
+//        UserInfo userInfo = userHelper.getLoginUserInfo();
+//        Long id = userInfo.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -75,6 +75,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po.setCreateTime(date1);
         po.setUpdateTime(date1);
         po.setDelFlag(1);
+//        po.setCreateUser(""+id+"");
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         List<String> appNameList = baseMapper.getAppName();
@@ -101,6 +102,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po1.setCreateTime(date2);
         po1.setUpdateTime(date2);
         po1.setDelFlag(1);
+//        po1.setCreateUser(""+id+"");
 
         int insert = appDataSourceMapper.insert(po1);
         if (insert < 0) {

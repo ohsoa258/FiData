@@ -685,7 +685,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         List<TableFieldsPO> list = tableFieldsImpl.query()
                 .eq("table_access_id", id)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .list();
 
         if (list.isEmpty()) {
@@ -702,7 +702,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 atlasEntityColumnDTO.setDataType(po.getFieldType());
             } else {
 
-                atlasEntityColumnDTO.setDataType(po.getFieldType()+"("+po.fieldLength+")");
+                atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
 
@@ -716,7 +716,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
     @Override
-    public DataAccessConfigDTO dataAccessConfig(long id) {
+    public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
 
         // app组配置
@@ -737,7 +737,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.app组配置
         // select * from tb_app_registration where id=id and del_flag=1;
         AppRegistrationPO registrationpo = this.appRegistrationImpl.query()
-                .eq("id", id)
+                .eq("id", appid)
                 .eq("del_flag", 1)
                 .one();
         if (registrationpo == null) {
@@ -754,7 +754,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         //3.数据源jdbc配置
         AppDataSourcePO datasourcepo = appDataSourceImpl.query()
-                .eq("appid", id)
+                .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
         if (datasourcepo == null) {
@@ -768,9 +768,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 4.目标源jdbc连接
 
 
-
         // 5.表及表sql
+        TableSyncmodePO syncpo = syncmodeImpl.query()
+                .eq("id", id)
+                .one();
 
+        processorConfig.scheduleExpression = syncpo.getCornExpression();
+//        processorConfig.scheduleType =;
 
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
