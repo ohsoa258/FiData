@@ -1,9 +1,12 @@
 package com.fisk.system.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.UserDTO;
+import com.fisk.system.entity.UserPO;
 
 import java.util.List;
 
@@ -63,5 +66,14 @@ public interface IUserService {
      * @return 查询结果
      */
     List<UserDTO> listUserData();
+
+    /**
+     * 查询用户
+     *
+     * @param pages pages
+     * @param size size
+     * @return 查询结果
+     *//*
+    IPage<UserPO> getPageUserData(int pages, int size);*/
 
 }

@@ -36,11 +36,7 @@ public class RoleInfoImpl implements IRoleInfoService{
     @Override
     public List<RoleInfoDTO> listRoleData()
     {
-        List<RoleInfoDTO> result;
-        QueryWrapper<RoleInfoPO> queryWrapper = new QueryWrapper<>();
-        result =RoleInfoMap.INSTANCES.poToDtos(mapper.selectList(queryWrapper));
-        return  result;
-        /*return mapper.roleList();*/
+        return mapper.roleList();
     }
 
     /**

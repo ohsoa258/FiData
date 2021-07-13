@@ -1,0 +1,17 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.system.mapper.UserMapper">
+
+    <select id="userList" resultType="com.fisk.system.dto.UserDTO">
+        select a.id,
+             a.username,
+			 a.email,
+			 a.create_time as createTime,
+			 a.user_account as userAccount,
+			 b.username as createUser
+        from tb_user_info a
+        left join tb_user_info b on a.create_user = b.id
+        where a.del_flag = 1 ORDER BY a.create_time desc
+    </select>
+</mapper>

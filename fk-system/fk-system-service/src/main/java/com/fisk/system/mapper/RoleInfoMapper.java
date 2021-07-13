@@ -17,12 +17,10 @@ import java.util.List;
 public interface RoleInfoMapper extends FKBaseMapper<RoleInfoPO> {
 
     /**
-     * 获取权限下所有数据源连接
+     * 获取所有角色列表
      *
      * @return 查询结果
      */
-    Page<RoleInfoDTO> listRoleData(Page page);
-
     List<RoleInfoDTO> roleList();
 
 }
