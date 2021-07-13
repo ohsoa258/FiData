@@ -1,0 +1,40 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.ApiConfigureMapper">
+
+    <select id="queryData" resultType="java.lang.Object">
+       SELECT
+       <if test="groupList!=null and groupList.size() >0" >
+           <foreach collection="groupList" item="group" separator=",">
+               ${group}
+           </foreach>
+       </if>
+
+        <!--聚合-->
+        <if test="aggregationFieldList!=null and aggregationFieldList.size() >0">
+        ,
+            <foreach collection="aggregationFieldList" item="aggreagation" separator=",">
+                ${aggreagation}
+            </foreach>
+        </if>
+      FROM ${tableName}
+      <!--条件-->
+      <where>
+         <if test="whereList!=null and whereList.size() >0">
+          <foreach collection="whereList" item="where" separator=",">
+              ${where}
+          </foreach>
+         </if>
+      </where>
+
+        <!--分组-->
+      <if test="groupList!=null and groupList.size() >0">
+      GROUP BY
+          <foreach collection="groupList" item="group" separator=",">
+              ${group}
+          </foreach>
+      </if>
+      limit ${offset},${limit}
+    </select>
+</mapper>
