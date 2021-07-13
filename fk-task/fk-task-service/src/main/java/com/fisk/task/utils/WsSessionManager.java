@@ -160,6 +160,16 @@ public class WsSessionManager {
      * @param session session
      * @param msg     msg
      */
+    public static void sendMsgBySession(String msg, Session session) {
+        sendMsg(session, msg, Long.valueOf(session.getId()));
+    }
+
+    /**
+     * 发送消息
+     *
+     * @param session session
+     * @param msg     msg
+     */
     private static void sendMsg(Session session, String msg, Long id) {
         MDCHelper.setClass(WsSessionManager.class.getName());
         MDCHelper.setFunction("sendMsg");
