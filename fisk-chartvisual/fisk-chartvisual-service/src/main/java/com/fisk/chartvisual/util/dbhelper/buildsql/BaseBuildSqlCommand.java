@@ -1,13 +1,16 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
+import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.enums.chartvisual.TableOrderEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -83,15 +86,13 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
                 ColumnDetails valueDetails = values.get(values.size() - 1);
                 orderColumn = valueDetails.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(valueDetails.columnName, arr));
             }
-            str.append(",ROW_NUMBER() OVER (ORDER BY ").append(orderColumn).append(" ").append(query.pagination.ascType).append(") AS RowNumber");
+            str.append(rowNumber(orderColumn, query.pagination.ascType.getName()));
         }
         str.append(" FROM ").append(query.tableName).append(" ");
         //where
         if (query.queryFilters != null) {
             str.append("WHERE 1 = 1 ");
-            query.queryFilters.forEach(e -> {
-                str.append("AND ").append(getColumn(e.columnName, arr)).append(" = '").append(e.value).append("' ");
-            });
+            str.append(queryFilter(query.queryFilters, arr));
         }
         //group
         str.append("GROUP BY ");
@@ -128,7 +129,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         String[] arr = getEscapeStr(type);
         String columns = query.columnDetails.stream()
                 .filter(e -> e.columnType == ColumnTypeEnum.VALUE)
-                .map(e -> "SUM(" + getColumn(e.columnLabel, arr)     + ")" + " as " + getColumn(e.columnLabel, arr))
+                .map(e -> "SUM(" + getColumn(e.columnLabel, arr) + ")" + " as " + getColumn(e.columnLabel, arr))
                 .collect(Collectors.joining(","));
         String sql = baseBuildQueryData(query, type, true);
         return "SELECT " + columns + " FROM (" + sql + ") AS tab";
@@ -142,17 +143,29 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
      * @return 查询语句
      */
     protected String baseBuildQuerySlicer(SlicerQueryObject query, DataSourceTypeEnum type) {
+        String ascType = TableOrderEnum.ASC.getName();
         String[] arr = getEscapeStr(type);
+        String columnName = getColumn(query.columnName, arr);
         StringBuilder str = new StringBuilder();
-        str.append("SELECT ").append(arr[0]).append(query.columnName).append(arr[1]).append(" FROM ").append(query.tableName);
+        str.append("SELECT ");
+        str.append(columnName);
+        if (type == DataSourceTypeEnum.SQLSERVER) {
+            str.append(rowNumber(columnName, ascType));
+        }
+        str.append(" FROM ").append(query.tableName);
         if (query.queryFilters != null) {
             str.append(" WHERE 1 = 1 ");
-            query.queryFilters.forEach(e -> {
-                str.append("AND ").append(arr[0]).append(e.columnName).append(arr[1]).append(" = '").append(e.value).append("' ");
-            });
+            str.append(queryFilter(query.queryFilters, arr));
+        }
+        if (StringUtils.isNotEmpty(query.likeValue)) {
+            str.append("AND ").append(getColumn(query.columnName, arr)).append(" LIKE '%").append(query.likeValue).append("%'");
         }
         str.append(" GROUP BY ");
-        str.append(arr[0]).append(query.columnName).append(arr[1]);
+        str.append(columnName);
+        //order sqlserver的在row_number中已经排序
+        if (type == DataSourceTypeEnum.MYSQL) {
+            str.append(" ORDER BY ").append(columnName).append(" ").append(ascType);
+        }
         return str.toString();
     }
 
@@ -191,5 +204,38 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
         return escapeStr[0] + column + escapeStr[1];
+    }
+
+    /**
+     * 拼接row_number 字段
+     *
+     * @param orderColumn 排序字段
+     * @param orderType   排序条件
+     * @return sql
+     */
+    protected String rowNumber(String orderColumn, String orderType) {
+        return ",ROW_NUMBER() OVER (ORDER BY " + orderColumn + " " + orderType + ") AS RowNumber";
+    }
+
+    /**
+     * 拼接where条件
+     *
+     * @param filter    filter
+     * @param escapeStr 转义字符
+     * @return where
+     */
+    protected String queryFilter(List<ChartQueryFilter> filter, String[] escapeStr) {
+        StringBuilder str = new StringBuilder();
+        filter.forEach(e -> {
+            str.append("AND ");
+            String name = getColumn(e.columnName, escapeStr);
+            if (e.value.size() > 0) {
+                String filterStr = e.value.stream().map(item -> "(" + name + " = '" + item + "')").collect(Collectors.joining(" OR "));
+                str.append("(").append(filterStr).append(")");
+            } else {
+                str.append(name).append(" = '").append(e.value).append("' ");
+            }
+        });
+        return str.toString();
     }
 }

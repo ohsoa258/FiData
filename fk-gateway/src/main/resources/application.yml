@@ -90,8 +90,13 @@ spring:
         predicates:
           - Path=/dataAccess/**
 
-      - id: task-center # 可视化服务
+      - id: task-center # 后台服务
         uri: lb://task-center
+        predicates:
+          - Path=/task/**
+
+      - id: task-center-websocket # websocket
+        uri: lb:ws://task-center
         predicates:
           - Path=/task/**
 
@@ -99,6 +104,7 @@ spring:
         uri: lb://datamodel-service
         predicates:
           - Path=/datamodel/**
+
 
   redis:
     host: 192.168.11.130
