@@ -10,6 +10,9 @@ import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
+import fk.atlas.api.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +42,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Resource
     private TableSyncmodeMapper syncmodeMapper;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
 
     /**
@@ -156,6 +162,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
         po.setId(tpo.getId());
         boolean save3 = syncmodeImpl.save(po);
+
+        // TODO: atlas调用
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask();
+//        System.out.println(task);
+//
+//        int a = 1 / 0;
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -596,6 +608,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+
     /**
      * 删除数据
      *
@@ -637,5 +650,50 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean success = tableFieldsImpl.updateBatchById(list);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+
+    @Override
+    public AtlasEntityRdbmsDTO getAtlasBuildTableAndColumn(long id, long appid) {
+
+        TableAccessPO po1 = this.query().eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+
+        AtlasEntityRdbmsDTO dto = new AtlasEntityRdbmsDTO();
+
+        // 实例
+        EnttityRdbmsInstance.attributes_rdbms_instance entityInstance =  dto.getEntityInstance().entity;
+        EnttityRdbmsInstance.attributes_field_rdbms_instance instance = entityInstance.attributes;
+//        instance.qualifiedName =
+//        instance.name =
+//        instance.rdbms_type =
+//        instance.platform =
+//        instance.hostname =
+//        instance.port =
+//        instance.protocol =
+//        instance.contact_info =
+//        instance.description =
+//        instance.owner =
+//        instance.ownerName =
+
+        // DB
+        EntityRdbmsDB.attributes_rdbms_db entitydb = dto.entityDb.entity;
+        EntityRdbmsDB.attributes_field_rdbms_db db = entitydb.attributes;
+
+        // entityTable
+        EntityRdbmsTable.attributes_rdbms_table entityTable = dto.getEntityTable().entity;
+        EntityRdbmsTable.attributes_field_rdbms_table table = entityTable.attributes;
+
+        // entityColumn
+        EntityRdbmsColumn.attributes_rdbms_column entityColumn = dto.getEntityTableColumn().entity;
+        EntityRdbmsColumn.attributes_field_rdbms_column column = entityColumn.attributes;
+
+        // entitiesProcess
+        List<EntityProcess.attributes_rdbms_process> entitiesProcess = dto.getEntityProcess().entities;
+
+
+        return dto;
     }
 }
