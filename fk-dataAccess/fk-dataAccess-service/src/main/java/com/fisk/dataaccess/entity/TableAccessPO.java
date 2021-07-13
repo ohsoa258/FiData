@@ -23,6 +23,11 @@ public class TableAccessPO extends BaseEntity {
     public long appid;
 
     /**
+     * 添加数据时后台生成
+     */
+    public String atlasTableId;
+
+    /**
      *  物理表名
      */
     public String tableName;

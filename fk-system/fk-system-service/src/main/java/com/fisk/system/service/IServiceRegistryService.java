@@ -11,14 +11,14 @@ import java.util.List;
 /**
  * @author JianwenYang
  */
-public interface IServiceRegistryService extends IService<ServiceRegistryPO> {
+public interface IServiceRegistryService {
 
     /**
      * 获取服务注册树形结构
      *
      * @return 返回值
      */
-    ResultEntity<List<ServiceRegistryDTO>> listServiceRegistry();
+    List<ServiceRegistryDTO> listServiceRegistry();
 
     /**
      * 添加服务注册
@@ -40,7 +40,7 @@ public interface IServiceRegistryService extends IService<ServiceRegistryPO> {
      *
      * @return 返回值
      */
-    ResultEntity<ServiceRegistryDTO> getDataDetail(int id);
+    ServiceRegistryDTO getDataDetail(int id);
 
     /**
      * 修改服务注册树形结构

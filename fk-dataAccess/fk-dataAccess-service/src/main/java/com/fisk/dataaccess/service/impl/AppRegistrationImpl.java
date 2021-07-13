@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
@@ -15,10 +17,8 @@ import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.daconfig.*;
-import fk.atlas.api.model.EntityProcess;
-import fk.atlas.api.model.EntityRdbmsDB;
-import fk.atlas.api.model.EnttityRdbmsInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +49,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private PublishTaskClient publishTaskClient;
 
-    private Date date = new Date(System.currentTimeMillis());
+    @Resource
+    UserHelper userHelper;
 
 
     /**
@@ -61,6 +62,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
+
+//        UserInfo info = userHelper.getLoginUserInfo();
+//        Long id = info.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -113,14 +117,24 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
 
-        EnttityRdbmsInstance.entity_rdbms_instance instanceData = new EnttityRdbmsInstance.entity_rdbms_instance();
-        EntityRdbmsDB.entity_rdbms_db dbData = new EntityRdbmsDB.entity_rdbms_db();
-        EntityProcess.entity_rdbms_process processData = new EntityProcess.entity_rdbms_process();
+
+        AtlasEntityDTO dto = new AtlasEntityDTO();
+
+        dto.setAppName("test");
+        dto.setDriveType("MySQL");
+        dto.setCreateUser("41");
+        dto.setAppDes("test");
+        dto.setHost("192.168.11.130");
+        dto.setPort("3306");
+        dto.setDbName("dmp_system_db");
 
 
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
+
+        System.out.println(task);
 
 
-//        publishTaskClient.publishBuildAtlasInstanceTask(instanceData,dbData,processData,"test");
+        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -208,6 +222,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
 
         // 1.3修改主表数据
+        Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);
         po.setDelFlag(1);
         boolean edit = this.updateById(po);
@@ -421,6 +436,31 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 5.表及表sql
 
         return null;
+    }
+
+
+    @Override
+    public AtlasEntityDTO getAtlasEntity(long id) {
+
+        AtlasEntityDTO dto = new AtlasEntityDTO();
+
+        AppRegistrationPO po1 = this.query().eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+
+        AppDataSourcePO po2 = appDataSourceImpl.query().eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+
+        dto.appName = po1.getAppName();
+        dto.createUser = po1.getCreateUser();
+        dto.appDes = po1.getAppDes();
+        dto.driveType = po2.getDriveType();
+        dto.host = po2.getHost();
+        dto.port = po2.getPort();
+        dto.dbName = po2.getDbName();
+
+        return dto;
     }
 
 }

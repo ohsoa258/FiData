@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +121,12 @@ public class AppRegistrationController {
     public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataAccessConfig(id));
+    }
+
+    @GetMapping("/getAtlasEntity/{id}")
+    public ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAtlasEntity(id));
     }
 
 }

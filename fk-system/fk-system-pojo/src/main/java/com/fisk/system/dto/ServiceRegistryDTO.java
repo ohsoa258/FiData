@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class ServiceRegistryDTO extends BaseDTO {
+public class ServiceRegistryDTO {
 
     public  int id;
 
@@ -60,12 +58,4 @@ public class ServiceRegistryDTO extends BaseDTO {
     */
     public List<ServiceRegistryDTO> dtos;
 
-
-    public ServiceRegistryDTO(BaseEntity entity) {
-        super(entity);
-    }
-
-    public static <T extends BaseEntity> List<ServiceRegistryDTO> convertEntityList(Collection<T> list){
-        return list.stream().map(ServiceRegistryDTO::new).collect(Collectors.toList());
-    }
 }

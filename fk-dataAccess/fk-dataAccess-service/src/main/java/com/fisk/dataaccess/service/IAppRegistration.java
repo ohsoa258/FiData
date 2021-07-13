@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
 import java.util.List;
 
@@ -89,4 +90,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 驱动类型
      */
     List<AppDriveTypeDTO> getDriveType();
+
+    /**
+     * atlas数据
+     *
+     * @param id id
+     * @return 查询结果
+     */
+    AtlasEntityDTO getAtlasEntity(long id);
 }

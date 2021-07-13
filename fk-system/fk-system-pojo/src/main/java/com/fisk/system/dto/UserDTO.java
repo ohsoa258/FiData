@@ -14,19 +14,18 @@ import java.util.stream.Collectors;
  * @author Lock
  */
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class UserDTO extends BaseDTO {
+public class UserDTO {
 
-    private Long id;
-    private String username;
+    public Long id;
 
-    public UserDTO(BaseEntity entity) {
-        super(entity);
-    }
+    public String email;
 
-    public static <T extends BaseEntity> List<UserDTO> convertEntityList(Collection<T> list){
-        return list.stream().map(UserDTO::new).collect(Collectors.toList());
-    }
+    public String userAccount;
+
+    public int errorNumber;
+
+    public String username;
+
+    public String password;
 
 }

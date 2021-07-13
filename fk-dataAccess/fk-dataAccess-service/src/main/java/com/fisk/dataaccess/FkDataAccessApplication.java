@@ -12,7 +12,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * <p>
  * //@EnableJwtVerification
  */
-@SpringBootApplication(scanBasePackages = {"com.fisk.dataaccess", "com.fisk.common.advice", "com.fisk.common.redis"})
+@SpringBootApplication(scanBasePackages = {"com.fisk.dataaccess", "com.fisk.common.advice", "com.fisk.common.redis",
+        "com.fisk.common.user"})
 @MapperScan("com.fisk.dataaccess.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
 public class FkDataAccessApplication {

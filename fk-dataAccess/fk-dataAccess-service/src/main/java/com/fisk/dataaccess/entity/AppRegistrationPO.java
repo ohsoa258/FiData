@@ -18,46 +18,51 @@ public class AppRegistrationPO extends BaseEntity {
      * 主键
      */
     @TableId
-    private long id;
+    public long id;
+
+    /**
+     * 调用atlas时,返回给应用注册的
+     */
+    public String atlasInstanceId;
 
     /**
      * 应用名称
      */
-    private String appName;
+    public String appName;
 
     /**
      * 应用描述
      */
-    private String appDes;
+    public String appDes;
 
     /**
      * 应用类型: 0: 实时应用   1: 非实时应用
      */
-    private int appType;
+    public int appType;
 
     /**
      * 应用负责人
      */
-    private String appPrincipal;
+    public String appPrincipal;
 
     /**
      * 应用负责人邮箱
      */
-    private String appPrincipalEmail;
+    public String appPrincipalEmail;
 
     /**
      * 创建人
      */
-    private String createUser;
+    public String createUser;
 
     /**
      * 更新人
      */
-    private String updateUser;
+    public String updateUser;
 
     /**
      * 逻辑删除(1: 未删除; 0: 删除)
      */
-    private int delFlag;
+    public int delFlag;
 
 }
