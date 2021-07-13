@@ -1,90 +1,157 @@
 package com.fisk.system.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.UserDTO;
-import com.fisk.system.entity.User;
+import com.fisk.system.entity.UserPO;
+import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
-import com.fisk.system.service.UserService;
+import com.fisk.system.service.IUserService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl implements IUserService {
 
     @Resource
     private BCryptPasswordEncoder passwordEncoder;
+    @Resource
+    UserHelper userHelper;
+    @Resource
+    UserMapper mapper;
 
     /**
      * 校验手机号或用户名是否存在
      *
      * @param data 用户名或手机号
-     * @param type 数据类型：1是用户名；2是手机；其它是参数有误
      * @return true：可以使用; false：不可使用
      */
     @Override
-    public Boolean exist(String data, Integer type) {
+    public Boolean exist(String data) {
 
-        // type只能是1,2 type=2时,手机号必须符合格式要求(测试阶段不要求)
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUserAccount, data);
+        UserPO po = mapper.selectOne(queryWrapper);
+        return  po==null?false:true;
+    }
 
-        int a = 1, b = 2;
-
-        if (type != a && type != b) {
-
-            throw new FkException(ResultEnum.PARAMTER_ERROR);
-        }
-
-        return this.query()
-                .eq(type == 1, "username", data)
-                .eq(type == 2, "phone", data)
-                .count() == 1;// 只查询一条,为1即存在,0就是无数据
+    @Override
+    public List<UserDTO> listUserData()
+    {
+        List<UserDTO> result;
+        QueryWrapper<UserPO>queryWrapper = new QueryWrapper<>();
+        result = UserMap.INSTANCES.poToDtos(mapper.selectList(queryWrapper));
+        return  result;
     }
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void register(User user) {
+    public ResultEnum register(UserDTO dto) {
 
-        // 1.对密码进行加密
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+       try
+       {
+           //1.判断用户名是否已存在
+           QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+           queryWrapper.lambda()
+                   .eq(UserPO::getUserAccount, dto.userAccount);
+           UserPO data = mapper.selectOne(queryWrapper);
+           if (data != null) {
+               return ResultEnum.NAME_EXISTS;
+           }
+           // 2.对密码进行加密
+           dto.password=passwordEncoder.encode(dto.getPassword());
+           UserInfo userInfo = userHelper.getLoginUserInfo();
+           UserPO po= UserMap.INSTANCES.dtoToPo(dto);
+           po.createUser = userInfo.id.toString();
+           // 3.写入数据库
+           return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+       }
+       catch (Exception e)
+       {
 
-        // 2.写入数据库
-        this.save(user);
+       }
+       return  ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public UserDTO getUser(int id)
+    {
+        UserDTO po=UserMap.INSTANCES.poToDto(mapper.selectById(id));
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return po;
+    }
+
+    @Override
+    public ResultEnum deleteUser(int id)
+    {
+        UserPO model = mapper.selectById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        model.updateUser=userInfo.id.toString();
+        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum updateUser(UserDTO dto)
+    {
+        UserPO model = mapper.selectById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(UserPO::getUserAccount, dto.userAccount);
+        UserPO data = mapper.selectOne(queryWrapper);
+        if (data != null && data.id != dto.id) {
+            return ResultEnum.NAME_EXISTS;
+        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        model.email=dto.email;
+        model.username=dto.username;
+        model.updateUser=userInfo.id.toString();
+        return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
-     * 登录: 根据用户名和密码查询用户
+     * 登录: 根据用户名和密码查询用户?
      *
-     * @param username username
+     * @param userAccount userAccount
      * @param password password
      * @return 执行结果
      */
     @Override
-    public ResultEntity<UserDTO> queryUser(String username, String password) {
+    public UserDTO queryUser(String userAccount, String password) {
 
         // 1.根据用户名查询用户,不能根据密码,参数是明文,数据库中的是加密后的
-        User user = this.query().eq("username", username).one();
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUserAccount, userAccount);
+        UserPO po = mapper.selectOne(queryWrapper);
         // 2.判断是否存在
-        if (user == null) {
+        if (po == null) {
             // 用户名错误
-            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
         // 3.校验密码(原理)先根据密文推算出盐值,然后明文+盐值,密码,再次比较新密文和密文
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, po.getPassword())) {
             // 密码错误
-            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
         }
         // 4.转换DTO
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, new UserDTO(user));
+        return UserMap.INSTANCES.poToDto(po);
     }
 }

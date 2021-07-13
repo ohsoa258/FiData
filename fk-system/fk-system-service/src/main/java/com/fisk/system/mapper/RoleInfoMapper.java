@@ -8,6 +8,8 @@ import com.fisk.system.entity.RoleInfoPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -20,5 +22,7 @@ public interface RoleInfoMapper extends FKBaseMapper<RoleInfoPO> {
      * @return 查询结果
      */
     Page<RoleInfoDTO> listRoleData(Page page);
+
+    List<RoleInfoDTO> roleList();
 
 }
