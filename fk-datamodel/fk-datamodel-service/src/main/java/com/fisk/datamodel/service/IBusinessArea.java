@@ -13,6 +13,7 @@ import java.util.Map;
  */
 public interface IBusinessArea extends IService<BusinessAreaPO> {
 
+
     /**
      * 添加业务域
      *
