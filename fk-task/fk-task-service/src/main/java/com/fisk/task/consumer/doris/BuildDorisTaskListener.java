@@ -5,7 +5,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IBuildTaskService;
@@ -37,7 +37,7 @@ public class BuildDorisTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        TableInfoDTO dto = JSON.parseObject(dataInfo, TableInfoDTO.class);
+        AtlasEntityDbTableColumnDTO dto = JSON.parseObject(dataInfo, AtlasEntityDbTableColumnDTO.class);
         StringBuilder sql = new StringBuilder();
         String tableName = dto.tableName;
         String stg_table = "stg_" + dto.tableName;
@@ -53,7 +53,7 @@ public class BuildDorisTaskListener {
             if (l.isKey.equals("1")) {
                 sqlDistributed.append(l.columnName);
             }
-            sqlFileds.append(l.columnName + " " + l.type + " comment " + "'" + l.comment + "' ,");
+            sqlFileds.append(l.columnName + " " + l.dataType + " comment " + "'" + l.comment + "' ,");
             sqlAggregate.append(l.columnName + ",");
             sqlSelectStrBuild.append(l.columnName + ",");
         });

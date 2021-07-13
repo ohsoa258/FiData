@@ -3,6 +3,7 @@ package com.fisk.task.consumer.atlas;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
@@ -36,7 +37,7 @@ public class BuildAtlasInstanceTaskListener {
     IAtlasBuildInstance atlas;
 
     @RabbitHandler
-    @MQConsumerLog
+    @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         log.info("dataInfo:"+dataInfo);
         AtlasEntityDTO ae = JSON.parseObject(dataInfo, AtlasEntityDTO.class);

@@ -3,6 +3,7 @@ package com.fisk.task.consumer.atlas;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
@@ -35,7 +36,7 @@ public class BuildAtalsTableAndColumnTaskListener {
     IDorisBuild doris;
 
     @RabbitHandler
-    @MQConsumerLog
+    @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(dataInfo, AtlasEntityDbTableColumnDTO.class);
         //设置日期格式
