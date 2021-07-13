@@ -33,9 +33,8 @@ public class ServiceRegistryController {
      */
     @GetMapping("/getList")
     @ApiOperation(value = "获取服务注册列表")
-    public ResultEntity<List<ServiceRegistryDTO>> getList() {
-        ResultEntity<List<ServiceRegistryDTO>> data = service.listServiceRegistry();
-        return data;
+    public ResultEntity<Object> getList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listServiceRegistry());
     }
 
     /**
@@ -68,15 +67,16 @@ public class ServiceRegistryController {
      */
     @GetMapping("/getData/{id}")
     @ApiOperation(value = "回显数据: 根据id查询(url拼接)")
-    public ResultEntity<ServiceRegistryDTO> getData(
-            @PathVariable("id") int id) {
-        return  service.getDataDetail(id);
+    public ResultEntity<Object> getData(
+            @PathVariable("id") int id)
+    {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataDetail(id));
     }
 
     @PutMapping("/edit")
     @ApiOperation(value = "修改服务注册(对象)")
-    public ResultEntity<Object> editData(@RequestBody ServiceRegistryDTO dto) {
-
+    public ResultEntity<Object> editData(@RequestBody ServiceRegistryDTO dto)
+    {
         return ResultEntityBuild.build(service.updateServiceRegistry(dto));
     }
 

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.constants.RegexPatterns;
 import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,17 +18,20 @@ import javax.validation.constraints.Pattern;
  */
 @TableName("tb_user_info")
 @Data
-@EqualsAndHashCode(callSuper = false)
-public class User extends BaseEntity {
-
-    @TableId
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class UserPO extends BasePO {
 
     @NotNull(message = "用户名不能为空")
-    private String username;
+    public String username;
 
     @NotNull(message = "密码不能为空")
     @Pattern(regexp = RegexPatterns.PASSWORD_REGEX, message = "密码格式不正确")
-    private String password;
+    public String password;
+
+    public String email;
+
+    public String userAccount;
+
+    public String errorNumber;
 
 }

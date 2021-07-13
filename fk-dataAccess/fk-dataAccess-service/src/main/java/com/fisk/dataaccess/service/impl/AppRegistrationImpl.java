@@ -8,7 +8,6 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
@@ -19,9 +18,7 @@ import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
-import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import com.fisk.task.dto.daconfig.*;
-import fk.atlas.api.model.EntityRdbmsDB;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +27,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author Lock
@@ -122,25 +118,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }*/
 
 
-//        AtlasEntityDTO dto = new AtlasEntityDTO();
-//
-////        dto.setAppid();
-//        dto.setAppName("test");
-//        dto.setAppDes("test");
-//        dto.setDriveType("MySQL");
-//        dto.setCreateUser("41");
-//        dto.setHost("192.168.11.130");
-//        dto.setPort("3306");
-//        dto.setDbName("dmp_system_db");
-//        dto.setDbId(UUID.randomUUID().toString());
-//
-//
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
-//
-//        System.out.println(task);
-//
-//
-//        int a = 1 / 0;
+        AtlasEntityDTO dto = new AtlasEntityDTO();
+
+        dto.setAppName("test");
+        dto.setDriveType("MySQL");
+        dto.setCreateUser("41");
+        dto.setAppDes("test");
+        dto.setHost("192.168.11.130");
+        dto.setPort("3306");
+        dto.setDbName("dmp_system_db");
+
+
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
+
+        System.out.println(task);
+
+
+        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -442,6 +436,31 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 5.表及表sql
 
         return null;
+    }
+
+
+    @Override
+    public AtlasEntityDTO getAtlasEntity(long id) {
+
+        AtlasEntityDTO dto = new AtlasEntityDTO();
+
+        AppRegistrationPO po1 = this.query().eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+
+        AppDataSourcePO po2 = appDataSourceImpl.query().eq("id", id)
+                .eq("del_flag", 1)
+                .one();
+
+        dto.appName = po1.getAppName();
+        dto.createUser = po1.getCreateUser();
+        dto.appDes = po1.getAppDes();
+        dto.driveType = po2.getDriveType();
+        dto.host = po2.getHost();
+        dto.port = po2.getPort();
+        dto.dbName = po2.getDbName();
+
+        return dto;
     }
 
 }
