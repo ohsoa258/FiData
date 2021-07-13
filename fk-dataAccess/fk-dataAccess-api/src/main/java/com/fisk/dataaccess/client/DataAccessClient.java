@@ -3,6 +3,7 @@ package com.fisk.dataaccess.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +22,8 @@ public interface DataAccessClient {
      * @param id appid
      * @return 执行结果
      */
-    @GetMapping("/appRegistration/dataAccess")
-    ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id);
+    @GetMapping("/physicalTable/dataAccessConfig")
+    ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id);
 
     /**
      * 元数据实例&DB构建

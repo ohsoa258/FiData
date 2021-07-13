@@ -11,6 +11,7 @@ import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -180,4 +181,10 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getAtlasBuildTableAndColumn(id, appid));
     }
 
+
+    @GetMapping("/dataAccessConfig")
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.dataAccessConfig(id));
+    }
 }
