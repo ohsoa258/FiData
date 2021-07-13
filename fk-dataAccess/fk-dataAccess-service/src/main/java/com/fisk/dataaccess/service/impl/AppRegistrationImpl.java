@@ -120,10 +120,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         AtlasEntityDTO dto = new AtlasEntityDTO();
 
-        dto.setAppName("test");
+        dto.setAppName("test0001");
         dto.setDriveType("MySQL");
         dto.setCreateUser("41");
-        dto.setAppDes("test");
+        dto.setAppDes("test0001");
         dto.setHost("192.168.11.130");
         dto.setPort("3306");
         dto.setDbName("dmp_system_db");
@@ -134,7 +134,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         System.out.println(task);
 
 
-        int a = 1 / 0;
+//        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
