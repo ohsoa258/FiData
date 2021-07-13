@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
+import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
@@ -91,9 +92,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         //where
         if (query.queryFilters != null) {
             str.append("WHERE 1 = 1 ");
-            query.queryFilters.forEach(e -> {
-                str.append("AND ").append(getColumn(e.columnName, arr)).append(" = '").append(e.value).append("' ");
-            });
+            str.append(queryFilter(query.queryFilters, arr));
         }
         //group
         str.append("GROUP BY ");
@@ -154,11 +153,9 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             str.append(rowNumber(columnName, ascType));
         }
         str.append(" FROM ").append(query.tableName);
-        str.append(" WHERE 1 = 1 ");
         if (query.queryFilters != null) {
-            query.queryFilters.forEach(e -> {
-                str.append("AND ").append(getColumn(e.columnName, arr)).append(" = '").append(e.value).append("' ");
-            });
+            str.append(" WHERE 1 = 1 ");
+            str.append(queryFilter(query.queryFilters, arr));
         }
         if (StringUtils.isNotEmpty(query.likeValue)) {
             str.append("AND ").append(getColumn(query.columnName, arr)).append(" LIKE '%").append(query.likeValue).append("%'");
@@ -166,7 +163,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         str.append(" GROUP BY ");
         str.append(columnName);
         //order sqlserver的在row_number中已经排序
-        if(type == DataSourceTypeEnum.MYSQL) {
+        if (type == DataSourceTypeEnum.MYSQL) {
             str.append(" ORDER BY ").append(columnName).append(" ").append(ascType);
         }
         return str.toString();
@@ -209,7 +206,36 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         return escapeStr[0] + column + escapeStr[1];
     }
 
+    /**
+     * 拼接row_number 字段
+     *
+     * @param orderColumn 排序字段
+     * @param orderType   排序条件
+     * @return sql
+     */
     protected String rowNumber(String orderColumn, String orderType) {
         return ",ROW_NUMBER() OVER (ORDER BY " + orderColumn + " " + orderType + ") AS RowNumber";
+    }
+
+    /**
+     * 拼接where条件
+     *
+     * @param filter    filter
+     * @param escapeStr 转义字符
+     * @return where
+     */
+    protected String queryFilter(List<ChartQueryFilter> filter, String[] escapeStr) {
+        StringBuilder str = new StringBuilder();
+        filter.forEach(e -> {
+            str.append("AND ");
+            String name = getColumn(e.columnName, escapeStr);
+            if (e.value.size() > 0) {
+                String filterStr = e.value.stream().map(item -> "(" + name + " = '" + item + "')").collect(Collectors.joining(" OR "));
+                str.append("(").append(filterStr).append(")");
+            } else {
+                str.append(name).append(" = '").append(e.value).append("' ");
+            }
+        });
+        return str.toString();
     }
 }

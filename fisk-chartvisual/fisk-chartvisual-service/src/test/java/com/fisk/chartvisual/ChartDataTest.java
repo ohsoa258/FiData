@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 测试报表数据获取
@@ -116,7 +117,7 @@ public class ChartDataTest {
         query.queryFilters = new ArrayList<ChartQueryFilter>() {{
             add(new ChartQueryFilter() {{
                 columnName = "type";
-                value = "智能发现";
+                value = Arrays.asList("智能发现");
             }});
         }};
         DataServiceResult res = dbService.query(query);
@@ -160,7 +161,7 @@ public class ChartDataTest {
         query.queryFilters = new ArrayList<ChartQueryFilter>() {{
             add(new ChartQueryFilter() {{
                 columnName = "type";
-                value = "智能发现";
+                value = Arrays.asList("智能发现");
             }});
         }};
         DataServiceResult res = dbService.query(query);
@@ -330,7 +331,7 @@ public class ChartDataTest {
         query.queryFilters = new ArrayList<ChartQueryFilter>() {{
             add(new ChartQueryFilter() {{
                 columnName = "TypeName";
-                value = "主动上报";
+                value = Arrays.asList("智能发现");
             }});
         }};
         DataServiceResult res = dbService.query(query);
@@ -374,7 +375,7 @@ public class ChartDataTest {
         query.queryFilters = new ArrayList<ChartQueryFilter>() {{
             add(new ChartQueryFilter() {{
                 columnName = "TypeName";
-                value = "主动上报";
+                value = Arrays.asList("智能发现");
             }});
         }};
         DataServiceResult res = dbService.query(query);
