@@ -7,7 +7,7 @@ import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
-import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -92,5 +92,5 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param appid appid
      * @return atlas
      */
-    AtlasEntityRdbmsDTO getAtlasBuildTableAndColumn(long id, long appid);
+    AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid);
 }

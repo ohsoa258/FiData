@@ -2,6 +2,7 @@ package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,5 +32,9 @@ public interface DataAccessClient {
      */
     @GetMapping("/appRegistration/getAtlasEntity/{id}")
     ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id);
+
+    @GetMapping("/physicalTable/getAtlasBuildTableAndColumn")
+    ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
+            @RequestParam("id") long id, @RequestParam("appid") long appid);
 
 }

@@ -11,8 +11,8 @@ import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
-import fk.atlas.api.model.*;
+import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -654,45 +654,43 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
     @Override
-    public AtlasEntityRdbmsDTO getAtlasBuildTableAndColumn(long id, long appid) {
+    public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
 
         TableAccessPO po1 = this.query().eq("id", id)
                 .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
 
-        AtlasEntityRdbmsDTO dto = new AtlasEntityRdbmsDTO();
+        AppDataSourcePO sourcepo = appDataSourceImpl.query().
+                eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
 
-        // 实例
-        EnttityRdbmsInstance.attributes_rdbms_instance entityInstance =  dto.getEntityInstance().entity;
-        EnttityRdbmsInstance.attributes_field_rdbms_instance instance = entityInstance.attributes;
-//        instance.qualifiedName =
-//        instance.name =
-//        instance.rdbms_type =
-//        instance.platform =
-//        instance.hostname =
-//        instance.port =
-//        instance.protocol =
-//        instance.contact_info =
-//        instance.description =
-//        instance.owner =
-//        instance.ownerName =
+        AtlasEntityDbTableColumnDTO dto = new AtlasEntityDbTableColumnDTO();
 
-        // DB
-        EntityRdbmsDB.attributes_rdbms_db entitydb = dto.entityDb.entity;
-        EntityRdbmsDB.attributes_field_rdbms_db db = entitydb.attributes;
+        dto.dbId = sourcepo.getAtlasDbId();
+        dto.tableName = po1.getTableName();
+        dto.createUser = po1.getCreateUser();
 
-        // entityTable
-        EntityRdbmsTable.attributes_rdbms_table entityTable = dto.getEntityTable().entity;
-        EntityRdbmsTable.attributes_field_rdbms_table table = entityTable.attributes;
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
-        // entityColumn
-        EntityRdbmsColumn.attributes_rdbms_column entityColumn = dto.getEntityTableColumn().entity;
-        EntityRdbmsColumn.attributes_field_rdbms_column column = entityColumn.attributes;
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .list();
 
-        // entitiesProcess
-        List<EntityProcess.attributes_rdbms_process> entitiesProcess = dto.getEntityProcess().entities;
+        for (TableFieldsPO po : list) {
 
+            AtlasEntityColumnDTO dto1 = new AtlasEntityColumnDTO();
+
+            dto1.setColumnName(po.getFieldName());
+            dto1.setComment(po.getFieldDes());
+            dto1.setDataType(po.getFieldType());
+            dto1.setIsKey("" + po.getIsPrimarykey() + "");
+
+            columns.add(dto1);
+        }
+
+        dto.columns = columns;
 
         return dto;
     }
