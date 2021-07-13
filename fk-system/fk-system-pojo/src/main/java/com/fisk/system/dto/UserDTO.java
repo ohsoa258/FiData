@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,10 +23,12 @@ public class UserDTO {
 
     public String userAccount;
 
-    public int errorNumber;
-
     public String username;
 
     public String password;
+
+    public Date createTime;
+
+    public String createUser;
 
 }
