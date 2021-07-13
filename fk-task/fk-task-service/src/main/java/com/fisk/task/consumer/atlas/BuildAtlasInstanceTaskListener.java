@@ -3,7 +3,9 @@ package com.fisk.task.consumer.atlas;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
@@ -36,9 +38,9 @@ public class BuildAtlasInstanceTaskListener {
     IAtlasBuildInstance atlas;
 
     @RabbitHandler
-    @MQConsumerLog
+    @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        log.info("dataInfo:"+dataInfo);
+        AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         AtlasEntityDTO ae = JSON.parseObject(dataInfo, AtlasEntityDTO.class);
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -60,6 +62,7 @@ public class BuildAtlasInstanceTaskListener {
         EnttityRdbmsInstance.entity_rdbms_instance eri = new EnttityRdbmsInstance.entity_rdbms_instance();
         eri.entity = ari;
         BusinessResult insRes = atlas.atlasBuildInstance(eri);
+        awbd.appId = insRes.data.toString();
         //endregion
         //region 创建DB
         EntityRdbmsDB.entity_rdbms_db rdbms_db = new EntityRdbmsDB.entity_rdbms_db();
@@ -78,6 +81,7 @@ public class BuildAtlasInstanceTaskListener {
         attributes_rdbms_db.attributes = attributes_field_rdbms_db;
         rdbms_db.entity = attributes_rdbms_db;
         BusinessResult dbRes = atlas.atlasBuildDb(rdbms_db);
+        awbd.dbId = dbRes.data.toString();
         //endregion
         //region 创建实例与数据库的连接
         EntityProcess.entity_rdbms_process entity_rdbms_process = new EntityProcess.entity_rdbms_process();
