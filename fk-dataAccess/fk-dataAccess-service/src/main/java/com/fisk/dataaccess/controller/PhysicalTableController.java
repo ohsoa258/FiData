@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.task.dto.atlas.AtlasEntityRdbmsDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -161,5 +162,14 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS*//*,tableAccess.listTableAndField(appName)*//*);
     }*/
+
+
+    @GetMapping("/getAtlasBuildTableAndColumn")
+    @ApiOperation("修改接口的回显数据")
+    public ResultEntity<AtlasEntityRdbmsDTO> getAtlasBuildTableAndColumn(
+            @RequestParam("id") long id,@RequestParam("appid")long appid) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getAtlasBuildTableAndColumn(id,appid));
+    }
 
 }

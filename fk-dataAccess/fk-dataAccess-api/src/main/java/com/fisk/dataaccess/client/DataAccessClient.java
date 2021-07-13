@@ -21,13 +21,13 @@ public interface DataAccessClient {
      * @return 执行结果
      */
     @GetMapping("/appRegistration/dataAccess")
-    Long dataAccessConfig(@RequestParam("appid") long id);
+    ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id);
 
     /**
-     * 调用
+     * 元数据实例&DB构建
      *
-     * @param id
-     * @return
+     * @param id appid
+     * @return 执行结果
      */
     @GetMapping("/appRegistration/getAtlasEntity/{id}")
     ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id);

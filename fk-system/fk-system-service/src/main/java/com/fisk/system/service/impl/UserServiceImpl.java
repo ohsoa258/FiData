@@ -129,17 +129,17 @@ public class UserServiceImpl implements IUserService {
     /**
      * 登录: 根据用户名和密码查询用户?
      *
-     * @param userAccount userAccount
+     * @param username username
      * @param password password
      * @return 执行结果
      */
     @Override
-    public UserDTO queryUser(String userAccount, String password) {
+    public UserDTO queryUser(String username, String password) {
 
         // 1.根据用户名查询用户,不能根据密码,参数是明文,数据库中的是加密后的
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(UserPO::getUserAccount, userAccount);
+                .eq(UserPO::getUsername, username);
         UserPO po = mapper.selectOne(queryWrapper);
         // 2.判断是否存在
         if (po == null) {

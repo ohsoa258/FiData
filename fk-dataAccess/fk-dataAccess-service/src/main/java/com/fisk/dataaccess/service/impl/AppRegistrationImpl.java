@@ -134,7 +134,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         System.out.println(task);
 
 
-        int a = 1 / 0;
+//        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
