@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 
+
 /**
  * @author Lock
  * @date 2021/5/17 17:16
@@ -44,13 +45,15 @@ public class LoginFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        // 白名单
-        String whiteList = "/v2/api-docs";
-
-        // 判断请求路径是否在白名单中
-        if (request.getPath().value().contains(whiteList)) {
+        // 判断是不是swagger
+        if (request.getPath().value().contains(SystemConstants.GATEWAY_SWAGGER_WHITELIST)) {
             return chain.filter(exchange);
         }
+        // 判断是不是websocket
+        if (SystemConstants.WEBSOCKET.equals(exchange.getRequest().getHeaders().getUpgrade())) {
+            return chain.filter(exchange);
+        }
+        // 判断是否在白名单中
         ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());
         if (res.code == ResultEnum.SUCCESS.getCode() && res.data) {
             return chain.filter(exchange);
@@ -97,6 +100,11 @@ public class LoginFilter implements GlobalFilter, Ordered {
 
     private Mono<Void> buildResult(ServerHttpResponse response, ServerWebExchange exchange, String str) {
         return response.writeWith(Mono.just(buildMessage(response, str)));
+    }
+
+    private static String convertHttpToWs(String scheme) {
+        scheme = scheme.toLowerCase();
+        return "http".equals(scheme) ? "ws" : "https".equals(scheme) ? "wss" : scheme;
     }
 
     private DataBuffer buildMessage(ServerHttpResponse response, String str) {

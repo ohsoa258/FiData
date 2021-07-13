@@ -60,7 +60,11 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
 
     @Override
     public String buildQuerySlicer(SlicerQueryObject query) {
-        return baseBuildQuerySlicer(query, dsType);
+        String sql = baseBuildQuerySlicer(query, dsType);
+        if (query.pagination != null) {
+            return paginationSql(sql, query.columnName, query.pagination.pageNum, query.pagination.pageSize);
+        }
+        return sql;
     }
 
     /**
@@ -72,6 +76,18 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
      */
     private String paginationSql(String sql, ChartQueryObject query) {
         return "SELECT TOP " + query.pagination.pageSize + " * FROM (" + sql + ") AS tab WHERE RowNumber > " + (query.pagination.pageNum - 1) * query.pagination.pageSize;
+    }
 
+    /**
+     * sql追加分页
+     *
+     * @param sql        查询语句
+     * @param columnName 字段名
+     * @param pageNum    页码
+     * @param pageSize   条数
+     * @return 带分页的sql
+     */
+    private String paginationSql(String sql, String columnName, int pageNum, int pageSize) {
+        return "SELECT TOP " + pageSize + " " + columnName + " FROM (" + sql + ") AS tab WHERE RowNumber > " + (pageNum - 1) * pageSize;
     }
 }

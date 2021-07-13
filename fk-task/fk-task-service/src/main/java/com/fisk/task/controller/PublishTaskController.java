@@ -4,7 +4,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
-import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
@@ -78,7 +78,7 @@ public class PublishTaskController {
     }
 
     @PostMapping("/atlasEntityDelete")
-    public ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody AtlasEntityDeleteDTO entityId) {
+    public ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody AtlasEntityDbTableColumnDTO entityId) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_ENTITYDELETE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,

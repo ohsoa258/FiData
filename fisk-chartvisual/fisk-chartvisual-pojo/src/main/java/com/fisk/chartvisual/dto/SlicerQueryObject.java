@@ -1,6 +1,5 @@
 package com.fisk.chartvisual.dto;
 
-import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -16,5 +15,7 @@ public class SlicerQueryObject {
     @NotNull
     public String tableName;
     public String columnName;
+    public String likeValue;
     public List<ChartQueryFilter> queryFilters;
+    public PaginationQuery pagination;
 }

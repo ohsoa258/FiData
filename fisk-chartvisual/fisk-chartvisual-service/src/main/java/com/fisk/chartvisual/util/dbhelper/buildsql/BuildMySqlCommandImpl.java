@@ -52,12 +52,17 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
 
     @Override
     public String buildQuerySlicer(SlicerQueryObject query) {
-        return baseBuildQuerySlicer(query, dsType);
+        String sql = baseBuildQuerySlicer(query, dsType);
+        if (query.pagination != null) {
+            return paginationSql(sql, query.pagination.pageNum, query.pagination.pageSize);
+        }
+        return sql;
     }
 
     /**
      * sql追加分页
-     * @param sql 查询语句
+     *
+     * @param sql   查询语句
      * @param query 查询对象
      * @return 带分页的sql
      */
@@ -72,4 +77,18 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
         sql += " LIMIT " + (query.pagination.pageNum - 1) * query.pagination.pageSize + "," + query.pagination.pageSize;
         return sql;
     }
+
+    /**
+     * sql追加分页
+     *
+     * @param sql      查询语句
+     * @param pageNum  页码
+     * @param pageSize 分页条数
+     * @return 带分页的sql
+     */
+    private String paginationSql(String sql, int pageNum, int pageSize) {
+        sql += " LIMIT " + (pageNum - 1) * pageSize + "," + pageSize;
+        return sql;
+    }
+
 }

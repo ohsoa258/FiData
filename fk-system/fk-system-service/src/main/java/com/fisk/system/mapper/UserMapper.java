@@ -1,10 +1,10 @@
 package com.fisk.system.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.fisk.system.entity.User;
+import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.system.entity.UserPO;
 
 /**
  * @author Lock
  */
-public interface UserMapper extends BaseMapper<User> {
+public interface UserMapper extends FKBaseMapper<UserPO> {
 }

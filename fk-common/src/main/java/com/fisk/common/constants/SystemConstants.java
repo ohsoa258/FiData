@@ -5,6 +5,10 @@ package com.fisk.common.constants;
  */
 public class SystemConstants {
 
+    public static final String GATEWAY_SWAGGER_WHITELIST = "/v2/api-docs";
+
+    public static final String WEBSOCKET = "websocket";
+
     public static final String BUILD_SQL_REPLACE_STR = "@parameter";
 
     public static final String AUTH_TOKEN_HEADER = "Bearer ";
