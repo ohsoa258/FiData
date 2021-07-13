@@ -1,5 +1,6 @@
 package com.fisk.task.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -57,6 +58,7 @@ public class PublishTaskController {
      */
     @PostMapping("/atlasBuildInstance")
     public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityDTO ArDto) {
+        log.debug(JSON.toJSONString(ArDto));
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,

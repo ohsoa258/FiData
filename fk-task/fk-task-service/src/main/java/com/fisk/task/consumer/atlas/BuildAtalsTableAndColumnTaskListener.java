@@ -5,6 +5,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.service.IDorisBuild;
 import com.rabbitmq.client.Channel;
@@ -12,6 +13,7 @@ import fk.atlas.api.model.EntityRdbmsColumn;
 import fk.atlas.api.model.EntityRdbmsTable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +34,8 @@ public class BuildAtalsTableAndColumnTaskListener {
     @Resource
     IDorisBuild doris;
 
+    @RabbitHandler
+    @MQConsumerLog
     public void msg(String dataInfo, Channel channel, Message message) {
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(dataInfo, AtlasEntityDbTableColumnDTO.class);
         //设置日期格式
