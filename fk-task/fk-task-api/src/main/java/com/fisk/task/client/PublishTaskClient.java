@@ -1,7 +1,6 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -41,7 +40,7 @@ public interface PublishTaskClient {
      * @return 构建结果
      */
     @PostMapping("/publishTask/atlasBuildTableAndColumn")
-    ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityDbTableColumnDTO ArDto);
+    ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto);
 
     /**
      * 元数据删除

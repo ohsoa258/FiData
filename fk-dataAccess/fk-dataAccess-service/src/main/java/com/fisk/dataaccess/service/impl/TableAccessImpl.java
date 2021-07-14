@@ -3,7 +3,6 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -178,6 +177,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         po.setId(tpo.getId());
         boolean save3 = syncmodeImpl.save(po);
 
+/*
         // TODO: atlas调用
         AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
         tableColumnDTO.dbId = "1";
@@ -204,6 +204,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
         System.out.println(task);
+*/
+
+        AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
+
+        publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

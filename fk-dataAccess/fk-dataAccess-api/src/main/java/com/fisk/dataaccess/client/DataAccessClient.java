@@ -17,13 +17,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface DataAccessClient {
 
     /**
-     * 给task模块提供数据源等信息
+     * 提供给nifi的数据
      *
-     * @param id appid
-     * @return 执行结果
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return DataAccessConfigDTO
      */
     @GetMapping("/physicalTable/dataAccessConfig")
-    ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id);
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
+            @RequestParam("id") long id, @RequestParam("appid") long appid);
 
     /**
      * 元数据实例&DB构建
