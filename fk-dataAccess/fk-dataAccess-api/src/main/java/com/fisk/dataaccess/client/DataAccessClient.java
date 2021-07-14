@@ -7,7 +7,6 @@ import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -32,8 +31,8 @@ public interface DataAccessClient {
      * @param id appid
      * @return 执行结果
      */
-    @GetMapping("/appRegistration/getAtlasEntity/{id}")
-    ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id);
+    @GetMapping("/appRegistration/getAtlasEntity")
+    ResultEntity<AtlasEntityDTO> getAtlasEntity(@RequestParam("id") long id);
 
     /**
      * 元数据Table&Column构建

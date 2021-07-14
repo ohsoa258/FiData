@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -141,6 +142,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
 
         atlasEntityQueryDTO.appId = "6";
+        atlasEntityQueryDTO.userId = userId;
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
 
         System.out.println(task);
@@ -472,7 +474,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .one();
 
         dto.userId = userId;
-//        dto.sendTime =
+        dto.sendTime = LocalDateTime.now();
         dto.appName = po1.getAppName();
         dto.createUser = po1.getCreateUser();
         dto.appDes = po1.getAppDes();

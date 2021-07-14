@@ -126,8 +126,8 @@ public class AppRegistrationController {
 //        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataAccessConfig(id));
 //    }
 
-    @GetMapping("/getAtlasEntity/{id}")
-    public ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id) {
+    @GetMapping("/getAtlasEntity")
+    public ResultEntity<AtlasEntityDTO> getAtlasEntity(@RequestParam("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasEntity(id));
     }
