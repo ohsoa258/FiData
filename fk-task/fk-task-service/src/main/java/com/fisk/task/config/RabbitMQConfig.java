@@ -93,11 +93,18 @@ public class RabbitMQConfig {
      * 绑定队列和交换机
      */
     @Bean
-    public Binding atlasEntityDeleteQueueExchange(@Qualifier("atlasEntityDeleteQueue") Queue queue,
+    public Binding dorisBuildTableQueueExchange(@Qualifier("dorisBuildTableQueue") Queue queue,
                                                  @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_ROUTER).noargs();
+    }
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding atlasEntityDeleteQueueExchange(@Qualifier("atlasEntityDeleteQueue") Queue queue,
+                                                  @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_ATLAS_ENTITYDELETE_ROUTER).noargs();
     }
-
     @Bean
     public RabbitTemplate createRabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate();
