@@ -29,4 +29,12 @@ public class TestAtlas {
         System.out.println(dto);
     }
 
+    @Test
+    public void test01() {
+
+        ResultEntity<AtlasEntityDTO> dto = client.getAtlasEntity(6);
+
+        System.out.println(dto);
+    }
+
 }

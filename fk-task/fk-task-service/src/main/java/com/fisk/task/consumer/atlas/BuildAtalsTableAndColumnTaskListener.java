@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.task.dto.atlas.*;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.service.IDorisBuild;
@@ -37,11 +37,16 @@ public class BuildAtalsTableAndColumnTaskListener {
     IAtlasBuildInstance atlas;
     @Resource
     IDorisBuild doris;
+    @Resource
+    DataAccessClient dc;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        AtlasEntityDbTableColumnDTO ae = JSON.parseObject(dataInfo, AtlasEntityDbTableColumnDTO.class);
+        log.info("dataInfo:"+dataInfo);
+        AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
+        ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.appId), Long.parseLong(inpData.dbId));
+        AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -70,9 +75,10 @@ public class BuildAtalsTableAndColumnTaskListener {
         List<AtlasEntityColumnDTO> l_acd = new ArrayList<>();
         StringBuilder sqlStr = new StringBuilder();
         ae.columns.forEach((c) -> {
-            sqlStr.append(c.columnName+",");
+            sqlStr.append(c.columnName + ",");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
+            l_acd.add(acd);
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
             attributes_field_rdbms_column.table = instance_rdbms_tableentity;
             attributes_field_rdbms_column.owner = ae.createUser;
@@ -87,9 +93,13 @@ public class BuildAtalsTableAndColumnTaskListener {
             BusinessResult resCol = atlas.atlasBuildTableColumn(entity_rdbms_column);
             acd.guid = resCol.data.toString();
         });
-        String nifiSelectSql=sqlStr.toString();
+        String nifiSelectSql = sqlStr.toString();
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(",")) + ")";
-        nifiSelectSql="select " + nifiSelectSql + " from " + ae.tableName;
+        nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
+        awbd.dorisSelectSqlStr = nifiSelectSql;
+        awbd.columnsKeys = l_acd;
+        log.info(JSON.toJSONString(awbd));
+
 
         //endregion
         //region Doris创建表

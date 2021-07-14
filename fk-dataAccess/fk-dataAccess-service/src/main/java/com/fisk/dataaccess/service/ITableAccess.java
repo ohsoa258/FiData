@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 
 import java.util.List;
@@ -109,4 +110,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return DataAccessConfigDTO
      */
     DataAccessConfigDTO dataAccessConfig(long id, long appid);
+
+    /**
+     * 根据appid,查询atlasInstanceId和atlasDbId
+     *
+     * @param appid 应用注册id
+     * @param id 物理表id
+     * @return AtlasWriteBackDataDTO
+     */
+    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id);
 }

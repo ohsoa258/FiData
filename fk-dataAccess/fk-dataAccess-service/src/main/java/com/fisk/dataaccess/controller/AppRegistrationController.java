@@ -45,6 +45,7 @@ public class AppRegistrationController {
 
     /**
      * 根据id查询数据,用于数据回显
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -90,6 +91,7 @@ public class AppRegistrationController {
 
     /**
      * 删除
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -102,6 +104,7 @@ public class AppRegistrationController {
 
     /**
      * 查询应用数据，按照创建时间倒序排序，查出top 10的数据
+     *
      * @return 返回值
      */
     @GetMapping("/getDescDate")
@@ -117,16 +120,26 @@ public class AppRegistrationController {
     }
 
 
-    @GetMapping("/dataAccess")
-    public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {
+//    @GetMapping("/dataAccess")
+//    public ResultEntity<Object> dataAccessConfig(@RequestParam("appid") long id) {
+//
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataAccessConfig(id));
+//    }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataAccessConfig(id));
+    @GetMapping("/getAtlasEntity")
+    public ResultEntity<AtlasEntityDTO> getAtlasEntity(@RequestParam("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasEntity(id));
     }
 
-    @GetMapping("/getAtlasEntity/{id}")
-    public ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id) {
+    @PostMapping("/addAtlasInstanceIdAndDbId")
+    public ResultEntity<Object> addAtlasInstanceIdAndDbId(
+            @RequestParam("appid") long appid,
+            @RequestParam("atlas_instance_id") String atlasInstanceId,
+            @RequestParam("atlas_db_id") String atlasDbId) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAtlasEntity(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasInstanceIdAndDbId(appid, atlasInstanceId, atlasDbId));
     }
+
 
 }

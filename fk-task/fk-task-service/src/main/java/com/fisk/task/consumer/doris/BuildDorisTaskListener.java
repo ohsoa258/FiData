@@ -4,16 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.TaskTypeEnum;
-import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.service.IDorisBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -24,7 +21,7 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-//@RabbitListener(queues = MQConstants.QueueConstants.BUILD_DORIS_FLOW)
+//@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
 
 public class BuildDorisTaskListener {
@@ -34,8 +31,8 @@ public class BuildDorisTaskListener {
     @Resource
     IDorisBuild doris;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
+//    @RabbitHandler
+//    @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         AtlasEntityDbTableColumnDTO dto = JSON.parseObject(dataInfo, AtlasEntityDbTableColumnDTO.class);
         StringBuilder sql = new StringBuilder();

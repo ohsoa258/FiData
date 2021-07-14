@@ -26,7 +26,7 @@ public interface AppRegistrationMapper extends BaseMapper<AppRegistrationPO> {
      * 查询appName
      * @return 返回值
      */
-    @Select("select app_name from tb_app_registration")
+    @Select("select app_name from tb_app_registration where del_flag=1")
     List<String> getAppName();
 
     /**

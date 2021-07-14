@@ -3,7 +3,7 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.vo.ChartQueryVO;
+import com.fisk.chartvisual.dto.ChartQueryDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
@@ -122,7 +122,9 @@ public class ChartManageImpl implements IChartManageService {
     }
 
     @Override
-    public Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryVO query) {
+    public Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryDTO query) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        query.id = userInfo.id;
         return chartMapper.listChartDataByUserId(page, query);
     }
 

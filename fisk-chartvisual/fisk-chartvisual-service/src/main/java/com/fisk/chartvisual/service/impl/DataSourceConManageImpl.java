@@ -48,6 +48,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        query.userId = userInfo.id;
         return mapper.listDataSourceConByUserId(page, query);
     }
 

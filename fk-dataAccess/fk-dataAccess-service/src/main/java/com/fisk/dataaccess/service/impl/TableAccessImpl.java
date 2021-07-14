@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
@@ -13,6 +15,7 @@ import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +50,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private PublishTaskClient publishTaskClient;
 
+    @Resource
+    private AppNifiFlowImpl nifiFlowImpl;
+
+    @Resource
+    private UserHelper userHelper;
 
     /**
      * 添加物理表(实时)
@@ -85,6 +93,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
 //            }
 //        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
 
         // 1.dto->po
         TableAccessPO tpo = tableAccessDTO.toEntity(TableAccessPO.class);
@@ -106,6 +116,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (id < 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
+        tpo.setCreateUser("" + userId + "");
         tpo.setAppid(id);
 
         // 0是实时物理表，1是非实时物理表
@@ -142,6 +153,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
             tfpo.setTableAccessId(tpo.getId());
 
+            tfpo.setCreateUser("" + userId + "");
+
             // 1是实时物理表的字段，0是非实时物理表的字段
             tfpo.setIsRealtime(1);
             tfpo.setDelFlag(1);
@@ -164,11 +177,38 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         po.setId(tpo.getId());
         boolean save3 = syncmodeImpl.save(po);
 
+/*
         // TODO: atlas调用
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask();
-//        System.out.println(task);
-//
-//        int a = 1 / 0;
+        AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
+        tableColumnDTO.dbId = "1";
+        tableColumnDTO.tableName = "tb_table_access";
+        tableColumnDTO.createUser = "47";
+
+        AtlasEntityColumnDTO columnDTO1 = new AtlasEntityColumnDTO();
+        columnDTO1.columnName = "id";
+        columnDTO1.dataType = "INT";
+        columnDTO1.isKey = "1";
+        columnDTO1.comment = "主键";
+        AtlasEntityColumnDTO columnDTO2 = new AtlasEntityColumnDTO();
+        columnDTO2.columnName = "address";
+        columnDTO2.dataType = "VARCHAR(255)";
+        columnDTO2.isKey = "0";
+        columnDTO2.comment = "地址";
+
+        List<AtlasEntityColumnDTO> columnList = new ArrayList<>();
+        columnList.add(columnDTO1);
+        columnList.add(columnDTO2);
+
+        tableColumnDTO.columns = columnList;
+
+
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
+        System.out.println(task);
+*/
+
+        AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
+
+        publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -657,12 +697,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
 
-        TableAccessPO accesspo = this.query().eq("id", id)
+        TableAccessPO modelAccess = this.query().eq("id", id)
                 .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
-
-        if (accesspo == null) {
+        if (modelAccess == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -678,8 +717,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AtlasEntityDbTableColumnDTO dto = new AtlasEntityDbTableColumnDTO();
 
         dto.dbId = sourcepo.getAtlasDbId();
-        dto.tableName = accesspo.getTableName();
-        dto.createUser = accesspo.getCreateUser();
+        dto.tableName = modelAccess.getTableName();
+        dto.createUser = modelAccess.getCreateUser();
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
@@ -775,12 +814,93 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         processorConfig.scheduleExpression = syncpo.getCornExpression();
 //        processorConfig.scheduleType =;
+        processorConfig.sourceExecSqlQuery = "";
 
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;
         dto.targetDsConfig = targetDsConfig;
         dto.processorConfig = processorConfig;
+
+        return dto;
+    }
+
+    @Override
+    public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
+
+        AtlasWriteBackDataDTO dto = new AtlasWriteBackDataDTO();
+
+        // 查询tb_app_registration
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.appId = modelReg.atlasInstanceId;
+
+        // 查询tb_app_datasource
+        AppDataSourcePO modelData = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelData == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.dbId = modelData.atlasDbId;
+//        // 查询tb_app_nifiFlow
+//        AppNifiFlowPO modelNifiFlow = nifiFlowImpl.query()
+//                .eq("id", appid)
+//                .one();
+//        if (modelNifiFlow == null) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+//        dto.dorisSelectSqlStr = modelNifiFlow.dorisSelectSqlStr;
+
+
+        // 查询tb_table_access
+        TableAccessPO modelAccess = this.query()
+                .eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+
+        dto.tableId = modelAccess.atlasTableId;
+        dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
+
+        AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
+        atlasDTO.dbId = modelData.getAtlasDbId();
+        atlasDTO.tableName = modelAccess.getTableName();
+        atlasDTO.createUser = modelAccess.getCreateUser();
+
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
+
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+        if (list.isEmpty()) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        for (TableFieldsPO po : list) {
+
+            AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
+
+            atlasEntityColumnDTO.setColumnName(po.getFieldName());
+            atlasEntityColumnDTO.setComment(po.getFieldDes());
+            if (po.fieldLength == 0) {
+                atlasEntityColumnDTO.setDataType(po.getFieldType());
+            } else {
+
+                atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
+            }
+            atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
+
+            columns.add(atlasEntityColumnDTO);
+        }
+
+        dto.columnsKeys = columns;
 
         return dto;
     }
