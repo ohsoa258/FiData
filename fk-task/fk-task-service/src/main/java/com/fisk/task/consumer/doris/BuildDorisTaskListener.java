@@ -14,6 +14,7 @@ import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -24,7 +25,7 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-//@RabbitListener(queues = MQConstants.QueueConstants.BUILD_DORIS_FLOW)
+@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
 
 public class BuildDorisTaskListener {

@@ -43,6 +43,7 @@ public class BuildAtalsTableAndColumnTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
+        log.info("dataInfo:"+dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
         ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.appId), Long.parseLong(inpData.dbId));
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
