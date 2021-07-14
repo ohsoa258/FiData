@@ -17,7 +17,7 @@ public interface DataAccessClient {
 
     /**
      *
-     * 给task模块提供数据源等信息
+     * 给nifi task模块提供数据源等信息
      *
      * @param id appid
      * @return 执行结果
@@ -34,6 +34,12 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getAtlasEntity/{id}")
     ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id);
 
+    /**\
+     * 元数据table&column数据获取
+     * @param id
+     * @param appid
+     * @return
+     */
     @GetMapping("/physicalTable/getAtlasBuildTableAndColumn")
     ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("appid") long appid);
