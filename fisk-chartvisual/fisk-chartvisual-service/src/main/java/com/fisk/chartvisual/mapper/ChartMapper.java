@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.vo.ChartQueryVO;
+import com.fisk.chartvisual.dto.ChartQueryDTO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.mybatis.FKBaseMapper;
@@ -19,5 +19,5 @@ public interface ChartMapper extends FKBaseMapper<ChartPO> {
      * @param query query对象
      * @return 查询结果
      */
-    Page<ChartPropertyVO> listChartDataByUserId(Page<ChartPropertyVO> page, @Param("query") ChartQueryVO query);
+    Page<ChartPropertyVO> listChartDataByUserId(Page<ChartPropertyVO> page, @Param("query") ChartQueryDTO query);
 }

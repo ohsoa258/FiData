@@ -5,7 +5,7 @@ import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.chartvisual.vo.ChartQueryVO;
+import com.fisk.chartvisual.dto.ChartQueryDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -60,8 +60,8 @@ public class ChartManageController {
     }
 
     @ApiOperation("获取用户权限的所有报表")
-    @GetMapping("/page")
-    public ResultEntity<Page<ChartPropertyVO>> listData(Page<ChartPropertyVO> page, ChartQueryVO query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(page, query));
+    @PostMapping("/page")
+    public ResultEntity<Page<ChartPropertyVO>> listData(@RequestBody ChartQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query.page, query));
     }
 }
