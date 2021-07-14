@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
@@ -63,8 +63,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
-//        UserInfo userInfo = userHelper.getLoginUserInfo();
-//        Long id = userInfo.id;
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -75,7 +75,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po.setCreateTime(date1);
         po.setUpdateTime(date1);
         po.setDelFlag(1);
-//        po.setCreateUser(""+id+"");
+        po.setCreateUser("" + userId + "");
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         List<String> appNameList = baseMapper.getAppName();
@@ -102,7 +102,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po1.setCreateTime(date2);
         po1.setUpdateTime(date2);
         po1.setDelFlag(1);
-//        po1.setCreateUser(""+id+"");
+        po1.setCreateUser("" + userId + "");
 
         int insert = appDataSourceMapper.insert(po1);
         if (insert < 0) {
@@ -120,6 +120,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }*/
 
 
+/*
         AtlasEntityDTO dto = new AtlasEntityDTO();
 
         dto.setAppName("test0001");
@@ -134,6 +135,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
 
         System.out.println(task);
+*/
 
 
 //        int a = 1 / 0;
@@ -211,6 +213,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         // 1.0前端应用注册传来的id
         long id = dto.getId();
 
@@ -227,6 +232,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);
         po.setDelFlag(1);
+        po.setUpdateUser("" + userId + "");
         boolean edit = this.updateById(po);
         if (!edit) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
@@ -495,7 +501,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         boolean updateById = appDataSourceImpl.updateById(modelData);
 
 
-        return updateById?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 }
