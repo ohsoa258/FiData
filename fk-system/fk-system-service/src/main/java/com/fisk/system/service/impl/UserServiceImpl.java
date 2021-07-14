@@ -7,7 +7,9 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserDTO;
+import com.fisk.system.dto.UserPowerDTO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
@@ -116,13 +118,17 @@ public class UserServiceImpl implements IUserService {
         return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-   /* @Override
-    public IPage<UserPO> getPageUserData(int pages,int size)
+    @Override
+    public IPage<UserPowerDTO> getPageUserData(QueryDTO dto)
     {
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-        Page<UserPO> page=new Page<UserPO>(pages,size);
-        return mapper.selectPage(page,queryWrapper);
-    }*/
+        if (dto.name !=null && dto.name.length()!=0)
+        {
+            queryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+        }
+        Page<UserPO> data=new Page<UserPO>(dto.getPage(),dto.getSize());
+        return UserMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.orderByDesc("create_time")));
+    }
 
     /**
      * 登录: 根据用户名和密码查询用户?

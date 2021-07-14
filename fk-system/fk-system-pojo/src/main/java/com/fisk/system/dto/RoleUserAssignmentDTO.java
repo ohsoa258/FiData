@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class UserRoleAssignmentDTO {
+public class RoleUserAssignmentDTO {
 
     public int roleId;
 

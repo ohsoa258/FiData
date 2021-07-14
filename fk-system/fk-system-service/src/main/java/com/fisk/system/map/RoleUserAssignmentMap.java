@@ -1,7 +1,7 @@
 package com.fisk.system.map;
 
-import com.fisk.system.dto.RoleServiceAssignmentDTO;
-import com.fisk.system.entity.RoleServiceAssignmentPO;
+import com.fisk.system.dto.RoleUserAssignmentDTO;
+import com.fisk.system.entity.RoleUserAssignmentPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -12,8 +12,8 @@ import java.util.List;
  * @author JianWenYang
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface RoleServiceAssignmentMap {
-    RoleServiceAssignmentMap INSTANCES = Mappers.getMapper(RoleServiceAssignmentMap.class);
+public interface RoleUserAssignmentMap {
+    RoleUserAssignmentMap INSTANCES = Mappers.getMapper(RoleUserAssignmentMap.class);
 
     /**
      * dto => po
@@ -21,5 +21,6 @@ public interface RoleServiceAssignmentMap {
      * @param po
      * @return target
      */
-    List<RoleServiceAssignmentDTO> poToDto(List<RoleServiceAssignmentPO> po);
+    List<RoleUserAssignmentDTO> poToDto(List<RoleUserAssignmentPO> po);
+
 }
