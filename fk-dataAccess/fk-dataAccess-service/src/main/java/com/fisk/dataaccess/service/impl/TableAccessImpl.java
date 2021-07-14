@@ -13,6 +13,7 @@ import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private AppNifiFlowImpl nifiFlowImpl;
 
 
     /**
@@ -781,6 +785,38 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.sourceDsConfig = sourceDsConfig;
         dto.targetDsConfig = targetDsConfig;
         dto.processorConfig = processorConfig;
+
+        return dto;
+    }
+
+    @Override
+    public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid) {
+
+        AtlasWriteBackDataDTO dto = new AtlasWriteBackDataDTO();
+
+        // 查询tb_app_registration
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.appId = modelReg.atlasInstanceId;
+
+        // 查询tb_app_datasource
+        AppDataSourcePO modelData = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelData == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.dbId = modelData.atlasDbId;
+
+        // 查询tb_table_access
+//        this.query()
+
 
         return dto;
     }

@@ -98,4 +98,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 查询结果
      */
     AtlasEntityDTO getAtlasEntity(long id);
+
+    /**
+     * atlas通过appid,将atlasInstanceId和atlasDbId保存下来
+     *
+     * @param appid appid
+     * @param atlasInstanceId atlasInstanceId
+     * @param atlasDbId atlasDbId
+     * @return 执行结果
+     */
+    ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId);
 }

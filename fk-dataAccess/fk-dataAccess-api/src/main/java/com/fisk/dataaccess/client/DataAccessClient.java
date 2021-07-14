@@ -7,6 +7,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface DataAccessClient {
 
     /**
-     *
      * 给task模块提供数据源等信息
      *
      * @param id appid
@@ -34,8 +34,29 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getAtlasEntity/{id}")
     ResultEntity<AtlasEntityDTO> getAtlasEntity(@PathVariable("id") long id);
 
+    /**
+     * 元数据Table&Column构建
+     *
+     * @param id    物理表id
+     * @param appid appid
+     * @return AtlasEntityDbTableColumnDTO
+     */
     @GetMapping("/physicalTable/getAtlasBuildTableAndColumn")
     ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("appid") long appid);
+
+    /**
+     * atlas通过appid,将atlasInstanceId和atlasDbId保存下来
+     *
+     * @param appid           appid
+     * @param atlasInstanceId atlasInstanceId
+     * @param atlasDbId       atlasDbId
+     * @return 执行结果
+     */
+    @PostMapping("/addAtlasInstanceIdAndDbId")
+    ResultEntity<Object> addAtlasInstanceIdAndDbId(
+            @RequestParam("appid") long appid,
+            @RequestParam("atlas_instance_id") String atlasInstanceId,
+            @RequestParam("atlas_db_id") String atlasDbId);
 
 }
