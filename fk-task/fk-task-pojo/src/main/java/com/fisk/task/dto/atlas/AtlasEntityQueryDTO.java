@@ -11,4 +11,5 @@ import lombok.Data;
 @Data
 public class AtlasEntityQueryDTO extends MQBaseDTO {
     public String appId;
+    public String dbId;
 }

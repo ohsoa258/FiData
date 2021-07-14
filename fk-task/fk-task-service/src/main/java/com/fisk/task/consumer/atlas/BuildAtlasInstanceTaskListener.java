@@ -45,10 +45,10 @@ public class BuildAtlasInstanceTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        log.info("data:"+dataInfo);
-        AtlasEntityQueryDTO inpData=JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
-        ResultEntity<AtlasEntityDTO> queryRes= dc.getAtlasEntity(Long.parseLong(inpData.appId));
-        log.info("query data :"+JSON.toJSONString(queryRes));
+        log.info("data:" + dataInfo);
+        AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
+        ResultEntity<AtlasEntityDTO> queryRes = dc.getAtlasEntity(Long.parseLong(inpData.appId));
+        log.info("query data :" + JSON.toJSONString(queryRes));
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         AtlasEntityDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDTO.class);
         //设置日期格式
@@ -123,6 +123,7 @@ public class BuildAtlasInstanceTaskListener {
         earps.add(attributes_rdbms_process);
         entity_rdbms_process.entities = earps;
         atlas.atlasBuildProcess(entity_rdbms_process);
+        log.info(JSON.toJSONString(awbd));
         //endregion
         //region 返回instance id & DB id
         //。。。。。。
