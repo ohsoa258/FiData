@@ -30,8 +30,6 @@ public class RoleServiceAssignmentImpl
     @Resource
     RoleServiceAssignmentMapper serviceMapper;
     @Resource
-    RoleUserAssignmentMapper userMapper;
-    @Resource
     UserHelper userHelper;
 
     @Override
