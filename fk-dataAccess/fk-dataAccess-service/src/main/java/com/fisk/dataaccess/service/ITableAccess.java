@@ -114,8 +114,9 @@ public interface ITableAccess extends IService<TableAccessPO> {
     /**
      * 根据appid,查询atlasInstanceId和atlasDbId
      *
-     * @param appid appid
+     * @param appid 应用注册id
+     * @param id 物理表id
      * @return AtlasWriteBackDataDTO
      */
-    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid);
+    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id);
 }

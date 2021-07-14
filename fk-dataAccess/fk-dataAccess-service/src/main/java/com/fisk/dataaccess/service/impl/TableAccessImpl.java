@@ -790,7 +790,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid) {
+    public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id) {
 
         AtlasWriteBackDataDTO dto = new AtlasWriteBackDataDTO();
 
@@ -814,9 +814,56 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         dto.dbId = modelData.atlasDbId;
 
-        // 查询tb_table_access
-//        this.query()
+        // 查询tb_app_nifiFlow
+        AppNifiFlowPO modelNifiFlow = nifiFlowImpl.query()
+                .eq("id", appid)
+                .one();
+        if (modelNifiFlow == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.dorisSelectSqlStr = modelNifiFlow.dorisSelectSqlStr;
 
+        // 查询tb_table_access
+        TableAccessPO modelAccess = this.query()
+                .eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+
+        dto.tableId = modelAccess.atlasTableId;
+
+        AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
+        atlasDTO.dbId = modelData.getAtlasDbId();
+        atlasDTO.tableName = modelAccess.getTableName();
+        atlasDTO.createUser = modelAccess.getCreateUser();
+
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
+
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+        if (list.isEmpty()) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        for (TableFieldsPO po : list) {
+
+            AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
+
+            atlasEntityColumnDTO.setColumnName(po.getFieldName());
+            atlasEntityColumnDTO.setComment(po.getFieldDes());
+            if (po.fieldLength == 0) {
+                atlasEntityColumnDTO.setDataType(po.getFieldType());
+            } else {
+
+                atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
+            }
+            atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
+
+            columns.add(atlasEntityColumnDTO);
+        }
+
+        dto.columnsKeys = columns;
 
         return dto;
     }

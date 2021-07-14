@@ -191,8 +191,10 @@ public class PhysicalTableController {
     }
 
     @GetMapping("/getAtlasWriteBackDataDTO")
-    public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(@RequestParam("appid") long appid) {
+    public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
+            @RequestParam("appid") long appid,
+            @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid,id));
     }
 }
