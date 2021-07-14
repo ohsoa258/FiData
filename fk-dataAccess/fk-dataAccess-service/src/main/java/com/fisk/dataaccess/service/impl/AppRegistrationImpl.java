@@ -458,7 +458,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public AtlasEntityDTO getAtlasEntity(long id) {
-        
+
         AtlasEntityDTO dto = new AtlasEntityDTO();
 
         AppRegistrationPO po1 = this.query().eq("id", id)

@@ -28,6 +28,16 @@ public class TableAccessPO extends BaseEntity {
     public String atlasTableId;
 
     /**
+     * 组件id
+     */
+    public String componentId;
+
+    /**
+     * nifi sql
+     */
+    public String dorisSelectSqlStr;
+
+    /**
      *  物理表名
      */
     public String tableName;
