@@ -54,6 +54,13 @@ public class RabbitMQConfig {
     public Queue atlasEntityDeleteQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW).build();
     }
+    /**
+     * 声明队列
+     */
+    @Bean("dorisBuildTableQueue")
+    public Queue dorisBuildTableQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_FLOW).build();
+    }
 
     /**
      * 绑定队列和交换机
