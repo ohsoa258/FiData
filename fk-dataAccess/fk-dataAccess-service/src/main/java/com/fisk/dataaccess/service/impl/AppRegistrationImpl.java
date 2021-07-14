@@ -458,11 +458,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public AtlasEntityDTO getAtlasEntity(long id) {
-
-        // 当前登录用户
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        Long userId = userInfo.id;
-
+        
         AtlasEntityDTO dto = new AtlasEntityDTO();
 
         AppRegistrationPO po1 = this.query().eq("id", id)
@@ -473,7 +469,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
 
-        dto.userId = userId;
         dto.sendTime = LocalDateTime.now();
         dto.appName = po1.getAppName();
         dto.createUser = po1.getCreateUser();
