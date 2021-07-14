@@ -123,10 +123,12 @@ public class BuildAtlasInstanceTaskListener {
         earps.add(attributes_rdbms_process);
         entity_rdbms_process.entities = earps;
         atlas.atlasBuildProcess(entity_rdbms_process);
-        log.info(JSON.toJSONString(awbd));
+        log.info("atlas执行完成.....");
+        log.info("awbd："+JSON.toJSONString(awbd));
         //endregion
         //region 返回instance id & DB id
-        //。。。。。。
+        dc.addAtlasInstanceIdAndDbId(Long.parseLong(inpData.appId),awbd.appId,awbd.dbId);
+        log.info("atlas数据回写完成.....");
         //endregion
     }
 }
