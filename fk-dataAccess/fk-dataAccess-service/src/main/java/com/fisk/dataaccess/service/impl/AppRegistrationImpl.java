@@ -465,4 +465,37 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return dto;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId) {
+
+        AppRegistrationPO modelReg = this.query().eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        modelReg.atlasInstanceId = atlasInstanceId;
+//        model.delFlag = 1;
+        // 保存tb_app_registration
+        boolean update = this.updateById(modelReg);
+        if (!update) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        AppDataSourcePO modelData = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelData == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        modelData.atlasDbId = atlasDbId;
+        // 保存tb_app_datasource
+        boolean updateById = appDataSourceImpl.updateById(modelData);
+
+
+        return updateById?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
 }
