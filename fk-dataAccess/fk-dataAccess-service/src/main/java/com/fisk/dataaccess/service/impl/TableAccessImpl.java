@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -15,6 +16,7 @@ import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import org.springframework.stereotype.Service;
@@ -206,9 +208,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         System.out.println(task);
 */
 
-        AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = userId;
+        atlasEntityQueryDTO.appId = "6";
+        atlasEntityQueryDTO.dbId = "" + 1 + "";
 
-        publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        System.out.println(task);
 
         return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
