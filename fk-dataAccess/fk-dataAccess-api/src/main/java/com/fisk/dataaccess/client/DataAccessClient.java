@@ -47,6 +47,7 @@ public interface DataAccessClient {
             @RequestParam("id") long id, @RequestParam("appid") long appid);
 
     /**
+     * 应用注册回写GUID
      * atlas通过appid,将atlasInstanceId和atlasDbId保存下来
      *
      * @param appid           appid

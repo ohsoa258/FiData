@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -18,6 +19,7 @@ import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -136,7 +138,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         System.out.println(task);
 */
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
 
+        atlasEntityQueryDTO.appId = "6";
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
+
+        System.out.println(task);
 
 //        int a = 1 / 0;
 
@@ -450,6 +457,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public AtlasEntityDTO getAtlasEntity(long id) {
 
+        // 当前登录用户
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         AtlasEntityDTO dto = new AtlasEntityDTO();
 
         AppRegistrationPO po1 = this.query().eq("id", id)
@@ -460,6 +471,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
 
+        dto.userId = userId;
+//        dto.sendTime =
         dto.appName = po1.getAppName();
         dto.createUser = po1.getCreateUser();
         dto.appDes = po1.getAppDes();
