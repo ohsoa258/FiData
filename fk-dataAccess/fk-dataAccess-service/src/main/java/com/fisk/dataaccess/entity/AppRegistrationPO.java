@@ -26,6 +26,11 @@ public class AppRegistrationPO extends BaseEntity {
     public String atlasInstanceId;
 
     /**
+     * 组件id
+     */
+    public String componentId;
+
+    /**
      * 应用名称
      */
     public String appName;
