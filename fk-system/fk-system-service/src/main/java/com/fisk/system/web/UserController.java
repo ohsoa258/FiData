@@ -51,12 +51,6 @@ public class UserController {
         return ResultEntityBuild.build(service.register(dto));
     }
 
-    /*@GetMapping("/getDataPage")
-    public ResultEntity<Object> getDataPage(int pages,int size)
-    {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getPageUserData(pages,size));
-    }*/
-
     /**
      * 根据用户名和密码查询用户
      *

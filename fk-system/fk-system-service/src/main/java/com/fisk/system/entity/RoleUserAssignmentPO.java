@@ -8,10 +8,10 @@ import lombok.EqualsAndHashCode;
 /**
  * @author JianWenYang
  */
-@TableName("tb_user_role_assignment")
+@TableName("tb_role_user_assignment")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserRoleAssignmentPO extends BasePO {
+public class RoleUserAssignmentPO extends BasePO {
 
     public int roleId;
 
