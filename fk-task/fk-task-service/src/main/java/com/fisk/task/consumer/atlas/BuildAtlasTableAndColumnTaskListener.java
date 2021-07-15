@@ -6,7 +6,9 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.AtlasProcessEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
@@ -39,6 +41,8 @@ public class BuildAtlasTableAndColumnTaskListener {
     IAtlasBuildInstance atlas;
     @Resource
     DataAccessClient dc;
+    @Resource
+    PublishTaskController pc;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
@@ -53,6 +57,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
         awbd.appId=inpData.appId;
+        awbd.tableName="ods_"+ae.tableName;
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表
@@ -105,7 +110,6 @@ public class BuildAtlasTableAndColumnTaskListener {
             sqlStr.append(c.columnName + ",");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
-            l_acd.add(acd);
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
             attributes_field_rdbms_column.table = instance_rdbms_tableentity;
             attributes_field_rdbms_column.owner = ae.createUser;
@@ -119,6 +123,8 @@ public class BuildAtlasTableAndColumnTaskListener {
             entity_rdbms_column.entity = attributes_rdbms_column;
             BusinessResult resCol = atlas.atlasBuildTableColumn(entity_rdbms_column);
             acd.guid = resCol.data.toString();
+            acd.columnId=c.columnId;
+            l_acd.add(acd);
         });
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
@@ -165,7 +171,13 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(JSON.toJSONString(result));
         //endregion
         //region 回写数据
-
+        dc.addAtlasTableIdAndDorisSql(awbd);
         //endregion
+        //启动nifi
+        BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
+        bfd.userId=ae.userId;
+        bfd.appId=Long.parseLong(inpData.appId);
+        bfd.id=Long.parseLong(ae.tableId);
+        pc.publishBuildNifiFlowTask(bfd);
     }
 }
