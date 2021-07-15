@@ -1,7 +1,6 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.dataaccess.dto.AtlasAccessDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -73,7 +72,7 @@ public interface DataAccessClient {
      * @return 执行结果
      */
     @PostMapping("/physicalTable/addAtlasTableIdAndDorisSql")
-    ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto);
+    ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasWriteBackDataDTO dto);
 
 
     /**
