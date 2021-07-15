@@ -166,7 +166,7 @@ public class WsSessionManager {
      * @param msg     msg
      */
     public static void sendMsgBySession(String msg, Session session) {
-        sendMsg(session, msg, Long.valueOf(session.getId()));
+        sendMsg(session, msg, 0L);
     }
 
     /**

@@ -5,6 +5,7 @@ import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.map.WsMessageLogMap;
 import com.fisk.task.mapper.MessageLogMapper;
@@ -22,6 +23,8 @@ import java.util.List;
 public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageLogPO> implements IWsMessageService {
 
     @Resource
+    MessageLogMapper mapper;
+    @Resource
     UserHelper userHelper;
 
     @Override
@@ -35,6 +38,13 @@ public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageL
                 .orderByDesc("create_time")
                 .list();
         return WsMessageLogMap.INSTANCES.poToVo(list);
+    }
+
+    @Override
+    public List<WsMessageLogVO> getUserAllMessage(MessageLogQuery query) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        query.userId = userInfo.id;
+        return mapper.listMessageLog(query.page, query);
     }
 
     @Override

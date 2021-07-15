@@ -1,0 +1,12 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.task.mapper.MessageLogMapper">
+
+    <select id="listMessageLog" resultType="com.fisk.task.vo.WsMessageLogVO">
+        select *
+        from tb_msg_log
+        where del_flag = 1
+        and create_user = #{query.userId}
+    </select>
+</mapper>
