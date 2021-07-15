@@ -13,4 +13,6 @@ public class AtlasEntityColumnDTO {
     public String dataType;
     public String isKey;
     public String comment;
+    //Atlas回写的时候赋值
+    public String guid;
 }

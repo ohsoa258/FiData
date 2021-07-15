@@ -3,7 +3,13 @@ package com.fisk.task.consumer.atlas;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
 import fk.atlas.api.model.EntityProcess;
@@ -11,6 +17,7 @@ import fk.atlas.api.model.EntityRdbmsDB;
 import fk.atlas.api.model.EnttityRdbmsInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -32,10 +39,18 @@ public class BuildAtlasInstanceTaskListener {
 
     @Resource
     IAtlasBuildInstance atlas;
+    @Resource
+    DataAccessClient dc;
 
+    @RabbitHandler
+    @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        log.info(dataInfo);
-        AtlasEntityDTO ae = JSON.parseObject(dataInfo, AtlasEntityDTO.class);
+        log.info("data:" + dataInfo);
+        AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
+        ResultEntity<AtlasEntityDTO> queryRes = dc.getAtlasEntity(Long.parseLong(inpData.appId));
+        log.info("query data :" + JSON.toJSONString(queryRes));
+        AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
+        AtlasEntityDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDTO.class);
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region  创建实例
@@ -56,6 +71,7 @@ public class BuildAtlasInstanceTaskListener {
         EnttityRdbmsInstance.entity_rdbms_instance eri = new EnttityRdbmsInstance.entity_rdbms_instance();
         eri.entity = ari;
         BusinessResult insRes = atlas.atlasBuildInstance(eri);
+        awbd.appId = insRes.data.toString();
         //endregion
         //region 创建DB
         EntityRdbmsDB.entity_rdbms_db rdbms_db = new EntityRdbmsDB.entity_rdbms_db();
@@ -74,6 +90,7 @@ public class BuildAtlasInstanceTaskListener {
         attributes_rdbms_db.attributes = attributes_field_rdbms_db;
         rdbms_db.entity = attributes_rdbms_db;
         BusinessResult dbRes = atlas.atlasBuildDb(rdbms_db);
+        awbd.dbId = dbRes.data.toString();
         //endregion
         //region 创建实例与数据库的连接
         EntityProcess.entity_rdbms_process entity_rdbms_process = new EntityProcess.entity_rdbms_process();
@@ -106,9 +123,12 @@ public class BuildAtlasInstanceTaskListener {
         earps.add(attributes_rdbms_process);
         entity_rdbms_process.entities = earps;
         atlas.atlasBuildProcess(entity_rdbms_process);
+        log.info("atlas执行完成.....");
+        log.info("awbd："+JSON.toJSONString(awbd));
         //endregion
         //region 返回instance id & DB id
-        //。。。。。。
+        dc.addAtlasInstanceIdAndDbId(Long.parseLong(inpData.appId),awbd.appId,awbd.dbId);
+        log.info("atlas数据回写完成.....");
         //endregion
     }
 }

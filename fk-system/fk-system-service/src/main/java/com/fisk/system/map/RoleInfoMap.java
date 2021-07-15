@@ -1,6 +1,9 @@
 package com.fisk.system.map;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.system.dto.RoleInfoDTO;
+import com.fisk.system.dto.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -24,10 +27,25 @@ public interface RoleInfoMap {
     RoleInfoPO dtoToPo(RoleInfoDTO dto);
 
     /**
-     po => dto
+     * dto => po
+     *
+     * @param po
+     * @return target
      */
     RoleInfoDTO poToDto(RoleInfoPO po);
-
+    /**
+     * list<po> => list<dto>
+     *
+     * @param po
+     * @return target
+     */
     List<RoleInfoDTO> poToDtos(List<RoleInfoPO> po);
+    /**
+     * Page<po> => Page<dto>
+     *
+     * @param po
+     * @return target
+     */
+    Page<RolePowerDTO> poToPageDto(IPage<RoleInfoPO> po);
 
 }

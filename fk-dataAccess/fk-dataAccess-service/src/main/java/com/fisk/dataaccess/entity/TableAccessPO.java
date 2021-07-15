@@ -23,9 +23,19 @@ public class TableAccessPO extends BaseEntity {
     public long appid;
 
     /**
-     * 添加数据时后台生成
+     * 添加数据时atlas生成
      */
     public String atlasTableId;
+
+    /**
+     * 组件id
+     */
+    public String componentId;
+
+    /**
+     * nifi sql
+     */
+    public String dorisSelectSqlStr;
 
     /**
      *  物理表名

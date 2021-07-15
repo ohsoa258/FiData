@@ -51,7 +51,7 @@ public class UserAuthServiceImpl implements UserAuthService {
         UserDTO userDTO = null;
 
         try {
-            ResultEntity<UserDTO> res = userClient.queryUser(userAuthDTO.getUserAccount(), userAuthDTO.getPassword());
+            ResultEntity<UserDTO> res = userClient.queryUser(userAuthDTO.getUsername(), userAuthDTO.getPassword());
             if (res.code == ResultEnum.SUCCESS.getCode()) {
                 userDTO = res.data;
             } else {
@@ -62,10 +62,10 @@ public class UserAuthServiceImpl implements UserAuthService {
         }
 
         // 创建自定义荷载对象
-        UserDetail userDetail = UserDetail.of(userDTO.getId(), userDTO.getUserAccount());
+        UserDetail userDetail = UserDetail.of(userDTO.getId(), userDTO.getUsername());
         // 生成jwt: token
         String token = SystemConstants.AUTH_TOKEN_HEADER + jwtUtils.createJwt(userDetail);
-        UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUserAccount(), token);
+        UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUsername(), token);
         boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);

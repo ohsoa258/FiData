@@ -32,6 +32,5 @@ public class UserPO extends BasePO {
 
     public String userAccount;
 
-    public String errorNumber;
 
 }

@@ -3,10 +3,11 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 添加物理表(实时)
+     *
      * @param tableAccessDTO 请求参数
      * @return 返回值
      */
@@ -25,6 +27,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 删除数据
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -32,6 +35,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 添加物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -39,6 +43,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 修改物理表(实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -46,6 +51,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 修改物理表(非实时)
+     *
      * @param dto 请求参数
      * @return 返回值
      */
@@ -71,6 +77,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据id查询数据,回显实时表
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -83,4 +90,47 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 返回值
      */
     List<TablePyhNameDTO> getTableFields(String appName);
+
+    /**
+     * atlas
+     *
+     * @param id    id
+     * @param appid appid
+     * @return atlas
+     */
+    AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid);
+
+    /**
+     * 提供给nifi的数据
+     *
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return DataAccessConfigDTO
+     */
+    DataAccessConfigDTO dataAccessConfig(long id, long appid);
+
+    /**
+     * 根据appid,查询atlasInstanceId和atlasDbId
+     *
+     * @param appid 应用注册id
+     * @param id 物理表id
+     * @return AtlasWriteBackDataDTO
+     */
+    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id);
+
+    /**
+     * atlas物理表回写
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum addAtlasTableIdAndDorisSql(AtlasAccessDTO dto);
+
+    /**
+     * 回写componentId
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum addComponentId(NifiAccessDTO dto);
 }

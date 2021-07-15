@@ -8,6 +8,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
@@ -18,12 +19,14 @@ import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -63,8 +66,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
 
-//        UserInfo info = userHelper.getLoginUserInfo();
-//        Long id = info.id;
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
@@ -75,6 +78,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po.setCreateTime(date1);
         po.setUpdateTime(date1);
         po.setDelFlag(1);
+        po.setCreateUser("" + userId + "");
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         List<String> appNameList = baseMapper.getAppName();
@@ -101,6 +105,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         po1.setCreateTime(date2);
         po1.setUpdateTime(date2);
         po1.setDelFlag(1);
+        po1.setCreateUser("" + userId + "");
 
         int insert = appDataSourceMapper.insert(po1);
         if (insert < 0) {
@@ -117,24 +122,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
 
+        // TODO: atlas对接应用注册
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
 
-        AtlasEntityDTO dto = new AtlasEntityDTO();
+        atlasEntityQueryDTO.appId = "" + po.getId() + "";
 
-        dto.setAppName("test");
-        dto.setDriveType("MySQL");
-        dto.setCreateUser("41");
-        dto.setAppDes("test");
-        dto.setHost("192.168.11.130");
-        dto.setPort("3306");
-        dto.setDbName("dmp_system_db");
-
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
+        atlasEntityQueryDTO.userId = userId;
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
 
         System.out.println(task);
 
-
-        int a = 1 / 0;
+//        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 //        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -209,6 +207,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         // 1.0前端应用注册传来的id
         long id = dto.getId();
 
@@ -225,6 +226,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);
         po.setDelFlag(1);
+        po.setUpdateUser("" + userId + "");
         boolean edit = this.updateById(po);
         if (!edit) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
@@ -452,6 +454,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
 
+        dto.sendTime = LocalDateTime.now();
         dto.appName = po1.getAppName();
         dto.createUser = po1.getCreateUser();
         dto.appDes = po1.getAppDes();
@@ -461,6 +464,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         dto.dbName = po2.getDbName();
 
         return dto;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId) {
+
+        AppRegistrationPO modelReg = this.query().eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        modelReg.atlasInstanceId = atlasInstanceId;
+//        model.delFlag = 1;
+        // 保存tb_app_registration
+        boolean update = this.updateById(modelReg);
+        if (!update) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        AppDataSourcePO modelData = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelData == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        modelData.atlasDbId = atlasDbId;
+        // 保存tb_app_datasource
+        boolean updateById = appDataSourceImpl.updateById(modelData);
+
+
+        return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 }

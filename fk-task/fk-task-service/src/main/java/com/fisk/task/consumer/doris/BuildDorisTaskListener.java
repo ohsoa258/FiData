@@ -3,9 +3,11 @@ package com.fisk.task.consumer.doris;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IBuildTaskService;
@@ -14,6 +16,7 @@ import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -24,7 +27,7 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-//@RabbitListener(queues = MQConstants.QueueConstants.BUILD_DORIS_FLOW)
+@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
 
 public class BuildDorisTaskListener {
@@ -33,11 +36,21 @@ public class BuildDorisTaskListener {
     IBuildTaskService service;
     @Resource
     IDorisBuild doris;
+    @Resource
+    DataAccessClient dc;
+
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        TableInfoDTO dto = JSON.parseObject(dataInfo, TableInfoDTO.class);
+        log.info("执行Doris");
+        log.info("dataInfo:"+dataInfo);
+        AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
+        ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
+        log.info("queryRes:"+JSON.toJSONString(queryRes.data));
+        log.info("queryRes:"+JSON.toJSONString(queryRes));
+        AtlasEntityDbTableColumnDTO dto = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
+        log.info("ae:"+JSON.toJSONString(dto));
         StringBuilder sql = new StringBuilder();
         String tableName = dto.tableName;
         String stg_table = "stg_" + dto.tableName;
@@ -53,7 +66,7 @@ public class BuildDorisTaskListener {
             if (l.isKey.equals("1")) {
                 sqlDistributed.append(l.columnName);
             }
-            sqlFileds.append(l.columnName + " " + l.type + " comment " + "'" + l.comment + "' ,");
+            sqlFileds.append(l.columnName + " " + l.dataType + " comment " + "'" + l.comment + "' ,");
             sqlAggregate.append(l.columnName + ",");
             sqlSelectStrBuild.append(l.columnName + ",");
         });
@@ -76,10 +89,11 @@ public class BuildDorisTaskListener {
         BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
         bb.appId = 123L;
         bb.userId = 37L;
-        service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
-                bb);
+//        service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
+//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+//                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
+//                bb);
+        log.info("Doris执行结束");
     }
 
 
