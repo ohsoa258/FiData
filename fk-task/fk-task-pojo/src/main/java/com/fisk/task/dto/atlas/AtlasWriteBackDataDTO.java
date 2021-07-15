@@ -12,8 +12,8 @@ import java.util.List;
 @Data
 public class AtlasWriteBackDataDTO {
     public String appId;
-    public String dbId;
     public String tableId;
+    public String atlasTableId;
     public String dorisSelectSqlStr;
     public List<AtlasEntityColumnDTO> columnsKeys;
 }

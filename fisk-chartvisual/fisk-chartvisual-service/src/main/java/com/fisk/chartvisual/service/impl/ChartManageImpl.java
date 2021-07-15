@@ -15,6 +15,8 @@ import com.fisk.chartvisual.mapper.DraftChartMapper;
 import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -48,7 +50,7 @@ public class ChartManageImpl implements IChartManageService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum saveChart(ReleaseChart dto) {
+    public ResultEntity<Long> saveChart(ReleaseChart dto) {
         UserInfo userInfo = userHelper.getLoginUserInfo();
         //判断是不是发布草稿
         if (dto.draftId != null) {
@@ -66,7 +68,7 @@ public class ChartManageImpl implements IChartManageService {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.id);
     }
 
     @Override

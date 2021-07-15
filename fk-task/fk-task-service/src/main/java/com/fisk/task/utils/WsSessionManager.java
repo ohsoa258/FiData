@@ -1,10 +1,12 @@
 package com.fisk.task.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.mapper.MessageLogMapper;
+import com.fisk.task.vo.WsMessageLogVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -63,9 +65,12 @@ public class WsSessionManager {
      * @return 删除的连接
      */
     public static Session remove(Long key) {
-        onlineCount.decrementAndGet();
+        Session res = SESSION_POOL.remove(key);
+        if(res != null) {
+            onlineCount.decrementAndGet();
+        }
         // 删除 session
-        return SESSION_POOL.remove(key);
+        return res;
     }
 
     /**
@@ -161,7 +166,7 @@ public class WsSessionManager {
      * @param msg     msg
      */
     public static void sendMsgBySession(String msg, Session session) {
-        sendMsg(session, msg, Long.valueOf(session.getId()));
+        sendMsg(session, msg, 0L);
     }
 
     /**
@@ -175,19 +180,21 @@ public class WsSessionManager {
         MDCHelper.setFunction("sendMsg");
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_WS_SEND_MESSAGE);
 
-        try {
-            MessageLogPO model = new MessageLogPO();
-            model.createUser = id.toString();
-            model.status = MessageStatusEnum.UNREAD;
-            model.msg = msg;
-            mapperService.insert(model);
-        } catch (Exception ex) {
-            log.error("消息保存失败, ex", ex);
-        }
+        MessageLogPO model = new MessageLogPO();
+        model.createUser = id.toString();
+        model.status = MessageStatusEnum.UNREAD;
+        model.msg = msg;
+        mapperService.insert(model);
+
+        WsMessageLogVO vo = new WsMessageLogVO();
+        vo.msg = msg;
+        vo.id = model.id;
+        vo.status = model.status;
+        vo.createTime = model.createTime;
 
         try {
             if (session != null) {
-                session.getBasicRemote().sendText(msg);
+                session.getBasicRemote().sendText(JSON.toJSONString(vo));
                 log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, LocalDateTime.now(), msg);
             }
         } catch (Exception e) {

@@ -14,6 +14,7 @@ import java.util.List;
 public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
 public String dbId;
 public String tableName;
+public String tableId;
 public String createUser;
 public List<AtlasEntityColumnDTO> columns;
 }

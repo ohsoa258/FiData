@@ -14,6 +14,7 @@ import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.nifi.*;
@@ -41,6 +42,8 @@ public class BuildNifiTaskListener {
 
     @Resource
     INifiComponentsBuild componentsBuild;
+    @Resource
+    DataAccessClient client;
 
     @RabbitHandler
     @MQConsumerLog

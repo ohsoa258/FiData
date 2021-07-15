@@ -37,8 +37,8 @@ public class ChartManageController {
 
     @ApiOperation("添加报表")
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@Validated @RequestBody ReleaseChart dto) {
-        return ResultEntityBuild.build(service.saveChart(dto));
+    public ResultEntity<Long> addData(@Validated @RequestBody ReleaseChart dto) {
+        return service.saveChart(dto);
     }
 
     @ApiOperation("根据id获取报表")

@@ -13,5 +13,5 @@ public class WsMessageLogVO {
     public String msg;
     public LocalDateTime createTime;
     public MessageStatusEnum status;
-    public int id;
+    public long id;
 }

@@ -1,16 +1,22 @@
 package task;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@SpringBootTest
-@RunWith(SpringRunner.class)
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
+//@SpringBootTest
+//@RunWith(SpringRunner.class)
 public class WsSendMsgTest {
 
     @Test
-    public void MockSendMsg(){
+    public void MockSendMsg() {
+        try {
+            String token = URLDecoder.decode("Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIzMGFmNjYwMmExNGU0MzJkOWQ0NjI0MGFkZWUzNDVhMSIsInVzZXIiOiJ7XCJpZFwiOjM3LFwidXNlcm5hbWVcIjpcImd1b3l1XCJ9IiwiaWQiOiIzNyJ9.8swyDu5fqJj70H7ACIjx4ubKGJPzgrpx7tBpfLdjIRI", "UTF-8");
+            System.out.println(token);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
     }
 }

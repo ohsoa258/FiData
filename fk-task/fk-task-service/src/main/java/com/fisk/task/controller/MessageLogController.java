@@ -1,8 +1,10 @@
 package com.fisk.task.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.service.IWsMessageService;
 import com.fisk.task.vo.WsMessageLogVO;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,11 @@ public class MessageLogController {
     @GetMapping("/getUnMsg")
     public ResultEntity<List<WsMessageLogVO>> getWsUnMessage() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserUnMessage());
+    }
+
+    @PostMapping("/getMsg")
+    public ResultEntity<Page<WsMessageLogVO>> getWsMessage(@RequestBody MessageLogQuery query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserAllMessage(query));
     }
 
     @PutMapping("/read")

@@ -51,6 +51,8 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info("queryRes:" + JSON.toJSONString(queryRes));
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
+        awbd.tableId=ae.tableId;
+        awbd.appId=inpData.appId;
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表
@@ -68,28 +70,28 @@ public class BuildAtlasTableAndColumnTaskListener {
         attributes_rdbms_table.attributes = attributes_field_rdbms_table;
         entity_rdbms_table.entity = attributes_rdbms_table;
         BusinessResult resTb = atlas.atlasBuildTable(entity_rdbms_table);
-        awbd.tableId = resTb.data.toString();
+        awbd.atlasTableId = resTb.data.toString();
         //endregion
         //region atlas创建表与DB的连接
-        AtlasEntityProcessDTO aepd=new AtlasEntityProcessDTO();
-        List<EntityProcess.entity> inputs_db=new ArrayList<>();
-        List<EntityProcess.entity> outputs_tab=new ArrayList<>();
-        EntityProcess.entity inputentity_db=new EntityProcess.entity();
-        EntityProcess.entity ouputentity_tab=new EntityProcess.entity();
-        inputentity_db.guid=ae.dbId;
-        inputentity_db.typeName= AtlasProcessEnum.db.getName();
+        AtlasEntityProcessDTO aepd = new AtlasEntityProcessDTO();
+        List<EntityProcess.entity> inputs_db = new ArrayList<>();
+        List<EntityProcess.entity> outputs_tab = new ArrayList<>();
+        EntityProcess.entity inputentity_db = new EntityProcess.entity();
+        EntityProcess.entity ouputentity_tab = new EntityProcess.entity();
+        inputentity_db.guid = ae.dbId;
+        inputentity_db.typeName = AtlasProcessEnum.db.getName();
         inputs_db.add(inputentity_db);
-        ouputentity_tab.guid=awbd.tableId;
-        ouputentity_tab.typeName=AtlasProcessEnum.table.getName();
+        ouputentity_tab.guid = awbd.atlasTableId;
+        ouputentity_tab.typeName = AtlasProcessEnum.table.getName();
         outputs_tab.add(ouputentity_tab);
-        aepd.createUser=ae.createUser;
-        aepd.inputs=inputs_db;
-        aepd.outputs=outputs_tab;
-        aepd.higherType=AtlasProcessEnum.higherDb.getName();
-        aepd.processName="db_process_table_"+ae.tableName;
-        aepd.qualifiedName="db_process_table_"+ae.tableName+"@atlas";
-        aepd.createUser=ae.createUser;
-        aepd.des="atlas process db link to table"+ae.tableName;
+        aepd.createUser = ae.createUser;
+        aepd.inputs = inputs_db;
+        aepd.outputs = outputs_tab;
+        aepd.higherType = AtlasProcessEnum.higherDb.getName();
+        aepd.processName = "db_process_table_" + ae.tableName;
+        aepd.qualifiedName = "db_process_table_" + ae.tableName + "@atlas";
+        aepd.createUser = ae.createUser;
+        aepd.des = "atlas process db link to table" + ae.tableName;
         atlas.atlasBuildProcess(aepd);
         //endregion
         //region atlas创建字段
@@ -134,8 +136,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         List<EntityProcess.entity> inputs = new ArrayList<>();
         List<EntityProcess.entity> outputs = new ArrayList<>();
         EntityProcess.entity inputentity = new EntityProcess.entity();
-
-        inputentity.guid = awbd.tableId;
+        inputentity.guid = awbd.atlasTableId;
         inputentity.typeName = "rdbms_table";
         inputs.add(inputentity);
         l_acd.forEach((o) -> {
@@ -146,13 +147,13 @@ public class BuildAtlasTableAndColumnTaskListener {
         });
         attributes_field_rdbms_process.owner = ae.createUser;
         attributes_field_rdbms_process.ownerName = ae.createUser;
-        attributes_field_rdbms_process.name = "table_process_column_"+ae.tableName;
-        attributes_field_rdbms_process.qualifiedName = "table_process_column_"+ae.tableName+"@atlas";
+        attributes_field_rdbms_process.name = "table_process_column_" + ae.tableName;
+        attributes_field_rdbms_process.qualifiedName = "table_process_column_" + ae.tableName + "@atlas";
         attributes_field_rdbms_process.contact_info = "";
-        attributes_field_rdbms_process.description = "atlas process column link to table "+ae.tableName;
+        attributes_field_rdbms_process.description = "atlas process column link to table " + ae.tableName;
         attributes_field_rdbms_process.createTime = df.format(new Date());
         attributes_field_rdbms_process.updateTime = df.format(new Date());
-        attributes_field_rdbms_process.comment = ae.tableName+" process column";
+        attributes_field_rdbms_process.comment = ae.tableName + " process column";
         attributes_field_rdbms_process.type = "table";
         attributes_field_rdbms_process.inputs = inputs;
         attributes_field_rdbms_process.outputs = outputs;
@@ -162,6 +163,9 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(JSON.toJSONString(entity_rdbms_process_table));
         BusinessResult result = atlas.atlasBuildProcess(entity_rdbms_process_table);
         log.info(JSON.toJSONString(result));
+        //endregion
+        //region 回写数据
+
         //endregion
     }
 }
