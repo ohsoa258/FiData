@@ -2,6 +2,7 @@ package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.AtlasAccessDTO;
+import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -17,17 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @FeignClient("dataAccess-service")
 public interface DataAccessClient {
-
-    /**
-     * 提供给nifi的数据
-     *
-     * @param id 物理表id
-     * @param appid 应用注册id
-     * @return DataAccessConfigDTO
-     */
-    @GetMapping("/physicalTable/dataAccessConfig")
-    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
-            @RequestParam("id") long id, @RequestParam("appid") long appid);
 
     /**
      * 元数据实例&DB构建
@@ -84,4 +74,25 @@ public interface DataAccessClient {
      */
     @PostMapping("/physicalTable/addAtlasTableIdAndDorisSql")
     ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto);
+
+
+    /**
+     * 提供给nifi的数据
+     *
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return DataAccessConfigDTO
+     */
+    @GetMapping("/physicalTable/dataAccessConfig")
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
+            @RequestParam("id") long id, @RequestParam("appid") long appid);
+
+    /**
+     * 回写componentId
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/physicalTable/addComponentId")
+    public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto);
 }

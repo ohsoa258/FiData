@@ -764,100 +764,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
 
-    @Override
-    public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
-        DataAccessConfigDTO dto = new DataAccessConfigDTO();
-
-        // app组配置
-        GroupConfig groupConfig = new GroupConfig();
-
-        //任务组配置
-        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
-
-        // 数据源jdbc配置
-        DataSourceConfig sourceDsConfig = new DataSourceConfig();
-
-        // 目标源jdbc连接
-        DataSourceConfig targetDsConfig = new DataSourceConfig();
-
-        // 表及表sql
-        ProcessorConfig processorConfig = new ProcessorConfig();
-
-        // 1.app组配置
-        // select * from tb_app_registration where id=id and del_flag=1;
-        AppRegistrationPO registrationpo = this.appRegistrationImpl.query()
-                .eq("id", appid)
-                .eq("del_flag", 1)
-                .one();
-        if (registrationpo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        groupConfig.setAppName(registrationpo.getAppName());
-        groupConfig.setAppDetails(registrationpo.getAppDes());
-        // TODO: 缺失字段(给个默认值)
-        groupConfig.setNewApp(false);
-
-        // 2.任务组配置
-        taskGroupConfig.setAppName(registrationpo.getAppName());
-        taskGroupConfig.setAppDetails(registrationpo.getAppDes());
-
-        //3.数据源jdbc配置
-        AppDataSourcePO datasourcepo = appDataSourceImpl.query()
-                .eq("appid", appid)
-                .eq("del_flag", 1)
-                .one();
-        if (datasourcepo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        sourceDsConfig.setJdbcStr(datasourcepo.getConnectStr());
-//        sourceDsConfig.setType(); // 先硬编码
-        sourceDsConfig.setUser(datasourcepo.getConnectAccount());
-        sourceDsConfig.setPassword(datasourcepo.getConnectPwd());
-
-        // 4.目标源jdbc连接
-
-
-        // 5.表及表sql
-        TableSyncmodePO modelSync = syncmodeImpl.query()
-                .eq("id", id)
-                .one();
-        if (modelSync == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-
-        NifiSettingPO modelNifi = nifiSettingImpl.query()
-                .eq("appid", appid)
-                .eq("tableId", id)
-                .one();
-        if (modelNifi == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-
-        // corn_expression
-        processorConfig.scheduleExpression = modelSync.getCornExpression();
-
-        String timerDriver = "timer_driver";
-        String corn = "corn";
-
-        if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
-            processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
-        } else if (corn.equalsIgnoreCase(modelSync.timerDriver)) {
-            processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
-        } else {
-            processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
-        }
-
-        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
-        processorConfig.targetTableName = modelNifi.tableName;
-
-        dto.groupConfig = groupConfig;
-        dto.taskGroupConfig = taskGroupConfig;
-        dto.sourceDsConfig = sourceDsConfig;
-        dto.targetDsConfig = targetDsConfig;
-        dto.processorConfig = processorConfig;
-
-        return dto;
-    }
 
     @Override
     public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
@@ -969,5 +875,120 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean save = nifiSettingImpl.save(po);
 
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
+        DataAccessConfigDTO dto = new DataAccessConfigDTO();
+
+        // app组配置
+        GroupConfig groupConfig = new GroupConfig();
+
+        //任务组配置
+        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+
+        // 数据源jdbc配置
+        DataSourceConfig sourceDsConfig = new DataSourceConfig();
+
+        // 目标源jdbc连接
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+
+        // 表及表sql
+        ProcessorConfig processorConfig = new ProcessorConfig();
+
+        // 1.app组配置
+        // select * from tb_app_registration where id=id and del_flag=1;
+        AppRegistrationPO registrationpo = this.appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (registrationpo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        groupConfig.setAppName(registrationpo.getAppName());
+        groupConfig.setAppDetails(registrationpo.getAppDes());
+        // TODO: 缺失字段(给个默认值)
+        groupConfig.setNewApp(false);
+
+        // 2.任务组配置
+        taskGroupConfig.setAppName(registrationpo.getAppName());
+        taskGroupConfig.setAppDetails(registrationpo.getAppDes());
+
+        //3.数据源jdbc配置
+        AppDataSourcePO datasourcepo = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (datasourcepo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        sourceDsConfig.setJdbcStr(datasourcepo.getConnectStr());
+//        sourceDsConfig.setType(); // 先硬编码
+        sourceDsConfig.setUser(datasourcepo.getConnectAccount());
+        sourceDsConfig.setPassword(datasourcepo.getConnectPwd());
+
+        // 4.目标源jdbc连接
+
+
+        // 5.表及表sql
+        /*TableSyncmodePO modelSync = syncmodeImpl.query()
+                .eq("id", id)
+                .one();*/
+        TableSyncmodePO modelSync = syncmodeMapper.getData(id);
+
+        if (modelSync == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        NifiSettingPO modelNifi = nifiSettingImpl.query()
+                .eq("appid", appid)
+                .eq("table_id", id)
+                .one();
+        if (modelNifi == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // corn_expression
+        processorConfig.scheduleExpression = modelSync.getCornExpression();
+
+        String timerDriver = "timer_driver";
+        String corn = "corn";
+
+        if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
+        } else if (corn.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        } else {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
+        }
+
+        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
+        processorConfig.targetTableName = modelNifi.tableName;
+
+        dto.groupConfig = groupConfig;
+        dto.taskGroupConfig = taskGroupConfig;
+        dto.sourceDsConfig = sourceDsConfig;
+        dto.targetDsConfig = targetDsConfig;
+        dto.processorConfig = processorConfig;
+
+        return dto;
+    }
+
+    @Override
+    public ResultEnum addComponentId(NifiAccessDTO dto) {
+
+        NifiSettingPO model = this.nifiSettingImpl.query()
+                .eq("table_id", dto.tableId)
+                .eq("appid", dto.appid)
+                .one();
+        if (model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        model.appGroupId = dto.appGroupId;
+        model.tableGroupId = dto.tableGroupId;
+        boolean update = this.nifiSettingImpl.updateById(model);
+
+        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

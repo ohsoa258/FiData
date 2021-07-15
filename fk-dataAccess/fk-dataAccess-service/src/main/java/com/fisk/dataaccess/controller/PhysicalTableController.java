@@ -179,14 +179,6 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasBuildTableAndColumn(id, appid));
     }
 
-
-    @GetMapping("/dataAccessConfig")
-    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
-            @RequestParam("id") long id, @RequestParam("appid") long appid) {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataAccessConfig(id,appid));
-    }
-
     @GetMapping("/getAtlasWriteBackDataDTO")
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
             @RequestParam("appid") long appid,
@@ -199,5 +191,18 @@ public class PhysicalTableController {
     public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasTableIdAndDorisSql(dto));
+    }
+
+    @GetMapping("/dataAccessConfig")
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
+            @RequestParam("id") long id, @RequestParam("appid") long appid) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataAccessConfig(id,appid));
+    }
+
+    @PostMapping("/addComponentId")
+    public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
     }
 }

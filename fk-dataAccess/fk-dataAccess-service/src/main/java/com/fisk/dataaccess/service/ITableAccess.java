@@ -3,10 +3,7 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AtlasAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -128,4 +125,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 执行结果
      */
     ResultEnum addAtlasTableIdAndDorisSql(AtlasAccessDTO dto);
+
+    /**
+     * 回写componentId
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum addComponentId(NifiAccessDTO dto);
 }

@@ -11,23 +11,23 @@ import java.io.Serializable;
  * @author Lock
  */
 @Data
-@TableName("tb_app_nififlow")
+@TableName("tb_nifi_setting")
 public class NifiSettingPO implements Serializable {
     /**
      * 应用注册id
      */
     @TableId(type = IdType.INPUT)
+    public long tableId;
+
+    /**
+     * 物理表id
+     */
     public long appid;
 
     /**
      * 应用注册componentId
      */
     public String appGroupId;
-
-    /**
-     * 物理表id
-     */
-    public long tableId;
     /**
      * 物理表componentId
      */
