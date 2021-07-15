@@ -122,26 +122,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(500, "保存tb_app_drivetype数据失败");
         }*/
 
-
-/*
-        AtlasEntityDTO dto = new AtlasEntityDTO();
-
-        dto.setAppName("test0001");
-        dto.setDriveType("MySQL");
-        dto.setCreateUser("41");
-        dto.setAppDes("test0001");
-        dto.setHost("192.168.11.130");
-        dto.setPort("3306");
-        dto.setDbName("dmp_system_db");
-
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(dto);
-
-        System.out.println(task);
-*/
+        // TODO: atlas对接应用注册
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
 
-        atlasEntityQueryDTO.appId = "6";
+        atlasEntityQueryDTO.appId = "" + po.getId() + "";
+
         atlasEntityQueryDTO.userId = userId;
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
 

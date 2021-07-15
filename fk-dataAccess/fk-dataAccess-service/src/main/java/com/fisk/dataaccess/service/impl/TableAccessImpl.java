@@ -118,6 +118,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
 
+        // 应用注册id
         long id = arpo.getId();
         if (id < 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
@@ -183,39 +184,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         po.setId(tpo.getId());
         boolean save3 = syncmodeImpl.save(po);
 
-/*
         // TODO: atlas调用
-        AtlasEntityDbTableColumnDTO tableColumnDTO = new AtlasEntityDbTableColumnDTO();
-        tableColumnDTO.dbId = "1";
-        tableColumnDTO.tableName = "tb_table_access";
-        tableColumnDTO.createUser = "47";
-
-        AtlasEntityColumnDTO columnDTO1 = new AtlasEntityColumnDTO();
-        columnDTO1.columnName = "id";
-        columnDTO1.dataType = "INT";
-        columnDTO1.isKey = "1";
-        columnDTO1.comment = "主键";
-        AtlasEntityColumnDTO columnDTO2 = new AtlasEntityColumnDTO();
-        columnDTO2.columnName = "address";
-        columnDTO2.dataType = "VARCHAR(255)";
-        columnDTO2.isKey = "0";
-        columnDTO2.comment = "地址";
-
-        List<AtlasEntityColumnDTO> columnList = new ArrayList<>();
-        columnList.add(columnDTO1);
-        columnList.add(columnDTO2);
-
-        tableColumnDTO.columns = columnList;
-
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(tableColumnDTO);
-        System.out.println(task);
-*/
-
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
         atlasEntityQueryDTO.userId = userId;
-        atlasEntityQueryDTO.appId = "6";
-        atlasEntityQueryDTO.dbId = "" + 1 + "";
+//        atlasEntityQueryDTO.appId = "6";
+        // 应用注册id
+        atlasEntityQueryDTO.appId = "" + id + "";
+
+        // 物理表id
+        atlasEntityQueryDTO.dbId = "" + tpo.getId() + "";
 
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
         System.out.println(task);
@@ -762,7 +739,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return dto;
     }
-
 
 
     @Override
