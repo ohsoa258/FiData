@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.dto.AtlasAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -8,6 +9,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -74,4 +76,12 @@ public interface DataAccessClient {
             @RequestParam("appid") long appid,
             @RequestParam("id") long id);
 
+    /**
+     *  物理表回写
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/physicalTable/addAtlasTableIdAndDorisSql")
+    ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto);
 }

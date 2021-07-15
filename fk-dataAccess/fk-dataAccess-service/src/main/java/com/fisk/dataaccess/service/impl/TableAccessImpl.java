@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -57,6 +58,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Resource
     private UserHelper userHelper;
+
+    @Resource
+    private NifiSettingImpl nifiSettingImpl;
 
     /**
      * 添加物理表(实时)
@@ -814,13 +818,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
         // 5.表及表sql
-        TableSyncmodePO syncpo = syncmodeImpl.query()
+        TableSyncmodePO modelSync = syncmodeImpl.query()
                 .eq("id", id)
                 .one();
+        if (modelSync == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
-        processorConfig.scheduleExpression = syncpo.getCornExpression();
-//        processorConfig.scheduleType =;
-        processorConfig.sourceExecSqlQuery = "";
+        NifiSettingPO modelNifi = nifiSettingImpl.query()
+                .eq("appid", appid)
+                .eq("tableId", id)
+                .one();
+        if (modelNifi == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // corn_expression
+        processorConfig.scheduleExpression = modelSync.getCornExpression();
+
+        String timerDriver = "timer_driver";
+        String corn = "corn";
+
+        if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
+        } else if (corn.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        } else {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
+        }
+
+        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
+        processorConfig.targetTableName = modelNifi.tableName;
 
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
@@ -909,5 +937,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.columnsKeys = columns;
 
         return dto;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addAtlasTableIdAndDorisSql(AtlasAccessDTO dto) {
+
+        // tb_table_access
+        TableAccessPO model = this.query()
+                .eq("id", dto.tableId)
+                .eq("appid", dto.appid)
+                .eq("del_flag", 1)
+                .one();
+        if (model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        model.atlasTableId = dto.atlasTableId;
+        model.updateUser = dto.userId;
+        boolean update = this.updateById(model);
+        if (!update) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        // tb_nifi_setting
+        NifiSettingPO po = new NifiSettingPO();
+        po.tableId = dto.tableId;
+        po.appid = dto.appid;
+        po.tableName = dto.tableName;
+        po.selectSql = dto.dorisSelectSqlStr;
+
+        boolean save = nifiSettingImpl.save(po);
+
+        return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }
