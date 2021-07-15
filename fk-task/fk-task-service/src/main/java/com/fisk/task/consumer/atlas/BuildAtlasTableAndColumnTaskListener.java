@@ -6,7 +6,9 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.AtlasProcessEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
@@ -39,6 +41,8 @@ public class BuildAtlasTableAndColumnTaskListener {
     IAtlasBuildInstance atlas;
     @Resource
     DataAccessClient dc;
+    @Resource
+    PublishTaskController pc;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
@@ -169,5 +173,11 @@ public class BuildAtlasTableAndColumnTaskListener {
         //region 回写数据
         dc.addAtlasTableIdAndDorisSql(awbd);
         //endregion
+        //启动nifi
+        BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
+        bfd.userId=ae.userId;
+        bfd.appId=Long.parseLong(inpData.appId);
+        bfd.id=Long.parseLong(ae.tableId);
+        pc.publishBuildNifiFlowTask(bfd);
     }
 }
