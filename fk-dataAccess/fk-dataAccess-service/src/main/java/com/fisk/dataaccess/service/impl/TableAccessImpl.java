@@ -706,6 +706,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.dbId = sourcepo.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
+        dto.tableId = modelAccess.getAtlasTableId();
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
@@ -731,6 +732,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
+            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
 
             columns.add(atlasEntityColumnDTO);
         }
