@@ -3,6 +3,7 @@ package com.fisk.datamodel.test;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,9 +33,8 @@ public class TestAtlas {
     @Test
     public void test01() {
 
-        ResultEntity<AtlasEntityDTO> dto = client.getAtlasEntity(6);
-
-        System.out.println(dto);
+        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(1, 6);
+        System.out.println(dto.getData());
     }
 
 }

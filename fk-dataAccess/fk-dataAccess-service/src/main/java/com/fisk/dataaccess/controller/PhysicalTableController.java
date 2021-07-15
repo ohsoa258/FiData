@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppNameDTO;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -196,5 +193,11 @@ public class PhysicalTableController {
             @RequestParam("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid,id));
+    }
+
+    @PostMapping("/addAtlasTableIdAndDorisSql")
+    public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasTableIdAndDorisSql(dto));
     }
 }
