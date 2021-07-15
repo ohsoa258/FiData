@@ -55,7 +55,7 @@ public interface DataAccessClient {
             @RequestParam("atlas_db_id") String atlasDbId);
 
     /**
-     *
+     *  根据应用注册id和物理表id,查询atlasInstanceId和atlasDbId
      *
      * @param appid 应用注册id
      * @param id 物理表id
