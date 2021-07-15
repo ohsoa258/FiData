@@ -901,21 +901,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 1.app组配置
         // select * from tb_app_registration where id=id and del_flag=1;
-        AppRegistrationPO registrationpo = this.appRegistrationImpl.query()
+        AppRegistrationPO modelReg = this.appRegistrationImpl.query()
                 .eq("id", appid)
                 .eq("del_flag", 1)
                 .one();
-        if (registrationpo == null) {
+        if (modelReg == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        groupConfig.setAppName(registrationpo.getAppName());
-        groupConfig.setAppDetails(registrationpo.getAppDes());
+        groupConfig.setAppName(modelReg.getAppName());
+        groupConfig.setAppDetails(modelReg.getAppDes());
         // TODO: 缺失字段(给个默认值)
-        groupConfig.setNewApp(false);
+//        groupConfig.setNewApp(false);
 
         // 2.任务组配置
-        taskGroupConfig.setAppName(registrationpo.getAppName());
-        taskGroupConfig.setAppDetails(registrationpo.getAppDes());
+        taskGroupConfig.setAppName(modelReg.getAppName());
+        taskGroupConfig.setAppDetails(modelReg.getAppDes());
 
         //3.数据源jdbc配置
         AppDataSourcePO datasourcepo = appDataSourceImpl.query()
