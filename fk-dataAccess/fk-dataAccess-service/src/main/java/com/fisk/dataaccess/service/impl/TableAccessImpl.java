@@ -706,6 +706,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.dbId = sourcepo.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
+        // TODO
         dto.tableId = "" + modelAccess.getId() + "";
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
