@@ -90,7 +90,7 @@ public class BuildAtlasInstanceTaskListener {
         attributes_rdbms_db.attributes = attributes_field_rdbms_db;
         rdbms_db.entity = attributes_rdbms_db;
         BusinessResult dbRes = atlas.atlasBuildDb(rdbms_db);
-        awbd.dbId = dbRes.data.toString();
+        awbd.atlasTableId = dbRes.data.toString();
         //endregion
         //region 创建实例与数据库的连接
         EntityProcess.entity_rdbms_process entity_rdbms_process = new EntityProcess.entity_rdbms_process();
@@ -127,7 +127,7 @@ public class BuildAtlasInstanceTaskListener {
         log.info("awbd："+JSON.toJSONString(awbd));
         //endregion
         //region 返回instance id & DB id
-        dc.addAtlasInstanceIdAndDbId(Long.parseLong(inpData.appId),awbd.appId,awbd.dbId);
+        dc.addAtlasInstanceIdAndDbId(Long.parseLong(inpData.appId),awbd.appId,awbd.atlasTableId);
         log.info("atlas数据回写完成.....");
         //endregion
     }
