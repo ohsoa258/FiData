@@ -706,7 +706,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.dbId = sourcepo.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
-        dto.tableId = modelAccess.getAtlasTableId();
+        dto.tableId = "" + modelAccess.getId() + "";
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
@@ -912,6 +912,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         // TODO: 缺失字段(给个默认值)
 //        groupConfig.setNewApp(false);
+//        this.query()
+//                .eq("id", id)
+
 
         // 2.任务组配置
         taskGroupConfig.setAppName(modelReg.getAppName());
@@ -934,9 +937,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
         // 5.表及表sql
-        /*TableSyncmodePO modelSync = syncmodeImpl.query()
-                .eq("id", id)
-                .one();*/
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
 
         if (modelSync == null) {
