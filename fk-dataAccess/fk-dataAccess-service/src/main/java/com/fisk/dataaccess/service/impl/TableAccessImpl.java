@@ -764,7 +764,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelData == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        dto.dbId = modelData.atlasDbId;
+        dto.atlasTableId = modelData.atlasDbId;
 //        // 查询tb_app_nifiFlow
 //        AppNifiFlowPO modelNifiFlow = nifiFlowImpl.query()
 //                .eq("id", appid)
@@ -803,6 +803,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
 
+            atlasEntityColumnDTO.setColumnId(po.getId());
             atlasEntityColumnDTO.setColumnName(po.getFieldName());
             atlasEntityColumnDTO.setComment(po.getFieldDes());
             if (po.fieldLength == 0) {
@@ -823,28 +824,52 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addAtlasTableIdAndDorisSql(AtlasAccessDTO dto) {
+    public ResultEnum addAtlasTableIdAndDorisSql(AtlasWriteBackDataDTO dto) {
 
-        // tb_table_access
-        TableAccessPO model = this.query()
-                .eq("id", dto.tableId)
-                .eq("appid", dto.appid)
+        // 应用注册id
+        long appid = Long.parseLong(dto.appId);
+        // 物理表id
+        long tableId = Long.parseLong(dto.tableId);
+
+        // 物理表: tb_table_access
+        TableAccessPO modelAccess = this.query()
+                .eq("id", tableId)
+                .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
-        if (model == null) {
+        if (modelAccess == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        model.atlasTableId = dto.atlasTableId;
-        model.updateUser = dto.userId;
-        boolean update = this.updateById(model);
+        modelAccess.atlasTableId = dto.atlasTableId;
+//        modelAccess.updateUser = dto.userId;
+        boolean update = this.updateById(modelAccess);
         if (!update) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        // tb_nifi_setting
+        List<AtlasEntityColumnDTO> list = dto.columnsKeys;
+
+        for (AtlasEntityColumnDTO columnDTO : list) {
+
+            TableFieldsPO modelFields = this.tableFieldsImpl.query()
+                    .eq("id", columnDTO.columnId)
+                    .one();
+            if (modelFields == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+
+            // 回写的字段GUID
+            modelFields.atlasFieldId = columnDTO.getGuid();
+            boolean updateField = this.tableFieldsImpl.updateById(modelFields);
+            if (!updateField) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }
+
+        // nifi配置表: tb_nifi_setting
         NifiSettingPO po = new NifiSettingPO();
-        po.tableId = dto.tableId;
-        po.appid = dto.appid;
+        po.tableId = tableId;
+        po.appid = appid;
         po.tableName = dto.tableName;
         po.selectSql = dto.dorisSelectSqlStr;
 

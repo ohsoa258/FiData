@@ -188,7 +188,7 @@ public class PhysicalTableController {
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
-    public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasAccessDTO dto) {
+    public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasWriteBackDataDTO dto) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasTableIdAndDorisSql(dto));
     }

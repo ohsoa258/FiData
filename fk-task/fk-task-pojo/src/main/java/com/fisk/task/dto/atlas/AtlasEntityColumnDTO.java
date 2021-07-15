@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class AtlasEntityColumnDTO {
     public String columnName;
+    public long columnId;
     public String dataType;
     public String isKey;
     public String comment;

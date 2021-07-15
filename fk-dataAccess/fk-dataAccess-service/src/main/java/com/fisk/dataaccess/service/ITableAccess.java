@@ -124,7 +124,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addAtlasTableIdAndDorisSql(AtlasAccessDTO dto);
+    ResultEnum addAtlasTableIdAndDorisSql(AtlasWriteBackDataDTO dto);
 
     /**
      * 回写componentId
