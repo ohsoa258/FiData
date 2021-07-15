@@ -40,17 +40,7 @@ public class TestAtlas {
     @Test
     public void test02() {
 
-//        AtlasAccessDTO dto = new AtlasAccessDTO();
-//        dto.appid = 6;
-//        dto.tableId = 1;
-//        dto.userId = "47";
-//        dto.tableName = "doris_tb_test";
-//        dto.atlasTableId = "1";
-//        dto.dorisSelectSqlStr = "select * from doris_tb_test";
-//
-//        client.addAtlasTableIdAndDorisSql(dto);
-
-        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(1, 6);
+        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(740, 6);
         System.out.println(dto);
 
     }
