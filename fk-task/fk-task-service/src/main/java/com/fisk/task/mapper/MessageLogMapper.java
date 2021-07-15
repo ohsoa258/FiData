@@ -6,8 +6,6 @@ import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.vo.WsMessageLogVO;
 
-import java.util.List;
-
 /**
  * @author gy
  */
@@ -20,5 +18,5 @@ public interface MessageLogMapper extends FKBaseMapper<MessageLogPO> {
      * @param query query对象
      * @return
      */
-    List<WsMessageLogVO> listMessageLog(Page<WsMessageLogVO> page, MessageLogQuery query);
+    Page<WsMessageLogVO> listMessageLog(Page<WsMessageLogVO> page, MessageLogQuery query);
 }

@@ -1,5 +1,6 @@
 package com.fisk.task.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.vo.WsMessageLogVO;
@@ -23,7 +24,7 @@ public interface IWsMessageService {
      * @param query query对象
      * @return 消息列表
      */
-    List<WsMessageLogVO> getUserAllMessage(MessageLogQuery query);
+    Page<WsMessageLogVO> getUserAllMessage(MessageLogQuery query);
 
     /**
      * 已读消息

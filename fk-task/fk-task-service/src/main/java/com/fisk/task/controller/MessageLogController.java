@@ -1,5 +1,6 @@
 package com.fisk.task.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -29,7 +30,7 @@ public class MessageLogController {
     }
 
     @PostMapping("/getMsg")
-    public ResultEntity<List<WsMessageLogVO>> getWsMessage(@RequestBody MessageLogQuery query) {
+    public ResultEntity<Page<WsMessageLogVO>> getWsMessage(@RequestBody MessageLogQuery query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserAllMessage(query));
     }
 

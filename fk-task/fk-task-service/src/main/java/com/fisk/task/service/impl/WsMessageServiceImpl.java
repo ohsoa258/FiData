@@ -1,5 +1,6 @@
 package com.fisk.task.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.response.ResultEnum;
@@ -41,7 +42,7 @@ public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageL
     }
 
     @Override
-    public List<WsMessageLogVO> getUserAllMessage(MessageLogQuery query) {
+    public Page<WsMessageLogVO> getUserAllMessage(MessageLogQuery query) {
         UserInfo userInfo = userHelper.getLoginUserInfo();
         query.userId = userInfo.id;
         return mapper.listMessageLog(query.page, query);

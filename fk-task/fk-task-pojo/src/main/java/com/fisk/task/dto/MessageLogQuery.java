@@ -10,5 +10,6 @@ import lombok.Data;
 @Data
 public class MessageLogQuery {
     public Long userId;
+    public String details;
     public Page<WsMessageLogVO> page;
 }

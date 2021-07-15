@@ -8,5 +8,8 @@
         from tb_msg_log
         where del_flag = 1
         and create_user = #{query.userId}
+        <if test="query.details != null and query.details != '' ">
+            and msg like concat('%', #{query.details}, '%')
+        </if>
     </select>
 </mapper>
