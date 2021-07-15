@@ -71,14 +71,16 @@ public class MQConsumerLogAspect {
         } catch (Exception ex) {
             log.error("任务状态更新失败");
         }
+        if (data == null || data.userId == null) {
+            throw new FkException(ResultEnum.PARAMTER_ERROR);
+        }
 
         if (model != null) {
             model.taskStatus = TaskStatusEnum.PROCESSING;
             mapper.updateById(model);
         }
-        if (data != null) {
-            WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId);
-        }
+
+        WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId);
 
         String code = UUID.randomUUID().toString();
         log.info("【{}】【{}】【{}】开始执行", LocalDateTime.now(), code, name);
@@ -97,9 +99,8 @@ public class MQConsumerLogAspect {
             model.taskStatus = statusEnum;
             mapper.updateById(model);
         }
-        if (data != null) {
-            WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
-        }
+
+        WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
         return res;
     }
 

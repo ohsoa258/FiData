@@ -31,6 +31,8 @@ public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageL
         List<MessageLogPO> list = this.query()
                 .select("id", "msg", "status", "create_time")
                 .eq("create_user", userInfo.id)
+                .eq("status", MessageStatusEnum.UNREAD.getValue())
+                .orderByDesc("create_time")
                 .list();
         return WsMessageLogMap.INSTANCES.poToVo(list);
     }
