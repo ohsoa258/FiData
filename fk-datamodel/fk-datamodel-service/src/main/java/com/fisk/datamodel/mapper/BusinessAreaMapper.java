@@ -2,6 +2,7 @@ package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -35,4 +36,18 @@ public interface BusinessAreaMapper extends BaseMapper<BusinessAreaPO> {
             "AND del_flag = 1\n" +
             "ORDER BY update_time DESC ")
     List<Map<String, Object>> queryByPage(Page<Map<String, Object>> page, @Param("key") String key);
+
+    /**
+     * 获取tb_area_business表全部字段
+     *
+     * @return 查询结果
+     */
+    List<BusinessFilterDTO> columnList();
+    /**
+     * 获取业务域数据列表--可根据筛选器
+     *
+     * @return 查询结果
+     */
+    Page<BusinessPageResultDTO> queryList(Page<BusinessPageResultDTO> page, @Param("query") BusinessPage query);
+
 }

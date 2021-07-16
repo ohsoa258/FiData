@@ -46,3 +46,7 @@ mybatis-plus:
       logic-not-delete-value: 1 # 逻辑未删除值(默认为 0)
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.fisk.dataaccess.entity  # 实体类的包扫描
+
+#feign:
+#  hystrix:
+#    enabled: true

@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
@@ -930,7 +931,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(datasourcepo.getConnectStr());
-//        sourceDsConfig.setType(); // 先硬编码
+        sourceDsConfig.setType(DriverTypeEnum.MYSQL); // 先硬编码
         sourceDsConfig.setUser(datasourcepo.getConnectAccount());
         sourceDsConfig.setPassword(datasourcepo.getConnectPwd());
 

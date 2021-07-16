@@ -1,0 +1,29 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.BusinessAreaMapper">
+
+    <select id="columnList" resultType="com.fisk.datamodel.dto.BusinessFilterDTO">
+        select
+        COLUMN_NAME as columnName,
+        COLUMN_COMMENT as columnDes,
+        DATA_TYPE as columnType
+        from information_schema.COLUMNS
+        where table_name = 'tb_area_business' and COLUMN_NAME not in ('del_flag','id')
+    </select>
+
+    <select id="queryList" resultType="com.fisk.datamodel.dto.BusinessPageResultDTO">
+        select id,
+        business_name,
+        business_email,
+        business_des,
+        business_admin
+        from tb_area_business
+        where del_flag=1
+        <if test="query.where !=null and query.where.length()>0 ">
+            ${query.where}
+        </if>
+
+    </select>
+
+</mapper>

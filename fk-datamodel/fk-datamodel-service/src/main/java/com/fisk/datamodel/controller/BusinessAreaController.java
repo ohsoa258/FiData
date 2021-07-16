@@ -5,6 +5,9 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.BusinessPageDTO;
+import com.fisk.datamodel.dto.BusinessPageResultDTO;
+import com.fisk.datamodel.dto.BusinessQueryDTO;
 import com.fisk.datamodel.service.IBusinessArea;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -12,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -64,5 +68,16 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }
 
+    @GetMapping("/getColumn")
+    @ApiOperation(value = "获取业务域表字段")
+    public ResultEntity<Object> getColumn(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaColumn());
+    }
+
+    @PostMapping("/getDataList")
+    @ApiOperation(value = "获取业务域数据列表")
+    public ResultEntity<Page<BusinessPageResultDTO>> getDataList(@RequestBody BusinessPageDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataList(query));
+    }
 
 }
