@@ -2,9 +2,9 @@ package com.fisk.datamodel.test;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.AtlasAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,16 +41,14 @@ public class TestAtlas {
     @Test
     public void test02() {
 
-        AtlasAccessDTO dto = new AtlasAccessDTO();
-        dto.appid = 6;
-        dto.tableId = 1;
-        dto.userId = "47";
-        dto.tableName = "doris_tb_test";
-        dto.atlasTableId = "1";
-        dto.dorisSelectSqlStr = "select * from doris_tb_test";
+        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(740, 6);
+        System.out.println(dto);
+    }
 
-        client.addAtlasTableIdAndDorisSql(dto);
-
+    @Test
+    public void test03() {
+        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(1,6);
+        System.out.println(dto);
     }
 
 }
