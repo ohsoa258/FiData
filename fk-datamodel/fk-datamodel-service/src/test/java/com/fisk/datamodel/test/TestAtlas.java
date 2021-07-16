@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +43,12 @@ public class TestAtlas {
 
         ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(740, 6);
         System.out.println(dto);
+    }
 
+    @Test
+    public void test03() {
+        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(1,6);
+        System.out.println(dto);
     }
 
 }
