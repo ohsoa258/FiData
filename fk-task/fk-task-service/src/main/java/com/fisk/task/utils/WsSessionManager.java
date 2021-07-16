@@ -1,6 +1,7 @@
 package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -114,9 +115,9 @@ public class WsSessionManager {
     /**
      * 根据id发送消息
      */
-    public static void sendMsgById(String message, Long id) {
+    public static void sendMsgById(String message, Long id, MessageLevelEnum level) {
         Session session = SESSION_POOL.get(id);
-        sendMsg(session, message, id);
+        sendMsg(session, message, id, level);
     }
 
     /**
@@ -125,11 +126,11 @@ public class WsSessionManager {
      * @param message 消息内容
      * @param id      发送者id(发送时，排除次id)
      */
-    public static void sendMsgByAll(String message, Long id) {
+    public static void sendMsgByAll(String message, Long id, MessageLevelEnum level) {
         for (Map.Entry<Long, Session> sessionEntry : SESSION_POOL.entrySet()) {
             //排除掉自己
             if (!sessionEntry.getKey().equals(id)) {
-                sendMsg(sessionEntry.getValue(), message, id);
+                sendMsg(sessionEntry.getValue(), message, id, level);
             }
         }
     }
@@ -140,11 +141,11 @@ public class WsSessionManager {
      * @param message 消息内容
      * @param ids     接收者id
      */
-    public static void sendMsgByAll(String message, List<Long> ids) {
+    public static void sendMsgByAll(String message, List<Long> ids, MessageLevelEnum level) {
         for (Long id : ids) {
             Session session = SESSION_POOL.get(id);
             if (session != null) {
-                sendMsg(session, message, id);
+                sendMsg(session, message, id, level);
             }
         }
     }
@@ -155,8 +156,8 @@ public class WsSessionManager {
      * @param session session
      * @param msg     msg
      */
-    public static void sendMsgBySession(String msg, Session session, Long id) {
-        sendMsg(session, msg, id);
+    public static void sendMsgBySession(String msg, Session session, Long id, MessageLevelEnum level) {
+        sendMsg(session, msg, id, level);
     }
 
     /**
@@ -165,8 +166,8 @@ public class WsSessionManager {
      * @param session session
      * @param msg     msg
      */
-    public static void sendMsgBySession(String msg, Session session) {
-        sendMsg(session, msg, 0L);
+    public static void sendMsgBySession(String msg, Session session, MessageLevelEnum level) {
+        sendMsg(session, msg, 0L, level);
     }
 
     /**
@@ -175,30 +176,37 @@ public class WsSessionManager {
      * @param session session
      * @param msg     msg
      */
-    private static void sendMsg(Session session, String msg, Long id) {
+    private static void sendMsg(Session session, String msg, Long id, MessageLevelEnum level) {
         MDCHelper.setClass(WsSessionManager.class.getName());
         MDCHelper.setFunction("sendMsg");
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_WS_SEND_MESSAGE);
 
+        //记录日志
         MessageLogPO model = new MessageLogPO();
         model.createUser = id.toString();
         model.status = MessageStatusEnum.UNREAD;
+        model.level = level;
         model.msg = msg;
         mapperService.insert(model);
 
-        WsMessageLogVO vo = new WsMessageLogVO();
-        vo.msg = msg;
-        vo.id = model.id;
-        vo.status = model.status;
-        vo.createTime = model.createTime;
+        //低等级的不需要发消息，只落表
+        if(level != MessageLevelEnum.LOW) {
+            //发送消息
+            WsMessageLogVO vo = new WsMessageLogVO();
+            vo.msg = msg;
+            vo.id = model.id;
+            vo.status = model.status;
+            vo.createTime = model.createTime;
+            vo.level = level;
 
-        try {
-            if (session != null) {
-                session.getBasicRemote().sendText(JSON.toJSONString(vo));
-                log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, LocalDateTime.now(), msg);
+            try {
+                if (session != null) {
+                    session.getBasicRemote().sendText(JSON.toJSONString(vo));
+                    log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, LocalDateTime.now(), msg);
+                }
+            } catch (Exception e) {
+                log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + LocalDateTime.now() + "】，错误信息：", e);
             }
-        } catch (Exception e) {
-            log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + LocalDateTime.now() + "】，错误信息：", e);
         }
     }
 }

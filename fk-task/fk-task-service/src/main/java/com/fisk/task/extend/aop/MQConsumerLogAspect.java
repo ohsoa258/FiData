@@ -1,6 +1,7 @@
 package com.fisk.task.extend.aop;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.response.ResultEnum;
@@ -80,7 +81,7 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
 
-        WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId);
+        WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
 
         String code = UUID.randomUUID().toString();
         log.info("【{}】【{}】【{}】开始执行", LocalDateTime.now(), code, name);
@@ -100,7 +101,7 @@ public class MQConsumerLogAspect {
             mapper.updateById(model);
         }
 
-        WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId);
+        WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
         return res;
     }
 

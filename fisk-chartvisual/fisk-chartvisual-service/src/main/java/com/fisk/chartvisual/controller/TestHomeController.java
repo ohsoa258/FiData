@@ -72,4 +72,9 @@ public class TestHomeController {
         dto.userId = userInfo.getLoginUserInfo().id;
         return publishTaskClient.publishBuildNifiFlowTask(dto);
     }
+
+    @GetMapping("/{group}/{name}")
+    public void router() {
+        System.out.println(123);
+    }
 }

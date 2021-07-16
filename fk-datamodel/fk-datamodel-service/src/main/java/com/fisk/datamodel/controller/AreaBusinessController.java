@@ -15,9 +15,9 @@ import javax.annotation.Resource;
 /**
  * @author Lock
  */
-@Api(description = "业务域接口2.0")
-@RestController
-@RequestMapping("/business2.0")
+//@Api(description = "业务域接口2.0")
+//@RestController
+//@RequestMapping("/business2.0")
 @Slf4j
 public class AreaBusinessController {
 
