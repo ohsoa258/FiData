@@ -707,7 +707,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
         // TODO
-        dto.tableId = "" + modelAccess.getId() + "";
+//        dto.tableId = "" + modelAccess.getId() + "";
+        dto.tableId = String.valueOf(modelAccess.getId());
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
@@ -913,8 +914,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         // TODO: 缺失字段(给个默认值)
 //        groupConfig.setNewApp(false);
-//        this.query()
-//                .eq("id", id)
+
 
 
         // 2.任务组配置
@@ -951,6 +951,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelNifi == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // TODO: 将app组配置中的setNewApp加上
+        if (modelNifi.appGroupId == null && modelNifi.tableGroupId == null) {
+            groupConfig.setNewApp(true);
+        } else {
+            groupConfig.setNewApp(false);
+        }
+
 
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
