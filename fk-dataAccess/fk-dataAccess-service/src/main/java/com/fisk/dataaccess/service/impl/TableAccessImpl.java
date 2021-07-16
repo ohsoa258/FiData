@@ -964,7 +964,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
-        String timerDriver = "timer_driver";
+        String timerDriver = "timer driver";
         String corn = "corn";
 
         if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
