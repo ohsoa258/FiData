@@ -1,5 +1,6 @@
 package com.fisk.task.vo;
 
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import lombok.Data;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 public class WsMessageLogVO {
     public String msg;
     public LocalDateTime createTime;
+    public MessageLevelEnum level;
     public MessageStatusEnum status;
     public long id;
 }

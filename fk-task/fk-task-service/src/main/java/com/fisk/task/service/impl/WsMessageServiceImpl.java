@@ -2,6 +2,7 @@ package com.fisk.task.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -33,9 +34,10 @@ public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageL
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
         List<MessageLogPO> list = this.query()
-                .select("id", "msg", "status", "create_time")
+                .select("id", "msg", "status", "create_time", "level")
                 .eq("create_user", userInfo.id)
                 .eq("status", MessageStatusEnum.UNREAD.getValue())
+                .ne("level", MessageLevelEnum.LOW.getValue())
                 .orderByDesc("create_time")
                 .list();
         return WsMessageLogMap.INSTANCES.poToVo(list);

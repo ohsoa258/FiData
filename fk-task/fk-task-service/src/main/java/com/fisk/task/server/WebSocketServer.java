@@ -1,6 +1,7 @@
 package com.fisk.task.server;
 
 import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -46,10 +47,10 @@ public class WebSocketServer {
             msg += "连接成功";
             log.info("有新连接加入：{}，当前在线人数为：{}", token, WsSessionManager.getOnlineCount());
             WsSessionManager.add(res.data.id, session);
-            WsSessionManager.sendMsgBySession(msg, session, res.data.id);
+            WsSessionManager.sendMsgBySession(msg, session, res.data.id, MessageLevelEnum.LOW);
         } else {
             msg += res.msg;
-            WsSessionManager.sendMsgBySession(msg, session);
+            WsSessionManager.sendMsgBySession(msg, session, MessageLevelEnum.LOW);
         }
     }
 
