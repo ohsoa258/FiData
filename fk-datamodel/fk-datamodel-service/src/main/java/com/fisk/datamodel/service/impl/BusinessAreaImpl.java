@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -103,6 +104,45 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 
         return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
+    }
+
+    @Override
+    public List<BusinessFilterDTO> getBusinessAreaColumn()
+    {
+        return baseMapper.columnList();
+    }
+
+    @Override
+    public Page<BusinessPageResultDTO> getDataList(BusinessPageDTO query)
+    {
+        StringBuilder str = new StringBuilder();
+        if (query.key !=null && query.key.length()>0)
+        {
+            str.append(" and business_name like concat('%', "+"'"+query.key+"'"+ ", '%') ");
+        }
+        for (BusinessQueryDTO model: query.dto)
+        {
+            switch (model.queryType)
+            {
+                case "大于":
+                    str.append(" and " +model.columnName+">" +"'"+model.columnValue+"' ");
+                    break;
+                case "小于":
+                    str.append(" and " +model.columnName+"<"+"'" +model.columnValue+"' ");
+                    break;
+                case "等于":
+                    str.append(" and " +model.columnName+"="+"'"+model.columnValue+"' ");
+                    break;
+                case "包含":
+                    str.append(" and " +model.columnName+" like concat('%'," + "'" + model.columnValue+"'" + ", '%') " );
+                    break;
+            }
+        }
+        BusinessPage data=new BusinessPage();
+        data.page=query.page;
+        data.where=str.toString();
+
+        return  baseMapper.queryList(query.page,data);
     }
 
 }
