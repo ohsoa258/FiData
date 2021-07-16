@@ -726,6 +726,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
 
+            atlasEntityColumnDTO.setColumnId(po.getId());
             atlasEntityColumnDTO.setColumnName(po.getFieldName());
             atlasEntityColumnDTO.setComment(po.getFieldDes());
             if (po.fieldLength == 0) {
@@ -745,7 +746,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-
+    
     @Override
     public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
 
@@ -856,6 +857,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (AtlasEntityColumnDTO columnDTO : list) {
 
+            // 根据本表id查询tb_table_fields
             TableFieldsPO modelFields = this.tableFieldsImpl.query()
                     .eq("id", columnDTO.columnId)
                     .one();
@@ -865,6 +867,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             // 回写的字段GUID
             modelFields.atlasFieldId = columnDTO.getGuid();
+            // 更新tb_table_fields表数据
             boolean updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
