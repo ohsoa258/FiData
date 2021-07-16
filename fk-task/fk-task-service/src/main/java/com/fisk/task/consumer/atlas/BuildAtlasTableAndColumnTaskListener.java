@@ -180,14 +180,18 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info("atlas创建字段与表的连接 完成");
         //endregion
         //region 回写数据
-        dc.addAtlasTableIdAndDorisSql(awbd);
+        log.info("开始回写数据");
+        log.info("参数："+JSON.toJSONString(awbd));
+        ResultEntity<Object> writeBackRes=dc.addAtlasTableIdAndDorisSql(awbd);
+        log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
         //endregion
         //启动nifi
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
-        bfd.userId=ae.userId;
+        bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
+        log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
     }
