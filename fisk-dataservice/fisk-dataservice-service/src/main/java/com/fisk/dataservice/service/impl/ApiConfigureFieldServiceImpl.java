@@ -30,39 +30,30 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     // todo 登录人
 
     @Override
-    public ResultEnum saveConfigure(List<ApiConfigureFieldPO> dto, String apiName, String apiInfo,Integer distinctData) {
+    public ResultEnum saveConfigureField(ApiConfigureFieldPO dto) {
         if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
+        return configureFieldMapper.insert(dto) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 拼接ApiConfigurePO对象
+     *
+     * @param apiName
+     * @param apiInfo
+     * @return
+     */
+    @Override
+    public ResultEnum saveApiConfigure(String apiName, String apiInfo) {
         ApiConfigurePO apiconfigurepo = new ApiConfigurePO();
         apiconfigurepo.setApiName(apiName);
         // 生成的·
         apiconfigurepo.setApiRoute("/a");
         apiconfigurepo.setApiInfo(apiInfo);
-        apiconfigurepo.setDistinctData(distinctData);
-        if (configureMapper.insert(apiconfigurepo) < 0){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
 
-        this.splicingApiConfigureField(dto,apiconfigurepo.getId());
-        return ResultEnum.SUCCESS;
-    }
-
-    /**
-     * 保存 ApiConfigureFieldPO 对象
-     * @param dto
-     * @param id
-     * @return
-     */
-    public ResultEnum splicingApiConfigureField(List<ApiConfigureFieldPO> dto,long id) {
-        // 把字段表配置信息先保存到字段表
-        for (ApiConfigureFieldPO configurable : dto) {
-            configurable.setFieldId((int) id);
-            configureFieldMapper.insert(configurable);
-        }
-
-        return ResultEnum.SUCCESS;
+        return configureMapper.insert(apiconfigurepo) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

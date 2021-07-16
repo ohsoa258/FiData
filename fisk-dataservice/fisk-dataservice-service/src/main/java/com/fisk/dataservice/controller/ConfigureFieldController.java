@@ -25,8 +25,14 @@ public class ConfigureFieldController {
 
     @ApiOperation("添加字段配置")
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@Validated @RequestBody List<ApiConfigureFieldPO> dto,String apiName,String apiInfo,Integer distinctData) {
-        return ResultEntityBuild.build(configureFieldService.saveConfigure(dto,apiName,apiInfo,distinctData));
+    public ResultEntity<Object> addData(@Validated @RequestBody ApiConfigureFieldPO dto) {
+        return ResultEntityBuild.build(configureFieldService.saveConfigureField(dto));
+    }
+
+    @ApiOperation("添加服务接口")
+    @PostMapping("/api/add")
+    public ResultEntity<Object> addApiData(@Validated @RequestBody String apiName, String apiInfo) {
+        return ResultEntityBuild.build(configureFieldService.saveApiConfigure(apiName,apiInfo));
     }
 
     @ApiOperation("删除字段")
