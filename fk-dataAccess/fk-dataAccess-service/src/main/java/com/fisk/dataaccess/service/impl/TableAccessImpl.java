@@ -746,7 +746,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-    
+
     @Override
     public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
 
@@ -828,6 +828,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addAtlasTableIdAndDorisSql(AtlasWriteBackDataDTO dto) {
@@ -886,6 +887,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+
     @Override
     public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -926,26 +928,41 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         taskGroupConfig.setAppDetails(modelReg.getAppDes());
 
         //3.数据源jdbc配置
-        AppDataSourcePO datasourcepo = appDataSourceImpl.query()
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
                 .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
-        if (datasourcepo == null) {
+        if (modelDataSource == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        sourceDsConfig.setJdbcStr(datasourcepo.getConnectStr());
-        sourceDsConfig.setType(DriverTypeEnum.MYSQL); // 先硬编码
-        sourceDsConfig.setUser(datasourcepo.getConnectAccount());
-        sourceDsConfig.setPassword(datasourcepo.getConnectPwd());
+        sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
+        // 先硬编码
+        sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        sourceDsConfig.setUser(modelDataSource.getConnectAccount());
+        sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
 
         // 4.目标源jdbc连接
 
 
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
-
         if (modelSync == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        TableAccessPO modelAccess = this.query()
+                .eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelAccess == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        if (modelReg.componentId == null && modelAccess.componentId ==null) {
+            groupConfig.setNewApp(true);
+        }else {
+            groupConfig.setNewApp(false);
         }
 
         NifiSettingPO modelNifi = nifiSettingImpl.query()
@@ -956,12 +973,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        // TODO: 将app组配置中的setNewApp加上
-        if (modelNifi.appGroupId == null && modelNifi.tableGroupId == null) {
-            groupConfig.setNewApp(true);
-        } else {
-            groupConfig.setNewApp(false);
-        }
+//        // TODO: 将app组配置中的setNewApp加上
+//        if (modelNifi.appGroupId == null && modelNifi.tableGroupId == null) {
+//            groupConfig.setNewApp(true);
+//        } else {
+//            groupConfig.setNewApp(false);
+//        }
+
 
 
         // corn_expression
@@ -978,7 +996,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
         }
 
+        // ods sql
         processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
+        // atlas返回的tableName
         processorConfig.targetTableName = modelNifi.tableName;
 
         dto.groupConfig = groupConfig;
@@ -990,21 +1010,46 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
+
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addComponentId(NifiAccessDTO dto) {
 
-        NifiSettingPO model = this.nifiSettingImpl.query()
-                .eq("table_id", dto.tableId)
-                .eq("appid", dto.appid)
+        AppRegistrationPO modelReg = this.appRegistrationImpl.query()
+                .eq("id", dto.appid)
+                .eq("del_flag", 1)
                 .one();
-        if (model == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        boolean updateReg = true;
+        if (modelReg.componentId == null) {
+            modelReg.componentId = dto.appGroupId;
+            // 更新tb_app_appRegistration表componentId
+            updateReg = this.appRegistrationImpl.updateById(modelReg);
+        }
+        if (!updateReg) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        model.appGroupId = dto.appGroupId;
-        model.tableGroupId = dto.tableGroupId;
-        boolean update = this.nifiSettingImpl.updateById(model);
+        TableAccessPO modelAccess = this.query()
+                .eq("id", dto.tableId)
+                .eq("appid", dto.appid)
+                .eq("del_flag", 1)
+                .one();
+        modelAccess.componentId = dto.appGroupId;
 
-        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        boolean updateAccess = this.updateById(modelAccess);
+
+//        NifiSettingPO modelNifi = this.nifiSettingImpl.query()
+//                .eq("table_id", dto.tableId)
+//                .eq("appid", dto.appid)
+//                .one();
+//        if (modelNifi == null) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+//
+//        modelNifi.appGroupId = dto.appGroupId;
+//        modelNifi.tableGroupId = dto.tableGroupId;
+//        boolean updateNifi = this.nifiSettingImpl.updateById(modelNifi);
+
+        return updateAccess ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }
