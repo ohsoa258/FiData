@@ -3,9 +3,10 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,4 +56,20 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return 查询结果
      */
     Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows);
+
+    /**
+     * 获取tb_area_business表全部字段
+     *
+     * @return 查询结果
+     */
+    List<BusinessFilterDTO> getBusinessAreaColumn();
+    /**
+     * 分页
+     *
+
+     * @param query query
+     * @return 查询结果
+     */
+    Page<BusinessPageResultDTO> getDataList(BusinessPageDTO query);
+
 }
