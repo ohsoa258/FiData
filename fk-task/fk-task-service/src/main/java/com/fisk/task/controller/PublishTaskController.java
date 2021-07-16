@@ -72,16 +72,15 @@ public class PublishTaskController {
     @PostMapping("/atlasBuildTableAndColumn")
     public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto) {
         log.info("进入方法");
-        return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
+         service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
                 ArDto);
         //Doris
-//        service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
-//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-//                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
-//                ArDto);
-        //Atlas
+        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
+                ArDto);
 
     }
 
