@@ -47,7 +47,7 @@ public class TestAtlas {
 
     @Test
     public void test03() {
-        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(1,6);
+        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(911,6);
         System.out.println(dto);
     }
 
