@@ -62,6 +62,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表
+        log.info("atlas创建表");
         EntityRdbmsTable.entity_rdbms_table entity_rdbms_table = new EntityRdbmsTable.entity_rdbms_table();
         EntityRdbmsTable.attributes_rdbms_table attributes_rdbms_table = new EntityRdbmsTable.attributes_rdbms_table();
         EntityRdbmsTable.attributes_field_rdbms_table attributes_field_rdbms_table = new EntityRdbmsTable.attributes_field_rdbms_table();
@@ -77,8 +78,10 @@ public class BuildAtlasTableAndColumnTaskListener {
         entity_rdbms_table.entity = attributes_rdbms_table;
         BusinessResult resTb = atlas.atlasBuildTable(entity_rdbms_table);
         awbd.atlasTableId = resTb.data.toString();
+        log.info("atlas创建表完成");
         //endregion
         //region atlas创建表与DB的连接
+        log.info("atlas创建表与DB的连接");
         AtlasEntityProcessDTO aepd = new AtlasEntityProcessDTO();
         List<EntityProcess.entity> inputs_db = new ArrayList<>();
         List<EntityProcess.entity> outputs_tab = new ArrayList<>();
@@ -99,8 +102,10 @@ public class BuildAtlasTableAndColumnTaskListener {
         aepd.createUser = ae.createUser;
         aepd.des = "atlas process db link to table" + ae.tableName;
         atlas.atlasBuildProcess(aepd);
+        log.info("atlas创建表与DB的连接 完成");
         //endregion
         //region atlas创建字段
+        log.info("atlas创建字段");
         EntityRdbmsColumn.entity_rdbms_column entity_rdbms_column = new EntityRdbmsColumn.entity_rdbms_column();
         EntityRdbmsColumn.attributes_rdbms_column attributes_rdbms_column = new EntityRdbmsColumn.attributes_rdbms_column();
         EntityRdbmsColumn.instance_rdbms_table_column instance_rdbms_tableentity = new EntityRdbmsColumn.instance_rdbms_table_column();
@@ -127,6 +132,7 @@ public class BuildAtlasTableAndColumnTaskListener {
             acd.columnId=c.columnId;
             l_acd.add(acd);
         });
+        log.info("atlas创建字段 完成");
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
@@ -136,6 +142,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(JSON.toJSONString(awbd));
         //endregion
         //region atlas创建字段与表的连接
+        log.info("atlas创建字段与表的连接");
         EntityProcess.entity_rdbms_process entity_rdbms_process_table = new EntityProcess.entity_rdbms_process();
         List<EntityProcess.attributes_rdbms_process> earps = new ArrayList<>();
         EntityProcess.attributes_rdbms_process attributes_rdbms_process = new EntityProcess.attributes_rdbms_process();
@@ -170,15 +177,18 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(JSON.toJSONString(entity_rdbms_process_table));
         BusinessResult result = atlas.atlasBuildProcess(entity_rdbms_process_table);
         log.info(JSON.toJSONString(result));
+        log.info("atlas创建字段与表的连接 完成");
         //endregion
         //region 回写数据
         dc.addAtlasTableIdAndDorisSql(awbd);
         //endregion
         //启动nifi
+        log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
         bfd.userId=ae.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
         pc.publishBuildNifiFlowTask(bfd);
+        log.info("执行完成");
     }
 }
