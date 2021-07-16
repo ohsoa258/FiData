@@ -9,15 +9,15 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.task.dto.daconfig.*;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiPositionHelper;
@@ -50,8 +50,11 @@ public class BuildNifiTaskListener {
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         //获取数据接入配置项
-        DataAccessConfigDTO configDTO = getConfigData(dto.appId);
-        
+        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId);
+        if (configDTO == null) {
+            log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
+            return;
+        }
         //1. 创建应用组
         ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
         //2. 创建jdbc连接池
@@ -70,41 +73,45 @@ public class BuildNifiTaskListener {
      * @param appId 配置的id
      * @return 数据接入配置
      */
-    private DataAccessConfigDTO getConfigData(long appId) {
-        DataAccessConfigDTO dto = new DataAccessConfigDTO();
+    private DataAccessConfigDTO getConfigData(long id, long appId) {
 
-        GroupConfig groupConfig = new GroupConfig();
-        groupConfig.appName = "Rabbit Consumer Build Nifi Data Flow";
-        groupConfig.appDetails = "...";
-        groupConfig.newApp = true;
-        groupConfig.componentId = "017a121f-4f36-11d6-6dbb-07fd97574e96";
-        dto.groupConfig = groupConfig;
-        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
-        taskGroupConfig.appName = "Task1";
-        taskGroupConfig.appDetails = "...";
-        dto.taskGroupConfig = taskGroupConfig;
-        DataSourceConfig config1 = new DataSourceConfig();
-        config1.type = DriverTypeEnum.MYSQL;
-        config1.user = "root";
-        config1.password = "root123";
-        config1.jdbcStr = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db";
-        config1.componentId = "017a1221-4f36-11d6-116e-33e37592ccd8";
-        dto.sourceDsConfig = config1;
-        DataSourceConfig config2 = new DataSourceConfig();
-        config2.type = DriverTypeEnum.MYSQL;
-        config2.user = "root";
-        config2.password = "Password01!";
-        config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
-        config2.componentId = "017a1220-4f36-11d6-9384-d2fdf9557105";
-        dto.targetDsConfig = config2;
-        ProcessorConfig processorConfig = new ProcessorConfig();
-        processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
-        processorConfig.scheduleExpression = "0/30 * * * * ?";
-        processorConfig.sourceExecSqlQuery = "select * from tb_test_data where id = ${Increment}";
-        processorConfig.targetTableName = "tb_test_data";
-        processorConfig.fieldName = "$.Increment";
-        dto.processorConfig = processorConfig;
-        return dto;
+        //region
+        //DataAccessConfigDTO dto = new DataAccessConfigDTO();
+        //GroupConfig groupConfig = new GroupConfig();
+        //groupConfig.appName = "Rabbit Consumer Build Nifi Data Flow";
+        //groupConfig.appDetails = "...";
+        //groupConfig.newApp = true;
+        //groupConfig.componentId = "017a121f-4f36-11d6-6dbb-07fd97574e96";
+        //dto.groupConfig = groupConfig;
+        //TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+        //taskGroupConfig.appName = "Task1";
+        //taskGroupConfig.appDetails = "...";
+        //dto.taskGroupConfig = taskGroupConfig;
+        //DataSourceConfig config1 = new DataSourceConfig();
+        //config1.type = DriverTypeEnum.MYSQL;
+        //config1.user = "root";
+        //config1.password = "root123";
+        //config1.jdbcStr = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db";
+        //config1.componentId = "017a1221-4f36-11d6-116e-33e37592ccd8";
+        //dto.sourceDsConfig = config1;
+        //DataSourceConfig config2 = new DataSourceConfig();
+        //config2.type = DriverTypeEnum.MYSQL;
+        //config2.user = "root";
+        //config2.password = "Password01!";
+        //config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
+        //config2.componentId = "017a1220-4f36-11d6-9384-d2fdf9557105";
+        //dto.targetDsConfig = config2;
+        //ProcessorConfig processorConfig = new ProcessorConfig();
+        //processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        //processorConfig.scheduleExpression = "0/30 * * * * ?";
+        //processorConfig.sourceExecSqlQuery = "select * from tb_test_data where id = ${Increment}";
+        //processorConfig.targetTableName = "tb_test_data";
+        //processorConfig.fieldName = "$.Increment";
+        //dto.processorConfig = processorConfig;
+        //return dto;
+        //endregion
+        ResultEntity<DataAccessConfigDTO> res = client.dataAccessConfig(id, appId);
+        return res.data;
     }
 
     /**
