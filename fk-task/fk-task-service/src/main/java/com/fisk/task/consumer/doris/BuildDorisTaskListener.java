@@ -2,13 +2,11 @@ package com.fisk.task.consumer.doris;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.service.IDorisBuild;
@@ -84,15 +82,8 @@ public class BuildDorisTaskListener {
         sql.append("\n" + "PROPERTIES(\"replication_num\" = \"1\");");
         String stg_sql = sql.toString().replace("tableName", stg_table);
         String ods_sql = sql.toString().replace("tableName", ods_table);
-        BusinessResult sqlResult_stg = doris.dorisBuildTable(stg_sql);
-        BusinessResult sqlResult_ods = doris.dorisBuildTable(ods_sql);
-        BuildNifiFlowDTO bb = new BuildNifiFlowDTO();
-        bb.appId = 123L;
-        bb.userId = 37L;
-//        service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
-//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-//                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
-//                bb);
+        doris.dorisBuildTable(stg_sql);
+        doris.dorisBuildTable(ods_sql);
         log.info("Doris执行结束");
     }
 
