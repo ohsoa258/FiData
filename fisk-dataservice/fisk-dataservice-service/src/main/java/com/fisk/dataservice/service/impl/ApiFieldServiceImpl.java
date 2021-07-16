@@ -9,12 +9,12 @@ import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.service.ApiFieldService;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -32,7 +32,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     // todo 登录人
 
     @Override
-    public List<Object> queryField(String apiRoute, Integer offset, Integer limit) {
+    public List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize) {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
         ApiConfigurePO apiConfigure = configureMapper.selectOne(queryWrapper);
@@ -43,14 +43,18 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
         query.lambda().eq(ApiConfigureFieldPO::getFieldId, apiConfigure.getId());
         List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectList(query);
-        return this.filterData(apiConfigureFieldList, apiConfigure.getApiName(), offset, limit);
+        return this.filterData(apiConfigureFieldList, apiConfigure.getApiName(), currentPage, pageSize);
     }
 
     /**
      * 数据分组
      * @param apiConfigureFieldList
+     * @param apiName
+     * @param currentPage
+     * @param pageSize
+     * @return
      */
-    public List<Object> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList,String apiName,Integer offset, Integer limit){
+    public List<Map> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList,String apiName, Integer currentPage, Integer pageSize){
         List<ApiConfigureFieldPO> aggregationList = new ArrayList<>();
         List<ApiConfigureFieldPO> groupingList = new ArrayList<>();
         List<ApiConfigureFieldPO> conditionList = new ArrayList<>();
@@ -69,7 +73,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
         }
-        return this.splicingSql(aggregationList,groupingList,conditionList,offset,limit, apiName);
+        return this.splicingSql(aggregationList,groupingList,conditionList,currentPage,pageSize, apiName);
     }
 
 
@@ -78,9 +82,13 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @param aggregationList 聚合
      * @param groupingList    分组
      * @param conditionList   条件
+     * @param currentPage    分页
+     * @param pageSize
+     * @param apiName  表名
+     * @return
      */
-    public List<Object> splicingSql(List<ApiConfigureFieldPO> aggregationList, List<ApiConfigureFieldPO> groupingList,
-                               List<ApiConfigureFieldPO> conditionList, Integer offset, Integer limit, String apiName){
+    public List<Map> splicingSql(List<ApiConfigureFieldPO> aggregationList, List<ApiConfigureFieldPO> groupingList,
+                               List<ApiConfigureFieldPO> conditionList, Integer currentPage, Integer pageSize, String apiName){
 
         // 获取聚合的字段
         List<String> aggregationFieldList = new ArrayList<>();
@@ -102,17 +110,17 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         List<String> whereList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(conditionList)){
             for (ApiConfigureFieldPO configureField : conditionList) {
-                whereList.add(configureField.getField()+configureField.getFieldConditionValue()+configureField.getFieldValue());
+                whereList.add(configureField.getField()+configureField.getFieldConditionValue()+"'"+configureField.getFieldValue()+"'");
             }
         }
 
-        if (offset == null){
-            offset = 0;
+        if (currentPage == null){
+            currentPage = 0;
         }
-        if (limit == null){
-            limit = 50;
+        if (pageSize == null){
+            pageSize = 50;
         }
-        List<Object> objects = configureMapper.queryData(aggregationFieldList, groupList, apiName, whereList, offset, limit);
+        List<Map> objects = configureMapper.queryData(aggregationFieldList, groupList, apiName, whereList, currentPage, pageSize);
         return objects;
     }
 }

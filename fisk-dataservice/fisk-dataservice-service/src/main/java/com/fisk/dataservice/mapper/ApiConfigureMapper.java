@@ -3,10 +3,9 @@ package com.fisk.dataservice.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.poi.ss.formula.functions.T;
-
+import org.apache.ibatis.annotations.Param;;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -21,15 +20,15 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
      * @param groupList
      * @param tableName
      * @param whereList
-     * @param offset
-     * @param limit
+     * @param currentPage
+     * @param pageSize
      * @return
      */
-    List<Object> queryData(@Param("aggregationFieldList") List<String> aggregationFieldList,
-                      @Param("groupList") List<String> groupList,
-                      @Param("tableName") String tableName,
-                      @Param("whereList") List<String> whereList,
-                      @Param("offset")Integer offset,
-                      @Param("limit")Integer limit
+    List<Map> queryData(@Param("aggregationFieldList") List<String> aggregationFieldList,
+                        @Param("groupList") List<String> groupList,
+                        @Param("tableName") String tableName,
+                        @Param("whereList") List<String> whereList,
+                        @Param("currentPage")Integer currentPage,
+                        @Param("pageSize")Integer pageSize
     );
 }

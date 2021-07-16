@@ -72,5 +72,5 @@ mybatis-plus:
   configuration:
     #  type-aliases-package: com.fisk.user.entity  实体类的包扫描
     default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
-    # 打印sql到控制台
+    # 打印sql到日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

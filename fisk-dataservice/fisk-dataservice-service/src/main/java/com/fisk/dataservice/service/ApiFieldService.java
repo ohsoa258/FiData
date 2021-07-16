@@ -1,8 +1,7 @@
 package com.fisk.dataservice.service;
 
-import org.apache.poi.ss.formula.functions.T;
-
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wangyan
@@ -12,9 +11,9 @@ public interface ApiFieldService {
     /**
      * 根据路径查询拼接sql
      * @param apiRoute
-     * @param offset 第几条显示
-     * @param limit  页数
+     * @param currentPage 当前页
+     * @param pageSize  页数大小
      * @return
      */
-    List<Object> queryField(String apiRoute, Integer offset, Integer limit);
+    List<Map> queryField(String apiRoute,Integer currentPage, Integer pageSize);
 }
