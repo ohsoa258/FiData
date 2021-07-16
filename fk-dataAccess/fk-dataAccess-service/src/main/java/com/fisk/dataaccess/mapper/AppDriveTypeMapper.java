@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ public interface AppDriveTypeMapper extends BaseMapper<AppDriveTypePO> {
      *
      * @return 驱动类型
      */
-    @Select("SELECT id,`name` FROM tb_app_drivetype;")
+    @Select("SELECT id,`name`,connect_str FROM tb_app_drivetype;")
     List<AppDriveTypePO> listData();
 
 }
