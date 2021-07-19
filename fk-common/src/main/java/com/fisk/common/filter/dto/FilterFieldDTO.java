@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.common.filter.dto;
 
 import lombok.Data;
 
@@ -6,8 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class BusinessFilterDTO {
-
+public class FilterFieldDTO {
     /**
      * 列名
      */
@@ -21,6 +20,5 @@ public class BusinessFilterDTO {
      * 列名类型
      */
     public String columnType;
-
 
 }

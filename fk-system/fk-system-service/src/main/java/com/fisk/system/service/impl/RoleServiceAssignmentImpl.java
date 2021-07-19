@@ -84,12 +84,18 @@ public class RoleServiceAssignmentImpl
     }
 
     @Override
-    public List<ServiceSourceDTO> getServiceList(int userId)
+    public List<ServiceSourceDTO> getServiceList()
     {
+        /*获取登录信息*/
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        if (userInfo==null)
+        {
+            return null;
+        }
         List<ServiceSourceDTO> dataList=new ArrayList<>();
         /*查询当前用户下所有角色*/
         QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
-        roleData.select("role_id");
+        roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId,userInfo.id);
         List<Object> idList = roleUserMapper.selectObjs(roleData).stream().distinct().collect(Collectors.toList());
 
         /*查询角色下所有服务*/

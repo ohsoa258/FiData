@@ -9,6 +9,7 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserDTO;
+import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.UserPowerDTO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
@@ -157,5 +158,19 @@ public class UserServiceImpl implements IUserService {
         }
         // 4.转换DTO
         return UserMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public UserInfoCurrentDTO getCurrentUserInfo()
+    {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        UserInfoCurrentDTO dto=new UserInfoCurrentDTO();
+        UserPO model = mapper.selectById(userInfo.id);
+        if (model == null) {
+            return null;
+        }
+        dto.userAccount=model.userAccount;
+        dto.userName=model.username;
+        return dto;
     }
 }
