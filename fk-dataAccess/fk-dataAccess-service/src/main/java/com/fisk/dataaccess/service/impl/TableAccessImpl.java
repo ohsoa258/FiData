@@ -104,46 +104,46 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Long userId = userInfo.id;
 
         // 1.dto->po
-        TableAccessPO tpo = tableAccessDTO.toEntity(TableAccessPO.class);
+        TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
         List<String> tableNameList = baseMapper.getTableName();
-        String tableName = tpo.getTableName();
+        String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
             throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
-        AppRegistrationPO arpo = appRegistrationImpl.query()
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
 
         // 应用注册id
-        long id = arpo.getId();
+        long id = modelReg.getId();
         if (id < 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
-        tpo.setCreateUser("" + userId + "");
-        tpo.setAppid(id);
+        modelAccess.setCreateUser("" + userId + "");
+        modelAccess.setAppid(id);
 
         // 0是实时物理表，1是非实时物理表
-        tpo.setIsRealtime(0);
-        tpo.setSyncSrc(tableAccessDTO.getSyncSrc());
-        tpo.setDelFlag(1);
+        modelAccess.setIsRealtime(0);
+        modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
+        modelAccess.setDelFlag(1);
         // 实时
-        tpo.setIsRealtime(0);
+        modelAccess.setIsRealtime(0);
 
         // 时间字段有问题,待定
-        Date date1 = new Date(System.currentTimeMillis());
+        Date dateAccess = new Date(System.currentTimeMillis());
 
-        tpo.setCreateTime(date1);
-        tpo.setUpdateTime(date1);
+        modelAccess.setCreateTime(dateAccess);
+        modelAccess.setUpdateTime(dateAccess);
 
         // 2.保存tb_table_access数据
-        boolean save1 = this.save(tpo);
+        boolean saveAccess = this.save(modelAccess);
 
-        if (!save1) {
+        if (!saveAccess) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
@@ -158,21 +158,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        }
 
         for (TableFieldsDTO tableFieldsDTO : list) {
-            TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
-            tfpo.setTableAccessId(tpo.getId());
+            TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+            modelField.setTableAccessId(modelAccess.getId());
 
-            tfpo.setCreateUser("" + userId + "");
+            modelField.setCreateUser("" + userId + "");
 
             // 1是实时物理表的字段，0是非实时物理表的字段
-            tfpo.setIsRealtime(1);
-            tfpo.setDelFlag(1);
+            modelField.setIsRealtime(1);
+            modelField.setDelFlag(1);
 
             // 时间
-            Date date2 = new Date(System.currentTimeMillis());
-            tfpo.setCreateTime(date2);
-            tfpo.setUpdateTime(date2);
+            Date dateField = new Date(System.currentTimeMillis());
+            modelField.setCreateTime(dateField);
+            modelField.setUpdateTime(dateField);
 
-            save2 = tableFieldsImpl.save(tfpo);
+            save2 = tableFieldsImpl.save(modelField);
         }
 
         if (!save2) {
@@ -182,8 +182,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 保存同步频率
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
         TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
-        po.setId(tpo.getId());
-        boolean save3 = syncmodeImpl.save(po);
+        po.setId(modelAccess.getId());
+        boolean saveSync = syncmodeImpl.save(po);
 
         // TODO: atlas调用
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
@@ -193,12 +193,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         atlasEntityQueryDTO.appId = "" + id + "";
 
         // 物理表id
-        atlasEntityQueryDTO.dbId = "" + tpo.getId() + "";
+        atlasEntityQueryDTO.dbId = "" + modelAccess.getId() + "";
 
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
         System.out.println(task);
 
-        return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -207,6 +207,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param tableAccessNonDTO dto
      * @return 执行结果
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addNonRealTimeData(TableAccessNonDTO tableAccessNonDTO) {
 
@@ -247,11 +248,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            }
 //        }
 
+        // 当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         // 1.dto->po
-        TableAccessPO tapo = tableAccessNonDTO.toEntity(TableAccessPO.class);
+        TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
 
         List<String> tableNameList = baseMapper.getTableName();
-        String tableName = tapo.getTableName();
+        String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
             throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
@@ -266,29 +271,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (id < 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
-        tapo.setAppid(id);
+        modelAccess.setAppid(id);
 
         // 0是实时物理表，1是非实时物理表
-        tapo.setIsRealtime(0);
-        tapo.setSyncSrc(tableAccessNonDTO.getSyncSrc());
-        tapo.setDelFlag(1);
+        modelAccess.setIsRealtime(0);
+        modelAccess.setSyncSrc(tableAccessNonDTO.getSyncSrc());
+        modelAccess.setDelFlag(1);
         // 非实时
-        tapo.setIsRealtime(1);
+        modelAccess.setIsRealtime(1);
+        // 当前登录人
+        modelAccess.setCreateUser(String.valueOf(userId));
 
         // 时间
         Date date1 = new Date(System.currentTimeMillis());
-        tapo.setCreateTime(date1);
-        tapo.setUpdateTime(date1);
+        modelAccess.setCreateTime(date1);
+        modelAccess.setUpdateTime(date1);
 
         // 2.保存tb_table_access数据
-        boolean save1 = this.save(tapo);
+        boolean saveAccess = this.save(modelAccess);
 
-        if (!save1) {
+        if (!saveAccess) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
-        boolean save2 = true;
+        boolean saveField = true;
         List<TableFieldsDTO> tfdto = tableAccessNonDTO.getList();
 
         // TODO: 这一块判断先不加
@@ -298,32 +305,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        }
 
         for (TableFieldsDTO tableFieldsDTO : tfdto) {
-            TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
-            tfpo.setTableAccessId(tapo.getId());
+            TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+            modelField.setTableAccessId(modelAccess.getId());
 
             // 1是实时物理表的字段，0是非实时物理表的字段
-            tfpo.setIsRealtime(1);
-            tfpo.setDelFlag(1);
+            modelField.setIsRealtime(1);
+            modelField.setDelFlag(1);
 
             // 时间
             Date date2 = new Date(System.currentTimeMillis());
-            tfpo.setCreateTime(date2);
-            tfpo.setUpdateTime(date2);
+            modelField.setCreateTime(date2);
+            modelField.setUpdateTime(date2);
 
-            save2 = tableFieldsImpl.save(tfpo);
+            saveField = tableFieldsImpl.save(modelField);
         }
 
-        if (!save2) {
+        if (!saveField) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_syncmode数据
         TableSyncmodeDTO syncmodeDTO = tableAccessNonDTO.getTableSyncmodeDTO();
-        TableSyncmodePO spo = syncmodeDTO.toEntity(TableSyncmodePO.class);
-        long aid = tapo.getId();
-        spo.setId(aid);
+        TableSyncmodePO modelSync = syncmodeDTO.toEntity(TableSyncmodePO.class);
+        long aid = modelAccess.getId();
+        modelSync.setId(aid);
 
-        boolean save3 = syncmodeImpl.save(spo);
+        boolean saveSync = syncmodeImpl.save(modelSync);
 //        if (!save3) {
 //            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
 //        }
@@ -333,7 +340,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //        System.out.println(i);
 
-        return save3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 
     }
 
@@ -354,19 +361,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            throw new FkException(500, "操作数据库失败");
 //        }
 
+        // 当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         // 1.dto->po
-        TableAccessPO tapo = tableAccessDTO.toEntity(TableAccessPO.class);
+        TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 时间字段
         Date date1 = new Date(System.currentTimeMillis());
 
-        tapo.setUpdateTime(date1);
-        tapo.setDelFlag(1);
+        modelAccess.setUpdateUser(String.valueOf(userId));
+        modelAccess.setUpdateTime(date1);
+        modelAccess.setDelFlag(1);
 
         // 2.保存tb_table_access数据
-        boolean update1 = this.updateById(tapo);
+        boolean updateAccess = this.updateById(modelAccess);
 
-        if (!update1) {
+        if (!updateAccess) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
@@ -379,29 +391,30 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (TableFieldsDTO tableFieldsDTO : list) {
 
-            // 0: 旧数据不操作  2: 新增  1: 修改
+            // 0: 旧数据不操作  1: 修改  2: 新增
             int funcType = tableFieldsDTO.getFuncType();
             // 修改
             if (funcType == 1) {
-                TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
                 Date date2 = new Date(System.currentTimeMillis());
-                tfpo.setUpdateTime(date2);
-                tfpo.setDelFlag(1);
+                modelField.setUpdateUser(String.valueOf(userId));
+                modelField.setUpdateTime(date2);
+                modelField.setDelFlag(1);
 
-                update2 = tableFieldsImpl.updateById(tfpo);
+                update2 = tableFieldsImpl.updateById(modelField);
                 // 新增
             } else if (funcType == 2) {
-                TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
                 // 还要绑定tb_table_access id
-                tfpo.setTableAccessId(tapo.getId());
+                modelField.setTableAccessId(modelAccess.getId());
 
                 Date date3 = new Date(System.currentTimeMillis());
-                tfpo.setCreateTime(date3);
-                tfpo.setUpdateTime(date3);
-                tfpo.setDelFlag(1);
-                saveField = tableFieldsImpl.save(tfpo);
-
+                modelField.setUpdateUser(String.valueOf(userId));
+                modelField.setCreateTime(date3);
+                modelField.setUpdateTime(date3);
+                modelField.setDelFlag(1);
+                saveField = tableFieldsImpl.save(modelField);
             }
         }
 
@@ -420,11 +433,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 修改同步频率
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
-        TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
-        boolean update = syncmodeImpl.updateById(po);
+        TableSyncmodePO modelSync = dto.toEntity(TableSyncmodePO.class);
+        boolean updateSync = syncmodeImpl.updateById(modelSync);
 
 
-        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return updateSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -445,40 +458,45 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(500, "操作数据库失败");
         }*/
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.id;
+
         // dto->po
-        TableAccessPO tapo = dto.toEntity(TableAccessPO.class);
+        TableAccessPO modelAccess = dto.toEntity(TableAccessPO.class);
 
         // 时间字段
-        Date date1 = new Date(System.currentTimeMillis());
+        Date dateAccess = new Date(System.currentTimeMillis());
 
-        tapo.setUpdateTime(date1);
-        tapo.setDelFlag(1);
+        modelAccess.setUpdateUser(String.valueOf(userId));
+        modelAccess.setUpdateTime(dateAccess);
+        modelAccess.setDelFlag(1);
 
         // 2.保存tb_table_access数据
-        boolean update1 = this.updateById(tapo);
+        boolean updateAccess = this.updateById(modelAccess);
 
-        if (!update1) {
+        if (!updateAccess) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
-        boolean update2 = true;
-//        boolean saveField = true;
+        boolean updateField = true;
 
         List<TableFieldsDTO> list = dto.getList();
 
 
         for (TableFieldsDTO tableFieldsDTO : list) {
 
-            TableFieldsPO tfpo = tableFieldsDTO.toEntity(TableFieldsPO.class);
-            Date date2 = new Date(System.currentTimeMillis());
-            tfpo.setUpdateTime(date2);
-            tfpo.setDelFlag(1);
+            TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+            Date dateField = new Date(System.currentTimeMillis());
 
-            update2 = tableFieldsImpl.updateById(tfpo);
+            modelField.setUpdateUser(String.valueOf(userId));
+            modelField.setUpdateTime(dateField);
+            modelField.setDelFlag(1);
+
+            updateField = tableFieldsImpl.updateById(modelField);
         }
 
-        if (!update2) {
+        if (!updateField) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 //        if (!saveField) {
@@ -487,13 +505,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
 
         // 4.保存tb_table_syncmode数据
-        boolean update3 = true;
+        boolean updateSync = true;
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
-        TableSyncmodePO tspo = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
-        update3 = syncmodeImpl.updateById(tspo);
+        TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
+        updateSync = syncmodeImpl.updateById(modelSync);
 
 
-        return update3 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return updateSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -574,8 +592,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessNonDTO dto = new TableAccessNonDTO(tapo);
 
         // 将应用名称封装进去
-        AppRegistrationPO apo = appRegistrationImpl.query().eq("id", tapo.getAppid()).one();
-        dto.setAppName(apo.getAppName());
+        AppRegistrationPO modelAccess = appRegistrationImpl.query().eq("id", tapo.getAppid()).one();
+        dto.setAppName(modelAccess.getAppName());
 
         // 查询tb_table_fields数据
         List<TableFieldsPO> list = tableFieldsImpl.query()
@@ -583,13 +601,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .list();
 
-        List<TableFieldsDTO> list1 = new ArrayList<>();
-        for (TableFieldsPO fpo : list) {
-            TableFieldsDTO tableFieldsDTO = new TableFieldsDTO(fpo);
-            list1.add(tableFieldsDTO);
+        List<TableFieldsDTO> listField = new ArrayList<>();
+        for (TableFieldsPO modelField : list) {
+            TableFieldsDTO tableFieldsDTO = new TableFieldsDTO(modelField);
+            listField.add(tableFieldsDTO);
         }
 
-        dto.setList(list1);
+        dto.setList(listField);
 
 //        int isRealtime = tapo.getIsRealtime();
 
@@ -597,8 +615,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 当要回显的数据是非实时的时候,要将tb_table_syncmode表数据封装进去
         // 非实时数据
 //        if (isRealtime == 1) {
-        TableSyncmodePO spo = this.syncmodeMapper.getData(id);
-        TableSyncmodeDTO sdto = new TableSyncmodeDTO(spo);
+        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
+        TableSyncmodeDTO sdto = new TableSyncmodeDTO(modelSync);
 
         dto.setTableSyncmodeDTO(sdto);
 //        }
@@ -617,16 +635,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public List<TablePyhNameDTO> getTableFields(String appName) {
 
         // 1.根据应用名称查询表id
-        AppRegistrationPO arpo = appRegistrationImpl.query().eq("app_name", appName).one();
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("app_name", appName).one();
 
         // tb_app_registration表id
-        long appid = arpo.getId();
+        long appid = modelReg.getId();
 
         // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
-        AppDataSourcePO dpo = appDataSourceImpl.query().eq("appid", appid).one();
-        String url = dpo.getConnectStr();
-        String user = dpo.getConnectAccount();
-        String pwd = dpo.getConnectPwd();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", appid).one();
+        String url = modelDataSource.getConnectStr();
+        String user = modelDataSource.getConnectAccount();
+        String pwd = modelDataSource.getConnectPwd();
 
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
