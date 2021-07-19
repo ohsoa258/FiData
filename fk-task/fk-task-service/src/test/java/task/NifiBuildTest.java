@@ -14,8 +14,10 @@ import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.INifiFlowBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -25,13 +27,28 @@ import javax.annotation.Resource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FkTaskApplication.class)
 @RunWith(SpringRunner.class)
+@Slf4j
 public class NifiBuildTest {
 
     private final String groupPid = "017a11b8-82a2-134f-ee9c-3b4c1425b0b3";
     private final String dbConId = "017a11b9-82a2-134f-2f7e-12b3e8ef41d2";
 
+    @Value("${dorisconstr.url}")
+    private String dorisUrl;
+    @Value("${dorisconstr.username}")
+    private String dorisUser;
+    @Value("${dorisconstr.password}")
+    private String dorisPwd;
+    @Value("${dorisconstr.driver_class_name}")
+    private String dorisDriver;
+
     @Resource
     INifiComponentsBuild service;
+
+    @Test
+    public void a() {
+        System.out.println(dorisUrl);
+    }
 
     @Test
     public void buildGroup() {

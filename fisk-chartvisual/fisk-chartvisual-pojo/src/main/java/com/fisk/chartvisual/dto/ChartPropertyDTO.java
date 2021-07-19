@@ -3,8 +3,6 @@ package com.fisk.chartvisual.dto;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * 报表属性
  *
@@ -16,6 +14,6 @@ public class ChartPropertyDTO {
     public String name;
     @Length(max = 200)
     public String details;
-    @Length(max = 2000)
+    @Length(max = 4000)
     public String content;
 }
