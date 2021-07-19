@@ -12,7 +12,7 @@
             </foreach>
         </if>
 
-        <if test="groupList.size() >0 and queryList.size()>0" >
+        <if test="queryList.size()>0 and (groupList.size() >0 or aggregationFieldList.size()>0)" >
             ,
         </if>
 

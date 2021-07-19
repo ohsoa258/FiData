@@ -9,7 +9,6 @@ import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.service.ApiFieldService;
-import org.apache.ibatis.annotations.Case;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,18 +43,18 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
         query.lambda().eq(ApiConfigureFieldPO::getFieldId, apiConfigure.getId());
         List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectList(query);
-        return this.filterData(apiConfigureFieldList, apiConfigure.getApiName(), currentPage, pageSize);
+        return this.filterData(apiConfigureFieldList, apiConfigure.getTableName(), currentPage, pageSize);
     }
 
     /**
      * 数据分组
      * @param apiConfigureFieldList
-     * @param apiName
+     * @param tableName
      * @param currentPage
      * @param pageSize
      * @return
      */
-    public List<Map> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList,String apiName, Integer currentPage, Integer pageSize){
+    public List<Map> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList,String tableName, Integer currentPage, Integer pageSize){
         List<ApiConfigureFieldPO> aggregationList = new ArrayList<>();
         List<ApiConfigureFieldPO> groupingList = new ArrayList<>();
         List<ApiConfigureFieldPO> conditionList = new ArrayList<>();
@@ -78,7 +77,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
         }
-        return this.splicingSql(queryFieldList,aggregationList,groupingList,conditionList,currentPage,pageSize, apiName);
+        return this.splicingSql(queryFieldList,aggregationList,groupingList,conditionList,currentPage,pageSize, tableName);
     }
 
 
@@ -89,14 +88,14 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @param conditionList   条件
      * @param currentPage    分页
      * @param pageSize
-     * @param apiName  表名
+     * @param tableName  表名
      * @return
      */
     public List<Map> splicingSql(List<ApiConfigureFieldPO> queryFieldList,
                                  List<ApiConfigureFieldPO> aggregationList,
                                  List<ApiConfigureFieldPO> groupingList,
                                  List<ApiConfigureFieldPO> conditionList,
-                                 Integer currentPage, Integer pageSize, String apiName){
+                                 Integer currentPage, Integer pageSize, String tableName){
         // 获取查询的字段
         List<String> queryList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(queryFieldList)){
@@ -135,7 +134,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         if (pageSize == null){
             pageSize = 50;
         }
-        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, apiName, whereList, currentPage, pageSize);
+        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, tableName, whereList, currentPage, pageSize);
         return objects;
     }
 }
