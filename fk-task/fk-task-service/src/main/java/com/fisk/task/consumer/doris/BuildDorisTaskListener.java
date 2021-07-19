@@ -20,8 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 /**
- * @author:yhxu
- * CreateTime: 2021年07月05日18:33:46
+ * @author:yhxu CreateTime: 2021年07月05日18:33:46
  * Description:
  */
 @Component
@@ -42,13 +41,13 @@ public class BuildDorisTaskListener {
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         log.info("执行Doris");
-        log.info("dataInfo:"+dataInfo);
+        log.info("dataInfo:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
         ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
-        log.info("queryRes:"+JSON.toJSONString(queryRes.data));
-        log.info("queryRes:"+JSON.toJSONString(queryRes));
+        log.info("queryRes:" + JSON.toJSONString(queryRes.data));
+        log.info("queryRes:" + JSON.toJSONString(queryRes));
         AtlasEntityDbTableColumnDTO dto = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
-        log.info("ae:"+JSON.toJSONString(dto));
+        log.info("ae:" + JSON.toJSONString(dto));
         StringBuilder sql = new StringBuilder();
         String tableName = dto.tableName;
         String stg_table = "stg_" + dto.tableName;
@@ -84,6 +83,8 @@ public class BuildDorisTaskListener {
         String ods_sql = sql.toString().replace("tableName", ods_table);
         doris.dorisBuildTable(stg_sql);
         doris.dorisBuildTable(ods_sql);
+        log.info("【STG】" + stg_sql);
+        log.info("【ODS】" + ods_sql);
         log.info("Doris执行结束");
     }
 
