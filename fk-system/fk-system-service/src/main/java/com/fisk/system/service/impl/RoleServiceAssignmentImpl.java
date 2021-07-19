@@ -7,17 +7,24 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.RoleServiceAssignmentDTO;
+import com.fisk.system.dto.ServiceRegistryDTO;
+import com.fisk.system.dto.ServiceSourceDTO;
 import com.fisk.system.entity.RoleServiceAssignmentPO;
 import com.fisk.system.entity.RoleUserAssignmentPO;
+import com.fisk.system.entity.ServiceRegistryPO;
 import com.fisk.system.map.RoleServiceAssignmentMap;
+import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.RoleServiceAssignmentMapper;
 import com.fisk.system.mapper.RoleUserAssignmentMapper;
+import com.fisk.system.mapper.ServiceRegistryMapper;
 import com.fisk.system.service.IRoleServiceAssignmentService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -29,6 +36,10 @@ public class RoleServiceAssignmentImpl
 {
     @Resource
     RoleServiceAssignmentMapper serviceMapper;
+    @Resource
+    RoleUserAssignmentMapper roleUserMapper;
+    @Resource
+    ServiceRegistryMapper serviceRegistryMapper;
     @Resource
     UserHelper userHelper;
 
@@ -70,6 +81,47 @@ public class RoleServiceAssignmentImpl
             list.add(model);
         }
         return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<ServiceSourceDTO> getServiceList(int userId)
+    {
+        List<ServiceSourceDTO> dataList=new ArrayList<>();
+        /*查询当前用户下所有角色*/
+        QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
+        roleData.select("role_id");
+        List<Object> idList = roleUserMapper.selectObjs(roleData).stream().distinct().collect(Collectors.toList());
+
+        /*查询角色下所有服务*/
+        QueryWrapper<RoleServiceAssignmentPO> serviceData = new QueryWrapper<>();
+        serviceData.in("role_id",idList.toArray()).select("service_id");
+        List<Object> serviceIds = serviceMapper.selectObjs(serviceData).stream().distinct().collect(Collectors.toList());
+
+        /*根据服务id集合获取服务列表*/
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("id",serviceIds.toArray());
+        List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
+
+        /*查询所有父节点*/
+        String code="1";
+        List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
+                .collect(Collectors.toList());
+        List<ServiceSourceDTO> dtoList = new ArrayList<>();
+
+        for (ServiceRegistryPO po : listParent) {
+            ServiceSourceDTO dto=RoleServiceAssignmentMap.INSTANCES.servicePoToDto(po);
+            List<ServiceSourceDTO> data=new ArrayList<>();
+            List<ServiceRegistryPO> listChild=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
+            /*查询所有子节点*/
+            for (ServiceRegistryPO item : listChild)
+            {
+                ServiceSourceDTO obj=RoleServiceAssignmentMap.INSTANCES.servicePoToDto(item);
+                data.add(obj);
+            }
+            dto.setDto(data);
+            dtoList.add(dto);
+        }
+        return dtoList;
     }
 
 

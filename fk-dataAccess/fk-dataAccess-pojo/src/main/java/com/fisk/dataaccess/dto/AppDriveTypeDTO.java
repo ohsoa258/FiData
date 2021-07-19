@@ -29,6 +29,11 @@ public class AppDriveTypeDTO extends BaseDTO {
      */
     public String name;
 
+    /**
+     * 模板
+     */
+    public String connectStr;
+
 
     public AppDriveTypeDTO(BaseEntity entity) {
         super(entity);
