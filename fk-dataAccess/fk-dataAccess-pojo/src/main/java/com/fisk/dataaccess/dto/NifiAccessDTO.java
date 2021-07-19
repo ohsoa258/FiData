@@ -28,4 +28,14 @@ public class NifiAccessDTO {
      */
     public String tableGroupId;
 
+    /**
+     * targetDbPoolComponentId
+     */
+    public String targetDbPoolComponentId;
+
+    /**
+     * sourceDbPoolComponentId
+     */
+    public String sourceDbPoolComponentId;
+
 }

@@ -968,9 +968,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         sourceDsConfig.setType(DriverTypeEnum.MYSQL);
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
+        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
 
         // 4.目标源jdbc连接
-
+        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
 
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
@@ -1049,12 +1050,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("id", dto.appid)
                 .eq("del_flag", 1)
                 .one();
+
+        if (modelReg==null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        modelReg.targetDbPoolComponentId = dto.targetDbPoolComponentId;
+        modelReg.sourceDbPoolComponentId = dto.sourceDbPoolComponentId;
+
         boolean updateReg = true;
         if (modelReg.componentId == null) {
             modelReg.componentId = dto.appGroupId;
             // 更新tb_app_appRegistration表componentId
             updateReg = this.appRegistrationImpl.updateById(modelReg);
         }
+
         if (!updateReg) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }

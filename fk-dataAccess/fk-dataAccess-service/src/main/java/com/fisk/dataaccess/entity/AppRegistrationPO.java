@@ -31,6 +31,16 @@ public class AppRegistrationPO extends BaseEntity {
     public String componentId;
 
     /**
+     * targetDbPoolComponentId
+     */
+    public String targetDbPoolComponentId;
+
+    /**
+     * sourceDbPoolComponentId
+     */
+    public String sourceDbPoolComponentId;
+
+    /**
      * 应用名称
      */
     public String appName;
