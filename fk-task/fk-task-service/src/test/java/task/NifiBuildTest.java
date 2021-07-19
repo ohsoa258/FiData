@@ -67,7 +67,7 @@ public class NifiBuildTest {
 
     @Test
     public void getGroup() {
-        BusinessResult<ProcessGroupEntity> res = service.getProcessGroupById("017a10ae-82a2-134f-e9d1-3e45c0e5249b");
+        BusinessResult<ProcessGroupEntity> res = service.getProcessGroupById("bd64a373-017a-1000-262c-2bdf24b5b84b");
         System.out.println(JSON.toJSONString(res));
     }
 
