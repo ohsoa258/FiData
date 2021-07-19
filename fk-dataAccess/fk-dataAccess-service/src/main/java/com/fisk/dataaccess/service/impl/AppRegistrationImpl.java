@@ -244,6 +244,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         dpo.setId(appDataSid);
 
         dpo.setAppid(id);
+        // 更新人
+        dpo.updateUser = String.valueOf(userId);
 
         Date date1 = new Date(System.currentTimeMillis());
         dpo.setUpdateTime(date1);
