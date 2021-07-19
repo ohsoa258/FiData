@@ -12,17 +12,12 @@ public interface ApiConfigureFieldService {
     /**
      * 接口字段保存方法
      * @param dto
-     * @return
-     */
-    ResultEnum saveConfigureField(ApiConfigureFieldPO dto);
-
-    /**
-     * 添加服务接口
      * @param apiName
      * @param apiInfo
+     * @param tableName
      * @return
      */
-    ResultEnum saveApiConfigure(String apiName, String apiInfo);
+    ResultEnum saveConfigure(List<ApiConfigureFieldPO> dto,String apiName,String apiInfo,String tableName);
 
     /**
      * 根据主键id删除字段

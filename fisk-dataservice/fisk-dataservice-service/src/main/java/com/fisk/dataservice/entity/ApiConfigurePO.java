@@ -12,18 +12,15 @@ import lombok.Data;
 @TableName("api_configure")
 public class ApiConfigurePO extends BasePO {
 
-    /**
-     * 接口请求的表名
-     */
     private String apiName;
     /**
      * 接口请求地址
      */
     private String apiRoute;
     /**
-     * 是否去重(0:否  1:是)
+     * 接口请求的表名
      */
-    private int distinctData;
+    private String tableName;
     /**
      * 接口信息
      */

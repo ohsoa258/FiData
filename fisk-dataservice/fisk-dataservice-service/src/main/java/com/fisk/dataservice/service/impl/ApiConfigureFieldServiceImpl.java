@@ -14,6 +14,8 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.List;
 
+import static com.fisk.dataservice.utils.TransformationUtils.toFirstChar;
+
 /**
  * @author WangYan
  * @date 2021/7/8 9:58
@@ -30,30 +32,42 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     // todo 登录人
 
     @Override
-    public ResultEnum saveConfigureField(ApiConfigureFieldPO dto) {
+    public ResultEnum saveConfigure(List<ApiConfigureFieldPO> dto, String apiName, String apiInfo,String tableName) {
         if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        return configureFieldMapper.insert(dto) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        ApiConfigurePO apiconfigurepo = new ApiConfigurePO();
+        apiconfigurepo.setApiName(apiName);
+        apiconfigurepo.setApiInfo(apiInfo);
+        apiconfigurepo.setTableName(tableName);
+        // 生成的·
+        String apiRoute = toFirstChar(apiName).toLowerCase();
+        apiconfigurepo.setApiRoute(apiRoute);
+        if (configureMapper.insert(apiconfigurepo) < 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        this.splicingApiConfigureField(dto,apiconfigurepo.getId());
+        return ResultEnum.SUCCESS;
     }
 
     /**
-     * 拼接ApiConfigurePO对象
-     *
-     * @param apiName
-     * @param apiInfo
+     * 保存 ApiConfigureFieldPO 对象
+     * @param dto
+     * @param id
      * @return
      */
-    @Override
-    public ResultEnum saveApiConfigure(String apiName, String apiInfo) {
-        ApiConfigurePO apiconfigurepo = new ApiConfigurePO();
-        apiconfigurepo.setApiName(apiName);
-        // 生成的·
-        apiconfigurepo.setApiRoute("/a");
-        apiconfigurepo.setApiInfo(apiInfo);
+    public ResultEnum splicingApiConfigureField(List<ApiConfigureFieldPO> dto,long id) {
+        // 把字段表配置信息先保存到字段表
+        for (ApiConfigureFieldPO configurable : dto) {
+            configurable.setFieldId((int) id);
+            if (configureFieldMapper.insert(configurable) < 0){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+        }
 
-        return configureMapper.insert(apiconfigurepo) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -62,8 +76,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        ApiConfigureFieldPO apiConfigureFieldPO = configureFieldMapper.selectById(id);
-        if (StringUtils.isEmpty(apiConfigureFieldPO)){
+        ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(id);
+        if (StringUtils.isEmpty(apiConfigureField)){
             return ResultEnum.DATA_NOTEXISTS;
         }
         return configureFieldMapper.deleteById(id) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -75,8 +89,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        ApiConfigureFieldPO apiConfigureFieldPO = configureFieldMapper.selectById(dto.getId());
-        if (apiConfigureFieldPO == null){
+        ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(dto.getId());
+        if (apiConfigureField == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
         return configureFieldMapper.updateById(dto)> 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -98,7 +112,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         }
 
         IPage<ApiConfigureFieldPO> page = new Page<>(currentPage, pageSize);
-        List<ApiConfigureFieldPO> apiConfigureFieldPOList = configureFieldMapper.selectPage(page, null).getRecords();
-        return apiConfigureFieldPOList;
+        List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectPage(page, null).getRecords();
+        return apiConfigureFieldList;
     }
 }

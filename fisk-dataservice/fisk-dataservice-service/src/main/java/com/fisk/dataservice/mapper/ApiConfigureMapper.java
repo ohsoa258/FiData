@@ -16,6 +16,7 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
 
     /**
      * 查询指定表的数据
+     * @param queryList
      * @param aggregationFieldList
      * @param groupList
      * @param tableName
@@ -24,7 +25,8 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
      * @param pageSize
      * @return
      */
-    List<Map> queryData(@Param("aggregationFieldList") List<String> aggregationFieldList,
+    List<Map> queryData(@Param("queryList") List<String> queryList,
+                        @Param("aggregationFieldList") List<String> aggregationFieldList,
                         @Param("groupList") List<String> groupList,
                         @Param("tableName") String tableName,
                         @Param("whereList") List<String> whereList,

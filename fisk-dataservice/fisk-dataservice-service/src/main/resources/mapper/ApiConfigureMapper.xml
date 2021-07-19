@@ -5,6 +5,17 @@
 
     <select id="queryData" resultType="java.util.Map">
        SELECT
+        <!--查询-->
+        <if test="queryList!=null and queryList.size() >0" >
+            <foreach collection="queryList" item="query" separator=",">
+                ${query}
+            </foreach>
+        </if>
+
+        <if test="groupList.size() >0 and queryList.size()>0" >
+            ,
+        </if>
+
         <!--分组-->
        <if test="groupList!=null and groupList.size() >0" >
            <foreach collection="groupList" item="group" separator=",">

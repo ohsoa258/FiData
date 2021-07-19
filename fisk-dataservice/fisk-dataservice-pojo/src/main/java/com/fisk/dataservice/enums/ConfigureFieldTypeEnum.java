@@ -16,8 +16,9 @@ public enum ConfigureFieldTypeEnum implements BaseEnum {
 
     AGGREGATION(1,"聚合字段"),
 
-    RESTRICT(2,"权限控制字段");
+    RESTRICT(2,"权限控制字段"),
 
+    QUERY(3,"查询字段");
 
     ConfigureFieldTypeEnum(int value, String name) {
         this.name = name;

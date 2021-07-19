@@ -9,6 +9,7 @@ import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.service.ApiFieldService;
+import org.apache.ibatis.annotations.Case;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -37,7 +38,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
         ApiConfigurePO apiConfigure = configureMapper.selectOne(queryWrapper);
         if (apiConfigure == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            throw new FkException(ResultEnum.NOTFOUND);
         }
 
         QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
@@ -58,6 +59,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         List<ApiConfigureFieldPO> aggregationList = new ArrayList<>();
         List<ApiConfigureFieldPO> groupingList = new ArrayList<>();
         List<ApiConfigureFieldPO> conditionList = new ArrayList<>();
+        List<ApiConfigureFieldPO> queryFieldList = new ArrayList<>();
         for (ApiConfigureFieldPO field : apiConfigureFieldList) {
             switch (field.getFieldType()) {
                 case GROUPING:
@@ -69,11 +71,14 @@ public class ApiFieldServiceImpl implements ApiFieldService {
                 case RESTRICT:
                     conditionList.add(field);
                     break;
+                case QUERY:
+                    queryFieldList.add(field);
+                    break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
         }
-        return this.splicingSql(aggregationList,groupingList,conditionList,currentPage,pageSize, apiName);
+        return this.splicingSql(queryFieldList,aggregationList,groupingList,conditionList,currentPage,pageSize, apiName);
     }
 
 
@@ -87,8 +92,18 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @param apiName  表名
      * @return
      */
-    public List<Map> splicingSql(List<ApiConfigureFieldPO> aggregationList, List<ApiConfigureFieldPO> groupingList,
-                               List<ApiConfigureFieldPO> conditionList, Integer currentPage, Integer pageSize, String apiName){
+    public List<Map> splicingSql(List<ApiConfigureFieldPO> queryFieldList,
+                                 List<ApiConfigureFieldPO> aggregationList,
+                                 List<ApiConfigureFieldPO> groupingList,
+                                 List<ApiConfigureFieldPO> conditionList,
+                                 Integer currentPage, Integer pageSize, String apiName){
+        // 获取查询的字段
+        List<String> queryList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(queryFieldList)){
+            for (ApiConfigureFieldPO apiConfigureField : queryFieldList) {
+                queryList.add(apiConfigureField.getField());
+            }
+        }
 
         // 获取聚合的字段
         List<String> aggregationFieldList = new ArrayList<>();
@@ -120,7 +135,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         if (pageSize == null){
             pageSize = 50;
         }
-        List<Map> objects = configureMapper.queryData(aggregationFieldList, groupList, apiName, whereList, currentPage, pageSize);
+        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, apiName, whereList, currentPage, pageSize);
         return objects;
     }
 }

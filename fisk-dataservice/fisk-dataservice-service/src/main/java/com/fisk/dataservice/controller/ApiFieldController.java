@@ -5,6 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.service.ApiFieldService;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,8 +25,8 @@ public class ApiFieldController {
     private ApiFieldService configureFieldService;
 
     @ApiOperation("根据路径查询")
-    @RequestMapping("/query/*")
-    public ResultEntity<List<Map>> queryData(String apiRoute, Integer currentPage, Integer pageSize) {
+    @RequestMapping("/query/{apiRoute}")
+    public ResultEntity<List<Map>> queryData(@PathVariable("apiRoute") String apiRoute, Integer currentPage, Integer pageSize) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,configureFieldService.queryField(apiRoute,currentPage,pageSize));
     }
 }

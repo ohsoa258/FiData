@@ -23,7 +23,7 @@ public class ApiConfigureFieldPO extends BasePO {
      */
     private String field;
     /**
-     * 字段类型（0：分组字段、1:聚合字段、2:权限控制）
+     * 字段类型（0：分组字段、1:聚合字段、2:权限控制、3：查询字段）
      */
     private ConfigureFieldTypeEnum fieldType;
     /**
