@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.mdc.TraceType;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -114,7 +116,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
-            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
+            return ResultEnum.Table_NAME_EXISTS;
+//            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
@@ -125,7 +128,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 应用注册id
         long id = modelReg.getId();
         if (id < 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         modelAccess.setCreateUser("" + userId + "");
         modelAccess.setAppid(id);
@@ -147,7 +151,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
@@ -263,7 +268,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
-            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
+            return ResultEnum.Table_NAME_EXISTS;
+//            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
         AppRegistrationPO arpo = appRegistrationImpl.query()
@@ -273,7 +279,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         long id = arpo.getId();
         if (id < 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         modelAccess.setAppid(id);
 
@@ -295,7 +302,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
@@ -326,7 +334,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!saveField) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_syncmode数据
@@ -391,7 +400,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
@@ -430,10 +440,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!update2) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
         if (!saveField) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
 
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
@@ -483,7 +495,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
@@ -505,7 +518,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!updateField) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 //        if (!saveField) {
 //            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
@@ -707,7 +721,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-
+    @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)
     @Override
     public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
 

@@ -1,6 +1,5 @@
 package com.fisk.dataaccess;
 
-import com.fisk.auth.annotation.EnableJwtVerification;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,7 +11,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * <p>
  * //@EnableJwtVerification
  */
-@SpringBootApplication(scanBasePackages = {"com.fisk.dataaccess", "com.fisk.common.advice", "com.fisk.common.redis",
+@SpringBootApplication(scanBasePackages = {
+        "com.fisk.dataaccess",
+        "com.fisk.common.advice",
+        "com.fisk.common.mdc",
+        "com.fisk.common.mybatis",
+        "com.fisk.common.redis",
+        "com.fisk.common.actuators",
         "com.fisk.common.user"})
 @MapperScan("com.fisk.dataaccess.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
