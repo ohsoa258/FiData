@@ -311,6 +311,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 1是实时物理表的字段，0是非实时物理表的字段
             modelField.setIsRealtime(1);
             modelField.setDelFlag(1);
+            modelField.setCreateUser(String.valueOf(userId));
 
             // 时间
             Date date2 = new Date(System.currentTimeMillis());
@@ -331,14 +332,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         modelSync.setId(aid);
 
         boolean saveSync = syncmodeImpl.save(modelSync);
-//        if (!save3) {
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
-//        }
-//
+
 //        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 //
 //        int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //        System.out.println(i);
+
+        // TODO: 调用atlas
+//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+//        atlasEntityQueryDTO.userId = userId;
+//        // 应用注册id
+//        atlasEntityQueryDTO.appId = String.valueOf(id);
+//        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+//        System.out.println(task);
 
         return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 
@@ -408,7 +415,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
                 // 还要绑定tb_table_access id
                 modelField.setTableAccessId(modelAccess.getId());
-
                 Date date3 = new Date(System.currentTimeMillis());
                 modelField.setUpdateUser(String.valueOf(userId));
                 modelField.setCreateTime(date3);
@@ -421,21 +427,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!update2) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
-
         if (!saveField) {
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
 
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
-//
 //        int i = createTableUtils.updatemysqltb(tableAccessDTO);
 //        System.out.println(i);
 
-        // 修改同步频率
+        // 修改tb_table_syncmode
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
         TableSyncmodePO modelSync = dto.toEntity(TableSyncmodePO.class);
         boolean updateSync = syncmodeImpl.updateById(modelSync);
-
 
         return updateSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -936,14 +939,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         groupConfig.setAppName(modelReg.getAppName());
         groupConfig.setAppDetails(modelReg.getAppDes());
+        // 回写应用注册组件id
+        groupConfig.setComponentId(modelReg.componentId);
         // TODO: 缺失字段(给个默认值)
 //        groupConfig.setNewApp(false);
-
 
 
         // 2.任务组配置
         taskGroupConfig.setAppName(modelReg.getAppName());
         taskGroupConfig.setAppDetails(modelReg.getAppDes());
+
 
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query()
@@ -977,11 +982,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        if (modelReg.componentId == null && modelAccess.componentId ==null) {
+        if (modelReg.componentId == null && modelAccess.componentId == null) {
             groupConfig.setNewApp(true);
-        }else {
+        } else {
             groupConfig.setNewApp(false);
         }
+
+        // TODO 回写物理表组件id
+        taskGroupConfig.setComponentId(modelAccess.componentId);
 
         NifiSettingPO modelNifi = nifiSettingImpl.query()
                 .eq("appid", appid)
@@ -997,7 +1005,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        } else {
 //            groupConfig.setNewApp(false);
 //        }
-
 
 
         // corn_expression
@@ -1052,7 +1059,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("appid", dto.appid)
                 .eq("del_flag", 1)
                 .one();
-        modelAccess.componentId = dto.appGroupId;
+        modelAccess.componentId = dto.tableGroupId;
 
         boolean updateAccess = this.updateById(modelAccess);
 
