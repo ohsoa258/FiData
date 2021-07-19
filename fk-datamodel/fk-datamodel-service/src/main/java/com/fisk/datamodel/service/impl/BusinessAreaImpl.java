@@ -3,6 +3,9 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
@@ -11,15 +14,22 @@ import com.fisk.datamodel.service.IBusinessArea;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
  */
 @Service
 public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAreaPO> implements IBusinessArea {
+
+    @Resource
+    GenerateCondition generateCondition;
+    @Resource
+    GetMetadata getMetadata;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -107,38 +117,22 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public List<BusinessFilterDTO> getBusinessAreaColumn()
+    public List<FilterFieldDTO> getBusinessAreaColumn()
     {
-        return baseMapper.columnList();
+        return getMetadata.getMetadataList("dmp_datamodel_db","tb_area_business","");
     }
 
     @Override
-    public Page<BusinessPageResultDTO> getDataList(BusinessPageDTO query)
+    public Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query)
     {
         StringBuilder str = new StringBuilder();
         if (query.key !=null && query.key.length()>0)
         {
             str.append(" and business_name like concat('%', "+"'"+query.key+"'"+ ", '%') ");
         }
-        for (BusinessQueryDTO model: query.dto)
-        {
-            switch (model.queryType)
-            {
-                case "大于":
-                    str.append(" and " +model.columnName+">" +"'"+model.columnValue+"' ");
-                    break;
-                case "小于":
-                    str.append(" and " +model.columnName+"<"+"'" +model.columnValue+"' ");
-                    break;
-                case "等于":
-                    str.append(" and " +model.columnName+"="+"'"+model.columnValue+"' ");
-                    break;
-                case "包含":
-                    str.append(" and " +model.columnName+" like concat('%'," + "'" + model.columnValue+"'" + ", '%') " );
-                    break;
-            }
-        }
-        BusinessPage data=new BusinessPage();
+        //筛选器拼接
+        str.append(generateCondition.getCondition(query.dto));
+        BusinessPageDTO data=new BusinessPageDTO();
         data.page=query.page;
         data.where=str.toString();
 

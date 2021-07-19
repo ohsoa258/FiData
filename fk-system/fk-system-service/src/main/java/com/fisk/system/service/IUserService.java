@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserDTO;
+import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.UserPowerDTO;
 import com.fisk.system.entity.UserPO;
 
@@ -76,5 +77,11 @@ public interface IUserService {
      * @return 查询结果
      */
     IPage<UserPowerDTO> getPageUserData(QueryDTO dto);
+
+    /**
+     * 获取当前登录人信息
+     * @return
+     */
+    UserInfoCurrentDTO getCurrentUserInfo();
 
 }
