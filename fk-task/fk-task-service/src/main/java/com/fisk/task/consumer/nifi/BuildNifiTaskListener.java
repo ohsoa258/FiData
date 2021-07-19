@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -41,6 +42,15 @@ import java.util.List;
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_NIFI_FLOW)
 @Slf4j
 public class BuildNifiTaskListener {
+
+    @Value("${dorisconstr.url}")
+    private String dorisUrl;
+    @Value("${dorisconstr.username}")
+    private String dorisUser;
+    @Value("${dorisconstr.password}")
+    private String dorisPwd;
+    @Value("${dorisconstr.driver_class_name}")
+    private String dorisDriver;
 
     @Resource
     INifiComponentsBuild componentsBuild;
@@ -57,6 +67,7 @@ public class BuildNifiTaskListener {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
         }
+        log.info(JSON.toJSONString("【数据接入配置项参数】" + configDTO));
         //1. 创建应用组
         ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
         //2. 创建jdbc连接池
@@ -100,10 +111,10 @@ public class BuildNifiTaskListener {
         //dto.sourceDsConfig = config1;
         DataSourceConfig config2 = new DataSourceConfig();
         config2.type = DriverTypeEnum.MYSQL;
-        config2.user = "root";
-        config2.password = "Password01!";
-        config2.jdbcStr = "jdbc:mysql://192.168.11.134:9030/test_db";
-        config2.componentId = "017a1220-4f36-11d6-9384-d2fdf9557105";
+        config2.user = dorisUser;
+        config2.password = dorisPwd;
+        config2.jdbcStr = dorisUrl;
+        //config2.componentId = "017a1220-4f36-11d6-9384-d2fdf9557105";
         //dto.targetDsConfig = config2;
         //ProcessorConfig processorConfig = new ProcessorConfig();
         //processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
