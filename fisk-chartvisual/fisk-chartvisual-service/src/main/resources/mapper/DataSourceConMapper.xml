@@ -13,6 +13,8 @@
         select id,
         `name`,
         con_str,
+        con_ip,
+        con_port,
         con_type,
         con_dbname,
         con_account,
