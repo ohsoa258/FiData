@@ -50,6 +50,21 @@
               ${group}
           </foreach>
       </if>
-      limit ${currentPage},${pageSize}
+
+      <!--如果查询条件中有聚合，那么查询的字段必须分组-->
+      <if test="aggregationFieldList!=null and aggregationFieldList.size() >0">
+        <if test="groupList!=null and groupList.size() >0">
+         ,
+        </if>
+
+        <if test="groupList==null or groupList.size() &lt;=0">
+        GROUP BY
+        </if>
+
+        <foreach collection="queryList" item="query" separator=",">
+            ${query}
+        </foreach>
+      </if>
+      limit #{currentPage},#{pageSize}
     </select>
 </mapper>

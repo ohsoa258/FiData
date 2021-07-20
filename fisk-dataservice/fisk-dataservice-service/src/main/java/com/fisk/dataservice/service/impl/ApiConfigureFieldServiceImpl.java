@@ -3,6 +3,7 @@ package com.fisk.dataservice.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.ApiFieldDataDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
@@ -32,23 +33,23 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     // todo 登录人
 
     @Override
-    public ResultEnum saveConfigure(List<ApiConfigureFieldPO> dto, String apiName, String apiInfo,String tableName) {
+    public ResultEnum saveConfigure(ApiFieldDataDTO dto) {
         if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
         ApiConfigurePO apiconfigurepo = new ApiConfigurePO();
-        apiconfigurepo.setApiName(apiName);
-        apiconfigurepo.setApiInfo(apiInfo);
-        apiconfigurepo.setTableName(tableName);
+        apiconfigurepo.setApiName(dto.getApiName());
+        apiconfigurepo.setApiInfo(dto.getApiInfo());
+        apiconfigurepo.setTableName(dto.getTableName());
         // 生成的·
-        String apiRoute = toFirstChar(apiName).toLowerCase();
+        String apiRoute = toFirstChar(dto.getApiName()).toLowerCase();
         apiconfigurepo.setApiRoute(apiRoute);
         if (configureMapper.insert(apiconfigurepo) < 0){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        this.splicingApiConfigureField(dto,apiconfigurepo.getId());
+        this.splicingApiConfigureField(dto.getApiConfigureFieldList(),apiconfigurepo.getId());
         return ResultEnum.SUCCESS;
     }
 

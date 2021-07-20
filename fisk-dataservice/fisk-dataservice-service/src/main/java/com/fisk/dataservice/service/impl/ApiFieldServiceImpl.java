@@ -129,12 +129,12 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         }
 
         if (currentPage == null){
-            currentPage = 0;
+            currentPage = 1;
         }
         if (pageSize == null){
             pageSize = 50;
         }
-        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, tableName, whereList, currentPage, pageSize);
+        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, tableName, whereList, (currentPage-1)*pageSize, pageSize);
         return objects;
     }
 }

@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.ApiFieldDataDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import java.util.List;
 
@@ -12,12 +13,9 @@ public interface ApiConfigureFieldService {
     /**
      * 接口字段保存方法
      * @param dto
-     * @param apiName
-     * @param apiInfo
-     * @param tableName
      * @return
      */
-    ResultEnum saveConfigure(List<ApiConfigureFieldPO> dto,String apiName,String apiInfo,String tableName);
+    ResultEnum saveConfigure(ApiFieldDataDTO dto);
 
     /**
      * 根据主键id删除字段

@@ -3,6 +3,7 @@ package com.fisk.dataservice.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.ApiFieldDataDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.service.ApiConfigureFieldService;
 import io.swagger.annotations.ApiOperation;
@@ -25,8 +26,8 @@ public class ConfigureFieldController {
 
     @ApiOperation("添加字段配置")
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@Validated @RequestBody List<ApiConfigureFieldPO> dto,String apiName,String apiInfo,String tableName) {
-        return ResultEntityBuild.build(configureFieldService.saveConfigure(dto,apiName,apiInfo,tableName));
+    public ResultEntity<Object> addData(@Validated @RequestBody ApiFieldDataDTO dto) {
+        return ResultEntityBuild.build(configureFieldService.saveConfigure(dto));
     }
 
     @ApiOperation("删除字段")
