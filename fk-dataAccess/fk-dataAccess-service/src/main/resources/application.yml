@@ -34,7 +34,8 @@ eureka:
       defaultZone: http://127.0.0.1:8082/eureka
 logging:
   level:
-    com.fisk: debug
+    com.fisk.dataaccess: debug
+    org.springframework.orm.jpa: debug
 mybatis-plus:
   global-config:
     db-config:
@@ -46,7 +47,8 @@ mybatis-plus:
       logic-not-delete-value: 1 # 逻辑未删除值(默认为 0)
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.fisk.dataaccess.entity  # 实体类的包扫描
-
+  configuration:
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
 #feign:
 #  hystrix:
 #    enabled: true

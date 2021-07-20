@@ -408,10 +408,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean update2 = true;
         boolean saveField = true;
 
-        List<TableFieldsDTO> list = tableAccessDTO.getList();
+        List<TableFieldsDTO> fieldsDTOList = tableAccessDTO.getList();
 
 
-        for (TableFieldsDTO tableFieldsDTO : list) {
+        for (TableFieldsDTO tableFieldsDTO : fieldsDTOList) {
 
             // 0: 旧数据不操作  1: 修改  2: 新增
             int funcType = tableFieldsDTO.getFuncType();
@@ -786,7 +786,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-
+    @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_WRITEBACKDATA)
     @Override
     public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
 
@@ -885,13 +885,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
         if (modelAccess == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return ResultEnum.DATA_NOTEXISTS;
         }
         modelAccess.atlasTableId = dto.atlasTableId;
 //        modelAccess.updateUser = dto.userId;
         boolean update = this.updateById(modelAccess);
         if (!update) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         List<AtlasEntityColumnDTO> list = dto.columnsKeys;
@@ -903,7 +903,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     .eq("id", columnDTO.columnId)
                     .one();
             if (modelFields == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                return ResultEnum.DATA_NOTEXISTS;
             }
 
             // 回写的字段GUID
@@ -911,7 +911,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 更新tb_table_fields表数据
             boolean updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                return ResultEnum.SAVE_DATA_ERROR;
             }
         }
 
@@ -927,7 +927,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-
+    @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
     public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -1068,7 +1068,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .one();
 
         if (modelReg==null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return ResultEnum.DATA_NOTEXISTS;
         }
 
         modelReg.targetDbPoolComponentId = dto.targetDbPoolComponentId;
@@ -1082,7 +1082,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!updateReg) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         TableAccessPO modelAccess = this.query()

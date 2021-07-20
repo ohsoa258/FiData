@@ -82,7 +82,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param id appid
      * @return task模块调用接口返回值
      */
-    ResultEnum dataAccessConfig(long id);
+//    ResultEnum dataAccessConfig(long id);
 
     /**
      * 查询数据源驱动类型

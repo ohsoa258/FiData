@@ -27,7 +27,7 @@ public class AppDataSourcePO extends BaseEntity {
     /**
      * tb_app_drivetype表type
      */
-    private String driveType;
+    public String driveType;
 
     /**
      * 主机名

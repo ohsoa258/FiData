@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.mdc.TraceType;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -20,7 +22,6 @@ import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
-import com.fisk.task.dto.daconfig.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -87,13 +88,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String appName = po.getAppName();
         boolean contains = appNameList.contains(appName);
         if (contains) {
-            throw new FkException(ResultEnum.DATA_EXISTS);
+            return ResultEnum.DATA_EXISTS;
         }
 
         // 保存
         boolean save = this.save(po);
         if (!save) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
 
@@ -111,7 +112,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         int insert = appDataSourceMapper.insert(po1);
         if (insert < 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 保存tb_app_drivetype数据
@@ -386,86 +387,94 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return AppDriveTypeDTO.convertEntityList(list);
     }
 
-    @Override
-    public ResultEnum dataAccessConfig(long id) {
+//    @Override
+//    public ResultEnum dataAccessConfig(long id) {
+//
+//        DataAccessConfigDTO dto = new DataAccessConfigDTO();
+//
+//        // app组配置
+//        GroupConfig groupConfig = dto.getGroupConfig();
+//
+//        //任务组配置
+//        TaskGroupConfig taskGroupConfig = dto.getTaskGroupConfig();
+//
+//        // 数据源jdbc配置
+//        DataSourceConfig sourceDsConfig = dto.getSourceDsConfig();
+//
+//        // 目标源jdbc连接
+//        DataSourceConfig targetDsConfig = dto.getTargetDsConfig();
+//
+//        // 表及表sql
+//        ProcessorConfig processorConfig = dto.getProcessorConfig();
+//
+//        // 1.app组配置
+//        // select * from tb_app_registration where id=id and del_flag=1;
+//        AppRegistrationPO rpo = this.query()
+//                .eq("id", id)
+//                .eq("del_flag", 1)
+//                .one();
+//        if (rpo == null) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+//        groupConfig.setAppName(rpo.getAppName());
+//        groupConfig.setAppDetails(rpo.getAppDes());
+//        // TODO: 缺失字段(给个默认值)
+//        groupConfig.setNewApp(false);
+//
+//        // 2.任务组配置
+//        taskGroupConfig.setAppName(rpo.getAppName());
+//        taskGroupConfig.setAppDetails(rpo.getAppDes());
+//
+//        //3.数据源jdbc配置
+//        AppDataSourcePO dpo = appDataSourceImpl.query()
+//                .eq("appid", id)
+//                .eq("del_flag", 1)
+//                .one();
+//        if (dpo == null) {
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+//        }
+//        sourceDsConfig.setJdbcStr(dpo.getConnectStr());
+////        sourceDsConfig.setType(); // 先硬编码
+//        sourceDsConfig.setUser(dpo.getConnectAccount());
+//        sourceDsConfig.setPassword(dpo.getConnectPwd());
+//
+//        // 4.目标源jdbc连接
+//
+//        // 5.表及表sql
+//
+//        return null;
+//    }
 
-        DataAccessConfigDTO dto = new DataAccessConfigDTO();
 
-        // app组配置
-        GroupConfig groupConfig = dto.getGroupConfig();
-
-        //任务组配置
-        TaskGroupConfig taskGroupConfig = dto.getTaskGroupConfig();
-
-        // 数据源jdbc配置
-        DataSourceConfig sourceDsConfig = dto.getSourceDsConfig();
-
-        // 目标源jdbc连接
-        DataSourceConfig targetDsConfig = dto.getTargetDsConfig();
-
-        // 表及表sql
-        ProcessorConfig processorConfig = dto.getProcessorConfig();
-
-        // 1.app组配置
-        // select * from tb_app_registration where id=id and del_flag=1;
-        AppRegistrationPO rpo = this.query()
-                .eq("id", id)
-                .eq("del_flag", 1)
-                .one();
-        if (rpo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        groupConfig.setAppName(rpo.getAppName());
-        groupConfig.setAppDetails(rpo.getAppDes());
-        // TODO: 缺失字段(给个默认值)
-        groupConfig.setNewApp(false);
-
-        // 2.任务组配置
-        taskGroupConfig.setAppName(rpo.getAppName());
-        taskGroupConfig.setAppDetails(rpo.getAppDes());
-
-        //3.数据源jdbc配置
-        AppDataSourcePO dpo = appDataSourceImpl.query()
-                .eq("appid", id)
-                .eq("del_flag", 1)
-                .one();
-        if (dpo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        sourceDsConfig.setJdbcStr(dpo.getConnectStr());
-//        sourceDsConfig.setType(); // 先硬编码
-        sourceDsConfig.setUser(dpo.getConnectAccount());
-        sourceDsConfig.setPassword(dpo.getConnectPwd());
-
-        // 4.目标源jdbc连接
-
-        // 5.表及表sql
-
-        return null;
-    }
-
-
+    @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_ENTITY)
     @Override
     public AtlasEntityDTO getAtlasEntity(long id) {
 
-        AtlasEntityDTO dto = new AtlasEntityDTO();
+        AtlasEntityDTO dto = null;
+        try {
+            dto = new AtlasEntityDTO();
 
-        AppRegistrationPO po1 = this.query().eq("id", id)
-                .eq("del_flag", 1)
-                .one();
+            AppRegistrationPO modelReg = this.query().eq("id", id)
+                    .eq("del_flag", 1)
+                    .one();
 
-        AppDataSourcePO po2 = appDataSourceImpl.query().eq("id", id)
-                .eq("del_flag", 1)
-                .one();
+            AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("id", id)
+                    .eq("del_flag", 1)
+                    .one();
 
-        dto.sendTime = LocalDateTime.now();
-        dto.appName = po1.getAppName();
-        dto.createUser = po1.getCreateUser();
-        dto.appDes = po1.getAppDes();
-        dto.driveType = po2.getDriveType();
-        dto.host = po2.getHost();
-        dto.port = po2.getPort();
-        dto.dbName = po2.getDbName();
+            dto.sendTime = LocalDateTime.now();
+            dto.appName = modelReg.appName;
+            dto.createUser = modelReg.getCreateUser();
+            dto.appDes = modelReg.getAppDes();
+            dto.driveType = modelDataSource.getDriveType();
+            dto.host = modelDataSource.getHost();
+            dto.port = modelDataSource.getPort();
+            dto.dbName = modelDataSource.getDbName();
+
+        } catch (Exception e) {
+            log.error("{}方法执行失败: ", e);
+//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
         return dto;
     }
@@ -478,14 +487,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
         if (modelReg == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return ResultEnum.DATA_NOTEXISTS;
         }
         modelReg.atlasInstanceId = atlasInstanceId;
 //        model.delFlag = 1;
         // 保存tb_app_registration
         boolean update = this.updateById(modelReg);
         if (!update) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         AppDataSourcePO modelData = appDataSourceImpl.query()
@@ -493,12 +502,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
         if (modelData == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
         modelData.atlasDbId = atlasDbId;
         // 保存tb_app_datasource
         boolean updateById = appDataSourceImpl.updateById(modelData);
-
 
         return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

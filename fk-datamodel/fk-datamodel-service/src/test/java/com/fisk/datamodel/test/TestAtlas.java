@@ -26,7 +26,7 @@ public class TestAtlas {
     @Test
     public void test() {
 
-        ResultEntity<AtlasEntityDTO> dtoResultEntity = client.getAtlasEntity(6);
+        ResultEntity<AtlasEntityDTO> dtoResultEntity = client.getAtlasEntity(1);
         AtlasEntityDTO dto = dtoResultEntity.getData();
 
         System.out.println(dto);
