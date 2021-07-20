@@ -167,7 +167,7 @@ public class UserServiceImpl implements IUserService {
         UserInfoCurrentDTO dto=new UserInfoCurrentDTO();
         UserPO model = mapper.selectById(userInfo.id);
         if (model == null) {
-            return null;
+            return dto;
         }
         dto.userAccount=model.userAccount;
         dto.userName=model.username;

@@ -72,7 +72,7 @@ public class PermissionController {
     }
 
     @GetMapping("/getService")
-    @ApiOperation("根据当前登录人id,获取服务列表")
+    @ApiOperation("根据当前登录人,获取服务列表")
     public ResultEntity<Object> getLoginService() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getServiceList());
     }

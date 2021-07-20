@@ -29,12 +29,4 @@ public interface AreaBusinessMap {
      */
     AreaBusinessDTO poToDto(AreaBusinessPO po);
 
-//    /**
-//     * 集合: po ==> dto
-//     *
-//     * @param po List<>
-//     * @return List
-//     */
-//    List<AreaBusinessDTO> poToDtos(List<AreaBusinessPO> po);
-
 }
