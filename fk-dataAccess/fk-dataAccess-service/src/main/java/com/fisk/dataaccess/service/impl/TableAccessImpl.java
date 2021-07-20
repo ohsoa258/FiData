@@ -1,10 +1,13 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.mdc.TraceType;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -21,6 +24,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,7 @@ import java.util.Map;
  * @author Lock
  */
 @Service
+@Slf4j
 public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessPO> implements ITableAccess {
 
     @Resource
@@ -111,7 +116,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
-            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
+            return ResultEnum.Table_NAME_EXISTS;
+//            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
@@ -122,7 +128,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 应用注册id
         long id = modelReg.getId();
         if (id < 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         modelAccess.setCreateUser("" + userId + "");
         modelAccess.setAppid(id);
@@ -144,12 +151,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
         boolean save2 = true;
-        List<TableFieldsDTO> list = tableAccessDTO.getList();
+        List<TableFieldsDTO> fieldsDTOList = tableAccessDTO.getList();
 
         //TODO: 这一块判断先不加
         // 表字段不为空判断
@@ -157,7 +165,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            throw new FkException(ResultEnum.DATA_NOTEXISTS);
 //        }
 
-        for (TableFieldsDTO tableFieldsDTO : list) {
+        for (TableFieldsDTO tableFieldsDTO : fieldsDTOList) {
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
             modelField.setTableAccessId(modelAccess.getId());
 
@@ -186,17 +194,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveSync = syncmodeImpl.save(po);
 
         // TODO: atlas调用
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = userId;
-//        atlasEntityQueryDTO.appId = "6";
-        // 应用注册id
-        atlasEntityQueryDTO.appId = "" + id + "";
-
-        // 物理表id
-        atlasEntityQueryDTO.dbId = "" + modelAccess.getId() + "";
-
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-        System.out.println(task);
+//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+//        atlasEntityQueryDTO.userId = userId;
+////        atlasEntityQueryDTO.appId = "6";
+//        // 应用注册id
+//        atlasEntityQueryDTO.appId = "" + id + "";
+//
+//        // 物理表id
+//        atlasEntityQueryDTO.dbId = "" + modelAccess.getId() + "";
+//
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+//        log.info("task:" + JSON.toJSONString(task));
+//        System.out.println(task);
 
         return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -259,17 +268,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
-            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
+            return ResultEnum.Table_NAME_EXISTS;
+//            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
-        AppRegistrationPO arpo = appRegistrationImpl.query()
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessNonDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
 
-        long id = arpo.getId();
+        long id = modelReg.getId();
         if (id < 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
         modelAccess.setAppid(id);
 
@@ -291,12 +302,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
         boolean saveField = true;
-        List<TableFieldsDTO> tfdto = tableAccessNonDTO.getList();
+        List<TableFieldsDTO> fieldsDTOList = tableAccessNonDTO.getList();
 
         // TODO: 这一块判断先不加
         // 表字段不为空判断
@@ -304,7 +316,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            throw new FkException(ResultEnum.DATA_NOTEXISTS);
 //        }
 
-        for (TableFieldsDTO tableFieldsDTO : tfdto) {
+        for (TableFieldsDTO tableFieldsDTO : fieldsDTOList) {
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
             modelField.setTableAccessId(modelAccess.getId());
 
@@ -322,7 +334,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!saveField) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.SAVE_DATA_ERROR;
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_syncmode数据
@@ -339,13 +352,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        System.out.println(i);
 
         // TODO: 调用atlas
-//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-//        atlasEntityQueryDTO.userId = userId;
-//        // 应用注册id
-//        atlasEntityQueryDTO.appId = String.valueOf(id);
-//        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-//        System.out.println(task);
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = userId;
+        // 应用注册id
+        atlasEntityQueryDTO.appId = String.valueOf(id);
+        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println(task);
 
         return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
 
@@ -386,7 +400,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
@@ -425,10 +440,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!update2) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
         if (!saveField) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
 
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
@@ -454,12 +471,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO: 原始SQL表修改(暂时不用集成)
         // 1.先修改表
-/*        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-
-        int i = mysqlTableUtils.updatemysqltb(dto);
-        if (i != 0) {
-            throw new FkException(500, "操作数据库失败");
-        }*/
+//        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+//
+//        int i = mysqlTableUtils.updatemysqltb(dto);
+//        if (i != 0) {
+//            throw new FkException(500, "操作数据库失败");
+//        }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
@@ -478,7 +495,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
@@ -500,7 +518,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!updateField) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 //        if (!saveField) {
 //            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
@@ -702,7 +721,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-
+    @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)
     @Override
     public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
 
@@ -963,9 +982,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         sourceDsConfig.setType(DriverTypeEnum.MYSQL);
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
+        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
 
         // 4.目标源jdbc连接
-
+        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
 
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
@@ -1032,6 +1052,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.targetDsConfig = targetDsConfig;
         dto.processorConfig = processorConfig;
 
+//        int a = 1 / 0;
+
         return dto;
     }
 
@@ -1044,12 +1066,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("id", dto.appid)
                 .eq("del_flag", 1)
                 .one();
+
+        if (modelReg==null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        modelReg.targetDbPoolComponentId = dto.targetDbPoolComponentId;
+        modelReg.sourceDbPoolComponentId = dto.sourceDbPoolComponentId;
+
         boolean updateReg = true;
         if (modelReg.componentId == null) {
             modelReg.componentId = dto.appGroupId;
             // 更新tb_app_appRegistration表componentId
             updateReg = this.appRegistrationImpl.updateById(modelReg);
         }
+
         if (!updateReg) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }

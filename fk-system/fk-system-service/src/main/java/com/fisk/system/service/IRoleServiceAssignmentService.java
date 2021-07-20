@@ -28,9 +28,8 @@ public interface IRoleServiceAssignmentService {
     /**
      * 根据登录人id,获取服务列表
      *
-     * @param userId
      * @return 保存结果
      */
 
-    List<ServiceSourceDTO> getServiceList(int userId);
+    List<ServiceSourceDTO> getServiceList();
 }

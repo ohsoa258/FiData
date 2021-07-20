@@ -100,4 +100,10 @@ public class UserController {
         return ResponseEntity.ok(UserContext.getUser());
     }
 
+    @GetMapping("/getCurrentUserInfo")
+    public  ResultEntity<Object> GetCurrentUserInfo(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCurrentUserInfo());
+    }
+
+
 }

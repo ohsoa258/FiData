@@ -71,10 +71,10 @@ public class PermissionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.addRoleServiceAssignment(dto));
     }
 
-    @GetMapping("/getService/{id}")
+    @GetMapping("/getService")
     @ApiOperation("根据当前登录人id,获取服务列表")
-    public ResultEntity<Object> getLoginService(@PathVariable("id") int userId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getServiceList(userId));
+    public ResultEntity<Object> getLoginService() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getServiceList());
     }
 
 }

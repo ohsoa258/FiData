@@ -2,6 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
@@ -62,7 +63,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      *
      * @return 查询结果
      */
-    List<BusinessFilterDTO> getBusinessAreaColumn();
+    List<FilterFieldDTO> getBusinessAreaColumn();
     /**
      * 分页
      *
@@ -70,6 +71,6 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param query query
      * @return 查询结果
      */
-    Page<BusinessPageResultDTO> getDataList(BusinessPageDTO query);
+    Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query);
 
 }
