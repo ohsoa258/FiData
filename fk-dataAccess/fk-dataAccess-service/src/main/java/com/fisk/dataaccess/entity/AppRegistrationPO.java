@@ -46,6 +46,11 @@ public class AppRegistrationPO extends BaseEntity {
     public String appName;
 
     /**
+     * 应用简称
+     */
+    public String appAbbreviation;
+
+    /**
      * 应用描述
      */
     public String appDes;

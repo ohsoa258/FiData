@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -132,6 +133,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         atlasEntityQueryDTO.userId = userId;
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
 
         System.out.println(task);
 
@@ -466,7 +468,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             dto.appName = modelReg.appName;
             dto.createUser = modelReg.getCreateUser();
             dto.appDes = modelReg.getAppDes();
-            dto.driveType = modelDataSource.getDriveType();
+
+            String driveType = "mysql";
+            if (driveType.equalsIgnoreCase(modelDataSource.getDriveType())) {
+                dto.driveType = "MySQL";
+            } else {
+                dto.driveType = modelDataSource.getDriveType();
+            }
             dto.host = modelDataSource.getHost();
             dto.port = modelDataSource.getPort();
             dto.dbName = modelDataSource.getDbName();
