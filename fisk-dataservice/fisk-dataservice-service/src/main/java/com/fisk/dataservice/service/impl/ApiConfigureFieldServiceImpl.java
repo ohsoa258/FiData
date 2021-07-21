@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
@@ -15,6 +16,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.List;
 
+import static com.fisk.dataservice.map.ApiConfigureFieldMap.apiConfigureFieldList;
 import static com.fisk.dataservice.utils.TransformationUtils.toFirstChar;
 
 /**
@@ -44,12 +46,22 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         apiconfigurepo.setTableName(dto.getTableName());
         // 生成的·
         String apiRoute = toFirstChar(dto.getApiName()).toLowerCase();
-        apiconfigurepo.setApiRoute(apiRoute);
+        QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
+        ApiConfigurePO apiConfigurePO = configureMapper.selectOne(queryWrapper);
+        if (apiConfigurePO.getApiRoute().equals(apiRoute)){
+            // 证明已经存在
+            apiconfigurepo.setApiRoute(apiRoute+1);
+        }else {
+            apiconfigurepo.setApiRoute(apiRoute);
+        }
+
         if (configureMapper.insert(apiconfigurepo) < 0){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        this.splicingApiConfigureField(dto.getApiConfigureFieldList(),apiconfigurepo.getId());
+        List<ApiConfigureFieldPO> apiConfigureFieldPOList = apiConfigureFieldList(dto.getApiConfigureFieldList());
+        this.splicingApiConfigureField(apiConfigureFieldPOList,apiconfigurepo.getId());
         return ResultEnum.SUCCESS;
     }
 

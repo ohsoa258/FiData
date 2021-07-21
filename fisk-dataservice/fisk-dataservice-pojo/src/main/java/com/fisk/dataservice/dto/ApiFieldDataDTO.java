@@ -1,6 +1,5 @@
 package com.fisk.dataservice.dto;
 
-import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import lombok.Data;
 
 import java.util.List;
@@ -14,5 +13,5 @@ public class ApiFieldDataDTO {
     public String apiName;
     public String apiInfo;
     public String tableName;
-    public List<ApiConfigureFieldPO> apiConfigureFieldList;
+    public List<ApiConfigureField> apiConfigureFieldList;
 }
