@@ -1,6 +1,7 @@
 package com.fisk.task.dto.atlas;
 
 import com.fisk.task.dto.MQBaseDTO;
+import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
     /**
      * 数据同步类型；全量、增量
      */
-    public String syncType;
+    public OdsDataSyncTypeEnum syncType;
     /**
      * 增量时间戳字段
      */
