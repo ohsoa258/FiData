@@ -100,6 +100,7 @@ public class UserController {
         return ResponseEntity.ok(UserContext.getUser());
     }
 
+    @ApiOperation("获取登录人信息")
     @GetMapping("/getCurrentUserInfo")
     public  ResultEntity<Object> GetCurrentUserInfo(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCurrentUserInfo());
