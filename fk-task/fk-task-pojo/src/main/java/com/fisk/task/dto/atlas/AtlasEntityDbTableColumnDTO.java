@@ -12,9 +12,17 @@ import java.util.List;
  */
 @Data
 public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
-public String dbId;
-public String tableName;
-public String tableId;
-public String createUser;
-public List<AtlasEntityColumnDTO> columns;
+    public String dbId;
+    public String tableName;
+    public String tableId;
+    /**
+     * 数据同步类型；全量、增量
+     */
+    public String syncType;
+    /**
+     * 增量时间戳字段
+     */
+    public String syncField;
+    public String createUser;
+    public List<AtlasEntityColumnDTO> columns;
 }
