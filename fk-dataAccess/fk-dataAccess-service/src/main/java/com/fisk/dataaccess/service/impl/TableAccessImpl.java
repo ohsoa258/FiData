@@ -15,6 +15,7 @@ import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
+import com.fisk.dataaccess.mapper.TableBusinessMapper;
 import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
@@ -67,6 +68,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Resource
     private NifiSettingImpl nifiSettingImpl;
+
+    @Resource
+    private TableBusinessImpl businessImpl;
+
+    @Resource
+    private TableBusinessMapper businessMapper;
 
     /**
      * 添加物理表(实时)
@@ -294,9 +301,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         modelAccess.setCreateUser(String.valueOf(userId));
 
         // 时间
-        Date date1 = new Date(System.currentTimeMillis());
-        modelAccess.setCreateTime(date1);
-        modelAccess.setUpdateTime(date1);
+        Date dateAccess = new Date(System.currentTimeMillis());
+        modelAccess.setCreateTime(dateAccess);
+        modelAccess.setUpdateTime(dateAccess);
 
         // 2.保存tb_table_access数据
         boolean saveAccess = this.save(modelAccess);
@@ -337,6 +344,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SAVE_DATA_ERROR;
 //            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
+
+        // TODO 新增tb_table_business业务时间表
+        // 保存tb_table_business数据
+        TableBusinessDTO businessDTO = tableAccessNonDTO.getBusinessDTO();
+        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+        modelBusiness.setAccessId(modelAccess.getId());
+        boolean saveBusiness = this.businessImpl.save(modelBusiness);
+        if (!saveBusiness) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
 
         // 保存tb_table_syncmode数据
         TableSyncmodeDTO syncmodeDTO = tableAccessNonDTO.getTableSyncmodeDTO();
@@ -521,10 +539,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.UPDATE_DATA_ERROR;
 //            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
-//        if (!saveField) {
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
-//        }
 
+        // TODO 新增tb_table_business业务时间表
+        // 保存tb_table_business数据
+        TableBusinessDTO businessDTO = dto.getBusinessDTO();
+        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+        boolean updateBusiness = this.businessImpl.updateById(modelBusiness);
+        if (!updateBusiness) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
 
         // 4.保存tb_table_syncmode数据
         boolean updateSync = true;
@@ -637,6 +660,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 当要回显的数据是非实时的时候,要将tb_table_syncmode表数据封装进去
         // 非实时数据
 //        if (isRealtime == 1) {
+        // 查询tb_table_business
+        TableBusinessPO modelBusiness = this.businessMapper.getData(id);
+        TableBusinessDTO businessDTO = new TableBusinessDTO(modelBusiness);
+        dto.setBusinessDTO(businessDTO);
+
+
+        // 查询tb_table_syncmode
         TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
         TableSyncmodeDTO sdto = new TableSyncmodeDTO(modelSync);
 
