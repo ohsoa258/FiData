@@ -76,15 +76,6 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<AppNameDTO> queryNoneRealTimeAppName();
 
     /**
-     *
-     * 给task模块提供数据源等信息
-     *
-     * @param id appid
-     * @return task模块调用接口返回值
-     */
-//    ResultEnum dataAccessConfig(long id);
-
-    /**
      * 查询数据源驱动类型
      *
      * @return 驱动类型
