@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.BusinessNameDTO;
 import com.fisk.datamodel.dto.DataAreaDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DataAreaPO;
+import com.fisk.datamodel.map.DataAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DataAreaMapper;
 import com.fisk.datamodel.service.IDataArea;
@@ -16,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -28,9 +30,12 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
     @Resource
     private BusinessAreaMapper businessAreaMapper;
-
     @Resource
     private BusinessAreaImpl businessAreaImpl;
+    @Resource
+    private DataAreaMapper mapper;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public List<BusinessNameDTO> getBusinessName() {
@@ -55,22 +60,23 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataAreaDTO dataAreaDTO) {
 
+        // 获取当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        Long userId = userInfo.getId();
+
+        // 根据业务名称查询业务域
         String businessName = dataAreaDTO.getBusinessName();
-        BusinessAreaPO bpo = businessAreaImpl.query()
+        BusinessAreaPO modelBusiness = businessAreaImpl.query()
                 .eq("business_name", businessName)
                 .eq("del_flag", 1)
                 .one();
 
-        DataAreaPO po = dataAreaDTO.toEntity(DataAreaPO.class);
+        DataAreaPO modelData = dataAreaDTO.toEntity(DataAreaPO.class);
 
-        po.setBusinessid(bpo.getId());
+        modelData.setBusinessid(modelBusiness.getId());
+        modelData.setCreateUser(String.valueOf(userId));
 
-        Date date = new Date(System.currentTimeMillis());
-        po.setCreateTime(date);
-        po.setUpdateTime(date);
-        po.setDelFlag(1);
-
-        return this.save(po) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return this.save(modelData) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -81,13 +87,12 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
                 .eq("id", id)
                 .eq("del_flag", 1)
                 .one();
-
         // 2.非空判断
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
-
-        DataAreaDTO dataAreaDTO = new DataAreaDTO(po);
+        // 3.po -> dto
+        DataAreaDTO dataAreaDTO = DataAreaMap.INSTANCES.poToDto(po);
 
         // 将businessName封装进去
         long businessid = po.getBusinessid();
@@ -95,15 +100,15 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
 
-        BusinessAreaPO bpo = businessAreaImpl.query()
+        BusinessAreaPO modelBusiness = businessAreaImpl.query()
                 .eq("id", businessid)
                 .eq("del_flag", 1)
                 .one();
-        if (bpo == null) {
+        if (modelBusiness == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
 
-        dataAreaDTO.setBusinessName(bpo.getBusinessName());
+        dataAreaDTO.setBusinessName(modelBusiness.getBusinessName());
 
         return dataAreaDTO;
     }
@@ -111,9 +116,12 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     @Override
     public ResultEnum updateDataArea(DataAreaDTO dataAreaDTO) {
 
+        // 获取当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+
         // 根据id查询数据域表信息
         long id = dataAreaDTO.getId();
-        // select * from 数据域表 where id=1
+        // select * from tb_area_data where id=#{id}
         DataAreaPO model = this.getById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -127,16 +135,13 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        BusinessAreaPO bpo = businessAreaImpl.query()
+        BusinessAreaPO modelBusiness = businessAreaImpl.query()
                 .eq("business_name", businessName)
                 .eq("del_flag", 1)
                 .one();
 
-        po.setBusinessid(bpo.getId());
-        po.setDelFlag(1);
-
-        Date date = new Date(System.currentTimeMillis());
-        po.setUpdateTime(date);
+        po.setBusinessid(modelBusiness.getId());
+        po.setUpdateUser(String.valueOf(userInfo.id));
 
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -146,18 +151,11 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
         // 删除数据域表信息
         // 1.非空判断
-        DataAreaPO apo = this.getById(id);
-        if (apo == null) {
+        DataAreaPO model = this.getById(id);
+        if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
-        // 将del_flag的状态改为0
-        apo.setDelFlag(0);
-
-        // update 表名 set del_flag=1 where id=1;
-        boolean update = this.updateById(apo);
-
-        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

@@ -1,9 +1,9 @@
 package com.fisk.datamodel.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.filter.dto.FilterFieldDTO;
-import com.fisk.datamodel.dto.*;
+import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.datamodel.dto.BusinessPageDTO;
+import com.fisk.datamodel.dto.BusinessPageResultDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -16,7 +16,7 @@ import java.util.Map;
  * @author Lock
  */
 @Mapper
-public interface BusinessAreaMapper extends BaseMapper<BusinessAreaPO> {
+public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
 
     /**
      *  查询

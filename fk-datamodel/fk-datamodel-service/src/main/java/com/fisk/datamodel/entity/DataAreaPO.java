@@ -1,8 +1,7 @@
 package com.fisk.datamodel.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,10 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_area_data")
 @EqualsAndHashCode(callSuper = true)
-public class DataAreaPO extends BaseEntity {
-
-    @TableId
-    public long id;
+public class DataAreaPO extends BasePO {
 
     /**
      *  业务域表id
@@ -36,15 +32,4 @@ public class DataAreaPO extends BaseEntity {
      *  数据域描述
      */
     public String dataDes;
-
-//    public LocalDateTime createTime;
-
-    public String createUser;
-
-//    public LocalDateTime updateTime;
-
-    public String updateUser;
-
-    public int delFlag;
-
 }
