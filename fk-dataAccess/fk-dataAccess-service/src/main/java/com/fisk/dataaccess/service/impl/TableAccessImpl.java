@@ -688,7 +688,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public List<TablePyhNameDTO> getTableFields(String appName) {
 
         // 1.根据应用名称查询表id
-        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("app_name", appName).one();
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("app_name", appName)
+                .eq("del_flag",1)
+                .one();
 
         // tb_app_registration表id
         long appid = modelReg.getId();
