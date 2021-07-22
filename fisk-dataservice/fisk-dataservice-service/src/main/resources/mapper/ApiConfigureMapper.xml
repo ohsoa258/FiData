@@ -66,8 +66,8 @@
         </foreach>
       </if>
 
-      <!--如果没有聚合字段，但是要分组-->
-      <if test="aggregationFieldList==null or aggregationFieldList.size() &lt;=0">
+      <!--如果没有聚合字段,但是有分组的字段，那么查询的字段必须分组。-->
+      <if test="aggregationFieldList.size() &lt;=0 and groupList.size() >0">
           <if test="groupList.size() >0 and queryList.size()>0">
               ,
           </if>
