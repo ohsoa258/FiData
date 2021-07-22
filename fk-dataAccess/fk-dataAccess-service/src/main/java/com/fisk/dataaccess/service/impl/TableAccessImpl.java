@@ -25,6 +25,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
+import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -763,22 +764,50 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        AppDataSourcePO sourcepo = appDataSourceImpl.query().
-                eq("appid", appid)
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+                .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
+        if (modelDataSource == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
-        if (sourcepo == null) {
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        TableSyncmodePO modelSync = syncmodeMapper.getData(id);
+        if (modelSync == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         AtlasEntityDbTableColumnDTO dto = new AtlasEntityDbTableColumnDTO();
 
-        dto.dbId = sourcepo.getAtlasDbId();
+        dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
-        // TODO
-//        dto.tableId = "" + modelAccess.getId() + "";
+
+        // TODO 新增appAbbreviation syncType syncField
+        dto.appAbbreviation = modelReg.appAbbreviation;
+        switch (modelSync.syncMode) {
+            case 1:
+                dto.syncType = OdsDataSyncTypeEnum.full_volume;
+                break;
+            case 2:
+                dto.syncType = OdsDataSyncTypeEnum.timestamp_incremental;
+                dto.syncField = modelSync.syncField;
+                break;
+            case 3:
+                dto.syncType = OdsDataSyncTypeEnum.business_time_cover;
+                break;
+            default:
+                break;
+        }
+
         dto.tableId = String.valueOf(modelAccess.getId());
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
@@ -833,14 +862,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appId = modelReg.atlasInstanceId;
 
         // 查询tb_app_datasource
-        AppDataSourcePO modelData = appDataSourceImpl.query()
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
                 .eq("appid", appid)
                 .eq("del_flag", 1)
                 .one();
-        if (modelData == null) {
+        if (modelDataSource == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        dto.atlasTableId = modelData.atlasDbId;
+        dto.atlasTableId = modelDataSource.atlasDbId;
 //        // 查询tb_app_nifiFlow
 //        AppNifiFlowPO modelNifiFlow = nifiFlowImpl.query()
 //                .eq("id", appid)
@@ -862,9 +891,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
 
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
-        atlasDTO.dbId = modelData.getAtlasDbId();
+        atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
+
+        // TODO 新增appAbbreviation syncType syncField
+//        atlasDTO.appAbbreviation = modelReg.appAbbreviation;
+//        switch (modelSync.syncMode) {
+//            case 1:
+//                atlasDTO.syncType = OdsDataSyncTypeEnum.full_volume;
+//                break;
+//            case 2:
+//                atlasDTO.syncType = OdsDataSyncTypeEnum.timestamp_incremental;
+//                atlasDTO.syncField = modelSync.syncField;
+//                break;
+//            case 3:
+//                atlasDTO.syncType = OdsDataSyncTypeEnum.business_time_cover;
+//                break;
+//            default:
+//                break;
+//        }
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
@@ -1097,7 +1143,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
 
-        if (modelReg==null) {
+        if (modelReg == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
