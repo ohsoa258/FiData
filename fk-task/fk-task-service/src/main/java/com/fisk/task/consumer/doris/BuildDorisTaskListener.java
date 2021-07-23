@@ -50,8 +50,8 @@ public class BuildDorisTaskListener {
         log.info("ae:" + JSON.toJSONString(dto));
         StringBuilder sql = new StringBuilder();
         String tableName = dto.tableName;
-        String stg_table = "stg_" + dto.tableName;
-        String ods_table = "ods_" + dto.tableName;
+        String stg_table = dto.appAbbreviation+"_stg_" + dto.tableName;
+        String ods_table = dto.appAbbreviation+"_ods_" + dto.tableName;
         sql.append("CREATE TABLE tableName");
         sql.append("(");
         StringBuilder sqlFileds = new StringBuilder();
