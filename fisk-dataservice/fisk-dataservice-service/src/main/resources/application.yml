@@ -1,0 +1,76 @@
+server:
+  port: 8089
+spring:
+  application:
+    name: dataservice-service
+  datasource:
+    url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+  rabbitmq:
+    host: 192.168.11.130
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: my_vhost
+  redis:
+    host: 192.168.11.130
+#  security:
+#    user:
+#      name: admin
+#      password: zxc19981213
+
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+fk:
+  encoder:
+    crypt:
+      secret: ${random.uuid} # 随机的密钥，使用uuid
+      strength: 6 # 加密强度4~31，决定盐加密时的运算强度，超过10以后加密耗时会显著增加
+
+  # 配置此条信息,当前服务开启时会调用feign接口,去授权中心获取秘钥
+  auth:
+    clientId: dataservice-service
+    secret: 1234
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+  instance:
+    #eureka客户端发送心跳间隔，默认30秒
+    lease-renewal-interval-in-seconds: 5
+    #eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除
+    lease-expiration-duration-in-seconds: 5
+
+logging:
+  level:
+    com.fisk.chartvisual.mapper: debug
+    org.springframework.orm.jpa: debug
+  config: classpath:logback-spring.xml
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      update-strategy: not_null
+      logic-delete-field: del_flag  # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+      logic-delete-value: 0 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 1 # 逻辑未删除值(默认为 0)
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    #  type-aliases-package: com.fisk.user.entity  实体类的包扫描
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+    # 打印sql到日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
