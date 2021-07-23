@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 public class ApiConfigureField {
-    private Integer fieldId;
+    private Integer configureId;
     private String field;
     private ConfigureFieldTypeEnum fieldType;
     private String fieldConditionValue;

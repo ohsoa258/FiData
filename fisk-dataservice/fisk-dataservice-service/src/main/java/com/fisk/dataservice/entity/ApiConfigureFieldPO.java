@@ -17,7 +17,7 @@ public class ApiConfigureFieldPO extends BasePO {
     /**
      * 关联主表的id
      */
-    private Integer fieldId;
+    private Integer configureId;
     /**
      * 字段
      */

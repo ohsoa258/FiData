@@ -1,6 +1,7 @@
 package com.fisk.dataservice.map;
 
 
+
 import com.fisk.dataservice.dto.ApiConfigureField;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 
@@ -18,7 +19,7 @@ public class ApiConfigureFieldMap {
         List<ApiConfigureFieldPO> fieldList = new ArrayList<>();
         for (ApiConfigureField apiConfigureField : dto) {
             ApiConfigureFieldPO apiConfigureFieldPO = new ApiConfigureFieldPO();
-            apiConfigureFieldPO.setFieldId(apiConfigureField.getFieldId());
+            apiConfigureFieldPO.setConfigureId(apiConfigureField.getConfigureId());
             apiConfigureFieldPO.setField(apiConfigureField.getField());
             apiConfigureFieldPO.setFieldType(apiConfigureField.getFieldType());
             apiConfigureFieldPO.setFieldConditionValue(apiConfigureField.getFieldConditionValue());

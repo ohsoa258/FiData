@@ -41,7 +41,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         }
 
         QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
-        query.lambda().eq(ApiConfigureFieldPO::getFieldId, apiConfigure.getId());
+        query.lambda().eq(ApiConfigureFieldPO::getConfigureId, apiConfigure.getId());
         List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectList(query);
         return this.filterData(apiConfigureFieldList, apiConfigure.getTableName(), currentPage, pageSize);
     }

@@ -49,11 +49,11 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
         ApiConfigurePO apiConfigurePO = configureMapper.selectOne(queryWrapper);
-        if (apiConfigurePO.getApiRoute().equals(apiRoute)){
+        if (apiConfigurePO == null){
+            apiconfigurepo.setApiRoute(apiRoute);
+        }else {
             // 证明已经存在
             apiconfigurepo.setApiRoute(apiRoute+1);
-        }else {
-            apiconfigurepo.setApiRoute(apiRoute);
         }
 
         if (configureMapper.insert(apiconfigurepo) < 0){
@@ -74,7 +74,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     public ResultEnum splicingApiConfigureField(List<ApiConfigureFieldPO> dto,long id) {
         // 把字段表配置信息先保存到字段表
         for (ApiConfigureFieldPO configurable : dto) {
-            configurable.setFieldId((int) id);
+            configurable.setConfigureId((int) id);
             if (configureFieldMapper.insert(configurable) < 0){
                 return ResultEnum.SAVE_DATA_ERROR;
             }
