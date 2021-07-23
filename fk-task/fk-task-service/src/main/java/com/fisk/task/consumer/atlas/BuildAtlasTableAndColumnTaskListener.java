@@ -56,9 +56,8 @@ public class BuildAtlasTableAndColumnTaskListener {
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
-        String a="";
         awbd.appId=inpData.appId;
-        awbd.tableName="stg_"+ae.tableName;
+        awbd.tableName= ae.appAbbreviation+"_stg_"+ae.tableName;
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表

@@ -17,6 +17,7 @@
         <module>fk-dataAccess</module>
         <module>fk-task</module>
         <module>fk-datamodel</module>
+        <module>fisk-dataservice</module>
     </modules>
 
 
