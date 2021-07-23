@@ -86,18 +86,21 @@ public class RoleServiceAssignmentImpl
     @Override
     public List<ServiceSourceDTO> getServiceList()
     {
+        List<ServiceSourceDTO> dtoList = new ArrayList<>();
         /*获取登录信息*/
         UserInfo userInfo = userHelper.getLoginUserInfo();
         if (userInfo==null)
         {
-            return null;
+            return dtoList;
         }
         List<ServiceSourceDTO> dataList=new ArrayList<>();
         /*查询当前用户下所有角色*/
         QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
         roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId,userInfo.id);
         List<Object> idList = roleUserMapper.selectObjs(roleData).stream().distinct().collect(Collectors.toList());
-
+        if (idList.size()==0) {
+            return dtoList;
+        }
         /*查询角色下所有服务*/
         QueryWrapper<RoleServiceAssignmentPO> serviceData = new QueryWrapper<>();
         serviceData.in("role_id",idList.toArray()).select("service_id");
@@ -112,8 +115,6 @@ public class RoleServiceAssignmentImpl
         String code="1";
         List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
                 .collect(Collectors.toList());
-        List<ServiceSourceDTO> dtoList = new ArrayList<>();
-
         for (ServiceRegistryPO po : listParent) {
             ServiceSourceDTO dto=RoleServiceAssignmentMap.INSTANCES.servicePoToDto(po);
             List<ServiceSourceDTO> data=new ArrayList<>();

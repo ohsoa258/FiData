@@ -26,6 +26,11 @@ public class AppRegistrationDTO extends BaseDTO {
 
     public String appName;
 
+    /**
+     * 应用简称
+     */
+    public String appAbbreviation;
+
     public String appDes;
 
     public int appType;

@@ -1,8 +1,7 @@
 package com.fisk.datamodel.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,13 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_area_business")
 @EqualsAndHashCode(callSuper = true)
-public class BusinessAreaPO extends BaseEntity {
-
-    /**
-     * 主键
-     */
-    @TableId
-    private long id;
+public class BusinessAreaPO extends BasePO {
 
     /**
      * 业务域名称
@@ -39,21 +32,4 @@ public class BusinessAreaPO extends BaseEntity {
      * 应用负责人邮箱
      */
     private String businessEmail;
-
-    /**
-     * 创建人
-     */
-    private String createUser;
-
-
-    /**
-     * 更新人
-     */
-    private String updateUser;
-
-    /**
-     * 逻辑删除(1: 未删除; 0: 删除)
-     */
-    private int delFlag;
-
 }

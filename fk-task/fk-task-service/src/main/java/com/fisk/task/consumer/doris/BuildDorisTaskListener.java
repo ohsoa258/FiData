@@ -59,10 +59,7 @@ public class BuildDorisTaskListener {
         StringBuilder sqlSelectStrBuild = new StringBuilder();
         StringBuilder sqlDistributed = new StringBuilder("DISTRIBUTED BY HASH(");
         dto.columns.forEach((l) -> {
-            //是否是主键
-            if (l.isKey.equals("1")) {
-                sqlDistributed.append(l.columnName);
-            }
+            sqlDistributed.append("doris_custom_data_flag");
             sqlFileds.append(l.columnName + " " + l.dataType + " comment " + "'" + l.comment + "' ,");
             sqlAggregate.append(l.columnName + ",");
             sqlSelectStrBuild.append(l.columnName + ",");
@@ -72,8 +69,7 @@ public class BuildDorisTaskListener {
         aggregateStr = aggregateStr.substring(0, aggregateStr.lastIndexOf(",")) + ")";
         String selectStr = sqlSelectStrBuild.toString();
         selectStr = selectStr.substring(0, selectStr.lastIndexOf(",")) + ")";
-        String filedStr = sqlFileds.toString();
-        sql.append(filedStr.substring(0, filedStr.lastIndexOf(",")));
+        sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" ").toString());
         String sqlSelectStr = "select " + selectStr + " from " + dto.tableName;
         sql.append(")");
         sql.append(aggregateStr);

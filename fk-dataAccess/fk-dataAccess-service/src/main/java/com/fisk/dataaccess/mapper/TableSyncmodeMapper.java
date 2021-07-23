@@ -16,7 +16,11 @@ public interface TableSyncmodeMapper extends BaseMapper<TableSyncmodePO> {
      * @param id 请求参数
      * @return 返回值
      */
-    @Select("select id,sync_mode,custom_delete_condition,custom_insert_condition,timer_driver,corn_expression from tb_table_syncmode where id =#{id}")
+    @Select("select id,sync_mode,sync_field," +
+            "custom_delete_condition,custom_insert_condition," +
+            "timer_driver,corn_expression " +
+            "from tb_table_syncmode " +
+            "where id =#{id}")
     TableSyncmodePO getData(long id);
 
 }

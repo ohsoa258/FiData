@@ -3,14 +3,17 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.DataSourceAreaDTO;
 import com.fisk.datamodel.entity.DataSourceAreaPO;
+import com.fisk.datamodel.map.DataSourceAreaMap;
 import com.fisk.datamodel.mapper.DataSourceAreaMapper;
 import com.fisk.datamodel.service.IDataSourceArea;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -19,17 +22,21 @@ import java.util.List;
 @Service
 public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSourceAreaPO> implements IDataSourceArea {
 
+    @Resource
+    private DataSourceAreaMapper mapper;
+    @Resource
+    UserHelper userHelper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataSourceAreaDTO dto) {
 
+        // 获取当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+
+        // dto -> po
         DataSourceAreaPO po = dto.toEntity(DataSourceAreaPO.class);
-
-        Date date = new Date(System.currentTimeMillis());
-
-        po.setCreateTime(date);
-        po.setUpdateTime(date);
-        po.setDelFlag(1);
+        po.setCreateUser(String.valueOf(userInfo.id));
 
         return this.save(po) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -41,16 +48,17 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
                 .eq("id", id)
                 .eq("del_flag", 1)
                 .one();
-
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
-        return new DataSourceAreaDTO(po);
+        return DataSourceAreaMap.INSTANCES.poToDto(po);
     }
 
     @Override
     public ResultEnum updateDataSourceArea(DataSourceAreaDTO dto) {
+
+        // 获取当前登录人信息
+        UserInfo userInfo = userHelper.getLoginUserInfo();
 
         long id = dto.getId();
         DataSourceAreaPO model = this.getById(id);
@@ -59,11 +67,7 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         }
 
         DataSourceAreaPO po = dto.toEntity(DataSourceAreaPO.class);
-
-        // 设置删除状态
-        po.setDelFlag(1);
-        Date date = new Date(System.currentTimeMillis());
-        po.setUpdateTime(date);
+        po.setUpdateUser(String.valueOf(userInfo.id));
 
         // 执行方法
         return this.updateById(po)?ResultEnum.SUCCESS:ResultEnum.UPDATE_DATA_ERROR;
@@ -77,22 +81,18 @@ public class DataSourceAreaImpl extends ServiceImpl<DataSourceAreaMapper, DataSo
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
-        // 2.将del_flag状态改为0
-        model.setDelFlag(0);
-
-        return this.updateById(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return  mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public List<DataSourceAreaDTO> listDataSource() {
 
-        List<DataSourceAreaPO> list = this.query().eq("del_flag", 1).list();
+        List<DataSourceAreaPO> listPo = this.query().eq("del_flag", 1).list();
 
-        if (null == list || list.isEmpty()) {
+        if (null == listPo || listPo.isEmpty()) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        return DataSourceAreaDTO.convertEntityList(list);
+        return DataSourceAreaMap.INSTANCES.listPoToDto(listPo);
     }
 }

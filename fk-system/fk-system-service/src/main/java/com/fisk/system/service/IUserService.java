@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.system.dto.QueryDTO;
-import com.fisk.system.dto.UserDTO;
-import com.fisk.system.dto.UserInfoCurrentDTO;
-import com.fisk.system.dto.UserPowerDTO;
+import com.fisk.system.dto.*;
 import com.fisk.system.entity.UserPO;
 
 import java.util.List;
@@ -83,5 +80,12 @@ public interface IUserService {
      * @return
      */
     UserInfoCurrentDTO getCurrentUserInfo();
+
+    /**
+     * 修改用户密码
+     * @param dto
+     * @return
+     */
+    ResultEnum changePassword(ChangePasswordDTO dto);
 
 }
