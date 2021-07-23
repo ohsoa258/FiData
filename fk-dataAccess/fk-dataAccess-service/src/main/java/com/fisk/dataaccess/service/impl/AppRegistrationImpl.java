@@ -137,12 +137,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
-        // 1.分页信息的健壮性处理
-        // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
-//        page = Math.min(page, 100);
-//        // 每页至少1条
-//        rows = Math.max(rows, 1);
-
         Page<AppRegistrationPO> page1 = new Page<>(page, rows);
 
         boolean isKeyExists = StringUtils.isNoneBlank(key);
