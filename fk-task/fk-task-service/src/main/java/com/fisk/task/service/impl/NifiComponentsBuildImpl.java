@@ -261,8 +261,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         autoRes.add(AutoEndBranchTypeEnum.RETRY.getName());
 
-        Map<String, String> map = new HashMap<>(1);
+        Map<String, String> map = new HashMap<>(2);
         map.put("JDBC Connection Pool", data.dbConnectionId);
+        map.put("putsql-sql-statement", data.sqlStatement);
 
 
         //组件配置信息
@@ -293,7 +294,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         Map<String, String> map = new HashMap<>(2);
         map.put("Destination", "flowfile-attribute");
-        map.put(NifiConstants.AttrConstants.INCREMENT_NAME, data.fieldName);
+        map.put(NifiConstants.AttrConstants.INCREMENT_START, "$." + NifiConstants.AttrConstants.INCREMENT_START);
+        map.put(NifiConstants.AttrConstants.INCREMENT_END, "$." + NifiConstants.AttrConstants.INCREMENT_END);
+        map.put(NifiConstants.AttrConstants.LOG_CODE, "$." + NifiConstants.AttrConstants.LOG_CODE);
 
 
         //组件配置信息
