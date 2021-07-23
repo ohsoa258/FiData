@@ -18,6 +18,4 @@ public class ProcessorConfig {
     public String scheduleExpression;
 
     public SchedulingStrategyTypeEnum scheduleType;
-
-    public String fieldName;
 }

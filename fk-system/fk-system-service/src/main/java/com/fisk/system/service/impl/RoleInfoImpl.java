@@ -1,13 +1,16 @@
 package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.RoleInfoDTO;
+import com.fisk.system.dto.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
-import com.fisk.system.entity.UserPO;
 import com.fisk.system.mapper.RoleInfoMapper;
 import org.springframework.stereotype.Service;
 import com.fisk.system.service.IRoleInfoService;
@@ -36,11 +39,7 @@ public class RoleInfoImpl implements IRoleInfoService{
     @Override
     public List<RoleInfoDTO> listRoleData()
     {
-        List<RoleInfoDTO> result;
-        QueryWrapper<RoleInfoPO> queryWrapper = new QueryWrapper<>();
-        result =RoleInfoMap.INSTANCES.poToDtos(mapper.selectList(queryWrapper));
-        return  result;
-        /*return mapper.roleList();*/
+        return mapper.roleList();
     }
 
     /**
@@ -123,6 +122,19 @@ public class RoleInfoImpl implements IRoleInfoService{
         model.updateUser=userInfo.id.toString();
 
         return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public IPage<RolePowerDTO> getPageRoleData(QueryDTO dto)
+    {
+        QueryWrapper<RoleInfoPO> queryWrapper = new QueryWrapper<>();
+        if (dto.name !=null && dto.name.length()!=0)
+        {
+            queryWrapper.lambda()
+                    .like(RoleInfoPO::getRoleName, dto.name);
+        }
+        Page<RoleInfoPO> data=new Page<RoleInfoPO>(dto.getPage(),dto.getSize());
+        return RoleInfoMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
     }
 
 }

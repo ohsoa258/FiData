@@ -1,7 +1,9 @@
 package com.fisk.task.controller;
 
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.service.IBuildTaskService;
@@ -30,6 +32,8 @@ public class TestController {
     RabbitTemplate rabbitTemplate;
     @Resource
     IBuildTaskService service;
+    @Resource
+    DataAccessClient dc;
 
     @GetMapping
     public void sendMsg(String msg) {
@@ -45,7 +49,7 @@ public class TestController {
 
     @GetMapping("/ws/sendMsg")
     public void wsSendMsg(String msg, Long id) {
-        WsSessionManager.sendMsgById(msg, id);
+        WsSessionManager.sendMsgById(msg, id, MessageLevelEnum.MEDIUM);
     }
 
     @GetMapping("/ws/getOnlineCount")
@@ -63,6 +67,12 @@ public class TestController {
         String result = ac.CreateEntity_rdbms_instance(dataDTO);
         //endregion
     }
+
+    @PostMapping("/test_GetAtlasDataInfo")
+    public void publishBuildAtlasTask(@RequestParam("id") long id) {
+        System.out.println(dc.getAtlasEntity(id));
+    }
+
     @PostMapping("/testDorisBuild")
     public void publishBuildDorisTask() {
         TableInfoDTO tab = new TableInfoDTO();

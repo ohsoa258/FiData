@@ -3,9 +3,8 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.task.dto.atlas.AtlasEntityDTO;
-import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
@@ -57,7 +56,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasBuildInstance")
-    public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityDTO ArDto) {
+    public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityQueryDTO ArDto) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW,
@@ -71,17 +70,18 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasBuildTableAndColumn")
-    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityDbTableColumnDTO ArDto) {
-        //Doris
-        service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
-                ArDto);
-        //Atlas
-        return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
+    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto) {
+        log.info("进入方法");
+         service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
                 ArDto);
+        //Doris
+        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
+                ArDto);
+
     }
 
     /**

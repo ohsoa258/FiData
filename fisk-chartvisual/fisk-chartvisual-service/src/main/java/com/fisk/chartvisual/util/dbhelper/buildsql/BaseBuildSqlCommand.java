@@ -153,8 +153,8 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             str.append(rowNumber(columnName, ascType));
         }
         str.append(" FROM ").append(query.tableName);
+        str.append(" WHERE 1 = 1 ");
         if (query.queryFilters != null) {
-            str.append(" WHERE 1 = 1 ");
             str.append(queryFilter(query.queryFilters, arr));
         }
         if (StringUtils.isNotEmpty(query.likeValue)) {

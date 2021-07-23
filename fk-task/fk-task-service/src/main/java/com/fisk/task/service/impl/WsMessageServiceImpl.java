@@ -1,10 +1,13 @@
 package com.fisk.task.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.map.WsMessageLogMap;
 import com.fisk.task.mapper.MessageLogMapper;
@@ -22,6 +25,8 @@ import java.util.List;
 public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageLogPO> implements IWsMessageService {
 
     @Resource
+    MessageLogMapper mapper;
+    @Resource
     UserHelper userHelper;
 
     @Override
@@ -29,10 +34,20 @@ public class WsMessageServiceImpl extends ServiceImpl<MessageLogMapper, MessageL
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
         List<MessageLogPO> list = this.query()
-                .select("id", "msg", "status", "create_time")
+                .select("id", "msg", "status", "create_time", "level")
                 .eq("create_user", userInfo.id)
+                .eq("status", MessageStatusEnum.UNREAD.getValue())
+                .ne("level", MessageLevelEnum.LOW.getValue())
+                .orderByDesc("create_time")
                 .list();
         return WsMessageLogMap.INSTANCES.poToVo(list);
+    }
+
+    @Override
+    public Page<WsMessageLogVO> getUserAllMessage(MessageLogQuery query) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        query.userId = userInfo.id;
+        return mapper.listMessageLog(query.page, query);
     }
 
     @Override

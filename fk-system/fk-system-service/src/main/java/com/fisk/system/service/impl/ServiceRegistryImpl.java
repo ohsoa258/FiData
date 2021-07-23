@@ -15,11 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.UUID;
 
 /**
  * @author JianWenYang
@@ -45,26 +42,25 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
             List<ServiceRegistryPO> list = mapper.selectList(queryWrapper);
             /*查询所有父节点*/
             String code="1";
-            List<ServiceRegistryPO> list_Parent=list.stream().filter(e->code.equals(e.getParentServeCode()))
+            List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
                     .collect(Collectors.toList());
+            List<ServiceRegistryDTO> dtoList = new ArrayList<>();
 
-            List<ServiceRegistryDTO> dtos = new ArrayList<>();
-
-            for (ServiceRegistryPO po : list_Parent) {
+            for (ServiceRegistryPO po : listParent) {
 
                 ServiceRegistryDTO dto=ServiceRegistryMap.INSTANCES.poToDto(po);
                 List<ServiceRegistryDTO> data=new ArrayList<>();
-                List<ServiceRegistryPO> list_Child=list.stream().filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
+                List<ServiceRegistryPO> listChild=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
                 /*查询所有子节点*/
-                for (ServiceRegistryPO item : list_Child)
+                for (ServiceRegistryPO item : listChild)
                 {
                     ServiceRegistryDTO obj=ServiceRegistryMap.INSTANCES.poToDto(item);
                     data.add(obj);
                 }
                 dto.setDtos(data);
-                dtos.add(dto);
+                dtoList.add(dto);
             }
-            return dtos;
+            return dtoList;
         }
         catch (Exception e)
         {
@@ -174,4 +170,7 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
             throw new FkException(ResultEnum.ERROR);
         }
     }
+
+
+
 }

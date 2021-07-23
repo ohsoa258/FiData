@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class TaskGroupConfig {
+    public long id;
     public String appName;
 
     public String appDetails;

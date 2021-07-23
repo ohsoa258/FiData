@@ -22,7 +22,10 @@ public interface ServiceRegistryMap {
     ServiceRegistryPO dtoToPo(ServiceRegistryDTO dto);
 
     /**
-     po => dto
+     * po => dto
+     *
+     * @param po
+     * @return target
      */
     ServiceRegistryDTO poToDto(ServiceRegistryPO po);
 

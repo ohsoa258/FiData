@@ -30,6 +30,11 @@ public class TableSyncmodeDTO extends BaseDTO {
     public int syncMode;
 
     /**
+     * 时间戳字段
+     */
+    public String syncField;
+
+    /**
      * 自定义删除条件：定义每次同步的时候删除我们已有的数据条件
      */
     public String customDeleteCondition;

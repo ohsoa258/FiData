@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class GroupConfig {
+    public long id;
     public String appName;
 
     public String appDetails;

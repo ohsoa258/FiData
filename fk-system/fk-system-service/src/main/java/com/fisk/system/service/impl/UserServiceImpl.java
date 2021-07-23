@@ -1,11 +1,13 @@
 package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.system.dto.UserDTO;
+import com.fisk.system.dto.*;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
@@ -49,39 +51,27 @@ public class UserServiceImpl implements IUserService {
     @Override
     public List<UserDTO> listUserData()
     {
-        List<UserDTO> result;
-        QueryWrapper<UserPO>queryWrapper = new QueryWrapper<>();
-        result = UserMap.INSTANCES.poToDtos(mapper.selectList(queryWrapper));
-        return  result;
+        return  mapper.userList();
     }
 
 
     @Override
     public ResultEnum register(UserDTO dto) {
-
-       try
-       {
-           //1.判断用户名是否已存在
-           QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-           queryWrapper.lambda()
-                   .eq(UserPO::getUserAccount, dto.userAccount);
-           UserPO data = mapper.selectOne(queryWrapper);
-           if (data != null) {
-               return ResultEnum.NAME_EXISTS;
-           }
-           // 2.对密码进行加密
-           dto.password=passwordEncoder.encode(dto.getPassword());
-           UserInfo userInfo = userHelper.getLoginUserInfo();
-           UserPO po= UserMap.INSTANCES.dtoToPo(dto);
-           po.createUser = userInfo.id.toString();
-           // 3.写入数据库
-           return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-       }
-       catch (Exception e)
-       {
-
-       }
-       return  ResultEnum.SUCCESS;
+        //1.判断用户名是否已存在
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUserAccount, dto.userAccount);
+        UserPO data = mapper.selectOne(queryWrapper);
+        if (data != null) {
+            return ResultEnum.NAME_EXISTS;
+        }
+        // 2.对密码进行加密
+        dto.password = passwordEncoder.encode(dto.getPassword());
+        UserPO po = UserMap.INSTANCES.dtoToPo(dto);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        po.createUser = userInfo.id.toString();
+        // 3.写入数据库
+        return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -126,6 +116,18 @@ public class UserServiceImpl implements IUserService {
         return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public IPage<UserPowerDTO> getPageUserData(QueryDTO dto)
+    {
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        if (dto.name !=null && dto.name.length()!=0)
+        {
+            queryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+        }
+        Page<UserPO> data=new Page<UserPO>(dto.getPage(),dto.getSize());
+        return UserMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.orderByDesc("create_time")));
+    }
+
     /**
      * 登录: 根据用户名和密码查询用户?
      *
@@ -153,5 +155,33 @@ public class UserServiceImpl implements IUserService {
         }
         // 4.转换DTO
         return UserMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public UserInfoCurrentDTO getCurrentUserInfo()
+    {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        UserInfoCurrentDTO dto=new UserInfoCurrentDTO();
+        UserPO model = mapper.selectById(userInfo.id);
+        if (model == null) {
+            return dto;
+        }
+        dto.userAccount=model.userAccount;
+        dto.userName=model.username;
+        return dto;
+    }
+
+    @Override
+    public ResultEnum changePassword(ChangePasswordDTO dto)
+    {
+        UserPO po=mapper.selectById(dto.id);
+        if (po==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        po.password=passwordEncoder.encode(dto.getPassword());
+        po.updateUser=userInfo.id.toString();
+        return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 }

@@ -2,12 +2,13 @@ package com.fisk.datamodel.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
- * @author Lock
+ * @author JianWenYang
  */
 @Data
-public class AreaBusinessDTO{
-
+public class BusinessPageResultDTO {
     /**
      * 主键
      */

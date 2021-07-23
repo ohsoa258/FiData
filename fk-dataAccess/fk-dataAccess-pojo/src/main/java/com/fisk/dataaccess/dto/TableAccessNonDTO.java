@@ -59,6 +59,11 @@ public class TableAccessNonDTO extends BaseDTO {
     public List<TableFieldsDTO> list;
 
     /**
+     * 业务时间对象
+     */
+    public TableBusinessDTO businessDTO;
+
+    /**
      * 同步方式对象
      */
     public TableSyncmodeDTO tableSyncmodeDTO;

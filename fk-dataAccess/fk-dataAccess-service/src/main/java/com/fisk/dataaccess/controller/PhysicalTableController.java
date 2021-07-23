@@ -4,13 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppNameDTO;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -32,7 +30,7 @@ public class PhysicalTableController {
     private IAppRegistration appRegService;
 
     @Resource
-    private ITableAccess tableAccess;
+    private ITableAccess service;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -69,7 +67,7 @@ public class PhysicalTableController {
     @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
     public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getTableFields(appName));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFields(appName));
     }
 
 
@@ -83,7 +81,7 @@ public class PhysicalTableController {
     @ApiOperation(value = "添加物理表(实时)")
     public ResultEntity<Object> addRealTimeData(@RequestBody TableAccessDTO tableAccessDTO) {
 
-        return ResultEntityBuild.build(tableAccess.addRealTimeData(tableAccessDTO));
+        return ResultEntityBuild.build(service.addRealTimeData(tableAccessDTO));
     }
 
     /**
@@ -95,7 +93,7 @@ public class PhysicalTableController {
     @PutMapping("/editRealTime")
     @ApiOperation(value = "修改物理表(实时)")
     public ResultEntity<Object> editRealTimeData(@RequestBody TableAccessDTO dto) {
-        return ResultEntityBuild.build(tableAccess.updateRealTimeData(dto));
+        return ResultEntityBuild.build(service.updateRealTimeData(dto));
     }
 
     /**
@@ -108,7 +106,7 @@ public class PhysicalTableController {
     @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
 
-        return ResultEntityBuild.build(tableAccess.addNonRealTimeData(dto));
+        return ResultEntityBuild.build(service.addNonRealTimeData(dto));
     }
 
     /**
@@ -120,7 +118,7 @@ public class PhysicalTableController {
     @PutMapping("/editNonRealTime")
     @ApiOperation(value = "修改物理表(非实时)")
     public ResultEntity<Object> editNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
-        return ResultEntityBuild.build(tableAccess.updateNonRealTimeData(dto));
+        return ResultEntityBuild.build(service.updateNonRealTimeData(dto));
     }
 
     /**
@@ -132,7 +130,7 @@ public class PhysicalTableController {
     @GetMapping("/get/{id}")
     @ApiOperation("修改接口的回显数据")
     public ResultEntity<TableAccessNonDTO> getData(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getData(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
 
     /**
@@ -150,7 +148,7 @@ public class PhysicalTableController {
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "rows", defaultValue = "5") Integer rows) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.queryByPage(key, page, rows));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }
 
     /**
@@ -162,7 +160,7 @@ public class PhysicalTableController {
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除物理表")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(tableAccess.deleteData(id));
+        return ResultEntityBuild.build(service.deleteData(id));
     }
 
 
@@ -178,13 +176,33 @@ public class PhysicalTableController {
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.getAtlasBuildTableAndColumn(id, appid));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasBuildTableAndColumn(id, appid));
     }
 
+    @GetMapping("/getAtlasWriteBackDataDTO")
+    public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
+            @RequestParam("appid") long appid,
+            @RequestParam("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid,id));
+    }
+
+    @PostMapping("/addAtlasTableIdAndDorisSql")
+    public ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasWriteBackDataDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasTableIdAndDorisSql(dto));
+    }
 
     @GetMapping("/dataAccessConfig")
-    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(@RequestParam("appid") long id) {
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
+            @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAccess.dataAccessConfig(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataAccessConfig(id,appid));
+    }
+
+    @PostMapping("/addComponentId")
+    public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
     }
 }

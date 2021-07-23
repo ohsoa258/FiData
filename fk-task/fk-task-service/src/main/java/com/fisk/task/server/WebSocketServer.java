@@ -1,6 +1,7 @@
 package com.fisk.task.server;
 
 import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -43,13 +44,14 @@ public class WebSocketServer {
         ResultEntity<UserInfo> res = userHelper.getLoginUserInfo(token);
         String msg = "【" + LocalDateTime.now() + "】";
         if (res.code == ResultEnum.SUCCESS.getCode()) {
-            msg = "【" + LocalDateTime.now() + "】连接成功";
+            msg += "连接成功";
             log.info("有新连接加入：{}，当前在线人数为：{}", token, WsSessionManager.getOnlineCount());
             WsSessionManager.add(res.data.id, session);
+            WsSessionManager.sendMsgBySession(msg, session, res.data.id, MessageLevelEnum.LOW);
         } else {
             msg += res.msg;
+            WsSessionManager.sendMsgBySession(msg, session, MessageLevelEnum.LOW);
         }
-        WsSessionManager.sendMsgBySession(msg, session);
     }
 
     /**
@@ -79,7 +81,7 @@ public class WebSocketServer {
     @OnError
     public void onError(Session session, Throwable error, @PathParam("token") String token) throws Exception {
         token = parseToken(token);
-        log.error("用户错误:" + token + ", 原因:" + error.getMessage());
+        log.error("用户错误:" + token + ", 原因:", error);
         error.printStackTrace();
     }
 

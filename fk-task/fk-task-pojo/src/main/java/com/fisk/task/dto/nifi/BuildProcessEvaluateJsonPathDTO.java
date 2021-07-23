@@ -12,5 +12,4 @@ public class BuildProcessEvaluateJsonPathDTO {
     public String name;
     public String details;
     public PositionDTO positionDTO;
-    public String fieldName;
 }

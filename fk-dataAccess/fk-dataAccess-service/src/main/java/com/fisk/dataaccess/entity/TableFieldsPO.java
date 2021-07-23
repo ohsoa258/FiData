@@ -1,8 +1,7 @@
 package com.fisk.dataaccess.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,11 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_fields")
-public class TableFieldsPO extends BaseEntity {
-
-    @TableId
-    public long id;
-
+public class TableFieldsPO extends BasePO {
     /**
      * table_access（id）
      */
@@ -66,14 +61,4 @@ public class TableFieldsPO extends BaseEntity {
      * 1是时间戳，0非时间戳
      */
     public int isTimestamp;
-
-//    public LocalDateTime createTime;
-
-    public String createUser;
-
-//    public LocalDateTime updateTime;
-
-    public String updateUser;
-
-    public int delFlag;
 }

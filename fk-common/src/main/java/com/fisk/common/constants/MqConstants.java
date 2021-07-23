@@ -17,7 +17,7 @@ public class MqConstants {
 
         public static final String BUILD_ATLAS_INSTANCE_FLOW = "task.build.atlas.instance.flow";
 
-        public static final String BUILD_ATLAS_TABLECOLUMN_FLOW = "task.build.atlas.tableclolumn.flow";
+        public static final String BUILD_ATLAS_TABLECOLUMN_FLOW = "task.build.atlas.tablecolumn.flow";
 
         public static final String BUILD_DORIS_FLOW= "task.build.doris.flow";
 

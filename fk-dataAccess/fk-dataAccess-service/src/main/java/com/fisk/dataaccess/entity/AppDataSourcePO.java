@@ -1,8 +1,7 @@
 package com.fisk.dataaccess.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,13 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_app_datasource")
-public class AppDataSourcePO extends BaseEntity {
-    /**
-     * 主键
-     */
-    @TableId
-    private long id;
-
+public class AppDataSourcePO extends BasePO {
     /**
      * tb_app_registration表id
      */
@@ -27,7 +20,7 @@ public class AppDataSourcePO extends BaseEntity {
     /**
      * tb_app_drivetype表type
      */
-    private String driveType;
+    public String driveType;
 
     /**
      * 主机名
@@ -73,20 +66,4 @@ public class AppDataSourcePO extends BaseEntity {
      * 验证方式（实时） 登录密码
      */
     public String realtimePwd;
-
-
-    /**
-     * 创建人(id)
-     */
-    public String createUser;
-
-    /**
-     * 更新人(id)
-     */
-    public String updateUser;
-
-    /**
-     * 逻辑删除(1: 未删除; 0: 删除)
-     */
-    public int delFlag;
 }

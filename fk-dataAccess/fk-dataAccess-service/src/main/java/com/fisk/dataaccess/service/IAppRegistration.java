@@ -76,15 +76,6 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<AppNameDTO> queryNoneRealTimeAppName();
 
     /**
-     *
-     * 给task模块提供数据源等信息
-     *
-     * @param id appid
-     * @return task模块调用接口返回值
-     */
-    ResultEnum dataAccessConfig(long id);
-
-    /**
      * 查询数据源驱动类型
      *
      * @return 驱动类型
@@ -98,4 +89,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 查询结果
      */
     AtlasEntityDTO getAtlasEntity(long id);
+
+    /**
+     * atlas通过appid,将atlasInstanceId和atlasDbId保存下来
+     *
+     * @param appid appid
+     * @param atlasInstanceId atlasInstanceId
+     * @param atlasDbId atlasDbId
+     * @return 执行结果
+     */
+    ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId);
 }
