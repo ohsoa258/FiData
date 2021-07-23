@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Lock
  */
 @Mapper
-public interface TableAccessMapper extends BaseMapper<TableAccessPO> {
+public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
 
     /**
      * 分页查询

@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.map;
 
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -31,6 +32,14 @@ public interface TableAccessMap {
      * @return dto
      */
     TableAccessDTO poToDto(TableAccessPO po);
+
+    /**
+     * po => dto
+     *
+     * @param po po
+     * @return dto
+     */
+    TableAccessNonDTO poToDtoNon(TableAccessPO po);
 
     /**
      * list集合 po -> dto

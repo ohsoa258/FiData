@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
@@ -8,21 +7,22 @@ import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.map.TableAccessMap;
+import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableBusinessMapper;
+import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -45,34 +44,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Resource
     private TableFieldsImpl tableFieldsImpl;
-
+    @Resource
+    private TableAccessMapper accessMapper;
+    @Resource
+    private TableFieldsMapper fieldsMapper;
     @Resource
     private AppRegistrationImpl appRegistrationImpl;
-
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
-
     @Resource
     private TableSyncmodeImpl syncmodeImpl;
-
     @Resource
     private TableSyncmodeMapper syncmodeMapper;
-
     @Resource
     private PublishTaskClient publishTaskClient;
-
     @Resource
     private AppNifiFlowImpl nifiFlowImpl;
-
     @Resource
     private UserHelper userHelper;
-
     @Resource
     private NifiSettingImpl nifiSettingImpl;
-
     @Resource
     private TableBusinessImpl businessImpl;
-
     @Resource
     private TableBusinessMapper businessMapper;
 
@@ -125,7 +118,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
             return ResultEnum.Table_NAME_EXISTS;
-//            throw new FkException(ResultEnum.Table_NAME_EXISTS, "当前" + tableName + "已存在,请重新输入");
         }
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
@@ -137,34 +129,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         long id = modelReg.getId();
         if (id < 0) {
             return ResultEnum.SAVE_DATA_ERROR;
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "保存失败");
         }
-        modelAccess.setCreateUser("" + userId + "");
+        modelAccess.setCreateUser(String.valueOf(userId));
         modelAccess.setAppid(id);
 
         // 0是实时物理表，1是非实时物理表
-        modelAccess.setIsRealtime(0);
         modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
-        modelAccess.setDelFlag(1);
+//        modelAccess.setDelFlag(1);
         // 实时
         modelAccess.setIsRealtime(0);
 
         // 时间字段有问题,待定
-        Date dateAccess = new Date(System.currentTimeMillis());
-
-        modelAccess.setCreateTime(dateAccess);
-        modelAccess.setUpdateTime(dateAccess);
+//        Date dateAccess = new Date(System.currentTimeMillis());
+//
+//        modelAccess.setCreateTime(dateAccess);
+//        modelAccess.setUpdateTime(dateAccess);
 
         // 2.保存tb_table_access数据
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
             return ResultEnum.SAVE_DATA_ERROR;
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
-        boolean save2 = true;
+        boolean saveFields = true;
         List<TableFieldsDTO> fieldsDTOList = tableAccessDTO.getList();
 
         //TODO: 这一块判断先不加
@@ -177,22 +166,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
             modelField.setTableAccessId(modelAccess.getId());
 
-            modelField.setCreateUser("" + userId + "");
+            modelField.setCreateUser(String.valueOf(userId));
 
             // 1是实时物理表的字段，0是非实时物理表的字段
             modelField.setIsRealtime(1);
-            modelField.setDelFlag(1);
+//            modelField.setDelFlag(1);
 
             // 时间
-            Date dateField = new Date(System.currentTimeMillis());
-            modelField.setCreateTime(dateField);
-            modelField.setUpdateTime(dateField);
+//            Date dateField = new Date(System.currentTimeMillis());
+//            modelField.setCreateTime(dateField);
+//            modelField.setUpdateTime(dateField);
 
-            save2 = tableFieldsImpl.save(modelField);
+            saveFields = tableFieldsImpl.save(modelField);
         }
 
-        if (!save2) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        if (!saveFields) {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 保存同步频率
@@ -293,25 +282,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         modelAccess.setAppid(id);
 
         // 0是实时物理表，1是非实时物理表
-        modelAccess.setIsRealtime(0);
         modelAccess.setSyncSrc(tableAccessNonDTO.getSyncSrc());
-        modelAccess.setDelFlag(1);
+//        modelAccess.setDelFlag(1);
         // 非实时
         modelAccess.setIsRealtime(1);
         // 当前登录人
         modelAccess.setCreateUser(String.valueOf(userId));
 
         // 时间
-        Date dateAccess = new Date(System.currentTimeMillis());
-        modelAccess.setCreateTime(dateAccess);
-        modelAccess.setUpdateTime(dateAccess);
+//        Date dateAccess = new Date(System.currentTimeMillis());
+//        modelAccess.setCreateTime(dateAccess);
+//        modelAccess.setUpdateTime(dateAccess);
 
         // 2.保存tb_table_access数据
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
             return ResultEnum.SAVE_DATA_ERROR;
-//            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
         }
 
         // 保存tb_table_fields数据
@@ -330,13 +317,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             // 1是实时物理表的字段，0是非实时物理表的字段
             modelField.setIsRealtime(1);
-            modelField.setDelFlag(1);
+//            modelField.setDelFlag(1);
             modelField.setCreateUser(String.valueOf(userId));
 
             // 时间
-            Date date2 = new Date(System.currentTimeMillis());
-            modelField.setCreateTime(date2);
-            modelField.setUpdateTime(date2);
+//            Date date2 = new Date(System.currentTimeMillis());
+//            modelField.setCreateTime(date2);
+//            modelField.setUpdateTime(date2);
 
             saveField = tableFieldsImpl.save(modelField);
         }
@@ -356,32 +343,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-
         // 保存tb_table_syncmode数据
         TableSyncmodeDTO syncmodeDTO = tableAccessNonDTO.getTableSyncmodeDTO();
         TableSyncmodePO modelSync = syncmodeDTO.toEntity(TableSyncmodePO.class);
-        long aid = modelAccess.getId();
-        modelSync.setId(aid);
+        modelSync.setId(modelAccess.getId());
 
         boolean saveSync = syncmodeImpl.save(modelSync);
-
 //        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 //
 //        int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
 //        System.out.println(i);
 
         // TODO: 调用atlas
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = userId;
-        // 应用注册id
-        atlasEntityQueryDTO.appId = String.valueOf(id);
-        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-        log.info("task:" + JSON.toJSONString(task));
-        System.out.println(task);
+//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+//        atlasEntityQueryDTO.userId = userId;
+//        // 应用注册id
+//        atlasEntityQueryDTO.appId = String.valueOf(id);
+//        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+//        log.info("task:" + JSON.toJSONString(task));
+//        System.out.println(task);
 
         return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-
     }
 
     /**
@@ -409,26 +392,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 时间字段
-        Date date1 = new Date(System.currentTimeMillis());
+//        Date date1 = new Date(System.currentTimeMillis());
 
         modelAccess.setUpdateUser(String.valueOf(userId));
-        modelAccess.setUpdateTime(date1);
-        modelAccess.setDelFlag(1);
+//        modelAccess.setUpdateTime(date1);
+//        modelAccess.setDelFlag(1);
 
         // 2.保存tb_table_access数据
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
             return ResultEnum.UPDATE_DATA_ERROR;
-//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
-        boolean update2 = true;
+        boolean updateFields = true;
         boolean saveField = true;
-
         List<TableFieldsDTO> fieldsDTOList = tableAccessDTO.getList();
-
 
         for (TableFieldsDTO tableFieldsDTO : fieldsDTOList) {
 
@@ -437,34 +417,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 修改
             if (funcType == 1) {
                 TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-                Date date2 = new Date(System.currentTimeMillis());
+//                Date date2 = new Date(System.currentTimeMillis());
                 modelField.setUpdateUser(String.valueOf(userId));
-                modelField.setUpdateTime(date2);
-                modelField.setDelFlag(1);
+//                modelField.setUpdateTime(date2);
+//                modelField.setDelFlag(1);
 
-                update2 = tableFieldsImpl.updateById(modelField);
+                updateFields = tableFieldsImpl.updateById(modelField);
                 // 新增
             } else if (funcType == 2) {
                 TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
 
                 // 还要绑定tb_table_access id
                 modelField.setTableAccessId(modelAccess.getId());
-                Date date3 = new Date(System.currentTimeMillis());
+//                Date date3 = new Date(System.currentTimeMillis());
                 modelField.setUpdateUser(String.valueOf(userId));
-                modelField.setCreateTime(date3);
-                modelField.setUpdateTime(date3);
-                modelField.setDelFlag(1);
+//                modelField.setCreateTime(date3);
+//                modelField.setUpdateTime(date3);
+//                modelField.setDelFlag(1);
                 saveField = tableFieldsImpl.save(modelField);
             }
         }
 
-        if (!update2) {
+        if (!updateFields) {
             return ResultEnum.UPDATE_DATA_ERROR;
-//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
         if (!saveField) {
             return ResultEnum.UPDATE_DATA_ERROR;
-//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据保存失败");
         }
 
 //        CreateTableUtils createTableUtils = new CreateTableUtils();
@@ -504,41 +482,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = dto.toEntity(TableAccessPO.class);
 
         // 时间字段
-        Date dateAccess = new Date(System.currentTimeMillis());
+//        Date dateAccess = new Date(System.currentTimeMillis());
 
         modelAccess.setUpdateUser(String.valueOf(userId));
-        modelAccess.setUpdateTime(dateAccess);
-        modelAccess.setDelFlag(1);
+//        modelAccess.setUpdateTime(dateAccess);
+//        modelAccess.setDelFlag(1);
 
         // 2.保存tb_table_access数据
         boolean updateAccess = this.updateById(modelAccess);
 
         if (!updateAccess) {
             return ResultEnum.UPDATE_DATA_ERROR;
-//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // 保存tb_table_fields数据: 分为更新和添加数据
         boolean updateField = true;
-
         List<TableFieldsDTO> list = dto.getList();
-
 
         for (TableFieldsDTO tableFieldsDTO : list) {
 
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-            Date dateField = new Date(System.currentTimeMillis());
+//            Date dateField = new Date(System.currentTimeMillis());
 
             modelField.setUpdateUser(String.valueOf(userId));
-            modelField.setUpdateTime(dateField);
-            modelField.setDelFlag(1);
+//            modelField.setUpdateTime(dateField);
+//            modelField.setDelFlag(1);
 
             updateField = tableFieldsImpl.updateById(modelField);
         }
 
         if (!updateField) {
             return ResultEnum.UPDATE_DATA_ERROR;
-//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
         }
 
         // TODO 新增tb_table_business业务时间表
@@ -551,11 +525,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         // 4.保存tb_table_syncmode数据
-        boolean updateSync = true;
+        boolean updateSync;
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
         updateSync = syncmodeImpl.updateById(modelSync);
-
 
         return updateSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -625,16 +598,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public TableAccessNonDTO getData(long id) {
 
         // 查询tb_table_access数据
-        TableAccessPO tapo = this.query()
+        TableAccessPO modelAccess = this.query()
                 .eq("id", id)
                 .eq("del_flag", 1)
                 .one();
 
-        TableAccessNonDTO dto = new TableAccessNonDTO(tapo);
+//        TableAccessNonDTO dto = new TableAccessNonDTO(modelAccess);
+        TableAccessNonDTO dto = TableAccessMap.INSTANCES.poToDtoNon(modelAccess);
+
 
         // 将应用名称封装进去
-        AppRegistrationPO modelAccess = appRegistrationImpl.query().eq("id", tapo.getAppid()).one();
-        dto.setAppName(modelAccess.getAppName());
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppid()).one();
+        dto.setAppName(modelReg.getAppName());
 
         // 查询tb_table_fields数据
         List<TableFieldsPO> list = tableFieldsImpl.query()
@@ -644,7 +619,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         List<TableFieldsDTO> listField = new ArrayList<>();
         for (TableFieldsPO modelField : list) {
-            TableFieldsDTO tableFieldsDTO = new TableFieldsDTO(modelField);
+//            TableFieldsDTO tableFieldsDTO = new TableFieldsDTO(modelField);
+            TableFieldsDTO tableFieldsDTO = TableFieldsMap.INSTANCES.poToDto(modelField);
+
             listField.add(tableFieldsDTO);
         }
 
@@ -685,7 +662,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.根据应用名称查询表id
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", appName)
-                .eq("del_flag",1)
+                .eq("del_flag", 1)
                 .one();
 
         // tb_app_registration表id
@@ -714,21 +691,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return 执行结果
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(long id) {
 
         // 1.删除tb_table_access数据
-        TableAccessPO tapo = this.getById(id);
-        if (tapo == null) {
+        TableAccessPO modelAccess = this.getById(id);
+        if (modelAccess == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
-        // 假删除
-        tapo.setDelFlag(0);
-        boolean update = this.updateById(tapo);
-        if (!update) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+        int deleteAccess = accessMapper.deleteByIdWithFill(modelAccess);
+        if (deleteAccess < 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
+        // 假删除
+//        modelAccess.setDelFlag(0);
+//        boolean update = this.updateById(modelAccess);
+//        if (!update) {
+//            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+//        }
 
         // 2.删除tb_table_fields数据
         List<TableFieldsPO> list = tableFieldsImpl.query()
@@ -741,13 +720,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SUCCESS;
         }
 
-        for (TableFieldsPO tfpo : list) {
-            tfpo.setDelFlag(0);
+        int deleteField = 0;
+        for (TableFieldsPO modelField : list) {
+//            modelField.setDelFlag(0);
+
+            deleteField = fieldsMapper.deleteByIdWithFill(modelField);
         }
 
-        boolean success = tableFieldsImpl.updateBatchById(list);
+//        boolean success = tableFieldsImpl.updateBatchById(list);
 
-        return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return deleteField > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)

@@ -13,12 +13,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class AppRegistrationPO extends BasePO {
 
-//    /**
-//     * 主键
-//     */
-//    @TableId
-//    public long id;
-
     /**
      * 调用atlas时,返回给应用注册的
      */
@@ -68,20 +62,4 @@ public class AppRegistrationPO extends BasePO {
      * 应用负责人邮箱
      */
     public String appPrincipalEmail;
-
-//    /**
-//     * 创建人
-//     */
-//    public String createUser;
-//
-//    /**
-//     * 更新人
-//     */
-//    public String updateUser;
-//
-//    /**
-//     * 逻辑删除(1: 未删除; 0: 删除)
-//     */
-//    public int delFlag;
-
 }

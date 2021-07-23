@@ -12,12 +12,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_app_datasource")
 public class AppDataSourcePO extends BasePO {
-//    /**
-//     * 主键
-//     */
-//    @TableId
-//    private long id;
-
     /**
      * tb_app_registration表id
      */
@@ -72,20 +66,4 @@ public class AppDataSourcePO extends BasePO {
      * 验证方式（实时） 登录密码
      */
     public String realtimePwd;
-
-
-//    /**
-//     * 创建人(id)
-//     */
-//    public String createUser;
-//
-//    /**
-//     * 更新人(id)
-//     */
-//    public String updateUser;
-//
-//    /**
-//     * 逻辑删除(1: 未删除; 0: 删除)
-//     */
-//    public int delFlag;
 }
