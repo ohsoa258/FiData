@@ -8,6 +8,7 @@ package fk.atlas.api;
 public class test {
     public static void main(String[] args) {
         AtlasClient ac=new AtlasClient("http://192.168.1.250:21000", "admin", "admin");
+
         System.out.println(ac.GetEntity());
     }
 }
