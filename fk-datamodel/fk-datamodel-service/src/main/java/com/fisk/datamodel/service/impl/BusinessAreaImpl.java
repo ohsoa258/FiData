@@ -42,6 +42,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
+        // 获取当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
         // 1.dto->po
@@ -70,7 +71,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
     @Override
     public ResultEnum updateBusinessArea(BusinessAreaDTO businessAreaDTO) {
-
+        // 获取当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
         // 修改时前端传来的id
@@ -109,26 +110,23 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public List<FilterFieldDTO> getBusinessAreaColumn()
-    {
-        return getMetadata.getMetadataList("dmp_datamodel_db","tb_area_business","");
+    public List<FilterFieldDTO> getBusinessAreaColumn() {
+        return getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_business", "");
     }
 
     @Override
-    public Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query)
-    {
+    public Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query) {
         StringBuilder str = new StringBuilder();
-        if (query.key !=null && query.key.length()>0)
-        {
-            str.append(" and business_name like concat('%', "+"'"+query.key+"'"+ ", '%') ");
+        if (query.key != null && query.key.length() > 0) {
+            str.append(" and business_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
         //筛选器拼接
         str.append(generateCondition.getCondition(query.dto));
-        BusinessPageDTO data=new BusinessPageDTO();
-        data.page=query.page;
-        data.where=str.toString();
+        BusinessPageDTO data = new BusinessPageDTO();
+        data.page = query.page;
+        data.where = str.toString();
 
-        return  baseMapper.queryList(query.page,data);
+        return baseMapper.queryList(query.page, data);
     }
 
 }

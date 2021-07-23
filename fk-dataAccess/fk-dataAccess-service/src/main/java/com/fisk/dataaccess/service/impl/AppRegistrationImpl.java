@@ -120,7 +120,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
         log.info("task:" + JSON.toJSONString(task));
 
-        System.out.println(task);
+//        System.out.println(task);
 
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -137,13 +137,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
-        Page<AppRegistrationPO> page1 = new Page<>(page, rows);
+        Page<AppRegistrationPO> pageReg = new Page<>(page, rows);
 
         boolean isKeyExists = StringUtils.isNoneBlank(key);
         query().like(isKeyExists, "app_name", key)
                 // 未删除
                 .eq("del_flag", 1)
-                .page(page1);
+                .page(pageReg);
 
         // 分页封装
         Page<AppRegistrationPO> poPage = new Page<>(page, rows);
@@ -163,10 +163,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         PageDTO<AppRegistrationDTO> pageDTO = new PageDTO<>();
 
         // 总条数
-        pageDTO.setTotal(page1.getTotal());
+        pageDTO.setTotal(pageReg.getTotal());
         // 总页数
 //        long totalPage = (long) (records1.size() + rows - 1) / rows;
-        pageDTO.setTotalPage(page1.getPages());
+        pageDTO.setTotalPage(pageReg.getPages());
 
         pageDTO.setItems(AppRegistrationMap.INSTANCES.listPoToDto(records2));
 
@@ -184,6 +184,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
 
+        // 获取当前登陆人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
@@ -214,7 +215,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppDataSourcePO modelDataSource = appDatasourceDTO.toEntity(AppDataSourcePO.class);
 
         // 2.2修改数据
-        long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
+        long appDataSid = appDataSourceImpl.query()
+                .eq("appid", id)
+                .one()
+                .getId();
         modelDataSource.setId(appDataSid);
 
         modelDataSource.setAppid(id);
@@ -244,7 +248,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // 2.删除tb_app_datasource表数据
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", id).one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+                .eq("appid", id)
+                .one();
 
         return appDataSourceMapper.deleteByIdWithFill(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -257,6 +263,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<AppNameDTO> queryAppName() {
 
+        // 查询所有应用名称
         List<AppRegistrationPO> list = this.query()
                 .eq("del_flag", 1)
                 .list();

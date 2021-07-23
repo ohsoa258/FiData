@@ -135,9 +135,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
+        modelAccess.setIsRealtime(0);
 //        modelAccess.setDelFlag(1);
         // 实时
-        modelAccess.setIsRealtime(0);
 
         // 时间字段有问题,待定
 //        Date dateAccess = new Date(System.currentTimeMillis());
@@ -483,10 +483,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 时间字段
 //        Date dateAccess = new Date(System.currentTimeMillis());
-
-        modelAccess.setUpdateUser(String.valueOf(userId));
 //        modelAccess.setUpdateTime(dateAccess);
 //        modelAccess.setDelFlag(1);
+        modelAccess.setUpdateUser(String.valueOf(userId));
 
         // 2.保存tb_table_access数据
         boolean updateAccess = this.updateById(modelAccess);
@@ -720,16 +719,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SUCCESS;
         }
 
-        int deleteField = 0;
-        for (TableFieldsPO modelField : list) {
-//            modelField.setDelFlag(0);
+//        int deleteField = 0;
+//        for (TableFieldsPO modelField : list) {
+////            modelField.setDelFlag(0);
+//
+//            deleteField = fieldsMapper.deleteByIdWithFill(modelField);
+//        }
 
-            deleteField = fieldsMapper.deleteByIdWithFill(modelField);
-        }
-
-//        boolean success = tableFieldsImpl.updateBatchById(list);
-
-        return deleteField > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        return deleteField > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return tableFieldsImpl.updateBatchById(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)
