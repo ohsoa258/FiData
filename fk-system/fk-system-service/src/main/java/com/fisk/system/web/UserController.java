@@ -5,6 +5,7 @@ import com.fisk.auth.utils.UserContext;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.UserDTO;
 import com.fisk.system.service.IUserService;
 import io.swagger.annotations.Api;
@@ -104,6 +105,12 @@ public class UserController {
     @GetMapping("/getCurrentUserInfo")
     public  ResultEntity<Object> GetCurrentUserInfo(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCurrentUserInfo());
+    }
+
+    @PutMapping("/changePassword")
+    @ApiOperation("修改用户密码")
+    public ResultEntity<Object> changePassword(@Validated @RequestBody ChangePasswordDTO dto) {
+        return ResultEntityBuild.build(service.changePassword(dto));
     }
 
 

@@ -7,10 +7,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.system.dto.QueryDTO;
-import com.fisk.system.dto.UserDTO;
-import com.fisk.system.dto.UserInfoCurrentDTO;
-import com.fisk.system.dto.UserPowerDTO;
+import com.fisk.system.dto.*;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
@@ -172,5 +169,19 @@ public class UserServiceImpl implements IUserService {
         dto.userAccount=model.userAccount;
         dto.userName=model.username;
         return dto;
+    }
+
+    @Override
+    public ResultEnum changePassword(ChangePasswordDTO dto)
+    {
+        UserPO po=mapper.selectById(dto.id);
+        if (po==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        po.password=passwordEncoder.encode(dto.getPassword());
+        po.updateUser=userInfo.id.toString();
+        return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 }
