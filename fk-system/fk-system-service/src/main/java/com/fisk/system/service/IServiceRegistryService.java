@@ -23,6 +23,7 @@ public interface IServiceRegistryService {
     /**
      * 添加服务注册
      *
+     * @param dto dto
      * @return 返回值
      */
     ResultEnum addServiceRegistry(ServiceRegistryDTO dto);
@@ -44,7 +45,7 @@ public interface IServiceRegistryService {
 
     /**
      * 修改服务注册树形结构
-     *
+     * @param dto dto
      * @return 返回值
      */
     ResultEnum updateServiceRegistry(ServiceRegistryDTO dto);

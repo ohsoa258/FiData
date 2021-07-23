@@ -103,7 +103,7 @@ public class UserController {
 
     @ApiOperation("获取登录人信息")
     @GetMapping("/getCurrentUserInfo")
-    public  ResultEntity<Object> GetCurrentUserInfo(){
+    public  ResultEntity<Object> getCurrentUserInfo(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCurrentUserInfo());
     }
 

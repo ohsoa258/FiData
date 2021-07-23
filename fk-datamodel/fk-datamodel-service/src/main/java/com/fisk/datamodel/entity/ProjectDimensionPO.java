@@ -41,4 +41,17 @@ public class ProjectDimensionPO extends BasePO {
      * 维度描述
      */
     public String dimensionDesc;
+    /**
+     * 表来源
+     */
+    public String tableSource;
+    /**
+     *数据来源(1:数据接入表,2:sql自定义字段，3:维度表)
+     */
+    public int dataSource;
+    /**
+     * 维度表类型(1:业务主键,2:关联维度，3:属性)
+     */
+    public int dimensionTabType;
+
 }

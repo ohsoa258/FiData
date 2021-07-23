@@ -103,10 +103,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
 
-//        // 1.分页信息的健壮性处理
-//        page = Math.min(page, 100);
-//        rows = Math.max(rows, 1);
-
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 
         return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));

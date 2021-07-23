@@ -40,7 +40,8 @@ public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
 
     /**
      * 获取业务域数据列表--可根据筛选器
-     *
+     * @param page
+     * @param query
      * @return 查询结果
      */
     Page<BusinessPageResultDTO> queryList(Page<BusinessPageResultDTO> page, @Param("query") BusinessPageDTO query);
