@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -12,7 +12,7 @@ import java.util.List;
  * @author Lock
  */
 @Mapper
-public interface AppRegistrationMapper extends BaseMapper<AppRegistrationPO> {
+public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 查询表信息
