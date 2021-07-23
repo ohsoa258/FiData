@@ -68,4 +68,12 @@ public class CodeTest {
         }
         return list;
     }
+
+    @Test
+    public void a() {
+        Integer a = 1111;
+        Integer b = 1111;
+        System.out.println(a == b);
+        System.out.println(a.equals(b));
+    }
 }

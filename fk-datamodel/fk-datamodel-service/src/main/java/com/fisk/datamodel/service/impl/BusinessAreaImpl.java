@@ -7,18 +7,22 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.*;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
+import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.BusinessPageDTO;
+import com.fisk.datamodel.dto.BusinessPageResultDTO;
+import com.fisk.datamodel.dto.BusinessQueryDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -30,18 +34,19 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     GenerateCondition generateCondition;
     @Resource
     GetMetadata getMetadata;
+    @Resource
+    UserHelper userHelper;
+    @Resource
+    BusinessAreaMapper mapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
 
         // 1.dto->po
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-
-        Date date = new Date(System.currentTimeMillis());
-        po.setCreateTime(date);
-        po.setUpdateTime(date);
-        po.setDelFlag(1);
+        po.createUser = String.valueOf(userInfo.id);
 
         boolean save = this.save(po);
 
@@ -60,11 +65,13 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
-        return new BusinessAreaDTO(po);
+        return BusinessAreaMap.INSTANCES.poToDto(po);
     }
 
     @Override
     public ResultEnum updateBusinessArea(BusinessAreaDTO businessAreaDTO) {
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
 
         // 修改时前端传来的id
         long id = businessAreaDTO.getId();
@@ -74,12 +81,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
 
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-
-        // 设置删除状态
-        po.setDelFlag(1);
-
-        Date date = new Date(System.currentTimeMillis());
-        po.setUpdateTime(date);
+        po.updateUser = String.valueOf(userInfo.id);
 
         boolean update = this.updateById(po);
 
@@ -95,21 +97,11 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        // 将del_flag的状态改为0
-        model.setDelFlag(0);
-
-        // update 表名 set del_flag=1 where id=1;
-        boolean update = this.updateById(model);
-
-        return update ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
-
-        // 1.分页信息的健壮性处理
-        page = Math.min(page, 100);
-        rows = Math.max(rows, 1);
 
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 

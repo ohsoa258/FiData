@@ -1,7 +1,7 @@
 package com.fisk.datamodel.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.datamodel.entity.DataAreaPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Lock
  */
 @Mapper
-public interface DataAreaMapper extends BaseMapper<DataAreaPO> {
+public interface DataAreaMapper extends FKBaseMapper<DataAreaPO> {
 
     /**
      * 分页

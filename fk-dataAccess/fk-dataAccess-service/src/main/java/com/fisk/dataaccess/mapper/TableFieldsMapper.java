@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -8,5 +8,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author Lock
  */
 @Mapper
-public interface TableFieldsMapper extends BaseMapper<TableFieldsPO> {
+public interface TableFieldsMapper extends FKBaseMapper<TableFieldsPO> {
 }

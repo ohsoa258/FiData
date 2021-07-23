@@ -1,16 +1,13 @@
 package com.fisk.datamodel.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.datamodel.entity.DataSourceAreaPO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
 
 /**
- * @author: Lock
+ * @author Lock
  */
 @Mapper
-public interface DataSourceAreaMapper extends BaseMapper<DataSourceAreaPO> {
+public interface DataSourceAreaMapper extends FKBaseMapper<DataSourceAreaPO> {
 
 }

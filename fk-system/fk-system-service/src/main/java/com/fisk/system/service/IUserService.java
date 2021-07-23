@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.system.dto.QueryDTO;
-import com.fisk.system.dto.UserDTO;
-import com.fisk.system.dto.UserInfoCurrentDTO;
-import com.fisk.system.dto.UserPowerDTO;
+import com.fisk.system.dto.*;
 import com.fisk.system.entity.UserPO;
 
 import java.util.List;
@@ -28,8 +25,9 @@ public interface IUserService {
 
     /**
      * 添加用户
-     *
+     * @param dto dto
      * @param dto
+     * @return 返回值
      */
     ResultEnum register(UserDTO dto);
 
@@ -37,6 +35,7 @@ public interface IUserService {
      * 获取用户详情
      *
      * @param id
+     * @return 用户详情
      */
     UserDTO getUser(int id);
 
@@ -44,6 +43,7 @@ public interface IUserService {
      * 删除用户
      *
      * @param id
+     * @return 返回值
      */
     ResultEnum deleteUser(int id);
 
@@ -51,6 +51,7 @@ public interface IUserService {
      * 编辑用户
      *
      * @param dto
+     * @return 返回值
      */
     ResultEnum updateUser(UserDTO dto);
 
@@ -80,8 +81,15 @@ public interface IUserService {
 
     /**
      * 获取当前登录人信息
-     * @return
+     * @return 登录用户名
      */
     UserInfoCurrentDTO getCurrentUserInfo();
+
+    /**
+     * 修改用户密码
+     * @param dto
+     * @return 返回值
+     */
+    ResultEnum changePassword(ChangePasswordDTO dto);
 
 }

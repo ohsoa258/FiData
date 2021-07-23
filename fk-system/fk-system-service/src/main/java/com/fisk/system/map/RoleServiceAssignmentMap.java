@@ -25,5 +25,10 @@ public interface RoleServiceAssignmentMap {
      */
     List<RoleServiceAssignmentDTO> poToDto(List<RoleServiceAssignmentPO> po);
 
+    /**
+     * po=>dto
+     * @param po
+     * @return
+     */
     ServiceSourceDTO servicePoToDto(ServiceRegistryPO po);
 }

@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.dto.PageDTO;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -16,6 +15,8 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.map.AppDataSourceMap;
+import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
@@ -31,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,19 +43,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Resource
     private AppDataSourceMapper appDataSourceMapper;
-
+    @Resource
+    private AppRegistrationMapper mapper;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
-
     @Resource
     private AppDriveTypeImpl appDriveTypeImpl;
-
     @Resource
     private AppDriveTypeMapper appDriveTypeMapper;
-
     @Resource
     private PublishTaskClient publishTaskClient;
-
     @Resource
     UserHelper userHelper;
 
@@ -76,13 +73,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
 
-
         // 保存tb_app_registration数据
-        Date date1 = new Date(System.currentTimeMillis());
-        po.setCreateTime(date1);
-        po.setUpdateTime(date1);
-        po.setDelFlag(1);
-        po.setCreateUser("" + userId + "");
+        po.setCreateUser(String.valueOf(userId));
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         List<String> appNameList = baseMapper.getAppName();
@@ -98,23 +90,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-
-        AppDataSourcePO po1 = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
-
+        AppDataSourcePO modelDataSource = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
 
         // 保存tb_app_datasource数据
-        po1.setAppid(po.getId());
+        modelDataSource.setAppid(po.getId());
+        modelDataSource.setCreateUser(String.valueOf(userId));
 
-        Date date2 = new Date(System.currentTimeMillis());
-        po1.setCreateTime(date2);
-        po1.setUpdateTime(date2);
-        po1.setDelFlag(1);
-        po1.setCreateUser("" + userId + "");
-
-        int insert = appDataSourceMapper.insert(po1);
-        if (insert < 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        int insert = appDataSourceMapper.insert(modelDataSource);
+//        if (insert < 0) {
+//            return ResultEnum.SAVE_DATA_ERROR;
+//        }
 
         // 保存tb_app_drivetype数据
 //        AppDriveTypePO po2 = new AppDriveTypePO();
@@ -137,10 +122,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         System.out.println(task);
 
-//        int a = 1 / 0;
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-//        return save2 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -154,23 +137,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public PageDTO<AppRegistrationDTO> listAppRegistration(String key, Integer page, Integer rows) {
 
-        // 1.分页信息的健壮性处理
-        // 返回二者间较小的值,即当前页最大不超过100页,避免单词查询太多数据影响效率
-        page = Math.min(page, 100);
-        // 每页至少1条
-        rows = Math.max(rows, 1);
-
         Page<AppRegistrationPO> page1 = new Page<>(page, rows);
 
         boolean isKeyExists = StringUtils.isNoneBlank(key);
         query().like(isKeyExists, "app_name", key)
-//                .or()
-//                .eq(isKeyExists, "app_des", key)
-//                .or()
-//                .eq(isKeyExists, "app_type", key)
-//                .or()
-//                .eq(isKeyExists, "app_principal", key)
-//                .or()
                 // 未删除
                 .eq("del_flag", 1)
                 .page(page1);
@@ -197,7 +167,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 总页数
 //        long totalPage = (long) (records1.size() + rows - 1) / rows;
         pageDTO.setTotalPage(page1.getPages());
-        pageDTO.setItems(AppRegistrationDTO.convertEntityList(records2));
+
+        pageDTO.setItems(AppRegistrationMap.INSTANCES.listPoToDto(records2));
+
 
         return pageDTO;
     }
@@ -227,14 +199,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 1.2dto->po
         AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
 
-        // 1.3修改主表数据
-        Date date = new Date(System.currentTimeMillis());
-        po.setUpdateTime(date);
-        po.setDelFlag(1);
-        po.setUpdateUser("" + userId + "");
+        // 1.3修改tb_app_registration数据
+        po.setUpdateUser(String.valueOf(userId));
         boolean edit = this.updateById(po);
         if (!edit) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+            return ResultEnum.UPDATE_DATA_ERROR;
         }
 
         // 2.0修改关联表数据(tb_app_datasource)
@@ -242,24 +211,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 2.1dto->po
         AppDataSourceDTO appDatasourceDTO = dto.getAppDatasourceDTO();
 
-        AppDataSourcePO dpo = appDatasourceDTO.toEntity(AppDataSourcePO.class);
+        AppDataSourcePO modelDataSource = appDatasourceDTO.toEntity(AppDataSourcePO.class);
 
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query().eq("appid", id).one().getId();
-        dpo.setId(appDataSid);
+        modelDataSource.setId(appDataSid);
 
-        dpo.setAppid(id);
+        modelDataSource.setAppid(id);
         // 更新人
-        dpo.updateUser = String.valueOf(userId);
+        modelDataSource.updateUser = String.valueOf(userId);
 
-        Date date1 = new Date(System.currentTimeMillis());
-        dpo.setUpdateTime(date1);
-        dpo.setDelFlag(1);
-        int update = appDataSourceMapper.updateById(dpo);
-
-
-        return update > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
-
+        return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     /**
@@ -275,20 +237,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
         // 1.删除tb_app_registration表数据
-        model.setDelFlag(0);
-        boolean updateReg = this.updateById(model);
-        if (!updateReg) {
-            throw new FkException(ResultEnum.UPDATE_DATA_ERROR, "数据更新失败");
+        int deleteReg = mapper.deleteByIdWithFill(model);
+        if (deleteReg < 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 2.删除tb_app_datasource表数据
-        AppDataSourcePO po1 = appDataSourceImpl.query().eq("appid", id).one();
-        po1.setDelFlag(0);
-        int updateData = appDataSourceMapper.updateById(po1);
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", id).one();
 
-        return updateData > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return appDataSourceMapper.deleteByIdWithFill(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -302,7 +260,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> list = this.query()
                 .eq("del_flag", 1)
                 .list();
-        List<AppNameDTO> list1 = new ArrayList<>();
+        List<AppNameDTO> listAppName = new ArrayList<>();
         for (AppRegistrationPO po : list) {
 
             AppNameDTO appNameDTO = new AppNameDTO();
@@ -310,10 +268,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             appNameDTO.setAppName(appName);
             appNameDTO.setAppType((byte) po.getAppType());
 
-            list1.add(appNameDTO);
+            listAppName.add(appNameDTO);
         }
 
-        return list1;
+        return listAppName;
     }
 
 
@@ -326,17 +284,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public AppRegistrationDTO getData(long id) {
 
-        AppRegistrationPO po1 = this.query()
+        AppRegistrationPO modelReg = this.query()
                 .eq("id", id)
                 .eq("del_flag", 1)
                 .one();
-        AppRegistrationDTO appRegistrationDTO = new AppRegistrationDTO(po1);
+        AppRegistrationDTO appRegistrationDTO = AppRegistrationMap.INSTANCES.poToDto(modelReg);
 
-        AppDataSourcePO po2 = appDataSourceImpl.query()
+
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
                 .eq("appid", id)
                 .eq("del_flag", 1)
                 .one();
-        AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO(po2);
+        AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(modelDataSource);
         appRegistrationDTO.setAppDatasourceDTO(appDataSourceDTO);
 
         return appRegistrationDTO;
@@ -352,7 +311,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 按时间倒叙,查询top10的数据
         List<AppRegistrationPO> descDate = baseMapper.getDescDate();
 
-        return AppRegistrationDTO.convertEntityList(descDate);
+        return AppRegistrationMap.INSTANCES.listPoToDto(descDate);
     }
 
     /**
@@ -367,7 +326,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .eq("app_type", 1)
                 .list();
-        List<AppNameDTO> list1 = new ArrayList<>();
+        List<AppNameDTO> listAppName = new ArrayList<>();
         for (AppRegistrationPO po : list) {
 
             AppNameDTO appNameDTO = new AppNameDTO();
@@ -375,10 +334,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             appNameDTO.setAppName(appName);
             appNameDTO.setAppType((byte) 1);
 
-            list1.add(appNameDTO);
+            listAppName.add(appNameDTO);
         }
 
-        return list1;
+        return listAppName;
     }
 
     @Override
@@ -388,64 +347,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         return AppDriveTypeDTO.convertEntityList(list);
     }
-
-//    @Override
-//    public ResultEnum dataAccessConfig(long id) {
-//
-//        DataAccessConfigDTO dto = new DataAccessConfigDTO();
-//
-//        // app组配置
-//        GroupConfig groupConfig = dto.getGroupConfig();
-//
-//        //任务组配置
-//        TaskGroupConfig taskGroupConfig = dto.getTaskGroupConfig();
-//
-//        // 数据源jdbc配置
-//        DataSourceConfig sourceDsConfig = dto.getSourceDsConfig();
-//
-//        // 目标源jdbc连接
-//        DataSourceConfig targetDsConfig = dto.getTargetDsConfig();
-//
-//        // 表及表sql
-//        ProcessorConfig processorConfig = dto.getProcessorConfig();
-//
-//        // 1.app组配置
-//        // select * from tb_app_registration where id=id and del_flag=1;
-//        AppRegistrationPO rpo = this.query()
-//                .eq("id", id)
-//                .eq("del_flag", 1)
-//                .one();
-//        if (rpo == null) {
-//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-//        }
-//        groupConfig.setAppName(rpo.getAppName());
-//        groupConfig.setAppDetails(rpo.getAppDes());
-//        // TODO: 缺失字段(给个默认值)
-//        groupConfig.setNewApp(false);
-//
-//        // 2.任务组配置
-//        taskGroupConfig.setAppName(rpo.getAppName());
-//        taskGroupConfig.setAppDetails(rpo.getAppDes());
-//
-//        //3.数据源jdbc配置
-//        AppDataSourcePO dpo = appDataSourceImpl.query()
-//                .eq("appid", id)
-//                .eq("del_flag", 1)
-//                .one();
-//        if (dpo == null) {
-//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-//        }
-//        sourceDsConfig.setJdbcStr(dpo.getConnectStr());
-////        sourceDsConfig.setType(); // 先硬编码
-//        sourceDsConfig.setUser(dpo.getConnectAccount());
-//        sourceDsConfig.setPassword(dpo.getConnectPwd());
-//
-//        // 4.目标源jdbc连接
-//
-//        // 5.表及表sql
-//
-//        return null;
-//    }
 
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_ENTITY)

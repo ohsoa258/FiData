@@ -15,4 +15,6 @@ public class BuildPutSqlProcessorDTO {
     public String dbConnectionId;
 
     public PositionDTO positionDTO;
+
+    public String sqlStatement;
 }

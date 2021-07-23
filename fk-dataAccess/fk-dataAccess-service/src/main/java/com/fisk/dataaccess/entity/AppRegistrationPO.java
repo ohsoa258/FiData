@@ -1,8 +1,7 @@
 package com.fisk.dataaccess.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,13 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_app_registration")
 @EqualsAndHashCode(callSuper = true)
-public class AppRegistrationPO extends BaseEntity {
-
-    /**
-     * 主键
-     */
-    @TableId
-    public long id;
+public class AppRegistrationPO extends BasePO {
 
     /**
      * 调用atlas时,返回给应用注册的
@@ -46,6 +39,11 @@ public class AppRegistrationPO extends BaseEntity {
     public String appName;
 
     /**
+     * 应用简称
+     */
+    public String appAbbreviation;
+
+    /**
      * 应用描述
      */
     public String appDes;
@@ -64,20 +62,4 @@ public class AppRegistrationPO extends BaseEntity {
      * 应用负责人邮箱
      */
     public String appPrincipalEmail;
-
-    /**
-     * 创建人
-     */
-    public String createUser;
-
-    /**
-     * 更新人
-     */
-    public String updateUser;
-
-    /**
-     * 逻辑删除(1: 未删除; 0: 删除)
-     */
-    public int delFlag;
-
 }
