@@ -3,11 +3,11 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.BusinessNameDTO;
-import com.fisk.datamodel.dto.DataAreaDTO;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.map.DataAreaMap;
@@ -28,6 +28,8 @@ import java.util.Map;
 @Service
 public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implements IDataArea {
 
+    @Resource
+    GenerateCondition generateCondition;
     @Resource
     private BusinessAreaMapper businessAreaMapper;
     @Resource
@@ -164,6 +166,22 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 
         return pageMap.setRecords(baseMapper.queryByPage(pageMap, key));
+    }
+
+    @Override
+    public Page<DataAreaDTO> dataFilter(DataAreaQueryDTO query) {
+
+        StringBuilder str = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            str.append(" and data_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+        }
+        //筛选器拼接
+        str.append(generateCondition.getCondition(query.dto));
+        DataAresPageDTO data = new DataAresPageDTO();
+        data.page = query.page;
+        data.where = str.toString();
+
+        return baseMapper.queryList(query.page, data);
     }
 
 

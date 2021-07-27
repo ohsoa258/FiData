@@ -2,6 +2,8 @@ package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.datamodel.dto.DataAreaDTO;
+import com.fisk.datamodel.dto.DataAresPageDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -35,4 +37,12 @@ public interface DataAreaMapper extends FKBaseMapper<DataAreaPO> {
             "ORDER BY a.update_time DESC ")
     List<Map<String, Object>> queryByPage(Page<Map<String,Object>> page, @Param("key") String key);
 
+    /**
+     * 筛选器
+     *
+     * @param page page
+     * @param query query
+     * @return 查询结果
+     */
+    Page<DataAreaDTO> queryList(Page<DataAreaDTO> page, @Param("query") DataAresPageDTO query);
 }

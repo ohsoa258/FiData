@@ -6,11 +6,11 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessNameDTO;
 import com.fisk.datamodel.dto.DataAreaDTO;
+import com.fisk.datamodel.dto.DataAreaQueryDTO;
 import com.fisk.datamodel.service.IDataArea;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -72,6 +72,12 @@ public class DataAreaController {
             @RequestParam(value = "rows", defaultValue = "1") Integer rows) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
+    }
+
+    @PostMapping("/dataFilter")
+    @ApiOperation(value = "筛选器")
+    public ResultEntity<Page<DataAreaDTO>> dataFilter(@RequestBody DataAreaQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataFilter(query));
     }
 
 }

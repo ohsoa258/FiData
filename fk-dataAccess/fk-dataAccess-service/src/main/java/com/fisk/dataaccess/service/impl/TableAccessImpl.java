@@ -81,31 +81,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO: 原始SQL表创建(暂时不用集成)
         // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
-//        AppRegistrationPO one = appRegistrationImpl.query()
-//                .eq("app_name", tableAccessDTO.getAppName())
-//                .eq("del_flag", 1)
-//                .one();
-//        // 0-1.获取appid
-//        long appid = one.getId();
-//
-//        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
-//        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
-//        String driveName = driveTypePO.getName(); // 数据源驱动名称
-//        if (driveName.equalsIgnoreCase("MySqL")) {
-//            // 先创建表
-//            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-//
-//            int i = mysqlTableUtils.createmysqltb(tableAccessDTO);
-//            if (i != 0) {
-//                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
-//            }
-//        } else {
-//            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
-//            int i = sqlServerTableUtils.createSqlServerTB(tableAccessDTO);
-//            if (i != 0) {
-//                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
-//            }
-//        }
+////        AppRegistrationPO one = appRegistrationImpl.query()
+////                .eq("app_name", tableAccessDTO.getAppName())
+////                .eq("del_flag", 1)
+////                .one();
+////        // 0-1.获取appid
+////        long appid = one.getId();
+////
+////        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
+////        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
+////        String driveName = driveTypePO.getName(); // 数据源驱动名称
+////        if (driveName.equalsIgnoreCase("MySqL")) {
+////            // 先创建表
+////            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+////
+////            int i = mysqlTableUtils.createmysqltb(tableAccessDTO);
+////            if (i != 0) {
+////                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
+////            }
+////        } else {
+////            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
+////            int i = sqlServerTableUtils.createSqlServerTB(tableAccessDTO);
+////            if (i != 0) {
+////                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
+////            }
+////        }
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
@@ -136,14 +136,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
         modelAccess.setIsRealtime(0);
-//        modelAccess.setDelFlag(1);
-        // 实时
-
-        // 时间字段有问题,待定
-//        Date dateAccess = new Date(System.currentTimeMillis());
-//
-//        modelAccess.setCreateTime(dateAccess);
-//        modelAccess.setUpdateTime(dateAccess);
 
         // 2.保存tb_table_access数据
         boolean saveAccess = this.save(modelAccess);
@@ -158,9 +150,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         //TODO: 这一块判断先不加
         // 表字段不为空判断
-//        if (tableFieldsDTOS == null||tableFieldsDTOS.isEmpty()) {
-//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-//        }
+////        if (tableFieldsDTOS == null||tableFieldsDTOS.isEmpty()) {
+////            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+////        }
 
         for (TableFieldsDTO tableFieldsDTO : fieldsDTOList) {
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
@@ -170,12 +162,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             // 1是实时物理表的字段，0是非实时物理表的字段
             modelField.setIsRealtime(1);
-//            modelField.setDelFlag(1);
-
-            // 时间
-//            Date dateField = new Date(System.currentTimeMillis());
-//            modelField.setCreateTime(dateField);
-//            modelField.setUpdateTime(dateField);
 
             saveFields = tableFieldsImpl.save(modelField);
         }
@@ -191,18 +177,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveSync = syncmodeImpl.save(po);
 
         // TODO: atlas调用
-//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-//        atlasEntityQueryDTO.userId = userId;
+////        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+////        atlasEntityQueryDTO.userId = userId;
 ////        atlasEntityQueryDTO.appId = "6";
-//        // 应用注册id
-//        atlasEntityQueryDTO.appId = "" + id + "";
-//
-//        // 物理表id
-//        atlasEntityQueryDTO.dbId = "" + modelAccess.getId() + "";
-//
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-//        log.info("task:" + JSON.toJSONString(task));
-//        System.out.println(task);
+////       // 应用注册id
+////       atlasEntityQueryDTO.appId = "" + id + "";
+////
+////       // 物理表id
+////       atlasEntityQueryDTO.dbId = "" + modelAccess.getId() + "";
+////
+////       ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+////       log.info("task:" + JSON.toJSONString(task));
+////       System.out.println(task);
 
         return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -218,41 +204,41 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public ResultEnum addNonRealTimeData(TableAccessNonDTO tableAccessNonDTO) {
 
         // 先创建表
-//        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-//
-//        int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
-//        if (i != 0) {
-//            throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-//        }
+////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+////
+////        int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
+////        if (i != 0) {
+////            throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
+////        }
 
         // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
         // 0-1.获取appid
         // TODO: 原始SQL表创建(暂时不用集成)
-//        AppRegistrationPO one = appRegistrationImpl.query()
-//                .eq("app_name", tableAccessNonDTO.getAppName())
-//                .eq("del_flag", 1)
-//                .one();
-//        // 0-1.获取appid
-//        long appid = one.getId();
-//
-//        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
-//        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
-//        String driveName = driveTypePO.getName(); // 数据源驱动名称
-//        if (driveName.equalsIgnoreCase("MySqL")) {
-//            // 先创建表
-//            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-//
-//            int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
-//            if (i != 0) {
-//                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-//            }
-//        } else {
-//            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
-//            int i = sqlServerTableUtils.createSqlServerTB(tableAccessNonDTO);
-//            if (i != 0) {
-//                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-//            }
-//        }
+////        AppRegistrationPO one = appRegistrationImpl.query()
+////                .eq("app_name", tableAccessNonDTO.getAppName())
+////                .eq("del_flag", 1)
+////                .one();
+////        // 0-1.获取appid
+////        long appid = one.getId();
+////
+////        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
+////        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
+////        String driveName = driveTypePO.getName(); // 数据源驱动名称
+////        if (driveName.equalsIgnoreCase("MySqL")) {
+////            // 先创建表
+////            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+////
+////            int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
+////            if (i != 0) {
+////                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
+////            }
+////        } else {
+////            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
+////            int i = sqlServerTableUtils.createSqlServerTB(tableAccessNonDTO);
+////            if (i != 0) {
+////                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
+////            }
+////        }
 
         // 当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -377,12 +363,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public ResultEnum updateRealTimeData(TableAccessDTO tableAccessDTO) {
 
         // TODO: 原始SQL表修改(暂时不用集成)
-//        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-//
-//        int i = mysqlTableUtils.updatemysqltb(tableAccessDTO);
-//        if (i != 0) {
-//            throw new FkException(500, "操作数据库失败");
-//        }
+////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
+////
+////        int i = mysqlTableUtils.updatemysqltb(tableAccessDTO);
+////        if (i != 0) {
+////            throw new FkException(500, "操作数据库失败");
+////        }
 
         // 当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -391,12 +377,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
-        // 时间字段
-//        Date date1 = new Date(System.currentTimeMillis());
-
         modelAccess.setUpdateUser(String.valueOf(userId));
-//        modelAccess.setUpdateTime(date1);
-//        modelAccess.setDelFlag(1);
 
         // 2.保存tb_table_access数据
         boolean updateAccess = this.updateById(modelAccess);

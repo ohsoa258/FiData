@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessNameDTO;
 import com.fisk.datamodel.dto.DataAreaDTO;
+import com.fisk.datamodel.dto.DataAreaQueryDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 
 import java.util.List;
@@ -58,4 +59,12 @@ public interface IDataArea extends IService<DataAreaPO> {
      * @return 查询结果
      */
     Page<Map<String,Object>> queryByPage(String key, Integer page, Integer rows);
+
+    /**
+     * 筛选器
+     *
+     * @param query 查询条件
+     * @return 查询结果
+     */
+    Page<DataAreaDTO> dataFilter(DataAreaQueryDTO query);
 }
