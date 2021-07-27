@@ -8,10 +8,10 @@ import lombok.EqualsAndHashCode;
 /**
  * @author JianWenYang
  */
-@TableName("tb_project_dimension_attribute")
+@TableName("tb_dimension_attribute")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ProjectDimensionAttributePO extends BasePO {
+public class DimensionAttributePO extends BasePO {
     /**
      * 维度表id
      */
@@ -21,9 +21,9 @@ public class ProjectDimensionAttributePO extends BasePO {
      */
     public String tableSourceField;
     /**
-     * 维度表字段名称
+     * 维度表中文字段名称
      */
-    public String dimensionFieldName;
+    public String dimensionFieldCnName;
     /**
      * 维度表字段类型
      */
@@ -36,5 +36,17 @@ public class ProjectDimensionAttributePO extends BasePO {
      * 维度表字段描述
      */
     public String dimensionFieldDes;
+    /**
+     * 维度表英文字段名称
+     */
+    public String dimensionFieldEnName;
+    /**
+     * 属性类型：1、业务主键,2、关联维度,3、属性
+     */
+    public int attributeType;
+    /**
+     * 关联维度表id
+     */
+    public int associate_dimension_id;
 
 }

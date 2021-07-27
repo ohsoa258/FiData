@@ -3,6 +3,7 @@ package com.fisk.common.filter.method;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -39,7 +40,7 @@ public class GetMetadata {
             //获取表字段名称、描述、数据类型
             while (rs.next()) {
                 FilterFieldDTO model = new FilterFieldDTO();
-                if (tableAlias.length()>0 && tableAlias !=null)
+                if (StringUtils.isNotEmpty(tableAlias))
                 {
                     model.columnName = tableAlias+"."+ rs.getString("Field");
                 }else {

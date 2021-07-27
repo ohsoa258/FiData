@@ -1,5 +1,6 @@
 package com.fisk.system.map;
 
+import com.fisk.system.dto.LoginServiceDTO;
 import com.fisk.system.dto.RoleServiceAssignmentDTO;
 import com.fisk.system.dto.ServiceSourceDTO;
 import com.fisk.system.entity.RoleServiceAssignmentPO;
@@ -31,4 +32,11 @@ public interface RoleServiceAssignmentMap {
      * @return
      */
     ServiceSourceDTO servicePoToDto(ServiceRegistryPO po);
+
+    /**
+     * pos==>dto
+     * @param po
+     * @return
+     */
+    LoginServiceDTO loginService(ServiceRegistryPO po);
 }
