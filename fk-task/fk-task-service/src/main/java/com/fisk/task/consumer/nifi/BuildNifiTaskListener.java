@@ -69,12 +69,6 @@ public class BuildNifiTaskListener {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
         }
-        DataSourceConfig cfg = new DataSourceConfig();
-        cfg.type = DriverTypeEnum.MYSQL;
-        cfg.user = "root";
-        cfg.password = "root123";
-        cfg.jdbcStr = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true";
-        configDTO.cfgDsConfig = cfg;
 
         log.info(JSON.toJSONString("【数据接入配置项参数】" + configDTO));
         //1. 获取数据接入配置库连接池
@@ -91,7 +85,7 @@ public class BuildNifiTaskListener {
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
-        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId());
+        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
     }
 
     /**
@@ -102,7 +96,9 @@ public class BuildNifiTaskListener {
      */
     private DataAccessConfigDTO getConfigData(long id, long appId) {
         ResultEntity<DataAccessConfigDTO> res = client.dataAccessConfig(id, appId);
-
+        if (res.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
         //target doris
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
         targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
@@ -247,7 +243,7 @@ public class BuildNifiTaskListener {
         dto.details = dto.name;
         switch (dsConfig.type) {
             case MYSQL:
-                dto.driverLocation = NifiConstants.DirverConstants.MYSQL_DIRVER_PATH;
+                dto.driverLocation = NifiConstants.DriveConstants.MYSQL_DRIVE_PATH;
                 break;
             default:
                 break;
@@ -502,7 +498,7 @@ public class BuildNifiTaskListener {
      * @param tableId          物理表id
      * @param tableComponentId 任务组id
      */
-    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId) {
+    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId) {
         NifiAccessDTO dto = new NifiAccessDTO();
         dto.appid = appId;
         dto.appGroupId = appComponentId;
@@ -510,6 +506,7 @@ public class BuildNifiTaskListener {
         dto.tableGroupId = tableComponentId;
         dto.targetDbPoolComponentId = targetDbPoolComponentId;
         dto.sourceDbPoolComponentId = sourceDbPoolComponentId;
+        dto.cfgDbPoolComponentId = cfgDbPoolComponentId;
         client.addComponentId(dto);
     }
 
@@ -542,13 +539,14 @@ public class BuildNifiTaskListener {
 
     /**
      * 获取/创建数据接入配置库的连接池
+     *
      * @param config 数据接入配置
      * @return 组件实体
      */
     private ControllerServiceEntity buildCfgDsPool(DataAccessConfigDTO config) {
         String groupId = NifiConstants.ApiConstants.ROOT_NODE;
         if (StringUtils.isNotEmpty(config.cfgDsConfig.componentId)) {
-            ControllerServiceEntity cfgRes = componentsBuild.getDbControllerService(config.sourceDsConfig.getComponentId());
+            ControllerServiceEntity cfgRes = componentsBuild.getDbControllerService(config.cfgDsConfig.getComponentId());
             if (cfgRes == null) {
                 throw new FkException(ResultEnum.TASK_NIFI_NO_COMPONENTS_FOUND);
             }
