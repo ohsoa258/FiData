@@ -47,7 +47,7 @@ public class BuildAtlasTableAndColumnTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        log.info("进去Atlas生成表和字段");
+        log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
         ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
