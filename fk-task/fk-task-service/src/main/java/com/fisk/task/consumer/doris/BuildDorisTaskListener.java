@@ -8,7 +8,6 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.service.IDorisBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +29,6 @@ import javax.annotation.Resource;
 public class BuildDorisTaskListener {
 
     @Resource
-    IBuildTaskService service;
-    @Resource
     IDorisBuild doris;
     @Resource
     DataAccessClient dc;
@@ -44,14 +41,13 @@ public class BuildDorisTaskListener {
         log.info("dataInfo:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
         ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
-        log.info("queryRes:" + JSON.toJSONString(queryRes.data));
         log.info("queryRes:" + JSON.toJSONString(queryRes));
         AtlasEntityDbTableColumnDTO dto = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
         log.info("ae:" + JSON.toJSONString(dto));
         StringBuilder sql = new StringBuilder();
         String tableName = dto.tableName;
-        String stg_table = dto.appAbbreviation+"_stg_" + dto.tableName;
-        String ods_table = dto.appAbbreviation+"_ods_" + dto.tableName;
+        String stg_table = dto.appAbbreviation + "_stg_" + dto.tableName;
+        String ods_table = dto.appAbbreviation + "_ods_" + dto.tableName;
         sql.append("CREATE TABLE tableName");
         sql.append("(");
         StringBuilder sqlFileds = new StringBuilder();
@@ -70,7 +66,12 @@ public class BuildDorisTaskListener {
         String selectStr = sqlSelectStrBuild.toString();
         selectStr = selectStr.substring(0, selectStr.lastIndexOf(",")) + ")";
         sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" ").toString());
-        String sqlSelectStr = "select " + selectStr + " from " + dto.tableName;
+        String sqlSelectStr = "";
+        if (dto.syncType.equals("timestamp_incremental")) {
+            sqlSelectStr = "select " + selectStr + " from " + dto.tableName + "where where " + dto.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
+        } else {
+            sqlSelectStr = "select " + selectStr + " from " + dto.tableName;
+        }
         sql.append(")");
         sql.append(aggregateStr);
         sql.append(sqlDistributed.toString());
