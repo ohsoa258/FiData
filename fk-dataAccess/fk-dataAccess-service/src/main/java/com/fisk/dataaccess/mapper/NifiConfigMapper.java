@@ -2,7 +2,9 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.dataaccess.entity.NifiConfigPO;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -16,7 +18,7 @@ public interface NifiConfigMapper extends BaseMapper<NifiConfigPO> {
      *
      * @return key
      */
-    @Select("SELECT `key` FROM tb_nifi_config;")
+    @Select("SELECT `component_key` FROM tb_nifi_config;")
     String getNifiKey();
 
     /**
@@ -24,6 +26,9 @@ public interface NifiConfigMapper extends BaseMapper<NifiConfigPO> {
      *
      * @return valeu
      */
-    @Select("SELECT `value` FROM tb_nifi_config;")
+    @Select("SELECT `component_id` FROM tb_nifi_config;")
     String getNifiValue();
+
+    @Insert("insert into tb_nifi_config(`key`,`value`) values(#{key},#{value})")
+    int addNifiConfig(@Param("key") String key, @Param("value") String value);
 }

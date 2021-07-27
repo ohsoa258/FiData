@@ -1093,8 +1093,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 为空的话,要保存值
         if (StringUtils.isEmpty(nifiKey)) {
             NifiConfigPO modelNifi = new NifiConfigPO();
-            modelNifi.key = ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName();
-            modelNifi.value = dto.cfgDbPoolComponentId;
+            modelNifi.componentKey = ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName();
+            modelNifi.componentId = dto.cfgDbPoolComponentId;
             saveNifiConfig = nifiConfigImpl.save(modelNifi);
         }
         return saveNifiConfig ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

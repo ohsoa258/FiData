@@ -20,11 +20,11 @@ public class NifiConfigPO implements Serializable {
     /**
      * 唯一key
      */
-    public String key;
+    public String componentKey;
 
     /**
      * cfgDbPoolComponentId
      */
-    public String value;
+    public String componentId;
 
 }

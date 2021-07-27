@@ -1,7 +1,9 @@
 package com.fisk.dataaccess.test;
 
+import com.fisk.dataaccess.entity.NifiConfigPO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.mapper.NifiConfigMapper;
+import com.fisk.dataaccess.service.impl.NifiConfigImpl;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +31,9 @@ public class NifiTest {
     @Resource
     private NifiConfigMapper nifiConfigMapper;
 
+    @Resource
+    private NifiConfigImpl nifiConfigImpl;
+
     @Test
     public void testJdbcConfig() {
         System.out.println(jdbcStr + "\n" + user + "\n" + password);
@@ -54,4 +59,14 @@ public class NifiTest {
 //        }
     }
 
+    @Test
+    public void testAddNifiConfi() {
+
+        NifiConfigPO modelNifi = new NifiConfigPO();
+        modelNifi.componentKey = ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName();
+        modelNifi.setComponentId("1");
+        this.nifiConfigImpl.save(modelNifi);
+//        nifiConfigMapper.addNifiConfig(modelNifi.key, "1");
+//        return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
 }
