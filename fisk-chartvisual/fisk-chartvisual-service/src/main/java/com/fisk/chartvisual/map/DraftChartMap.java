@@ -3,10 +3,8 @@ package com.fisk.chartvisual.map;
 import com.fisk.chartvisual.dto.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
 import com.fisk.chartvisual.entity.BaseChartProperty;
-import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.constants.SqlConstants;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -27,6 +25,7 @@ public interface DraftChartMap {
     DraftChartPO dtoToPo(ChartPropertyDTO dto);
 
     /**
+     * po => vo
      * @param po source
      * @return target vo
      */

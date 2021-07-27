@@ -6,6 +6,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * @author gy
+ */
 @Data
 public class ColumnDetails {
     @NotNull

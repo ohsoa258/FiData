@@ -114,6 +114,7 @@ public interface INifiComponentsBuild {
      * @param groupId  组id
      * @param sourceId 源组件的id
      * @param targetId 目标组件的id
+     * @param type 自动结束的流程
      * @return 连接entity
      */
     BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);

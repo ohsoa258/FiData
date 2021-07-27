@@ -29,26 +29,6 @@ public class NifiFlowBuildImpl implements INifiFlowBuild {
 
     @Override
     public BusinessResult<Object> buildSourceToTargetDataFlow() {
-        //创建组
-        //BuildProcessGroupDTO group1DTO = new BuildProcessGroupDTO();
-        //group1DTO.name = "GY-Test-Flow";
-        //group1DTO.details = "java程序通过调用RESTAPI创建Nifi流程";
-        //BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(group1DTO);
-        //String pid = res.data.getId();
-
-        //创建数据源连接池
-        //BuildDbControllerServiceDTO dbCsDTO = new BuildDbControllerServiceDTO();
-        //dbCsDTO.groupId = pid;
-        //dbCsDTO.enabled = true;
-        //dbCsDTO.name = "Source Data Connection Pool";
-        //dbCsDTO.details = "源系统jdbc连接池";
-        //dbCsDTO.conUrl = "jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
-        //dbCsDTO.driverName = DriverTypeEnum.MYSQL.getName();
-        //dbCsDTO.driverLocation = NifiConstants.DirverConstants.MYSQL_DIRVER_PATH;
-        //dbCsDTO.user = "root";
-        //dbCsDTO.pwd = "root123";
-        //BusinessResult<ControllerServiceEntity> csRes = componentsBuild.buildDbControllerService(dbCsDTO);
-        //String dbConPoolId = csRes.data.getId();
         String pid = "017a11f5-82a2-134f-121c-fcc1fdeba097";
         String dbConPoolId = "017a11f6-82a2-134f-34db-a77db9ed67d1";
 
