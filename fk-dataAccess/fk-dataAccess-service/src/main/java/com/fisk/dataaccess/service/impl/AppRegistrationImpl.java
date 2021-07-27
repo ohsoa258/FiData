@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.dto.PageDTO;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -55,7 +59,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private PublishTaskClient publishTaskClient;
     @Resource
     UserHelper userHelper;
-
+    @Resource
+    private GenerateCondition generateCondition;
+    @Resource
+    private GetMetadata getMetadata;
 
     /**
      * 添加应用
@@ -425,6 +432,36 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         boolean updateById = appDataSourceImpl.updateById(modelData);
 
         return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+
+    @Override
+    public Page<AppRegistrationDTO> filter(AppRegistrationQueryDTO query) {
+
+        StringBuilder str = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            str.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+        }
+
+        //筛选器
+        str.append(generateCondition.getCondition(query.dto));
+
+        AppRegistrationPageDTO data = new AppRegistrationPageDTO();
+        data.page = query.page;
+
+        data.where = str.toString();
+
+        return baseMapper.filter(query.page, data);
+    }
+
+
+    @Override
+    public List<FilterFieldDTO> getColumn() {
+
+        return getMetadata.getMetadataList(
+                "dmp_datainput_db",
+                "tb_app_registration",
+                "", FilterSqlConstants.APP_REGISTRATION_SQL);
     }
 
 }

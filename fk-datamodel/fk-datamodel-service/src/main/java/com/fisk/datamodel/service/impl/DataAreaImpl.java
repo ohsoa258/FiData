@@ -195,7 +195,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
 
     @Override
-    public List<FilterFieldDTO> getBusinessAreaColumn() {
+    public List<FilterFieldDTO> getDataAreaColumn() {
 
         List<FilterFieldDTO> list = new ArrayList<>();
         list = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_data", "a");

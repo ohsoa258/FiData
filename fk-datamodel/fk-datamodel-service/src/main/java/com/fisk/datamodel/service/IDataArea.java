@@ -74,5 +74,5 @@ public interface IDataArea extends IService<DataAreaPO> {
      *
      * @return 多表字段
      */
-    List<FilterFieldDTO> getBusinessAreaColumn();
+    List<FilterFieldDTO> getDataAreaColumn();
 }

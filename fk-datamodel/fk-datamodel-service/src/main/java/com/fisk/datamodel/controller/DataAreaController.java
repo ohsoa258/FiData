@@ -81,9 +81,9 @@ public class DataAreaController {
     }
 
     @GetMapping("/getColumn")
-    @ApiOperation(value = "获取业务域表字段")
-    public ResultEntity<Object> getBusinessColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaColumn());
+    @ApiOperation(value = "获取数据域表字段")
+    public ResultEntity<Object> getDataColumn(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataAreaColumn());
     }
 
 }
