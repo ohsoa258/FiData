@@ -17,8 +17,8 @@ public class NifiConstants {
 
     }
 
-    public static final class DirverConstants {
-        public static final String MYSQL_DIRVER_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
+    public static final class DriveConstants {
+        public static final String MYSQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
     }
 
     public static final class AttrConstants {
