@@ -18,7 +18,8 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
 
     /**
      * 获取权限下所有数据源连接
-     *
+     * @param page 分页信息
+     * @param query where条件
      * @return 查询结果
      */
     Page<DataSourceConVO> listDataSourceConByUserId(Page<DataSourceConVO> page, @Param("query") DataSourceConQuery query);

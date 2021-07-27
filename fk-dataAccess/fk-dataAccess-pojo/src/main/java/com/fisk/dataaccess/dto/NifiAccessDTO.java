@@ -38,4 +38,9 @@ public class NifiAccessDTO {
      */
     public String sourceDbPoolComponentId;
 
+    /**
+     * cfgDbPoolComponentId
+     */
+    public String cfgDbPoolComponentId;
+
 }

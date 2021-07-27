@@ -34,8 +34,8 @@ public interface IDataService {
 
     /**
      * 下载数据
-     * @param query 表/字段信息
-     * @return 查询结果
+     * @param key redis key
+     * @param response http请求响应
      */
     void downLoad(String key, HttpServletResponse response);
 

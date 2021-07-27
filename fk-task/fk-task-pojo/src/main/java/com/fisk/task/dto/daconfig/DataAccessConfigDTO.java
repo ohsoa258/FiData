@@ -4,6 +4,7 @@ import lombok.Data;
 
 /**
  * 数据接入配置项
+ *
  * @author gy
  */
 @Data
