@@ -7,7 +7,8 @@ import lombok.Data;
  * @author Lock
  */
 @Data
-public class DataAresPageDTO {
+public class DataAreaPageDTO {
     public String where;
     public Page<DataAreaDTO> page;
+    public long businessid;
 }

@@ -2,6 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.BusinessNameDTO;
 import com.fisk.datamodel.dto.DataAreaDTO;
@@ -67,4 +68,11 @@ public interface IDataArea extends IService<DataAreaPO> {
      * @return 查询结果
      */
     Page<DataAreaDTO> dataFilter(DataAreaQueryDTO query);
+
+    /**
+     * 筛选器获取所有表字段(多表)
+     *
+     * @return 多表字段
+     */
+    List<FilterFieldDTO> getBusinessAreaColumn();
 }

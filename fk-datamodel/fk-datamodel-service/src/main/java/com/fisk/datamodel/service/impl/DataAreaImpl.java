@@ -3,11 +3,16 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.BusinessNameDTO;
+import com.fisk.datamodel.dto.DataAreaDTO;
+import com.fisk.datamodel.dto.DataAreaPageDTO;
+import com.fisk.datamodel.dto.DataAreaQueryDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.map.DataAreaMap;
@@ -30,6 +35,8 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
     @Resource
     GenerateCondition generateCondition;
+    @Resource
+    GetMetadata getMetadata;
     @Resource
     private BusinessAreaMapper businessAreaMapper;
     @Resource
@@ -161,7 +168,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     }
 
     @Override
-    public Page<Map<String,Object>> queryByPage(String key, Integer page, Integer rows) {
+    public Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows) {
         // 新建分页
         Page<Map<String, Object>> pageMap = new Page<>(page, rows);
 
@@ -173,15 +180,28 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
         StringBuilder str = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {
-            str.append(" and data_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+            str.append(" and a.data_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
         //筛选器拼接
         str.append(generateCondition.getCondition(query.dto));
-        DataAresPageDTO data = new DataAresPageDTO();
+
+        DataAreaPageDTO data = new DataAreaPageDTO();
         data.page = query.page;
+
         data.where = str.toString();
 
-        return baseMapper.queryList(query.page, data);
+        return baseMapper.queryFilter(query.page, data);
+    }
+
+
+    @Override
+    public List<FilterFieldDTO> getBusinessAreaColumn() {
+
+        List<FilterFieldDTO> list = new ArrayList<>();
+        list = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_data", "a");
+        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_business", "b");
+        list.addAll(fieldDTOList);
+        return list;
     }
 
 

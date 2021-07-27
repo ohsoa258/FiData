@@ -80,4 +80,10 @@ public class DataAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataFilter(query));
     }
 
+    @GetMapping("/getColumn")
+    @ApiOperation(value = "获取业务域表字段")
+    public ResultEntity<Object> getBusinessColumn(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaColumn());
+    }
+
 }
