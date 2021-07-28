@@ -14,9 +14,10 @@ import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -108,18 +109,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public List<DataDomainVO> listDataDomain(int id) {
+    public ResultEntity<List<DataDomainVO>> listDataDomain(int id) {
         //获取连接信息
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if (model == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         //创建连接
         IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
         List<DataDomainDTO> data = DbHelper.execQueryResultList(command.buildDataDomainQuery(model.conDbname), model, DataDomainDTO.class);
         if (data != null) {
             //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息 + "#" + StringUtils.defaultString(o.getTableDetails())
-            return data.stream()
+            List<DataDomainVO> res = data.stream()
                     .collect(Collectors.collectingAndThen(
                             Collectors.toCollection(
                                     () -> new TreeSet<>(
@@ -137,7 +138,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                                         .collect(Collectors.toList());
                             }})
                     .collect(Collectors.toList());
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, res);
         }
-        return null;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 }
