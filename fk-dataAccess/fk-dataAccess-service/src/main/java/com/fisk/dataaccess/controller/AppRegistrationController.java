@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -7,6 +8,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppDriveTypeDTO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
+import com.fisk.dataaccess.dto.AppRegistrationQueryDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import io.swagger.annotations.Api;
@@ -119,6 +121,18 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveType());
     }
 
+    @PostMapping("/filter")
+    @ApiOperation(value = "筛选器")
+    public ResultEntity<Page<AppRegistrationDTO>> filter(@RequestBody AppRegistrationQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.filter(query));
+    }
+
+    @GetMapping("/getColumn")
+    @ApiOperation(value = "获取过滤器字段")
+    public ResultEntity<Object> getColumn(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    }
+
     @GetMapping("/getAtlasEntity")
     public ResultEntity<AtlasEntityDTO> getAtlasEntity(@RequestParam("id") long id) {
 
@@ -133,6 +147,4 @@ public class AppRegistrationController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasInstanceIdAndDbId(appid, atlasInstanceId, atlasDbId));
     }
-
-
 }

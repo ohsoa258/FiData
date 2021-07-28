@@ -3,10 +3,12 @@ package com.fisk.chartvisual.map;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
-import com.fisk.common.constants.SqlConstants;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * @author gy
+ */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DataSourceConMap {
 

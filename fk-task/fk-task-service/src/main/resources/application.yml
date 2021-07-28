@@ -13,7 +13,7 @@ spring:
     port: 5672
     username: admin
     password: admin
-    virtual-host: gy_vhost
+    virtual-host: gy2_vhost
     #消息确认配置项
     #确认消息已发送到交换机(Exchange)
     publisher-confirms: true
@@ -29,6 +29,7 @@ dorisconstr:
   username: root
   password: Password01!
   driver_class_name: com.mysql.jdbc.Driver
+
 
 atlasconstr:
   url: http://192.168.1.250:21000

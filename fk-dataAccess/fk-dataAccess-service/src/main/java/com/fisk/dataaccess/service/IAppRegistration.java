@@ -1,12 +1,11 @@
 package com.fisk.dataaccess.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.dto.PageDTO;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppDriveTypeDTO;
-import com.fisk.dataaccess.dto.AppNameDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
@@ -99,4 +98,19 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 执行结果
      */
     ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId);
+
+    /**
+     * 过滤器
+     *
+     * @param query 查询条件
+     * @return 过滤结果
+     */
+    Page<AppRegistrationDTO> filter(AppRegistrationQueryDTO query);
+
+    /**
+     * 获取过滤器表字段
+     *
+     * @return 表字段
+     */
+    List<FilterFieldDTO> getColumn();
 }

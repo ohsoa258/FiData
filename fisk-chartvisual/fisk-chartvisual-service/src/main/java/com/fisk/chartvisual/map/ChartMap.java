@@ -1,15 +1,11 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.ChartPropertyDTO;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.entity.BaseChartProperty;
 import com.fisk.chartvisual.entity.ChartPO;
-import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.constants.SqlConstants;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -44,6 +40,7 @@ public interface ChartMap {
     ChartPO draftToRelease(DraftChartPO draft, @MappingTarget ChartPO release);
 
     /**
+     * po => vo
      * @param po source
      * @return target vo
      */
@@ -51,7 +48,6 @@ public interface ChartMap {
 
     /**
      * editDto => po
-     *
      * @param dto source
      * @param po target
      */

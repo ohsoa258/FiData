@@ -35,7 +35,7 @@ public class TestAtlas {
     @Test
     public void test01() {
 
-        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(1, 6);
+        ResultEntity<AtlasEntityDbTableColumnDTO> dto = client.getAtlasBuildTableAndColumn(1035, 89);
         System.out.println(dto.getData());
     }
 
@@ -48,7 +48,7 @@ public class TestAtlas {
 
     @Test
     public void test03() {
-        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(1, 6);
+        ResultEntity<DataAccessConfigDTO> dto = client.dataAccessConfig(1028, 89);
         System.out.println(dto);
     }
 

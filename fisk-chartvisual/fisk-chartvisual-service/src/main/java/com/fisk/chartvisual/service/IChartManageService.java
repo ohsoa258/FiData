@@ -60,6 +60,9 @@ public interface IChartManageService {
     ResultEnum deleteDataById(int id, ChartQueryTypeEnum type);
 
     /**
+     * 查询数据列表
+     * @param page 分页信息
+     * @param query where条件
      * @return 数据
      */
     Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryDTO query);
