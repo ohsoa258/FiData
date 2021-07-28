@@ -64,7 +64,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
 
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
-        model.createUser = userInfo.id.toString();
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -87,7 +86,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
 
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
-        model.updateUser = userInfo.id.toString();
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

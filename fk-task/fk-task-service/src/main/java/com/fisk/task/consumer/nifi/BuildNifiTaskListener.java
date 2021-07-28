@@ -51,8 +51,6 @@ public class BuildNifiTaskListener {
     private String dorisUser;
     @Value("${dorisconstr.password}")
     private String dorisPwd;
-    @Value("${dorisconstr.driver_class_name}")
-    private String dorisDriver;
 
     @Resource
     INifiComponentsBuild componentsBuild;
@@ -214,8 +212,8 @@ public class BuildNifiTaskListener {
      * @return dto
      */
     private BuildDbControllerServiceDTO buildDbControllerServiceDTO(DataAccessConfigDTO config, String groupId, DbPoolTypeEnum type) {
-        DataSourceConfig dsConfig = null;
-        String name = null;
+        DataSourceConfig dsConfig;
+        String name;
         switch (type) {
             case SOURCE:
                 dsConfig = config.sourceDsConfig;
@@ -422,8 +420,6 @@ public class BuildNifiTaskListener {
         querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
-        //querySqlDto.scheduleType = config.processorConfig.scheduleType;
-        //querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -487,7 +483,7 @@ public class BuildNifiTaskListener {
      * @param processors 需要启用的组件
      */
     private void enabledProcessor(String groupId, List<ProcessorEntity> processors) {
-        List<ProcessorEntity> enableRes = componentsBuild.enabledProcessor(groupId, processors);
+        componentsBuild.enabledProcessor(groupId, processors);
     }
 
     /**
@@ -533,7 +529,6 @@ public class BuildNifiTaskListener {
      * @return sql
      */
     private String buildLogSql() {
-        StringBuilder str = new StringBuilder();
         return "INSERT INTO tb_etl_log ( tablename, startdate, enddate, datarows, `status`, errordesc ) VALUES ('1', '1990-01-01', '1990-01-01', 1, 1, '${" + NifiConstants.AttrConstants.LOG_CODE + "}')";
     }
 

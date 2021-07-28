@@ -19,11 +19,13 @@ public class BasePO {
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     public LocalDateTime createTime;
 
+    @TableField(value = "create_user", fill = FieldFill.INSERT)
     public String createUser;
 
     @TableField(value = "update_time", fill = FieldFill.UPDATE)
     public LocalDateTime updateTime;
 
+    @TableField(value = "update_user", fill = FieldFill.UPDATE)
     public String updateUser;
 
     @TableLogic

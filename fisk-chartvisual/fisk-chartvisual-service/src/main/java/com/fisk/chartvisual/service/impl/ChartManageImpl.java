@@ -12,6 +12,7 @@ import com.fisk.chartvisual.map.ChartMap;
 import com.fisk.chartvisual.map.DraftChartMap;
 import com.fisk.chartvisual.mapper.ChartMapper;
 import com.fisk.chartvisual.mapper.DraftChartMapper;
+import com.fisk.chartvisual.mapper.FolderMapper;
 import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.exception.FkException;
@@ -37,31 +38,31 @@ public class ChartManageImpl implements IChartManageService {
     DraftChartMapper draftChartMapper;
     @Resource
     UserHelper userHelper;
-
-    //TODO: 登录人
+    @Resource
+    FolderMapper folderMapper;
 
     @Override
     public ResultEnum saveChartToDraft(ChartPropertyDTO dto) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         DraftChartPO model = DraftChartMap.INSTANCES.dtoToPo(dto);
-        model.createUser = userInfo.id.toString();
         return draftChartMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<Long> saveChart(ReleaseChart dto) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         //判断是不是发布草稿
         if (dto.draftId != null) {
             DraftChartPO draftModel = getDraftChartById(dto.draftId);
             if (draftChartMapper.deleteByIdWithFill(draftModel) == 0) {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, "草稿清除失败");
             }
         }
 
+        if (folderMapper.selectById(dto.folderId) == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, "文件夹不存在");
+        }
+
         ChartPO model = ChartMap.INSTANCES.dtoToPo(dto);
-        model.createUser = userInfo.id.toString();
 
         int res = chartMapper.insert(model);
         if (res == 0) {
@@ -85,19 +86,16 @@ public class ChartManageImpl implements IChartManageService {
 
     @Override
     public ResultEnum updateChart(ChartPropertyEditDTO dto) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         int res = 0;
         switch (dto.type) {
             case DRAFT:
                 DraftChartPO draft = getDraftChartById(dto.id);
                 ChartMap.INSTANCES.editDtoToPo(dto, draft);
-                draft.updateUser = userInfo.id.toString();
                 res = draftChartMapper.updateById(draft);
                 break;
             case RELEASE:
                 ChartPO release = getReleaseChartById(dto.id);
                 ChartMap.INSTANCES.editDtoToPo(dto, release);
-                release.updateUser = userInfo.id.toString();
                 res = chartMapper.updateById(release);
                 break;
             default:
