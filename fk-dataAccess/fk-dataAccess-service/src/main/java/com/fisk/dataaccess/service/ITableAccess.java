@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -133,4 +134,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 执行结果
      */
     ResultEnum addComponentId(NifiAccessDTO dto);
+
+    /**
+     * 过滤器
+     *
+     * @param query 查询条件
+     * @return 过滤结果
+     */
+    Page<TableAccessVO> listData(TableAccessQueryDTO query);
 }

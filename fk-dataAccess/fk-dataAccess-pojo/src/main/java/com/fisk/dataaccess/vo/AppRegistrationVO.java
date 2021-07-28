@@ -1,7 +1,8 @@
 package com.fisk.dataaccess.vo;
 
 import lombok.Data;
-import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
 
 /**
  * @author Lock
@@ -34,6 +35,6 @@ public class AppRegistrationVO{
     /**
      * 创建时间
      */
-    public DateTime createTime;
+    public LocalDateTime createTime;
 
 }

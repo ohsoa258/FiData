@@ -67,7 +67,7 @@ public interface IDataArea extends IService<DataAreaPO> {
      * @param query 查询条件
      * @return 查询结果
      */
-    Page<DataAreaDTO> dataFilter(DataAreaQueryDTO query);
+    Page<DataAreaDTO> listData(DataAreaQueryDTO query);
 
     /**
      * 筛选器获取所有表字段(多表)

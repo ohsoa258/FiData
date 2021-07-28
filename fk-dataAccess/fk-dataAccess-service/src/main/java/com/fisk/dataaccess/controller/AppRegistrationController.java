@@ -124,8 +124,8 @@ public class AppRegistrationController {
 
     @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
-    public ResultEntity<Page<AppRegistrationVO>> filter(@RequestBody AppRegistrationQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.filter(query));
+    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
     }
 
     @GetMapping("/getColumn")

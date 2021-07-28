@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -20,6 +21,7 @@ import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -81,6 +83,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String user;
     @Value("${spring.datasource.password}")
     private String password;
+    @Resource
+    private GenerateCondition generateCondition;
 
     /**
      * 添加物理表(实时)
@@ -1098,5 +1102,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             saveNifiConfig = nifiConfigImpl.save(modelNifi);
         }
         return saveNifiConfig ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public Page<TableAccessVO> listData(TableAccessQueryDTO query) {
+        StringBuilder querySql = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            querySql.append(" and table_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+        }
+
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+        TableAccessPageDTO data = new TableAccessPageDTO();
+        data.page = query.page;
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
+
+        return baseMapper.filter(query.page, data);
     }
 }
