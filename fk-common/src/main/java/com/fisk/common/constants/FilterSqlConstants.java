@@ -13,7 +13,7 @@ public class FilterSqlConstants {
     /**
      *  应用注册
      */
-    public static final String APP_REGISTRATION_SQL = " where Field in ('app_name','app_des','app_type','app_principal','create_time')";
+    public static final String APP_REGISTRATION_SQL = " where Field in ('id','app_name','app_des','app_type','app_principal','create_time')";
 
 
 
