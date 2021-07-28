@@ -16,20 +16,12 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
 
     /**
      * 查询指定表的数据
-     * @param queryList
-     * @param aggregationFieldList
-     * @param groupList
-     * @param tableName
-     * @param whereList
-     * @param currentPage
-     * @param pageSize
+     * @param splitSql 拼接sql
+     * @param currentPage  当前页数
+     * @param pageSize     页数大小
      * @return
      */
-    List<Map> queryData(@Param("queryList") List<String> queryList,
-                        @Param("aggregationFieldList") List<String> aggregationFieldList,
-                        @Param("groupList") List<String> groupList,
-                        @Param("tableName") String tableName,
-                        @Param("whereList") List<String> whereList,
+    List<Map> queryData(@Param("splitSql") String splitSql,
                         @Param("currentPage")Integer currentPage,
                         @Param("pageSize")Integer pageSize
     );

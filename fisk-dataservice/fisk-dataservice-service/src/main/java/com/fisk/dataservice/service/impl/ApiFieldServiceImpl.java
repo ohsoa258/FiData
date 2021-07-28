@@ -1,7 +1,7 @@
 package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
@@ -12,9 +12,11 @@ import com.fisk.dataservice.service.ApiFieldService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.fisk.dataservice.enums.ConfigureFieldTypeEnum.*;
+import static java.util.stream.Collectors.joining;
 
 /**
  * @author WangYan
@@ -47,7 +49,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     }
 
     /**
-     * 数据分组
+     * 数据分组拼接
      * @param apiConfigureFieldList
      * @param tableName
      * @param currentPage
@@ -55,28 +57,25 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @return
      */
     public List<Map> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList,String tableName, Integer currentPage, Integer pageSize){
-        List<ApiConfigureFieldPO> aggregationList = new ArrayList<>();
-        List<ApiConfigureFieldPO> groupingList = new ArrayList<>();
-        List<ApiConfigureFieldPO> conditionList = new ArrayList<>();
-        List<ApiConfigureFieldPO> queryFieldList = new ArrayList<>();
-        for (ApiConfigureFieldPO field : apiConfigureFieldList) {
-            switch (field.getFieldType()) {
-                case GROUPING:
-                    groupingList.add(field);
-                    break;
-                case AGGREGATION:
-                    aggregationList.add(field);
-                    break;
-                case RESTRICT:
-                    conditionList.add(field);
-                    break;
-                case QUERY:
-                    queryFieldList.add(field);
-                    break;
-                default:
-                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-            }
-        }
+        String queryFieldList = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(QUERY))
+                .map(e -> "`" +e.getField() +"`")
+                .collect(joining(","));
+
+        String groupingList = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(GROUPING))
+                .map(e -> "`"+e.getField() +"`")
+                .collect(joining(","));
+
+        String aggregationList = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(AGGREGATION))
+                .map(e -> e.getFieldConditionValue() + "("+ "`" + e.getField()+ "`"+ ")")
+                .collect(joining(","));
+
+        String conditionList = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(RESTRICT))
+                .map(e -> "`" +e.getField() +"`" + e.getFieldConditionValue() + "'" + e.getFieldValue() + "'")
+                .collect(joining("AND "));
         return this.splicingSql(queryFieldList,aggregationList,groupingList,conditionList,currentPage,pageSize, tableName);
     }
 
@@ -91,50 +90,131 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @param tableName  表名
      * @return
      */
-    public List<Map> splicingSql(List<ApiConfigureFieldPO> queryFieldList,
-                                 List<ApiConfigureFieldPO> aggregationList,
-                                 List<ApiConfigureFieldPO> groupingList,
-                                 List<ApiConfigureFieldPO> conditionList,
-                                 Integer currentPage, Integer pageSize, String tableName){
-        // 获取查询的字段
-        List<String> queryList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(queryFieldList)){
-            for (ApiConfigureFieldPO apiConfigureField : queryFieldList) {
-                queryList.add(apiConfigureField.getField());
-            }
-        }
+    public List<Map> splicingSql(String queryFieldList,
+                                 String aggregationList,
+                                 String groupingList,
+                                 String conditionList,
+                                 Integer currentPage, Integer pageSize,
+                                 String tableName){
+        // sql
+        String splitSql = this.splitSql(queryFieldList, aggregationList, groupingList, conditionList, tableName);
 
-        // 获取聚合的字段
-        List<String> aggregationFieldList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(aggregationList)){
-            for (ApiConfigureFieldPO configureField : aggregationList) {
-                aggregationFieldList.add(configureField.getFieldConditionValue() + "(" + configureField.getField() +")");
-            }
-        }
-
-        // 获取分组的字段
-        List<String> groupList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(groupingList)){
-            for (ApiConfigureFieldPO configureField : groupingList) {
-                groupList.add(configureField.getField());
-            }
-        }
-
-        // 权限控制的字段
-        List<String> whereList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(conditionList)){
-            for (ApiConfigureFieldPO configureField : conditionList) {
-                whereList.add(configureField.getField()+configureField.getFieldConditionValue()+"'"+configureField.getFieldValue()+"'");
-            }
-        }
-
+        // 添加分页
         if (currentPage == null){
             currentPage = 1;
         }
         if (pageSize == null){
             pageSize = 50;
         }
-        List<Map> objects = configureMapper.queryData(queryList,aggregationFieldList, groupList, tableName, whereList, (currentPage-1)*pageSize, pageSize);
+        List<Map> objects = configureMapper.queryData(splitSql, (currentPage-1)*pageSize, pageSize);
         return objects;
+    }
+
+    /**
+     * 拼接sql主方法
+     * @param queryFieldList   查询
+     * @param aggregationList  聚合
+     * @param groupingList     分组
+     * @param conditionList    条件
+     * @param tableName        表名
+     * @return
+     */
+    public String splitSql(String queryFieldList, String aggregationList, String groupingList, String conditionList, String tableName){
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        // select
+        this.queryField(str,queryFieldList,aggregationList,groupingList);
+
+        // from
+        str.append(" FROM ").append("`" + tableName + "`").append(" ");
+        // where
+        if (StringUtils.isNotBlank(conditionList)){
+            str.append("WHERE 1 = 1 AND " + conditionList);
+        }
+
+        // group
+        if (StringUtils.isNotBlank(groupingList)){
+            str.append("GROUP BY ");
+            str.append(groupingList);
+        }
+
+        // groupBy
+        this.aggregation(str,queryFieldList,aggregationList,groupingList);
+        this.noAggregation(str,queryFieldList,aggregationList,groupingList);
+        return str.toString();
+    }
+
+    /**
+     * select
+     * @param str  字符串拼接
+     * @param queryFieldList   查询
+     * @param aggregationList  聚合
+     * @param groupingList     分组
+     * @return
+     */
+    public void queryField(StringBuilder str,String queryFieldList, String aggregationList, String groupingList){
+        if (StringUtils.isNotBlank(queryFieldList)){
+            str.append(queryFieldList);
+        }
+        if (StringUtils.isNotBlank(queryFieldList) && StringUtils.isNotBlank(groupingList)){
+            str.append(",");
+        }
+        if (StringUtils.isNotBlank(groupingList)){
+            str.append(groupingList);
+        }
+        if (StringUtils.isNotBlank(groupingList) && StringUtils.isNotBlank(aggregationList)){
+            str.append(",");
+        }
+        if (StringUtils.isNotBlank(aggregationList)){
+            str.append(aggregationList);
+        }
+    }
+
+    /**
+     * 如果查询条件中有聚合，那么查询的字段必须分组
+     * @param str  字符串拼接
+     * @param queryFieldList   查询
+     * @param aggregationList  聚合
+     * @param groupingList     分组
+     * @return
+     */
+    public void aggregation(StringBuilder str,String queryFieldList, String aggregationList, String groupingList){
+        if (StringUtils.isNotBlank(aggregationList)){
+            if (StringUtils.isNotBlank(groupingList) && StringUtils.isNotBlank(queryFieldList)){
+                str.append(",");
+            }
+
+            if (StringUtils.isBlank(groupingList)){
+                str.append("GROUP BY ");
+            }
+
+            if (StringUtils.isNotBlank(queryFieldList)){
+                str.append(queryFieldList);
+            }
+        }
+    }
+
+    /**
+     * 如果没有聚合字段,但是有分组的字段，那么查询的字段必须分组。
+     * @param str  字符串拼接
+     * @param queryFieldList   查询
+     * @param aggregationList  聚合
+     * @param groupingList     分组
+     * @return
+     */
+    public void noAggregation(StringBuilder str,String queryFieldList, String aggregationList, String groupingList){
+        if (StringUtils.isBlank(aggregationList) && StringUtils.isNotBlank(groupingList)){
+            if (StringUtils.isNotBlank(groupingList) && StringUtils.isNotBlank(queryFieldList)){
+                str.append(",");
+            }
+
+            if (StringUtils.isBlank(groupingList)){
+                str.append("GROUP BY ");
+            }
+
+            if (StringUtils.isNotBlank(queryFieldList)){
+                str.append(queryFieldList);
+            }
+        }
     }
 }
