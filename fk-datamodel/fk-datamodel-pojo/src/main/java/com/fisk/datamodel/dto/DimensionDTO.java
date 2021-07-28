@@ -6,11 +6,9 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionDTO {
+public class DimensionDTO {
     public int id;
     public int businessId;
-    public int dataId;
-    public int projectId;
     public String dimensionCnName;
     public String dimensionEnName;
     public String dimensionTabName;

@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionAssociationDTO extends ProjectDimensionDTO {
+public class ProjectDimensionAssociationDTO extends DimensionDTO {
     /**
      * 数据域名称
      */

@@ -2,6 +2,7 @@ package com.fisk.system.service;
 
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.AssignmentDTO;
+import com.fisk.system.dto.LoginServiceDTO;
 import com.fisk.system.dto.RoleServiceAssignmentDTO;
 import com.fisk.system.dto.ServiceSourceDTO;
 
@@ -31,5 +32,5 @@ public interface IRoleServiceAssignmentService {
      * @return 保存结果
      */
 
-    List<ServiceSourceDTO> getServiceList();
+    List<LoginServiceDTO> getServiceList();
 }

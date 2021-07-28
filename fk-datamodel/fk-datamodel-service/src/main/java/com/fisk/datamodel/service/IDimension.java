@@ -1,17 +1,15 @@
 package com.fisk.datamodel.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.ProjectDimensionAssociationDTO;
-import com.fisk.datamodel.dto.ProjectDimensionDTO;
-import com.fisk.datamodel.dto.ProjectDimensionSourceDTO;
-import com.fisk.datamodel.dto.ProjectInfoDropDTO;
+import com.fisk.datamodel.dto.*;
 
 import java.util.List;
 
 /**
  * @author JianWenYang
  */
-public interface IProjectDimension {
+public interface IDimension {
 
     /**
      * 获取维度相关数据域列表以及数据域下维度表
@@ -24,7 +22,7 @@ public interface IProjectDimension {
      * @param dto
      * @return
      */
-    ResultEnum addDimension(ProjectDimensionDTO dto);
+    ResultEnum addDimension(DimensionDTO dto);
 
     /**
      * 获取维度表详情
@@ -38,7 +36,7 @@ public interface IProjectDimension {
      * @param dto
      * @return
      */
-    ResultEnum updateDimension(ProjectDimensionDTO dto);
+    ResultEnum updateDimension(DimensionDTO dto);
 
     /**
      * 删除维度表
@@ -55,10 +53,10 @@ public interface IProjectDimension {
     ProjectDimensionAssociationDTO getRegionDetail(int id);
 
     /**
-     * 根据数据域id获取项目列表
-     * @param dataId
+     * 获取维度表列表
+     * @param dto
      * @return
      */
-    List<ProjectInfoDropDTO> getProjectDropList(int dataId);
+    IPage<DimensionDTO> getDimension(QueryDTO dto);
 
 }

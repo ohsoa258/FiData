@@ -458,11 +458,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     @Override
     public List<FilterFieldDTO> getColumn() {
-
-        return getMetadata.getMetadataList(
+return null;
+        /*return getMetadata.getMetadataList(
                 "dmp_datainput_db",
                 "tb_app_registration",
-                "", FilterSqlConstants.APP_REGISTRATION_SQL);
+                "", FilterSqlConstants.APP_REGISTRATION_SQL);*/
     }
 
 }

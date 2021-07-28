@@ -1,9 +1,11 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.datamodel.dto.ProjectDimensionDTO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datamodel.dto.DimensionDTO;
 import com.fisk.datamodel.dto.ProjectDimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
-import com.fisk.datamodel.entity.ProjectDimensionPO;
+import com.fisk.datamodel.entity.DimensionPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -14,22 +16,22 @@ import java.util.List;
  * @author JianWenYang
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface ProjectDimensionMap {
-    ProjectDimensionMap INSTANCES = Mappers.getMapper(ProjectDimensionMap.class);
+public interface DimensionMap {
+    DimensionMap INSTANCES = Mappers.getMapper(DimensionMap.class);
 
     /**
      * dto==>po
      * @param dto
      * @return
      */
-    ProjectDimensionPO dtoToPo(ProjectDimensionDTO dto);
+    DimensionPO dtoToPo(DimensionDTO dto);
 
     /**
      * po==>dto
      * @param po
      * @return
      */
-    ProjectDimensionDTO poToDto(ProjectDimensionPO po);
+    DimensionDTO poToDto(DimensionPO po);
 
     /**
      * 数据域po==>维度域dto
@@ -43,6 +45,13 @@ public interface ProjectDimensionMap {
      * @param po
      * @return
      */
-    List<ProjectDimensionDTO> listPoToListDto(List<ProjectDimensionPO> po);
+    List<DimensionDTO> listPoToListDto(List<DimensionPO> po);
+
+    /**
+     * 分页po==>dto
+     * @param po
+     * @return
+     */
+    Page<DimensionDTO> pagePoToDto(IPage<DimensionPO> po);
 
 }

@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.system.dto.AssignmentDTO;
-import com.fisk.system.dto.RoleServiceAssignmentDTO;
-import com.fisk.system.dto.ServiceRegistryDTO;
-import com.fisk.system.dto.ServiceSourceDTO;
+import com.fisk.system.dto.*;
 import com.fisk.system.entity.RoleServiceAssignmentPO;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.ServiceRegistryPO;
@@ -84,9 +81,9 @@ public class RoleServiceAssignmentImpl
     }
 
     @Override
-    public List<ServiceSourceDTO> getServiceList()
+    public List<LoginServiceDTO> getServiceList()
     {
-        List<ServiceSourceDTO> dtoList = new ArrayList<>();
+        List<LoginServiceDTO> dtoList = new ArrayList<>();
         /*获取登录信息*/
         UserInfo userInfo = userHelper.getLoginUserInfo();
         if (userInfo==null)
@@ -98,7 +95,7 @@ public class RoleServiceAssignmentImpl
         QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
         roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId,userInfo.id);
         List<Object> idList = roleUserMapper.selectObjs(roleData).stream().distinct().collect(Collectors.toList());
-        if (idList.size()==0) {
+        if (idList==null || idList.size()==0) {
             return dtoList;
         }
         /*查询角色下所有服务*/
@@ -116,13 +113,24 @@ public class RoleServiceAssignmentImpl
         List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
                 .collect(Collectors.toList());
         for (ServiceRegistryPO po : listParent) {
-            ServiceSourceDTO dto=RoleServiceAssignmentMap.INSTANCES.servicePoToDto(po);
-            List<ServiceSourceDTO> data=new ArrayList<>();
+            LoginServiceDTO dto=new LoginServiceDTO();
+            dto.name=po.serveEnName;
+            dto.path="/"+po.serveUrl;
+            dto.component="Layout";
+            IconDTO icon=new IconDTO();
+            icon.title=po.serveCnName;
+            icon.noCache=false;
+            icon.icon=po.icon;
+            dto.meta=icon;
+            List<LoginServiceDTO> data=new ArrayList<>();
             List<ServiceRegistryPO> listChild=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->po.getServeCode().equals(e.getParentServeCode())).collect(Collectors.toList());
             /*查询所有子节点*/
             for (ServiceRegistryPO item : listChild)
             {
-                ServiceSourceDTO obj=RoleServiceAssignmentMap.INSTANCES.servicePoToDto(item);
+                LoginServiceDTO obj=new LoginServiceDTO();
+                obj.name=po.serveEnName;
+                obj.path="/"+po.serveUrl;
+                obj.component=item.serveUrl;
                 data.add(obj);
             }
             dto.setDto(data);

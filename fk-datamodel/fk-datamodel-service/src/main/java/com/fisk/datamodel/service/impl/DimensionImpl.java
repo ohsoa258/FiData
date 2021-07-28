@@ -1,24 +1,20 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.exception.FkException;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.ProjectDimensionAssociationDTO;
-import com.fisk.datamodel.dto.ProjectDimensionDTO;
-import com.fisk.datamodel.dto.ProjectDimensionSourceDTO;
-import com.fisk.datamodel.dto.ProjectInfoDropDTO;
-import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.DataAreaPO;
-import com.fisk.datamodel.entity.ProjectDimensionPO;
+import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
-import com.fisk.datamodel.map.ProjectDimensionMap;
-import com.fisk.datamodel.map.ProjectInfoMap;
+import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.DataAreaMapper;
-import com.fisk.datamodel.mapper.ProjectDimensionMapper;
+import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.ProjectInfoMapper;
-import com.fisk.datamodel.service.IProjectDimension;
+import com.fisk.datamodel.service.IDimension;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,12 +28,12 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
-public class ProjectDimensionImpl implements IProjectDimension {
+public class DimensionImpl implements IDimension {
 
     @Resource
     DataAreaMapper dataAreaMapper;
     @Resource
-    ProjectDimensionMapper mapper;
+    DimensionMapper mapper;
     @Resource
     ProjectInfoMapper projectInfoMapper;
     @Resource
@@ -51,7 +47,7 @@ public class ProjectDimensionImpl implements IProjectDimension {
         QueryWrapper<ProjectInfoPO> projectInfo=new QueryWrapper<>();
         projectInfo.select("businessid");
         List<Object> ids=projectInfoMapper.selectObjs(projectInfo).stream().distinct().collect(Collectors.toList());
-        if (ids.size()==0)
+        if (ids ==null || ids.size()==0)
         {
             return list;
         }
@@ -63,8 +59,8 @@ public class ProjectDimensionImpl implements IProjectDimension {
         Collections.reverse(dataArea);
         ////ProjectDimensionMap.INSTANCES.poToDtoList(dataAreaMapper.selectList(queryWrapper));
         //获取维度表
-        QueryWrapper<ProjectDimensionPO> dimensionList=new QueryWrapper<>();
-        List<ProjectDimensionPO> dimensionPo=mapper.selectList(dimensionList).stream().sorted(Comparator.comparing(ProjectDimensionPO::getCreateTime)).collect(Collectors.toList());
+        QueryWrapper<DimensionPO> dimensionList=new QueryWrapper<>();
+        List<DimensionPO> dimensionPo=mapper.selectList(dimensionList).stream().sorted(Comparator.comparing(DimensionPO::getCreateTime)).collect(Collectors.toList());
         //降序
         Collections.reverse(dimensionPo);
         for (DataAreaPO item:dataArea)
@@ -72,29 +68,28 @@ public class ProjectDimensionImpl implements IProjectDimension {
             ProjectDimensionSourceDTO dto=new ProjectDimensionSourceDTO();
             dto.id=item.id;
             dto.dimensionCnName=item.dataName;
-            dto.data=ProjectDimensionMap.INSTANCES.listPoToListDto(
+            /*dto.data= DimensionMap.INSTANCES.listPoToListDto(
                     dimensionPo.stream().filter(e->e.getDataId()==item.id).collect(Collectors.toList())
-            );
+            );*/
             list.add(dto);
         }
         return list;
     }
 
     @Override
-    public ResultEnum addDimension(ProjectDimensionDTO dto){
+    public ResultEnum addDimension(DimensionDTO dto){
 
-        QueryWrapper<ProjectDimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(ProjectDimensionPO::getBusinessId,dto.businessId)
-                            .eq(ProjectDimensionPO::getDataId,dto.dataId)
-                            .eq(ProjectDimensionPO::getDimensionCnName,dto.dimensionCnName)
-                            .eq(ProjectDimensionPO::getDimensionTabName,dto.dimensionTabName);
-        ProjectDimensionPO po=mapper.selectOne(queryWrapper);
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
+                            .eq(DimensionPO::getDimensionCnName,dto.dimensionCnName)
+                            .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
+        DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
         {
             return ResultEnum.DATA_EXISTS;
         }
         UserInfo userInfo = userHelper.getLoginUserInfo();
-        ProjectDimensionPO model= ProjectDimensionMap.INSTANCES.dtoToPo(dto);
+        DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
         model.createUser=userInfo.id.toString();
         return mapper.insert(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -106,24 +101,23 @@ public class ProjectDimensionImpl implements IProjectDimension {
     }
 
     @Override
-    public ResultEnum updateDimension(ProjectDimensionDTO dto)
+    public ResultEnum updateDimension(DimensionDTO dto)
     {
-        ProjectDimensionPO model=mapper.selectById(dto.id);
+        DimensionPO model=mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        QueryWrapper<ProjectDimensionPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(ProjectDimensionPO::getBusinessId,dto.businessId)
-                .eq(ProjectDimensionPO::getDataId,dto.dataId)
-                .eq(ProjectDimensionPO::getDimensionTabName,dto.dimensionTabName)
-                .eq(ProjectDimensionPO::getDimensionCnName,dto.dimensionCnName);
-        ProjectDimensionPO po=mapper.selectOne(queryWrapper);
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
+                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
+                .eq(DimensionPO::getDimensionCnName,dto.dimensionCnName);
+        DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=model.id)
         {
             return ResultEnum.DATA_EXISTS;
         }
         UserInfo userInfo = userHelper.getLoginUserInfo();
-        model= ProjectDimensionMap.INSTANCES.dtoToPo(dto);
+        model= DimensionMap.INSTANCES.dtoToPo(dto);
         model.updateUser=userInfo.id.toString();
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -131,7 +125,7 @@ public class ProjectDimensionImpl implements IProjectDimension {
     @Override
     public ResultEnum deleteDimension(int id)
     {
-        ProjectDimensionPO model=mapper.selectById(id);
+        DimensionPO model=mapper.selectById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -147,18 +141,16 @@ public class ProjectDimensionImpl implements IProjectDimension {
     }
 
     @Override
-    public List<ProjectInfoDropDTO> getProjectDropList(int dataId)
+    public IPage<DimensionDTO> getDimension(QueryDTO dto)
     {
-        List<ProjectInfoDropDTO> list=new ArrayList<>();
-        DataAreaPO po=dataAreaMapper.selectById(dataId);
-        if (po==null)
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        if (dto.businessId !=0)
         {
-            return list;
+            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId);
         }
-        QueryWrapper<ProjectInfoPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(ProjectInfoPO::getBusinessid,po.businessid);
-        list= ProjectInfoMap.INSTANCES.poToDto(projectInfoMapper.selectList(queryWrapper));
-        return list;
+        Page<DimensionPO> data=new Page<>(dto.getPage(),dto.getSize());
+        return DimensionMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
     }
+
 
 }

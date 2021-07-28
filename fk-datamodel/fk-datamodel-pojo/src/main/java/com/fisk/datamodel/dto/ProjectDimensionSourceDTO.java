@@ -13,5 +13,5 @@ public class ProjectDimensionSourceDTO {
     @TableId
     public long id;
     public String dimensionCnName;
-    public List<ProjectDimensionDTO> data;
+    public List<DimensionDTO> data;
 }
