@@ -2,7 +2,6 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -47,5 +46,5 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      * @param query query
      * @return 查询结果
      */
-    Page<AppRegistrationDTO> filter(Page<AppRegistrationDTO> page, @Param("query") AppRegistrationPageDTO query);
+    Page<AppRegistrationVO> filter(Page<AppRegistrationVO> page, @Param("query") AppRegistrationPageDTO query);
 }

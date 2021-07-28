@@ -7,6 +7,7 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
 import java.util.List;
@@ -105,7 +106,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param query 查询条件
      * @return 过滤结果
      */
-    Page<AppRegistrationDTO> filter(AppRegistrationQueryDTO query);
+    Page<AppRegistrationVO> filter(AppRegistrationQueryDTO query);
 
     /**
      * 获取过滤器表字段

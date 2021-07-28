@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
 import com.fisk.dataaccess.dto.AppRegistrationQueryDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -121,9 +122,9 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveType());
     }
 
-    @PostMapping("/filter")
+    @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
-    public ResultEntity<Page<AppRegistrationDTO>> filter(@RequestBody AppRegistrationQueryDTO query){
+    public ResultEntity<Page<AppRegistrationVO>> filter(@RequestBody AppRegistrationQueryDTO query){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.filter(query));
     }
 

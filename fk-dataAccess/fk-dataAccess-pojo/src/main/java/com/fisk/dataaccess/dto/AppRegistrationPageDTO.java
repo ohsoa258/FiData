@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.dto;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import lombok.Data;
 
 /**
@@ -9,5 +10,5 @@ import lombok.Data;
 @Data
 public class AppRegistrationPageDTO {
     public String where;
-    public Page<AppRegistrationDTO> page;
+    public Page<AppRegistrationVO> page;
 }

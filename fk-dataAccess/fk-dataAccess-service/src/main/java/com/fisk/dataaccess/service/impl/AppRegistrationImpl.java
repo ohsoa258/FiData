@@ -25,6 +25,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -436,7 +437,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     @Override
-    public Page<AppRegistrationDTO> filter(AppRegistrationQueryDTO query) {
+    public Page<AppRegistrationVO> filter(AppRegistrationQueryDTO query) {
 
         StringBuilder str = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {
