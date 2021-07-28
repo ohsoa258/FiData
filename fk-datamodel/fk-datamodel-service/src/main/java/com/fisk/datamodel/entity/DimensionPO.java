@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.omg.CORBA.PUBLIC_MEMBER;
 
 /**
  * @author JianWenYang
@@ -33,5 +34,9 @@ public class DimensionPO extends BasePO {
      * 维度描述
      */
     public String dimensionDesc;
+    /**
+     * 是否共享
+     */
+    public Boolean share;
 
 }

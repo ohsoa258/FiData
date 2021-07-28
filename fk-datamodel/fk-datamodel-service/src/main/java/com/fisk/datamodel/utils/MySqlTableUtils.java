@@ -2,7 +2,7 @@ package com.fisk.datamodel.utils;
 
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.ProjectDimensionMetaDTO;
+import com.fisk.datamodel.dto.DimensionMetaDTO;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -21,13 +21,12 @@ public class MySqlTableUtils {
 
     /**
      * 获取实时及非实时的表 表字段
-     * @param metaDataEnum 维度表字段筛选类型。0:业务字段、1:属性
      * @return 查询结果
      */
-    public List<ProjectDimensionMetaDTO> getTable() {
+    public List<DimensionMetaDTO> getTable() {
 
 
-        List<ProjectDimensionMetaDTO> map = null;
+        List<DimensionMetaDTO> map = null;
         try {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(url, user, pwd);
@@ -35,7 +34,7 @@ public class MySqlTableUtils {
             Statement st = conn.createStatement();
             map = new ArrayList<>();
             for (String tableName : tableNames) {
-                ProjectDimensionMetaDTO model=new ProjectDimensionMetaDTO();
+                DimensionMetaDTO model=new DimensionMetaDTO();
                 ResultSet rs = st.executeQuery("show full columns from " + tableName);
                 model.tableName=tableName;
                 List<String> colNames = getColNames(rs);
@@ -79,9 +78,7 @@ public class MySqlTableUtils {
     private List<String> getColNames(ResultSet rs){
         List<String> colNameList = null;
         try {
-
             colNameList = new ArrayList<String>();
-
             while (rs.next()) {
                 colNameList.add(rs.getString("Field"));
             }

@@ -74,31 +74,24 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
      * @return 返回值
      */
     @Override
-    public ResultEnum addServiceRegistry(ServiceRegistryDTO dto)
-    {
-        try {
+    public ResultEnum addServiceRegistry(ServiceRegistryDTO dto) {
 
-            ServiceRegistryPO po=ServiceRegistryMap.INSTANCES.dtoToPo(dto);
-            /*获取登录信息*/
-            UserInfo userInfo = userHelper.getLoginUserInfo();
-            // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
-            QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(ServiceRegistryPO::getServeCnName, dto.serveCnName);
+        ServiceRegistryPO po = ServiceRegistryMap.INSTANCES.dtoToPo(dto);
+        /*获取登录信息*/
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ServiceRegistryPO::getServeCnName, dto.serveCnName);
 
-            ServiceRegistryPO data = mapper.selectOne(queryWrapper);
-            if (data != null) {
-                return ResultEnum.NAME_EXISTS;
-            }
-            po.createUser=userInfo.id.toString();
-            po.serveCode=UUID.randomUUID().toString();
-            // 保存
-            return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        ServiceRegistryPO data = mapper.selectOne(queryWrapper);
+        if (data != null) {
+            return ResultEnum.NAME_EXISTS;
         }
-        catch (Exception e)
-        {
-            throw new FkException(ResultEnum.ERROR);
-        }
+        po.createUser = userInfo.id.toString();
+        po.serveCode = UUID.randomUUID().toString();
+        // 保存
+        return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -107,20 +100,14 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
      * @return 返回值
      */
     @Override
-    public  ResultEnum delServiceRegistry(int id){
-        try {
-            ServiceRegistryPO model = mapper.selectById(id);
-            if (model == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-            UserInfo userInfo = userHelper.getLoginUserInfo();
-            model.updateUser=userInfo.id.toString();
-            return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    public  ResultEnum delServiceRegistry(int id) {
+        ServiceRegistryPO model = mapper.selectById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
         }
-        catch (Exception e)
-        {
-            throw new FkException(ResultEnum.ERROR);
-        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        model.updateUser = userInfo.id.toString();
+        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -131,46 +118,32 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
      */
     @Override
     public ServiceRegistryDTO getDataDetail(int id) {
-        try {
-            ServiceRegistryDTO po = ServiceRegistryMap.INSTANCES.poToDto(mapper.selectById(id));
-            if (po == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            return po;
+        ServiceRegistryDTO po = ServiceRegistryMap.INSTANCES.poToDto(mapper.selectById(id));
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        catch (Exception e)
-        {
-            throw new FkException(ResultEnum.ERROR);
-        }
+        return po;
     }
 
 
     @Override
     public ResultEnum updateServiceRegistry(ServiceRegistryDTO dto) {
-        try {
-            /*判断是否存在*/
-            ServiceRegistryPO model = mapper.selectById(dto.id);
-            if (model == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-            /*判断名称是否重复*/
-            QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(ServiceRegistryPO::getServeCnName, dto.serveEnName);
-            ServiceRegistryPO data = mapper.selectOne(queryWrapper);
-            if (data != null && data.id != dto.id) {
-                return ResultEnum.NAME_EXISTS;
-            }
-            ServiceRegistryPO po=ServiceRegistryMap.INSTANCES.dtoToPo(dto);
-            UserInfo userInfo = userHelper.getLoginUserInfo();
-            po.updateUser=userInfo.id.toString();
-            return  mapper.updateById(po)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        /*判断是否存在*/
+        ServiceRegistryPO model = mapper.selectById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
         }
-        catch (Exception e){
-            throw new FkException(ResultEnum.ERROR);
+        /*判断名称是否重复*/
+        QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ServiceRegistryPO::getServeCnName, dto.serveEnName);
+        ServiceRegistryPO data = mapper.selectOne(queryWrapper);
+        if (data != null && data.id != dto.id) {
+            return ResultEnum.NAME_EXISTS;
         }
+        ServiceRegistryPO po = ServiceRegistryMap.INSTANCES.dtoToPo(dto);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        po.updateUser = userInfo.id.toString();
+        return mapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
-
-
-
 }

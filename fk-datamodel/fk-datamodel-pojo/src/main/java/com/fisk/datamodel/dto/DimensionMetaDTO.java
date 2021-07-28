@@ -8,7 +8,7 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionMetaDTO {
+public class DimensionMetaDTO {
     public String tableName;
     public List<String> field;
 }

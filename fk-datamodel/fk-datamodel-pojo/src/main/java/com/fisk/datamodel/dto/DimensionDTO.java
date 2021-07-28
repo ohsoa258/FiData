@@ -13,4 +13,5 @@ public class DimensionDTO {
     public String dimensionEnName;
     public String dimensionTabName;
     public String dimensionDesc;
+    public boolean share;
 }

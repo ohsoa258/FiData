@@ -47,6 +47,10 @@ public class DimensionAttributePO extends BasePO {
     /**
      * 关联维度表id
      */
-    public int associate_dimension_id;
+    public int associateDimensionId;
+    /**
+     * 表来源
+     */
+    public String tableSource;
 
 }

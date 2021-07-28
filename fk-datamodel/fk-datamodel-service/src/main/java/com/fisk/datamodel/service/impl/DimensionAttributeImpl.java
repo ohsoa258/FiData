@@ -5,14 +5,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.ProjectDimensionAttributeDTO;
-import com.fisk.datamodel.dto.ProjectDimensionMetaDTO;
+import com.fisk.datamodel.dto.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.DimensionAttributeListDTO;
+import com.fisk.datamodel.dto.DimensionAttributeUpdateDTO;
+import com.fisk.datamodel.dto.DimensionMetaDTO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
-import com.fisk.datamodel.service.IProjectDimensionAttribute;
+import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.datamodel.utils.MySqlTableUtils;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
 @Service
 public class DimensionAttributeImpl
         extends ServiceImpl<DimensionAttributeMapper, DimensionAttributePO>
-        implements IProjectDimensionAttribute {
+        implements IDimensionAttribute {
 
     @Resource
     MySqlTableUtils mySqlTableUtils;
@@ -39,15 +41,15 @@ public class DimensionAttributeImpl
     UserHelper userHelper;
 
     @Override
-    public List<ProjectDimensionMetaDTO> getProjectDimensionMeta()
+    public List<DimensionMetaDTO> getProjectDimensionMeta()
     {
         return mySqlTableUtils.getTable();
     }
 
     @Override
-    public List<ProjectDimensionMetaDTO> getProjectDimensionTable()
+    public List<DimensionMetaDTO> getProjectDimensionTable()
     {
-        List<ProjectDimensionMetaDTO> list=new ArrayList<>();
+        List<DimensionMetaDTO> list=new ArrayList<>();
         //获取维度表
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         List<DimensionPO> data=mapper.selectList(queryWrapper);
@@ -57,7 +59,7 @@ public class DimensionAttributeImpl
 
         for (DimensionPO po:data)
         {
-            ProjectDimensionMetaDTO model=new ProjectDimensionMetaDTO();
+            DimensionMetaDTO model=new DimensionMetaDTO();
             model.tableName=po.dimensionTabName;
             List<DimensionAttributePO> filter=list2.stream().filter(e->e.getDimensionId()==po.id).collect(Collectors.toList());
             List<String> ids=new ArrayList<>();
@@ -71,19 +73,69 @@ public class DimensionAttributeImpl
         return list;
     }
 
+
+
     @Override
-    public ResultEnum addProjectDimensionAttribute(List<ProjectDimensionAttributeDTO> dto)
+    public ResultEnum addDimensionAttribute(int dimensionId,List<DimensionAttributeDTO> dto)
     {
+        //判断是否重复添加
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+        boolean isExit=false;
+        for (DimensionAttributeDTO item:dto)
+        {
+            DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
+                    .eq(DimensionAttributePO::getDimensionFieldCnName,item.dimensionFieldCnName)
+                    .eq(DimensionAttributePO::getTableSourceField,item.tableSourceField)
+                    .eq(DimensionAttributePO::getAttributeType,item.attributeType)
+                    .eq(DimensionAttributePO::getDimensionFieldType,item.dimensionFieldType)
+                    .eq(DimensionAttributePO::getTableSource,item.tableSource)
+            );
+            if (po !=null)
+            {
+                isExit=true;
+                break;
+            }
+        }
+        if (isExit)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         //获取登录信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
         List<DimensionAttributePO> list=new ArrayList<>();
-        for (ProjectDimensionAttributeDTO attribute:dto)
+        for (DimensionAttributeDTO attribute:dto)
         {
             DimensionAttributePO data= DimensionAttributeMap.INSTANCES.dtoToPo(attribute);
+            data.dimensionId=dimensionId;
             data.createUser=userInfo.id.toString();
             list.add(data);
         }
         return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteDimensionAttribute(List<Integer> ids)
+    {
+        return attributeMapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<DimensionAttributeListDTO> getDimensionAttributeList(int dimensionId)
+    {
+        return attributeMapper.getDimensionAttributeList(dimensionId);
+    }
+
+    @Override
+    public ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto)
+    {
+        DimensionAttributePO po=attributeMapper.selectById(dto.id);
+        if (po==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
 }
