@@ -157,10 +157,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
-    public BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data) {
+    public BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data, List<String> autoEnd) {
         //流程分支，是否自动结束
-        List<String> autoRes = new ArrayList<>();
-        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoEnd.add(AutoEndBranchTypeEnum.FAILURE.getName());
 
         //组件属性
         Map<String, String> map = new HashMap<>(4);
@@ -178,7 +177,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             config.setSchedulingPeriod(data.scheduleExpression);
         }
         config.setProperties(map);
-        config.setAutoTerminatedRelationships(autoRes);
+        config.setAutoTerminatedRelationships(autoEnd);
         config.setComments(data.details);
 
         //组件整体配置
@@ -303,7 +302,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setType(ProcessorTypeEnum.PutSQL.getName());
+        dto.setType(ProcessorTypeEnum.UpdateAttribute.getName());
         dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
