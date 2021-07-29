@@ -49,14 +49,14 @@ public class DimensionAttributeController {
 
     @ApiOperation("删除维度字段")
     @PostMapping("/deleteAttribute")
-    public ResultEntity<Object> deleteAttribute(@Validated @RequestBody List<Integer> ids)
+    public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids)
     {
         return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
     }
 
     @ApiOperation("获取维度字段表列表")
     @GetMapping("/getDimensionAttributeList")
-    public ResultEntity<Object> getDimensionAttributeList(int dimensionId) {
+    public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
     }
 
