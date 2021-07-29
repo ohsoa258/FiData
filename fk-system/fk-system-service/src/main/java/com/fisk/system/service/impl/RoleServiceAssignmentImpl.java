@@ -114,7 +114,7 @@ public class RoleServiceAssignmentImpl
                 .collect(Collectors.toList());
         for (ServiceRegistryPO po : listParent) {
             LoginServiceDTO dto=new LoginServiceDTO();
-            dto.name=po.serveEnName;
+            dto.name=po.serveUrl;
             dto.path="/"+po.serveUrl;
             dto.component="Layout";
             IconDTO icon=new IconDTO();
@@ -128,12 +128,12 @@ public class RoleServiceAssignmentImpl
             for (ServiceRegistryPO item : listChild)
             {
                 LoginServiceDTO obj=new LoginServiceDTO();
-                obj.name=po.serveEnName;
+                obj.name=po.serveUrl;
                 obj.path="/"+po.serveUrl;
                 obj.component=item.serveUrl;
                 data.add(obj);
             }
-            dto.setDto(data);
+            dto.setChildren(data);
             dtoList.add(dto);
         }
         return dtoList;

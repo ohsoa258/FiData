@@ -23,5 +23,5 @@ public class LoginServiceDTO {
 
     public IconDTO meta;
 
-    public List<LoginServiceDTO> dto;
+    public List<LoginServiceDTO> children;
 }

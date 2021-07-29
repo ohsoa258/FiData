@@ -3,7 +3,7 @@ package com.fisk.datamodel.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.DimensionDTO;
-import com.fisk.datamodel.dto.ProjectDimensionSourceDTO;
+import com.fisk.datamodel.dto.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import org.mapstruct.Mapper;
@@ -38,7 +38,7 @@ public interface DimensionMap {
      * @param po
      * @return
      */
-    List<ProjectDimensionSourceDTO> poToDtoList(List<DataAreaPO> po);
+    List<DimensionSourceDTO> poToDtoList(List<DataAreaPO> po);
 
     /**
      * 数据域po==>数据域dto
