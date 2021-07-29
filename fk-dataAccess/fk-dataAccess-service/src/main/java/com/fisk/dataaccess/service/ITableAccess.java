@@ -111,7 +111,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param appid 应用注册id
      * @return DataAccessConfigDTO
      */
-    DataAccessConfigDTO dataAccessConfig(long id, long appid);
+    ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid);
 
     /**
      * 根据appid和物理表id,查询atlasInstanceId和atlasDbId
