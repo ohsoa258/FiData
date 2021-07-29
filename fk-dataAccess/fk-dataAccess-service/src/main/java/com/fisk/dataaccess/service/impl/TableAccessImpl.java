@@ -26,6 +26,7 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -135,12 +136,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
-        List<String> tableNameList = baseMapper.getTableName();
+//        List<String> tableNameList = baseMapper.getTableName();
+//        String tableName = modelAccess.getTableName();
+//        boolean contains = tableNameList.contains(tableName);
+//        if (contains) {
+//            return ResultEnum.Table_NAME_EXISTS;
+//        }
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
-        boolean contains = tableNameList.contains(tableName);
-        if (contains) {
+        // 查询表名对应的应用注册id
+        Long appId = this.baseMapper.getAppIdByTableName(tableName);
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.id = appId;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEnum.Table_NAME_EXISTS;
         }
+
+        int a = 1 / 0;
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
