@@ -15,6 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.mybatis",
         "com.fisk.common.redis",
         "com.fisk.common.user",
+        "com.fisk.common.feign",
         "com.fisk.common.exception",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.task.mapper")
