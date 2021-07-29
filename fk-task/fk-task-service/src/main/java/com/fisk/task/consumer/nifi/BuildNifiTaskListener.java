@@ -270,7 +270,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建log
-        ProcessorEntity logProcessor = putSqlProcessor(groupId, cfgDbPoolId, buildLogSql(), 4);
+        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, config.processorConfig.targetTableName);
         //连接器
         componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         //创建执行删除组件
@@ -290,9 +290,17 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, toJsonRes.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建执行sql组件
-        ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId, null, 9);
+        ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
         //连接器
         componentConnector(groupId, toSqlRes.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
+        //清除sql参数组件
+        ProcessorEntity clearRes = execClearParameterProcessor(groupId);
+        //连接器
+        componentConnector(groupId, putSqlRes.getId(), clearRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //创建执行存储过程组件
+        ProcessorEntity procedureRes = execProcedureProcessor(config.processorConfig.targetTableName, groupId, cfgDbPoolId);
+        //连接器
+        componentConnector(groupId, clearRes.getId(), procedureRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
@@ -304,6 +312,8 @@ public class BuildNifiTaskListener {
         res.add(toJsonRes);
         res.add(toSqlRes);
         res.add(putSqlRes);
+        res.add(clearRes);
+        res.add(procedureRes);
         return res;
     }
 
@@ -321,23 +331,79 @@ public class BuildNifiTaskListener {
     }
 
     /**
+     * 清除sql参数组件
+     *
+     * @param groupId     组id
+     * @return 组件对象
+     */
+    private ProcessorEntity execClearParameterProcessor(String groupId) {
+        BuildUpdateAttributeDTO dto = new BuildUpdateAttributeDTO();
+        dto.name = "Clear SQL Parameter";
+        dto.details = "Clear SQL Parameter";
+        dto.groupId = groupId;
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        BusinessResult<ProcessorEntity> res = componentsBuild.buildUpdateAttribute(dto);
+        verifyProcessorResult(res);
+        return res.data;
+    }
+
+    /**
+     * 执行sql query组件
+     *
+     * @param tableName   表明
+     * @param groupId     组id
+     * @param cfgDbPoolId 配置库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity execProcedureProcessor(String tableName, String groupId, String cfgDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Exec Mysql Procedure";
+        querySqlDto.details = "Execute Mysql Procedure Update Log";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = " CALL nifi_update_etl_log ('" + tableName + "', 2) ";
+        querySqlDto.dbConnectionId = cfgDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    /**
+     * 插入日志组件
+     *
+     * @param groupId  组id
+     * @param dbPoolId 连接池id
+     * @param tableName 表明
+     * @return 组件对象
+     */
+    private ProcessorEntity putLogProcessor(String groupId, String dbPoolId, String tableName) {
+        BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
+        putSqlDto.name = "Put Log to Config Db";
+        putSqlDto.details = "Put Log to Config Db";
+        putSqlDto.groupId = groupId;
+        putSqlDto.dbConnectionId = dbPoolId;
+        putSqlDto.sqlStatement = buildLogSql(tableName);
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+
+        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
+        verifyProcessorResult(putSqlRes);
+        return putSqlRes.data;
+    }
+
+    /**
      * 执行sql组件
      *
      * @param groupId  组id
      * @param dbPoolId 连接池id
-     * @param sql      执行的sql
      * @return 组件对象
      */
-    private ProcessorEntity putSqlProcessor(String groupId, String dbPoolId, String sql, int level) {
+    private ProcessorEntity putSqlProcessor(String groupId, String dbPoolId) {
         BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
         putSqlDto.name = "Put sql to target data source";
         putSqlDto.details = "Put sql to target data source";
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = dbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(level);
-        if (StringUtils.isNotEmpty(sql)) {
-            putSqlDto.sqlStatement = sql;
-        }
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
         verifyProcessorResult(putSqlRes);
         return putSqlRes.data;
@@ -395,7 +461,6 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
         querySqlDto.groupId = groupId;
-        //todo
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
         querySqlDto.dbConnectionId = sourceDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
@@ -528,8 +593,8 @@ public class BuildNifiTaskListener {
      *
      * @return sql
      */
-    private String buildLogSql() {
-        return "INSERT INTO tb_etl_log ( tablename, startdate, enddate, datarows, `status`, errordesc ) VALUES ('1', '1990-01-01', '1990-01-01', 1, 1, '${" + NifiConstants.AttrConstants.LOG_CODE + "}')";
+    private String buildLogSql(String tableName) {
+        return "INSERT INTO tb_etl_log ( tablename, startdate, `status`, code) VALUES ('" + tableName + "', now(), 1, '${" + NifiConstants.AttrConstants.LOG_CODE + "}')";
     }
 
     /**
