@@ -65,6 +65,8 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     @Select("select table_name from tb_table_access where del_flag=1")
     List<String> getTableName();
 
+
+
     /**
      * 筛选器分页功能
      *

@@ -249,6 +249,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
 
+        // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<String> tableNameList = baseMapper.getTableName();
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
