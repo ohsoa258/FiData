@@ -138,9 +138,9 @@ public class BuildAtlasTableAndColumnTaskListener {
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
         //nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
         if (ae.appAbbreviation.equals("timestamp_incremental")) {
-            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
+            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
         } else {
-            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' from " + ae.tableName;
+            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName;
         }
         awbd.dorisSelectSqlStr = nifiSelectSql;
         awbd.columnsKeys = l_acd;

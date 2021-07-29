@@ -13,7 +13,7 @@ spring:
     port: 5672
     username: admin
     password: admin
-    virtual-host: gy2_vhost
+    virtual-host: yhxu_vhost
     #消息确认配置项
     #确认消息已发送到交换机(Exchange)
     publisher-confirms: true
