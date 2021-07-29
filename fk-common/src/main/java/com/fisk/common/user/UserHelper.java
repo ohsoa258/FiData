@@ -49,7 +49,12 @@ public class UserHelper {
             throw new FkException(ResultEnum.NOTFOUND_REQUEST);
         }
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-        String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH).replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
+        if(StringUtils.isEmpty(token))
+        {
+            throw new FkException(ResultEnum.AUTH_TOKEN_IS_NOTNULL);
+        }
+        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
         //解析token
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();

@@ -12,7 +12,6 @@
     <artifactId>fisk-chartvisual-service</artifactId>
 
     <dependencies>
-
         <!--web启动器-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
