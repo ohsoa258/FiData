@@ -302,6 +302,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, clearRes.getId(), procedureRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
+
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
         res.add(jsonRes);
@@ -348,7 +349,7 @@ public class BuildNifiTaskListener {
     }
 
     /**
-     * 执行sql query组件
+     * 执行存储过程组件
      *
      * @param tableName   表明
      * @param groupId     组id
@@ -363,7 +364,9 @@ public class BuildNifiTaskListener {
         querySqlDto.querySql = " CALL nifi_update_etl_log ('" + tableName + "', 2) ";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        List<String> autoEnd =  new ArrayList<String>();
+        autoEnd.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, autoEnd);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
@@ -464,7 +467,7 @@ public class BuildNifiTaskListener {
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
         querySqlDto.dbConnectionId = sourceDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
@@ -485,7 +488,7 @@ public class BuildNifiTaskListener {
         querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
@@ -525,7 +528,7 @@ public class BuildNifiTaskListener {
         querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }

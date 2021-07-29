@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class NifiFlowBuildImpl implements INifiFlowBuild {
         execSqlDTO.scheduleExpression = "0/30 * * * * ? ";
         execSqlDTO.querySql = "select id as source_id,name,type,sub_type,value from tb_test_data";
         execSqlDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(0);
-        BusinessResult<ProcessorEntity> execSqlRes = componentsBuild.buildExecuteSqlProcess(execSqlDTO);
+        BusinessResult<ProcessorEntity> execSqlRes = componentsBuild.buildExecuteSqlProcess(execSqlDTO, new ArrayList<String>());
 
         //创建 数据转json 组件
         BuildConvertToJsonProcessorDTO toJsonDTO = new BuildConvertToJsonProcessorDTO();
