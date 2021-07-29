@@ -18,6 +18,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.mybatis",
         "com.fisk.common.feign",
         "com.fisk.common.redis",
+        "com.fisk.common.exception",
         "com.fisk.common.actuators",
         "com.fisk.common.filter",
         "com.fisk.common.user"})
