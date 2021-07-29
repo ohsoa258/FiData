@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -170,6 +171,19 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS*//*,tableAccess.listTableAndField(appName)*//*);
     }*/
+
+    @PostMapping("/pageFilter")
+    @ApiOperation(value = "过滤器")
+    public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
+    }
+
+    @GetMapping("/getColumn")
+    @ApiOperation(value = "过滤器表字段")
+    public ResultEntity<Object> getColumn(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    }
+
 
 
     @GetMapping("/getAtlasBuildTableAndColumn")

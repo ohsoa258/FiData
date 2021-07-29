@@ -40,10 +40,10 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     List<AppRegistrationPO> getDescDate();
 
     /**
-     * 筛选器
+     * 筛选器分页功能
      *
-     * @param page page
-     * @param query query
+     * @param page 分页对象
+     * @param query query对象
      * @return 查询结果
      */
     Page<AppRegistrationVO> filter(Page<AppRegistrationVO> page, @Param("query") AppRegistrationPageDTO query);

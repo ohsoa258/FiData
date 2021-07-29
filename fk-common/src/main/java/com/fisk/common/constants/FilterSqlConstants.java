@@ -14,6 +14,14 @@ public class FilterSqlConstants {
      *  应用注册
      */
     public static final String APP_REGISTRATION_SQL = " where Field in ('app_name','app_des','app_type','app_principal','create_time')";
+    /**
+     * 物理表
+     */
+    public static final String TABLE_ACCESS_SQL = " where Field in ('table_name','table_des','update_time')";
+    /**
+     * 同步方式
+     */
+    public static final String TABLE_SYNCMODE_SQL = " where Field in ('sync_field')";
 
 
 

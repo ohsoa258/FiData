@@ -52,13 +52,16 @@ public class ChartManageImpl implements IChartManageService {
     public ResultEntity<Long> saveChart(ReleaseChart dto) {
         //判断是不是发布草稿
         if (dto.draftId != null) {
-            DraftChartPO draftModel = getDraftChartById(dto.draftId);
+            DraftChartPO draftModel = draftChartMapper.selectById(dto.draftId);
+            if (draftModel == null) {
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, "草稿不存在");
+            }
             if (draftChartMapper.deleteByIdWithFill(draftModel) == 0) {
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, "草稿清除失败");
             }
         }
 
-        if (folderMapper.selectById(dto.folderId) == null) {
+        if (folderMapper.selectById(dto.fid) == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, "文件夹不存在");
         }
 
@@ -66,7 +69,7 @@ public class ChartManageImpl implements IChartManageService {
 
         int res = chartMapper.insert(model);
         if (res == 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.id);
@@ -76,9 +79,9 @@ public class ChartManageImpl implements IChartManageService {
     public ChartPropertyVO getDataById(int id, ChartQueryTypeEnum type) {
         switch (type) {
             case DRAFT:
-                return DraftChartMap.INSTANCES.poToVo(getDraftChartById(id));
+                return DraftChartMap.INSTANCES.poToVo(draftChartMapper.selectById(id));
             case RELEASE:
-                return ChartMap.INSTANCES.poToVo(getReleaseChartById(id));
+                return ChartMap.INSTANCES.poToVo(chartMapper.selectById((id)));
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -89,12 +92,18 @@ public class ChartManageImpl implements IChartManageService {
         int res = 0;
         switch (dto.type) {
             case DRAFT:
-                DraftChartPO draft = getDraftChartById(dto.id);
+                DraftChartPO draft = draftChartMapper.selectById(dto.id);
+                if (draft == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
                 ChartMap.INSTANCES.editDtoToPo(dto, draft);
                 res = draftChartMapper.updateById(draft);
                 break;
             case RELEASE:
-                ChartPO release = getReleaseChartById(dto.id);
+                ChartPO release = chartMapper.selectById(dto.id);
+                if (release == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
                 ChartMap.INSTANCES.editDtoToPo(dto, release);
                 res = chartMapper.updateById(release);
                 break;
@@ -110,10 +119,18 @@ public class ChartManageImpl implements IChartManageService {
         int res = 0;
         switch (type) {
             case DRAFT:
-                res = draftChartMapper.deleteByIdWithFill(getDraftChartById(id));
+                DraftChartPO draft = draftChartMapper.selectById(id);
+                if (draft == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                res = draftChartMapper.deleteByIdWithFill(draft);
                 break;
             case RELEASE:
-                res = chartMapper.deleteByIdWithFill(getReleaseChartById(id));
+                ChartPO chart = chartMapper.selectById(id);
+                if (chart == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                res = chartMapper.deleteByIdWithFill(chart);
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -126,25 +143,5 @@ public class ChartManageImpl implements IChartManageService {
         UserInfo userInfo = userHelper.getLoginUserInfo();
         query.id = userInfo.id;
         return chartMapper.listChartDataByUserId(page, query);
-    }
-
-
-
-    /*-----------------*/
-
-    private DraftChartPO getDraftChartById(int id) {
-        DraftChartPO draft = draftChartMapper.selectById(id);
-        if (draft == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        return draft;
-    }
-
-    private ChartPO getReleaseChartById(int id) {
-        ChartPO release = chartMapper.selectById(id);
-        if (release == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        return release;
     }
 }

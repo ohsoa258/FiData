@@ -6,11 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionAttributeDTO {
-    /**
-     * 维度表id
-     */
-    public int dimensionId;
+public class DimensionAttributeDTO {
     /**
      * 表字段来源
      */
@@ -43,5 +39,10 @@ public class ProjectDimensionAttributeDTO {
     /**
      * 关联维度表id
      */
-    public int associate_dimension_id;
+    public int associateDimensionId;
+    /**
+     * 表来源
+     */
+    public String tableSource;
+
 }

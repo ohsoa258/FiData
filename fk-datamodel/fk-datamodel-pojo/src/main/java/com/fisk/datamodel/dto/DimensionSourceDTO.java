@@ -9,7 +9,7 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionSourceDTO {
+public class DimensionSourceDTO {
     @TableId
     public long id;
     public String dimensionCnName;

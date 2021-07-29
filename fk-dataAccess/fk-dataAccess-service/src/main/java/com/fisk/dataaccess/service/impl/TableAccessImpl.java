@@ -3,9 +3,13 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -20,6 +24,7 @@ import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -81,6 +86,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String user;
     @Value("${spring.datasource.password}")
     private String password;
+    @Resource
+    private GenerateCondition generateCondition;
+    @Resource
+    private GetMetadata getMetadata;
 
     /**
      * 添加物理表(实时)
@@ -1098,5 +1107,39 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             saveNifiConfig = nifiConfigImpl.save(modelNifi);
         }
         return saveNifiConfig ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public Page<TableAccessVO> listData(TableAccessQueryDTO query) {
+        StringBuilder querySql = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            querySql.append(" and table_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+        }
+
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+        TableAccessPageDTO data = new TableAccessPageDTO();
+        data.page = query.page;
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
+
+        return baseMapper.filter(query.page, data);
+    }
+
+    @Override
+    public List<FilterFieldDTO> getColumn() {
+        List<FilterFieldDTO> list = new ArrayList<>();
+        list = getMetadata.getMetadataList(
+                "dmp_datainput_db",
+                "tb_table_access",
+                "a",
+                FilterSqlConstants.TABLE_ACCESS_SQL);
+        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList(
+                "dmp_datainput_db",
+                "tb_table_syncmode",
+                "b",
+                FilterSqlConstants.TABLE_SYNCMODE_SQL);
+        list.addAll(fieldDTOList);
+        return list;
     }
 }

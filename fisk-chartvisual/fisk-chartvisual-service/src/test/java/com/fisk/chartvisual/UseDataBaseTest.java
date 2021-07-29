@@ -10,6 +10,7 @@ import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.response.ResultEntity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,9 +50,9 @@ public class UseDataBaseTest {
      */
     @Test
     public void getDataDomainMysql() {
-        List<DataDomainVO> data = con.listDataDomain(1);
+        ResultEntity<List<DataDomainVO>> data = con.listDataDomain(1);
         System.out.println(data.toString());
-        assert data.size() > 0;
+        assert data.data.size() > 0;
     }
 
     @Test
@@ -81,9 +82,9 @@ public class UseDataBaseTest {
      */
     @Test
     public void getDataDomainSqlServer() {
-        List<DataDomainVO> data = con.listDataDomain(2);
+        ResultEntity<List<DataDomainVO>> data = con.listDataDomain(2);
         System.out.println(data.toString());
-        assert data.size() > 0;
+        assert data.data.size() > 0;
     }
 
     @Test

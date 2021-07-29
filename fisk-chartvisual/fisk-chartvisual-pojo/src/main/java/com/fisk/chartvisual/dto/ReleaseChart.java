@@ -10,5 +10,5 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ReleaseChart extends ChartPropertyDTO {
     public Integer draftId;
-    public Integer folderId;
+    public Long fid;
 }

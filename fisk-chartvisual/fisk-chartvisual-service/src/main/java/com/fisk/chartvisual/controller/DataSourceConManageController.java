@@ -7,6 +7,7 @@ import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.dto.DataSourceConQuery;
 import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -16,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 数据源管理
@@ -61,7 +63,7 @@ public class DataSourceConManageController {
 
     @GetMapping("/getDataDomain")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<Object> getDataDomain(int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataDomain(id));
+    public ResultEntity<List<DataDomainVO>> getDataDomain(int id) {
+        return service.listDataDomain(id);
     }
 }

@@ -2,9 +2,11 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -133,4 +135,19 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 执行结果
      */
     ResultEnum addComponentId(NifiAccessDTO dto);
+
+    /**
+     * 过滤器
+     *
+     * @param query 查询条件
+     * @return 过滤结果
+     */
+    Page<TableAccessVO> listData(TableAccessQueryDTO query);
+
+    /**
+     * 筛选器获取表字段(多表)
+     *
+     * @return 多表字段
+     */
+    List<FilterFieldDTO> getColumn();
 }

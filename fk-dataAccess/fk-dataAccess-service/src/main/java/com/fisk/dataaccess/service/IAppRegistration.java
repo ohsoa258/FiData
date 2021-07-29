@@ -106,7 +106,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param query 查询条件
      * @return 过滤结果
      */
-    Page<AppRegistrationVO> filter(AppRegistrationQueryDTO query);
+    Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query);
 
     /**
      * 获取过滤器表字段

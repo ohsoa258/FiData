@@ -2,7 +2,9 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.dataaccess.dto.TableAccessPageDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -47,4 +49,13 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      */
     @Select("select table_name from tb_table_access where del_flag=1")
     List<String> getTableName();
+
+    /**
+     * 筛选器分页功能
+     *
+     * @param page 分页对象
+     * @param query query对象
+     * @return 查询结果
+     */
+    Page<TableAccessVO> filter(Page<TableAccessVO> page, @Param("query") TableAccessPageDTO query);
 }

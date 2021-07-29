@@ -74,10 +74,10 @@ public class DataAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryByPage(key, page, rows));
     }
 
-    @PostMapping("/dataFilter")
+    @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
-    public ResultEntity<Page<DataAreaDTO>> dataFilter(@RequestBody DataAreaQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.dataFilter(query));
+    public ResultEntity<Page<DataAreaDTO>> listData(@RequestBody DataAreaQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
     }
 
     @GetMapping("/getColumn")

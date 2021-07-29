@@ -437,24 +437,24 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     @Override
-    public Page<AppRegistrationVO> filter(AppRegistrationQueryDTO query) {
+    public Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query) {
 
-        StringBuilder str = new StringBuilder();
+        StringBuilder querySql = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {
-            str.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+            querySql.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
+//        String key = "app_name";
+//        StringBuilder querySql = getQuerySql(key, query.value);
 
-        //筛选器
-        str.append(generateCondition.getCondition(query.dto));
-
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
         AppRegistrationPageDTO data = new AppRegistrationPageDTO();
         data.page = query.page;
-
-        data.where = str.toString();
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
 
         return baseMapper.filter(query.page, data);
     }
-
 
     @Override
     public List<FilterFieldDTO> getColumn() {
@@ -464,5 +464,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 "",
                 FilterSqlConstants.APP_REGISTRATION_SQL);
     }
+
+    /**
+     * 筛选器左边的模糊搜索查询SQL拼接
+     *
+     * @param key   字段名称
+     * @param value 字段值
+     * @return SQL语句
+     */
+//    private StringBuilder getQuerySql(String key, String value) {
+//
+//        StringBuilder querySql = new StringBuilder();
+//        if (value != null && value.length() > 0) {
+//            querySql.append(" and " + key + " like concat('%', " + "'" + value + "'" + ", '%') ");
+//        }
+//
+//        return querySql;
+//    }
 
 }

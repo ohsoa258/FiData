@@ -2,7 +2,7 @@ package com.fisk.dataaccess.dto;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterQueryDTO;
-import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import lombok.Data;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
  * @author Lock
  */
 @Data
-public class AppRegistrationQueryDTO {
+public class TableAccessQueryDTO {
 
     /**
      * 查询字段值
@@ -21,5 +21,5 @@ public class AppRegistrationQueryDTO {
     /**
      * 分页,返回给前端的数据对象
      */
-    public Page<AppRegistrationVO> page;
+    public Page<TableAccessVO> page;
 }
