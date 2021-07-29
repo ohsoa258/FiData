@@ -63,15 +63,7 @@ public class BuildDorisTaskListener {
         sqlDistributed.append(") BUCKETS 10");
         String aggregateStr = sqlAggregate.toString();
         aggregateStr = aggregateStr.substring(0, aggregateStr.lastIndexOf(",")) + ")";
-        String selectStr = sqlSelectStrBuild.toString();
-        selectStr = selectStr.substring(0, selectStr.lastIndexOf(",")) + ")";
         sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" ").toString());
-        String sqlSelectStr = "";
-        if (dto.syncType.equals("timestamp_incremental")) {
-            sqlSelectStr = "select " + selectStr + " from " + dto.tableName + "where where " + dto.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
-        } else {
-            sqlSelectStr = "select " + selectStr + " from " + dto.tableName;
-        }
         sql.append(")");
         sql.append(aggregateStr);
         sql.append(sqlDistributed.toString());
