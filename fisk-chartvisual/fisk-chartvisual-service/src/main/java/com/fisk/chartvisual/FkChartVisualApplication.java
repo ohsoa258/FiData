@@ -14,6 +14,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.mdc",
         "com.fisk.common.mybatis",
         "com.fisk.common.redis",
+        "com.fisk.common.feign",
         "com.fisk.common.user",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
