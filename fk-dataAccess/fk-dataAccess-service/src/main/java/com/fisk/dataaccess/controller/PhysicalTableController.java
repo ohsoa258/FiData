@@ -1,18 +1,24 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,13 +31,17 @@ import java.util.Map;
 @Api(description = "物理表接口")
 @RestController
 @RequestMapping("/physicalTable")
+@Slf4j
 public class PhysicalTableController {
 
     @Resource
     private IAppRegistration appRegService;
-
     @Resource
     private ITableAccess service;
+    @Resource
+    private UserHelper userHelper;
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -106,8 +116,20 @@ public class PhysicalTableController {
     @PostMapping("/addNonRealTime")
     @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
+        ResultEntity<AtlasIdsVO> atlasIdsVOResult = service.addNonRealTimeData(dto);
 
-        return ResultEntityBuild.build(service.addNonRealTimeData(dto));
+        AtlasIdsVO atlasIdsVO = atlasIdsVOResult.data;
+
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+        // 应用注册id
+        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
+        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println(task);
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,atlasIdsVOResult);
     }
 
     /**

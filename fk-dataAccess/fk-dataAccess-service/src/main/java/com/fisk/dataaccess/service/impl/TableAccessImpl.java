@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -13,6 +12,7 @@ import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -24,11 +24,11 @@ import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
@@ -203,7 +203,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addNonRealTimeData(TableAccessNonDTO tableAccessNonDTO) {
+    public ResultEntity<AtlasIdsVO> addNonRealTimeData(TableAccessNonDTO tableAccessNonDTO) {
 
         // 先创建表
 ////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
@@ -254,7 +254,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
-            return ResultEnum.Table_NAME_EXISTS;
+//            return ResultEnum.Table_NAME_EXISTS;
+            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
         }
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
@@ -264,7 +265,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         long id = modelReg.getId();
         if (id < 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
         modelAccess.setAppid(id);
 
@@ -279,7 +280,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean saveAccess = this.save(modelAccess);
 
         if (!saveAccess) {
-            return ResultEnum.SAVE_DATA_ERROR;
+//            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // 保存tb_table_fields数据
@@ -298,7 +300,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         if (!saveField) {
-            return ResultEnum.SAVE_DATA_ERROR;
+//            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // TODO 新增tb_table_business业务时间表
@@ -308,7 +311,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         modelBusiness.setAccessId(modelAccess.getId());
         boolean saveBusiness = this.businessImpl.save(modelBusiness);
         if (!saveBusiness) {
-            return ResultEnum.SAVE_DATA_ERROR;
+//            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // 保存tb_table_syncmode数据
@@ -323,16 +327,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 ////        System.out.println(i);
 
         // TODO: 调用atlas
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = userId;
-        // 应用注册id
-        atlasEntityQueryDTO.appId = String.valueOf(id);
-        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-        log.info("task:" + JSON.toJSONString(task));
-        System.out.println(task);
+//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+//        atlasEntityQueryDTO.userId = userId;
+//        // 应用注册id
+//        atlasEntityQueryDTO.appId = String.valueOf(id);
+//        atlasEntityQueryDTO.dbId = String.valueOf(modelAccess.getId());
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+//        log.info("task:" + JSON.toJSONString(task));
+//        System.out.println(task);
 
-        return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        AtlasIdsVO atlasIdsVO = new AtlasIdsVO();
+        atlasIdsVO.userId = userId;
+        // 应用注册id
+        atlasIdsVO.appId = String.valueOf(id);
+        atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,atlasIdsVO);
     }
 
     /**

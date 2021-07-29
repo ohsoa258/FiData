@@ -3,9 +3,11 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -41,7 +43,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dto 请求参数
      * @return 返回值
      */
-    ResultEnum addNonRealTimeData(TableAccessNonDTO dto);
+    ResultEntity<AtlasIdsVO> addNonRealTimeData(TableAccessNonDTO dto);
 
     /**
      * 修改物理表(实时)
