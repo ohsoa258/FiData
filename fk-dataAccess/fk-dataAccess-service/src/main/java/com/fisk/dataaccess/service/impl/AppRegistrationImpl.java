@@ -330,7 +330,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
-     * 查询所有非实时应用名称
+     * 查询所有非实时应用名称(弃用)
      *
      * @return 返回值
      */
