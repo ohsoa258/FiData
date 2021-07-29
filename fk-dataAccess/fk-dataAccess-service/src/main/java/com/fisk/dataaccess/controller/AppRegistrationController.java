@@ -123,13 +123,13 @@ public class AppRegistrationController {
     }
 
     @PostMapping("/pageFilter")
-    @ApiOperation(value = "筛选器")
+    @ApiOperation(value = "过滤器")
     public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
     }
 
     @GetMapping("/getColumn")
-    @ApiOperation(value = "获取过滤器字段")
+    @ApiOperation(value = "过滤器字段")
     public ResultEntity<Object> getColumn(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
     }

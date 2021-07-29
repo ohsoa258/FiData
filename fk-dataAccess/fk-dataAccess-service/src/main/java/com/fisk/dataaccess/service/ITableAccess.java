@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
@@ -142,4 +143,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 过滤结果
      */
     Page<TableAccessVO> listData(TableAccessQueryDTO query);
+
+    /**
+     * 筛选器获取表字段(多表)
+     *
+     * @return 多表字段
+     */
+    List<FilterFieldDTO> getColumn();
 }

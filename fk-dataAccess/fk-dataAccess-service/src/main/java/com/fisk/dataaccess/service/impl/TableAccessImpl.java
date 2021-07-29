@@ -3,10 +3,13 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -85,6 +88,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String password;
     @Resource
     private GenerateCondition generateCondition;
+    @Resource
+    private GetMetadata getMetadata;
 
     /**
      * 添加物理表(实时)
@@ -1119,5 +1124,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         data.where = querySql.toString();
 
         return baseMapper.filter(query.page, data);
+    }
+
+    @Override
+    public List<FilterFieldDTO> getColumn() {
+        List<FilterFieldDTO> list = new ArrayList<>();
+        list = getMetadata.getMetadataList(
+                "dmp_datainput_db",
+                "tb_table_access",
+                "a",
+                FilterSqlConstants.TABLE_ACCESS_SQL);
+        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList(
+                "dmp_datainput_db",
+                "tb_table_syncmode",
+                "b",
+                FilterSqlConstants.TABLE_SYNCMODE_SQL);
+        list.addAll(fieldDTOList);
+        return list;
     }
 }
