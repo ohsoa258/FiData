@@ -9,19 +9,15 @@ import lombok.Data;
 public class FactDTO {
     public int id;
     /**
-     * 业务域id
+     * 业务过程id
      */
-    public int businessId;
-    /**
-     * 业务过程名称
-     */
-    public String factName;
+    public int businessProcessId;
     /**
      * 事实表名称
      */
     public String factTableName;
     /**
-     * 业务过程描述
+     * 事实表描述
      */
-    public String factDesc;
+    public String factTableDesc;
 }

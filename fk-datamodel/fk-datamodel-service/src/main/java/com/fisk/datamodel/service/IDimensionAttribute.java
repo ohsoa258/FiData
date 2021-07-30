@@ -1,10 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.DimensionAttributeDTO;
-import com.fisk.datamodel.dto.DimensionAttributeListDTO;
-import com.fisk.datamodel.dto.DimensionAttributeUpdateDTO;
-import com.fisk.datamodel.dto.DimensionMetaDTO;
+import com.fisk.datamodel.dto.dimensionattribute.*;
 
 import java.util.List;
 
@@ -23,7 +20,7 @@ public interface IDimensionAttribute {
      * 获取维度表以及字段
      * @return 查询数据
      */
-    List<DimensionMetaDTO> getProjectDimensionTable();
+    List<DimensionAttributeAssociationDTO> getProjectDimensionTable();
 
     /**
      * 添加维度字段

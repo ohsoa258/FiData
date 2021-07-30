@@ -3,6 +3,9 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 
 import java.util.List;
 

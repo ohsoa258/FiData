@@ -1,0 +1,20 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.FactAttributeMapper">
+    <select id="getFactAttributeList" resultType="com.fisk.datamodel.dto.factattribute.FactAttributeListDTO">
+        SELECT a.id,
+        a.table_source_field,
+        a.fact_field_cn_name,
+        a.fact_field_type,
+        a.fact_field_length,
+        a.fact_field_des,
+        a.fact_field_en_name,
+        a.attribute_type,
+        a.table_source,
+        b.dimension_cn_name
+        from tb_fact_attribute a
+        left join tb_dimension b on a.associate_dimension_id = b.id
+        where a.del_flag=1 and a.fact_id= ${factId} order by a.create_time desc
+    </select>
+</mapper>

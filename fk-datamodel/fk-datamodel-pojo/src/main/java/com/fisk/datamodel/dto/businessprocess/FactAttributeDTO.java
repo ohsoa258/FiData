@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.fact;
+package com.fisk.datamodel.dto.businessprocess;
 
 import lombok.Data;
 
