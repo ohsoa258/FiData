@@ -33,6 +33,14 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     List<String> getAppName();
 
     /**
+     * 根据appName查询id
+     * @param appName appName
+     * @return 返回值
+     */
+    @Select("select id from tb_app_registration where app_name=#{app_name} and del_flag=1")
+    Long getIdByAppName(@Param("app_name")String appName);
+
+    /**
      * 倒序查询
      * @return 返回值
      */

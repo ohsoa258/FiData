@@ -5,6 +5,7 @@ import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.TableAccessPageDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.TableNameVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -65,6 +66,22 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     @Select("select table_name from tb_table_access where del_flag=1")
     List<String> getTableName();
 
+    /**
+     * 查询table_name及对应的appid
+     *
+     * @return 查询结果
+     */
+    @Select("select appid,table_name from tb_table_access where del_flag=1")
+    List<TableNameVO> getAppIdAndTableName();
+
+    /**
+     * 根据table_name查询appid
+     *
+     * @param tableName tableName
+     * @return 查询结果
+     */
+    @Select("select appid from tb_table_access where table_name=#{tableName} and del_flag=1")
+    Long getAppIdByTableName(@Param("tableName") String tableName);
 
 
     /**

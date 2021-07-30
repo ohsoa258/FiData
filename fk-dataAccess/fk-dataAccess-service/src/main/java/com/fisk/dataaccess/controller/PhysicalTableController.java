@@ -192,13 +192,13 @@ public class PhysicalTableController {
     }*/
 
     @PostMapping("/pageFilter")
-    @ApiOperation(value = "过滤器")
+    @ApiOperation(value = "筛选器")
     public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
 
     @GetMapping("/getColumn")
-    @ApiOperation(value = "过滤器表字段")
+    @ApiOperation(value = "筛选器表字段")
     public ResultEntity<Object> getColumn() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }
@@ -208,7 +208,7 @@ public class PhysicalTableController {
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasBuildTableAndColumn(id, appid));
+        return service.getAtlasBuildTableAndColumn(id, appid);
     }
 
     @GetMapping("/getAtlasWriteBackDataDTO")

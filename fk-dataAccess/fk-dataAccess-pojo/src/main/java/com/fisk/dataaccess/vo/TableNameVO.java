@@ -9,7 +9,9 @@ import java.util.Objects;
  */
 @Data
 public class TableNameVO {
-    public long id;
+
+    // 应用注册id
+    public long appid;
     public String tableName;
     @Override
     public boolean equals(Object o) {
@@ -20,12 +22,12 @@ public class TableNameVO {
             return false;
         }
         TableNameVO tableNameVO = (TableNameVO) o;
-        return id == tableNameVO.id &&
+        return appid == tableNameVO.appid &&
                 Objects.equals(tableName, tableNameVO.tableName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, tableName);
+        return Objects.hash(appid, tableName);
     }
 }
