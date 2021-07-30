@@ -28,6 +28,10 @@ public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
      * 增量时间戳字段
      */
     public String syncField;
+    /**
+     * Corn表达式
+     */
+    public String cornExpress;
     public String createUser;
     public List<AtlasEntityColumnDTO> columns;
 }

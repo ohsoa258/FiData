@@ -61,11 +61,11 @@ public class BuildDorisTaskListener {
             sqlSelectStrBuild.append(l.columnName + ",");
         });
         sqlFileds.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' ,");
-        sqlAggregate.append("fk_doris_increment_code ,");
+        sqlAggregate.append("fk_doris_increment_code ,doris_custom_data_flag ,");
         sqlDistributed.append(") BUCKETS 10");
         String aggregateStr = sqlAggregate.toString();
         aggregateStr = aggregateStr.substring(0, aggregateStr.lastIndexOf(",")) + ")";
-        sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" ").toString());
+        sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" comment '系统字段，默认分桶'").toString());
         sql.append(")");
         sql.append(aggregateStr);
         sql.append(sqlDistributed.toString());
