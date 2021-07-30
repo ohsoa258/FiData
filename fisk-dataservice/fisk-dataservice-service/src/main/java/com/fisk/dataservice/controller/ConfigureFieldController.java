@@ -1,9 +1,11 @@
 package com.fisk.dataservice.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.service.ApiConfigureFieldService;
 import io.swagger.annotations.ApiOperation;
@@ -38,20 +40,20 @@ public class ConfigureFieldController {
 
     @ApiOperation("修改字段")
     @PutMapping("/edit")
-    public ResultEntity<Object> editData(@Validated @RequestBody ApiConfigureFieldPO dto) {
+    public ResultEntity<Object> editData(@Validated @RequestBody ApiConfigureFieldEditDTO dto) {
         return ResultEntityBuild.build(configureFieldService.updateField(dto));
     }
 
-    @ApiOperation("根据id查询字段")
-    @GetMapping("/get")
-    public ResultEntity<ApiConfigureFieldPO> getDataById(Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(id));
+    @ApiOperation("根据configureId查询字段")
+    @GetMapping("/getByConfigureId")
+    public ResultEntity<List<ApiConfigureFieldPO>> getDataById(Integer configureId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(configureId));
     }
 
     @ApiOperation("分页查询所有字段")
     @GetMapping("/getAll")
-    public ResultEntity<List<ApiConfigureFieldPO>> listData(Integer currentPage,Integer pageSize) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.listData(currentPage,pageSize));
+    public ResultEntity<List<ApiConfigureFieldPO>> listData(Page<ApiConfigureFieldPO> page) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.listData(page));
     }
 
 }
