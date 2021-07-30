@@ -741,6 +741,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.tableName = modelAccess.getTableName();
             dto.createUser = modelAccess.getCreateUser();
 
+            // TODO 新增cron表达式
+            dto.cornExpress = modelSync.cornExpression;
+
             // TODO 新增appAbbreviation syncType syncField
             dto.appAbbreviation = modelReg.appAbbreviation;
             switch (modelSync.syncMode) {
