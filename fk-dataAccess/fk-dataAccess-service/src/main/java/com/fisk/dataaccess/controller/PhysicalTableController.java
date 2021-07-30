@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -38,8 +37,6 @@ public class PhysicalTableController {
     private IAppRegistration appRegService;
     @Resource
     private ITableAccess service;
-    @Resource
-    private UserHelper userHelper;
     @Resource
     private PublishTaskClient publishTaskClient;
 
@@ -129,7 +126,7 @@ public class PhysicalTableController {
         log.info("task:" + JSON.toJSONString(task));
         System.out.println(task);
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,atlasIdsVOResult);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVOResult);
     }
 
     /**
@@ -196,16 +193,15 @@ public class PhysicalTableController {
 
     @PostMapping("/pageFilter")
     @ApiOperation(value = "过滤器")
-    public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
+    public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
 
     @GetMapping("/getColumn")
     @ApiOperation(value = "过滤器表字段")
-    public ResultEntity<Object> getColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }
-
 
 
     @GetMapping("/getAtlasBuildTableAndColumn")
@@ -220,7 +216,7 @@ public class PhysicalTableController {
             @RequestParam("appid") long appid,
             @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid,id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid, id));
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
@@ -233,7 +229,7 @@ public class PhysicalTableController {
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
             @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataAccessConfig(id,appid));
+        return service.dataAccessConfig(id, appid);
     }
 
     @PostMapping("/addComponentId")

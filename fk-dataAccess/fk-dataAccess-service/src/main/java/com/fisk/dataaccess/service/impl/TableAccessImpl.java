@@ -26,6 +26,7 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -135,12 +136,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
-        List<String> tableNameList = baseMapper.getTableName();
+//        List<String> tableNameList = baseMapper.getTableName();
+//        String tableName = modelAccess.getTableName();
+//        boolean contains = tableNameList.contains(tableName);
+//        if (contains) {
+//            return ResultEnum.Table_NAME_EXISTS;
+//        }
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
-        boolean contains = tableNameList.contains(tableName);
-        if (contains) {
+        // 查询表名对应的应用注册id
+        Long appId = this.baseMapper.getAppIdByTableName(tableName);
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.id = appId;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEnum.Table_NAME_EXISTS;
         }
+
+        int a = 1 / 0;
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
@@ -342,7 +355,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         atlasIdsVO.appId = String.valueOf(id);
         atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,atlasIdsVO);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
 
     /**
@@ -934,140 +947,132 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
-    public DataAccessConfigDTO dataAccessConfig(long id, long appid) {
-        DataAccessConfigDTO dto = null;
-        try {
-            dto = new DataAccessConfigDTO();
+    public ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid) {
+        DataAccessConfigDTO dto = new DataAccessConfigDTO();
 
-            // app组配置
-            GroupConfig groupConfig = new GroupConfig();
-            //任务组配置
-            TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
-            // 数据源jdbc配置
-            DataSourceConfig sourceDsConfig = new DataSourceConfig();
-            // 目标源jdbc连接
-            DataSourceConfig targetDsConfig = new DataSourceConfig();
-            // 增量配置库源jdbc连接
-            DataSourceConfig cfgDsConfig = new DataSourceConfig();
-            // 表及表sql
-            ProcessorConfig processorConfig = new ProcessorConfig();
+        // app组配置
+        GroupConfig groupConfig = new GroupConfig();
+        //任务组配置
+        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+        // 数据源jdbc配置
+        DataSourceConfig sourceDsConfig = new DataSourceConfig();
+        // 目标源jdbc连接
+        DataSourceConfig targetDsConfig = new DataSourceConfig();
+        // 增量配置库源jdbc连接
+        DataSourceConfig cfgDsConfig = new DataSourceConfig();
+        // 表及表sql
+        ProcessorConfig processorConfig = new ProcessorConfig();
 
-            // 1.app组配置
-            // select * from tb_app_registration where id=id and del_flag=1;
-            AppRegistrationPO modelReg = this.appRegistrationImpl.query()
-                    .eq("id", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelReg == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            groupConfig.setAppName(modelReg.getAppName());
-            groupConfig.setAppDetails(modelReg.getAppDes());
-            // 回写应用注册组件id
-            groupConfig.setComponentId(modelReg.componentId);
+        // 1.app组配置
+        // select * from tb_app_registration where id=id and del_flag=1;
+        AppRegistrationPO modelReg = this.appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        groupConfig.setAppName(modelReg.getAppName());
+        groupConfig.setAppDetails(modelReg.getAppDes());
+        // 回写应用注册组件id
+        groupConfig.setComponentId(modelReg.componentId);
 
-            // 2.任务组配置
-            taskGroupConfig.setAppName(modelReg.getAppName());
-            taskGroupConfig.setAppDetails(modelReg.getAppDes());
+        // 2.任务组配置
+        taskGroupConfig.setAppName(modelReg.getAppName());
+        taskGroupConfig.setAppDetails(modelReg.getAppDes());
 
-            //3.数据源jdbc配置
-            AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelDataSource == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
-            // 先硬编码
-            sourceDsConfig.setType(DriverTypeEnum.MYSQL);
-            sourceDsConfig.setUser(modelDataSource.getConnectAccount());
-            sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
-            sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
+        //3.数据源jdbc配置
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelDataSource == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
+        // 先硬编码
+        sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        sourceDsConfig.setUser(modelDataSource.getConnectAccount());
+        sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
+        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
 
-            // 4.目标源jdbc连接
-            targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
+        // 4.目标源jdbc连接
+        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
 
-            // 5.表及表sql
-            TableSyncmodePO modelSync = syncmodeMapper.getData(id);
-            if (modelSync == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            TableAccessPO modelAccess = this.query()
-                    .eq("id", id)
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelAccess == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            // TODO: 将app组配置中的setNewApp加上
-            if (modelReg.componentId == null && modelAccess.componentId == null) {
-                groupConfig.setNewApp(true);
-            } else {
-                groupConfig.setNewApp(false);
-            }
-
-            // TODO 回写物理表组件id
-            taskGroupConfig.setComponentId(modelAccess.componentId);
-
-            NifiSettingPO modelNifi = nifiSettingImpl.query()
-                    .eq("appid", appid)
-                    .eq("table_id", id)
-                    .one();
-            if (modelNifi == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            // corn_expression
-            processorConfig.scheduleExpression = modelSync.getCornExpression();
-
-            String timerDriver = "timer driver";
-            String corn = "CORN driven";
-
-            if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
-                processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
-            } else if (corn.equalsIgnoreCase(modelSync.timerDriver)) {
-                processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
-            } else {
-                processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
-            }
-            // ods sql
-            processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
-            // atlas返回的tableName
-            processorConfig.targetTableName = modelNifi.tableName;
-
-            // TODO  新增: 增量配置库源jdbc连接
-            cfgDsConfig.setType(DriverTypeEnum.MYSQL);
-            cfgDsConfig.setJdbcStr(jdbcStr);
-            cfgDsConfig.setUser(user);
-            cfgDsConfig.setPassword(password);
-            /**
-             * 查询tb_nifi_config表,查询value是否未空,
-             *
-             */
-            String nifiKey = nifiConfigMapper.getNifiKey();
-            if (StringUtils.isNotEmpty(nifiKey)) {
-                cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
-            }
-
-
-            dto.groupConfig = groupConfig;
-            dto.taskGroupConfig = taskGroupConfig;
-            dto.sourceDsConfig = sourceDsConfig;
-            dto.targetDsConfig = targetDsConfig;
-            dto.processorConfig = processorConfig;
-            dto.cfgDsConfig = cfgDsConfig;
-
-        } catch (Exception e) {
-            log.error("{}方法执行失败: ", e);
+        // 5.表及表sql
+        TableSyncmodePO modelSync = syncmodeMapper.getData(id);
+        if (modelSync == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
-//        int a = 1 / 0;
+        TableAccessPO modelAccess = this.query()
+                .eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelAccess == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
 
-        return dto;
+        // TODO: 将app组配置中的setNewApp加上
+        if (modelReg.componentId == null && modelAccess.componentId == null) {
+            groupConfig.setNewApp(true);
+        } else {
+            groupConfig.setNewApp(false);
+        }
+
+        // TODO 回写物理表组件id
+        taskGroupConfig.setComponentId(modelAccess.componentId);
+
+        NifiSettingPO modelNifi = nifiSettingImpl.query()
+                .eq("appid", appid)
+                .eq("table_id", id)
+                .one();
+        if (modelNifi == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // corn_expression
+        processorConfig.scheduleExpression = modelSync.getCornExpression();
+
+        String timerDriver = "timer driver";
+        String corn = "CORN driven";
+
+        if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
+        } else if (corn.equalsIgnoreCase(modelSync.timerDriver)) {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.CRON;
+        } else {
+            processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
+        }
+        // ods sql
+        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
+        // atlas返回的tableName
+        processorConfig.targetTableName = modelNifi.tableName;
+
+        // TODO  新增: 增量配置库源jdbc连接
+        cfgDsConfig.setType(DriverTypeEnum.MYSQL);
+        cfgDsConfig.setJdbcStr(jdbcStr);
+        cfgDsConfig.setUser(user);
+        cfgDsConfig.setPassword(password);
+        /**
+         * 查询tb_nifi_config表,查询value是否未空,
+         *
+         */
+        String nifiKey = nifiConfigMapper.getNifiKey();
+        if (StringUtils.isNotEmpty(nifiKey)) {
+            cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
+        }
+
+
+        dto.groupConfig = groupConfig;
+        dto.taskGroupConfig = taskGroupConfig;
+        dto.sourceDsConfig = sourceDsConfig;
+        dto.targetDsConfig = targetDsConfig;
+        dto.processorConfig = processorConfig;
+        dto.cfgDsConfig = cfgDsConfig;
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
 

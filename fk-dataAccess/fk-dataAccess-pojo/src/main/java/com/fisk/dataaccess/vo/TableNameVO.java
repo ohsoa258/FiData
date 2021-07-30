@@ -9,6 +9,8 @@ import java.util.Objects;
  */
 @Data
 public class TableNameVO {
+
+    // 应用注册id
     public long id;
     public String tableName;
     @Override

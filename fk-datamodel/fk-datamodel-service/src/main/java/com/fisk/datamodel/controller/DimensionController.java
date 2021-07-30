@@ -25,9 +25,9 @@ public class DimensionController {
     @Resource
     IDimension service;
 
-    @GetMapping("/getDimensionList")
     @ApiOperation("获取维度列表")
-    public ResultEntity<Object> getDimensionList(QueryDTO dto) {
+    @PostMapping("/getDimensionList")
+    public ResultEntity<Object> getDimensionList(@RequestBody QueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList(dto));
     }
 

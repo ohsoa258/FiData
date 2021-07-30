@@ -73,9 +73,10 @@ public interface INifiComponentsBuild {
      * 创建ExecuteSQL组件
      *
      * @param data dto
+     * @param autoEnd auto end
      * @return Processor组件
      */
-    BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data);
+    BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data, List<String> autoEnd);
 
     /**
      * 创建ConvertToJson组件
