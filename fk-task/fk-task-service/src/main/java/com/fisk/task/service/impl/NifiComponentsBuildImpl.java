@@ -52,7 +52,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         entity.setRevision(NifiHelper.buildRevisionDTO());
 
         try {
-            ProcessGroupEntity res = NifiHelper.getProcessGroupsApi().createProcessGroup(NifiHelper.getPid(dto.pid), entity);
+            ProcessGroupEntity res = NifiHelper.getProcessGroupsApi().createProcessGroup(NifiHelper.getPid(dto.groupId), entity);
             return BusinessResult.of(true, "", res);
         } catch (ApiException e) {
             log.error("分组创建失败，【" + e.getResponseBody() + "】: ", e);
@@ -153,6 +153,100 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         } else {
             return BusinessResult.of(false, "控制器服务当前正在运行，不允许修改", null);
         }
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildMergeContentProcess(BuildMergeContentProcessorDTO data) {
+        List<String> auto = new ArrayList<>(2);
+        //流程分支，是否自动结束
+        auto.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        auto.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(0);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(auto);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.MergeContent.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data) {
+        List<String> auto = new ArrayList<>(1);
+        //流程分支，是否自动结束
+        auto.add(AutoEndBranchTypeEnum.FAILURE.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(1);
+        map.put("Replacement Value", data.replacementValue);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(auto);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.ReplaceText.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildPublishMqProcess(BuildPublishMqProcessorDTO data) {
+        List<String> auto = new ArrayList<>(2);
+        //流程分支，是否自动结束
+        auto.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        auto.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(7);
+        map.put("Exchange Name", data.exchange);
+        map.put("Routing Key", data.route);
+        map.put("Host Name", data.host);
+        map.put("Port", data.port);
+        map.put("Virtual Host", data.vhost);
+        map.put("User Name", data.user);
+        map.put("Password", data.pwd);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(auto);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.PublishAMQP.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override

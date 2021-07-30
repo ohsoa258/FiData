@@ -39,7 +39,7 @@ public class NifiFlowBuildImpl implements INifiFlowBuild {
         BuildProcessGroupDTO group2DTO = new BuildProcessGroupDTO();
         group2DTO.name = "子流程1";
         group2DTO.details = "java程序通过调用RESTAPI创建Nifi流程";
-        group2DTO.pid = pid;
+        group2DTO.groupId = pid;
         group2DTO.positionDTO = NifiPositionHelper.buildXPositionDTO(xlevel);
         BusinessResult<ProcessGroupEntity> groupRes = componentsBuild.buildProcessGroup(group2DTO);
         String groupId = groupRes.data.getId();

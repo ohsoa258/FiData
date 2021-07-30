@@ -57,7 +57,7 @@ public class NifiBuildTest {
         position.setX(300.00);
         position.setY(300.00);
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO() {{
-            pid = groupPid;
+            groupId = groupPid;
             name = "test";
             details = "";
             positionDTO = position;

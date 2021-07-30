@@ -70,6 +70,30 @@ public interface INifiComponentsBuild {
     /* 组件创建 */
 
     /**
+     * 创建MergeContent组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildMergeContentProcess(BuildMergeContentProcessorDTO data);
+
+    /**
+     * 创建ReplaceText组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data);
+
+    /**
+     * 创建PublishMQ组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildPublishMqProcess(BuildPublishMqProcessorDTO data);
+
+    /**
      * 创建ExecuteSQL组件
      *
      * @param data dto

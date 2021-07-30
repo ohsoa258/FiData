@@ -13,6 +13,8 @@ public class MqConstants {
 
     public static final class QueueConstants{
 
+        public static final String INCREMENT_RESULT = "task.data.increment.result";
+
         public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
         public static final String BUILD_ATLAS_INSTANCE_FLOW = "task.build.atlas.instance.flow";
@@ -27,6 +29,7 @@ public class MqConstants {
 
     public static final class RouterConstants{
 
+        public static final String INCREMENT_RESULT = "task.data.increment.#";
         public static final String TASK_BUILD_NIFI_ROUTER = "task.build.nifi.#";
         public static final String TASK_BUILD_ATLAS_INSTANCE_ROUTER = "task.build.atlas.instance.#";
         public static final String TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER = "task.build.atlas.tablecolumn.#";

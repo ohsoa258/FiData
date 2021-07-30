@@ -2,16 +2,14 @@ package com.fisk.task.dto.nifi;
 
 import com.davis.client.model.PositionDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author gy
  */
 @Data
-public class BuildDbControllerServiceDTO {
-    public String groupId;
-    public String name;
-    public String details;
-    public PositionDTO positionDTO;
+@EqualsAndHashCode(callSuper = true)
+public class BuildDbControllerServiceDTO extends BaseProcessorDTO {
     public boolean enabled;
     public String conUrl;
     public String driverName;
