@@ -26,6 +26,7 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -58,6 +59,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableFieldsMapper fieldsMapper;
     @Resource
     private AppRegistrationImpl appRegistrationImpl;
+    @Resource
+    private AppRegistrationMapper registrationMapper;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
@@ -135,24 +138,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
-        List<String> tableNameList = baseMapper.getTableName();
+        /*List<String> tableNameList = baseMapper.getTableName();
         String tableName = modelAccess.getTableName();
         boolean contains = tableNameList.contains(tableName);
         if (contains) {
             return ResultEnum.Table_NAME_EXISTS;
+        }*/
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        String tableName = modelAccess.getTableName();
+        // 查询表名对应的应用注册id
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.appid = modelAccess.appid;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
+            return ResultEnum.Table_NAME_EXISTS;
         }
-//        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
-//        String tableName = modelAccess.getTableName();
-//        // 查询表名对应的应用注册id
-//        Long appId = this.baseMapper.getAppIdByTableName(tableName);
-//        TableNameVO tableNameVO = new TableNameVO();
-//        tableNameVO.id = appId;
-//        tableNameVO.tableName = tableName;
-//        if (appIdAndTableNameList.contains(tableNameVO)) {
-//            return ResultEnum.Table_NAME_EXISTS;
-//        }
-
-//        int a = 1 / 0;
 
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
@@ -702,103 +702,97 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)
     @Override
-    public AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid) {
+    public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(long id, long appid) {
 
         AtlasEntityDbTableColumnDTO dto = null;
-        try {
-            TableAccessPO modelAccess = this.query().eq("id", id)
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelAccess == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
 
-            AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelDataSource == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            AppRegistrationPO modelReg = appRegistrationImpl.query()
-                    .eq("id", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelReg == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            TableSyncmodePO modelSync = syncmodeMapper.getData(id);
-            if (modelSync == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            dto = new AtlasEntityDbTableColumnDTO();
-
-            dto.dbId = modelDataSource.getAtlasDbId();
-            dto.tableName = modelAccess.getTableName();
-            dto.createUser = modelAccess.getCreateUser();
-
-            // TODO 新增cron表达式
-            dto.cornExpress = modelSync.cornExpression;
-
-            // TODO 新增appAbbreviation syncType syncField
-            dto.appAbbreviation = modelReg.appAbbreviation;
-            switch (modelSync.syncMode) {
-                case 1:
-                    dto.syncType = OdsDataSyncTypeEnum.full_volume;
-                    break;
-                case 2:
-                    dto.syncType = OdsDataSyncTypeEnum.timestamp_incremental;
-                    dto.syncField = modelSync.syncField;
-                    break;
-                case 3:
-                    dto.syncType = OdsDataSyncTypeEnum.business_time_cover;
-                    break;
-                default:
-                    break;
-            }
-
-            dto.tableId = String.valueOf(modelAccess.getId());
-
-            List<AtlasEntityColumnDTO> columns = new ArrayList<>();
-
-            List<TableFieldsPO> list = tableFieldsImpl.query()
-                    .eq("table_access_id", id)
-                    .eq("del_flag", 1)
-                    .list();
-
-            if (list.isEmpty()) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-
-            for (TableFieldsPO po : list) {
-
-                AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
-
-                atlasEntityColumnDTO.setColumnId(po.getId());
-                atlasEntityColumnDTO.setColumnName(po.getFieldName());
-                atlasEntityColumnDTO.setComment(po.getFieldDes());
-                if (po.fieldLength == 0) {
-                    atlasEntityColumnDTO.setDataType(po.getFieldType());
-                } else {
-
-                    atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
-                }
-                atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-                atlasEntityColumnDTO.setGuid(po.atlasFieldId);
-
-                columns.add(atlasEntityColumnDTO);
-            }
-
-            dto.columns = columns;
-        } catch (FkException e) {
-            log.error("{}方法执行失败: ", e);
+        TableAccessPO modelAccess = this.query().eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+//        if (modelAccess == null) {
+//            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//        }
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+//        if (modelDataSource == null) {
+//            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//        }
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+//        if (modelReg == null) {
+//            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//        }
+        TableSyncmodePO modelSync = syncmodeMapper.getData(id);
+        if (modelAccess == null || modelDataSource == null || modelSync == null || modelReg == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
-        return dto;
+        dto = new AtlasEntityDbTableColumnDTO();
+
+        dto.dbId = modelDataSource.getAtlasDbId();
+        dto.tableName = modelAccess.getTableName();
+        dto.createUser = modelAccess.getCreateUser();
+
+        // TODO 新增cron表达式
+        dto.cornExpress = modelSync.cornExpression;
+
+        // TODO 新增appAbbreviation syncType syncField
+        dto.appAbbreviation = modelReg.appAbbreviation;
+        switch (modelSync.syncMode) {
+            case 1:
+                dto.syncType = OdsDataSyncTypeEnum.full_volume;
+                break;
+            case 2:
+                dto.syncType = OdsDataSyncTypeEnum.timestamp_incremental;
+                dto.syncField = modelSync.syncField;
+                break;
+            case 3:
+                dto.syncType = OdsDataSyncTypeEnum.business_time_cover;
+                break;
+            default:
+                break;
+        }
+
+        dto.tableId = String.valueOf(modelAccess.getId());
+
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
+
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+
+        if (list.isEmpty()) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        for (TableFieldsPO po : list) {
+
+            AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
+
+            atlasEntityColumnDTO.setColumnId(po.getId());
+            atlasEntityColumnDTO.setColumnName(po.getFieldName());
+            atlasEntityColumnDTO.setComment(po.getFieldDes());
+            if (po.fieldLength == 0) {
+                atlasEntityColumnDTO.setDataType(po.getFieldType());
+            } else {
+
+                atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
+            }
+            atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
+            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
+
+            columns.add(atlasEntityColumnDTO);
+        }
+
+        dto.columns = columns;
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_WRITEBACKDATA)

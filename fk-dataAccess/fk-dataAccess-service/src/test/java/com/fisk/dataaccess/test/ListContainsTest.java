@@ -24,13 +24,13 @@ public class ListContainsTest {
         TableNameVO nameVO4 = new TableNameVO();
         List<TableNameVO> list = new ArrayList<>();
 
-        nameVO1.id = 1;
+        nameVO1.appid = 1;
         nameVO1.tableName = "a";
-        nameVO2.id = 2;
+        nameVO2.appid = 2;
         nameVO2.tableName = "b";
-        nameVO3.id = 3;
+        nameVO3.appid = 3;
         nameVO3.tableName = "c";
-        nameVO4.id = 1;
+        nameVO4.appid = 1;
         nameVO4.tableName = "a";
 
         list.add(nameVO1);

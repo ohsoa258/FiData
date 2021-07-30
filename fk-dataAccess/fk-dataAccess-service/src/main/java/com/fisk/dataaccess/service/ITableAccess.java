@@ -102,7 +102,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param appid appid
      * @return atlas
      */
-    AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid);
+    ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(long id, long appid);
 
     /**
      * 提供给nifi的数据
