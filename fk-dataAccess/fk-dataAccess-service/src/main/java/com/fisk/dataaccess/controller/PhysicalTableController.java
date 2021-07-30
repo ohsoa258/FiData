@@ -112,20 +112,24 @@ public class PhysicalTableController {
     @PostMapping("/addNonRealTime")
     @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
-        ResultEntity<AtlasIdsVO> atlasIdsVOResult = service.addNonRealTimeData(dto);
+        ResultEntity<AtlasIdsVO> atlasIdsVO = service.addNonRealTimeData(dto);
 
-        AtlasIdsVO atlasIdsVO = atlasIdsVOResult.data;
+        AtlasIdsVO atlasIds = atlasIdsVO.data;
+
+        if (atlasIds == null) {
+            return ResultEntityBuild.buildData(atlasIdsVO.code,atlasIdsVO.msg);
+        }
 
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+        atlasEntityQueryDTO.userId = atlasIds.userId;
         // 应用注册id
-        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
-        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+        atlasEntityQueryDTO.appId = atlasIds.appId;
+        atlasEntityQueryDTO.dbId = atlasIds.dbId;
 //        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
 //        log.info("task:" + JSON.toJSONString(task));
 //        System.out.println(task);
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVOResult);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
 
     /**
