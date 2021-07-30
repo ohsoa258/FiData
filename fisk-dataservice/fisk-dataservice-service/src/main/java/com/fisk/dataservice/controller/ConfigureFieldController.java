@@ -44,10 +44,10 @@ public class ConfigureFieldController {
         return ResultEntityBuild.build(configureFieldService.updateField(dto));
     }
 
-    @ApiOperation("根据id查询字段")
-    @GetMapping("/get")
-    public ResultEntity<ApiConfigureFieldPO> getDataById(Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(id));
+    @ApiOperation("根据configureId查询字段")
+    @GetMapping("/getByConfigureId")
+    public ResultEntity<List<ApiConfigureFieldPO>> getDataById(Integer configureId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(configureId));
     }
 
     @ApiOperation("分页查询所有字段")

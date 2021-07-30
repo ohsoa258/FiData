@@ -106,12 +106,14 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     }
 
     @Override
-    public ApiConfigureFieldPO getDataById(Integer id) {
-        if (id == null){
+    public List<ApiConfigureFieldPO> getDataById(Integer configureId) {
+        if (configureId == null){
             return null;
         }
 
-        return configureFieldMapper.selectById(id);
+        QueryWrapper<ApiConfigureFieldPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ApiConfigureFieldPO::getConfigureId, configureId);
+        return configureFieldMapper.selectList(queryWrapper);
     }
 
     @Override

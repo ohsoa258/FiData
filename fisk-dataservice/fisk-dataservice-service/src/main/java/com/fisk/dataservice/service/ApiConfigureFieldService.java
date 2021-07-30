@@ -34,11 +34,11 @@ public interface ApiConfigureFieldService {
     ResultEnum updateField(ApiConfigureFieldEditDTO dto);
 
     /**
-     * 根据id查询字段
-     * @param id
+     * 根据configureId询字段
+     * @param configureId
      * @return
      */
-    ApiConfigureFieldPO getDataById(Integer id);
+    List<ApiConfigureFieldPO> getDataById(Integer configureId);
 
     /**
      * 分页查询
