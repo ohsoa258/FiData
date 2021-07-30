@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class BuildProcessGroupDTO extends BaseProcessorDTO {
-
+public class BuildReplaceTextProcessorDTO extends BaseProcessorDTO{
+    public String replacementValue;
 }

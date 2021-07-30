@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.11.130:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+  rabbitmq:
+    host: 192.168.11.130
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: gy_vhost
+    #消息确认配置项
+    #确认消息已发送到交换机(Exchange)
+    publisher-confirms: true
+    #确认消息已发送到队列(Queue)
+    publisher-returns: true
+  redis:
+    host: 192.168.11.130
+  jackson:
+    time-zone: GMT+8
+
+dorisconstr:
+  url: jdbc:mysql://192.168.11.134:9030/dmp_ods?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+  password: Password01!
+  driver_class_name: com.mysql.jdbc.Driver
+
+
+atlasconstr:
+  url: http://192.168.1.250:21000
+  username: admin
+  password: admin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka

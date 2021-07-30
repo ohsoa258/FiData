@@ -28,7 +28,7 @@ public class NifiConstants {
         public static final String INCREMENT_START = "IncrementStart";
         public static final String INCREMENT_DB_FIELD_END = "Incremental_ObjectiveScore_End";
         public static final String INCREMENT_END = "IncrementEnd";
-        public static final String LOG_CODE = "uuid";
+        public static final String LOG_CODE = "uuids";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
