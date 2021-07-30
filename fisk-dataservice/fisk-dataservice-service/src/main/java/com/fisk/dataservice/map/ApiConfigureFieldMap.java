@@ -2,7 +2,9 @@ package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.ApiConfigureField;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
+import com.fisk.dataservice.dto.ConfigureUserDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
+import com.fisk.dataservice.entity.ConfigureUserPO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -33,4 +35,12 @@ public interface ApiConfigureFieldMap {
             @Mapping(target = "id", ignore = true)
     })
     void editDtoToPo(ApiConfigureFieldEditDTO dto, @MappingTarget ApiConfigureFieldPO po);
+
+    /**
+     * dto => po
+     *
+     * @param dto source
+     * @return target
+     */
+    ConfigureUserPO dtoToPo(ConfigureUserDTO dto);
 }

@@ -47,8 +47,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         String apiRoute = toFirstChar(dto.getApiName()).toLowerCase();
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
-        ApiConfigurePO apiConfigurePO = configureMapper.selectOne(queryWrapper);
-        if (apiConfigurePO == null){
+        ApiConfigurePO apbConfigurer = configureMapper.selectOne(queryWrapper);
+        if (apbConfigurer == null){
             apiconfigurepo.setApiRoute(apiRoute);
         }else {
             // 证明已经存在
@@ -59,8 +59,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        List<ApiConfigureFieldPO> apiConfigureFieldPOList = ApiConfigureFieldMap.INSTANCES.dtoConfigureFieldListPo(dto.getApiConfigureFieldList());
-        return this.splicingApiConfigureField(apiConfigureFieldPOList,apiconfigurepo.getId());
+        List<ApiConfigureFieldPO> apiConfigureFieldList = ApiConfigureFieldMap.INSTANCES.dtoConfigureFieldListPo(dto.getApiConfigureFieldList());
+        return this.splicingApiConfigureField(apiConfigureFieldList,apiconfigurepo.getId());
     }
 
     /**
