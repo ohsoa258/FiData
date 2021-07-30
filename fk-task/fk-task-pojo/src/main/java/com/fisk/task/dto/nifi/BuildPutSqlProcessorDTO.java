@@ -1,20 +1,16 @@
 package com.fisk.task.dto.nifi;
 
-import com.davis.client.model.PositionDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author gy
  */
 @Data
-public class BuildPutSqlProcessorDTO {
-    public String groupId;
-    public String name;
-    public String details;
+@EqualsAndHashCode(callSuper = true)
+public class BuildPutSqlProcessorDTO extends BaseProcessorDTO {
 
     public String dbConnectionId;
-
-    public PositionDTO positionDTO;
 
     public String sqlStatement;
 }

@@ -4,10 +4,10 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityProcessDTO;
 import com.fisk.task.service.IAtlasBuildInstance;
-import com.fisk.task.utils.YamlReader;
 import fk.atlas.api.AtlasClient;
 import fk.atlas.api.model.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -24,9 +24,12 @@ import java.util.List;
 @Service
 @Slf4j
 public class AtlasBuildInstance implements IAtlasBuildInstance {
-    private String atlas_url = YamlReader.instance.getValueByKey("atlasconstr.url").toString();
-    private String atlas_username = YamlReader.instance.getValueByKey("atlasconstr.username").toString();
-    private String atlas_pwd = YamlReader.instance.getValueByKey("atlasconstr.password").toString();
+    @Value("{atlasconstr.url}")
+    private String atlas_url;
+    @Value("{atlasconstr.username}")
+    private String atlas_username;
+    @Value("{atlasconstr.password}")
+    private String atlas_pwd;
     private AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
 
     @Resource
