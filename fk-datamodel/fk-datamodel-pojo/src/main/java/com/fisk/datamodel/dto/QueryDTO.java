@@ -16,7 +16,7 @@ public class QueryDTO {
      */
     public int size;
     /**
-    *业务域id
+    *id
      */
-    public int businessId;
+    public int id;
 }

@@ -2,7 +2,7 @@ package com.fisk.datamodel.utils;
 
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.DimensionMetaDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;

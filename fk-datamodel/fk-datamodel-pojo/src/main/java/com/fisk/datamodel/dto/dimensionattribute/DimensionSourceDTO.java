@@ -1,6 +1,7 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.dimensionattribute;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import lombok.Data;
 
 import java.util.List;

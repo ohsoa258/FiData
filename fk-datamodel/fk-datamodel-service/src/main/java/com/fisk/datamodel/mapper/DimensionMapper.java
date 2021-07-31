@@ -1,7 +1,7 @@
 package com.fisk.datamodel.mapper;
 
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.DimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.entity.DimensionPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

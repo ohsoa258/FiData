@@ -2,8 +2,8 @@ package com.fisk.datamodel.map;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.datamodel.dto.DimensionDTO;
-import com.fisk.datamodel.dto.DimensionSourceDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import org.mapstruct.Mapper;

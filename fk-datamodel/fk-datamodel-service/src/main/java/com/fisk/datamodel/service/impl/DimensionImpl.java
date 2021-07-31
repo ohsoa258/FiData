@@ -7,6 +7,9 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
@@ -138,9 +141,9 @@ public class DimensionImpl implements IDimension {
     public IPage<DimensionDTO> getDimensionList(QueryDTO dto)
     {
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        if (dto.businessId !=0)
+        if (dto.id !=0)
         {
-            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
+            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.id)
                                  .or()
                                  .eq(DimensionPO::getShare,true);
         }

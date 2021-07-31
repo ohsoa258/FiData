@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.DimensionAttributeDTO;
-import com.fisk.datamodel.dto.DimensionAttributeListDTO;
-import com.fisk.datamodel.dto.DimensionAttributeUpdateDTO;
-import com.fisk.datamodel.dto.DimensionMetaDTO;
+import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.map.DimensionAttributeMap;
@@ -47,9 +44,9 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public List<DimensionMetaDTO> getProjectDimensionTable()
+    public List<DimensionAttributeAssociationDTO> getProjectDimensionTable()
     {
-        List<DimensionMetaDTO> list=new ArrayList<>();
+        List<DimensionAttributeAssociationDTO> list=new ArrayList<>();
         //获取维度表
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         List<DimensionPO> data=mapper.selectList(queryWrapper);
@@ -59,8 +56,9 @@ public class DimensionAttributeImpl
 
         for (DimensionPO po:data)
         {
-            DimensionMetaDTO model=new DimensionMetaDTO();
+            DimensionAttributeAssociationDTO model=new DimensionAttributeAssociationDTO();
             model.tableName=po.dimensionTabName;
+            model.associateDimensionId=po.id;
             List<DimensionAttributePO> filter=list2.stream().filter(e->e.getDimensionId()==po.id).collect(Collectors.toList());
             List<String> ids=new ArrayList<>();
             for (DimensionAttributePO attribute:filter)
@@ -72,8 +70,6 @@ public class DimensionAttributeImpl
         }
         return list;
     }
-
-
 
     @Override
     public ResultEnum addDimensionAttribute(int dimensionId,List<DimensionAttributeDTO> dto)
