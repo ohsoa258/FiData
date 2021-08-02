@@ -3,10 +3,8 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.DimensionAttributeDTO;
-import com.fisk.datamodel.dto.DimensionAttributeUpdateDTO;
-import com.fisk.datamodel.dto.DimensionDTO;
+import com.fisk.datamodel.dto.dimension.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -55,7 +53,7 @@ public class DimensionAttributeController {
     }
 
     @ApiOperation("获取维度字段表列表")
-    @GetMapping("/getDimensionAttributeList")
+    @GetMapping("/getDimensionAttributeList") ////@PathVariable/{dimensionId}
     public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
     }

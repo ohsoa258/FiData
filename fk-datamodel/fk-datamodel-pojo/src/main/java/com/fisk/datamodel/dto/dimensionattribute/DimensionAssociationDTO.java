@@ -1,5 +1,6 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.dimensionattribute;
 
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import lombok.Data;
 
 /**

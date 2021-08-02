@@ -258,6 +258,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
+//        if (1 == 1) {
+//            return ResultEntityBuild.build(ResultEnum.UNKNOWN);
+//        }
+
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
 

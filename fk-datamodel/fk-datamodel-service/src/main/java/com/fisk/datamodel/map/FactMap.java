@@ -13,20 +13,26 @@ import org.mapstruct.factory.Mappers;
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface FactMap {
-    FactMap INSTANCES= Mappers.getMapper(FactMap.class);
-
-    /**
-     * 分页po==>dto
-     * @param po
-     * @return 分页结果
-     */
-    Page<FactDTO> pagePoToDto(IPage<FactPO> po);
+    FactMap INSTANCES = Mappers.getMapper(FactMap.class);
 
     /**
      * dto==>po
      * @param dto
-     * @return 添加结果
+     * @return
      */
     FactPO dtoToPo(FactDTO dto);
+
+    /**
+     * po==>dto
+     * @param po
+     * @return
+     */
+    FactDTO poToDto(FactPO po);
+
+    /**
+     * 分页po==>dto
+     * @return
+     */
+    Page<FactDTO> pagePoToDto(IPage<FactPO> po);
 
 }

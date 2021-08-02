@@ -1,8 +1,7 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.DimensionAttributeDTO;
-import com.fisk.datamodel.dto.DimensionAttributeUpdateDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

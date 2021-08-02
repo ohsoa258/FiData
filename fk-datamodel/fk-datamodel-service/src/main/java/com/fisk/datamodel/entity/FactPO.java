@@ -8,25 +8,21 @@ import lombok.EqualsAndHashCode;
 /**
  * @author JianWenYang
  */
-@TableName("tb_fact")
 @Data
+@TableName("tb_fact")
 @EqualsAndHashCode(callSuper = true)
 public class FactPO extends BasePO {
     /**
-     * 业务域id
+     * 业务过程id
      */
-    public int businessId;
-    /**
-     * 业务过程名称
-     */
-    public String factName;
+    public int businessProcessId;
     /**
      * 事实表名称
      */
     public String factTableName;
     /**
-     * 业务过程描述
+     * 事实表描述
      */
-    public String factDesc;
+    public String factTableDesc;
 
 }
