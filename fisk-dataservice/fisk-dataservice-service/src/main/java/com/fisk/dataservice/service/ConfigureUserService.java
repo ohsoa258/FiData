@@ -1,7 +1,9 @@
 package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.UserDTO;
+import com.fisk.dataservice.vo.UserVO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 
 import java.util.List;
@@ -16,5 +18,26 @@ public interface ConfigureUserService {
      * @param page
      * @return
      */
-    List<UserDTO> listData(Page<ConfigureUserPO> page);
+    List<UserVO> listData(Page<ConfigureUserPO> page);
+
+    /**
+     * 保存用户
+     * @param dto
+     * @return
+     */
+    ResultEnum saveUser(ConfigureUserPO dto,String apiName);
+
+    /**
+     * 编辑用户
+     * @param dto
+     * @return
+     */
+   ResultEnum updateUser(UserDTO dto);
+
+    /**
+     * 根据主键id删除用户
+     * @param id
+     * @return
+     */
+    ResultEnum deleteUserById(Integer id);
 }

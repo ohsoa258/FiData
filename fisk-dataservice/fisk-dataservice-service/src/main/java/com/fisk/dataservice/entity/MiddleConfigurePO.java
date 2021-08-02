@@ -10,14 +10,14 @@ import lombok.Data;
  */
 
 @Data
-@TableName("configure_user")
-public class ConfigureUserPO extends BasePO {
+@TableName("middle_configure")
+public class MiddleConfigurePO extends BasePO {
     /**
-     * 用户名
+     * 用户表id
      */
-    private String userName;
+    private Integer userId;
     /**
-     * 密码
+     * 服务表id
      */
-    private String password;
+    private Integer configureId;
 }

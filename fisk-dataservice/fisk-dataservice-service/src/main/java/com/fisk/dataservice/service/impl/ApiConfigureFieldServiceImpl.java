@@ -1,10 +1,9 @@
 package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
@@ -34,7 +33,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     private ApiConfigureMapper configureMapper;
 
     @Override
-    public ResultEnum saveConfigure(ApiFieldDataDTO dto) {
+    public ResultEnum saveConfigure(ApiFieldDataVO dto) {
         if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }

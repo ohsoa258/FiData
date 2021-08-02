@@ -12,10 +12,12 @@ import com.fisk.dataservice.dto.ConfigureUserDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
+import com.fisk.dataservice.entity.MiddleConfigurePO;
 import com.fisk.dataservice.map.ApiConfigureFieldMap;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.mapper.ConfigureUserMapper;
+import com.fisk.dataservice.mapper.MiddleConfigureMapper;
 import com.fisk.dataservice.service.ApiFieldService;
 import org.springframework.stereotype.Service;
 
@@ -45,22 +47,27 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     private ConfigureUserMapper userMapper;
 
     @Resource
-    private RedisUtil redis;
+    private MiddleConfigureMapper middleMapper;
 
-    // todo 登录人
+    @Resource
+    private RedisUtil redis;
 
     @Override
     public List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize, ConfigureUserDTO user) {
         // 校验用户信息
-        Integer configureId = this.checkingToken(user);
+        Long userId = this.checkingToken(user);
 
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(ApiConfigurePO::getId, configureId)
-                .eq(ApiConfigurePO::getApiRoute, apiRoute);
+        queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
         ApiConfigurePO apiConfigure = configureMapper.selectOne(queryWrapper);
         if (apiConfigure == null) {
             throw new FkException(ResultEnum.NOTFOUND);
+        }
+
+        // 验证用户权限能否访问该服务
+        boolean checkingConfigure = checkingConfigure(userId, apiConfigure.getId());
+        if (checkingConfigure == false){
+            throw new FkException(ResultEnum.UNAUTHORIZED);
         }
 
         QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
@@ -74,8 +81,8 @@ public class ApiFieldServiceImpl implements ApiFieldService {
      * @param user 用户信息
      * @return
      */
-    public Integer checkingToken(ConfigureUserDTO user){
-        if (user.getConfigureId() == null){
+    public Long checkingToken(ConfigureUserDTO user){
+        if (user.getId() == null){
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
@@ -93,15 +100,30 @@ public class ApiFieldServiceImpl implements ApiFieldService {
 
             ConfigureUserPO configureUser = ApiConfigureFieldMap.INSTANCES.dtoToPo(user);
             String token = createJwt(configureUser);
-            UserInfo userInfo = UserInfo.of(configureUser.getConfigureId().longValue(), configureUser.getUserName(), token);
+            UserInfo userInfo = UserInfo.of(configureUser.getId(), configureUser.getUserName(), token);
             boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.getId()), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
-            return user.getConfigureId();
+            return user.getId();
         }else {
             // token存在,直接根据id从redis当中获取数据
-            UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(user.getConfigureId()));
+            UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(user.getId()));
             ConfigureUserPO configureUser = analysisToken(userInfo.token);
-            return configureUser.getConfigureId();
+            return configureUser.getId();
         }
+    }
+
+    /**
+     * 验证用户权限能否访问该服务
+     * @param userId 用户ID
+     * @param configureId 访问服务的ID
+     * @return
+     */
+    public boolean checkingConfigure(Long userId,Long configureId){
+        QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(MiddleConfigurePO::getUserId, userId.intValue())
+                .eq(MiddleConfigurePO::getConfigureId, configureId.intValue());
+        MiddleConfigurePO configure = middleMapper.selectOne(queryWrapper);
+        return configure != null ? true : false;
     }
 
     /**

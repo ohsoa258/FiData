@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 public class ConfigureUserDTO {
     public Long id;
-    public Integer configureId;
     public String userName;
     public String password;
 }

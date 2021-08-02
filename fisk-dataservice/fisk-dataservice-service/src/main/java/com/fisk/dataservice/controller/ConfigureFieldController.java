@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.service.ApiConfigureFieldService;
@@ -28,7 +28,7 @@ public class ConfigureFieldController {
 
     @ApiOperation("添加字段配置")
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@Validated @RequestBody ApiFieldDataDTO dto) {
+    public ResultEntity<Object> addData(@Validated @RequestBody ApiFieldDataVO dto) {
         return ResultEntityBuild.build(configureFieldService.saveConfigure(dto));
     }
 
