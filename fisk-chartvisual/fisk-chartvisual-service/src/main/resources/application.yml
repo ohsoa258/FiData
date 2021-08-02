@@ -16,6 +16,9 @@ spring:
     virtual-host: my_vhost
   redis:
     host: 192.168.11.130
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
 #  security:
 #    user:
 #      name: admin

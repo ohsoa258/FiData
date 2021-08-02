@@ -3,6 +3,7 @@ package com.fisk.task.config;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
@@ -36,7 +37,7 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_MQ_PRODUCER_CONFIRM);
         MDCHelper.setClass(RabbitMQConfig.class.getName());
         MDCHelper.setFunction("ConfirmCallback");
-        log.info("【{}】相关数据: {}. 确认情况: {}. 原因: {}.", LocalDateTime.now(), correlationData, ack, cause);
+        log.info("【{}】相关数据: {}. 确认情况: {}. 原因: {}.", DateTimeUtils.getNow(), correlationData, ack, cause);
     }
 
     @Override
@@ -44,6 +45,6 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
         MDCHelper.setAppLogType(TraceTypeEnum.TASK_MQ_PRODUCER_CONFIRM);
         MDCHelper.setClass(RabbitMQConfig.class.getName());
         MDCHelper.setFunction("ReturnCallback");
-        log.info("【{}】消息: {}. 回应码: {}. 回应信息: {}. 交换机: {}. 路由键: {}.", LocalDateTime.now(), JSON.toJSONString(message.getBody()), replyCode, replyText, exchange, routingKey);
+        log.info("【{}】消息: {}. 回应码: {}. 回应信息: {}. 交换机: {}. 路由键: {}.", DateTimeUtils.getNow(), JSON.toJSONString(message.getBody()), replyCode, replyText, exchange, routingKey);
     }
 }
