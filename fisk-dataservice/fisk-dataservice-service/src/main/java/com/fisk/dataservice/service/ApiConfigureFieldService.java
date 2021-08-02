@@ -1,7 +1,9 @@
 package com.fisk.dataservice.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import java.util.List;
 
@@ -29,20 +31,19 @@ public interface ApiConfigureFieldService {
      * @param dto
      * @return
      */
-    ResultEnum updateField(ApiConfigureFieldPO dto);
+    ResultEnum updateField(ApiConfigureFieldEditDTO dto);
 
     /**
-     * 根据id查询字段
-     * @param id
+     * 根据configureId询字段
+     * @param configureId
      * @return
      */
-    ApiConfigureFieldPO getDataById(Integer id);
+    List<ApiConfigureFieldPO> getDataById(Integer configureId);
 
     /**
      * 分页查询
-     * @param currentPage 当前页数
-     * @param pageSize    页数大小
+     * @param page
      * @return
      */
-    List<ApiConfigureFieldPO> listData(Integer currentPage,Integer pageSize);
+    List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page);
 }
