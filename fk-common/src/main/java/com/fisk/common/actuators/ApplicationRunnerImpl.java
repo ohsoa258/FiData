@@ -2,6 +2,7 @@ package com.fisk.common.actuators;
 
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -21,6 +22,6 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
         MDCHelper.setClass(ApplicationRunnerImpl.class.getName());
         MDCHelper.setFunction("run");
         MDCHelper.setAppLogType(TraceTypeEnum.PROJECT_START);
-        log.info("------------【" + LocalDateTime.now() + "】项目开始运行------------");
+        log.info("------------【" + DateTimeUtils.getNow() + "】项目开始运行------------");
     }
 }

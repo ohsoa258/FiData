@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.fisk.common.utils.DateTimeUtils;
 import com.fisk.task.utils.WsSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,7 @@ public class WebSocketServer {
         token = parseToken(token);
         userHelper = context.getBean(UserHelper.class);
         ResultEntity<UserInfo> res = userHelper.getLoginUserInfo(token);
-        String msg = "【" + LocalDateTime.now() + "】";
+        String msg = "【" + DateTimeUtils.getNow() + "】";
         if (res.code == ResultEnum.SUCCESS.getCode()) {
             msg += "连接成功";
             log.info("有新连接加入：{}，当前在线人数为：{}", token, WsSessionManager.getOnlineCount());

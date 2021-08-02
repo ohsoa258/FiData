@@ -5,6 +5,7 @@ import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.utils.DateTimeUtils;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.TaskStatusEnum;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -67,8 +67,10 @@ public class MQConsumerLogAspect {
             }
             //获取方法参数
             data = JSON.parseObject((String) args[0], MQBaseDTO.class);
-            model = mapper.selectById(data.logId);
-            taskName = model == null ? "" : model.taskName;
+            if (data.logId != null) {
+                model = mapper.selectById(data.logId);
+                taskName = model == null ? "" : model.taskName;
+            }
         } catch (Exception ex) {
             log.error("任务状态更新失败");
         }
@@ -84,7 +86,7 @@ public class MQConsumerLogAspect {
         WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
 
         String code = UUID.randomUUID().toString();
-        log.info("【{}】【{}】【{}】开始执行", LocalDateTime.now(), code, name);
+        log.info("【{}】【{}】【{}】开始执行", DateTimeUtils.getNow(), code, name);
         Object res = null;
         boolean isSuccess = false;
         try {
@@ -93,7 +95,7 @@ public class MQConsumerLogAspect {
         } catch (Exception ex) {
             log.error("消费者处理报错，", ex);
         }
-        log.info("【{}】【{}】【{}】执行结束，执行结果【{}】", LocalDateTime.now(), code, name, isSuccess);
+        log.info("【{}】【{}】【{}】执行结束，执行结果【{}】", DateTimeUtils.getNow(), code, name, isSuccess);
 
         TaskStatusEnum statusEnum = isSuccess ? TaskStatusEnum.SUCCESS : TaskStatusEnum.FAILURE;
         if (model != null) {

@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
+import com.fisk.dataservice.map.ApiConfigureFieldMap;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.service.ApiConfigureFieldService;
@@ -16,7 +18,6 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.List;
 
-import static com.fisk.dataservice.map.ApiConfigureFieldMap.apiConfigureFieldList;
 import static com.fisk.dataservice.utils.TransformationUtils.toFirstChar;
 
 /**
@@ -32,8 +33,6 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     @Resource
     private ApiConfigureMapper configureMapper;
 
-    // todo 登录人
-
     @Override
     public ResultEnum saveConfigure(ApiFieldDataDTO dto) {
         if (StringUtils.isEmpty(dto)) {
@@ -48,8 +47,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         String apiRoute = toFirstChar(dto.getApiName()).toLowerCase();
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ApiConfigurePO::getApiRoute, apiRoute);
-        ApiConfigurePO apiConfigurePO = configureMapper.selectOne(queryWrapper);
-        if (apiConfigurePO == null){
+        ApiConfigurePO apbConfigurer = configureMapper.selectOne(queryWrapper);
+        if (apbConfigurer == null){
             apiconfigurepo.setApiRoute(apiRoute);
         }else {
             // 证明已经存在
@@ -60,9 +59,8 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        List<ApiConfigureFieldPO> apiConfigureFieldPOList = apiConfigureFieldList(dto.getApiConfigureFieldList());
-        this.splicingApiConfigureField(apiConfigureFieldPOList,apiconfigurepo.getId());
-        return ResultEnum.SUCCESS;
+        List<ApiConfigureFieldPO> apiConfigureFieldList = ApiConfigureFieldMap.INSTANCES.dtoConfigureFieldListPo(dto.getApiConfigureFieldList());
+        return this.splicingApiConfigureField(apiConfigureFieldList,apiconfigurepo.getId());
     }
 
     /**
@@ -75,7 +73,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         // 把字段表配置信息先保存到字段表
         for (ApiConfigureFieldPO configurable : dto) {
             configurable.setConfigureId((int) id);
-            if (configureFieldMapper.insert(configurable) < 0){
+            if (configureFieldMapper.insert(configurable) <= 0){
                 return ResultEnum.SAVE_DATA_ERROR;
             }
         }
@@ -97,35 +95,29 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     }
 
     @Override
-    public ResultEnum updateField(ApiConfigureFieldPO dto) {
-        if (StringUtils.isEmpty(dto)){
-            return ResultEnum.PARAMTER_NOTNULL;
-        }
-
-        ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(dto.getId());
-        if (apiConfigureField == null){
+    public ResultEnum updateField(ApiConfigureFieldEditDTO dto) {
+        ApiConfigureFieldPO configureField = configureFieldMapper.selectById(dto.id);
+        if (configureField == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        return configureFieldMapper.updateById(dto)> 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
+        ApiConfigureFieldMap.INSTANCES.editDtoToPo(dto,configureField);
+        return configureFieldMapper.updateById(configureField)> 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ApiConfigureFieldPO getDataById(Integer id) {
-        if (id == null){
+    public List<ApiConfigureFieldPO> getDataById(Integer configureId) {
+        if (configureId == null){
             return null;
         }
 
-        return configureFieldMapper.selectById(id);
+        QueryWrapper<ApiConfigureFieldPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ApiConfigureFieldPO::getConfigureId, configureId);
+        return configureFieldMapper.selectList(queryWrapper);
     }
 
     @Override
-    public List<ApiConfigureFieldPO> listData(Integer currentPage, Integer pageSize) {
-        if (currentPage == null || pageSize == null){
-            return null;
-        }
-
-        IPage<ApiConfigureFieldPO> page = new Page<>(currentPage, pageSize);
-        List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectPage(page, null).getRecords();
-        return apiConfigureFieldList;
+    public List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page) {
+        return configureFieldMapper.selectPage(page, null).getRecords();
     }
 }
