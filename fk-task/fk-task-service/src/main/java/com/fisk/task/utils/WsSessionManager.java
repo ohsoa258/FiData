@@ -5,6 +5,7 @@ import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.MessageStatusEnum;
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.utils.DateTimeUtils;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.mapper.MessageLogMapper;
 import com.fisk.task.vo.WsMessageLogVO;
@@ -202,10 +203,10 @@ public class WsSessionManager {
             try {
                 if (session != null) {
                     session.getBasicRemote().sendText(JSON.toJSONString(vo));
-                    log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, LocalDateTime.now(), msg);
+                    log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, DateTimeUtils.getNow(), msg);
                 }
             } catch (Exception e) {
-                log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + LocalDateTime.now() + "】，错误信息：", e);
+                log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + DateTimeUtils.getNow() + "】，错误信息：", e);
             }
         }
     }
