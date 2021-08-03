@@ -1,19 +1,23 @@
 package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
+import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import com.fisk.dataservice.entity.MiddleConfigurePO;
 import com.fisk.dataservice.map.ApiConfigureFieldMap;
+import com.fisk.dataservice.map.ApiConfigureMap;
 import com.fisk.dataservice.mapper.ApiConfigureFieldMapper;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.mapper.ConfigureUserMapper;
@@ -22,6 +26,7 @@ import com.fisk.dataservice.service.ApiFieldService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -75,6 +80,52 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         List<ApiConfigureFieldPO> apiConfigureFieldList = configureFieldMapper.selectList(query);
         return this.filterData(apiConfigureFieldList, apiConfigure.getTableName(), currentPage, pageSize);
     }
+
+    @Override
+    public List<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page) {
+        return configureMapper.selectPage(page, null).getRecords();
+    }
+
+    @Override
+    public ResultEnum updateApiConfigure(ApiConfigureDTO dto) {
+        ApiConfigurePO apiConfigure = configureMapper.selectById(dto.id);
+        if (apiConfigure == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        ApiConfigurePO apiConfigurePO = ApiConfigureMap.INSTANCES.dtoToPo(dto);
+        return configureMapper.updateById(apiConfigurePO)> 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteApiById(Integer id) {
+        ApiConfigurePO apiConfigure = configureMapper.selectById(id);
+        if (org.springframework.util.StringUtils.isEmpty(apiConfigure)){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 删除ApiConfigure表中的数据
+        if (configureMapper.deleteById(id) <= 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        // 删除ApiConfigureField表中的数据
+        QueryWrapper<ApiConfigureFieldPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(ApiConfigureFieldPO::getConfigureId, id)
+                .select(ApiConfigureFieldPO::getId);
+        List<ApiConfigureFieldPO> selectList = configureFieldMapper.selectList(query);
+        if (CollectionUtils.isEmpty(selectList)){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        List<Long> ids = new ArrayList<>();
+        for (ApiConfigureFieldPO apiConfigureField : selectList) {
+            ids.add( apiConfigureField.getId());
+        }
+        return configureFieldMapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
 
     /**
      * 验证用户信息token

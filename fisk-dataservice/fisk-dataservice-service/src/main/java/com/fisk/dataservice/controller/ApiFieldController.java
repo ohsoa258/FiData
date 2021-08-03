@@ -1,11 +1,15 @@
 package com.fisk.dataservice.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
+import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.service.ApiFieldService;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -29,5 +33,23 @@ public class ApiFieldController {
                                              Integer currentPage, Integer pageSize,
                                              @RequestBody ConfigureUserDTO user) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,configureFieldService.queryField(apiRoute,currentPage,pageSize,user));
+    }
+
+    @ApiOperation("分页查询所有Api服务")
+    @GetMapping("/getAll")
+    public ResultEntity<List<ApiConfigurePO>> listData(Page<ApiConfigurePO> page) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.queryAll(page));
+    }
+
+    @ApiOperation("修改Api服务")
+    @PutMapping("/edit")
+    public ResultEntity<Object> editData(@Validated @RequestBody ApiConfigureDTO dto) {
+        return ResultEntityBuild.build(configureFieldService.updateApiConfigure(dto));
+    }
+
+    @ApiOperation("删除Api服务")
+    @DeleteMapping("/delete")
+    public ResultEntity<Object> deleteDataById(Integer id) {
+        return ResultEntityBuild.build(configureFieldService.deleteApiById(id));
     }
 }
