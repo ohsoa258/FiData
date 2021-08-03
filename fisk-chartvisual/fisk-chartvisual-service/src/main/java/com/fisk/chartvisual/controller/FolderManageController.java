@@ -40,7 +40,7 @@ public class FolderManageController {
 
     @ApiOperation("编辑文件夹")
     @PutMapping("/update")
-    public ResultEntity<Object> update(FolderEditDTO dto) {
+    public ResultEntity<Object> update(@Validated @RequestBody FolderEditDTO dto) {
         return service.update(dto);
     }
 

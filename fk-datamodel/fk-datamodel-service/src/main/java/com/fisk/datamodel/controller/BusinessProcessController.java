@@ -55,5 +55,11 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(service.deleteBusinessProcess(id));
     }
 
+    @ApiOperation("获取业务域下拉列表")
+    @GetMapping("/getBusinessProcessDropList")
+    public ResultEntity<Object> getBusinessProcessDropList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessDropList());
+    }
+
 
 }

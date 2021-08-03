@@ -34,8 +34,6 @@ public class DimensionAttributeImpl
     DimensionMapper mapper;
     @Resource
     DimensionAttributeMapper attributeMapper;
-    @Resource
-    UserHelper userHelper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionMeta()
@@ -63,7 +61,7 @@ public class DimensionAttributeImpl
             List<String> ids=new ArrayList<>();
             for (DimensionAttributePO attribute:filter)
             {
-                ids.add(attribute.dimensionFieldCnName);
+                ids.add(attribute.dimensionFieldEnName);
             }
             model.field=ids;
             list.add(model);
@@ -78,10 +76,11 @@ public class DimensionAttributeImpl
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
         boolean isExit=false;
+        List<DimensionAttributePO> list=new ArrayList<>();
         for (DimensionAttributeDTO item:dto)
         {
             DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
-                    .eq(DimensionAttributePO::getDimensionFieldCnName,item.dimensionFieldCnName)
+                    .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
                     .eq(DimensionAttributePO::getTableSourceField,item.tableSourceField)
                     .eq(DimensionAttributePO::getAttributeType,item.attributeType)
                     .eq(DimensionAttributePO::getDimensionFieldType,item.dimensionFieldType)
@@ -92,20 +91,13 @@ public class DimensionAttributeImpl
                 isExit=true;
                 break;
             }
+            DimensionAttributePO data= DimensionAttributeMap.INSTANCES.dtoToPo(item);
+            data.dimensionId=dimensionId;
+            list.add(data);
         }
         if (isExit)
         {
             return ResultEnum.DATA_EXISTS;
-        }
-        //获取登录信息
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        List<DimensionAttributePO> list=new ArrayList<>();
-        for (DimensionAttributeDTO attribute:dto)
-        {
-            DimensionAttributePO data= DimensionAttributeMap.INSTANCES.dtoToPo(attribute);
-            data.dimensionId=dimensionId;
-            data.createUser=userInfo.id.toString();
-            list.add(data);
         }
         return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -130,7 +122,12 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        po.dimensionFieldCnName=dto.dimensionFieldCnName;
+        po.dimensionFieldDes=dto.dimensionFieldDes;
+        po.dimensionFieldLength=dto.dimensionFieldLength;
+        po.dimensionFieldEnName=dto.dimensionFieldEnName;
+        po.dimensionFieldType=dto.dimensionFieldType;
+        //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

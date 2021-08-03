@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.map.FactMap;
 import com.fisk.datamodel.mapper.FactMapper;
@@ -28,7 +29,7 @@ public class FactImpl implements IFact {
     {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(FactPO::getFactTableName,dto.factTableName);
+                .eq(FactPO::getFactTableEnName,dto.factTableEnName);
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
@@ -63,11 +64,19 @@ public class FactImpl implements IFact {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.businessProcessId)
+            .eq(FactPO::getFactTableEnName,dto.factTableEnName);
+        FactPO model=mapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         return mapper.updateById(FactMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public IPage<FactDTO> getFactList(QueryDTO dto)
+    public IPage<FactListDTO> getFactList(QueryDTO dto)
     {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.id);

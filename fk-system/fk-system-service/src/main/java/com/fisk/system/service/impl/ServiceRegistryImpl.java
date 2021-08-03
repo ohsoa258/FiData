@@ -26,8 +26,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
 
     @Resource
     ServiceRegistryMapper mapper;
-    @Resource
-    UserHelper userHelper;
 
     /**
      * 获取服务注册树形结构
@@ -77,8 +75,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
     public ResultEnum addServiceRegistry(ServiceRegistryDTO dto) {
 
         ServiceRegistryPO po = ServiceRegistryMap.INSTANCES.dtoToPo(dto);
-        /*获取登录信息*/
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
         QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -88,7 +84,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-        po.createUser = userInfo.id.toString();
         po.serveCode = UUID.randomUUID().toString();
         // 保存
         return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -105,8 +100,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser = userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -142,8 +135,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
             return ResultEnum.NAME_EXISTS;
         }
         ServiceRegistryPO po = ServiceRegistryMap.INSTANCES.dtoToPo(dto);
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        po.updateUser = userInfo.id.toString();
         return mapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

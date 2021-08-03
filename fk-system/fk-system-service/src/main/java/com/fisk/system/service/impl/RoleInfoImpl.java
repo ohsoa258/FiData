@@ -12,6 +12,7 @@ import com.fisk.system.dto.RoleInfoDTO;
 import com.fisk.system.dto.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
 import com.fisk.system.mapper.RoleInfoMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import com.fisk.system.service.IRoleInfoService;
 import com.fisk.system.map.RoleInfoMap;
@@ -26,8 +27,6 @@ import java.util.List;
 @Service
 public class RoleInfoImpl implements IRoleInfoService{
 
-    @Resource
-    UserHelper userHelper;
     @Resource
     RoleInfoMapper mapper;
 
@@ -58,9 +57,7 @@ public class RoleInfoImpl implements IRoleInfoService{
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         RoleInfoPO po= RoleInfoMap.INSTANCES.dtoToPo(dto);
-        po.createUser = userInfo.id.toString();
         return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -76,8 +73,6 @@ public class RoleInfoImpl implements IRoleInfoService{
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser=userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -116,10 +111,8 @@ public class RoleInfoImpl implements IRoleInfoService{
         if (data != null && data.id != dto.id) {
             return ResultEnum.NAME_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         model.roleDesc=dto.roleDesc;
         model.roleName=dto.roleName;
-        model.updateUser=userInfo.id.toString();
 
         return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -128,7 +121,7 @@ public class RoleInfoImpl implements IRoleInfoService{
     public IPage<RolePowerDTO> getPageRoleData(QueryDTO dto)
     {
         QueryWrapper<RoleInfoPO> queryWrapper = new QueryWrapper<>();
-        if (dto.name !=null && dto.name.length()!=0)
+        if (dto !=null && StringUtils.isNotEmpty(dto.name))
         {
             queryWrapper.lambda()
                     .like(RoleInfoPO::getRoleName, dto.name);
