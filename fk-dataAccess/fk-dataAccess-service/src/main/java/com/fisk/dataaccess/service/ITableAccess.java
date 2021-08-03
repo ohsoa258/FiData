@@ -152,4 +152,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 多表字段
      */
     List<FilterFieldDTO> getColumn();
+
+    /**
+     * 获取数据接入表名以及字段
+     *
+     * @return 表名及表字段
+     */
+    List<TableNameDTO> getDataAccessMeta();
 }

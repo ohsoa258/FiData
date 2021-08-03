@@ -1181,4 +1181,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         list.addAll(fieldDTOList);
         return list;
     }
+
+    @Override
+    public List<TableNameDTO> getDataAccessMeta() {
+
+        List<TableNameDTO> list = new ArrayList<>();
+
+        List<TableNameDTO> listTableName = baseMapper.listTableName();
+
+        for (TableNameDTO tableNameDTO : listTableName) {
+
+            TableNameDTO dto = new TableNameDTO();
+
+            List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
+
+            dto.id = tableNameDTO.id;
+            dto.tableName = tableNameDTO.tableName;
+            dto.list = listFieldName;
+
+            list.add(dto);
+        }
+
+        return list;
+    }
 }
