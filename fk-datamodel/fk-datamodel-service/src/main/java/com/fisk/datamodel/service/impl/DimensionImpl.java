@@ -39,8 +39,6 @@ public class DimensionImpl implements IDimension {
     DimensionMapper mapper;
     @Resource
     ProjectInfoMapper projectInfoMapper;
-    @Resource
-    UserHelper userHelper;
 
     @Override
     public List<DimensionSourceDTO> getDimensionList()
@@ -91,9 +89,7 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
-        model.createUser=userInfo.id.toString();
         return mapper.insert(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -119,9 +115,7 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         model= DimensionMap.INSTANCES.dtoToPo(dto);
-        model.updateUser=userInfo.id.toString();
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -132,8 +126,6 @@ public class DimensionImpl implements IDimension {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser=userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

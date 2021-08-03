@@ -3,10 +3,13 @@ package com.fisk.datamodel.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -28,5 +31,12 @@ public interface BusinessProcessMap {
      * @return 添加结果
      */
     BusinessProcessPO dtoToPo(BusinessProcessDTO dto);
+
+    /**
+     * po==>dropDto
+     * @param po
+     * @return
+     */
+    List<BusinessProcessDropDTO> poToDropPo(List<BusinessProcessPO> po);
 
 }

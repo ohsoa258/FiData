@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactListDTO;
 
 /**
  * @author JianWenYang
@@ -43,6 +44,6 @@ public interface IFact {
      * @param dto
      * @return
      */
-    IPage<FactDTO> getFactList(QueryDTO dto);
+    IPage<FactListDTO> getFactList(QueryDTO dto);
 
 }

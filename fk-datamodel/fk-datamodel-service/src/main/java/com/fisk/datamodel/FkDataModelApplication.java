@@ -15,6 +15,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.redis",
         "com.fisk.common.user",
         "com.fisk.common.filter",
+        "com.fisk.common.exception",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.datamodel.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client",
