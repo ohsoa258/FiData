@@ -24,6 +24,7 @@ import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
+import com.fisk.dataaccess.utils.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -347,6 +348,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         modelSync.setId(modelAccess.getId());
 
         boolean saveSync = syncmodeImpl.save(modelSync);
+        if (!saveSync) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
 ////        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
 ////
 ////       int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
@@ -658,10 +662,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String pwd = modelDataSource.getConnectPwd();
 
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
-        MysqlConUtils mysqlConUtils = new MysqlConUtils();
         List<TablePyhNameDTO> list = new ArrayList<>();
-
-        list = mysqlConUtils.getnrttable(url, user, pwd);
+        switch (modelDataSource.driveType) {
+            case "mysql":
+                // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+                MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+                break;
+            case "sqlserver":
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd);
+                break;
+            default:
+                break;
+        }
 
         return list;
     }
