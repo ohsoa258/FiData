@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -25,6 +22,9 @@ import java.util.List;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+
+    public static final String TAG_1 = "fact-attribute-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataModelApplication.class.getPackage().getName();
@@ -35,8 +35,8 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
+                .tags(new Tag(TAG_1, "事实字段"))
                 .securityContexts(securityContexts());
-
     }
 
     private List<SecurityContext> securityContexts() {

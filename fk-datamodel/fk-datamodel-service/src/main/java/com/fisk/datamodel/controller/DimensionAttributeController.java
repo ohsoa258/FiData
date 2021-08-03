@@ -3,7 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.dimension.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import io.swagger.annotations.Api;

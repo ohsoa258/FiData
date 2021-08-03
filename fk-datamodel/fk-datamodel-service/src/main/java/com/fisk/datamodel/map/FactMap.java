@@ -3,6 +3,7 @@ package com.fisk.datamodel.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.entity.FactPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -33,6 +34,6 @@ public interface FactMap {
      * 分页po==>dto
      * @return
      */
-    Page<FactDTO> pagePoToDto(IPage<FactPO> po);
+    Page<FactListDTO> pagePoToDto(IPage<FactPO> po);
 
 }

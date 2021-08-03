@@ -9,6 +9,7 @@ import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.mapper.BusinessProcessMapper;
@@ -16,6 +17,7 @@ import com.fisk.datamodel.service.IBusinessProcess;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -25,8 +27,6 @@ public class BusinessProcessImpl implements IBusinessProcess {
 
     @Resource
     BusinessProcessMapper mapper;
-    @Resource
-    UserHelper userHelper;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -50,9 +50,7 @@ public class BusinessProcessImpl implements IBusinessProcess {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         BusinessProcessPO model=BusinessProcessMap.INSTANCES.dtoToPo(dto);
-        model.createUser=userInfo.id.toString();
         return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -77,9 +75,7 @@ public class BusinessProcessImpl implements IBusinessProcess {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         model=BusinessProcessMap.INSTANCES.dtoToPo(dto);
-        model.updateUser=userInfo.id.toString();
         return mapper.updateById(model)>0?ResultEnum.SUCCESS: ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -91,9 +87,14 @@ public class BusinessProcessImpl implements IBusinessProcess {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser=userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<BusinessProcessDropDTO> getBusinessProcessDropList()
+    {
+        QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
+        return BusinessProcessMap.INSTANCES.poToDropPo(mapper.selectList(queryWrapper.select().orderByDesc("create_time")));
     }
 
 }

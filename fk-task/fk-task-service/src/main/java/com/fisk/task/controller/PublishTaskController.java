@@ -85,6 +85,19 @@ public class PublishTaskController {
     }
 
     /**
+     * Doris 增量更新
+     * @param entityId
+     * @return
+     */
+    @PostMapping("/dorisIncrementalUpdate")
+    public ResultEntity<Object> publishBuildDorisIncrementalUpdateTask(@RequestBody AtlasEntityDeleteDTO entityId) {
+        return service.publishTask(TaskTypeEnum.BUILD_DORIS_INCREMENTAL_UPDATE_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW,
+                entityId);
+    }
+
+    /**
      * Atlas删除实体
      * @param entityId
      * @return

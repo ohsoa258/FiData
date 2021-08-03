@@ -17,6 +17,7 @@ import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,7 +118,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     public Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query) {
         StringBuilder str = new StringBuilder();
-        if (query.key != null && query.key.length() > 0) {
+        if (query !=null && StringUtils.isNotEmpty(query.key)) {
             str.append(" and business_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
         //筛选器拼接

@@ -73,6 +73,14 @@ public class RabbitMQConfig {
     }
 
     /**
+     * 声明队列
+     */
+    @Bean("incrementDorisFlowQueue")
+    public Queue incrementDorisFlowQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW).build();
+    }
+
+    /**
      * 绑定队列和交换机
      */
     @Bean
@@ -124,6 +132,15 @@ public class RabbitMQConfig {
     public Binding incrementResultQueueExchange(@Qualifier("incrementResultQueue") Queue queue,
                                                 @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.INCREMENT_RESULT).noargs();
+    }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding incrementDorisFlowQueueExchange(@Qualifier("incrementDorisFlowQueue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_INCREMENTAL_ROUTER).noargs();
     }
 
     @Bean
