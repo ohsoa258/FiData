@@ -44,7 +44,7 @@ public class ConfigureFieldController {
         return ResultEntityBuild.build(configureFieldService.updateField(dto));
     }
 
-    @ApiOperation("根据configureId查询字段")
+    @ApiOperation("根据Api的id查询字段")
     @GetMapping("/getByConfigureId")
     public ResultEntity<List<ApiConfigureFieldPO>> getDataById(Integer configureId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(configureId));

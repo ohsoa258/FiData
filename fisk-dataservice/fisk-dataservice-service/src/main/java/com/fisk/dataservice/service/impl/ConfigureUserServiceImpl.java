@@ -2,6 +2,7 @@ package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
@@ -15,6 +16,7 @@ import com.fisk.dataservice.mapper.ConfigureUserMapper;
 import com.fisk.dataservice.mapper.MiddleConfigureMapper;
 import com.fisk.dataservice.service.ConfigureUserService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -52,7 +54,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             for (MiddleConfigurePO middleConfigure : configureList) {
                 QueryWrapper<ApiConfigurePO> query = new QueryWrapper<>();
                 query.lambda()
-                        .eq(ApiConfigurePO::getId , middleConfigure.getConfigureId())
+                        .eq(ApiConfigurePO::getId, middleConfigure.getConfigureId())
                         .select(ApiConfigurePO::getApiName);
                 ApiConfigurePO apiConfigure = apiConfigureMapper.selectOne(query);
                 user.setConfigureName(apiConfigure.getApiName());
@@ -63,22 +65,25 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public ResultEnum saveUser(ConfigureUserPO po,String apiName) {
+    public ResultEnum saveUser(ConfigureUserPO po, String apiName) {
         if (StringUtils.isEmpty(po)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        QueryWrapper<ConfigureUserPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(ConfigureUserPO::getUserName, po.getUserName())
-                .eq(ConfigureUserPO::getPassword, po.getPassword()).last("limit 1");
-        ConfigureUserPO selectOne = configureUserMapper.selectOne(queryWrapper);
-        if (selectOne != null){
-            return ResultEnum.DATA_EXISTS;
-        }
+        if (po.getId() == 0) {
+            // 用户不存在，先添加用户
+            QueryWrapper<ConfigureUserPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(ConfigureUserPO::getUserName, po.getUserName())
+                    .eq(ConfigureUserPO::getPassword, po.getPassword()).last("limit 1");
+            ConfigureUserPO selectOne = configureUserMapper.selectOne(queryWrapper);
+            if (selectOne != null) {
+                return ResultEnum.DATA_EXISTS;
+            }
 
-        if (configureUserMapper.insert(po) <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
+            if (configureUserMapper.insert(po) <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
         }
 
         MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
@@ -95,31 +100,62 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         }
 
         ConfigureUserPO user = ConfigureUserMap.INSTANCES.dtoToPo(dto);
-        return configureUserMapper.updateById(user)> 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return configureUserMapper.updateById(user) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum deleteUserById(Integer id) {
-        if (id == null){
+        if (id == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
         ConfigureUserPO configureUser = configureUserMapper.selectById(id);
-        if (StringUtils.isEmpty(configureUser)){
+        if (StringUtils.isEmpty(configureUser)) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        if (configureUserMapper.deleteById(id) <= 0){
+        if (configureUserMapper.deleteById(id) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         return middleMapper.deleteById(id) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public ConfigureUserPO byUserId(Integer id) {
+        ConfigureUserPO user = configureUserMapper.selectById(id);
+        if (StringUtils.isEmpty(user)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        } else {
+            return user;
+        }
+    }
+
+    @Override
+    public List<ApiConfigurePO> configureByUserId(Integer id) {
+        // 查询用户id下所有服务的id
+        QueryWrapper<MiddleConfigurePO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(MiddleConfigurePO::getUserId, id)
+                .select(MiddleConfigurePO::getConfigureId);
+        List<MiddleConfigurePO> configureList = middleMapper.selectList(query);
+        if (CollectionUtils.isEmpty(configureList)){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 根据服务id查询所有服务
+        List<ApiConfigurePO> apiConfigureList = new ArrayList<>();
+        for (MiddleConfigurePO middleConfigurePO : configureList) {
+            apiConfigureList.add(apiConfigureMapper.selectById(middleConfigurePO.getConfigureId()));
+        }
+        return apiConfigureList;
+    }
+
     /**
      * 根据apiName获取对应ID
+     *
      * @param apiName
      * @return
      */
-    public Integer obtainId(String apiName){
+    public Integer obtainId(String apiName) {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(ApiConfigurePO::getApiName, apiName)
