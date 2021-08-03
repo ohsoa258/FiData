@@ -9,6 +9,8 @@ import lombok.Data;
 @Data
 public class UserDTO {
     public Long id;
+    public String downSystemName;
+    public String systemInfo;
     public String userName;
     public String password;
 }

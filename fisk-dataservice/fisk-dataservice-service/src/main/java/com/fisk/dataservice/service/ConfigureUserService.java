@@ -19,7 +19,7 @@ public interface ConfigureUserService {
      * @param page
      * @return
      */
-    List<UserVO> listData(Page<ConfigureUserPO> page);
+    List<ConfigureUserPO> listData(Page<ConfigureUserPO> page);
 
     /**
      * 保存用户

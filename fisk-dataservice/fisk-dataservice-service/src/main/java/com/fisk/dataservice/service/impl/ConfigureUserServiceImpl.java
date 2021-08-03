@@ -6,11 +6,9 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
-import com.fisk.dataservice.vo.UserVO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import com.fisk.dataservice.entity.MiddleConfigurePO;
-import com.fisk.dataservice.map.ApiConfigureFieldMap;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.mapper.ConfigureUserMapper;
 import com.fisk.dataservice.mapper.MiddleConfigureMapper;
@@ -40,28 +38,8 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     private MiddleConfigureMapper middleMapper;
 
     @Override
-    public List<UserVO> listData(Page<ConfigureUserPO> page) {
-        List<ConfigureUserPO> userList = configureUserMapper.selectPage(page, null).getRecords();
-
-        List<UserVO> userVOList = new ArrayList<>();
-        for (ConfigureUserPO configureUser : userList) {
-            UserVO user = ApiConfigureFieldMap.INSTANCES.poToDto(configureUser);
-
-            // 查询出用户对应服务表ID
-            QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(MiddleConfigurePO::getUserId, configureUser.getId());
-            List<MiddleConfigurePO> configureList = middleMapper.selectList(queryWrapper);
-            for (MiddleConfigurePO middleConfigure : configureList) {
-                QueryWrapper<ApiConfigurePO> query = new QueryWrapper<>();
-                query.lambda()
-                        .eq(ApiConfigurePO::getId, middleConfigure.getConfigureId())
-                        .select(ApiConfigurePO::getApiName);
-                ApiConfigurePO apiConfigure = apiConfigureMapper.selectOne(query);
-                user.setConfigureName(apiConfigure.getApiName());
-                userVOList.add(user);
-            }
-        }
-        return userVOList;
+    public List<ConfigureUserPO> listData(Page<ConfigureUserPO> page) {
+        return configureUserMapper.selectPage(page, null).getRecords();
     }
 
     @Override

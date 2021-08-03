@@ -5,7 +5,6 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.UserDTO;
-import com.fisk.dataservice.vo.UserVO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import com.fisk.dataservice.service.ConfigureUserService;
 import io.swagger.annotations.ApiOperation;
@@ -28,7 +27,7 @@ public class ConfigureUserController {
 
     @ApiOperation("分页查询所有用户")
     @GetMapping("/getAll")
-    public ResultEntity<List<UserVO>> listData(Page<ConfigureUserPO> page) {
+    public ResultEntity<List<ConfigureUserPO>> listData(Page<ConfigureUserPO> page) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.listData(page));
     }
 
@@ -39,7 +38,7 @@ public class ConfigureUserController {
     }
 
     @ApiOperation("编辑用户")
-    @PostMapping("/editUser")
+    @PutMapping("/editUser")
     public ResultEntity<Object> editData(@Validated @RequestBody UserDTO dto) {
         return ResultEntityBuild.build(userService.updateUser(dto));
     }
@@ -51,13 +50,13 @@ public class ConfigureUserController {
     }
 
     @ApiOperation("根据id查询用户信息")
-    @DeleteMapping("/byUserId")
+    @GetMapping("/byUserId")
     public ResultEntity<Object> byUserId(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.byUserId(id));
     }
 
     @ApiOperation("根据用户id查询Api服务")
-    @DeleteMapping("/configureByUserId")
+    @GetMapping("/configureByUserId")
     public ResultEntity<Object> configureByUserId(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.configureByUserId(id));
     }
