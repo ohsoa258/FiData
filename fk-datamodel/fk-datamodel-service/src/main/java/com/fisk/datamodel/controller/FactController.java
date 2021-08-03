@@ -18,7 +18,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "事实表")
+@Api(description = "数仓建模-事实表")
 @RestController
 @RequestMapping("/fact")
 @Slf4j
@@ -33,27 +33,33 @@ public class FactController {
     }
 
     @ApiOperation("添加事实表")
-    @PostMapping("/addBusinessProcess")
-    public ResultEntity<Object> addBusinessProcess(@Validated @RequestBody FactDTO dto) {
+    @PostMapping("/addFact")
+    public ResultEntity<Object> addFact(@Validated @RequestBody FactDTO dto) {
         return ResultEntityBuild.build(service.addFact(dto));
     }
 
     @ApiOperation("根据id获取事实表详情")
-    @GetMapping("/getBusinessProcess/{id}")
-    public ResultEntity<Object> getBusinessProcess(@PathVariable("id") int id) {
+    @GetMapping("/getFact/{id}")
+    public ResultEntity<Object> getFact(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFact(id));
     }
 
     @ApiOperation("修改事实表")
-    @PutMapping("/editBusinessProcess")
-    public ResultEntity<Object> editBusinessProcess(@Validated @RequestBody FactDTO dto) {
+    @PutMapping("/editFact")
+    public ResultEntity<Object> editFact(@Validated @RequestBody FactDTO dto) {
         return ResultEntityBuild.build(service.updateFact(dto));
     }
 
     @ApiOperation("删除事实表")
-    @DeleteMapping("/deleteBusinessProcess/{id}")
-    public ResultEntity<Object> deleteBusinessProcess(@PathVariable("id") int id) {
+    @DeleteMapping("/deleteFact/{id}")
+    public ResultEntity<Object> deleteFact(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteFact(id));
+    }
+
+    @ApiOperation("获取事实表以及事实字段表数据")
+    @GetMapping("/getFactDropList")
+    public ResultEntity<Object> getFactDropList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactDropList());
     }
 
 }

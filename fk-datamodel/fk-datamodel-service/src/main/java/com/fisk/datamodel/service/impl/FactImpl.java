@@ -6,14 +6,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.map.FactMap;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -23,6 +29,8 @@ public class FactImpl implements IFact {
 
     @Resource
     FactMapper mapper;
+    @Resource
+    FactAttributeMapper attributeMapper;
 
     @Override
     public ResultEnum addFact(FactDTO dto)
@@ -82,6 +90,22 @@ public class FactImpl implements IFact {
         queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.id);
         Page<FactPO> data=new Page<>(dto.getPage(),dto.getSize());
         return FactMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
+    }
+
+    @Override
+    public List<FactDropDTO> getFactDropList()
+    {
+        //获取事实表数据
+        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        List<FactDropDTO> list=FactMap.INSTANCES.dropPoToDto(mapper.selectList(queryWrapper));
+        //获取事实字段表数据
+        QueryWrapper<FactAttributePO> attribute=new QueryWrapper<>();
+        for (FactDropDTO dto:list)
+        {
+            //向字段集合添加数据
+            dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute.lambda().eq(FactAttributePO::getFactId,dto.id)));
+        }
+        return list;
     }
 
 }

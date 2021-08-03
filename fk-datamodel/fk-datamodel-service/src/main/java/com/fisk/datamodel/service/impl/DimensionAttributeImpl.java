@@ -81,10 +81,9 @@ public class DimensionAttributeImpl
         {
             DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
                     .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
-                    .eq(DimensionAttributePO::getTableSourceField,item.tableSourceField)
+                    .eq(DimensionAttributePO::getTableSourceFieldId,item.tableSourceFieldId)
                     .eq(DimensionAttributePO::getAttributeType,item.attributeType)
                     .eq(DimensionAttributePO::getDimensionFieldType,item.dimensionFieldType)
-                    .eq(DimensionAttributePO::getTableSource,item.tableSource)
             );
             if (po !=null)
             {
