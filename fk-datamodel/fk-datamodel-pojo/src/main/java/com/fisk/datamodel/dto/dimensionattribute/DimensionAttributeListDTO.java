@@ -16,4 +16,13 @@ public class DimensionAttributeListDTO extends DimensionAttributeDTO {
      * 关联维度表名称
      */
     public String dimensionCnName;
+    /**
+     * 源表名
+     */
+    public String tableSource;
+    /**
+     * 源表字段
+     */
+    public String tableSourceField;
+
 }

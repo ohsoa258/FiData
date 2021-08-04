@@ -35,7 +35,7 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
-                .tags(new Tag(TAG_1, "事实字段"))
+                .tags(new Tag(TAG_1, "数仓建模-事实字段"))
                 .securityContexts(securityContexts());
     }
 

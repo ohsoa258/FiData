@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -45,5 +48,11 @@ public interface IFact {
      * @return
      */
     IPage<FactListDTO> getFactList(QueryDTO dto);
+
+    /**
+     * 获取事实表下拉列表
+     * @return
+     */
+    List<FactDropDTO> getFactDropList();
 
 }

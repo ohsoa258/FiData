@@ -4,17 +4,19 @@
 <mapper namespace="com.fisk.datamodel.mapper.FactAttributeMapper">
     <select id="getFactAttributeList" resultType="com.fisk.datamodel.dto.factattribute.FactAttributeListDTO">
         SELECT a.id,
-        a.table_source_field,
         a.fact_field_cn_name,
         a.fact_field_type,
         a.fact_field_length,
         a.fact_field_des,
         a.fact_field_en_name,
         a.attribute_type,
-        a.table_source,
-        b.dimension_cn_name
-        from tb_fact_attribute a
-        left join tb_dimension b on a.associate_dimension_id = b.id
+        b.dimension_cn_name,
+        c.field_name as tableSourceField,
+        d.table_name as tableSource
+        from dmp_datamodel_db.tb_fact_attribute a
+        left join dmp_datamodel_db.tb_dimension b on a.associate_dimension_id = b.id
+        left join dmp_datainput_db.tb_table_fields c on a.table_source_field_id = c.id
+        left join dmp_datainput_db.tb_table_access d on c.table_access_id=d.id
         where a.del_flag=1 and a.fact_id= ${factId} order by a.create_time desc
     </select>
 </mapper>
