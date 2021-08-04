@@ -220,7 +220,7 @@ public class PhysicalTableController {
             @RequestParam("appid") long appid,
             @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid, id));
+        return service.getAtlasWriteBackDataDTO(appid, id);
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
