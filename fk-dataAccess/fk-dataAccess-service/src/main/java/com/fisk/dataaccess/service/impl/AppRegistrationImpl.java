@@ -465,6 +465,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 FilterSqlConstants.APP_REGISTRATION_SQL);
     }
 
+    @Override
+    public List<AppNameDTO> getDataList() {
+
+        return baseMapper.getDataList();
+    }
+
     /**
      * 筛选器左边的模糊搜索查询SQL拼接
      *
