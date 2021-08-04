@@ -15,4 +15,22 @@
         left join tb_fact c on b.fact_id=c.id
         where a.del_flag=1 and a.id = #{id}
     </select>
+    <select id="queryList" resultType="com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO">
+        select a.id,
+        a.business_process_id,
+        a.fact_attribute_id,
+        a.calculation_logic,
+        a.indicators_name,
+        a.indicators_des,
+        b.fact_field_en_name as factFieldName,
+        c.fact_table_en_name as factName
+        from tb_atomic_indicators a
+        LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
+        LEFT JOIN tb_fact c on b.fact_id=c.id
+        where a.del_flag=1
+        <if test="query.businessProcessId!=0 ">
+           and a.business_process_id= ${query.businessProcessId}
+        </if>
+    </select>
+
 </mapper>

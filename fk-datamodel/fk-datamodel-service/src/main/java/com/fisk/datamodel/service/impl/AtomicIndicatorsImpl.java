@@ -1,9 +1,12 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
 import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO;
+import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
@@ -65,6 +68,12 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
             return ResultEnum.DATA_NOTEXISTS;
         }
         return mapper.updateById(AtomicIndicatorsMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public Page<AtomicIndicatorsResultDTO> getAtomicIndicatorList(AtomicIndicatorsQueryDTO dto)
+    {
+        return mapper.queryList(dto.page,dto);
     }
 
 }

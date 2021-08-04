@@ -3,9 +3,11 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -63,5 +65,12 @@ public class DimensionAttributeController {
     public ResultEntity<Object> editDimensionAttribute(@Validated @RequestBody DimensionAttributeUpdateDTO dto) {
         return ResultEntityBuild.build(service.updateDimensionAttribute(dto));
     }
+
+    @GetMapping("/getDimensionEntity")
+    @ApiOperation("获取维度表元数据(用于Doris创建表)")
+    public ResultEntity<DimensionMetaDataDTO> getDimensionEntity(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
+    }
+
 
 }
