@@ -1,10 +1,12 @@
 package com.fisk.datamodel.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,6 +49,12 @@ public class AtomicIndicatorsController {
     @PutMapping("/editAtomicIndicators")
     public ResultEntity<Object> editAtomicIndicators(@Validated @RequestBody AtomicIndicatorsDTO dto) {
         return ResultEntityBuild.build(service.updateAtomicIndicatorDetails(dto));
+    }
+
+    @PostMapping("/getAtomicIndicatorsList")
+    @ApiOperation(value = "获取原子指标数据列表")
+    public ResultEntity<Page<AtomicIndicatorsResultDTO>> getAtomicIndicatorsList(@RequestBody AtomicIndicatorsQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAtomicIndicatorList(query));
     }
 
 }

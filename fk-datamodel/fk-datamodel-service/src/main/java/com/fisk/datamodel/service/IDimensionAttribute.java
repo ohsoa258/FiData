@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 
 import java.util.List;
@@ -50,5 +51,12 @@ public interface IDimensionAttribute {
      * @return
      */
     ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto);
+
+    /**
+     * 根据维度id获取
+     * @param id
+     * @return
+     */
+    DimensionMetaDataDTO getDimensionMetaData(int id);
 
 }

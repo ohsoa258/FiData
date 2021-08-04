@@ -3,8 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
@@ -57,7 +56,7 @@ public class DimensionAttributeImpl
             DimensionAttributeAssociationDTO model=new DimensionAttributeAssociationDTO();
             model.tableName=po.dimensionTabName;
             model.associateDimensionId=po.id;
-            List<DimensionAttributePO> filter=list2.stream().filter(e->e.getDimensionId()==po.id).collect(Collectors.toList());
+            List<DimensionAttributePO> filter=list2.stream().filter(e->e.getDimensionId()==po.id && e.getAttributeType() !=2).collect(Collectors.toList());
             List<String> ids=new ArrayList<>();
             for (DimensionAttributePO attribute:filter)
             {
@@ -128,6 +127,34 @@ public class DimensionAttributeImpl
         po.dimensionFieldType=dto.dimensionFieldType;
         //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+
+    @Override
+    public DimensionMetaDataDTO getDimensionMetaData(int id)
+    {
+        DimensionMetaDataDTO data=new DimensionMetaDataDTO();
+        DimensionPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            return data;
+        }
+        data.dimensionTabName=po.dimensionTabName;
+        data.id=po.id;
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
+        List<DimensionAttributeMetaDataDTO> dtoList=new ArrayList<>();
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        for (DimensionAttributePO item:list)
+        {
+            DimensionAttributeMetaDataDTO dto=new DimensionAttributeMetaDataDTO();
+            dto.dimensionFieldEnName=item.dimensionFieldEnName;
+            dto.dimensionFieldLength=item.dimensionFieldLength;
+            dto.dimensionFieldType=item.dimensionFieldType;
+            dtoList.add(dto);
+        }
+        data.dto=dtoList;
+        return data;
     }
 
 }
