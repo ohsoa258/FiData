@@ -4,17 +4,20 @@
 <mapper namespace="com.fisk.datamodel.mapper.DimensionAttributeMapper">
     <select id="getDimensionAttributeList" resultType="com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO">
         SELECT a.id,
-        a.table_source_field,
+        a.table_source_field_id,
         a.dimension_field_cn_name,
         a.dimension_field_type,
         a.dimension_field_length,
         a.dimension_field_des,
         a.dimension_field_en_name,
         a.attribute_type,
-        a.table_source,
-        b.dimension_cn_name
-        from tb_dimension_attribute a
-        left join tb_dimension b on a.associate_dimension_id = b.id
+        b.dimension_cn_name,
+        c.field_name as tableSourceField,
+        d.table_name as tableSource
+        from dmp_datamodel_db.tb_dimension_attribute a
+        left join dmp_datamodel_db.tb_dimension b on a.associate_dimension_id = b.id
+        left join dmp_datainput_db.tb_table_fields c on a.table_source_field_id = c.id
+        left join dmp_datainput_db.tb_table_access d on c.table_access_id=d.id
         where a.del_flag=1 and a.dimension_id= ${dimensionId} order by a.create_time desc
     </select>
 </mapper>

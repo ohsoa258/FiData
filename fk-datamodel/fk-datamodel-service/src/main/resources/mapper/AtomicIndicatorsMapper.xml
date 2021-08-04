@@ -1,0 +1,18 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.AtomicIndicatorsMapper">
+    <select id="AtomicIndicatorsDetailDTO" resultType="com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO">
+        SELECT a.id,
+        a.business_process_id,
+        a.fact_attribute_id,
+        a.calculation_logic,
+        a.indicators_name,
+        a.indicators_des,
+        c.id as fact_id
+        from tb_atomic_indicators a
+        left join tb_fact_attribute b on a.fact_attribute_id = b.id
+        left join tb_fact c on b.fact_id=c.id
+        where a.del_flag=1 and a.id = #{id}
+    </select>
+</mapper>

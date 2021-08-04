@@ -240,4 +240,11 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
     }
+
+    @ApiOperation("获取数据接入表名以及字段")
+    @GetMapping("/getDataAccessMeta")
+    public ResultEntity<Object> getDataAccessMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessMeta());
+    }
+
 }

@@ -8,9 +8,9 @@ import lombok.Data;
 @Data
 public class DimensionAttributeDTO {
     /**
-     * 表字段来源
+     * 表字段来源id
      */
-    public String tableSourceField;
+    public int tableSourceFieldId;
     /**
      * 维度表中文字段名称
      */
@@ -40,9 +40,5 @@ public class DimensionAttributeDTO {
      * 关联维度表id
      */
     public int associateDimensionId;
-    /**
-     * 表来源
-     */
-    public String tableSource;
 
 }

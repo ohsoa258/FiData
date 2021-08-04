@@ -46,8 +46,7 @@ public class FactAttributeImpl
             FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
                     .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
                     .eq(FactAttributePO::getFactFieldType, item.factFieldType)
-                    .eq(FactAttributePO::getTableSource, item.tableSource)
-                    .eq(FactAttributePO::getTableSourceField, item.tableSourceField));
+                    .eq(FactAttributePO::getTableSourceFieldId, item.tableSourceFieldId));
             if (po != null) {
                 isExit = true;
                 break;
