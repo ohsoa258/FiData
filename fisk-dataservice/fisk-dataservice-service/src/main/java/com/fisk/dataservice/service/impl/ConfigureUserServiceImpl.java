@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
 import com.fisk.dataservice.entity.ApiConfigurePO;
@@ -43,31 +44,49 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public ResultEnum saveUser(ConfigureUserPO po, String apiName) {
-        if (StringUtils.isEmpty(po)) {
+    public ResultEnum saveUserConfigure(UserConfigureDTO dto) {
+        if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        if (po.getId() == 0) {
-            // 用户不存在，先添加用户
-            QueryWrapper<ConfigureUserPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(ConfigureUserPO::getUserName, po.getUserName())
-                    .eq(ConfigureUserPO::getPassword, po.getPassword()).last("limit 1");
-            ConfigureUserPO selectOne = configureUserMapper.selectOne(queryWrapper);
-            if (selectOne != null) {
-                return ResultEnum.DATA_EXISTS;
-            }
-
-            if (configureUserMapper.insert(po) <= 0) {
-                return ResultEnum.SAVE_DATA_ERROR;
-            }
+        // 用户不存在，先添加用户
+        ConfigureUserPO configureUser = configureUserMapper.selectById(dto.id);
+        if (configureUser == null){
+            return ResultEnum.DATA_NOTEXISTS;
         }
 
-        MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
-        middleConfigure.setUserId(Integer.parseInt(String.valueOf(po.getId())));
-        middleConfigure.setConfigureId(obtainId(apiName));
-        return middleMapper.insert(middleConfigure) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 用户存在，添加Api服务
+        List<Integer> apiIds = new ArrayList<>();
+        List<String> apiName = dto.getApiName();
+        for (String name : apiName) {
+            apiIds.add(obtainId(name));
+        }
+
+        for (Integer apiId : apiIds) {
+            MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
+            middleConfigure.setUserId(Integer.parseInt(String.valueOf(dto.id)));
+            middleConfigure.setConfigureId(apiId);
+            if (middleMapper.insert(middleConfigure) <= 0){
+                return  ResultEnum.SAVE_DATA_ERROR;
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum saveUser(ConfigureUserPO dto) {
+        if (StringUtils.isEmpty(dto)) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        QueryWrapper<ConfigureUserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ConfigureUserPO::getDownSystemName, dto.getDownSystemName()).last("limit 1");
+        ConfigureUserPO configureUser = configureUserMapper.selectOne(queryWrapper);
+        if (configureUser != null){
+            return ResultEnum.DATA_EXISTS;
+        }
+        return configureUserMapper.insert(dto) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

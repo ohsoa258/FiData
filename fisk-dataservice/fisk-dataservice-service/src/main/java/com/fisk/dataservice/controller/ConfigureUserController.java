@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import com.fisk.dataservice.service.ConfigureUserService;
@@ -27,25 +28,31 @@ public class ConfigureUserController {
 
     @ApiOperation("分页查询所有用户")
     @GetMapping("/getAll")
-    public ResultEntity<List<ConfigureUserPO>> listData(Page<ConfigureUserPO> page) {
+    public ResultEntity<List<ConfigureUserPO>> getAll(Page<ConfigureUserPO> page) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.listData(page));
     }
 
     @ApiOperation("添加用户配置服务")
+    @PostMapping("/addUserConfigure")
+    public ResultEntity<Object> addUserConfigure(@Validated @RequestBody UserConfigureDTO dto) {
+        return ResultEntityBuild.build(userService.saveUserConfigure(dto));
+    }
+
+    @ApiOperation("添加用户")
     @PostMapping("/addUser")
-    public ResultEntity<Object> addData(@Validated @RequestBody ConfigureUserPO dto ,String apiName) {
-        return ResultEntityBuild.build(userService.saveUser(dto,apiName));
+    public ResultEntity<Object> addUser(@Validated @RequestBody ConfigureUserPO dto) {
+        return ResultEntityBuild.build(userService.saveUser(dto));
     }
 
     @ApiOperation("编辑用户")
     @PutMapping("/editUser")
-    public ResultEntity<Object> editData(@Validated @RequestBody UserDTO dto) {
+    public ResultEntity<Object> editUser(@Validated @RequestBody UserDTO dto) {
         return ResultEntityBuild.build(userService.updateUser(dto));
     }
 
     @ApiOperation("删除用户下的所有服务")
-    @DeleteMapping("/deleteUser")
-    public ResultEntity<Object> deleteDataById(Integer id) {
+    @DeleteMapping("/deleteUserById")
+    public ResultEntity<Object> deleteUserById(Integer id) {
         return ResultEntityBuild.build(userService.deleteUserById(id));
     }
 

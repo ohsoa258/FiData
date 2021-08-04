@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.vo.UserVO;
@@ -22,11 +23,18 @@ public interface ConfigureUserService {
     List<ConfigureUserPO> listData(Page<ConfigureUserPO> page);
 
     /**
-     * 保存用户
+     * 保存用户服务
      * @param dto
      * @return
      */
-    ResultEnum saveUser(ConfigureUserPO dto,String apiName);
+    ResultEnum saveUserConfigure(UserConfigureDTO dto);
+
+    /**
+     * 添加用户
+     * @param dto
+     * @return
+     */
+    ResultEnum saveUser(ConfigureUserPO dto);
 
     /**
      * 编辑用户
