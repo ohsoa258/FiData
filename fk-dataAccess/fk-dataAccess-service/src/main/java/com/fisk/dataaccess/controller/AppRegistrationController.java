@@ -5,6 +5,7 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -21,7 +22,7 @@ import java.util.List;
 /**
  * @author Lock
  */
-@Api(description = "应用注册接口")
+@Api(tags = {SwaggerConfig.TAG_1})
 @RestController
 @RequestMapping("/appRegistration")
 @Slf4j
