@@ -114,4 +114,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 表字段
      */
     List<FilterFieldDTO> getColumn();
+
+    /**
+     * 获取应用注册名称和id
+     *
+     * @return 应用名称
+     */
+    List<AppNameDTO> getDataList();
 }

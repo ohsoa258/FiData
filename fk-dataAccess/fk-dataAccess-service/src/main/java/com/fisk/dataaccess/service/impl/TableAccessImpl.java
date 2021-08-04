@@ -266,7 +266,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
 
-        // 判断table_name是否已存在(不同应用注册下,名称可以相同)
 //        List<String> tableNameList = baseMapper.getTableName();
 //        String tableName = modelAccess.getTableName();
 //        boolean contains = tableNameList.contains(tableName);
@@ -275,6 +274,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
 //        }
 
+        // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
@@ -486,7 +486,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 
-        // 保存tb_table_fields数据: 分为更新和添加数据
+        // 保存tb_table_fields数据
         boolean updateField = true;
         List<TableFieldsDTO> list = dto.getList();
 
@@ -1187,17 +1187,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         List<TableNameDTO> list = new ArrayList<>();
 
+        // 获取所有表
         List<TableNameDTO> listTableName = baseMapper.listTableName();
 
         for (TableNameDTO tableNameDTO : listTableName) {
 
             TableNameDTO dto = new TableNameDTO();
 
+            // 根据tb_access_id获取表字段及id
             List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
 
             dto.id = tableNameDTO.id;
             dto.tableName = tableNameDTO.tableName;
-            dto.list = listFieldName;
+            dto.field = listFieldName;
 
             list.add(dto);
         }

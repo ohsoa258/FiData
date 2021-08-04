@@ -23,6 +23,8 @@ public class AppNameDTO extends BaseDTO {
 
     public byte appType;
 
+    public long id;
+
 //    public List<String> appName;
 
     public AppNameDTO(BaseEntity entity) {

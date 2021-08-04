@@ -23,6 +23,6 @@ public class TableNameDTO {
     /**
      * 表字段
      */
-    public List<FieldNameDTO> list;
+    public List<FieldNameDTO> field;
     
 }

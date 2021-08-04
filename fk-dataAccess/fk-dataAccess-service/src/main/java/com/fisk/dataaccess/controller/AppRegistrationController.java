@@ -5,10 +5,7 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppDriveTypeDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
-import com.fisk.dataaccess.dto.AppRegistrationQueryDTO;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
@@ -147,5 +144,12 @@ public class AppRegistrationController {
             @RequestParam("atlas_db_id") String atlasDbId) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasInstanceIdAndDbId(appid, atlasInstanceId, atlasDbId));
+    }
+
+    @ApiOperation(value = "获取应用注册名称")
+    @GetMapping("/getAppName")
+    public ResultEntity<List<AppNameDTO>> getAppNameAndId() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
 }
