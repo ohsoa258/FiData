@@ -63,4 +63,10 @@ public class FactController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactDropList());
     }
 
+    @ApiOperation("获取事实表下拉列表")
+    @GetMapping("/getFactScreenDropList")
+    public ResultEntity<Object> getFactScreenDropList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactScreenDropList());
+    }
+
 }

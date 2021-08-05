@@ -34,8 +34,8 @@
 		b.dimension_field_des,
 		b.dimension_field_en_name,
 		a.attribute_type,
+		c.dimension_cn_name,
 		b.dimension_field_en_name AS tableSourceField,
-		c.dimension_cn_name AS tableSourceField,
 		c.dimension_tab_name AS tableSource
 	    FROM dmp_datamodel_db.tb_dimension_attribute a
 		LEFT JOIN dmp_datamodel_db.tb_dimension_attribute b ON a.associate_dimension_id = b.id

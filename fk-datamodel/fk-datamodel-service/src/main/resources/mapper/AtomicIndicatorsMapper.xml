@@ -28,8 +28,11 @@
         LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
         LEFT JOIN tb_fact c on b.fact_id=c.id
         where a.del_flag=1
-        <if test="query.businessProcessId!=0 ">
+        <if test="query.businessProcessId !=0 ">
            and a.business_process_id= ${query.businessProcessId}
+        </if>
+        <if test="query.factId !=0 ">
+            and c.id= ${query.factId}
         </if>
     </select>
 
