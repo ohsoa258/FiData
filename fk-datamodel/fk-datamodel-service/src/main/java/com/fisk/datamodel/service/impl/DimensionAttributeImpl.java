@@ -143,10 +143,20 @@ public class DimensionAttributeImpl
         for (DimensionAttributePO item:list)
         {
             DimensionAttributeMetaDataDTO dto=new DimensionAttributeMetaDataDTO();
-            dto.dimensionFieldEnName=item.dimensionFieldEnName;
-            dto.dimensionFieldLength=item.dimensionFieldLength;
-            dto.dimensionFieldType=item.dimensionFieldType;
-            dtoList.add(dto);
+            //判断是否为关联维度
+            if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            {
+                //查看关联维度字段相关信息
+                DimensionAttributePO po1=attributeMapper.selectById(item.associateDimensionId);
+                if (po1 !=null)
+                {
+                    po1.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                    dtoList.add(DimensionAttributeMap.INSTANCES.poToMetaDto(po1));
+                }
+            }
+            else {
+                dtoList.add(DimensionAttributeMap.INSTANCES.poToMetaDto(item));
+            }
         }
         data.dto=dtoList;
         return data;
