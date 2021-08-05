@@ -1,9 +1,11 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.entity.GbfPO;
 import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fisk.dataservice.utils.TransformationUtils.toFirstChar;
@@ -128,5 +131,22 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         }else {
             return apiConfigureField;
         }
+    }
+
+    @Override
+    public Object getAllField() {
+        List<Object> objectList = new ArrayList<>();
+        GbfPO gbf = new GbfPO();
+        gbf.setTableName("gbf");
+        gbf.setId("id");
+        gbf.setStudentNo("studentNo");
+        gbf.setName("name");
+        gbf.setAge("age");
+        gbf.setHeight("height");
+        gbf.setWeight("weight");
+        gbf.setGender("gender");
+        objectList.add(gbf);
+
+        return objectList;
     }
 }

@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import com.fisk.dataservice.service.ConfigureUserService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import java.util.List;
  * @author WangYan
  * @date 2021/7/30 14:15
  */
+@Api(tags = {SwaggerConfig.TAG_3})
 @RestController
 @RequestMapping("/User")
 public class ConfigureUserController {

@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.service.ApiFieldService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.Map;
  * @author WangYan
  * @date 2021/7/13 13:26
  */
+@Api(tags = {SwaggerConfig.TAG_1})
 @RestController
 @RequestMapping("/api")
 public class ApiFieldController {

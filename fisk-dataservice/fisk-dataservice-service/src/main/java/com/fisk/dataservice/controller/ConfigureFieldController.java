@@ -1,13 +1,14 @@
 package com.fisk.dataservice.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.service.ApiConfigureFieldService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
  * @author WangYan
  * @date 2021/7/8 10:04
  */
+@Api(tags = {SwaggerConfig.TAG_2})
 @RestController
 @RequestMapping("/config")
 public class ConfigureFieldController {
@@ -54,5 +56,11 @@ public class ConfigureFieldController {
     @GetMapping("/getById")
     public ResultEntity<Object> getById(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getById(id));
+    }
+
+    @ApiOperation("获取字段拼接")
+    @GetMapping("/getAllField")
+    public ResultEntity<Object> getAllField() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getAllField());
     }
 }

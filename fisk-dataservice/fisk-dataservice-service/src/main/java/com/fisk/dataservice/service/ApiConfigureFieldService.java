@@ -46,4 +46,10 @@ public interface ApiConfigureFieldService {
      * @return
      */
     ApiConfigureFieldPO getById(Integer id);
+
+    /**
+     * 获取每张表的所有字段拼接
+     * @return
+     */
+    Object getAllField();
 }
