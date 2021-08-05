@@ -1,7 +1,6 @@
 package com.fisk.common.user;
 
 import com.fisk.common.constants.SystemConstants;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
@@ -46,10 +45,15 @@ public class UserHelper {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if(requestAttributes == null)
         {
-            throw new FkException(ResultEnum.NOTFOUND_REQUEST);
+            return null;
         }
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-        String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH).replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
+        if(StringUtils.isEmpty(token))
+        {
+            return null;
+        }
+        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
         //解析token
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();

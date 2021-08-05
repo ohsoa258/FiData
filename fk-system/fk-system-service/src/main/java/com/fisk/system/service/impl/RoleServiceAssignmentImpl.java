@@ -10,7 +10,6 @@ import com.fisk.system.entity.RoleServiceAssignmentPO;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.ServiceRegistryPO;
 import com.fisk.system.map.RoleServiceAssignmentMap;
-import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.RoleServiceAssignmentMapper;
 import com.fisk.system.mapper.RoleUserAssignmentMapper;
 import com.fisk.system.mapper.ServiceRegistryMapper;
@@ -51,8 +50,6 @@ public class RoleServiceAssignmentImpl
     @Override
     public ResultEnum addRoleServiceAssignment(AssignmentDTO dto)
     {
-        /*获取登录信息*/
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         /*查询当前角色所有用户*/
         QueryWrapper<RoleServiceAssignmentPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(RoleServiceAssignmentPO::getRoleId,dto.id);
@@ -74,7 +71,6 @@ public class RoleServiceAssignmentImpl
             RoleServiceAssignmentPO model=new RoleServiceAssignmentPO();
             model.roleId=dto.id;
             model.serviceId=item;
-            model.createUser=userInfo.id.toString();
             list.add(model);
         }
         return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
@@ -114,7 +110,7 @@ public class RoleServiceAssignmentImpl
                 .collect(Collectors.toList());
         for (ServiceRegistryPO po : listParent) {
             LoginServiceDTO dto=new LoginServiceDTO();
-            dto.name=po.serveEnName;
+            dto.name=po.serveUrl;
             dto.path="/"+po.serveUrl;
             dto.component="Layout";
             IconDTO icon=new IconDTO();
@@ -128,12 +124,12 @@ public class RoleServiceAssignmentImpl
             for (ServiceRegistryPO item : listChild)
             {
                 LoginServiceDTO obj=new LoginServiceDTO();
-                obj.name=po.serveEnName;
+                obj.name=po.serveUrl;
                 obj.path="/"+po.serveUrl;
                 obj.component=item.serveUrl;
                 data.add(obj);
             }
-            dto.setDto(data);
+            dto.setChildren(data);
             dtoList.add(dto);
         }
         return dtoList;

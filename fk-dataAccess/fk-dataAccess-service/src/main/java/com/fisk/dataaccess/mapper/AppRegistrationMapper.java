@@ -2,7 +2,7 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -34,6 +34,14 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     List<String> getAppName();
 
     /**
+     * 根据appName查询id
+     * @param appName appName
+     * @return 返回值
+     */
+    @Select("select id from tb_app_registration where app_name=#{app_name} and del_flag=1")
+    Long getIdByAppName(@Param("app_name")String appName);
+
+    /**
      * 倒序查询
      * @return 返回值
      */
@@ -41,11 +49,19 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     List<AppRegistrationPO> getDescDate();
 
     /**
-     * 筛选器
+     * 筛选器分页功能
      *
-     * @param page page
-     * @param query query
+     * @param page  分页对象
+     * @param query query对象
      * @return 查询结果
      */
-    Page<AppRegistrationDTO> filter(Page<AppRegistrationDTO> page, @Param("query") AppRegistrationPageDTO query);
+    Page<AppRegistrationVO> filter(Page<AppRegistrationVO> page, @Param("query") AppRegistrationPageDTO query);
+
+    /**
+     * 获取应用注册名称和id
+     *
+     * @return 应用名称
+     */
+    @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1;")
+    List<AppNameDTO> getDataList();
 }

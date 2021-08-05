@@ -25,6 +25,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -329,7 +330,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
-     * 查询所有非实时应用名称
+     * 查询所有非实时应用名称(弃用)
      *
      * @return 返回值
      */
@@ -436,32 +437,55 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
     @Override
-    public Page<AppRegistrationDTO> filter(AppRegistrationQueryDTO query) {
+    public Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query) {
 
-        StringBuilder str = new StringBuilder();
+        StringBuilder querySql = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {
-            str.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+            querySql.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
+//        String key = "app_name";
+//        StringBuilder querySql = getQuerySql(key, query.value);
 
-        //筛选器
-        str.append(generateCondition.getCondition(query.dto));
-
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
         AppRegistrationPageDTO data = new AppRegistrationPageDTO();
         data.page = query.page;
-
-        data.where = str.toString();
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
 
         return baseMapper.filter(query.page, data);
     }
 
-
     @Override
     public List<FilterFieldDTO> getColumn() {
-return null;
-        /*return getMetadata.getMetadataList(
+        return getMetadata.getMetadataList(
                 "dmp_datainput_db",
                 "tb_app_registration",
-                "", FilterSqlConstants.APP_REGISTRATION_SQL);*/
+                "",
+                FilterSqlConstants.APP_REGISTRATION_SQL);
     }
+
+    @Override
+    public List<AppNameDTO> getDataList() {
+
+        return baseMapper.getDataList();
+    }
+
+    /**
+     * 筛选器左边的模糊搜索查询SQL拼接
+     *
+     * @param key   字段名称
+     * @param value 字段值
+     * @return SQL语句
+     */
+//    private StringBuilder getQuerySql(String key, String value) {
+//
+//        StringBuilder querySql = new StringBuilder();
+//        if (value != null && value.length() > 0) {
+//            querySql.append(" and " + key + " like concat('%', " + "'" + value + "'" + ", '%') ");
+//        }
+//
+//        return querySql;
+//    }
 
 }

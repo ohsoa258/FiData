@@ -1,6 +1,8 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.datamodel.dto.ProjectDimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -18,5 +20,20 @@ public interface DimensionAttributeMap {
      * @param dto
      * @return
      */
-    DimensionAttributePO dtoToPo(ProjectDimensionAttributeDTO dto);
+    DimensionAttributePO dtoToPo(DimensionAttributeDTO dto);
+
+    /**
+     * updateDto==>po
+     * @param dto
+     * @return
+     */
+    DimensionAttributePO updateDtoToPo(DimensionAttributeUpdateDTO dto);
+
+    /**
+     * po==>MetaDto
+     * @param po
+     * @return
+     */
+    DimensionAttributeMetaDataDTO poToMetaDto(DimensionAttributePO po);
+
 }

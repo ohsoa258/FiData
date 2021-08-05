@@ -54,24 +54,18 @@ public class BuildDorisTaskListener {
         StringBuilder sqlAggregate = new StringBuilder("AGGREGATE KEY(");
         StringBuilder sqlSelectStrBuild = new StringBuilder();
         StringBuilder sqlDistributed = new StringBuilder("DISTRIBUTED BY HASH(");
+        sqlDistributed.append("doris_custom_data_flag");
         dto.columns.forEach((l) -> {
-            sqlDistributed.append("doris_custom_data_flag");
             sqlFileds.append(l.columnName + " " + l.dataType + " comment " + "'" + l.comment + "' ,");
             sqlAggregate.append(l.columnName + ",");
             sqlSelectStrBuild.append(l.columnName + ",");
         });
+        sqlFileds.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' ,");
+        sqlAggregate.append("fk_doris_increment_code ,doris_custom_data_flag ,");
         sqlDistributed.append(") BUCKETS 10");
         String aggregateStr = sqlAggregate.toString();
         aggregateStr = aggregateStr.substring(0, aggregateStr.lastIndexOf(",")) + ")";
-        String selectStr = sqlSelectStrBuild.toString();
-        selectStr = selectStr.substring(0, selectStr.lastIndexOf(",")) + ")";
-        sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" ").toString());
-        String sqlSelectStr = "";
-        if (dto.syncType.equals("timestamp_incremental")) {
-            sqlSelectStr = "select " + selectStr + " from " + dto.tableName + "where where " + dto.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
-        } else {
-            sqlSelectStr = "select " + selectStr + " from " + dto.tableName;
-        }
+        sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" comment '系统字段，默认分桶'").toString());
         sql.append(")");
         sql.append(aggregateStr);
         sql.append(sqlDistributed.toString());

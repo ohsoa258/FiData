@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.dimensionattribute;
 
 import lombok.Data;
 
@@ -6,15 +6,11 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ProjectDimensionAttributeDTO {
+public class DimensionAttributeDTO {
     /**
-     * 维度表id
+     * 表字段来源id
      */
-    public int dimensionId;
-    /**
-     * 表字段来源
-     */
-    public String tableSourceField;
+    public int tableSourceFieldId;
     /**
      * 维度表中文字段名称
      */
@@ -43,5 +39,6 @@ public class ProjectDimensionAttributeDTO {
     /**
      * 关联维度表id
      */
-    public int associate_dimension_id;
+    public int associateDimensionId;
+
 }

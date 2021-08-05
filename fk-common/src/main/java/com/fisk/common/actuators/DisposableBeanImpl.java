@@ -3,6 +3,7 @@ package com.fisk.common.actuators;
 
 import com.fisk.common.mdc.MDCHelper;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.utils.DateTimeUtils;
 import com.netflix.discovery.DiscoveryManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -22,6 +23,6 @@ public class DisposableBeanImpl implements DisposableBean {
         MDCHelper.setClass(DisposableBeanImpl.class.getName());
         MDCHelper.setFunction("destroy");
         MDCHelper.setAppLogType(TraceTypeEnum.PROJECT_SHUTDOWN);
-        log.info("------------【" + LocalDateTime.now() + "】项目停止运行------------");
+        log.info("------------【" + DateTimeUtils.getNow() + "】项目停止运行------------");
     }
 }

@@ -24,6 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.util.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FkTaskApplication.class)
 @RunWith(SpringRunner.class)
@@ -56,7 +57,7 @@ public class NifiBuildTest {
         position.setX(300.00);
         position.setY(300.00);
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO() {{
-            pid = groupPid;
+            groupId = groupPid;
             name = "test";
             details = "";
             positionDTO = position;
@@ -127,7 +128,7 @@ public class NifiBuildTest {
             scheduleType = SchedulingStrategyTypeEnum.CRON;
             scheduleExpression = "0 0/1 * * * ? ";
         }};
-        BusinessResult<ProcessorEntity> res = service.buildExecuteSqlProcess(dto);
+        BusinessResult<ProcessorEntity> res = service.buildExecuteSqlProcess(dto, new ArrayList<String>());
         System.out.println(JSON.toJSONString(res));
     }
 

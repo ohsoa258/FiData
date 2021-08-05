@@ -70,12 +70,37 @@ public interface INifiComponentsBuild {
     /* 组件创建 */
 
     /**
-     * 创建ExecuteSQL组件
+     * 创建MergeContent组件
      *
      * @param data dto
      * @return Processor组件
      */
-    BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data);
+    BusinessResult<ProcessorEntity> buildMergeContentProcess(BuildMergeContentProcessorDTO data);
+
+    /**
+     * 创建ReplaceText组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data);
+
+    /**
+     * 创建PublishMQ组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildPublishMqProcess(BuildPublishMqProcessorDTO data);
+
+    /**
+     * 创建ExecuteSQL组件
+     *
+     * @param data dto
+     * @param autoEnd auto end
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data, List<String> autoEnd);
 
     /**
      * 创建ConvertToJson组件
@@ -100,6 +125,14 @@ public interface INifiComponentsBuild {
      * @return Processor组件
      */
     BusinessResult<ProcessorEntity> buildPutSqlProcess(BuildPutSqlProcessorDTO data);
+
+    /**
+     * 创建UpdateAttribute组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildUpdateAttribute(BuildUpdateAttributeDTO data);
 
     /**
      * 创建EvaluateJsonPath组件

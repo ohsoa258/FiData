@@ -7,6 +7,9 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
@@ -36,13 +39,11 @@ public class DimensionImpl implements IDimension {
     DimensionMapper mapper;
     @Resource
     ProjectInfoMapper projectInfoMapper;
-    @Resource
-    UserHelper userHelper;
 
     @Override
-    public List<ProjectDimensionSourceDTO> getDimensionList()
+    public List<DimensionSourceDTO> getDimensionList()
     {
-        List<ProjectDimensionSourceDTO> list=new ArrayList<>();
+        List<DimensionSourceDTO> list=new ArrayList<>();
         //获取项目下所有业务域
         QueryWrapper<ProjectInfoPO> projectInfo=new QueryWrapper<>();
         projectInfo.select("businessid");
@@ -65,7 +66,7 @@ public class DimensionImpl implements IDimension {
         Collections.reverse(dimensionPo);
         for (DataAreaPO item:dataArea)
         {
-            ProjectDimensionSourceDTO dto=new ProjectDimensionSourceDTO();
+            DimensionSourceDTO dto=new DimensionSourceDTO();
             dto.id=item.id;
             dto.dimensionCnName=item.dataName;
             /*dto.data= DimensionMap.INSTANCES.listPoToListDto(
@@ -88,14 +89,12 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
-        model.createUser=userInfo.id.toString();
         return mapper.insert(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ProjectDimensionAssociationDTO getDimension(int id)
+    public DimensionAssociationDTO getDimension(int id)
     {
         return mapper.getDimension(id);
     }
@@ -116,9 +115,7 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         model= DimensionMap.INSTANCES.dtoToPo(dto);
-        model.updateUser=userInfo.id.toString();
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -129,24 +126,18 @@ public class DimensionImpl implements IDimension {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser=userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ProjectDimensionAssociationDTO getRegionDetail(int id)
-    {
-        return mapper.getDimensionAssociation(id);
-    }
-
-    @Override
-    public IPage<DimensionDTO> getDimension(QueryDTO dto)
+    public IPage<DimensionDTO> getDimensionList(QueryDTO dto)
     {
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        if (dto.businessId !=0)
+        if (dto.id !=0)
         {
-            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId);
+            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.id)
+                                 .or()
+                                 .eq(DimensionPO::getShare,true);
         }
         Page<DimensionPO> data=new Page<>(dto.getPage(),dto.getSize());
         return DimensionMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));

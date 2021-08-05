@@ -9,6 +9,7 @@ import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 
 import java.util.List;
@@ -61,5 +62,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param id 数据源连接地址
      * @return 数据源下的数据域
      */
-    List<DataDomainVO> listDataDomain(int id);
+    ResultEntity<List<DataDomainVO>> listDataDomain(int id);
 }

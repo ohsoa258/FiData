@@ -77,4 +77,23 @@ public class ResultEntityBuild {
 
         return res;
     }
+
+    /**
+     * 创建请求结果对象(对接atlas时创建的)
+     *
+     * @param code 错误状态码
+     * @param msg  额外报错描述
+     * @param <T>  返回数据的类型
+     * @return 请求结果对象
+     */
+    public static <T> ResultEntity<T> buildData(int code, String msg) {
+        if (String.valueOf(code).isEmpty()) {
+            code = ResultEnum.SUCCESS.getCode();
+        }
+        ResultEntity<T> res = new ResultEntity<T>();
+        res.code = code;
+        res.msg = msg;
+
+        return res;
+    }
 }

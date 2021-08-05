@@ -17,7 +17,8 @@ public enum AutoEndBranchTypeEnum implements BaseEnum {
     RETRY(3, "retry"),
     SQL(4, "sql"),
     UNNMATCHED(5, "unmatched"),
-    MATCHED(6, "matched");
+    MATCHED(6, "matched"),
+    MERGED(7, "merged");
 
     AutoEndBranchTypeEnum(int value, String name) {
         this.value = value;

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.BusinessAreaDTO;
 import com.fisk.datamodel.dto.BusinessPageResultDTO;
 import com.fisk.datamodel.dto.BusinessQueryDTO;
@@ -19,7 +20,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "业务域接口")
+@Api(tags = {SwaggerConfig.businessArea})
 @RestController
 @RequestMapping("/business")
 @Slf4j

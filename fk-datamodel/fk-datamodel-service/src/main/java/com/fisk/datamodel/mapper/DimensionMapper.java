@@ -1,7 +1,7 @@
 package com.fisk.datamodel.mapper;
 
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.ProjectDimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.entity.DimensionPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -16,12 +16,12 @@ public interface DimensionMapper extends FKBaseMapper<DimensionPO> {
      * @param id
      * @return
      */
-    ProjectDimensionAssociationDTO getDimensionAssociation(@Param("id") int id);
+    DimensionAssociationDTO getDimensionAssociation(@Param("id") int id);
 
     /**
      * 获取维度表详情
      * @param id
      * @return
      */
-    ProjectDimensionAssociationDTO getDimension(@Param("id") int id);
+    DimensionAssociationDTO getDimension(@Param("id") int id);
 }

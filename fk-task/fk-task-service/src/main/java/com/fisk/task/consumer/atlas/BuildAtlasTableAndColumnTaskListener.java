@@ -2,6 +2,7 @@ package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -69,9 +70,9 @@ public class BuildAtlasTableAndColumnTaskListener {
         instance_rdbms_table.guid = ae.dbId;
         attributes_field_rdbms_table.owner = ae.createUser;
         attributes_field_rdbms_table.ownerName = ae.createUser;
-        attributes_field_rdbms_table.name = ae.tableName;
-        attributes_field_rdbms_table.qualifiedName = "db_" + ae.tableName + "@atalas";
-        attributes_field_rdbms_table.description = "db_" + ae.tableName + "@atalas";
+        attributes_field_rdbms_table.name = ae.appAbbreviation+"_"+ae.tableName;
+        attributes_field_rdbms_table.qualifiedName = "db_" + ae.appAbbreviation+"_"+ae.tableName + "@atalas";
+        attributes_field_rdbms_table.description = "db_" + ae.appAbbreviation+"_"+ae.tableName + "@atalas";
         attributes_field_rdbms_table.db = instance_rdbms_table;
         attributes_rdbms_table.attributes = attributes_field_rdbms_table;
         entity_rdbms_table.entity = attributes_rdbms_table;
@@ -96,10 +97,10 @@ public class BuildAtlasTableAndColumnTaskListener {
         aepd.inputs = inputs_db;
         aepd.outputs = outputs_tab;
         aepd.higherType = AtlasProcessEnum.higherDb.getName();
-        aepd.processName = "db_process_table_" + ae.tableName;
-        aepd.qualifiedName = "db_process_table_" + ae.tableName + "@atlas";
+        aepd.processName = "db_process_table_" + ae.appAbbreviation+"_"+ae.tableName;
+        aepd.qualifiedName = "db_process_table_" + ae.appAbbreviation+"_"+ae.tableName + "@atlas";
         aepd.createUser = ae.createUser;
-        aepd.des = "atlas process db link to table" + ae.tableName;
+        aepd.des = "atlas process db link to table" + ae.appAbbreviation+"_"+ae.tableName;
         atlas.atlasBuildProcess(aepd);
         log.info("atlas创建表与DB的连接 完成");
         //endregion
@@ -135,7 +136,12 @@ public class BuildAtlasTableAndColumnTaskListener {
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
-        nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
+        //nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
+        if (ae.appAbbreviation.equals("timestamp_incremental")) {
+            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
+        } else {
+            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName;
+        }
         awbd.dorisSelectSqlStr = nifiSelectSql;
         awbd.columnsKeys = l_acd;
         log.info(JSON.toJSONString(awbd));

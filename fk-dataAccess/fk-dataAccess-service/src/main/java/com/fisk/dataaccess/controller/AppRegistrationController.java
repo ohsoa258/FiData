@@ -5,11 +5,10 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppDriveTypeDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
-import com.fisk.dataaccess.dto.AppRegistrationQueryDTO;
+import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +22,7 @@ import java.util.List;
 /**
  * @author Lock
  */
-@Api(description = "应用注册接口")
+@Api(tags = {SwaggerConfig.TAG_1})
 @RestController
 @RequestMapping("/appRegistration")
 @Slf4j
@@ -121,14 +120,14 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveType());
     }
 
-    @PostMapping("/filter")
-    @ApiOperation(value = "筛选器")
-    public ResultEntity<Page<AppRegistrationDTO>> filter(@RequestBody AppRegistrationQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.filter(query));
+    @PostMapping("/pageFilter")
+    @ApiOperation(value = "过滤器")
+    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
     }
 
     @GetMapping("/getColumn")
-    @ApiOperation(value = "获取过滤器字段")
+    @ApiOperation(value = "过滤器字段")
     public ResultEntity<Object> getColumn(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
     }
@@ -146,5 +145,12 @@ public class AppRegistrationController {
             @RequestParam("atlas_db_id") String atlasDbId) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasInstanceIdAndDbId(appid, atlasInstanceId, atlasDbId));
+    }
+
+    @ApiOperation(value = "获取应用注册名称")
+    @GetMapping("/getAppName")
+    public ResultEntity<List<AppNameDTO>> getAppNameAndId() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
 }

@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class BaseChartProperty extends BasePO {
+    public Long fid;
     public String name;
     public String content;
     public String details;

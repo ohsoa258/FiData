@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.dimension;
 
 import lombok.Data;
 
@@ -13,4 +13,5 @@ public class DimensionDTO {
     public String dimensionEnName;
     public String dimensionTabName;
     public String dimensionDesc;
+    public boolean share;
 }

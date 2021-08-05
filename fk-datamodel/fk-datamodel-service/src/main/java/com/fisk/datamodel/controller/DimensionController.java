@@ -3,10 +3,10 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.DimensionDTO;
+import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.service.IDimension;
-import com.fisk.datamodel.service.IProjectDimensionAttribute;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -17,20 +17,18 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "数仓建模--维度")
+@Api(tags ={SwaggerConfig.dimension})
 @RestController
 @RequestMapping("/dimension")
 @Slf4j
 public class DimensionController {
     @Resource
     IDimension service;
-    @Resource
-    IProjectDimensionAttribute iProjectDimensionAttribute;
 
-    @GetMapping("/getDimension")
     @ApiOperation("获取维度列表")
-    public ResultEntity<Object> getDimension(QueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimension(dto));
+    @PostMapping("/getDimensionList")
+    public ResultEntity<Object> getDimensionList(@RequestBody QueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList(dto));
     }
 
     /*@ApiOperation("获取数据域以及数据域下的维度表")
@@ -39,11 +37,11 @@ public class DimensionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList());
     }*/
 
-    @ApiOperation("添加维度获取数据域相关数据")
+    /*@ApiOperation("添加维度获取数据域相关数据")
     @GetMapping("/getDimensionAssociation/{id}")
     public ResultEntity<Object> getDimensionAssociation(@PathVariable("id")int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRegionDetail(id));
-    }
+    }*/
 
     @ApiOperation("添加维度")
     @PostMapping("/addDimension")
@@ -67,18 +65,6 @@ public class DimensionController {
     @PutMapping("/editDimension")
     public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) {
         return ResultEntityBuild.build(service.updateDimension(dto));
-    }
-
-    @ApiOperation("获取数据接入表名以及字段")
-    @GetMapping("/getDataAccessMeta")
-    public ResultEntity<Object> getDataAccessMeta() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iProjectDimensionAttribute.getProjectDimensionMeta());
-    }
-
-    @ApiOperation("获取维度表名以及字段")
-    @GetMapping("/getDimensionMeta")
-    public ResultEntity<Object> getDimensionMeta() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iProjectDimensionAttribute.getProjectDimensionTable());
     }
 
 

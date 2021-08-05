@@ -1,15 +1,13 @@
 package com.fisk.task.dto.nifi;
 
-import com.davis.client.model.PositionDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author gy
  */
 @Data
-public class BuildConvertToJsonProcessorDTO {
-    public String groupId;
-    public String name;
-    public String details;
-    public PositionDTO positionDTO;
+@EqualsAndHashCode(callSuper = true)
+public class BuildConvertToJsonProcessorDTO extends BaseProcessorDTO {
+
 }

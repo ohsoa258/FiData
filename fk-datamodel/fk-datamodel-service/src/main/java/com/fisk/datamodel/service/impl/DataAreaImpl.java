@@ -176,7 +176,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     }
 
     @Override
-    public Page<DataAreaDTO> dataFilter(DataAreaQueryDTO query) {
+    public Page<DataAreaDTO> listData(DataAreaQueryDTO query) {
 
         StringBuilder str = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {

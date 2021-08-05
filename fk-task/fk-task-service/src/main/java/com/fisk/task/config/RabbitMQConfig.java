@@ -47,6 +47,7 @@ public class RabbitMQConfig {
     public Queue atlasTableColumnQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW).build();
     }
+
     /**
      * 声明队列
      */
@@ -54,12 +55,29 @@ public class RabbitMQConfig {
     public Queue atlasEntityDeleteQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW).build();
     }
+
     /**
      * 声明队列
      */
     @Bean("dorisBuildTableQueue")
     public Queue dorisBuildTableQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_FLOW).build();
+    }
+
+    /**
+     * 声明队列
+     */
+    @Bean("incrementResultQueue")
+    public Queue incrementResultQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.INCREMENT_RESULT).build();
+    }
+
+    /**
+     * 声明队列
+     */
+    @Bean("incrementDorisFlowQueue")
+    public Queue incrementDorisFlowQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW).build();
     }
 
     /**
@@ -97,6 +115,7 @@ public class RabbitMQConfig {
                                                   @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_ATLAS_ENTITYDELETE_ROUTER).noargs();
     }
+
     /**
      * 绑定队列和交换机
      */
@@ -105,6 +124,25 @@ public class RabbitMQConfig {
                                                 @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_ROUTER).noargs();
     }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding incrementResultQueueExchange(@Qualifier("incrementResultQueue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.INCREMENT_RESULT).noargs();
+    }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding incrementDorisFlowQueueExchange(@Qualifier("incrementDorisFlowQueue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_INCREMENTAL_ROUTER).noargs();
+    }
+
     @Bean
     public RabbitTemplate createRabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate();

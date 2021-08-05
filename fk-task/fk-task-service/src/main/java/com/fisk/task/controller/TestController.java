@@ -47,6 +47,12 @@ public class TestController {
         rabbitTemplate.convertAndSend(exchange, queue, msg);
     }
 
+    @GetMapping("/catch")
+    public void catchs() {
+        String msg = null;
+        msg.toString();
+    }
+
     @GetMapping("/ws/sendMsg")
     public void wsSendMsg(String msg, Long id) {
         WsSessionManager.sendMsgById(msg, id, MessageLevelEnum.MEDIUM);

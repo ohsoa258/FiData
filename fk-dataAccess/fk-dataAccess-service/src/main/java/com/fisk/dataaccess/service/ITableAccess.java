@@ -2,9 +2,13 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
+import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -39,7 +43,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dto 请求参数
      * @return 返回值
      */
-    ResultEnum addNonRealTimeData(TableAccessNonDTO dto);
+    ResultEntity<AtlasIdsVO> addNonRealTimeData(TableAccessNonDTO dto);
 
     /**
      * 修改物理表(实时)
@@ -98,7 +102,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param appid appid
      * @return atlas
      */
-    AtlasEntityDbTableColumnDTO getAtlasBuildTableAndColumn(long id, long appid);
+    ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(long id, long appid);
 
     /**
      * 提供给nifi的数据
@@ -107,7 +111,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param appid 应用注册id
      * @return DataAccessConfigDTO
      */
-    DataAccessConfigDTO dataAccessConfig(long id, long appid);
+    ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid);
 
     /**
      * 根据appid和物理表id,查询atlasInstanceId和atlasDbId
@@ -116,7 +120,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id 物理表id
      * @return AtlasWriteBackDataDTO
      */
-    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id);
+    ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid,long id);
 
     /**
      * atlas物理表回写
@@ -133,4 +137,26 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 执行结果
      */
     ResultEnum addComponentId(NifiAccessDTO dto);
+
+    /**
+     * 过滤器
+     *
+     * @param query 查询条件
+     * @return 过滤结果
+     */
+    Page<TableAccessVO> listData(TableAccessQueryDTO query);
+
+    /**
+     * 筛选器获取表字段(多表)
+     *
+     * @return 多表字段
+     */
+    List<FilterFieldDTO> getColumn();
+
+    /**
+     * 获取数据接入表名以及字段
+     *
+     * @return 表名及表字段
+     */
+    List<TableNameDTO> getDataAccessMeta();
 }

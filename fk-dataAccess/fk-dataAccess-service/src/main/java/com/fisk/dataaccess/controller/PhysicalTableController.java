@@ -1,17 +1,24 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
+import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -21,16 +28,18 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "物理表接口")
+@Api(tags = {SwaggerConfig.TAG_2})
 @RestController
 @RequestMapping("/physicalTable")
+@Slf4j
 public class PhysicalTableController {
 
     @Resource
     private IAppRegistration appRegService;
-
     @Resource
     private ITableAccess service;
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     /**
      * 根据是否为实时,查询应用名称集合
@@ -105,8 +114,24 @@ public class PhysicalTableController {
     @PostMapping("/addNonRealTime")
     @ApiOperation(value = "添加物理表(非实时)")
     public ResultEntity<Object> addNonRealTimeData(@RequestBody TableAccessNonDTO dto) {
+        ResultEntity<AtlasIdsVO> atlasIdsVO = service.addNonRealTimeData(dto);
 
-        return ResultEntityBuild.build(service.addNonRealTimeData(dto));
+        AtlasIdsVO atlasIds = atlasIdsVO.data;
+
+        if (atlasIds == null) {
+            return ResultEntityBuild.buildData(atlasIdsVO.code,atlasIdsVO.msg);
+        }
+
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = atlasIds.userId;
+        // 应用注册id
+        atlasEntityQueryDTO.appId = atlasIds.appId;
+        atlasEntityQueryDTO.dbId = atlasIds.dbId;
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println(task);
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
 
     /**
@@ -171,12 +196,24 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS*//*,tableAccess.listTableAndField(appName)*//*);
     }*/
 
+    @PostMapping("/pageFilter")
+    @ApiOperation(value = "筛选器")
+    public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
+    }
+
+    @GetMapping("/getColumn")
+    @ApiOperation(value = "筛选器表字段")
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
+    }
+
 
     @GetMapping("/getAtlasBuildTableAndColumn")
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
             @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasBuildTableAndColumn(id, appid));
+        return service.getAtlasBuildTableAndColumn(id, appid);
     }
 
     @GetMapping("/getAtlasWriteBackDataDTO")
@@ -184,7 +221,7 @@ public class PhysicalTableController {
             @RequestParam("appid") long appid,
             @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid,id));
+        return service.getAtlasWriteBackDataDTO(appid, id);
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
@@ -197,7 +234,7 @@ public class PhysicalTableController {
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
             @RequestParam("id") long id, @RequestParam("appid") long appid) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataAccessConfig(id,appid));
+        return service.dataAccessConfig(id, appid);
     }
 
     @PostMapping("/addComponentId")
@@ -205,4 +242,11 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
     }
+
+    @ApiOperation("获取数据接入表名以及字段")
+    @GetMapping("/getDataAccessMeta")
+    public ResultEntity<Object> getDataAccessMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessMeta());
+    }
+
 }
