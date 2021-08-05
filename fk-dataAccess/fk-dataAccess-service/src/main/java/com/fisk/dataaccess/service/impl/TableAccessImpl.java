@@ -824,31 +824,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_WRITEBACKDATA)
     @Override
-    public AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid, long id) {
+    public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid, long id) {
 
-        AtlasWriteBackDataDTO dto = null;
-        try {
-            dto = new AtlasWriteBackDataDTO();
+        AtlasWriteBackDataDTO dto = new AtlasWriteBackDataDTO();
 
-            // 查询tb_app_registration
-            AppRegistrationPO modelReg = appRegistrationImpl.query()
-                    .eq("id", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelReg == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            dto.appId = modelReg.atlasInstanceId;
+        // 查询tb_app_registration
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("id", appid)
+                .eq("del_flag", 1)
+                .one();
+        // 查询tb_app_datasource
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
+        if (modelReg == null || modelDataSource == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
 
-            // 查询tb_app_datasource
-            AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
-            if (modelDataSource == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
-            dto.atlasTableId = modelDataSource.atlasDbId;
+        dto.appId = modelReg.atlasInstanceId;
+        dto.atlasTableId = modelDataSource.atlasDbId;
 //        // 查询tb_app_nifiFlow
 //        AppNifiFlowPO modelNifiFlow = nifiFlowImpl.query()
 //                .eq("id", appid)
@@ -859,54 +854,51 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        dto.dorisSelectSqlStr = modelNifiFlow.dorisSelectSqlStr;
 
 
-            // 查询tb_table_access
-            TableAccessPO modelAccess = this.query()
-                    .eq("id", id)
-                    .eq("appid", appid)
-                    .eq("del_flag", 1)
-                    .one();
+        // 查询tb_table_access
+        TableAccessPO modelAccess = this.query()
+                .eq("id", id)
+                .eq("appid", appid)
+                .eq("del_flag", 1)
+                .one();
 
-            dto.tableId = modelAccess.atlasTableId;
-            dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
+        dto.tableId = modelAccess.atlasTableId;
+        dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
 
-            AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
-            atlasDTO.dbId = modelDataSource.getAtlasDbId();
-            atlasDTO.tableName = modelAccess.getTableName();
-            atlasDTO.createUser = modelAccess.getCreateUser();
+        AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
+        atlasDTO.dbId = modelDataSource.getAtlasDbId();
+        atlasDTO.tableName = modelAccess.getTableName();
+        atlasDTO.createUser = modelAccess.getCreateUser();
 
-            List<AtlasEntityColumnDTO> columns = new ArrayList<>();
+        List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
-            List<TableFieldsPO> list = tableFieldsImpl.query()
-                    .eq("table_access_id", id)
-                    .eq("del_flag", 1)
-                    .list();
-            if (list.isEmpty()) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        List<TableFieldsPO> list = tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+        if (list.isEmpty()) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        for (TableFieldsPO po : list) {
+
+            AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
+
+            atlasEntityColumnDTO.setColumnId(po.getId());
+            atlasEntityColumnDTO.setColumnName(po.getFieldName());
+            atlasEntityColumnDTO.setComment(po.getFieldDes());
+            if (po.fieldLength == 0) {
+                atlasEntityColumnDTO.setDataType(po.getFieldType());
+            } else {
+
+                atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
-            for (TableFieldsPO po : list) {
+            atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
 
-                AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
-
-                atlasEntityColumnDTO.setColumnId(po.getId());
-                atlasEntityColumnDTO.setColumnName(po.getFieldName());
-                atlasEntityColumnDTO.setComment(po.getFieldDes());
-                if (po.fieldLength == 0) {
-                    atlasEntityColumnDTO.setDataType(po.getFieldType());
-                } else {
-
-                    atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
-                }
-                atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-
-                columns.add(atlasEntityColumnDTO);
-            }
-
-            dto.columnsKeys = columns;
-        } catch (Exception e) {
-            log.error("{}方法执行失败: ", e);
+            columns.add(atlasEntityColumnDTO);
         }
 
-        return dto;
+        dto.columnsKeys = columns;
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
 

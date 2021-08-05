@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "物理表接口")
+@Api(tags = {SwaggerConfig.TAG_2})
 @RestController
 @RequestMapping("/physicalTable")
 @Slf4j
@@ -220,7 +221,7 @@ public class PhysicalTableController {
             @RequestParam("appid") long appid,
             @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid, id));
+        return service.getAtlasWriteBackDataDTO(appid, id);
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")

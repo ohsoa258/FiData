@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -26,11 +23,16 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    public static final String TAG_1 = "app-registration-controller";
+    public static final String TAG_2 = "physical-table-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataAccessApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
+                .tags(new Tag(TAG_1,"应用注册"))
+                .tags(new Tag(TAG_2,"物理表"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
