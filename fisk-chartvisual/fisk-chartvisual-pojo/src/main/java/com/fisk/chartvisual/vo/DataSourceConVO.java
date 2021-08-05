@@ -15,6 +15,7 @@ public class DataSourceConVO {
     public String conStr;
     public String conIp;
     public int conPort;
+    public String conCube;
     public DataSourceTypeEnum conType;
     public String conDbname;
     public String conAccount;

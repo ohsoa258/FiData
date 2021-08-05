@@ -66,4 +66,6 @@ public interface IChartManageService {
      * @return 数据
      */
     Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryDTO query);
+
+
 }
