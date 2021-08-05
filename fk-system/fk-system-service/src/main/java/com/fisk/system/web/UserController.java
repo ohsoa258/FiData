@@ -5,6 +5,7 @@ import com.fisk.auth.utils.UserContext;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.UserDTO;
 import com.fisk.system.service.IUserService;
@@ -20,7 +21,7 @@ import javax.annotation.Resource;
 /**
  * @author Lock
  */
-@Api(description = "用户中心服务")
+@Api(tags = {SwaggerConfig.info})
 @RestController
 @RequestMapping("/info")
 @Slf4j

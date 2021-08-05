@@ -4,6 +4,7 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.service.IServiceRegistryService;
 import io.swagger.annotations.Api;
@@ -17,7 +18,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(description = "服务注册")
+@Api(tags = {SwaggerConfig.serviceRegistry})
 @RestController
 @RequestMapping("/ServiceRegistry")
 @Slf4j

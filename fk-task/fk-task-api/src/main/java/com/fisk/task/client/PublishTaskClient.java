@@ -39,9 +39,9 @@ public interface PublishTaskClient {
      * @param ArDto dto
      * @return 构建结果
      */
+
     @PostMapping("/publishTask/atlasBuildTableAndColumn")
     ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto);
-
     /**
      * 元数据删除
      * @param entityId

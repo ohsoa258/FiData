@@ -23,7 +23,13 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "fact-attribute-controller";
+    public static final String factAttribute = "fact-attribute-controller";
+    public static final String fact="fact-controller";
+    public static final String dimension="dimension-controller";
+    public static final String dimensionAttribute="dimension-attribute-controller";
+    public static final String businessProcess="business-process-controller";
+    public static final String businessArea="business-area-controller";
+    public static final String dataSourceArea="data-source-area-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -35,7 +41,13 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
-                .tags(new Tag(TAG_1, "数仓建模-事实字段"))
+                .tags(new Tag(factAttribute, "数仓建模-事实字段"))
+                .tags(new Tag(fact,"数仓建模-事实表"))
+                .tags(new Tag(dimension,"数仓建模--维度"))
+                .tags(new Tag(dimensionAttribute,"数仓建模–维度字段"))
+                .tags(new Tag(businessProcess,"业务过程"))
+                .tags(new Tag(businessArea,"业务域"))
+                .tags(new Tag(dataSourceArea,"计算数据源"))
                 .securityContexts(securityContexts());
     }
 

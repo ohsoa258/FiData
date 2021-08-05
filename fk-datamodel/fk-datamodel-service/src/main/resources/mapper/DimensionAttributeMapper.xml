@@ -3,21 +3,46 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datamodel.mapper.DimensionAttributeMapper">
     <select id="getDimensionAttributeList" resultType="com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO">
-        SELECT a.id,
-        a.table_source_field_id,
-        a.dimension_field_cn_name,
-        a.dimension_field_type,
-        a.dimension_field_length,
-        a.dimension_field_des,
-        a.dimension_field_en_name,
-        a.attribute_type,
-        b.dimension_cn_name,
-        c.field_name as tableSourceField,
-        d.table_name as tableSource
-        from dmp_datamodel_db.tb_dimension_attribute a
-        left join dmp_datamodel_db.tb_dimension b on a.associate_dimension_id = b.id
-        left join dmp_datainput_db.tb_table_fields c on a.table_source_field_id = c.id
-        left join dmp_datainput_db.tb_table_access d on c.table_access_id=d.id
-        where a.del_flag=1 and a.dimension_id= ${dimensionId} order by a.create_time desc
+    SELECT
+	a.id,
+	a.table_source_field_id,
+	a.dimension_field_cn_name,
+	a.dimension_field_type,
+	a.dimension_field_length,
+	a.dimension_field_des,
+	a.dimension_field_en_name,
+	a.attribute_type,
+	b.dimension_cn_name,
+	c.field_name AS tableSourceField,
+	d.table_name AS tableSource
+    FROM dmp_datamodel_db.tb_dimension_attribute a
+	LEFT JOIN dmp_datamodel_db.tb_dimension b ON a.associate_dimension_id = b.id
+	LEFT JOIN dmp_datainput_db.tb_table_fields c ON a.table_source_field_id = c.id
+	LEFT JOIN dmp_datainput_db.tb_table_access d ON c.table_access_id = d.id
+    WHERE
+	a.del_flag = 1
+	AND a.dimension_id = ${dimensionId}
+	AND a.attribute_type != 1
+	UNION ALL
+	(
+	    SELECT
+		a.id,
+		a.associate_dimension_id AS table_source_field_id,
+		b.dimension_field_cn_name,
+		b.dimension_field_type,
+		b.dimension_field_length,
+		b.dimension_field_des,
+		b.dimension_field_en_name,
+		a.attribute_type,
+		b.dimension_field_en_name AS tableSourceField,
+		c.dimension_cn_name AS tableSourceField,
+		c.dimension_tab_name AS tableSource
+	    FROM dmp_datamodel_db.tb_dimension_attribute a
+		LEFT JOIN dmp_datamodel_db.tb_dimension_attribute b ON a.associate_dimension_id = b.id
+		LEFT JOIN dmp_datamodel_db.tb_dimension c ON b.dimension_id = c.id
+	    WHERE
+		a.del_flag = 1
+	    AND a.attribute_type = 1
+	    AND a.dimension_id = ${dimensionId})
     </select>
 </mapper>
