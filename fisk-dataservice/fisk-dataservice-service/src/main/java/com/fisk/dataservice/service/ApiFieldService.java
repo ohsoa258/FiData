@@ -44,4 +44,11 @@ public interface ApiFieldService {
      * @return
      */
     ResultEnum deleteApiById(Integer id);
+
+    /**
+     * 根据id查询Api服务
+     * @param id
+     * @return
+     */
+    ApiConfigurePO getById(Integer id);
 }

@@ -126,6 +126,20 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         return configureFieldMapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public ApiConfigurePO getById(Integer id) {
+        if (id == null){
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+
+        ApiConfigurePO apiConfigure = configureMapper.selectById(id);
+        if (apiConfigure == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }else {
+            return apiConfigure;
+        }
+    }
+
 
     /**
      * 验证用户信息token

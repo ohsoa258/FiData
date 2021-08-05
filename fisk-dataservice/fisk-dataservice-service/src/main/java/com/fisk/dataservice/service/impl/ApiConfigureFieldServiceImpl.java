@@ -2,6 +2,7 @@ package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
@@ -116,7 +117,16 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     }
 
     @Override
-    public List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page) {
-        return configureFieldMapper.selectPage(page, null).getRecords();
+    public ApiConfigureFieldPO getById(Integer id) {
+        if (id == null){
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+
+        ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(id);
+        if (apiConfigureField == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }else {
+            return apiConfigureField;
+        }
     }
 }

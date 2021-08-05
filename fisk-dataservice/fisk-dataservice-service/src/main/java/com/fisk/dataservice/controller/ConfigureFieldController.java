@@ -50,10 +50,9 @@ public class ConfigureFieldController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getDataById(configureId));
     }
 
-    @ApiOperation("分页查询所有字段")
-    @GetMapping("/getAll")
-    public ResultEntity<List<ApiConfigureFieldPO>> listData(Page<ApiConfigureFieldPO> page) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.listData(page));
+    @ApiOperation("根据id查询字段")
+    @GetMapping("/getById")
+    public ResultEntity<Object> getById(Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getById(id));
     }
-
 }

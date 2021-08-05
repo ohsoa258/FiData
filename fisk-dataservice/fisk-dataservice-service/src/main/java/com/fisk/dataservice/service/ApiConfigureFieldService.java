@@ -41,9 +41,9 @@ public interface ApiConfigureFieldService {
     List<ApiConfigureFieldPO> getDataById(Integer configureId);
 
     /**
-     * 分页查询
-     * @param page
+     * 根据id查询字段
+     * @param id
      * @return
      */
-    List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page);
+    ApiConfigureFieldPO getById(Integer id);
 }

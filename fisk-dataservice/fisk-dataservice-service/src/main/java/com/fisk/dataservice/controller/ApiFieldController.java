@@ -52,4 +52,10 @@ public class ApiFieldController {
     public ResultEntity<Object> deleteDataById(Integer id) {
         return ResultEntityBuild.build(configureFieldService.deleteApiById(id));
     }
+
+    @ApiOperation("根据id查询Api服务")
+    @GetMapping("/getById")
+    public ResultEntity<Object> getById(Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getById(id));
+    }
 }
