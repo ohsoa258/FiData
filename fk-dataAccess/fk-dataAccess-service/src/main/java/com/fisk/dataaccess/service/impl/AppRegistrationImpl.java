@@ -80,8 +80,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // dto->po
         AppRegistrationPO po = appRegistrationDTO.toEntity(AppRegistrationPO.class);
-
-        // 保存tb_app_registration数据
         po.setCreateUser(String.valueOf(userId));
 
         // 数据保存需求更改: 添加应用的时候，相同的应用名称不可以再次添加
@@ -92,32 +90,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEnum.DATA_EXISTS;
         }
 
-        // 保存
+        // 保存tb_app_registration数据
         boolean save = this.save(po);
         if (!save) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         AppDataSourcePO modelDataSource = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
-
         // 保存tb_app_datasource数据
         modelDataSource.setAppid(po.getId());
         modelDataSource.setCreateUser(String.valueOf(userId));
 
         int insert = appDataSourceMapper.insert(modelDataSource);
-//        if (insert < 0) {
-//            return ResultEnum.SAVE_DATA_ERROR;
-//        }
-
-        // 保存tb_app_drivetype数据
-//        AppDriveTypePO po2 = new AppDriveTypePO();
-//        po2.setId(po.getId());
-//        po2.setName(po1.getDriveType());
-//        boolean save2 = appDriveTypeImpl.save(po2);
-
-/*        if (!save2) {
-            throw new FkException(500, "保存tb_app_drivetype数据失败");
-        }*/
 
         // TODO: atlas对接应用注册
         AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
@@ -127,9 +111,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         atlasEntityQueryDTO.userId = userId;
         ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
         log.info("task:" + JSON.toJSONString(task));
-
-//        System.out.println(task);
-
+        System.out.println("task = " + task);
 
         return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -156,9 +138,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 分页封装
         Page<AppRegistrationPO> poPage = new Page<>(page, rows);
 
-
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
-
 
         // 查询数据
         queryWrapper.like(isKeyExists, "app_name", key)
@@ -177,7 +157,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         pageDTO.setTotalPage(pageReg.getPages());
 
         pageDTO.setItems(AppRegistrationMap.INSTANCES.listPoToDto(records2));
-
 
         return pageDTO;
     }
@@ -304,7 +283,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("del_flag", 1)
                 .one();
         AppRegistrationDTO appRegistrationDTO = AppRegistrationMap.INSTANCES.poToDto(modelReg);
-
 
         AppDataSourcePO modelDataSource = appDataSourceImpl.query()
                 .eq("appid", id)
