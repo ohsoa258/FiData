@@ -52,7 +52,8 @@ public class AMOHelper {
             return true;
         } catch (Exception ex) {
             log.error("【connection】数据库连接获取失败, ex", ex);
-            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, ex.getLocalizedMessage());
+            return false;
+//            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, ex.getLocalizedMessage());
         }
     }
 
@@ -223,7 +224,6 @@ public class AMOHelper {
                 DimensionPO dimensionPO=new DimensionPO();
                 dimensionPO.Name = Dimension.getName();
                 dimensionPO.UniqueName= Dimension.getUniqueName();
-                dimensionPO.Hierarchies= new ArrayList<>();
                 List<HierarchyPO> hierarchyPOList=new ArrayList<>();
                 NamedList<Hierarchy> Hierarchies = Dimension.getHierarchies();
                 for (int h = 0; h < Hierarchies.size(); h++) {
@@ -232,7 +232,10 @@ public class AMOHelper {
                     Hierarchy Hierarchy = Hierarchies.get(h);
                     hierarchyPO.Name = Hierarchy.getName();
                     hierarchyPO.UniqueName = Hierarchy.getUniqueName();
+                    hierarchyPOList.add(hierarchyPO);
                 }
+                dimensionPO.Hierarchies= hierarchyPOList;
+                dimensionPOList.add(dimensionPO);
             }
         }
         cubePO.Measures=measurePOList;

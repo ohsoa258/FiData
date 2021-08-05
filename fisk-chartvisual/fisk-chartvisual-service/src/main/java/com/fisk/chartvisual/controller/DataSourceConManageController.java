@@ -68,9 +68,9 @@ public class DataSourceConManageController {
         return service.listDataDomain(id);
     }
 
-    @GetMapping("/getDataDomain")
+    @GetMapping("/getSSASDataStructure")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DimensionVO>> getSSASDataDomain(int id) {
+    public ResultEntity<List<DimensionVO>> getSSASDataStructure(int id) {
         return service.SSASDataStructure(id);
     }
 }

@@ -113,9 +113,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
     public ResultEnum testConnection(TestConnectionDTO dto) {
-        return useDataBase.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
-                ?
-                ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        if (dto.conType == DataSourceTypeEnum.TABULAR || dto.conType == DataSourceTypeEnum.CUBE) {
+            return cubeHelper.connection(dto.conStr, dto.conAccount, dto.conPassword)
+                    ?
+                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        } else {
+            return useDataBase.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
+                    ?
+                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        }
     }
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
@@ -156,50 +162,53 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<List<DimensionVO>> SSASDataStructure(int id){
+    public ResultEntity<List<DimensionVO>> SSASDataStructure(int id) {
+//        CubeHelper cubeHelper=new CubeHelper();
         //获取连接信息
-        List<DimensionVO> dimensionVOList=new ArrayList<>();
+        List<DimensionVO> dimensionVOList = new ArrayList<>();
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        }else{
-                cubeHelper.connection(model.conStr,model.conAccount,model.conPassword);
-                try {
-                    CubePO ModelStructure=  cubeHelper.getModelStructure(model.conDbname,model.conCube);
-                    //度量
-                    DimensionVO dimensionVO_Mea=new DimensionVO();
-                    dimensionVO_Mea.Name="Measures";
-                    dimensionVO_Mea.UniqueName="[Measures]";
-                    dimensionVO_Mea.DimensionType=3;
-                    List<HierarchyVO> hierarchyVOList_Mea=new ArrayList<>();
-                    ModelStructure.Measures.forEach(item->{
-                        HierarchyVO hierarchyVO_Mea=new HierarchyVO();
-                        hierarchyVO_Mea.Name=item.Name;
-                        hierarchyVO_Mea.UniqueName=item.UniqueName;
+        } else {
+            cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+            try {
+                CubePO ModelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
+                //度量
+                DimensionVO dimensionVO_Mea = new DimensionVO();
+                dimensionVO_Mea.Name = "Measures";
+                dimensionVO_Mea.UniqueName = "[Measures]";
+                dimensionVO_Mea.DimensionType = 3;
+                List<HierarchyVO> hierarchyVOList_Mea = new ArrayList<>();
+                ModelStructure.Measures.forEach(item -> {
+                    HierarchyVO hierarchyVO_Mea = new HierarchyVO();
+                    hierarchyVO_Mea.Name = item.Name;
+                    hierarchyVO_Mea.UniqueName = item.UniqueName;
+                    hierarchyVOList_Mea.add(hierarchyVO_Mea);
+                });
+                dimensionVO_Mea.children = hierarchyVOList_Mea;
+                dimensionVOList.add(dimensionVO_Mea);
+                //维度
+                ModelStructure.Dimensions.forEach(d -> {
+                    DimensionVO dimensionVO_Dim = new DimensionVO();
+                    dimensionVO_Dim.Name = d.Name;
+                    dimensionVO_Dim.UniqueName = d.UniqueName;
+                    dimensionVO_Dim.DimensionType = 2;
+                    List<HierarchyVO> hierarchyVOList_Dim = new ArrayList<>();
+                    d.Hierarchies.forEach(h -> {
+                        HierarchyVO hierarchyVO_Dim = new HierarchyVO();
+                        hierarchyVO_Dim.Name = h.Name;
+                        hierarchyVO_Dim.UniqueName = h.UniqueName;
+                        hierarchyVOList_Dim.add(hierarchyVO_Dim);
                     });
-                    dimensionVO_Mea.children=hierarchyVOList_Mea;
-                    dimensionVOList.add(dimensionVO_Mea);
-                    //维度
-                    ModelStructure.Dimensions.forEach(d -> {
-                        DimensionVO dimensionVO_Dim=new DimensionVO();
-                        dimensionVO_Dim.Name=d.Name;
-                        dimensionVO_Dim.UniqueName=d.UniqueName;
-                        dimensionVO_Dim.DimensionType=2;
-                        List<HierarchyVO> hierarchyVOList_Dim=new ArrayList<>();
-                        d.Hierarchies.forEach(h->{
-                            HierarchyVO hierarchyVO_Dim=new HierarchyVO();
-                            hierarchyVO_Dim.Name=h.Name;
-                            hierarchyVO_Dim.UniqueName=h.UniqueName;
-                            hierarchyVOList_Dim.add(hierarchyVO_Dim);
-                        });
-                        dimensionVO_Dim.children=hierarchyVOList_Dim;
-                        dimensionVOList.add(dimensionVO_Dim);
-                    });
+                    dimensionVO_Dim.children = hierarchyVOList_Dim;
+                    dimensionVOList.add(dimensionVO_Dim);
+                });
 
-                } catch (Exception e) {
-                    log.error(e.getMessage());
-                    return ResultEntityBuild.build(ResultEnum.ERROR);
-                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                return ResultEntityBuild.build(ResultEnum.ERROR);
+            }
+            cubeHelper.closeConnection();
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dimensionVOList);
     }

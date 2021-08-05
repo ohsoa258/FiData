@@ -30,4 +30,5 @@ public class DataSourceConPO extends BasePO {
 
     public String conPassword;
 
+    public String conCube;
 }

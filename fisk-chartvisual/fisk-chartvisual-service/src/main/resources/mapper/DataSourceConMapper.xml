@@ -43,6 +43,7 @@
                con_type,
                con_dbname,
                con_account,
+               con_cube,
                con_password,
                create_time
         from tb_datasource_con
