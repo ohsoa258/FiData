@@ -3,6 +3,7 @@ package com.fisk.system.web;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.service.IRoleInfoService;
@@ -20,7 +21,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "权限管理")
+@Api(tags = {SwaggerConfig.permission})
 @RestController
 @RequestMapping("/auth")
 @Slf4j

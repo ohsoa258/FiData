@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.TAG_1 })
+@Api(tags = { SwaggerConfig.factAttribute })
 //@Api(description = "事实字段")
 @RestController
 @RequestMapping("/factAttribute")

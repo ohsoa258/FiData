@@ -23,4 +23,9 @@ public class DimensionAttributeMetaDataDTO {
      */
     public int dimensionFieldLength;
 
+    /**
+     * 属性类型：0、业务主键,1、关联维度,2、属性
+     */
+    public int attributeType;
+
 }
