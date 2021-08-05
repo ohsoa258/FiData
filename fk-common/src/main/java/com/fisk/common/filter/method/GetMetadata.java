@@ -78,7 +78,7 @@ public class GetMetadata {
             ////获取表字段名称、描述、数据类型
             while (rs.next()) {
                 FilterFieldDTO model = new FilterFieldDTO();
-                if (!StringUtils.isNotEmpty(tableAlias)) {
+                if (StringUtils.isNotEmpty(tableAlias)) {
                     model.columnName = tableAlias + "." + rs.getString("Field");
                 } else {
                     model.columnName ="`"+ rs.getString("Field")+"`";
