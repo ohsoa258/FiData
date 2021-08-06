@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,8 @@ import java.util.List;
 public class DimensionAttributeController {
     @Resource
     IDimensionAttribute service;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @ApiOperation("获取关联维度表名以及字段")
     @GetMapping("/getDimensionMeta")
@@ -42,7 +45,7 @@ public class DimensionAttributeController {
         if (result==ResultEnum.SUCCESS)
         {
             //发送消息
-
+            publishTaskClient.publishBuildAtlasDorisTableTask(dto);
         }
         return ResultEntityBuild.build(result);
     }
