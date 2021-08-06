@@ -17,4 +17,7 @@ public class ChartPropertyEditDTO extends ChartPropertyDTO {
     public Integer id;
 
     public ChartQueryTypeEnum type;
+
+    @NotNull
+    public Long fid;
 }

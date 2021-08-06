@@ -5,6 +5,7 @@
 
     <select id="listChartDataByUserId" resultType="com.fisk.chartvisual.vo.ChartPropertyVO">
         select id,
+        fid,
         name,
         content,
         details,
@@ -24,6 +25,7 @@
         </if>
         union all
         select id,
+        fid,
         name,
         content,
         details,
