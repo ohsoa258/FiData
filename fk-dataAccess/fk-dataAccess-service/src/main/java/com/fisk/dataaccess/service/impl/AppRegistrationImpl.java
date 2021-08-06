@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,6 +11,7 @@ import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -26,9 +26,9 @@ import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -73,7 +73,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addData(AppRegistrationDTO appRegistrationDTO) {
+    public ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO appRegistrationDTO) {
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
@@ -87,13 +87,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String appName = po.getAppName();
         boolean contains = appNameList.contains(appName);
         if (contains) {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_EXISTS);
         }
 
         // 保存tb_app_registration数据
         boolean save = this.save(po);
         if (!save) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         AppDataSourcePO modelDataSource = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
@@ -103,17 +103,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         int insert = appDataSourceMapper.insert(modelDataSource);
 
-        // TODO: atlas对接应用注册
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
+        vo.userId = userId;
+        vo.appId = String.valueOf(po.getId());
 
-        atlasEntityQueryDTO.appId = "" + po.getId() + "";
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
 
-        atlasEntityQueryDTO.userId = userId;
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
-        log.info("task:" + JSON.toJSONString(task));
-        System.out.println("task = " + task);
-
-        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
