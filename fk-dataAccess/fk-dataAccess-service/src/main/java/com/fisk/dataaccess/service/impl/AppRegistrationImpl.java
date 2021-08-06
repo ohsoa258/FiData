@@ -102,14 +102,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         modelDataSource.setCreateUser(String.valueOf(userId));
 
         int insert = appDataSourceMapper.insert(modelDataSource);
+        if (insert <= 0) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
 
         AtlasEntityQueryVO vo = new AtlasEntityQueryVO();
         vo.userId = userId;
         vo.appId = String.valueOf(po.getId());
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
-
-//        return insert > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
