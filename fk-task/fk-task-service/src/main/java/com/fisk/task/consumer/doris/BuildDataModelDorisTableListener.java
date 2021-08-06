@@ -8,7 +8,6 @@ import com.fisk.datamodel.client.DimensionClient;
 import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeMetaDataDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;
 import com.rabbitmq.client.Channel;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
  */
 @Component
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_TABLE)
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
 public class BuildDataModelDorisTableListener {
     @Resource
