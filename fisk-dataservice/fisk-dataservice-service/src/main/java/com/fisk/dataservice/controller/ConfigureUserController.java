@@ -53,10 +53,16 @@ public class ConfigureUserController {
         return ResultEntityBuild.build(userService.updateUser(dto));
     }
 
-    @ApiOperation("删除用户下的所有服务")
+    @ApiOperation("删除用户")
     @DeleteMapping("/deleteUserById")
     public ResultEntity<Object> deleteUserById(Integer id) {
         return ResultEntityBuild.build(userService.deleteUserById(id));
+    }
+
+    @ApiOperation("删除用户下的Api接口")
+    @DeleteMapping("/deleteUserApiById")
+    public ResultEntity<Object> deleteUserApiById(UserConfigureDTO dto) {
+        return ResultEntityBuild.build(userService.deleteUserApiById(dto));
     }
 
     @ApiOperation("根据id查询用户信息")

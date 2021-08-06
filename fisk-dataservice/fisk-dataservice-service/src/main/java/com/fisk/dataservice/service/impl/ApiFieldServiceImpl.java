@@ -100,7 +100,7 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     @Override
     public ResultEnum deleteApiById(Integer id) {
         ApiConfigurePO apiConfigure = configureMapper.selectById(id);
-        if (org.springframework.util.StringUtils.isEmpty(apiConfigure)){
+        if (apiConfigure == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 

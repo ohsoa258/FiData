@@ -51,6 +51,13 @@ public interface ConfigureUserService {
     ResultEnum deleteUserById(Integer id);
 
     /**
+     * 删除该用户下的APi服务
+     * @param dto
+     * @return
+     */
+    ResultEnum deleteUserApiById(UserConfigureDTO dto);
+
+    /**
      * 根据id查询用户
      * @param id
      * @return

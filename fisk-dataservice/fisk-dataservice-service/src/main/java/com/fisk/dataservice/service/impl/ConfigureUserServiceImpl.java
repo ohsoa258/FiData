@@ -66,8 +66,8 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
             middleConfigure.setUserId(Integer.parseInt(String.valueOf(dto.id)));
             middleConfigure.setConfigureId(apiId);
-            if (middleMapper.insert(middleConfigure) <= 0){
-                return  ResultEnum.SAVE_DATA_ERROR;
+            if (middleMapper.insert(middleConfigure) <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
             }
         }
         return ResultEnum.SUCCESS;
@@ -83,7 +83,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         queryWrapper.lambda()
                 .eq(ConfigureUserPO::getDownSystemName, dto.getDownSystemName()).last("limit 1");
         ConfigureUserPO configureUser = configureUserMapper.selectOne(queryWrapper);
-        if (configureUser != null){
+        if (configureUser != null) {
             return ResultEnum.DATA_EXISTS;
         }
         return configureUserMapper.insert(dto) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -106,14 +106,55 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        ConfigureUserPO configureUser = configureUserMapper.selectById(id);
-        if (StringUtils.isEmpty(configureUser)) {
+        if (StringUtils.isEmpty(userExistent(id))) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        if (configureUserMapper.deleteById(id) <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+
+        QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(MiddleConfigurePO::getUserId, id)
+                .select(MiddleConfigurePO::getConfigureId);
+        List<MiddleConfigurePO> configureList = middleMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(configureList)) {
+            // 该用户下没有Api服务，可以直接删除
+            if (configureUserMapper.deleteById(id) <= 0) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+        } else {
+            // 用户下有Api服务,必须先删除服务
+            return ResultEnum.API_DELETE_ERROR;
         }
-        return middleMapper.deleteById(id) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum deleteUserApiById(UserConfigureDTO dto) {
+        if (dto.id == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        if (StringUtils.isEmpty(userExistent(Integer.parseInt(String.valueOf(dto.id))))) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 获取Api对应的Id
+        List<Integer> configureIds = new ArrayList<>();
+        for (String apiName : dto.getApiName()) {
+            configureIds.add(obtainId(apiName));
+        }
+
+        for (Integer configureId : configureIds) {
+            QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(MiddleConfigurePO::getUserId, dto.id)
+                    .eq(MiddleConfigurePO::getConfigureId, configureId);
+            if (middleMapper.delete(queryWrapper) <= 0){
+                return ResultEnum.DELETE_ERROR;
+            }
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -134,7 +175,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .eq(MiddleConfigurePO::getUserId, id)
                 .select(MiddleConfigurePO::getConfigureId);
         List<MiddleConfigurePO> configureList = middleMapper.selectList(query);
-        if (CollectionUtils.isEmpty(configureList)){
+        if (CollectionUtils.isEmpty(configureList)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -159,5 +200,13 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .select(ApiConfigurePO::getId);
         ApiConfigurePO apiConfigure = apiConfigureMapper.selectOne(queryWrapper);
         return Integer.parseInt(String.valueOf(apiConfigure.getId()));
+    }
+
+    /**
+     * 判断用户是否存在
+     * @param userId 用户id
+     */
+    public ConfigureUserPO userExistent(Integer userId){
+        return configureUserMapper.selectById(userId);
     }
 }
