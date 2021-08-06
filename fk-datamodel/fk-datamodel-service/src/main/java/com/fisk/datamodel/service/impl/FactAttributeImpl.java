@@ -74,6 +74,14 @@ public class FactAttributeImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,po.factId)
+                .eq(FactAttributePO::getFactFieldEnName,dto.factFieldEnName);
+        FactAttributePO model=mapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         po.factFieldCnName=dto.factFieldCnName;
         po.factFieldDes=dto.factFieldDes;
         po.factFieldLength=dto.factFieldLength;

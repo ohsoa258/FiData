@@ -16,7 +16,7 @@ public class DataAreaPO extends BasePO {
     /**
      *  业务域表id
      */
-    public long businessid;
+    public long businessId;
 
     /**
      *  数据域名称

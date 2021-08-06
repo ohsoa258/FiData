@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -104,7 +105,7 @@ public class FactImpl implements IFact {
         for (FactDropDTO dto:list)
         {
             //向字段集合添加数据
-            dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute.lambda().eq(FactAttributePO::getFactId,dto.id)));
+             dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute).stream().filter(e->e.getFactId()==dto.id).collect(Collectors.toList()));
         }
         return list;
     }

@@ -28,8 +28,6 @@ import java.util.List;
 public class DimensionAttributeController {
     @Resource
     IDimensionAttribute service;
-    @Resource
-    PublishTaskClient publishTaskClient;
 
     @ApiOperation("获取关联维度表名以及字段")
     @GetMapping("/getDimensionMeta")
@@ -41,13 +39,7 @@ public class DimensionAttributeController {
     @PostMapping("/addAttribute")
     public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
     {
-        ResultEnum result=service.addDimensionAttribute(dto.dimensionId,dto.list);
-        if (result==ResultEnum.SUCCESS)
-        {
-            //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(dto);
-        }
-        return ResultEntityBuild.build(result);
+        return ResultEntityBuild.build(service.addDimensionAttribute(dto.dimensionId,dto.list));
     }
 
     @ApiOperation("删除维度字段")

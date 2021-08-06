@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
@@ -14,6 +15,7 @@ import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +35,8 @@ public class DimensionAttributeImpl
     DimensionMapper mapper;
     @Resource
     DimensionAttributeMapper attributeMapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -90,7 +94,16 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
-        return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        boolean flat=this.saveBatch(list);
+        if (flat)
+        {
+            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+            pushDto.dimensionId=dimensionId;
+            pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+        }
+        return flat==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -115,12 +128,20 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,po.dimensionId)
+                .eq(DimensionAttributePO::getDimensionFieldEnName,dto.dimensionFieldEnName);
+        DimensionAttributePO model=attributeMapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         po.dimensionFieldCnName=dto.dimensionFieldCnName;
         po.dimensionFieldDes=dto.dimensionFieldDes;
         po.dimensionFieldLength=dto.dimensionFieldLength;
         po.dimensionFieldEnName=dto.dimensionFieldEnName;
         po.dimensionFieldType=dto.dimensionFieldType;
-        ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+       po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

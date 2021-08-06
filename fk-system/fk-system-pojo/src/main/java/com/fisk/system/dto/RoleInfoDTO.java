@@ -1,8 +1,10 @@
 package com.fisk.system.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.dto.BaseDTO;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -22,7 +24,8 @@ public class RoleInfoDTO {
      */
     public String roleDesc;
 
-    public Date createTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime createTime;
 
     public String createUser;
 }

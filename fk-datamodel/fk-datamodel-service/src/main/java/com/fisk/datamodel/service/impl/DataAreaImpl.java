@@ -82,7 +82,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
 
         DataAreaPO modelData = dataAreaDTO.toEntity(DataAreaPO.class);
 
-        modelData.setBusinessid(modelBusiness.getId());
+        modelData.setBusinessId(modelBusiness.getId());
         modelData.setCreateUser(String.valueOf(userId));
 
         return this.save(modelData) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -104,13 +104,13 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
         DataAreaDTO dataAreaDTO = DataAreaMap.INSTANCES.poToDto(po);
 
         // 将businessName封装进去
-        long businessid = po.getBusinessid();
-        if (businessid == 0) {
+        long businessId = po.getBusinessId();
+        if (businessId == 0) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
 
         BusinessAreaPO modelBusiness = businessAreaImpl.query()
-                .eq("id", businessid)
+                .eq("id", businessId)
                 .eq("del_flag", 1)
                 .one();
         if (modelBusiness == null) {
@@ -149,7 +149,7 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
                 .eq("del_flag", 1)
                 .one();
 
-        po.setBusinessid(modelBusiness.getId());
+        po.setBusinessId(modelBusiness.getId());
         po.setUpdateUser(String.valueOf(userInfo.id));
 
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
