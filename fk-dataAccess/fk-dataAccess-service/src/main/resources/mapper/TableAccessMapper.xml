@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.dataaccess.mapper.TableAccessMapper">
     <select id="filter" resultType="com.fisk.dataaccess.vo.TableAccessVO">
         select a.id,
-        a.appid,
+        a.app_id,
         a.`table_name`,
         a.table_des,
         a.update_time,

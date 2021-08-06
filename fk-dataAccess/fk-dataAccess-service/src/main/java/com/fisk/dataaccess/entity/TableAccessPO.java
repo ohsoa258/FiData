@@ -16,7 +16,7 @@ public class TableAccessPO extends BasePO {
     /**
      *  tb_app_registration表id
      */
-    public long appid;
+    public long appId;
 
     /**
      * 添加数据时atlas生成

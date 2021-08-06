@@ -148,7 +148,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appid = modelAccess.appid;
+        tableNameVO.appId = modelAccess.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEnum.Table_NAME_EXISTS;
@@ -165,7 +165,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SAVE_DATA_ERROR;
         }
         modelAccess.setCreateUser(String.valueOf(userId));
-        modelAccess.setAppid(id);
+        modelAccess.setAppId(id);
 
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
@@ -274,7 +274,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appid = modelAccess.appid;
+        tableNameVO.appId = modelAccess.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
@@ -289,7 +289,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (id < 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
-        modelAccess.setAppid(id);
+        modelAccess.setAppId(id);
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessNonDTO.getSyncSrc());
         // 非实时
@@ -509,7 +509,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         long appid = arpo.getId();
 
         // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
-        AppDataSourcePO dpo = appDataSourceImpl.query().eq("appid", appid).one();
+        AppDataSourcePO dpo = appDataSourceImpl.query().eq("app_id", appid).one();
         String url = dpo.getConnectStr();
         String user = dpo.getConnectAccount();
         String pwd = dpo.getConnectPwd();
@@ -559,7 +559,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessNonDTO dto = TableAccessMap.INSTANCES.poToDtoNon(modelAccess);
 
         // 将应用名称封装进去
-        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppid()).one();
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppId()).one();
         dto.setAppName(modelReg.getAppName());
 
         // 查询tb_table_fields数据
@@ -611,7 +611,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         long appid = modelReg.getId();
 
         // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", appid).one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).one();
         String url = modelDataSource.getConnectStr();
         String user = modelDataSource.getConnectAccount();
         String pwd = modelDataSource.getConnectPwd();
@@ -674,8 +674,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         AtlasEntityDbTableColumnDTO dto = null;
 
-        TableAccessPO modelAccess = this.query().eq("id", id).eq("appid", appid).eq("del_flag", 1).one();
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", appid).eq("del_flag", 1).one();
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", appid).eq("del_flag", 1).one();
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
         if (modelAccess == null || modelDataSource == null || modelSync == null || modelReg == null) {
@@ -755,7 +755,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .one();
         // 查询tb_app_datasource
         AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                .eq("appid", appid)
+                .eq("app_id", appid)
                 .eq("del_flag", 1)
                 .one();
         if (modelReg == null || modelDataSource == null) {
@@ -768,7 +768,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 查询tb_table_access
         TableAccessPO modelAccess = this.query()
                 .eq("id", id)
-                .eq("appid", appid)
+                .eq("app_id", appid)
                 .eq("del_flag", 1)
                 .one();
 
@@ -862,7 +862,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // nifi配置表: tb_nifi_setting
         NifiSettingPO po = new NifiSettingPO();
         po.tableId = tableId;
-        po.appid = appid;
+        po.appId = appid;
         po.tableName = dto.tableName;
         po.selectSql = dto.dorisSelectSqlStr;
 
@@ -901,7 +901,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         taskGroupConfig.setAppName(modelReg.getAppName());
         taskGroupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("appid", appid).eq("del_flag", 1).one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
@@ -918,7 +918,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelSync == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        TableAccessPO modelAccess = this.query().eq("id", id).eq("appid", appid).eq("del_flag", 1).one();
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
@@ -931,7 +931,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 回写物理表组件id
         taskGroupConfig.setComponentId(modelAccess.componentId);
 
-        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("appid", appid).eq("table_id", id).one();
+        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("app_id", appid).eq("table_id", id).one();
         if (modelNifi == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
@@ -979,7 +979,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public ResultEnum addComponentId(NifiAccessDTO dto) {
 
         AppRegistrationPO modelReg = this.appRegistrationImpl.query()
-                .eq("id", dto.appid)
+                .eq("id", dto.appId)
                 .eq("del_flag", 1)
                 .one();
         if (modelReg == null) {
@@ -1001,7 +1001,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         TableAccessPO modelAccess = this.query()
                 .eq("id", dto.tableId)
-                .eq("appid", dto.appid)
+                .eq("app_id", dto.appId)
                 .eq("del_flag", 1)
                 .one();
         modelAccess.componentId = dto.tableGroupId;

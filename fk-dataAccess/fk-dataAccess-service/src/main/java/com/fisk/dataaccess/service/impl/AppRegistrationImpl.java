@@ -98,7 +98,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         AppDataSourcePO modelDataSource = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
         // 保存tb_app_datasource数据
-        modelDataSource.setAppid(po.getId());
+        modelDataSource.setAppId(po.getId());
         modelDataSource.setCreateUser(String.valueOf(userId));
 
         int insert = appDataSourceMapper.insert(modelDataSource);
@@ -200,12 +200,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 2.2修改数据
         long appDataSid = appDataSourceImpl.query()
-                .eq("appid", id)
+                .eq("app_id", id)
                 .one()
                 .getId();
         modelDataSource.setId(appDataSid);
 
-        modelDataSource.setAppid(id);
+        modelDataSource.setAppId(id);
         // 更新人
         modelDataSource.updateUser = String.valueOf(userId);
 
@@ -233,7 +233,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 2.删除tb_app_datasource表数据
         AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                .eq("appid", id)
+                .eq("app_id", id)
                 .one();
 
         return appDataSourceMapper.deleteByIdWithFill(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -282,7 +282,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppRegistrationDTO appRegistrationDTO = AppRegistrationMap.INSTANCES.poToDto(modelReg);
 
         AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                .eq("appid", id)
+                .eq("app_id", id)
                 .eq("del_flag", 1)
                 .one();
         AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(modelDataSource);
@@ -397,7 +397,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         AppDataSourcePO modelData = appDataSourceImpl.query()
-                .eq("appid", appid)
+                .eq("app_id", appid)
                 .eq("del_flag", 1)
                 .one();
         if (modelData == null) {

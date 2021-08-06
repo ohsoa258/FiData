@@ -14,7 +14,7 @@ public class AtlasAccessDTO {
     /**
      * 应用注册id
      */
-    public long appid;
+    public long appId;
 
     /**
      * 当前登陆人

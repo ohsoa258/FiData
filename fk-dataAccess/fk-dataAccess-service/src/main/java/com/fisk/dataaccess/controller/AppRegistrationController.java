@@ -160,7 +160,7 @@ public class AppRegistrationController {
 
     @PostMapping("/addAtlasInstanceIdAndDbId")
     public ResultEntity<Object> addAtlasInstanceIdAndDbId(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("atlas_instance_id") String atlasInstanceId,
             @RequestParam("atlas_db_id") String atlasDbId) {
 

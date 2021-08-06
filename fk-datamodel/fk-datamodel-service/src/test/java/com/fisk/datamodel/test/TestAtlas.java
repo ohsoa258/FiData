@@ -56,7 +56,7 @@ public class TestAtlas {
     public void test04() {
 
         NifiAccessDTO dto = new NifiAccessDTO();
-        dto.appid = 325;
+        dto.appId = 325;
         dto.tableId = 940;
         dto.appGroupId = "bd881358-017a-1000-d6f4-e715c2cf2641";
         dto.tableGroupId = "bd8813bf-017a-1000-104d-882f0d4aba32";
