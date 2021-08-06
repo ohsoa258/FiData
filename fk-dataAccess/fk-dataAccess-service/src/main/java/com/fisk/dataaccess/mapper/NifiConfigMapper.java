@@ -29,6 +29,13 @@ public interface NifiConfigMapper extends BaseMapper<NifiConfigPO> {
     @Select("SELECT `component_id` FROM tb_nifi_config;")
     String getNifiValue();
 
+    /**
+     * 添加
+     *
+     * @param key 唯一key
+     * @param value value
+     * @return 执行结果
+     */
     @Insert("insert into tb_nifi_config(`key`,`value`) values(#{key},#{value})")
     int addNifiConfig(@Param("key") String key, @Param("value") String value);
 }

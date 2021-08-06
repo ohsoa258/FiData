@@ -10,8 +10,13 @@ import java.util.Objects;
 @Data
 public class TableNameVO {
 
-    // 应用注册id
+    /**
+     * 应用注册id
+     */
     public long appid;
+    /**
+     * 表名
+     */
     public String tableName;
     @Override
     public boolean equals(Object o) {
