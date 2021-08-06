@@ -82,8 +82,8 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     }
 
     @Override
-    public List<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page) {
-        return configureMapper.selectPage(page, null).getRecords();
+    public Page<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page) {
+        return configureMapper.selectPage(page, null);
     }
 
     @Override

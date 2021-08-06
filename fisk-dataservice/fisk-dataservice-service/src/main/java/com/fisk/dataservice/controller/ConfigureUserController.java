@@ -31,7 +31,7 @@ public class ConfigureUserController {
 
     @ApiOperation("分页查询所有用户")
     @GetMapping("/getAll")
-    public ResultEntity<List<ConfigureUserPO>> getAll(Page<ConfigureUserPO> page) {
+    public ResultEntity<Page<ConfigureUserPO>> getAll(Page<ConfigureUserPO> page) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.listData(page));
     }
 

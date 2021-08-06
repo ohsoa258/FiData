@@ -40,7 +40,7 @@ public class ApiFieldController {
 
     @ApiOperation("分页查询所有Api服务")
     @GetMapping("/getAll")
-    public ResultEntity<List<ApiConfigurePO>> listData(Page<ApiConfigurePO> page) {
+    public ResultEntity<Page<ApiConfigurePO>> listData(Page<ApiConfigurePO> page) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.queryAll(page));
     }
 

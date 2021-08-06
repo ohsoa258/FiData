@@ -2,10 +2,9 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.UserApiDTO;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
-import com.fisk.dataservice.entity.ApiConfigurePO;
-import com.fisk.dataservice.vo.UserVO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public interface ConfigureUserService {
      * @param page
      * @return
      */
-    List<ConfigureUserPO> listData(Page<ConfigureUserPO> page);
+    Page<ConfigureUserPO> listData(Page<ConfigureUserPO> page);
 
     /**
      * 保存用户服务
@@ -69,5 +68,5 @@ public interface ConfigureUserService {
      * @param id
      * @return
      */
-    List<ApiConfigurePO> configureByUserId(Integer id);
+    List<UserApiDTO> configureByUserId(Integer id);
 }

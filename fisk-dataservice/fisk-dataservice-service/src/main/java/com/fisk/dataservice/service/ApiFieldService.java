@@ -29,7 +29,7 @@ public interface ApiFieldService {
      * @param page
      * @return
      */
-    List<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page);
+    Page<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page);
 
     /**
      * 修改Api接口

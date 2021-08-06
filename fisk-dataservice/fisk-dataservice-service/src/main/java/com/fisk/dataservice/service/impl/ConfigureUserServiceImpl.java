@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.UserApiDTO;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
@@ -39,8 +40,9 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     private MiddleConfigureMapper middleMapper;
 
     @Override
-    public List<ConfigureUserPO> listData(Page<ConfigureUserPO> page) {
-        return configureUserMapper.selectPage(page, null).getRecords();
+    public Page<ConfigureUserPO> listData(Page<ConfigureUserPO> page) {
+        Page<ConfigureUserPO> userPOPage = configureUserMapper.selectPage(page, null);
+        return userPOPage;
     }
 
     @Override
@@ -168,7 +170,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public List<ApiConfigurePO> configureByUserId(Integer id) {
+    public List<UserApiDTO> configureByUserId(Integer id) {
         // 查询用户id下所有服务的id
         QueryWrapper<MiddleConfigurePO> query = new QueryWrapper<>();
         query.lambda()
@@ -179,12 +181,14 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        // 根据服务id查询所有服务
-        List<ApiConfigurePO> apiConfigureList = new ArrayList<>();
-        for (MiddleConfigurePO middleConfigurePO : configureList) {
-            apiConfigureList.add(apiConfigureMapper.selectById(middleConfigurePO.getConfigureId()));
+        List<UserApiDTO> userApiList = new ArrayList<>();
+        for (MiddleConfigurePO middleConfigure : configureList) {
+            UserApiDTO user = new UserApiDTO();
+            user.setUserId(id);
+            user.setConfigureId(middleConfigure.getConfigureId());
+            userApiList.add(user);
         }
-        return apiConfigureList;
+        return userApiList;
     }
 
     /**
