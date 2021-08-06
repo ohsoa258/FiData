@@ -20,6 +20,9 @@
         <if test=" query.details != null ">
             and details like concat('%', #{query.details}, '%')
         </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
+        </if>
         <if test=" query.folderId != null ">
             and fid = #{query.folderId}
         </if>
@@ -39,6 +42,9 @@
         </if>
         <if test=" query.details != null ">
             and details like concat('%', #{query.details}, '%')
+        </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
         </if>
         <if test=" query.folderId != null ">
             and fid = #{query.folderId}
