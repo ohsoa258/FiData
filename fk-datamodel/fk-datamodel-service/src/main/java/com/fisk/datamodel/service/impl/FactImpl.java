@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.map.FactAttributeMap;
@@ -106,6 +107,14 @@ public class FactImpl implements IFact {
             dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute.lambda().eq(FactAttributePO::getFactId,dto.id)));
         }
         return list;
+    }
+
+    @Override
+    public List<FactScreenDropDTO> getFactScreenDropList()
+    {
+        //获取事实表数据
+        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        return FactMap.INSTANCES.dropScreenPoToDto(mapper.selectList(queryWrapper.orderByDesc("create_time")));
     }
 
 }

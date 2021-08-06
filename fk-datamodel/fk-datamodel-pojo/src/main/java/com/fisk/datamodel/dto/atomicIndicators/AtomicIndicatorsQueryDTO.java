@@ -11,7 +11,11 @@ public class AtomicIndicatorsQueryDTO {
     /**
      * 业务过程id
      */
-    public int businessProcessId;
+    public long businessProcessId;
+    /**
+     * 事实表id
+     */
+    public long factId;
     /**
      * 分页返回对象
      */

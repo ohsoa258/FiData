@@ -198,9 +198,9 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     public List<FilterFieldDTO> getDataAreaColumn() {
 
         List<FilterFieldDTO> list = new ArrayList<>();
-        list = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_data", "a");
-        List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_business", "b");
-        list.addAll(fieldDTOList);
+        //list = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_data", "a");
+        //List<FilterFieldDTO> fieldDTOList = getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_business", "b");
+        //list.addAll(fieldDTOList);
         return list;
     }
 

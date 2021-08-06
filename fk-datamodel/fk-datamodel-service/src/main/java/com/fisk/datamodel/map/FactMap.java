@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 import com.fisk.datamodel.entity.FactPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -45,5 +46,12 @@ public interface FactMap {
      * @return
      */
     List<FactDropDTO> dropPoToDto(List<FactPO> po);
+
+    /**
+     * dropScreenPo==>dto
+     * @param po
+     * @return
+     */
+    List<FactScreenDropDTO> dropScreenPoToDto(List<FactPO> po);
 
 }
