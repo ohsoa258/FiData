@@ -514,7 +514,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         for (ProcessorEntity item : entities) {
-            try {
+            try {//启动组件判断顺序有点假
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
                 if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
                     continue;

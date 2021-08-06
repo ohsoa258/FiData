@@ -1,9 +1,9 @@
 package com.fisk.system.web;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.RoleInfoDTO;
 import com.fisk.system.service.IRoleInfoService;
 import io.swagger.annotations.Api;
@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "角色管理")
+@Api(tags = {SwaggerConfig.ROLE_INFO})
 @RestController
 @RequestMapping("/role")
 @Slf4j

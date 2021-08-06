@@ -1,17 +1,19 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.AppDriveTypeDTO;
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.AppRegistrationEditDTO;
-import com.fisk.dataaccess.dto.AppRegistrationQueryDTO;
+import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,7 @@ import java.util.List;
 /**
  * @author Lock
  */
-@Api(description = "应用注册接口")
+@Api(tags = {SwaggerConfig.TAG_1})
 @RestController
 @RequestMapping("/appRegistration")
 @Slf4j
@@ -32,6 +34,8 @@ public class AppRegistrationController {
 
     @Resource
     private IAppRegistration service;
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     /**
      * 添加应用
@@ -43,7 +47,21 @@ public class AppRegistrationController {
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
 
-        return ResultEntityBuild.build(service.addData(dto));
+        ResultEntity<AtlasEntityQueryVO> resultEntity = service.addData(dto);
+        AtlasEntityQueryVO vo = resultEntity.data;
+        if (vo == null) {
+            return ResultEntityBuild.buildData(resultEntity.code, resultEntity.msg);
+        }
+
+        // TODO: atlas对接应用注册
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.appId = vo.appId;
+        atlasEntityQueryDTO.userId = vo.userId;
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println("task = " + task);
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }
 
     /**
@@ -124,14 +142,14 @@ public class AppRegistrationController {
 
     @PostMapping("/pageFilter")
     @ApiOperation(value = "过滤器")
-    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
+    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
 
     @GetMapping("/getColumn")
     @ApiOperation(value = "过滤器字段")
-    public ResultEntity<Object> getColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }
 
     @GetMapping("/getAtlasEntity")
@@ -147,5 +165,12 @@ public class AppRegistrationController {
             @RequestParam("atlas_db_id") String atlasDbId) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addAtlasInstanceIdAndDbId(appid, atlasInstanceId, atlasDbId));
+    }
+
+    @ApiOperation(value = "获取应用注册名称")
+    @GetMapping("/getAppName")
+    public ResultEntity<List<AppNameDTO>> getAppNameAndId() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
 }

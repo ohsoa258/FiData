@@ -19,7 +19,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.exception",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.task.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.dataaccess.client"})
+@EnableFeignClients(basePackages = {"com.fisk.dataaccess.client","com.fisk.datamodel.client"})
 public class FkTaskApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext configurableApplicationContext =  SpringApplication.run(FkTaskApplication.class, args);

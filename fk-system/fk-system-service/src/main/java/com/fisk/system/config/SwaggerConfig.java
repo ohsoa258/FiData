@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -26,6 +23,11 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    public static final String PERMISSION = "permission-controller";
+    public static final String ROLE_INFO = "role-info-controller";
+    public static final String SERVICE_REGISTRY = "service-registry-controller";
+    public static final String USER = "user-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkSystemApplication.class.getPackage().getName();
@@ -35,6 +37,10 @@ public class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
                 .build()
+                .tags(new Tag(PERMISSION,"权限管理"))
+                .tags(new Tag(ROLE_INFO,"角色管理"))
+                .tags(new Tag(SERVICE_REGISTRY,"服务注册"))
+                .tags(new Tag(USER,"用户中心服务"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

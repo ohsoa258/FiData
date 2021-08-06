@@ -120,7 +120,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id 物理表id
      * @return AtlasWriteBackDataDTO
      */
-    AtlasWriteBackDataDTO getAtlasWriteBackDataDTO(long appid,long id);
+    ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid,long id);
 
     /**
      * atlas物理表回写
@@ -152,4 +152,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 多表字段
      */
     List<FilterFieldDTO> getColumn();
+
+    /**
+     * 获取数据接入表名以及字段
+     *
+     * @return 表名及表字段
+     */
+    List<TableNameDTO> getDataAccessMeta();
 }

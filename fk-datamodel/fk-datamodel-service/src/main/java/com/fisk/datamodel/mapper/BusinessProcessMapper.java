@@ -12,6 +12,11 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface BusinessProcessMapper extends FKBaseMapper<BusinessProcessPO> {
 
+    /**
+     * 获取业务过程详情
+     * @param id
+     * @return
+     */
     BusinessProcessAssociationDTO getBusinessProcessDetail(@Param("id") int id);
 
 }

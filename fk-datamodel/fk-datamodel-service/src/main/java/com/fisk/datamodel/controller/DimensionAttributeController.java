@@ -3,9 +3,12 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -18,19 +21,15 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(description = "数仓建模--维度字段")
+@Api(tags = {SwaggerConfig.DIMENSION_ATTRIBUTE})
 @RestController
 @RequestMapping("/attribute")
 @Slf4j
 public class DimensionAttributeController {
     @Resource
     IDimensionAttribute service;
-
-    @ApiOperation("获取数据接入表名以及字段")
-    @GetMapping("/getDataAccessMeta")
-    public ResultEntity<Object> getDataAccessMeta() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProjectDimensionMeta());
-    }
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @ApiOperation("获取关联维度表名以及字段")
     @GetMapping("/getDimensionMeta")
@@ -42,18 +41,29 @@ public class DimensionAttributeController {
     @PostMapping("/addAttribute")
     public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
     {
-        return ResultEntityBuild.build(service.addDimensionAttribute(dto.dimensionId,dto.list));
+        ResultEnum result=service.addDimensionAttribute(dto.dimensionId,dto.list);
+        if (result==ResultEnum.SUCCESS)
+        {
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(dto);
+        }
+        return ResultEntityBuild.build(result);
     }
 
     @ApiOperation("删除维度字段")
     @PostMapping("/deleteAttribute")
     public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids)
     {
-        return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
+        ResultEntity<Integer> result=service.deleteDimensionAttribute(ids);
+        if (result.code==ResultEnum.SUCCESS.getCode())
+        {
+            //发送消息
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     @ApiOperation("获取维度字段表列表")
-    @GetMapping("/getDimensionAttributeList") ////@PathVariable/{dimensionId}
+    @GetMapping("/getDimensionAttributeList")
     public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
     }
@@ -63,5 +73,12 @@ public class DimensionAttributeController {
     public ResultEntity<Object> editDimensionAttribute(@Validated @RequestBody DimensionAttributeUpdateDTO dto) {
         return ResultEntityBuild.build(service.updateDimensionAttribute(dto));
     }
+
+    @GetMapping("/getDimensionEntity")
+    @ApiOperation("获取维度表元数据(用于Doris创建表)")
+    public ResultEntity<DimensionMetaDataDTO> getDimensionEntity(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
+    }
+
 
 }

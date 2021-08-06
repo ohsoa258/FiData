@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.BusinessNameDTO;
 import com.fisk.datamodel.dto.DataAreaDTO;
 import com.fisk.datamodel.dto.DataAreaQueryDTO;
@@ -20,7 +21,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "数据域接口")
+@Api(tags = {SwaggerConfig.DATA_AREA})
 @RestController
 @RequestMapping("/dataArea")
 @Slf4j

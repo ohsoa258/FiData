@@ -3,6 +3,7 @@ package com.fisk.dataaccess.utils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,11 +13,14 @@ import java.util.Map;
 
 /**
  * @author Lock
+ * <p>
+ * MySQL 获取表及表字段
  */
+@Slf4j
 public class MysqlConUtils {
 
     /**
-     * 获取实时及非实时的表 表字段
+     * 获取实时及非实时的表 表字段(暂时不使用此方法)
      * @param url url
      * @param user user
      * @param pwd pwd
@@ -61,15 +65,16 @@ public class MysqlConUtils {
      * 获取非实时 表及表字段
      * @param url url
      * @param user user
-     * @param pwd pwd
+     * @param password password
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getnrttable(String url, String user, String pwd){
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password){
 
         List<TablePyhNameDTO> list = null;
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(url, user, pwd);
+            Connection conn = DriverManager.getConnection(url, user, password);
+            // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn);
             Statement st = conn.createStatement();
 
@@ -97,7 +102,8 @@ public class MysqlConUtils {
             st.close();
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
-            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            return null;
         }
 
         return list;

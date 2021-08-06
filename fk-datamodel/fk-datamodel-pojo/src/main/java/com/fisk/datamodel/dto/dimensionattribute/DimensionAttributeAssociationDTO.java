@@ -6,6 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class DimensionAttributeAssociationDTO extends DimensionMetaDTO {
-    public long associateDimensionId;
+public class DimensionAttributeAssociationDTO {
+    public long id;
+    public String dimensionFieldEnName;
 }

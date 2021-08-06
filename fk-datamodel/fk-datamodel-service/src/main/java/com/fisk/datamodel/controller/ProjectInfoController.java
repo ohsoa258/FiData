@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.ProjectInfoDTO;
 import com.fisk.datamodel.service.IProjectInfo;
 import io.swagger.annotations.Api;
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "项目信息接口")
+@Api(tags = {SwaggerConfig.PROJECT_INFO})
 @RestController
 @RequestMapping("/projectInfo")
 @Slf4j

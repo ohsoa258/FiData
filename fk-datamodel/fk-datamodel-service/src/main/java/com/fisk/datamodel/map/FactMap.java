@@ -3,11 +3,15 @@ package com.fisk.datamodel.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 import com.fisk.datamodel.entity.FactPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -32,8 +36,23 @@ public interface FactMap {
 
     /**
      * 分页po==>dto
+     * @param po
      * @return
      */
     Page<FactListDTO> pagePoToDto(IPage<FactPO> po);
+
+    /**
+     * dropPo==>dto
+     * @param po
+     * @return
+     */
+    List<FactDropDTO> dropPoToDto(List<FactPO> po);
+
+    /**
+     * dropScreenPo==>dto
+     * @param po
+     * @return
+     */
+    List<FactScreenDropDTO> dropScreenPoToDto(List<FactPO> po);
 
 }

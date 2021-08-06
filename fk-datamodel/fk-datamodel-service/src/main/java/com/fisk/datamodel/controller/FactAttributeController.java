@@ -19,8 +19,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.TAG_1 })
-//@Api(description = "事实字段")
+@Api(tags = { SwaggerConfig.FACT_ATTRIBUTE })
 @RestController
 @RequestMapping("/factAttribute")
 @Slf4j
