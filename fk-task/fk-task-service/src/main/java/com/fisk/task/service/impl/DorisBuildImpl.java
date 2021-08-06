@@ -5,6 +5,7 @@ import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
 import com.fisk.task.utils.YamlReader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -21,17 +22,24 @@ import java.sql.Statement;
 public class DorisBuildImpl implements IDorisBuild {
     @Resource
     IDorisBuild doris;
-
+    @Value("${dorisconstr.url}")
+    private String dorisUrl;
+    @Value("${dorisconstr.username}")
+    private String dorisUser;
+    @Value("${dorisconstr.password}")
+    private String dorisPwd;
+    @Value("${dorisconstr.driver_class_name}")
+    private String dorisDriverName;
 
 
     @Override
     public BusinessResult dorisBuildTable(String executsql) {
         boolean re = false;
         String msg = null;
-        String dorisconstr = YamlReader.instance.getValueByKey("dorisconstr.url").toString();
-        String username = YamlReader.instance.getValueByKey("dorisconstr.username").toString();
-        String pwd = YamlReader.instance.getValueByKey("dorisconstr.password").toString();
-        String Driver = YamlReader.instance.getValueByKey("dorisconstr.driver_class_name").toString();
+        String dorisconstr = dorisUrl;
+        String username = dorisUser;
+        String pwd = dorisPwd;
+        String Driver = dorisDriverName;
         Connection conn = null;
         Statement stmt = null;
         //PreparedStatement和Statement的区别在于
