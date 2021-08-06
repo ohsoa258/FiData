@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.dimensionAttribute})
+@Api(tags = {SwaggerConfig.DIMENSION_ATTRIBUTE})
 @RestController
 @RequestMapping("/attribute")
 @Slf4j
@@ -63,7 +63,7 @@ public class DimensionAttributeController {
     }
 
     @ApiOperation("获取维度字段表列表")
-    @GetMapping("/getDimensionAttributeList") ////@PathVariable/{dimensionId}
+    @GetMapping("/getDimensionAttributeList")
     public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
     }

@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,7 +20,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "数仓建模--原子指标")
+@Api(tags = {SwaggerConfig.ATOMIC_INDICATOR})
 @RestController
 @RequestMapping("/AtomicIndicators")
 @Slf4j

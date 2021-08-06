@@ -120,7 +120,7 @@ public class DimensionAttributeImpl
         po.dimensionFieldLength=dto.dimensionFieldLength;
         po.dimensionFieldEnName=dto.dimensionFieldEnName;
         po.dimensionFieldType=dto.dimensionFieldType;
-        //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

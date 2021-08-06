@@ -18,7 +18,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.businessProcess})
+@Api(tags = {SwaggerConfig.BUSINESS_PROCESS})
 @RestController
 @RequestMapping("/businessProcess")
 @Slf4j

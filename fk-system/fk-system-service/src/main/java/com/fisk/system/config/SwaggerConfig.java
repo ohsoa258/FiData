@@ -23,10 +23,10 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String permission = "permission-controller";
-    public static final String roleInfo = "role-info-controller";
-    public static final String serviceRegistry = "service-registry-controller";
-    public static final String info = "user-controller";
+    public static final String PERMISSION = "permission-controller";
+    public static final String ROLE_INFO = "role-info-controller";
+    public static final String SERVICE_REGISTRY = "service-registry-controller";
+    public static final String USER = "user-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -37,10 +37,10 @@ public class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
                 .build()
-                .tags(new Tag(permission,"权限管理"))
-                .tags(new Tag(roleInfo,"角色管理"))
-                .tags(new Tag(serviceRegistry,"服务注册"))
-                .tags(new Tag(info,"用户中心服务"))
+                .tags(new Tag(PERMISSION,"权限管理"))
+                .tags(new Tag(ROLE_INFO,"角色管理"))
+                .tags(new Tag(SERVICE_REGISTRY,"服务注册"))
+                .tags(new Tag(USER,"用户中心服务"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

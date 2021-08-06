@@ -1,8 +1,11 @@
 package com.fisk.datamodel.dto.factattribute;
 
+import lombok.Data;
+
 /**
  * @author JianWenYang
  */
+@Data
 public class FactAttributeListDTO extends FactAttributeDTO {
     /**
      * 主键

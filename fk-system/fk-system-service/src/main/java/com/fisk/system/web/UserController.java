@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 /**
  * @author Lock
  */
-@Api(tags = {SwaggerConfig.info})
+@Api(tags = {SwaggerConfig.USER})
 @RestController
 @RequestMapping("/info")
 @Slf4j

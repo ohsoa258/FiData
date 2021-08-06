@@ -1,6 +1,6 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

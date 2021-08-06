@@ -3,10 +3,10 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
@@ -29,8 +29,7 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
     {
         //查询原子指标数据
         QueryWrapper<AtomicIndicatorsPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(AtomicIndicatorsPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(AtomicIndicatorsPO::getFactAttributeId,dto.factAttributeId)
+        queryWrapper.lambda().eq(AtomicIndicatorsPO::getFactAttributeId,dto.factAttributeId)
                 .eq(AtomicIndicatorsPO::getCalculationLogic,dto.calculationLogic)
                 .eq(AtomicIndicatorsPO::getIndicatorsName,dto.indicatorsName);
         AtomicIndicatorsPO po=mapper.selectOne(queryWrapper);
@@ -56,7 +55,7 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
     @Override
     public AtomicIndicatorsDetailDTO getAtomicIndicatorDetails(int id)
     {
-        return mapper.AtomicIndicatorsDetailDTO(id);
+        return mapper.atomicIndicatorsDetailDTO(id);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.atomicIndicators;
+package com.fisk.datamodel.dto.atomicindicator;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.atomicIndicators;
+package com.fisk.datamodel.dto.atomicindicator;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
@@ -8,10 +8,6 @@ import lombok.Data;
  */
 @Data
 public class AtomicIndicatorsQueryDTO {
-    /**
-     * 业务过程id
-     */
-    public long businessProcessId;
     /**
      * 事实表id
      */

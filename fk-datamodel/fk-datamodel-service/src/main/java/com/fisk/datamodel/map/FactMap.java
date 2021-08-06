@@ -36,6 +36,7 @@ public interface FactMap {
 
     /**
      * 分页po==>dto
+     * @param po
      * @return
      */
     Page<FactListDTO> pagePoToDto(IPage<FactPO> po);

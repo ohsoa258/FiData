@@ -44,9 +44,7 @@ public class FactAttributeImpl
         List<FactAttributePO> list = new ArrayList<>();
         for (FactAttributeDTO item : dto) {
             FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
-                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
-                    .eq(FactAttributePO::getFactFieldType, item.factFieldType)
-                    .eq(FactAttributePO::getTableSourceFieldId, item.tableSourceFieldId));
+                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName));
             if (po != null) {
                 isExit = true;
                 break;
@@ -81,7 +79,7 @@ public class FactAttributeImpl
         po.factFieldLength=dto.factFieldLength;
         po.factFieldEnName=dto.factFieldEnName;
         po.factFieldType=dto.factFieldType;
-        //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

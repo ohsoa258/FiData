@@ -2,10 +2,10 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
 
 /**
  * @author JianWenYang

@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(tags = {SwaggerConfig.businessArea})
+@Api(tags = {SwaggerConfig.BUSINESS_AREA})
 @RestController
 @RequestMapping("/business")
 @Slf4j

@@ -1,6 +1,5 @@
 package com.fisk.system.web;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -18,7 +17,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.roleInfo})
+@Api(tags = {SwaggerConfig.ROLE_INFO})
 @RestController
 @RequestMapping("/role")
 @Slf4j

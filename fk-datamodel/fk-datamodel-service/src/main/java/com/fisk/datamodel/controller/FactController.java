@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.fact })
+@Api(tags = { SwaggerConfig.FACT })
 @RestController
 @RequestMapping("/fact")
 @Slf4j

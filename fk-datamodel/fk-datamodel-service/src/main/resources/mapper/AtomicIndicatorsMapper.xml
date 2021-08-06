@@ -2,9 +2,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datamodel.mapper.AtomicIndicatorsMapper">
-    <select id="AtomicIndicatorsDetailDTO" resultType="com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO">
+    <select id="atomicIndicatorsDetailDTO" resultType="com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO">
         SELECT a.id,
-        a.business_process_id,
         a.fact_attribute_id,
         a.calculation_logic,
         a.indicators_name,
@@ -13,11 +12,10 @@
         from tb_atomic_indicators a
         left join tb_fact_attribute b on a.fact_attribute_id = b.id
         left join tb_fact c on b.fact_id=c.id
-        where a.del_flag=1 and a.id = #{id}
+        where a.del_flag=1 and a.id = ${id}
     </select>
-    <select id="queryList" resultType="com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO">
         select a.id,
-        a.business_process_id,
         a.fact_attribute_id,
         a.calculation_logic,
         a.indicators_name,
@@ -28,9 +26,6 @@
         LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
         LEFT JOIN tb_fact c on b.fact_id=c.id
         where a.del_flag=1
-        <if test="query.businessProcessId !=0 ">
-           and a.business_process_id= ${query.businessProcessId}
-        </if>
         <if test="query.factId !=0 ">
             and c.id= ${query.factId}
         </if>

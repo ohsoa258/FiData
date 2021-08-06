@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * @author Lock
  */
-@Api(tags = {SwaggerConfig.dataSourceArea})
+@Api(tags = {SwaggerConfig.DATASOURCE_AREA})
 @RestController
 @RequestMapping("/datasource")
 public class DataSourceAreaController {

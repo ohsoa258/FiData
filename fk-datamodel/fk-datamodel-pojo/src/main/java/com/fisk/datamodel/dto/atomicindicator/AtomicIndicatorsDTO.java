@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.atomicIndicators;
+package com.fisk.datamodel.dto.atomicindicator;
 
 import lombok.Data;
 
@@ -8,7 +8,6 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorsDTO {
     public int id;
-    public int businessProcessId;
     public int factAttributeId;
     public String calculationLogic;
     public String indicatorsName;

@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -7,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
  * @author JianWenYang
  */
 @Configuration
+@Data
 public class GetConfigDTO {
 
     @Value("${spring.datasource.url}")
