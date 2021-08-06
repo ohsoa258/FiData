@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_TABLE)
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
-public class BuildDorisTableListener {
+public class BuildDataModelDorisTableListener {
     @Resource
     DimensionClient dc;
     @Resource
