@@ -1,0 +1,22 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.DerivedIndicatorsMapper">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO">
+        select a.id,
+        a.fact_id,
+        a.derived_name,
+        a.derived_des,
+        a.time_period,
+        b.indicators_name as atomicName,
+        c.limited_name as businessLimitedName
+        from tb_derived_indicators a
+        LEFT JOIN tb_atomic_indicators b on a.atomic_id=b.id
+        LEFT JOIN tb_business_limited c on a.business_limited_id=c.id
+        where a.del_flag=1
+        <if test="query.factId !=0 ">
+            and a.fact_id= ${query.factId}
+        </if>
+    </select>
+
+</mapper>

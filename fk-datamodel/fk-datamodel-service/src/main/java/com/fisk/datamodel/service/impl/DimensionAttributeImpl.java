@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.CreateTypeEnum;
@@ -37,6 +38,8 @@ public class DimensionAttributeImpl
     DimensionAttributeMapper attributeMapper;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -60,6 +63,7 @@ public class DimensionAttributeImpl
                 DimensionAttributeAssociationDTO dto=new DimensionAttributeAssociationDTO();
                 dto.id=attribute.id;
                 dto.dimensionFieldEnName=attribute.dimensionFieldEnName;
+                dto.id=userHelper.getLoginUserInfo().id;
                 associationList.add(dto);
             }
             model.field=associationList;
