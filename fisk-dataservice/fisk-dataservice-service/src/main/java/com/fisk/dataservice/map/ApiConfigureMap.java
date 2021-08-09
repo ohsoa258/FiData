@@ -1,5 +1,6 @@
 package com.fisk.dataservice.map;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import org.mapstruct.Mapper;
@@ -22,4 +23,11 @@ public interface ApiConfigureMap {
      * @return target
      */
     ApiConfigurePO dtoToPo(ApiConfigureDTO dto);
+
+    /**
+     * Page<ApiConfigurePO> page => Page<ApiConfigureDTO> page
+     * @param page
+     * @return
+     */
+    Page<ApiConfigureDTO> poToDtoPage(Page<ApiConfigurePO> page);
 }

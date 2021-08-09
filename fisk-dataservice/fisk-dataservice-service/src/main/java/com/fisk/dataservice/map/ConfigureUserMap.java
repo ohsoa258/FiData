@@ -1,5 +1,6 @@
 package com.fisk.dataservice.map;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import org.mapstruct.Mapper;
@@ -22,4 +23,11 @@ public interface ConfigureUserMap {
      * @return target
      */
     ConfigureUserPO dtoToPo(UserDTO dto);
+
+    /**
+     * Page<ConfigureUserPO> page => Page<UserDTO> page
+     * @param page
+     * @return
+     */
+    Page<UserDTO> poToDtoPage(Page<ConfigureUserPO> page);
 }

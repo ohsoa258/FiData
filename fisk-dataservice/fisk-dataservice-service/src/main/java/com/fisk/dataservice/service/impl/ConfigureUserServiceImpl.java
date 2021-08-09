@@ -17,7 +17,7 @@ import com.fisk.dataservice.mapper.MiddleConfigureMapper;
 import com.fisk.dataservice.service.ConfigureUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -40,14 +40,20 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     private MiddleConfigureMapper middleMapper;
 
     @Override
-    public Page<ConfigureUserPO> listData(Page<ConfigureUserPO> page) {
-        Page<ConfigureUserPO> userPOPage = configureUserMapper.selectPage(page, null);
-        return userPOPage;
+    public Page<UserDTO> listData(Page<ConfigureUserPO> page,String downSystemName) {
+        if(StringUtils.isNotBlank(downSystemName)){
+            QueryWrapper<ConfigureUserPO> query = new QueryWrapper<>();
+            query.lambda()
+                    .like(ConfigureUserPO::getDownSystemName,downSystemName);
+            return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, query));
+        }
+
+        return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, null));
     }
 
     @Override
     public ResultEnum saveUserConfigure(UserConfigureDTO dto) {
-        if (StringUtils.isEmpty(dto)) {
+        if (dto == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
@@ -77,7 +83,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
     @Override
     public ResultEnum saveUser(ConfigureUserPO dto) {
-        if (StringUtils.isEmpty(dto)) {
+        if (dto == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
@@ -108,7 +114,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        if (StringUtils.isEmpty(userExistent(id))) {
+        if (userExistent(id) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -136,7 +142,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        if (StringUtils.isEmpty(userExistent(Integer.parseInt(String.valueOf(dto.id))))) {
+        if (userExistent(Integer.parseInt(String.valueOf(dto.id))) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -162,7 +168,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     @Override
     public ConfigureUserPO byUserId(Integer id) {
         ConfigureUserPO user = configureUserMapper.selectById(id);
-        if (StringUtils.isEmpty(user)) {
+        if (user == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         } else {
             return user;

@@ -1,6 +1,9 @@
 package com.fisk.dataservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * @author WangYan
@@ -13,4 +16,7 @@ public class UserDTO {
     public String systemInfo;
     public String userName;
     public String password;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime createTime;
+    public String createUser;
 }

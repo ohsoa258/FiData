@@ -3,6 +3,8 @@ package com.fisk.dataservice.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author WangYan
  * @date 2021/7/30 14:59
@@ -15,5 +17,5 @@ public class UserVO {
     public String password;
     public String createUser;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public String createTime;
+    public LocalDateTime createTime;
 }

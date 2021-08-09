@@ -82,8 +82,15 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     }
 
     @Override
-    public Page<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page) {
-        return configureMapper.selectPage(page, null);
+    public Page<ApiConfigureDTO> queryAll(Page<ApiConfigurePO> page,String apiName) {
+        if (StringUtils.isNotBlank(apiName)){
+            QueryWrapper<ApiConfigurePO> query = new QueryWrapper<>();
+            query.lambda()
+                    .like(ApiConfigurePO::getApiName,apiName);
+            return ApiConfigureMap.INSTANCES.poToDtoPage(configureMapper.selectPage(page, query));
+        }
+
+        return  ApiConfigureMap.INSTANCES.poToDtoPage(configureMapper.selectPage(page, null));
     }
 
     @Override

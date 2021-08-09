@@ -17,9 +17,10 @@ public interface ConfigureUserService {
     /**
      * 分页查询用户
      * @param page
+     * @param downSystemName
      * @return
      */
-    Page<ConfigureUserPO> listData(Page<ConfigureUserPO> page);
+    Page<UserDTO> listData(Page<ConfigureUserPO> page,String downSystemName);
 
     /**
      * 保存用户服务

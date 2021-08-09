@@ -27,9 +27,10 @@ public interface ApiFieldService {
     /**
      * 查询所有Api服务
      * @param page
+     * @param apiName
      * @return
      */
-    Page<ApiConfigurePO> queryAll(Page<ApiConfigurePO> page);
+    Page<ApiConfigureDTO> queryAll(Page<ApiConfigurePO> page,String apiName);
 
     /**
      * 修改Api接口
