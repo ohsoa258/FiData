@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_TABLE)
+@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE)
 @Slf4j
 public class BuildDataModelDorisTableListener {
     @Resource
@@ -36,7 +36,7 @@ public class BuildDataModelDorisTableListener {
     IDorisBuild doris;
 
     @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DORIS_TABLE_MQ_BUILD)
+    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         DimensionAttributeAddDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddDTO.class);
         ResultEntity<DimensionMetaDataDTO> dimensionAttributeList = dc.getDimensionEntity(inpData.dimensionId);

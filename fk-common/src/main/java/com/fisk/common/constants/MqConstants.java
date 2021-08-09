@@ -27,7 +27,7 @@ public class MqConstants {
 
         public static final String BUILD_ATLAS_ENTITYDELETE_FLOW="task.build.atlas.entitydelete.flow";
 
-        public static final String BUILD_DORIS_TABLE= "task.build.doris.table.flow";
+        public static final String BUILD_DATAMODEL_DORIS_TABLE= "task.build.datamodel.doris.table.flow";
 
     }
 
@@ -39,7 +39,7 @@ public class MqConstants {
         public static final String TASK_BUILD_ATLAS_TABLECOLUMN_ROUTER = "task.build.atlas.tablecolumn.#";
         public static final String TASK_BUILD_ATLAS_ENTITYDELETE_ROUTER = "task.build.atlas.entitydelete.#";
         public static final String TASK_BUILD_DORIS_ROUTER = "task.build.doris.#";
-        public static final String TASK_BUILD_DORIS_TABLE_ROUTER = "task.build.doris.table.#";
+        public static final String TASK_BUILD_DATAMODEL_DORIS_TABLE_ROUTER = "task.build.datamodel.doris.table.#";
         public static final String TASK_BUILD_DORIS_INCREMENTAL_ROUTER = "task.build.doris.incremental.#";
 
     }

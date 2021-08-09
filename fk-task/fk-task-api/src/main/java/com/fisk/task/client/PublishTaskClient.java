@@ -51,7 +51,7 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/atlasEntityDelete")
     ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody String entityId);
     /**
-     * doris创建表BUILD_DORIS_TABLE
+     * doris创建表BUILD_DATAMODEL_DORIS_TABLE
      * @param atlasEntityQueryDTO
      * @return
      */

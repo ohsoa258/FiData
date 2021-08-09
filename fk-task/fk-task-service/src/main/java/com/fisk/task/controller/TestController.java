@@ -113,6 +113,6 @@ public class TestController {
         tab.dimensionId=8;
         tab.createType=1;
         tab.userId = 60L;
-        service.publishTask(TaskTypeEnum.BUILD_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DORIS_TABLE, tab);
+        service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);
     }
 }

@@ -118,9 +118,9 @@ public class PublishTaskController {
      */
     @PostMapping("/atlasDorisTable")
     public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO dimensionAttributeAddDTO){
-        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TABLE.getName(),
+        return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DORIS_TABLE,
+                MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
                 dimensionAttributeAddDTO);
     }
 
