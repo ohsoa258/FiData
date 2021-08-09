@@ -18,7 +18,7 @@ public class TableAccessVO {
 
     public long id;
 
-    public long appid;
+    public long appId;
 
     /**
      * 应用名称

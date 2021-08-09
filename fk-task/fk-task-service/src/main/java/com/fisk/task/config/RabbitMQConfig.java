@@ -67,9 +67,25 @@ public class RabbitMQConfig {
     /**
      * 声明队列
      */
+    @Bean("dorisBuildTable2Queue")
+    public Queue dorisBuildTable2Queue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE).build();
+    }
+
+    /**
+     * 声明队列
+     */
     @Bean("incrementResultQueue")
     public Queue incrementResultQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.INCREMENT_RESULT).build();
+    }
+
+    /**
+     * 声明队列
+     */
+    @Bean("incrementDorisFlowQueue")
+    public Queue incrementDorisFlowQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW).build();
     }
 
     /**
@@ -116,7 +132,14 @@ public class RabbitMQConfig {
                                                 @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_ROUTER).noargs();
     }
-
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding dorisBuildTable2QueueExchange(@Qualifier("dorisBuildTable2Queue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAMODEL_DORIS_TABLE_ROUTER).noargs();
+    }
     /**
      * 绑定队列和交换机
      */
@@ -124,6 +147,15 @@ public class RabbitMQConfig {
     public Binding incrementResultQueueExchange(@Qualifier("incrementResultQueue") Queue queue,
                                                 @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.INCREMENT_RESULT).noargs();
+    }
+
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding incrementDorisFlowQueueExchange(@Qualifier("incrementDorisFlowQueue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_INCREMENTAL_ROUTER).noargs();
     }
 
     @Bean

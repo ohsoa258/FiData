@@ -1,9 +1,11 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -26,7 +28,7 @@ import java.util.Map;
 /**
  * @author Lock
  */
-@Api(description = "物理表接口")
+@Api(tags = {SwaggerConfig.TAG_2})
 @RestController
 @RequestMapping("/physicalTable")
 @Slf4j
@@ -125,9 +127,9 @@ public class PhysicalTableController {
         // 应用注册id
         atlasEntityQueryDTO.appId = atlasIds.appId;
         atlasEntityQueryDTO.dbId = atlasIds.dbId;
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-//        log.info("task:" + JSON.toJSONString(task));
-//        System.out.println(task);
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println(task);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
@@ -209,17 +211,17 @@ public class PhysicalTableController {
 
     @GetMapping("/getAtlasBuildTableAndColumn")
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
-            @RequestParam("id") long id, @RequestParam("appid") long appid) {
+            @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 
         return service.getAtlasBuildTableAndColumn(id, appid);
     }
 
     @GetMapping("/getAtlasWriteBackDataDTO")
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("id") long id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtlasWriteBackDataDTO(appid, id));
+        return service.getAtlasWriteBackDataDTO(appid, id);
     }
 
     @PostMapping("/addAtlasTableIdAndDorisSql")
@@ -230,7 +232,7 @@ public class PhysicalTableController {
 
     @GetMapping("/dataAccessConfig")
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
-            @RequestParam("id") long id, @RequestParam("appid") long appid) {
+            @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 
         return service.dataAccessConfig(id, appid);
     }
@@ -240,4 +242,11 @@ public class PhysicalTableController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
     }
+
+    @ApiOperation("获取数据接入表名以及字段")
+    @GetMapping("/getDataAccessMeta")
+    public ResultEntity<Object> getDataAccessMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessMeta());
+    }
+
 }

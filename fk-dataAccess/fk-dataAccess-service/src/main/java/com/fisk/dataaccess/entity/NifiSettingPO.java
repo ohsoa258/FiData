@@ -22,7 +22,7 @@ public class NifiSettingPO implements Serializable {
     /**
      * 物理表id
      */
-    public long appid;
+    public long appId;
 
     /**
      * 应用注册componentId

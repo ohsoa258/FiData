@@ -23,7 +23,7 @@ public class ProjectInfoPO extends BaseEntity {
     /**
      * tb_area_business(id)
      */
-    public long businessid;
+    public long businessId;
 
     /**
      * 项目空间模式

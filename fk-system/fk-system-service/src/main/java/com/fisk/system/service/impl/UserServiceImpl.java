@@ -12,6 +12,7 @@ import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
 import com.fisk.system.service.IUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +29,9 @@ public class UserServiceImpl implements IUserService {
     @Resource
     private BCryptPasswordEncoder passwordEncoder;
     @Resource
-    UserHelper userHelper;
-    @Resource
     UserMapper mapper;
+    @Resource
+    UserHelper userHelper;
 
     /**
      * 校验手机号或用户名是否存在
@@ -68,8 +69,6 @@ public class UserServiceImpl implements IUserService {
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
         UserPO po = UserMap.INSTANCES.dtoToPo(dto);
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        po.createUser = userInfo.id.toString();
         // 3.写入数据库
         return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -91,8 +90,6 @@ public class UserServiceImpl implements IUserService {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        model.updateUser=userInfo.id.toString();
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -109,10 +106,8 @@ public class UserServiceImpl implements IUserService {
         if (data != null && data.id != dto.id) {
             return ResultEnum.NAME_EXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         model.email=dto.email;
         model.username=dto.username;
-        model.updateUser=userInfo.id.toString();
         return  mapper.updateById(model)>0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -120,7 +115,7 @@ public class UserServiceImpl implements IUserService {
     public IPage<UserPowerDTO> getPageUserData(QueryDTO dto)
     {
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-        if (dto.name !=null && dto.name.length()!=0)
+        if (dto !=null && StringUtils.isNotEmpty(dto.name))
         {
             queryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
         }
@@ -179,9 +174,7 @@ public class UserServiceImpl implements IUserService {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo userInfo = userHelper.getLoginUserInfo();
         po.password=passwordEncoder.encode(dto.getPassword());
-        po.updateUser=userInfo.id.toString();
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 }

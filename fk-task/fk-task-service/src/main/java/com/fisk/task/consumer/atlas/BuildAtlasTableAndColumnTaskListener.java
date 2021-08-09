@@ -11,6 +11,7 @@ import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.AtlasProcessEnum;
+import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
@@ -137,7 +138,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(nifiSelectSql);
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
         //nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
-        if (ae.appAbbreviation.equals("timestamp_incremental")) {
+        if (ae.appAbbreviation.equals(OdsDataSyncTypeEnum.timestamp_incremental.getName())) {
             nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
         } else {
             nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName;

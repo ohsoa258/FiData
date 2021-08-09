@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.service.IDimension;
@@ -16,7 +17,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "数仓建模--维度")
+@Api(tags ={SwaggerConfig.DIMENSION})
 @RestController
 @RequestMapping("/dimension")
 @Slf4j

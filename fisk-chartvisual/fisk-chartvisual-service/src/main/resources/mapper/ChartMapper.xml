@@ -5,6 +5,7 @@
 
     <select id="listChartDataByUserId" resultType="com.fisk.chartvisual.vo.ChartPropertyVO">
         select id,
+        fid,
         name,
         content,
         details,
@@ -19,11 +20,15 @@
         <if test=" query.details != null ">
             and details like concat('%', #{query.details}, '%')
         </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
+        </if>
         <if test=" query.folderId != null ">
             and fid = #{query.folderId}
         </if>
         union all
         select id,
+        fid,
         name,
         content,
         details,
@@ -37,6 +42,9 @@
         </if>
         <if test=" query.details != null ">
             and details like concat('%', #{query.details}, '%')
+        </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
         </if>
         <if test=" query.folderId != null ">
             and fid = #{query.folderId}

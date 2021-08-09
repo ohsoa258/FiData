@@ -2,6 +2,7 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.dataaccess.dto.TableNameDTO;
 import com.fisk.dataaccess.dto.TableAccessPageDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
@@ -71,7 +72,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return 查询结果
      */
-    @Select("select appid,table_name from tb_table_access where del_flag=1")
+    @Select("select app_id,table_name from tb_table_access where del_flag=1")
     List<TableNameVO> getAppIdAndTableName();
 
     /**
@@ -80,7 +81,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      * @param tableName tableName
      * @return 查询结果
      */
-    @Select("select appid from tb_table_access where table_name=#{tableName} and del_flag=1")
+    @Select("select app_id from tb_table_access where table_name=#{tableName} and del_flag=1")
     Long getAppIdByTableName(@Param("tableName") String tableName);
 
 
@@ -92,4 +93,12 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      * @return 查询结果
      */
     Page<TableAccessVO> filter(Page<TableAccessVO> page, @Param("query") TableAccessPageDTO query);
+
+    /**
+     * 获取所有表
+     *
+     * @return 表名
+     */
+    @Select("SELECT id,table_name FROM tb_table_access WHERE del_flag = 1;")
+    List<TableNameDTO> listTableName();
 }

@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.service.IBusinessProcess;
@@ -17,7 +18,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(description = "业务过程")
+@Api(tags = {SwaggerConfig.BUSINESS_PROCESS})
 @RestController
 @RequestMapping("/businessProcess")
 @Slf4j
@@ -53,6 +54,12 @@ public class BusinessProcessController {
     @DeleteMapping("/deleteBusinessProcess/{id}")
     public ResultEntity<Object> deleteBusinessProcess(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteBusinessProcess(id));
+    }
+
+    @ApiOperation("获取业务域下拉列表")
+    @GetMapping("/getBusinessProcessDropList")
+    public ResultEntity<Object> getBusinessProcessDropList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessDropList());
     }
 
 

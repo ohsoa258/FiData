@@ -36,7 +36,7 @@ public interface DataAccessClient {
      */
     @GetMapping("/physicalTable/getAtlasBuildTableAndColumn")
     ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
-            @RequestParam("id") long id, @RequestParam("appid") long appid);
+            @RequestParam("id") long id, @RequestParam("app_id") long appid);
 
     /**
      * 应用注册回写GUID
@@ -49,7 +49,7 @@ public interface DataAccessClient {
      */
     @PostMapping("/appRegistration/addAtlasInstanceIdAndDbId")
     ResultEntity<Object> addAtlasInstanceIdAndDbId(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("atlas_instance_id") String atlasInstanceId,
             @RequestParam("atlas_db_id") String atlasDbId);
 
@@ -62,7 +62,7 @@ public interface DataAccessClient {
      */
     @GetMapping("/physicalTable/getAtlasWriteBackDataDTO")
     ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("id") long id);
 
     /**
@@ -84,7 +84,7 @@ public interface DataAccessClient {
      */
     @GetMapping("/physicalTable/dataAccessConfig")
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
-            @RequestParam("id") long id, @RequestParam("appid") long appid);
+            @RequestParam("id") long id, @RequestParam("app_id") long appid);
 
     /**
      * 回写componentId

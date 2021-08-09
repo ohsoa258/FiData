@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.DataSourceAreaDTO;
 import com.fisk.datamodel.service.IDataSourceArea;
 import io.swagger.annotations.Api;
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * @author Lock
  */
-@Api(description = "计算数据源接口")
+@Api(tags = {SwaggerConfig.DATASOURCE_AREA})
 @RestController
 @RequestMapping("/datasource")
 public class DataSourceAreaController {

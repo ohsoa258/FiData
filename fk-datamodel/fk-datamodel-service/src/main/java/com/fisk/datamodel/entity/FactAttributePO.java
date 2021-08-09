@@ -13,13 +13,13 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FactAttributePO extends BasePO {
     /**
-     * 业务过程id
+     * 事实表id
      */
     public int factId;
     /**
-     *表来源字段
+     *表来源字段id
      */
-    public String tableSourceField;
+    public int tableSourceFieldId;
     /**
      * 业务过程字段表中文字段名称
      */
@@ -48,8 +48,5 @@ public class FactAttributePO extends BasePO {
      * 关联业务过程字段表id
      */
     public int associateDimensionId;
-    /**
-     * 表来源
-     */
-    public String tableSource;
+
 }

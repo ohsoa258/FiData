@@ -1,5 +1,6 @@
 package com.fisk.common.filter.method;
 
+import com.fisk.common.filter.dto.FilterEnum;
 import com.fisk.common.filter.dto.FilterQueryDTO;
 import org.springframework.stereotype.Component;
 

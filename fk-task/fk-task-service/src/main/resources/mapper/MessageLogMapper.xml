@@ -12,4 +12,5 @@
             and msg like concat('%', #{query.details}, '%')
         </if>
     </select>
+
 </mapper>

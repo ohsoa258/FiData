@@ -1,6 +1,8 @@
 package com.fisk.datamodel.service;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 
 import java.util.List;
@@ -11,16 +13,10 @@ import java.util.List;
 public interface IDimensionAttribute {
 
     /**
-     * 获取接入表以及表字段
-     * @return 查询数据
-     */
-    List<DimensionMetaDTO> getProjectDimensionMeta();
-
-    /**
      * 获取维度表以及字段
      * @return 查询数据
      */
-    List<DimensionAttributeAssociationDTO> getProjectDimensionTable();
+    List<DimensionMetaDTO> getProjectDimensionTable();
 
     /**
      * 添加维度字段
@@ -35,7 +31,7 @@ public interface IDimensionAttribute {
      * @param ids
      * @return 删除结果
      */
-    ResultEnum deleteDimensionAttribute(List<Integer> ids);
+    ResultEntity<Integer> deleteDimensionAttribute(List<Integer> ids);
 
     /**
      * 获取维度字段表数据
@@ -50,5 +46,12 @@ public interface IDimensionAttribute {
      * @return
      */
     ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto);
+
+    /**
+     * 根据维度id获取
+     * @param id
+     * @return
+     */
+    DimensionMetaDataDTO getDimensionMetaData(int id);
 
 }

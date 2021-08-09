@@ -4,6 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactDropDTO;
+import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -43,6 +48,18 @@ public interface IFact {
      * @param dto
      * @return
      */
-    IPage<FactDTO> getFactList(QueryDTO dto);
+    IPage<FactListDTO> getFactList(QueryDTO dto);
+
+    /**
+     * 获取事实表下拉列表
+     * @return
+     */
+    List<FactDropDTO> getFactDropList();
+
+    /**
+     * 获取事实筛选列表
+     * @return
+     */
+    List<FactScreenDropDTO> getFactScreenDropList();
 
 }

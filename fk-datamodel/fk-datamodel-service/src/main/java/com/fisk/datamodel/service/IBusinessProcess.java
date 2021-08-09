@@ -5,6 +5,9 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -45,5 +48,11 @@ public interface IBusinessProcess {
      * @return
      */
     ResultEnum deleteBusinessProcess(int id);
+
+    /**
+     * 获取业务过程下拉列表
+     * @return
+     */
+    List<BusinessProcessDropDTO> getBusinessProcessDropList();
 
 }

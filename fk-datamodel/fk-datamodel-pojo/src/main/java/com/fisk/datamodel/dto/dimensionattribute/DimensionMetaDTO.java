@@ -9,6 +9,13 @@ import java.util.List;
  */
 @Data
 public class DimensionMetaDTO {
+    /**
+     * 关联维度id
+     */
+    public long associateDimensionId;
+    /**
+     * 维度表名
+     */
     public String tableName;
-    public List<String> field;
+    public List<DimensionAttributeAssociationDTO> field;
 }

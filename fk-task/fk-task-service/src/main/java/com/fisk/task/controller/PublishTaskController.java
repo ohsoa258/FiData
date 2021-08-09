@@ -3,6 +3,7 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -85,6 +86,19 @@ public class PublishTaskController {
     }
 
     /**
+     * Doris 增量更新
+     * @param entityId
+     * @return
+     */
+    @PostMapping("/dorisIncrementalUpdate")
+    public ResultEntity<Object> publishBuildDorisIncrementalUpdateTask(@RequestBody AtlasEntityDeleteDTO entityId) {
+        return service.publishTask(TaskTypeEnum.BUILD_DORIS_INCREMENTAL_UPDATE_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW,
+                entityId);
+    }
+
+    /**
      * Atlas删除实体
      * @param entityId
      * @return
@@ -95,6 +109,19 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,
                 entityId);
+    }
+
+    /**
+     * doris创建表BUILD_DORIS_TABLE
+     * @param dimensionAttributeAddDTO
+     * @return
+     */
+    @PostMapping("/atlasDorisTable")
+    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO dimensionAttributeAddDTO){
+        return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
+                dimensionAttributeAddDTO);
     }
 
 }
