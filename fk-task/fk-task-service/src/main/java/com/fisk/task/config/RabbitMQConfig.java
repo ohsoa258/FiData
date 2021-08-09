@@ -67,8 +67,8 @@ public class RabbitMQConfig {
     /**
      * 声明队列
      */
-    @Bean("dorisBuildTable2Queue")
-    public Queue dorisBuildTable2Queue() {
+    @Bean("dorisBuildDataModelTableQueue")
+    public Queue dorisBuildDataModelTableQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE).build();
     }
 
@@ -136,7 +136,7 @@ public class RabbitMQConfig {
      * 绑定队列和交换机
      */
     @Bean
-    public Binding dorisBuildTable2QueueExchange(@Qualifier("dorisBuildTable2Queue") Queue queue,
+    public Binding dorisBuildDataModelTableQueueExchange(@Qualifier("dorisBuildDataModelTableQueue") Queue queue,
                                                 @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAMODEL_DORIS_TABLE_ROUTER).noargs();
     }
