@@ -6,8 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
-import com.fisk.chartvisual.entity.MeasurePO;
+import com.fisk.chartvisual.enums.DimensionTypeEnum;
 import com.fisk.chartvisual.map.DataSourceConMap;
+import com.fisk.chartvisual.map.SSASMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
@@ -19,7 +20,6 @@ import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
 import com.fisk.chartvisual.vo.DimensionVO;
-import com.fisk.chartvisual.vo.HierarchyVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -31,12 +31,14 @@ import com.fisk.common.user.UserInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.naming.Name;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import static com.fisk.common.constants.SSASConstant.Measures_Name;
+import static com.fisk.common.constants.SSASConstant.Measures_UniqueName;
 
 /**
  * 数据源管理实现类
@@ -163,7 +165,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public ResultEntity<List<DimensionVO>> SSASDataStructure(int id) {
-//        CubeHelper cubeHelper=new CubeHelper();
         //获取连接信息
         List<DimensionVO> dimensionVOList = new ArrayList<>();
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
@@ -175,40 +176,27 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 CubePO ModelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
                 //度量
                 DimensionVO dimensionVO_Mea = new DimensionVO();
-                dimensionVO_Mea.Name = "Measures";
-                dimensionVO_Mea.UniqueName = "[Measures]";
-                dimensionVO_Mea.DimensionType = 3;
-                List<HierarchyVO> hierarchyVOList_Mea = new ArrayList<>();
-                ModelStructure.Measures.forEach(item -> {
-                    HierarchyVO hierarchyVO_Mea = new HierarchyVO();
-                    hierarchyVO_Mea.Name = item.Name;
-                    hierarchyVO_Mea.UniqueName = item.UniqueName;
-                    hierarchyVOList_Mea.add(hierarchyVO_Mea);
-                });
-                dimensionVO_Mea.children = hierarchyVOList_Mea;
+                dimensionVO_Mea.name = Measures_Name;
+                dimensionVO_Mea.uniqueName = Measures_UniqueName;
+                dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
+                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(ModelStructure.Measures);
                 dimensionVOList.add(dimensionVO_Mea);
                 //维度
                 ModelStructure.Dimensions.forEach(d -> {
                     DimensionVO dimensionVO_Dim = new DimensionVO();
-                    dimensionVO_Dim.Name = d.Name;
-                    dimensionVO_Dim.UniqueName = d.UniqueName;
-                    dimensionVO_Dim.DimensionType = 2;
-                    List<HierarchyVO> hierarchyVOList_Dim = new ArrayList<>();
-                    d.Hierarchies.forEach(h -> {
-                        HierarchyVO hierarchyVO_Dim = new HierarchyVO();
-                        hierarchyVO_Dim.Name = h.Name;
-                        hierarchyVO_Dim.UniqueName = h.UniqueName;
-                        hierarchyVOList_Dim.add(hierarchyVO_Dim);
-                    });
-                    dimensionVO_Dim.children = hierarchyVOList_Dim;
+                    dimensionVO_Dim.name = d.Name;
+                    dimensionVO_Dim.uniqueName = d.UniqueName;
+                    dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;
+                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.Hierarchies);
                     dimensionVOList.add(dimensionVO_Dim);
                 });
 
             } catch (Exception e) {
-                log.error(e.getMessage());
+                log.error("获取SSAS数据结构出错，错误信息:",e);
                 return ResultEntityBuild.build(ResultEnum.ERROR);
+            }finally {
+                cubeHelper.closeConnection();
             }
-            cubeHelper.closeConnection();
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dimensionVOList);
     }

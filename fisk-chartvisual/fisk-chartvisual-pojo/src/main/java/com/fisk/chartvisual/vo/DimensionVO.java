@@ -1,16 +1,15 @@
 package com.fisk.chartvisual.vo;
 
+import com.fisk.chartvisual.enums.DimensionTypeEnum;
+
 import java.util.List;
 
 /**
  * @author JinXingWang
  */
 public class DimensionVO {
-    public String Name;
-    public String UniqueName;
-    /**
-     * 2 维度 3 度量
-     */
-    public int DimensionType;
+    public String name;
+    public String uniqueName;
+    public DimensionTypeEnum dimensionType;
     public List<HierarchyVO> children;
 }

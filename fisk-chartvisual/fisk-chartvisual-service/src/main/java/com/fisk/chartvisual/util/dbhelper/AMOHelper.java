@@ -52,8 +52,7 @@ public class AMOHelper {
             return true;
         } catch (Exception ex) {
             log.error("【connection】数据库连接获取失败, ex", ex);
-            return false;
-//            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, ex.getLocalizedMessage());
+            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, ex.getLocalizedMessage());
         }
     }
 

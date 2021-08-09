@@ -1,5 +1,7 @@
 package com.fisk.chartvisual.entity;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -7,6 +9,7 @@ import java.util.List;
  *
  * @author JinXingWang
  */
+@Data
 public class HierarchyPO {
     public String Name;
     public String UniqueName;
