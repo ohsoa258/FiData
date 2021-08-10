@@ -63,7 +63,6 @@ public class DimensionAttributeImpl
                 DimensionAttributeAssociationDTO dto=new DimensionAttributeAssociationDTO();
                 dto.id=attribute.id;
                 dto.dimensionFieldEnName=attribute.dimensionFieldEnName;
-                dto.id=userHelper.getLoginUserInfo().id;
                 associationList.add(dto);
             }
             model.field=associationList;
@@ -104,6 +103,7 @@ public class DimensionAttributeImpl
             DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
             pushDto.dimensionId=dimensionId;
             pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
+            pushDto.userId=userHelper.getLoginUserInfo().id;
             //发送消息
             publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
         }
