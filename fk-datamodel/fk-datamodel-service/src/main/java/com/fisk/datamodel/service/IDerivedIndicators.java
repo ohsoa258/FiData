@@ -26,10 +26,24 @@ public interface IDerivedIndicators {
     ResultEnum deleteDerivedIndicators(long id);
 
     /**
-     * 天添加派生指标
+     * 添加派生指标
      * @param dto
      * @return
      */
     ResultEnum addDerivedIndicators(DerivedIndicatorsDTO dto);
+
+    /**
+     * 获取派生指标详情
+     * @param id
+     * @return
+     */
+    DerivedIndicatorsDTO getDerivedIndicators(long id);
+
+    /**
+     * 修改派生指标
+     * @param dto
+     * @return
+     */
+    ResultEnum updateDerivedIndicators(DerivedIndicatorsDTO dto);
 
 }

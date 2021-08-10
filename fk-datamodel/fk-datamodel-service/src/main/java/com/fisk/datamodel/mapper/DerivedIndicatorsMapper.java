@@ -15,6 +15,7 @@ import org.apache.ibatis.annotations.Param;
 public interface DerivedIndicatorsMapper extends FKBaseMapper<DerivedIndicatorsPO> {
     /**
      * 查询派生指标列表
+     * @param page
      * @param dto
      * @return
      */

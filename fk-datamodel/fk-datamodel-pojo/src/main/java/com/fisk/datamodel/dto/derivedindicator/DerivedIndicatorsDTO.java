@@ -19,6 +19,6 @@ public class DerivedIndicatorsDTO {
     /**
      * 事实字段表id集合
      */
-    public List<Integer> ids;
+    public List<Integer> attributeId;
 
 }

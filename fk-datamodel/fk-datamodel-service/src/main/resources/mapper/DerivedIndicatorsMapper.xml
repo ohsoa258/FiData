@@ -8,6 +8,8 @@
         a.derived_name,
         a.derived_des,
         a.time_period,
+        a.atomic_id,
+        a.business_limited_id,
         b.indicators_name as atomicName,
         c.limited_name as businessLimitedName
         from tb_derived_indicators a

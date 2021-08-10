@@ -20,6 +20,11 @@ public interface DerivedIndicatorsMap {
      */
     DerivedIndicatorsPO dtoToPo(DerivedIndicatorsDTO dto);
 
-
+    /**
+     * po==>dto
+     * @param po
+     * @return
+     */
+    DerivedIndicatorsDTO poToDto(DerivedIndicatorsPO po);
 
 }

@@ -14,13 +14,13 @@ import com.fisk.datamodel.map.DerivedIndicatorsMap;
 import com.fisk.datamodel.mapper.DerivedIndicatorsMapper;
 import com.fisk.datamodel.mapper.DerivedIndicatorsAttributeMapper;
 import com.fisk.datamodel.service.IDerivedIndicators;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -32,7 +32,8 @@ public class DerivedIndicatorsImpl
 
     @Resource
     DerivedIndicatorsMapper mapper;
-    private static SqlSessionFactory sqlSessionFactory;
+    @Resource
+    DerivedIndicatorsAttributeMapper attributeMapper;
 
     @Override
     public Page<DerivedIndicatorsListDTO> getDerivedIndicatorsList(DerivedIndicatorsQueryDTO dto)
@@ -51,51 +52,106 @@ public class DerivedIndicatorsImpl
         return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addDerivedIndicators(DerivedIndicatorsDTO dto)
+    public ResultEnum addDerivedIndicators(DerivedIndicatorsDTO dto) {
+        //判断是否重复
+        QueryWrapper<DerivedIndicatorsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DerivedIndicatorsPO::getDerivedName, dto.derivedName)
+                .eq(DerivedIndicatorsPO::getFactId, dto.factId);
+        DerivedIndicatorsPO po = mapper.selectOne(queryWrapper);
+        if (po != null) {
+            return ResultEnum.DATA_EXISTS;
+        }
+        int flat = mapper.insert(DerivedIndicatorsMap.INSTANCES.dtoToPo(dto));
+        if (flat == 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        //查询添加id
+        queryWrapper.lambda().eq(DerivedIndicatorsPO::getDerivedName, dto.derivedName)
+                .eq(DerivedIndicatorsPO::getFactId, dto.factId);
+        DerivedIndicatorsPO addSelect = mapper.selectOne(queryWrapper);
+        if (addSelect==null)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        //派生指标聚合字段集合
+        List<DerivedIndicatorsAttributePO> ids = new ArrayList<>();
+        for (Integer item : dto.attributeId) {
+            DerivedIndicatorsAttributePO model = new DerivedIndicatorsAttributePO();
+            model.factAttributeId = item;
+            model.derivedIndicatorsId=addSelect.id;
+            ids.add(model);
+        }
+        boolean result = this.saveBatch(ids);
+        if (!result) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public DerivedIndicatorsDTO getDerivedIndicators(long id)
     {
-        SqlSession session = sqlSessionFactory.openSession(false);
-        boolean result=false;
-        try
+        DerivedIndicatorsPO po=mapper.selectById(id);
+        if (po==null)
         {
-            //判断是否重复
-            QueryWrapper<DerivedIndicatorsPO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.lambda().eq(DerivedIndicatorsPO::getDerivedName,dto.derivedName)
-                    .eq(DerivedIndicatorsPO::getFactId,dto.factId);
-            DerivedIndicatorsPO po=mapper.selectOne(queryWrapper);
-            if (po!=null)
-            {
-                return ResultEnum.DATA_EXISTS;
-            }
-            int flat= mapper.insert(DerivedIndicatorsMap.INSTANCES.dtoToPo(dto));
-            if (flat==0)
-            {
-                return ResultEnum.SAVE_DATA_ERROR;
-            }
-            //派生指标聚合字段集合
-            List<DerivedIndicatorsAttributePO> ids=new ArrayList<>();
-            for (Integer item:dto.ids)
-            {
-                DerivedIndicatorsAttributePO model=new DerivedIndicatorsAttributePO();
-                model.factAttributeId=item;
-            }
-            result= this.saveBatch(ids);
-            if (!result)
-            {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-            }
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
-        catch (Exception ex)
+        DerivedIndicatorsDTO dto=DerivedIndicatorsMap.INSTANCES.poToDto(po);
+        //获取聚合字段
+        QueryWrapper<DerivedIndicatorsAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DerivedIndicatorsAttributePO::getDerivedIndicatorsId,po.id);
+        List<DerivedIndicatorsAttributePO> idList =attributeMapper.selectList(queryWrapper).stream().collect(Collectors.toList());
+        List<Integer> list=new ArrayList<>();
+        for (DerivedIndicatorsAttributePO item:idList)
         {
-            log.error("{}方法执行失败: ", ex);
-            //回滚
-            session.rollback();
+            list.add(item.factAttributeId);
         }
-        finally {
-            // 关闭会话，释放资源
-            session.close();
+        dto.attributeId =list;
+        return  dto;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum updateDerivedIndicators(DerivedIndicatorsDTO dto)
+    {
+        DerivedIndicatorsPO po=mapper.selectById(dto.id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
-        return result?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        po=DerivedIndicatorsMap.INSTANCES.dtoToPo(dto);
+        //保存派生指标数据
+        int flat=mapper.updateById(po);
+        if (flat==0)
+        {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+        }
+        //删除聚合数据
+        QueryWrapper<DerivedIndicatorsAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DerivedIndicatorsAttributePO::getDerivedIndicatorsId,dto.id);
+        List<DerivedIndicatorsAttributePO> listData=attributeMapper.selectList(queryWrapper);
+        if ( listData !=null && listData.size()>0)
+        {
+            boolean res=this.remove(queryWrapper);
+            if (!res) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, "数据保存失败");
+            }
+        }
+        //添加最新聚合数据
+        List<DerivedIndicatorsAttributePO> ids=new ArrayList<>();
+        for (Integer item : dto.attributeId) {
+            DerivedIndicatorsAttributePO model = new DerivedIndicatorsAttributePO();
+            model.factAttributeId = item;
+            model.derivedIndicatorsId=dto.id;
+            ids.add(model);
+        }
+        boolean result = this.saveBatch(ids);
+        if (!result) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR,"数据保存失败");
+        }
+        return ResultEnum.SUCCESS;
     }
 
 }
