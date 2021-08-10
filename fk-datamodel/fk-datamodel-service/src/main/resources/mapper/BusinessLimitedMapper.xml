@@ -1,0 +1,27 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.BusinessLimitedMapper">
+
+    <select id="queryList" resultType="com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO">
+        SELECT
+        bl.id,
+        bl.limited_des,
+        bl.limited_name,
+        bp.business_process_cn_name,
+        ab.business_name
+        FROM
+        tb_business_limited bl
+        LEFT JOIN tb_fact f ON bl.fact_id = f.id
+        LEFT JOIN tb_business_process bp ON bp.id = f.business_process_id
+        LEFT JOIN tb_area_business ab ON ab.id = bp.business_id
+        where bl.del_flag=1
+        <if test="query.id !=0 and query.id !=null">
+            and bl.id= ${query.id}
+        </if>
+        <if test="query.factId !=0 and query.factId !=null">
+            and bl.factId= ${query.factId}
+        </if>
+    </select>
+
+</mapper>
