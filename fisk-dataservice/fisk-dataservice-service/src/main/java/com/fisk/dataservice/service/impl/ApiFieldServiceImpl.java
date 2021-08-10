@@ -178,6 +178,10 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         }else {
             // token存在,直接根据id从redis当中获取数据
             UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildLoginUserInfo(user.getId()));
+            if (userInfo == null){
+                throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+            }
+
             ConfigureUserPO configureUser = analysisToken(userInfo.token);
             return configureUser.getId();
         }
@@ -280,6 +284,11 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         // where
         if (StringUtils.isNotBlank(conditionList)){
             str.append("WHERE 1 = 1 AND " + conditionList);
+        }
+
+        // order by
+        if (StringUtils.isNotBlank(queryFieldList)){
+            str.append(" ORDER BY " + queryFieldList.substring(0,queryFieldList.indexOf(",")) +" DESC ");
         }
 
         // group
