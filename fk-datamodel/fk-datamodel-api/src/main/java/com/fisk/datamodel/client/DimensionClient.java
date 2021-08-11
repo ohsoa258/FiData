@@ -21,4 +21,13 @@ public interface DimensionClient {
     @GetMapping("/attribute/getDimensionEntity")
     ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id);
 
+    /**
+     * 获取事实表元数据字段
+     *
+     * @param id
+     * @return 执行结果
+     */
+    @GetMapping("/factAttribute/getFactEntity")
+    ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
+
 }
