@@ -89,7 +89,9 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
         QueryWrapper<ConfigureUserPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ConfigureUserPO::getDownSystemName, dto.getDownSystemName()).last("limit 1");
+                .eq(ConfigureUserPO::getDownSystemName, dto.getDownSystemName())
+                .eq(ConfigureUserPO::getUserName, dto.getUserName())
+                .last("limit 1");
         ConfigureUserPO configureUser = configureUserMapper.selectOne(queryWrapper);
         if (configureUser != null) {
             return ResultEnum.DATA_EXISTS;
