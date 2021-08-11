@@ -8,8 +8,16 @@ import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
  * @author cfk
  */
 public interface IBusinessLimited {
-     //获取限定列表
-     Page<BusinessLimitedDTO> getBusinessLimitedDTOPage (BusinessLimitedQueryDTO businessLimitedQueryDTO);
-     //删除
+     /**
+      * 获取限定列表
+      * @param businessLimitedQueryDto
+      * @return
+      */
+     Page<BusinessLimitedDTO> getBusinessLimitedDtoPage (BusinessLimitedQueryDTO businessLimitedQueryDto);
+     /**
+      * 删除
+      * @param id
+      * @return
+      */
      ResultEnum deleteBusinessLimitedById(String id);
 }

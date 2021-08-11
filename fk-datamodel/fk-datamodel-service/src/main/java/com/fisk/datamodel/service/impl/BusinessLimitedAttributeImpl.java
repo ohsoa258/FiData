@@ -58,42 +58,43 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     }
 
 
-    //获取一个
+
+
     @Override
     public BusinessLimitedAddDTO getBusinessLimitedAttribute(String businessLimitedId) {
-        BusinessLimitedPO businessLimitedPO = businessLimitedMapper.selectById(businessLimitedId);
-        BusinessLimitedDTO businessLimitedDTO1 = BusinessLimitedMap.INSTANCES.poToDto(businessLimitedPO);
-        BusinessLimitedAddDTO businessLimitedDTO = new BusinessLimitedAddDTO();
-        BusinessLimitedDTOToBusinessLimitedAddDTO(businessLimitedDTO1, businessLimitedDTO);
+        BusinessLimitedPO businessLimitedPo = businessLimitedMapper.selectById(businessLimitedId);
+        BusinessLimitedDTO businessLimitedDto = BusinessLimitedMap.INSTANCES.poToDto(businessLimitedPo);
+        BusinessLimitedAddDTO businessLimitedAddDto = new BusinessLimitedAddDTO();
+        BusinessLimitedDtoToBusinessLimitedAddDto(businessLimitedDto, businessLimitedAddDto);
         QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId, businessLimitedId);
-        List<BusinessLimitedAttributePO> businessLimitedAttributePOS = businessLimitedAttributeMapper.selectList(queryWrapper);
-        ArrayList<BusinessLimitedAttributeAddDTO> businessLimitedAttributeDTOS = new ArrayList<>();
-        BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDTO = new BusinessLimitedAttributeAddDTO();
-        for (BusinessLimitedAttributePO businessLimitedAttributePO : businessLimitedAttributePOS) {
-            BusinessLimitedAttributeDTO businessLimitedAttributeDTO = BusinessLimitedAttributeMap.INSTANCES.poTodto(businessLimitedAttributePO);
-            BusinessLimitedAttributeDTOToBusinessLimitedAttributeAddDTO(businessLimitedAttributeDTO, businessLimitedAttributeAddDTO);
-            businessLimitedAttributeDTOS.add(businessLimitedAttributeAddDTO);
+        List<BusinessLimitedAttributePO> businessLimitedAttributePos = businessLimitedAttributeMapper.selectList(queryWrapper);
+        ArrayList<BusinessLimitedAttributeAddDTO> businessLimitedAttributeDtos = new ArrayList<>();
+        BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto = new BusinessLimitedAttributeAddDTO();
+        for (BusinessLimitedAttributePO businessLimitedAttributePo : businessLimitedAttributePos) {
+            BusinessLimitedAttributeDTO businessLimitedAttributeDTO = BusinessLimitedAttributeMap.INSTANCES.poTodto(businessLimitedAttributePo);
+            BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(businessLimitedAttributeDTO, businessLimitedAttributeAddDto);
+            businessLimitedAttributeDtos.add(businessLimitedAttributeAddDto);
         }
         //赋值业务限定字段条件
-        businessLimitedDTO.businessLimitedAttributeAddDTOList = businessLimitedAttributeDTOS;
+        businessLimitedAddDto.businessLimitedAttributeAddDTOList = businessLimitedAttributeDtos;
         //获取下拉框事实表字段
-        List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPO.factId);
-        businessLimitedDTO.factAttributeListDTOList=factAttributeList;
-        return businessLimitedDTO;
+        List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPo.factId);
+        businessLimitedAddDto.factAttributeListDtoList=factAttributeList;
+        return businessLimitedAddDto;
     }
-    //类型转换
-    private void BusinessLimitedDTOToBusinessLimitedAddDTO(BusinessLimitedDTO businessLimitedDTO1, BusinessLimitedAddDTO businessLimitedDTO) {
-        businessLimitedDTO.id = businessLimitedDTO1.id;
-        businessLimitedDTO.limitedDes = businessLimitedDTO1.limitedDes;
-        businessLimitedDTO.limitedName = businessLimitedDTO1.limitedName;
+
+    private void BusinessLimitedDtoToBusinessLimitedAddDto(BusinessLimitedDTO businessLimitedDto, BusinessLimitedAddDTO businessLimitedAddDto) {
+        businessLimitedDto.id = businessLimitedAddDto.id;
+        businessLimitedDto.limitedDes = businessLimitedAddDto.limitedDes;
+        businessLimitedDto.limitedName = businessLimitedAddDto.limitedName;
     }
-    //类型转换
-    private void BusinessLimitedAttributeDTOToBusinessLimitedAttributeAddDTO(BusinessLimitedAttributeDTO businessLimitedAttributeDTO, BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDTO) {
-        businessLimitedAttributeAddDTO.id = businessLimitedAttributeDTO.id;
-        businessLimitedAttributeAddDTO.businessLimitedId = businessLimitedAttributeDTO.businessLimitedId;
-        businessLimitedAttributeAddDTO.factAttributeId = businessLimitedAttributeDTO.factAttributeId;
-        businessLimitedAttributeAddDTO.calculationLogic = businessLimitedAttributeDTO.calculationLogic;
-        businessLimitedAttributeAddDTO.calculationValue = businessLimitedAttributeDTO.calculationValue;
+
+    private void BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(BusinessLimitedAttributeDTO businessLimitedAttributeDto, BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto) {
+        businessLimitedAttributeDto.id = businessLimitedAttributeAddDto.id;
+        businessLimitedAttributeDto.businessLimitedId = businessLimitedAttributeAddDto.businessLimitedId;
+        businessLimitedAttributeDto.factAttributeId = businessLimitedAttributeAddDto.factAttributeId;
+        businessLimitedAttributeDto.calculationLogic = businessLimitedAttributeAddDto.calculationLogic;
+        businessLimitedAttributeDto.calculationValue = businessLimitedAttributeAddDto.calculationValue;
     }
 }

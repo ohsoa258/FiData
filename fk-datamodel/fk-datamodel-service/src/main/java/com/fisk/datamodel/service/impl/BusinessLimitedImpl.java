@@ -22,9 +22,9 @@ public class BusinessLimitedImpl implements IBusinessLimited {
     @Resource
     public BusinessLimitedAttributeMapper businessLimitedAttributeMapper;
     @Override
-    public Page<BusinessLimitedDTO> getBusinessLimitedDTOPage(BusinessLimitedQueryDTO businessLimitedDTO) {
-        Page<BusinessLimitedDTO> businessLimitedDTOPage = businessLimitedMapper.queryList(businessLimitedDTO.page,businessLimitedDTO);
-        return businessLimitedDTOPage;
+    public Page<BusinessLimitedDTO> getBusinessLimitedDtoPage(BusinessLimitedQueryDTO businessLimitedDto) {
+        Page<BusinessLimitedDTO> businessLimitedDtoPage = businessLimitedMapper.queryList(businessLimitedDto.page,businessLimitedDto);
+        return businessLimitedDtoPage;
     }
 
     @Override

@@ -16,20 +16,36 @@ import java.util.Date;
 @AllArgsConstructor
 public class BusinessLimitedPO {
     public int id;
-    //业务限定名称
+    /**
+     *业务限定名称
+     */
     public String limitedName;
-    //业务限定描述
+    /**
+     *业务限定描述
+     */
     public String limitedDes;
-    //创建时间
+    /**
+     *创建时间
+     */
     public Date createTime;
-    //创建人
+    /**
+     *创建人
+     */
     public String createUser;
-    //修改时间
+    /**
+     *修改时间
+     */
     public Date updateTime;
-    //修改人
+    /**
+     *修改人
+     */
     public String updateUser;
-    //是否删除
+    /**
+     *是否删除
+     */
     public int delFlag;
-    //事实表id
+    /**
+     *事实表id
+     */
     public int factId;
 }

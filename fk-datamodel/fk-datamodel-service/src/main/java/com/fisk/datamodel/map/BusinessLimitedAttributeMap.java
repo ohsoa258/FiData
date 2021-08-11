@@ -11,7 +11,17 @@ import org.mapstruct.factory.Mappers;
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface BusinessLimitedAttributeMap {
     BusinessLimitedAttributeMap INSTANCES = Mappers.getMapper(BusinessLimitedAttributeMap.class);
-    BusinessLimitedAttributePO dtoTopo(BusinessLimitedAttributeDTO businessLimitedAttributeDTO);
-    BusinessLimitedAttributeDTO poTodto(BusinessLimitedAttributePO businessLimitedAttributePO);
+    /**
+     * dtoTopo
+     * @param businessLimitedAttributeDto
+     * @return
+     */
+    BusinessLimitedAttributePO dtoTopo(BusinessLimitedAttributeDTO businessLimitedAttributeDto);
+    /**
+     * poTodto
+     * @param businessLimitedAttributePo
+     * @return
+     */
+    BusinessLimitedAttributeDTO poTodto(BusinessLimitedAttributePO businessLimitedAttributePo);
 
 }

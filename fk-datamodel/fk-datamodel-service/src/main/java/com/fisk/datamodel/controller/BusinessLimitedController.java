@@ -32,14 +32,14 @@ public class BusinessLimitedController {
 
     @ApiOperation("更新业务限定")
     @PutMapping("/updateBusinessLimitedAttribute")
-    public ResultEntity<Object> updateBusinessLimitedAttribute(@Validated @RequestBody BusinessLimitedAddDTO businessLimitedAddDTO) {
-        return ResultEntityBuild.build(iBusinessLimitedAttribute.updateBusinessLimitedAttribute(businessLimitedAddDTO));
+    public ResultEntity<Object> updateBusinessLimitedAttribute(@Validated @RequestBody BusinessLimitedAddDTO businessLimitedAddDto) {
+        return ResultEntityBuild.build(iBusinessLimitedAttribute.updateBusinessLimitedAttribute(businessLimitedAddDto));
     }
 
     @PostMapping("/getBusinessLimitedDTOPage")
     @ApiOperation(value = "获取业务限定数据列表")
-    public ResultEntity<Page<BusinessLimitedDTO>> getBusinessLimitedDTOPage(@RequestBody BusinessLimitedQueryDTO businessLimitedQueryDTO) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedDTOPage(businessLimitedQueryDTO));
+    public ResultEntity<Page<BusinessLimitedDTO>> getBusinessLimitedDtoPage(@RequestBody BusinessLimitedQueryDTO businessLimitedQueryDto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedDtoPage(businessLimitedQueryDto));
 
     }
 

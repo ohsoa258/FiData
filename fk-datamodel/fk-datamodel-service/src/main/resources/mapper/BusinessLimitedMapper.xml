@@ -20,7 +20,7 @@
             and bl.id= ${query.id}
         </if>
         <if test="query.factId !=0 and query.factId !=null">
-            and bl.factId= ${query.factId}
+            and bl.fact_id= ${query.factId}
         </if>
     </select>
 

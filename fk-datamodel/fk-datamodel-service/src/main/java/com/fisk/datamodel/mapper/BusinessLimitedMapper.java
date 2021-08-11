@@ -12,6 +12,11 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface BusinessLimitedMapper  extends FKBaseMapper<BusinessLimitedPO> {
-
+    /**
+     * 获取业务限定列表
+     * @param query
+     * @param page
+     * @return
+     */
     Page<BusinessLimitedDTO>  queryList(Page<BusinessLimitedDTO> page,@Param("query") BusinessLimitedQueryDTO query);
 }
