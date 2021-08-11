@@ -3,18 +3,22 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +37,10 @@ public class FactAttributeImpl
     FactMapper factMapper;
     @Resource
     FactAttributeMapper mapper;
+    @Resource
+    UserHelper userHelper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -59,6 +67,16 @@ public class FactAttributeImpl
         }
         if (isExit) {
             return ResultEnum.DATA_EXISTS;
+        }
+        boolean flat=this.saveBatch(list);
+        if (flat)
+        {
+            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+            pushDto.dimensionId=factId;
+            pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
+            pushDto.userId=userHelper.getLoginUserInfo().id;
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
         }
         return this.saveBatch(list) == true ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
