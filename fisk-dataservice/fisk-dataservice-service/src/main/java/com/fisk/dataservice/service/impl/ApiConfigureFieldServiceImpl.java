@@ -136,6 +136,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
 
     @Override
     public Object getAllField() {
+        List<GbfPO> gbfList = new ArrayList<>();
         List<FieldDTO> fieldList = new ArrayList<>();
         List<String> field = new ArrayList<>();
         field.add("id");
@@ -151,9 +152,10 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
         }
 
         GbfPO gbf = new GbfPO();
-        gbf.setTableName("gbf");
-        gbf.setFieldName(fieldList);
-        return gbf;
+        gbf.setName("gbf");
+        gbf.setChildren(fieldList);
+        gbfList.add(gbf);
+        return gbfList;
     }
 
     public FieldDTO fieldName(String name){

@@ -11,6 +11,6 @@ import java.util.List;
  */
 @Data
 public class GbfPO {
-    private String tableName;
-    private List<FieldDTO> fieldName;
+    private String name;
+    private List<FieldDTO> children;
 }
