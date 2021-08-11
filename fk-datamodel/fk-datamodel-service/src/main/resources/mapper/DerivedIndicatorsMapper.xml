@@ -21,4 +21,9 @@
         </if>
     </select>
 
+    <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO">
+	    insert into tb_der,derived_name,derived_des,atomic_id,business_limited_id,time_period,create_user,create_time)
+	    values(#{factId},#{derivedName},#{derivedDes},#{atomicId},#{busiived_indicators(fact_idnessLimitedId},#{timePeriod},#{createUser},#{createTime})
+    </insert>
+
 </mapper>

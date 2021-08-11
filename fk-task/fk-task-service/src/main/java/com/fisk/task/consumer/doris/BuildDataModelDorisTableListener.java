@@ -5,9 +5,9 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DimensionClient;
-import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;
 import com.rabbitmq.client.Channel;
@@ -39,23 +39,23 @@ public class BuildDataModelDorisTableListener {
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         DimensionAttributeAddDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddDTO.class);
-        ResultEntity<DimensionMetaDataDTO> dimensionAttributeList = dc.getDimensionEntity(inpData.dimensionId);
-        DimensionMetaDataDTO dimensionMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), DimensionMetaDataDTO.class);
-        List<DimensionAttributeMetaDataDTO> dto = dimensionMetaDataDTO.dto;
+        ResultEntity<ModelMetaDataDTO> dimensionAttributeList = dc.getDimensionEntity(inpData.dimensionId);
+        ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+        List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
         StringBuilder sql = new StringBuilder();
-        String stg_table = "stg_" + dimensionMetaDataDTO.dimensionTabName;
-        String ods_table = "ods_" + dimensionMetaDataDTO.dimensionTabName;
+        String stg_table = "stg_" + modelMetaDataDTO.tableName;
+        String ods_table = "ods_" + modelMetaDataDTO.tableName;
         String stg_sql = "";
         String ods_sql = "";
         sql.append("CREATE TABLE tableName (");
         StringBuilder sqlFileds = new StringBuilder();
-        List<DimensionAttributeMetaDataDTO> dto2 = dimensionMetaDataDTO.dto;
+        List<ModelAttributeMetaDataDTO> dto2 = modelMetaDataDTO.dto;
         List<Integer> collect = dto2.stream().map(e -> e.attributeType).collect(Collectors.toList());
         //先判断是不是维度表,再根据是否是业务主键,判断建表模型
         if (inpData.createType == 1) {
             sqlFileds.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' , doris_custom_data_flag varchar(2) DEFAULT \"1\" comment '系统字段，默认分桶' ");
             dto.forEach((l) -> {
-                sqlFileds.append("," + l.dimensionFieldEnName + " " + l.dimensionFieldType + " comment " + " ''");
+                sqlFileds.append("," + l.fieldEnName + " " + l.fieldType + " comment " + " ''");
             });
             sqlFileds.append(")");
             sql.append(sqlFileds);
@@ -65,11 +65,11 @@ public class BuildDataModelDorisTableListener {
             StringBuilder sqlDistributed = new StringBuilder("DISTRIBUTED BY HASH(");
             StringBuilder sqlSelectStrBuild = new StringBuilder("UNIQUE KEY(");
             dto.forEach((l) -> {
-                sqlFileds.append(l.dimensionFieldEnName + " " + l.dimensionFieldType + " comment " + " '',");
+                sqlFileds.append(l.fieldEnName + " " + l.fieldType + " comment " + " '',");
                 //是否是业务主键
                 if (collect.contains(0)) {
-                    sqlDistributed.append(l.dimensionFieldEnName + ",");
-                    sqlSelectStrBuild.append(l.dimensionFieldEnName + ",");
+                    sqlDistributed.append(l.fieldEnName + ",");
+                    sqlSelectStrBuild.append(l.fieldEnName + ",");
                 }
             });
             sqlFileds.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' ,");

@@ -3,15 +3,17 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.FactAttributePO;
+import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
+import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,8 @@ public class FactAttributeImpl
         extends ServiceImpl<FactAttributeMapper,FactAttributePO>
         implements IFactAttribute {
 
+    @Resource
+    FactMapper factMapper;
     @Resource
     FactAttributeMapper mapper;
 
@@ -89,6 +93,50 @@ public class FactAttributeImpl
         po.factFieldType=dto.factFieldType;
         ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ModelMetaDataDTO getFactMetaData(int id)
+    {
+        ModelMetaDataDTO data=new ModelMetaDataDTO();
+        FactPO po=factMapper.selectById(id);
+        if (po==null)
+        {
+            return data;
+        }
+        data.tableName =po.factTableEnName;
+        data.id=po.id;
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,id);
+        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
+        List<FactAttributePO> list=mapper.selectList(queryWrapper);
+        for (FactAttributePO item:list)
+        {
+            ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
+            //判断是否为关联维度
+            if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            {
+                //查看关联维度字段相关信息
+                FactAttributePO po1=mapper.selectById(item.associateDimensionId);
+                if (po1 !=null)
+                {
+                    dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                    dto.fieldEnName=po1.factFieldEnName;
+                    dto.fieldLength=po1.factFieldLength;
+                    dto.fieldType=po1.factFieldType;
+                    dtoList.add(dto);
+                }
+            }
+            else {
+                dto.attributeType=item.attributeType;
+                dto.fieldEnName=item.factFieldEnName;
+                dto.fieldLength=item.factFieldLength;
+                dto.fieldType=item.factFieldType;
+                dtoList.add(dto);
+            }
+        }
+        data.dto=dtoList;
+        return data;
     }
 
 }

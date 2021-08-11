@@ -1,5 +1,6 @@
 package com.fisk.datamodel.map;
 
+import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.entity.DerivedIndicatorsPO;
 import org.mapstruct.Mapper;
@@ -26,5 +27,12 @@ public interface DerivedIndicatorsMap {
      * @return
      */
     DerivedIndicatorsDTO poToDto(DerivedIndicatorsPO po);
+
+    /**
+     * po==>po
+     * @param dto
+     * @return
+     */
+    DerivedIndicatorsAddDTO poToPo(DerivedIndicatorsDTO dto);
 
 }

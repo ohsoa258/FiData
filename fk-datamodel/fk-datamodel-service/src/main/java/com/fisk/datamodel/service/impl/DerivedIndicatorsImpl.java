@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +38,8 @@ public class DerivedIndicatorsImpl
     DerivedIndicatorsMapper mapper;
     @Resource
     DerivedIndicatorsAttributeMapper attributeMapper;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public Page<DerivedIndicatorsListDTO> getDerivedIndicatorsList(DerivedIndicatorsQueryDTO dto)
@@ -63,29 +69,31 @@ public class DerivedIndicatorsImpl
         if (po != null) {
             return ResultEnum.DATA_EXISTS;
         }
-        int flat = mapper.insert(DerivedIndicatorsMap.INSTANCES.dtoToPo(dto));
-        if (flat == 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
-        //查询添加id
-        queryWrapper.lambda().eq(DerivedIndicatorsPO::getDerivedName, dto.derivedName)
-                .eq(DerivedIndicatorsPO::getFactId, dto.factId);
-        DerivedIndicatorsPO addSelect = mapper.selectOne(queryWrapper);
-        if (addSelect==null)
+        //添加派生指标数据，并返回插入id
+        DerivedIndicatorsAddDTO poAdd=DerivedIndicatorsMap.INSTANCES.poToPo(dto);
+        Date date = new Date(System.currentTimeMillis());
+        poAdd.createTime=date;
+        poAdd.createUser=userHelper.getLoginUserInfo().id.toString();
+        int addId=mapper.insertAndGetId(poAdd);
+        //判断insert是否成功，并返回插入主键id是否成功
+        if (addId==0 || poAdd.id==0)
         {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //派生指标聚合字段集合
-        List<DerivedIndicatorsAttributePO> ids = new ArrayList<>();
-        for (Integer item : dto.attributeId) {
-            DerivedIndicatorsAttributePO model = new DerivedIndicatorsAttributePO();
-            model.factAttributeId = item;
-            model.derivedIndicatorsId=addSelect.id;
-            ids.add(model);
-        }
-        boolean result = this.saveBatch(ids);
-        if (!result) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        if (poAdd.attributeId !=null && poAdd.attributeId.size()>0)
+        {
+            List<DerivedIndicatorsAttributePO> ids = new ArrayList<>();
+            for (Integer item : dto.attributeId) {
+                DerivedIndicatorsAttributePO model = new DerivedIndicatorsAttributePO();
+                model.factAttributeId = item;
+                model.derivedIndicatorsId=poAdd.id;
+                ids.add(model);
+            }
+            boolean result = this.saveBatch(ids);
+            if (!result) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
         }
         return ResultEnum.SUCCESS;
     }

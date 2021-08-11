@@ -10,15 +10,13 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author JianWenYang
  */
 @FeignClient("datamodel-service")
-public interface DimensionClient {
-
+public interface FactClient {
     /**
-     * 获取维度表元数据字段
+     * 获取事实表元数据字段
      *
      * @param id
      * @return 执行结果
      */
-    @GetMapping("/attribute/getDimensionEntity")
-    ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id);
-
+    @GetMapping("/factAttribute/getFactEntity")
+    ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
 }
