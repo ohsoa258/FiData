@@ -1,6 +1,9 @@
 package com.fisk.dataservice.entity;
 
+import com.fisk.dataservice.dto.FieldDTO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -9,11 +12,5 @@ import lombok.Data;
 @Data
 public class GbfPO {
     private String tableName;
-    private String id;
-    private String studentNo;
-    private String name;
-    private String age;
-    private String height;
-    private String weight;
-    private String gender;
+    private List<FieldDTO> fieldName;
 }

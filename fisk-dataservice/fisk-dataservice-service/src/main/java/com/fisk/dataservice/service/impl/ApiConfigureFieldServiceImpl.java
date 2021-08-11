@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.FieldDTO;
 import com.fisk.dataservice.entity.GbfPO;
 import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
@@ -135,18 +136,29 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
 
     @Override
     public Object getAllField() {
-        List<Object> objectList = new ArrayList<>();
+        List<FieldDTO> fieldList = new ArrayList<>();
+        List<String> field = new ArrayList<>();
+        field.add("id");
+        field.add("studentNo");
+        field.add("name");
+        field.add("age");
+        field.add("height");
+        field.add("weight");
+        field.add("gender");
+        for (String s : field) {
+            FieldDTO fieldDTO = fieldName(s);
+            fieldList.add(fieldDTO);
+        }
+
         GbfPO gbf = new GbfPO();
         gbf.setTableName("gbf");
-        gbf.setId("id");
-        gbf.setStudentNo("studentNo");
-        gbf.setName("name");
-        gbf.setAge("age");
-        gbf.setHeight("height");
-        gbf.setWeight("weight");
-        gbf.setGender("gender");
-        objectList.add(gbf);
+        gbf.setFieldName(fieldList);
+        return gbf;
+    }
 
-        return objectList;
+    public FieldDTO fieldName(String name){
+        FieldDTO field = new FieldDTO();
+        field.setName(name);
+        return field;
     }
 }
