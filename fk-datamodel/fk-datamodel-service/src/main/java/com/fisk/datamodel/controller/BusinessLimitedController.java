@@ -14,10 +14,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 /**
@@ -34,7 +31,7 @@ public class BusinessLimitedController {
     public IBusinessLimitedAttribute iBusinessLimitedAttribute;
 
     @ApiOperation("更新业务限定")
-    @PostMapping("/updateBusinessLimitedAttribute")
+    @PutMapping("/updateBusinessLimitedAttribute")
     public ResultEntity<Object> updateBusinessLimitedAttribute(@Validated @RequestBody BusinessLimitedAddDTO businessLimitedAddDTO) {
         return ResultEntityBuild.build(iBusinessLimitedAttribute.updateBusinessLimitedAttribute(businessLimitedAddDTO));
     }
@@ -46,16 +43,16 @@ public class BusinessLimitedController {
 
     }
 
-    @PostMapping("/getBusinessLimitedAttribute")
+    @GetMapping("/getBusinessLimitedAttribute/{id}")
     @ApiOperation(value = "获取业务限定详情")
-    public ResultEntity<BusinessLimitedAddDTO> getBusinessLimitedAttribute(@RequestBody String businessLimitedId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimitedAttribute.getBusinessLimitedAttribute(businessLimitedId));
+    public ResultEntity<BusinessLimitedAddDTO> getBusinessLimitedAttribute(@PathVariable("id") String id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimitedAttribute.getBusinessLimitedAttribute(id));
     }
 
-    @PostMapping("/deleteBusinessLimitedById")
+    @DeleteMapping("/deleteBusinessLimitedById/{id}")
     @ApiOperation(value = "删除业务限定记录")
-    public ResultEntity<Object> deleteBusinessLimitedById(@RequestBody String businessLimitedId) {
-        return ResultEntityBuild.build(iBusinessLimited.deleteBusinessLimitedById(businessLimitedId));
+    public ResultEntity<Object> deleteBusinessLimitedById(@PathVariable("id") String id) {
+        return ResultEntityBuild.build(iBusinessLimited.deleteBusinessLimitedById(id));
     }
 
 

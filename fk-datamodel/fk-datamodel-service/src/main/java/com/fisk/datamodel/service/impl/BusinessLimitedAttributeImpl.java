@@ -6,12 +6,14 @@ import com.fisk.datamodel.dto.businessLimited.BusinessLimitedAddDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeAddDTO;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.map.BusinessLimitedAttributeMap;
 import com.fisk.datamodel.map.BusinessLimitedMap;
 import com.fisk.datamodel.mapper.BusinessLimitedAttributeMapper;
 import com.fisk.datamodel.mapper.BusinessLimitedMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IBusinessLimitedAttribute;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,8 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     public BusinessLimitedMapper businessLimitedMapper;
     @Resource
     public BusinessLimitedAttributeMapper businessLimitedAttributeMapper;
+    @Resource
+    public FactAttributeMapper factAttributeMapper;
 
     @Override
     public ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAddDTO businessLimitedAddDTO) {
@@ -66,22 +70,25 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         List<BusinessLimitedAttributePO> businessLimitedAttributePOS = businessLimitedAttributeMapper.selectList(queryWrapper);
         ArrayList<BusinessLimitedAttributeAddDTO> businessLimitedAttributeDTOS = new ArrayList<>();
         BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDTO = new BusinessLimitedAttributeAddDTO();
-        for (BusinessLimitedAttributePO businessLimitedAttributePO : businessLimitedAttributePOS
-        ) {
+        for (BusinessLimitedAttributePO businessLimitedAttributePO : businessLimitedAttributePOS) {
             BusinessLimitedAttributeDTO businessLimitedAttributeDTO = BusinessLimitedAttributeMap.INSTANCES.poTodto(businessLimitedAttributePO);
             BusinessLimitedAttributeDTOToBusinessLimitedAttributeAddDTO(businessLimitedAttributeDTO, businessLimitedAttributeAddDTO);
             businessLimitedAttributeDTOS.add(businessLimitedAttributeAddDTO);
         }
+        //赋值业务限定字段条件
         businessLimitedDTO.businessLimitedAttributeAddDTOList = businessLimitedAttributeDTOS;
+        //获取下拉框事实表字段
+        List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPO.factId);
+        businessLimitedDTO.factAttributeListDTOList=factAttributeList;
         return businessLimitedDTO;
     }
-
+    //类型转换
     private void BusinessLimitedDTOToBusinessLimitedAddDTO(BusinessLimitedDTO businessLimitedDTO1, BusinessLimitedAddDTO businessLimitedDTO) {
         businessLimitedDTO.id = businessLimitedDTO1.id;
         businessLimitedDTO.limitedDes = businessLimitedDTO1.limitedDes;
         businessLimitedDTO.limitedName = businessLimitedDTO1.limitedName;
     }
-
+    //类型转换
     private void BusinessLimitedAttributeDTOToBusinessLimitedAttributeAddDTO(BusinessLimitedAttributeDTO businessLimitedAttributeDTO, BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDTO) {
         businessLimitedAttributeAddDTO.id = businessLimitedAttributeDTO.id;
         businessLimitedAttributeAddDTO.businessLimitedId = businessLimitedAttributeDTO.businessLimitedId;
