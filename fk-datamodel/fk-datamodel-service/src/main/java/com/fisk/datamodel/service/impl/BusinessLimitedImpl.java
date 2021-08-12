@@ -6,12 +6,15 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
+import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.mapper.BusinessLimitedAttributeMapper;
 import com.fisk.datamodel.mapper.BusinessLimitedMapper;
 import com.fisk.datamodel.service.IBusinessLimited;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * @author cfk
  */
@@ -35,5 +38,14 @@ public class BusinessLimitedImpl implements IBusinessLimited {
         businessLimitedMapper.deleteById(businessLimitedId);
         return ResultEnum.SUCCESS;
     }
+
+    @Override
+    public List<BusinessLimitedPO> getBusinessLimitedList(String factId) {
+        QueryWrapper<BusinessLimitedPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessLimitedPO::getFactId,factId);
+        List<BusinessLimitedPO> businessLimitedPos = businessLimitedMapper.selectList(queryWrapper);
+        return businessLimitedPos;
+    }
+
 
 }
