@@ -57,7 +57,7 @@ public class BusinessLimitedController {
     public ResultEntity<Object> deleteBusinessLimitedById(@PathVariable("id") String id) {
         return ResultEntityBuild.build(iBusinessLimited.deleteBusinessLimitedById(id));
     }
-    @PostMapping("/getBusinessLimitedList/{factId}")
+    @GetMapping("/getBusinessLimitedList/{factId}")
     @ApiOperation(value = "获取业务限定下拉数据")
     public ResultEntity<List<BusinessLimitedPO>> getBusinessLimitedList(@PathVariable("factId") String factId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedList(factId));
