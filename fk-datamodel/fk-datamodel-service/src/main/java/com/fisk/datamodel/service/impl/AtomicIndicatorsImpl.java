@@ -3,17 +3,19 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
+import com.fisk.datamodel.entity.FactAttributePO;
+import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
+import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -23,6 +25,8 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
 
     @Resource
     AtomicIndicatorsMapper mapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(AtomicIndicatorsDTO dto)
@@ -38,7 +42,15 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        return mapper.insert(AtomicIndicatorsMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        //查询factId
+        FactAttributePO factAttributePO=factAttributeMapper.selectById(dto.factAttributeId);
+        if (factAttributePO==null)
+        {
+            return  ResultEnum.DATA_NOTEXISTS;
+        }
+        AtomicIndicatorsPO model=AtomicIndicatorsMap.INSTANCES.dtoToPo(dto);
+        model.factId=factAttributePO.factId;
+        return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -73,6 +85,17 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
     public Page<AtomicIndicatorsResultDTO> getAtomicIndicatorList(AtomicIndicatorsQueryDTO dto)
     {
         return mapper.queryList(dto.page,dto);
+    }
+
+    @Override
+    public List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId)
+    {
+        QueryWrapper<AtomicIndicatorsPO> queryWrapper=new QueryWrapper<>();
+        if (factId !=0)
+        {
+            queryWrapper.lambda().eq(AtomicIndicatorsPO::getFactId,factId);
+        }
+        return AtomicIndicatorsMap.INSTANCES.poToDtoList(mapper.selectList(queryWrapper));
     }
 
 }
