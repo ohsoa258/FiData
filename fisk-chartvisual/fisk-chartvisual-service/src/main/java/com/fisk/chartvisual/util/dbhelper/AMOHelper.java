@@ -7,21 +7,14 @@ import com.fisk.chartvisual.entity.MeasurePO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import io.netty.util.concurrent.ProgressivePromise;
 import lombok.extern.slf4j.Slf4j;
 import org.olap4j.*;
 import org.olap4j.metadata.*;
-
-import java.io.PrintWriter;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
-import org.olap4j.driver.xmla.XmlaOlap4jDriver;
 
 /**
  * @author JinXingWang
@@ -38,15 +31,15 @@ public class AMOHelper {
     /**
      * 创建连接
      *
-     * @param ConnectionStr
-     * @param Account
-     * @param Password
-     * @return
+     * @param connectionStr 连接字符串
+     * @param account 账号
+     * @param password 密码
+     * @return true | false
      */
-    public boolean connection(String ConnectionStr, String Account, String Password) {
+    public boolean connection(String connectionStr, String account, String password) {
         try {
             loadDriver();
-            OlapConnection conn = (OlapConnection) DriverManager.getConnection(ConnectionStr, Account, Password);
+            OlapConnection conn = (OlapConnection) DriverManager.getConnection(connectionStr, account, password);
             OlapWrapper wrapper = conn;
             connection = wrapper.unwrap(OlapConnection.class);
             return true;
@@ -90,12 +83,12 @@ public class AMOHelper {
     /**
      * 获取数据库
      *
-     * @return
-     * @throws Exception
+     * @return 数据库
+     * @throws Exception 错误信息
      */
     public List<String> getCatalogs() throws Exception {
-        OlapDatabaseMetaData MetaData = connection.getMetaData();
-        ResultSet rs = MetaData.getCatalogs();
+        OlapDatabaseMetaData metaData = connection.getMetaData();
+        ResultSet rs = metaData.getCatalogs();
         List<String> catalogs = new ArrayList<>();
         while (rs.next()) {
             String value = rs.getString("TABLE_CAT");
@@ -111,7 +104,7 @@ public class AMOHelper {
      * @return
      */
     public List<String> getSchemas() {
-        List<String> Schemas = new ArrayList<>();
+        List<String> schemas = new ArrayList<>();
         // TABULAR 没有Schema
         switch (type) {
             case TABULAR:
@@ -121,7 +114,7 @@ public class AMOHelper {
             default:
                 break;
         }
-        return Schemas;
+        return schemas;
     }
 
     /**
@@ -148,17 +141,17 @@ public class AMOHelper {
 //        DESCRIPTION
 //        CUBE_CAPTION
 //        BASE_CUBE_NAME
-        OlapDatabaseMetaData MetaData = connection.getMetaData();
-        List<String> Schemas = new ArrayList<>();
-        // TABULAR 没有Schema
-        switch (type) {
-            case TABULAR:
-                break;
-            case CUBE:
-                break;
-            default:
-                break;
-        }
+//        OlapDatabaseMetaData metaData = connection.getMetaData();
+//        List<String> schemas = new ArrayList<>();
+//        // TABULAR 没有Schema
+//        switch (type) {
+//            case TABULAR:
+//                break;
+//            case CUBE:
+//                break;
+//            default:
+//                break;
+//        }
     }
 
     public void getDimensions(String catalogs, String cube) {
@@ -184,61 +177,58 @@ public class AMOHelper {
 
     /**
      * 获取SSAS结构
-     *
-     * @param catalogs
-     * @throws Exception
+     * @param catalogName 库名称
+     * @param cubeName 模型名称
+     * @return
+     * @throws Exception 错误
      */
-    public CubePO getModelStructure(String catalogs, String cube) throws Exception {
+    public CubePO getModelStructure(String catalogName, String cubeName) throws Exception {
         Database metadata = connection.getOlapDatabase();
-        NamedList<Catalog> Catalogs = metadata.getCatalogs();
-        Catalog Catalog = Catalogs.get(catalogs);
-        NamedList<Schema> Schemas = Catalog.getSchemas();
+        NamedList<Catalog> catalogList = metadata.getCatalogs();
+        Catalog catalog = catalogList.get(catalogName);
+        NamedList<Schema> schemas = catalog.getSchemas();
         //架构
-        Schema Schema = Schemas.get("");
-        String SchemaName = Schema.getName();
-        NamedList<Cube> Cubes = Schema.getCubes();
-        Cube Cube = Cubes.get(cube);
-        NamedList<Dimension> Dimensions = Cube.getDimensions();
-        CubePO cubePO=new  CubePO();
-        cubePO.Name=Cube.getName();
-        cubePO.UniqueName=Cube.getUniqueName();
-        List<MeasurePO> measurePOList=new ArrayList<>();
+        Schema schema = schemas.get("");
+        String schemaName = schema.getName();
+        NamedList<Cube> cubes = schema.getCubes();
+        Cube cube = cubes.get(cubeName);
+        NamedList<Dimension> dimensions = cube.getDimensions();
+        CubePO cubePo=new  CubePO();
+        cubePo.Name=cube.getName();
+        cubePo.UniqueName=cube.getUniqueName();
+        List<MeasurePO> measurePoList=new ArrayList<>();
         //度量值
-        List<Measure> Measures = Cube.getMeasures();
-        for (int m = 0; m < Measures.size(); m++) {
-            MeasurePO measurePO=new MeasurePO();
-            Measure Measure = Measures.get(m);
-            measurePO.Name=Measure.getName();
-            measurePO.UniqueName=Measure.getUniqueName();
-            measurePOList.add(measurePO);
+        List<Measure> measures = cube.getMeasures();
+        for (Measure measure:measures) {
+            MeasurePO measurePo=new MeasurePO();
+            measurePo.Name=measure.getName();
+            measurePo.UniqueName=measure.getUniqueName();
+            measurePoList.add(measurePo);
         }
         //维度
-        List<DimensionPO> dimensionPOList=new ArrayList<>();
-        for (int d = 0; d < Dimensions.size(); d++) {
-            //维度
-            Dimension Dimension = Dimensions.get(d);
+        List<DimensionPO> dimensionPoList=new ArrayList<>();
+        for (Dimension dimension: dimensions ) {
             // MEASURE 为度量值 , OTHER 为维度
-            Dimension.Type DimensionType = Dimension.getDimensionType();
-            if (DimensionType == org.olap4j.metadata.Dimension.Type.OTHER) {
-                DimensionPO dimensionPO=new DimensionPO();
-                dimensionPO.Name = Dimension.getName();
-                dimensionPO.UniqueName= Dimension.getUniqueName();
-                List<HierarchyPO> hierarchyPOList=new ArrayList<>();
-                NamedList<Hierarchy> Hierarchies = Dimension.getHierarchies();
-                for (int h = 0; h < Hierarchies.size(); h++) {
+            Dimension.Type dimensionType = dimension.getDimensionType();
+            if (dimensionType == org.olap4j.metadata.Dimension.Type.OTHER) {
+                DimensionPO dimensionPo=new DimensionPO();
+                dimensionPo.Name = dimension.getName();
+                dimensionPo.UniqueName= dimension.getUniqueName();
+                List<HierarchyPO> hierarchyPoList=new ArrayList<>();
+                NamedList<Hierarchy> hierarchies = dimension.getHierarchies();
+                for (Hierarchy  hierarchy: hierarchies) {
                     //层级
-                    HierarchyPO hierarchyPO=new HierarchyPO();
-                    Hierarchy Hierarchy = Hierarchies.get(h);
-                    hierarchyPO.Name = Hierarchy.getName();
-                    hierarchyPO.UniqueName = Hierarchy.getUniqueName();
-                    hierarchyPOList.add(hierarchyPO);
+                    HierarchyPO hierarchyPo=new HierarchyPO();
+                    hierarchyPo.Name = hierarchy.getName();
+                    hierarchyPo.UniqueName = hierarchy.getUniqueName();
+                    hierarchyPoList.add(hierarchyPo);
                 }
-                dimensionPO.Hierarchies= hierarchyPOList;
-                dimensionPOList.add(dimensionPO);
+                dimensionPo.Hierarchies= hierarchyPoList;
+                dimensionPoList.add(dimensionPo);
             }
         }
-        cubePO.Measures=measurePOList;
-        cubePO.Dimensions=dimensionPOList;
-        return cubePO;
+        cubePo.Measures=measurePoList;
+        cubePo.Dimensions=dimensionPoList;
+        return cubePo;
     }
 }
