@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
  * @author JinXingWang
  */
 @Service
-public class TabularHelper extends  AMOHelper{
+public class TabularHelper extends AmoHelper {
     public TabularHelper() {
         super(DataSourceTypeEnum.TABULAR);
     }

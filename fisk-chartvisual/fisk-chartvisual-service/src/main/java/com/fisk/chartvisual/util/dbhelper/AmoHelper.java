@@ -20,11 +20,11 @@ import java.util.List;
  * @author JinXingWang
  */
 @Slf4j
-public class AMOHelper {
+public class AmoHelper {
     public final DataSourceTypeEnum type;
     private OlapConnection connection;
 
-    public AMOHelper(DataSourceTypeEnum typeEnum) {
+    public AmoHelper(DataSourceTypeEnum typeEnum) {
         this.type = typeEnum;
     }
 
@@ -42,6 +42,7 @@ public class AMOHelper {
             OlapConnection conn = (OlapConnection) DriverManager.getConnection(connectionStr, account, password);
             OlapWrapper wrapper = conn;
             connection = wrapper.unwrap(OlapConnection.class);
+            OlapDatabaseMetaData metaData=  connection.getMetaData();
             return true;
         } catch (Exception ex) {
             log.error("【connection】数据库连接获取失败, ex", ex);
@@ -99,87 +100,10 @@ public class AMOHelper {
 
 
     /**
-     * 获取Schemas
-     *
-     * @return
-     */
-    public List<String> getSchemas() {
-        List<String> schemas = new ArrayList<>();
-        // TABULAR 没有Schema
-        switch (type) {
-            case TABULAR:
-                break;
-            case CUBE:
-                break;
-            default:
-                break;
-        }
-        return schemas;
-    }
-
-    /**
-     * 获取Cube
-     *
-     * @param catalogs
-     * @throws Exception
-     */
-    public void getCubes(String catalogs) throws Exception {
-//        CATALOG_NAME
-//        SCHEMA_NAME
-//        CUBE_NAME
-//        CUBE_TYPE
-//        CUBE_GUID
-//        CREATED_ON
-//        LAST_SCHEMA_UPDATE
-//        SCHEMA_UPDATED_BY
-//        LAST_DATA_UPDATE
-//        DATA_UPDATED_BY
-//        IS_DRILLTHROUGH_ENABLED
-//        IS_WRITE_ENABLED
-//        IS_LINKABLE
-//        IS_SQL_ENABLED
-//        DESCRIPTION
-//        CUBE_CAPTION
-//        BASE_CUBE_NAME
-//        OlapDatabaseMetaData metaData = connection.getMetaData();
-//        List<String> schemas = new ArrayList<>();
-//        // TABULAR 没有Schema
-//        switch (type) {
-//            case TABULAR:
-//                break;
-//            case CUBE:
-//                break;
-//            default:
-//                break;
-//        }
-    }
-
-    public void getDimensions(String catalogs, String cube) {
-//        CATALOG_NAME
-//        SCHEMA_NAME
-//        CUBE_NAME
-//        DIMENSION_NAME
-//        DIMENSION_UNIQUE_NAME
-//        DIMENSION_GUID
-//        DIMENSION_CAPTION
-//        DIMENSION_ORDINAL
-//        DIMENSION_TYPE
-//        DIMENSION_CARDINALITY
-//        DEFAULT_HIERARCHY
-//        DESCRIPTION
-//        IS_VIRTUAL
-//        IS_READWRITE
-//        DIMENSION_UNIQUE_SETTINGS
-//        DIMENSION_MASTER_UNIQUE_NAME
-//        DIMENSION_IS_VISIBLE
-
-    }
-
-    /**
      * 获取SSAS结构
      * @param catalogName 库名称
      * @param cubeName 模型名称
-     * @return
+     * @return 模型结构
      * @throws Exception 错误
      */
     public CubePO getModelStructure(String catalogName, String cubeName) throws Exception {
@@ -189,7 +113,6 @@ public class AMOHelper {
         NamedList<Schema> schemas = catalog.getSchemas();
         //架构
         Schema schema = schemas.get("");
-        String schemaName = schema.getName();
         NamedList<Cube> cubes = schema.getCubes();
         Cube cube = cubes.get(cubeName);
         NamedList<Dimension> dimensions = cube.getDimensions();
