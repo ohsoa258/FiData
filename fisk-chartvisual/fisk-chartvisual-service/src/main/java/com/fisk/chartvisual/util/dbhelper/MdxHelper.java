@@ -8,6 +8,7 @@ import java.util.List;
 
 /**
  * 通过列行值获取mdx语句
+ * @author JinXingWang
  */
 public class MdxHelper {
 
@@ -129,13 +130,15 @@ public class MdxHelper {
             if (i<hierarchySize-1){
                 dmBeforeMdxSb.append("DrilldownMember(");
                 dmAfterMdxSb.append(", "+hierarchyPOS.get(i).uniqueNameAllMember+"\n" +
-                        ", "+hierarchyPOS.get(i+1).name+"\n" +
+                        ", "+hierarchyPOS.get(i+1).uniqueName+"\n" +
                         ")");
             }
-            if (i>0){
-                cjMdxSb.append(hierarchyPOS.get(i).uniqueNameAll);
-            }else {
-                cjMdxSb.append(","+hierarchyPOS.get(i).uniqueNameAll+"");
+            if (i>=1){
+                if (i==1){
+                    cjMdxSb.append(hierarchyPOS.get(i).uniqueNameAll);
+                }else {
+                    cjMdxSb.append(","+hierarchyPOS.get(i).uniqueNameAll);
+                }
             }
         }
         cjMdxSb.append(")}");

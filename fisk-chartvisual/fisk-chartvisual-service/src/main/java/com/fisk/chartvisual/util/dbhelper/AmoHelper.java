@@ -7,14 +7,21 @@ import com.fisk.chartvisual.entity.MeasurePO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import jdk.nashorn.internal.ir.ReturnNode;
 import lombok.extern.slf4j.Slf4j;
 import org.olap4j.*;
 import org.olap4j.metadata.*;
+import org.springframework.util.StopWatch;
+
+import java.io.PrintWriter;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import static com.fisk.common.constants.SSASConstant.HierarchyAllMember_UniqueName;
 
 
@@ -100,7 +107,6 @@ public class AmoHelper {
         return catalogs;
     }
 
-
     /**
      * 获取SSAS结构
      * @param catalogName 库名称
@@ -158,5 +164,61 @@ public class AmoHelper {
         cubePo.measures=measurePoList;
         cubePo.dimensions=dimensionPoList;
         return cubePo;
+    }
+
+    public List<Map<String,Object>> qeury(String mdx){
+        StopWatch stopWatch = new StopWatch();
+        String code = UUID.randomUUID().toString();
+        OlapStatement stmt = null;
+        List<Map<String,Object>> data=null;
+        try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
+            stmt = connection.createStatement();
+            CellSet cellset = stmt.executeOlapQuery(mdx);
+            stmt.close();
+            data=getDataByAnalyticalCellSet(cellset);
+        } catch (Exception ex) {
+            log.error("【execQuery】【" + code + "】执行MDX查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        }finally {
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+        return data;
+    }
+
+    public List<Map<String,Object>>  getDataByAnalyticalCellSet(CellSet cellSet){
+        List<Map<String,Object>> data=null;
+        List<CellSetAxis> axis=cellSet.getAxes();
+        switch (axis.size()){
+            case 2:
+                data=getTwoAxisData(cellSet);
+                break;
+            case 1:
+                data=getOneAxisData(cellSet);
+                break;
+            default:
+                data=new ArrayList<>();
+                break;
+        }
+        return data;
+    }
+
+    public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
+
+        return  null;
+    }
+
+    public List<Map<String,Object>> getOneAxisData(CellSet cellSet){
+        for (Position column : cellSet.getAxes().get(0)) {
+            for (Member member : column.getMembers()) {
+                if ()
+                member.isAll()
+                System.out.println(member.getUniqueName());
+                final Cell cell = cellSet.getCell(column);
+                System.out.println(cell.getOrdinal() + "=" + cell.getFormattedValue()+"="+cell.getValue());
+            }
+        }
     }
 }

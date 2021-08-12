@@ -2,6 +2,7 @@ package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
@@ -75,6 +76,12 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
 
         IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
         return DbHelper.execQueryResultMaps(command.buildQuerySlicer(query), model);
+    }
+
+    @Override
+    public DataServiceResult querySsas(ChartQueryObjectSsas query) {
+        DataSourceConVO model = getDataSourceCon(query.id);
+        return null;
     }
 
 

@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataServiceResult;
@@ -59,5 +60,11 @@ public class DataServiceController {
     @PostMapping("/slicer")
     public ResultEntity<List<Map<String, Object>>> slicer(@Validated @RequestBody SlicerQueryObject query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.querySlicer(query));
+    }
+
+    @ApiOperation("获取数据")
+    @PostMapping("/get_ssas")
+    public ResultEntity<DataServiceResult> getSsas(@Validated @RequestBody ChartQueryObjectSsas query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, db.querySsas(query));
     }
 }

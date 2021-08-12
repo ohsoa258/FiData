@@ -11,7 +11,8 @@ import com.fisk.common.enums.BaseEnum;
 public enum MatrixElemTypeEnum implements BaseEnum {
     ROW(1,"行"),
     COLUMN(2,"列"),
-    VALUE(3,"值");
+    VALUE(3,"值"),
+    FILTER(4,"筛选器");
     MatrixElemTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
