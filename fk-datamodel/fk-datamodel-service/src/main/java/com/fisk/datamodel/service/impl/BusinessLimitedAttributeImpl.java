@@ -95,10 +95,14 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
             businessLimitedAttributeDtos.add(businessLimitedAttributeAddDto);
         }
         //赋值业务限定字段条件
-        businessLimitedAddDto.businessLimitedAttributeAddDTOList.addAll(businessLimitedAttributeDtos);
+        if (businessLimitedAttributeDtos.size() != 0) {
+            businessLimitedAddDto.businessLimitedAttributeAddDTOList.addAll(businessLimitedAttributeDtos);
+        }
         //获取下拉框事实表字段
         List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPo.factId);
-        businessLimitedAddDto.factAttributeListDtoList.addAll(factAttributeList);
+        if (factAttributeList.size() != 0) {
+            businessLimitedAddDto.factAttributeListDtoList.addAll(factAttributeList);
+        }
         return businessLimitedAddDto;
     }
 
