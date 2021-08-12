@@ -28,7 +28,7 @@ public class BusinessLimitedDTO {
     /**
      * 创建人
      */
-    public Long createUser;
+    public String createUser;
     /**
      * 修改时间
      */
@@ -36,7 +36,7 @@ public class BusinessLimitedDTO {
     /**
      * 修改人
      */
-    public Long updateUser;
+    public String updateUser;
     /**
      *是否删除
      */

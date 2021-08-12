@@ -32,7 +32,7 @@ public class BusinessLimitedAttributeDTO {
     /**
      *创建人
      */
-    public Long createUser;
+    public String createUser;
     /**
      *修改时间
      */
@@ -40,7 +40,7 @@ public class BusinessLimitedAttributeDTO {
     /**
      *更新人
      */
-    public Long updateUser;
+    public String updateUser;
     /**
      *是否删除
      */

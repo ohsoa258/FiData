@@ -39,12 +39,12 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
 
     @Override
     public ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAddDTO businessLimitedAddDTO) {
-        Long id = userHelper.getLoginUserInfo().id;
+        String id = userHelper.getLoginUserInfo().id.toString();
         if (businessLimitedAddDTO.id != 0) {
             BusinessLimitedDTO businessLimitedDto = new BusinessLimitedDTO();
             businessLimitedAddDTO.updateTime=new Date();
             businessLimitedAddDTO.updateUser=id;
-            BusinessLimitedDtoToBusinessLimitedAddDto(businessLimitedDto,businessLimitedAddDTO);
+            businessLimitedDto=businessLimitedAddDTO;
             businessLimitedMapper.updateById(BusinessLimitedMap.INSTANCES.dtoTopo(businessLimitedDto));
         } else {
             businessLimitedAddDTO.createTime=new Date();
@@ -71,7 +71,7 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
             businessLimitedAttributeAddDto.businessLimitedId=businessLimitedAddDTO.id;
             businessLimitedAttributeAddDto.createTime=new Date();
             businessLimitedAttributeAddDto.createUser=id;
-            BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(businessLimitedAttributeDto,businessLimitedAttributeAddDto);
+            businessLimitedAttributeDto=businessLimitedAttributeAddDto;
             businessLimitedAttributeMapper.insert(BusinessLimitedAttributeMap.INSTANCES.dtoTopo(businessLimitedAttributeDto));
         }
         return ResultEnum.SUCCESS;
@@ -102,25 +102,25 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     }
 
     private void BusinessLimitedDtoToBusinessLimitedAddDto(BusinessLimitedDTO businessLimitedDto, BusinessLimitedAddDTO businessLimitedAddDto) {
-        businessLimitedDto.id = businessLimitedAddDto.id;
-        businessLimitedDto.limitedDes = businessLimitedAddDto.limitedDes;
-        businessLimitedDto.limitedName = businessLimitedAddDto.limitedName;
-        businessLimitedDto.createTime = businessLimitedAddDto.createTime;
-        businessLimitedDto.createUser = businessLimitedAddDto.createUser;
-        businessLimitedDto.updateTime = businessLimitedAddDto.updateTime;
-        businessLimitedDto.updateUser = businessLimitedAddDto.updateUser;
-        businessLimitedDto.factId = businessLimitedAddDto.factId;
+        businessLimitedAddDto.id = businessLimitedDto.id;
+        businessLimitedAddDto.limitedDes = businessLimitedDto.limitedDes;
+        businessLimitedAddDto.limitedName = businessLimitedDto.limitedName;
+        businessLimitedAddDto.createTime = businessLimitedDto.createTime;
+        businessLimitedAddDto.createUser = businessLimitedDto.createUser;
+        businessLimitedAddDto.updateTime = businessLimitedDto.updateTime;
+        businessLimitedAddDto.updateUser = businessLimitedDto.updateUser;
+        businessLimitedAddDto.factId = businessLimitedDto.factId;
     }
 
     private void BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(BusinessLimitedAttributeDTO businessLimitedAttributeDto, BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto) {
-        businessLimitedAttributeDto.id = businessLimitedAttributeAddDto.id;
-        businessLimitedAttributeDto.businessLimitedId = businessLimitedAttributeAddDto.businessLimitedId;
-        businessLimitedAttributeDto.factAttributeId = businessLimitedAttributeAddDto.factAttributeId;
-        businessLimitedAttributeDto.calculationLogic = businessLimitedAttributeAddDto.calculationLogic;
-        businessLimitedAttributeDto.calculationValue = businessLimitedAttributeAddDto.calculationValue;
-        businessLimitedAttributeDto.createTime = businessLimitedAttributeAddDto.createTime;
-        businessLimitedAttributeDto.createUser = businessLimitedAttributeAddDto.createUser;
-        businessLimitedAttributeDto.updateTime = businessLimitedAttributeAddDto.updateTime;
-        businessLimitedAttributeDto.updateUser = businessLimitedAttributeAddDto.updateUser;
+        businessLimitedAttributeAddDto.id = businessLimitedAttributeDto.id;
+        businessLimitedAttributeAddDto.businessLimitedId = businessLimitedAttributeDto.businessLimitedId;
+        businessLimitedAttributeAddDto.factAttributeId = businessLimitedAttributeDto.factAttributeId;
+        businessLimitedAttributeAddDto.calculationLogic = businessLimitedAttributeDto.calculationLogic;
+        businessLimitedAttributeAddDto.calculationValue = businessLimitedAttributeDto.calculationValue;
+        businessLimitedAttributeAddDto.createTime = businessLimitedAttributeDto.createTime;
+        businessLimitedAttributeAddDto.createUser = businessLimitedAttributeDto.createUser;
+        businessLimitedAttributeAddDto.updateTime = businessLimitedAttributeDto.updateTime;
+        businessLimitedAttributeAddDto.updateUser = businessLimitedAttributeDto.updateUser;
     }
 }
