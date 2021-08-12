@@ -1,5 +1,7 @@
 package com.fisk.datamodel.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +13,7 @@ import java.util.Date;
 @Data
 @TableName("tb_business_limited_attribute")
 public class BusinessLimitedAttributePO {
+    @TableId(type = IdType.AUTO)
     public int id;
     /**
      * 业务限定id

@@ -23,5 +23,9 @@
             and bl.fact_id= ${query.factId}
         </if>
     </select>
-
+    <insert id="insertBusinessLimited" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+            parameterType="com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO">
+        insert into tb_business_limited (limited_name,limited_des,fact_id,del_flag) values
+        (#{businessLimitedDto.limitedName},#{businessLimitedDto.limitedDes},#{businessLimitedDto.factId},1)
+    </insert>
 </mapper>

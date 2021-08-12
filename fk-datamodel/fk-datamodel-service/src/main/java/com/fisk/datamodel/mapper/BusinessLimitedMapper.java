@@ -19,4 +19,10 @@ public interface BusinessLimitedMapper  extends FKBaseMapper<BusinessLimitedPO> 
      * @return
      */
     Page<BusinessLimitedDTO>  queryList(Page<BusinessLimitedDTO> page,@Param("query") BusinessLimitedQueryDTO query);
+    /**
+     * 更新业务限定
+     * @param businessLimitedDto
+     * @return
+     */
+    int insertBusinessLimited(@Param("businessLimitedDto")BusinessLimitedDTO businessLimitedDto);
 }

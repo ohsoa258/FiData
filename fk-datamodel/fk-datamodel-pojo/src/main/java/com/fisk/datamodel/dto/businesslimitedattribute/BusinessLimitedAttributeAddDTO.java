@@ -7,7 +7,9 @@ import lombok.Data;
  */
 @Data
 public class BusinessLimitedAttributeAddDTO extends BusinessLimitedAttributeDTO {
-    //操作类型,状态:0原有,1新增,2修改,3删除
+    /**
+     * 操作类型,状态:0原有,1新增,2修改,3删除
+     */
     public int funcType;
 
 

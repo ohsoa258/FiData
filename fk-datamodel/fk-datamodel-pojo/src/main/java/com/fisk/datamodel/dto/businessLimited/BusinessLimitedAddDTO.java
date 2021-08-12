@@ -11,6 +11,8 @@ import java.util.List;
 @Data
 public class BusinessLimitedAddDTO extends BusinessLimitedDTO {
     public List<BusinessLimitedAttributeAddDTO> businessLimitedAttributeAddDTOList;
-    //下拉框字段
+    /**
+     * 下拉框字段
+     */
     public List<FactAttributeListDTO> factAttributeListDtoList;
 }

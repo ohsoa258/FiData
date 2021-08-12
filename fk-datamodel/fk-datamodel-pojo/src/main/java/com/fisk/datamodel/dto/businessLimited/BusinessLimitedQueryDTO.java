@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BusinessLimitedQueryDTO {
-    //事实表id
+    /**
+     * 事实表id
+     */
     public String factId;
     public String id;
 
