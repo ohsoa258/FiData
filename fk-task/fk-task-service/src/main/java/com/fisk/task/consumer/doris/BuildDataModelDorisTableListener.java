@@ -39,7 +39,12 @@ public class BuildDataModelDorisTableListener {
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         DimensionAttributeAddDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddDTO.class);
-        ResultEntity<ModelMetaDataDTO> dimensionAttributeList = dc.getDimensionEntity(inpData.dimensionId);
+        ResultEntity<ModelMetaDataDTO> dimensionAttributeList =new ResultEntity<>();
+        if(inpData.createType==0){
+            dimensionAttributeList=dc.getDimensionEntity(inpData.dimensionId);
+        }else {
+            dimensionAttributeList=dc.getFactEntity(inpData.dimensionId);
+        }
         ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
         StringBuilder sql = new StringBuilder();
