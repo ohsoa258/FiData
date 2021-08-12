@@ -44,6 +44,7 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
             BusinessLimitedDTO businessLimitedDto = new BusinessLimitedDTO();
             businessLimitedAddDTO.updateTime=new Date();
             businessLimitedAddDTO.updateUser=id;
+            businessLimitedAddDTO.delFlag=1;
             businessLimitedDto=businessLimitedAddDTO;
             businessLimitedMapper.updateById(BusinessLimitedMap.INSTANCES.dtoTopo(businessLimitedDto));
         } else {
@@ -94,10 +95,10 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
             businessLimitedAttributeDtos.add(businessLimitedAttributeAddDto);
         }
         //赋值业务限定字段条件
-        businessLimitedAddDto.businessLimitedAttributeAddDTOList = businessLimitedAttributeDtos;
+        businessLimitedAddDto.businessLimitedAttributeAddDTOList.addAll(businessLimitedAttributeDtos);
         //获取下拉框事实表字段
         List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPo.factId);
-        businessLimitedAddDto.factAttributeListDtoList=factAttributeList;
+        businessLimitedAddDto.factAttributeListDtoList.addAll(factAttributeList);
         return businessLimitedAddDto;
     }
 
