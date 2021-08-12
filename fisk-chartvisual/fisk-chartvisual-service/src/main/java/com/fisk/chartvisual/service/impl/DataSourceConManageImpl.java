@@ -179,15 +179,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 dimensionVO_Mea.name = Measures_Name;
                 dimensionVO_Mea.uniqueName = Measures_UniqueName;
                 dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
-                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(ModelStructure.Measures);
+                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(ModelStructure.measures);
                 dimensionVOList.add(dimensionVO_Mea);
                 //维度
-                ModelStructure.Dimensions.forEach(d -> {
+                ModelStructure.dimensions.forEach(d -> {
                     DimensionVO dimensionVO_Dim = new DimensionVO();
-                    dimensionVO_Dim.name = d.Name;
-                    dimensionVO_Dim.uniqueName = d.UniqueName;
+                    dimensionVO_Dim.name = d.name;
+                    dimensionVO_Dim.uniqueName = d.uniqueName;
                     dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;
-                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.Hierarchies);
+                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
                     dimensionVOList.add(dimensionVO_Dim);
                 });
 

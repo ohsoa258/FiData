@@ -8,7 +8,7 @@ import java.util.List;
  * @author JinXingWang
  */
 public class CatalogPO {
-    public String Name;
-    public String UniqueName;
-    public List<CubePO> Cubes;
+    public String name;
+    public String uniqueName;
+    public List<CubePO> cubes;
 }

@@ -8,6 +8,6 @@ import lombok.Data;
  */
 @Data
 public class MeasurePO {
-    public String Name;
-    public String UniqueName;
+    public String name;
+    public String uniqueName;
 }

@@ -8,8 +8,8 @@ import java.util.List;
  * @author JinXingWang
  */
 public class DimensionPO {
-    public String Name;
-    public String UniqueName;
-    public List<HierarchyPO> Hierarchies;
+    public String name;
+    public String uniqueName;
+    public List<HierarchyPO> hierarchies;
 
 }

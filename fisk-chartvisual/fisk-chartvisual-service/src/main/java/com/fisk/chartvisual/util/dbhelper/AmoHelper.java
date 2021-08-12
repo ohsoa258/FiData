@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import static com.fisk.common.constants.SSASConstant.HierarchyAllMember_UniqueName;
+
 
 /**
  * @author JinXingWang
@@ -117,15 +119,15 @@ public class AmoHelper {
         Cube cube = cubes.get(cubeName);
         NamedList<Dimension> dimensions = cube.getDimensions();
         CubePO cubePo=new  CubePO();
-        cubePo.Name=cube.getName();
-        cubePo.UniqueName=cube.getUniqueName();
+        cubePo.name=cube.getName();
+        cubePo.uniqueName=cube.getUniqueName();
         List<MeasurePO> measurePoList=new ArrayList<>();
         //度量值
         List<Measure> measures = cube.getMeasures();
         for (Measure measure:measures) {
             MeasurePO measurePo=new MeasurePO();
-            measurePo.Name=measure.getName();
-            measurePo.UniqueName=measure.getUniqueName();
+            measurePo.name=measure.getName();
+            measurePo.uniqueName=measure.getUniqueName();
             measurePoList.add(measurePo);
         }
         //维度
@@ -135,23 +137,26 @@ public class AmoHelper {
             Dimension.Type dimensionType = dimension.getDimensionType();
             if (dimensionType == org.olap4j.metadata.Dimension.Type.OTHER) {
                 DimensionPO dimensionPo=new DimensionPO();
-                dimensionPo.Name = dimension.getName();
-                dimensionPo.UniqueName= dimension.getUniqueName();
+                dimensionPo.name = dimension.getName();
+                dimensionPo.uniqueName= dimension.getUniqueName();
                 List<HierarchyPO> hierarchyPoList=new ArrayList<>();
                 NamedList<Hierarchy> hierarchies = dimension.getHierarchies();
                 for (Hierarchy  hierarchy: hierarchies) {
                     //层级
                     HierarchyPO hierarchyPo=new HierarchyPO();
-                    hierarchyPo.Name = hierarchy.getName();
-                    hierarchyPo.UniqueName = hierarchy.getUniqueName();
+                    hierarchyPo.name = hierarchy.getName();
+                    hierarchyPo.uniqueName = hierarchy.getUniqueName();
+                    NamedList<Level> levels= hierarchy.getLevels();
+                    hierarchyPo.uniqueNameAll=levels.get(0).getUniqueName();
+                    hierarchyPo.uniqueNameAllMember=levels.get(1).getUniqueName()+HierarchyAllMember_UniqueName;
                     hierarchyPoList.add(hierarchyPo);
                 }
-                dimensionPo.Hierarchies= hierarchyPoList;
+                dimensionPo.hierarchies= hierarchyPoList;
                 dimensionPoList.add(dimensionPo);
             }
         }
-        cubePo.Measures=measurePoList;
-        cubePo.Dimensions=dimensionPoList;
+        cubePo.measures=measurePoList;
+        cubePo.dimensions=dimensionPoList;
         return cubePo;
     }
 }

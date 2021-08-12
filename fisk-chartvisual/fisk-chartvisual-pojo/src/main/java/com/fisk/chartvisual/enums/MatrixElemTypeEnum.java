@@ -2,21 +2,23 @@ package com.fisk.chartvisual.enums;
 
 import com.fisk.common.enums.BaseEnum;
 
+
 /**
- * 维度类型
+ *
  * @author JinXingWang
  */
 
-public enum DimensionTypeEnum implements BaseEnum {
-    MEASURE(2,"度量"),
-    OTHER(3,"维度");
-
-    DimensionTypeEnum(int value, String name) {
+public enum MatrixElemTypeEnum implements BaseEnum {
+    ROW(1,"行"),
+    COLUMN(2,"列"),
+    VALUE(3,"值");
+    MatrixElemTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
     private final int value;
     private final String name;
+
 
     @Override
     public int getValue() {

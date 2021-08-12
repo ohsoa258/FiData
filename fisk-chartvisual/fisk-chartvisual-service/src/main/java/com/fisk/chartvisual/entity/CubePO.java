@@ -8,8 +8,8 @@ import java.util.List;
  * @author JinXingWang
  */
 public class CubePO {
-    public String Name;
-    public String UniqueName;
-    public List<DimensionPO> Dimensions;
-    public List<MeasurePO> Measures;
+    public String name;
+    public String uniqueName;
+    public List<DimensionPO> dimensions;
+    public List<MeasurePO> measures;
 }

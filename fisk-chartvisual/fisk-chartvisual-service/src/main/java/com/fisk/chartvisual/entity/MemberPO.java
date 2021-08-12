@@ -7,6 +7,6 @@ import com.fasterxml.jackson.databind.annotation.JsonAppend;
  * @author JinXingWang
  */
 public class MemberPO {
-    public String Name;
-    public String UniqueName;
+    public String name;
+    public String uniqueName;
 }

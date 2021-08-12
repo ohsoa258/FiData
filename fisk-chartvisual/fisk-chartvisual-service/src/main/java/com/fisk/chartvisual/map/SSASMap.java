@@ -25,31 +25,23 @@ public interface SSASMap {
 
     /**
      * 层级PO转VO
-     * @param po
-     * @return
+     * @param po 层级
+     * @return 层级vo
      */
-    @Mappings({
-            @Mapping(source = "Name", target = "name"),
-            @Mapping(source = "UniqueName", target = "uniqueName")
-    })
     List<HierarchyVO> hierarchiesPoToVo(List<HierarchyPO> po);
 
 
     /**
      * 度量PO转 层级 VO
-     * @param po
-     * @return VO
+     * @param po 度量
+     * @return VO 层级vo
      */
-    @Mappings({
-            @Mapping(source = "Name", target = "name"),
-            @Mapping(source = "UniqueName", target = "uniqueName"),
-    })
     List<HierarchyVO> measurePoToVo(List<MeasurePO> po);
 
     /**
      * 维度 PO 转VO
-     * @param po
-     * @return
+     * @param po 维度
+     * @return 维度vo
      */
     List<DimensionVO> dimensionPoToVo(List<DimensionPO> po);
 
