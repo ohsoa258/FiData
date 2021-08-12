@@ -16,6 +16,7 @@
         con_ip,
         con_port,
         con_type,
+        con_cube,
         con_dbname,
         con_account,
         con_password,
