@@ -488,8 +488,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         }
 
-        if (!updateField||!saveField) {
+        if (!updateField) {
             return ResultEnum.UPDATE_DATA_ERROR;
+        }
+        if (!saveField) {
+            return ResultEnum.DATAACCESS_SAVEFIELD_ERROR;
         }
 
         // TODO 新增tb_table_business业务时间表
