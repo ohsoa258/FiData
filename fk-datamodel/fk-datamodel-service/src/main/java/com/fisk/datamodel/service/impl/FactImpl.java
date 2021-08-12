@@ -11,6 +11,7 @@ import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.map.FactMap;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
@@ -104,8 +105,8 @@ public class FactImpl implements IFact {
         QueryWrapper<FactAttributePO> attribute=new QueryWrapper<>();
         for (FactDropDTO dto:list)
         {
-            //向字段集合添加数据
-             dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute).stream().filter(e->e.getFactId()==dto.id).collect(Collectors.toList()));
+            //向字段集合添加数据,只获取字段为度量类型的数据
+             dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute).stream().filter(e->e.getFactId()==dto.id && e.attributeType== FactAttributeEnum.MEASURE.getValue()).collect(Collectors.toList()));
         }
         return list;
     }

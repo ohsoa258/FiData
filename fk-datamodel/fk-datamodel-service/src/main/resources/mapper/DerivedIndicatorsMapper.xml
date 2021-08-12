@@ -1,0 +1,29 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.DerivedIndicatorsMapper">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO">
+        select a.id,
+        a.fact_id,
+        a.derived_name,
+        a.derived_des,
+        a.time_period,
+        a.atomic_id,
+        a.business_limited_id,
+        b.indicators_name as atomicName,
+        c.limited_name as businessLimitedName
+        from tb_derived_indicators a
+        LEFT JOIN tb_atomic_indicators b on a.atomic_id=b.id
+        LEFT JOIN tb_business_limited c on a.business_limited_id=c.id
+        where a.del_flag=1
+        <if test="query.factId !=0 ">
+            and a.fact_id= ${query.factId}
+        </if>
+    </select>
+
+    <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO">
+	    insert into tb_der,derived_name,derived_des,atomic_id,business_limited_id,time_period,create_user,create_time)
+	    values(#{factId},#{derivedName},#{derivedDes},#{atomicId},#{busiived_indicators(fact_idnessLimitedId},#{timePeriod},#{createUser},#{createTime})
+    </insert>
+
+</mapper>

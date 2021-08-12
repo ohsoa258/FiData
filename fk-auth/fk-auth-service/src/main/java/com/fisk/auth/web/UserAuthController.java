@@ -3,6 +3,7 @@ package com.fisk.auth.web;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.service.UserAuthService;
 import com.fisk.common.response.ResultEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserAuthController {
 
     @Resource

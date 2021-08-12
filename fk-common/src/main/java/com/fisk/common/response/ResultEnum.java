@@ -62,6 +62,8 @@ public enum ResultEnum {
      */
     DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败"),
     DATAACCESS_GETTABLE_ERROR(5002,"获取表名失败"),
+    DATAACCESS_SAVEFIELD_ERROR(5002,"添加表字段失败"),
+
 
     /**
      * 后台任务模块

@@ -33,6 +33,8 @@ public class SwaggerConfig {
     public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
     public static final String DATA_AREA ="data-area-controller";
     public static final String PROJECT_INFO ="project-info-controller";
+    public static final String DERIVED_INDICATOR="derived-indicators-controller";
+    public static final String BUSINES_LIMITE ="busines-limited-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -54,6 +56,8 @@ public class SwaggerConfig {
                 .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–原子指标"))
                 .tags(new Tag(DATA_AREA,"数据域"))
                 .tags(new Tag(PROJECT_INFO,"项目信息"))
+                .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))
+                .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
                 .securityContexts(securityContexts());
     }
 

@@ -22,18 +22,20 @@ public class GenerateCondition {
         StringBuilder str = new StringBuilder();
         for (FilterQueryDTO model:filterList)
         {
-            switch (model.queryType)
+            //获取查询类型枚举值
+            FilterEnum queryType=FilterEnum.getValue(model.queryType);
+            switch (queryType)
             {
-                case "大于":
+                case GREATER_THAN:
                     str.append(" and " +model.columnName+" > '"+model.columnValue+"' ");
                     break;
-                case "小于":
+                case LESS_THAN:
                     str.append(" and " +model.columnName+" < '" +model.columnValue+"' ");
                     break;
-                case "等于":
+                case EQUAL:
                     str.append(" and " +model.columnName+" = '"+model.columnValue+"' ");
                     break;
-                case "包含":
+                case CONTAINS:
                     str.append(" and " +model.columnName+" like concat('%'," + "'" + model.columnValue+"'" + ", '%') " );
                     break;
                 default:

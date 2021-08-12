@@ -411,7 +411,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         }
 
-        if (!updateFields||!saveField) {
+        if (!updateFields || !saveField) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 ////        CreateTableUtils createTableUtils = new CreateTableUtils();
@@ -461,8 +461,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 3.保存tb_table_fields数据
         boolean updateField = true;
+        boolean saveField = true;
         List<TableFieldsDTO> list = dto.getList();
-
+/*
         for (TableFieldsDTO tableFieldsDTO : list) {
 
             TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
@@ -470,8 +471,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             updateField = tableFieldsImpl.updateById(modelField);
         }
+*/
+
+        for (TableFieldsDTO tableFieldsDTO : list) {
+            // 0: 未操作的数据  1: 新增  2: 编辑
+            int funcType = tableFieldsDTO.getFuncType();
+            if (funcType == 2) {
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                modelField.setUpdateUser(String.valueOf(userId));
+                updateField = tableFieldsImpl.updateById(modelField);
+            } else if (funcType == 1) {
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                modelField.setTableAccessId(modelAccess.getId());
+                modelField.setUpdateUser(String.valueOf(userId));
+                saveField = tableFieldsImpl.save(modelField);
+            }
+        }
+
         if (!updateField) {
             return ResultEnum.UPDATE_DATA_ERROR;
+        }
+        if (!saveField) {
+            return ResultEnum.DATAACCESS_SAVEFIELD_ERROR;
         }
 
         // TODO 新增tb_table_business业务时间表

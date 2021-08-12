@@ -1,7 +1,7 @@
 package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +19,15 @@ public interface DimensionClient {
      * @return 执行结果
      */
     @GetMapping("/attribute/getDimensionEntity")
-    ResultEntity<DimensionMetaDataDTO> getDimensionEntity(@RequestParam("id") int id);
+    ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id);
+
+    /**
+     * 获取事实表元数据字段
+     *
+     * @param id
+     * @return 执行结果
+     */
+    @GetMapping("/factAttribute/getFactEntity")
+    ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
 
 }
