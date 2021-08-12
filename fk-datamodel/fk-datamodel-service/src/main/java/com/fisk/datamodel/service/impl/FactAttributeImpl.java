@@ -10,11 +10,13 @@ import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
+import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
+import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
@@ -37,6 +39,8 @@ public class FactAttributeImpl
     FactMapper factMapper;
     @Resource
     FactAttributeMapper mapper;
+    @Resource
+    DimensionAttributeMapper attributeMapper;
     @Resource
     UserHelper userHelper;
     @Resource
@@ -71,14 +75,22 @@ public class FactAttributeImpl
         boolean flat=this.saveBatch(list);
         if (flat)
         {
-            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
-            pushDto.dimensionId=factId;
-            pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
-            pushDto.userId=userHelper.getLoginUserInfo().id;
-            //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            try
+            {
+                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+                pushDto.dimensionId=factId;
+                pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
+                pushDto.userId=userHelper.getLoginUserInfo().id;
+                //发送消息
+                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            }
+            catch (Exception ex){
+                log.error(ex.getMessage());
+                return ResultEnum.SUCCESS;
+            }
+
         }
-        return this.saveBatch(list) == true ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return flat ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 
@@ -135,13 +147,13 @@ public class FactAttributeImpl
             if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
                 //查看关联维度字段相关信息
-                FactAttributePO po1=mapper.selectById(item.associateDimensionId);
+                DimensionAttributePO po1=attributeMapper.selectById(item.associateDimensionId);
                 if (po1 !=null)
                 {
                     dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
-                    dto.fieldEnName=po1.factFieldEnName;
-                    dto.fieldLength=po1.factFieldLength;
-                    dto.fieldType=po1.factFieldType;
+                    dto.fieldEnName=po1.dimensionFieldEnName;
+                    dto.fieldLength=po1.dimensionFieldLength;
+                    dto.fieldType=po1.dimensionFieldType;
                     dtoList.add(dto);
                 }
             }

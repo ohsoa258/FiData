@@ -100,14 +100,20 @@ public class DimensionAttributeImpl
         boolean flat=this.saveBatch(list);
         if (flat)
         {
-            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
-            pushDto.dimensionId=dimensionId;
-            pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
-            pushDto.userId=userHelper.getLoginUserInfo().id;
-            //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            try{
+                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+                pushDto.dimensionId=dimensionId;
+                pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
+                pushDto.userId=userHelper.getLoginUserInfo().id;
+                //发送消息
+                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            }
+            catch (Exception ex){
+                log.error(ex.getMessage());
+                return ResultEnum.SUCCESS;
+            }
         }
-        return flat==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return flat?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
