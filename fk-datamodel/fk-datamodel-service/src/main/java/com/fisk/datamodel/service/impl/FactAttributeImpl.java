@@ -154,6 +154,7 @@ public class FactAttributeImpl
                     dto.fieldEnName=po1.dimensionFieldEnName;
                     dto.fieldLength=po1.dimensionFieldLength;
                     dto.fieldType=po1.dimensionFieldType;
+                    dto.fieldCnName=po1.dimensionFieldCnName;
                     dtoList.add(dto);
                 }
             }
@@ -162,6 +163,7 @@ public class FactAttributeImpl
                 dto.fieldEnName=item.factFieldEnName;
                 dto.fieldLength=item.factFieldLength;
                 dto.fieldType=item.factFieldType;
+                dto.fieldCnName=item.factFieldCnName;
                 dtoList.add(dto);
             }
         }

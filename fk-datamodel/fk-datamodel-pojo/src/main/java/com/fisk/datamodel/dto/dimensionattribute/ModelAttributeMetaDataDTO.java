@@ -28,4 +28,9 @@ public class ModelAttributeMetaDataDTO {
      */
     public int attributeType;
 
+    /**
+     * 维度字段中文名称
+     */
+    public String fieldCnName;
+
 }

@@ -10,9 +10,13 @@ import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.derivedindicatorslimited.DerivedIndicatorsLimitedDTO;
 import com.fisk.datamodel.entity.DerivedIndicatorsAttributePO;
+import com.fisk.datamodel.entity.DerivedIndicatorsLimitedPO;
 import com.fisk.datamodel.entity.DerivedIndicatorsPO;
+import com.fisk.datamodel.map.DerivedIndicatorsLimitedMap;
 import com.fisk.datamodel.map.DerivedIndicatorsMap;
+import com.fisk.datamodel.mapper.DerivedIndicatorsLimitedMapper;
 import com.fisk.datamodel.mapper.DerivedIndicatorsMapper;
 import com.fisk.datamodel.mapper.DerivedIndicatorsAttributeMapper;
 import com.fisk.datamodel.service.IDerivedIndicators;
@@ -21,10 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -38,6 +40,8 @@ public class DerivedIndicatorsImpl
     DerivedIndicatorsMapper mapper;
     @Resource
     DerivedIndicatorsAttributeMapper attributeMapper;
+    @Resource
+    DerivedIndicatorsLimitedMapper derivedIndicatorsLimitedMapper;
     @Resource
     UserHelper userHelper;
 
@@ -80,6 +84,20 @@ public class DerivedIndicatorsImpl
         {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+        //业务限定条件集合
+        if (poAdd.limitedList !=null && poAdd.limitedList.size()>0)
+        {
+            List<DerivedIndicatorsLimitedPO> limitedPOList=new ArrayList<>();
+            for (DerivedIndicatorsLimitedDTO item:dto.limitedList)
+            {
+                item.derivedIndicatorsId=poAdd.id;
+                int flat=derivedIndicatorsLimitedMapper.insert(DerivedIndicatorsLimitedMap.INSTANCES.dtoToPo(item));
+                if (flat==0)
+                {
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                }
+            }
+        }
         //派生指标聚合字段集合
         if (poAdd.attributeId !=null && poAdd.attributeId.size()>0)
         {
@@ -107,17 +125,27 @@ public class DerivedIndicatorsImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据不存在");
         }
         DerivedIndicatorsDTO dto=DerivedIndicatorsMap.INSTANCES.poToDto(po);
+        //获取业务限定
+        QueryWrapper<DerivedIndicatorsLimitedPO> limitedPOQueryWrapper=new QueryWrapper<>();
+        limitedPOQueryWrapper.lambda().eq(DerivedIndicatorsLimitedPO::getDerivedIndicatorsId,po.id);
+        List<DerivedIndicatorsLimitedPO> limitedList=derivedIndicatorsLimitedMapper.selectList(limitedPOQueryWrapper);
+        List<DerivedIndicatorsLimitedDTO> dataList=new ArrayList<>();
+        for (DerivedIndicatorsLimitedPO item:limitedList)
+        {
+            dataList.add(DerivedIndicatorsLimitedMap.INSTANCES.poToDto(item));
+        }
+        dto.limitedList=dataList;
         //获取聚合字段
         QueryWrapper<DerivedIndicatorsAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DerivedIndicatorsAttributePO::getDerivedIndicatorsId,po.id);
-        List<DerivedIndicatorsAttributePO> idList =attributeMapper.selectList(queryWrapper).stream().collect(Collectors.toList());
+        List<DerivedIndicatorsAttributePO> idList =attributeMapper.selectList(queryWrapper);
         List<Integer> list=new ArrayList<>();
         for (DerivedIndicatorsAttributePO item:idList)
         {
             list.add(item.factAttributeId);
         }
         dto.attributeId =list;
-        return  dto;
+        return dto;
     }
 
     @Transactional(rollbackFor = Exception.class)

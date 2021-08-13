@@ -29,11 +29,6 @@ public class DerivedIndicatorsPO extends BasePO {
     public long atomicId;
 
     /**
-     * 业务限定id
-     */
-    public long businessLimitedId;
-
-    /**
      * 时间周期
      */
     public String timePeriod;

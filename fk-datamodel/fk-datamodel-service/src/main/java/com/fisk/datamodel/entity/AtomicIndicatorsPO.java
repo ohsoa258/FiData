@@ -13,6 +13,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class AtomicIndicatorsPO extends BasePO {
     /**
+     * 事实表id
+     */
+    public int factId;
+    /**
      * 事实字段表id
      */
     public int factAttributeId;

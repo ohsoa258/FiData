@@ -8,6 +8,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedAddDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
+import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.service.IBusinessLimited;
 import com.fisk.datamodel.service.IBusinessLimitedAttribute;
 import io.swagger.annotations.Api;
@@ -17,6 +18,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * @author cfk
  */
@@ -54,6 +57,10 @@ public class BusinessLimitedController {
     public ResultEntity<Object> deleteBusinessLimitedById(@PathVariable("id") String id) {
         return ResultEntityBuild.build(iBusinessLimited.deleteBusinessLimitedById(id));
     }
-
+    @GetMapping("/getBusinessLimitedList/{factId}")
+    @ApiOperation(value = "获取业务限定下拉数据")
+    public ResultEntity<List<BusinessLimitedPO>> getBusinessLimitedList(@PathVariable("factId") String factId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedList(factId));
+    }
 
 }
