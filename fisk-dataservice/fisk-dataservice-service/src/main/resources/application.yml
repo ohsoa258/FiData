@@ -4,10 +4,19 @@ spring:
   application:
     name: dataservice-service
   datasource:
-    url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
-    username: root
-    password: root123
-    driver-class-name: com.mysql.jdbc.Driver
+    dynamic:
+      primary: master_dataservice  #设置默认的数据源
+      datasource:
+        master_dataservice:
+          url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+          password: root123
+          driver-class-name: com.mysql.jdbc.Driver
+        datamodel:
+          url: jdbc:mysql://192.168.11.130:3306/dmp_datamodel_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+          password: root123
+          driver-class-name: com.mysql.jdbc.Driver
   redis:
     host: 192.168.11.130
 #  security:

@@ -38,6 +38,14 @@ public class ApiFieldController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,configureFieldService.queryField(apiRoute,currentPage,pageSize,user));
     }
 
+    @ApiOperation("查询无需身份验证")
+    @RequestMapping("/get/{apiRoute}")
+    public ResultEntity<List<Map>> queryData(@PathVariable("apiRoute") String apiRoute,
+                                             Integer currentPage,
+                                             Integer pageSize) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,configureFieldService.queryField(apiRoute,currentPage,pageSize));
+    }
+
     @ApiOperation("分页查询所有Api服务")
     @GetMapping("/getAll")
     public ResultEntity<Page<ApiConfigureDTO>> listData(Page<ApiConfigurePO> page,String apiName) {

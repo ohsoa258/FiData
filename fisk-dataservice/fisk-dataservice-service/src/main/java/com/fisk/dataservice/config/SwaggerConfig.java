@@ -26,6 +26,7 @@ public class SwaggerConfig {
     public static final String TAG_1 = "api-field-controller";
     public static final String TAG_2 = "configure-field-controller";
     public static final String TAG_3 = "configure-user-controller";
+    public static final String TAG_4 = "data-domain-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -35,6 +36,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_1,"Api接口"))
                 .tags(new Tag(TAG_2,"接口服务字段配置"))
                 .tags(new Tag(TAG_3,"用户服务配置"))
+                .tags(new Tag(TAG_4,"数据源"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

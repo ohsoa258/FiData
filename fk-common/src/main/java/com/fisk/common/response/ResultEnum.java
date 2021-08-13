@@ -71,12 +71,13 @@ public enum ResultEnum {
     TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件"),
 
     /**
-     * 数据源接入模块
+     * 数据域接入模块
      * @param code
      * @param msg
      */
     API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
-    DELETE_ERROR(7002,"删除失败");
+    DELETE_ERROR(7002,"删除失败"),
+    API_FIELD_ERROR(7003,"api没有sql执行!");
 
     ResultEnum(int code, String msg) {
         this.code = code;

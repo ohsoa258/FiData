@@ -25,6 +25,15 @@ public interface ApiFieldService {
     List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize, ConfigureUserDTO user);
 
     /**
+     * 根据路径查询拼接sql
+     * @param apiRoute
+     * @param currentPage 当前页
+     * @param pageSize  页数大小
+     * @return
+     */
+    List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize);
+
+    /**
      * 查询所有Api服务
      * @param page
      * @param apiName
