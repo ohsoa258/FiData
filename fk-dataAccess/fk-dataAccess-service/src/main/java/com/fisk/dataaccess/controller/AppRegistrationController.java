@@ -6,6 +6,7 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.apollo.config.ApolloConfigureSwitch;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -17,6 +18,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -173,4 +175,19 @@ public class AppRegistrationController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+    @GetMapping("/test")
+    public ResultEntity<Object> test() {
+        ApolloConfigureSwitch apolloConfigureSwitch = new ApolloConfigureSwitch();
+
+//        String username = apolloConfigureSwitch.getUsername();
+//        System.out.println(username);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, username);
+    }
+
 }
