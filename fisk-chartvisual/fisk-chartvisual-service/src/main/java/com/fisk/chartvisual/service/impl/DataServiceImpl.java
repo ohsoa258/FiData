@@ -84,7 +84,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         MdxHelper mdxHelper=new MdxHelper();
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
         String mdx=mdxHelper.GetMdxByColumnRowValue(query.columnDetails,model.conCube);
-        return  cubeHelper.qeury(mdx);
+        return  cubeHelper.query(mdx);
     }
 
 

@@ -188,12 +188,7 @@ public class MdxHelper {
 
     private   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> datas,MatrixElemTypeEnum matrixElemType){
        return datas.stream()
-                .filter(p -> {
-                    if (matrixElemType==p.matrixElemType) {
-                        return true;
-                    } else {
-                        return false;
-                    }})
+                .filter(p -> matrixElemType==p.matrixElemType)
                 .collect(Collectors.toList());
 
     }

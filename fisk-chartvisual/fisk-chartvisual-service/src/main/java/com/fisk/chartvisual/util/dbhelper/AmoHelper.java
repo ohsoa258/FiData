@@ -8,20 +8,14 @@ import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import jdk.nashorn.internal.ir.ReturnNode;
 import lombok.extern.slf4j.Slf4j;
 import org.olap4j.*;
 import org.olap4j.metadata.*;
 import org.springframework.util.StopWatch;
-
-import java.io.PrintWriter;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-
-import static com.fisk.common.constants.SSASConstant.HierarchyAllMember_UniqueName;
-
 
 /**
  * @author JinXingWang
@@ -150,9 +144,6 @@ public class AmoHelper {
                     HierarchyPO hierarchyPo=new HierarchyPO();
                     hierarchyPo.name = hierarchy.getName();
                     hierarchyPo.uniqueName = hierarchy.getUniqueName();
-//                    NamedList<Level> levels= hierarchy.getLevels();
-//                    hierarchyPo.uniqueNameAll=levels.get(0).getUniqueName();
-//                    hierarchyPo.uniqueNameAllMember=levels.get(1).getUniqueName()+HierarchyAllMember_UniqueName;
                     hierarchyPoList.add(hierarchyPo);
                 }
                 dimensionPo.hierarchies= hierarchyPoList;
@@ -167,17 +158,16 @@ public class AmoHelper {
     /**
      * 查询
      * @param mdx mdx语句
-     * @return
+     * @return 数据集合
      */
-    public DataServiceResult qeury(String mdx){
+    public DataServiceResult query(String mdx){
         StopWatch stopWatch = new StopWatch();
         String code = UUID.randomUUID().toString();
         DataServiceResult res=new DataServiceResult();
-        OlapStatement stmt = null;
         try {
             stopWatch.start();
             log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
-            stmt = connection.createStatement();
+            OlapStatement stmt = connection.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);
             stmt.close();
             res.data =getDataByAnalyticalCellSet(cellset);
@@ -194,29 +184,24 @@ public class AmoHelper {
     /**
      * 解析 cellSet
      * @param cellSet 单元格集合
-     * @return
+     * @return map集合
      */
     public List<Map<String,Object>>  getDataByAnalyticalCellSet(CellSet cellSet){
-        List<Map<String,Object>> data=null;
         List<CellSetAxis> axis=cellSet.getAxes();
         switch (axis.size()){
             case 2:
-                data=getTwoAxisData(cellSet);
-                break;
+                return getTwoAxisData(cellSet);
             case 1:
-                data=getOneAxisData(cellSet);
-                break;
+                return getOneAxisData(cellSet);
             default:
-                data=new ArrayList<>();
-                break;
+                return new ArrayList<>();
         }
-        return data;
     }
 
     /**
      * 解析2轴cellSet
      * @param cellSet 单元格集合
-     * @return
+     * @return map 集合
      */
     public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
 
@@ -226,10 +211,10 @@ public class AmoHelper {
     /**
      * 解析1轴cellSet
      * @param cellSet 单元格集合
-     * @return
+     * @return map集合
      */
     public List<Map<String,Object>> getOneAxisData(CellSet cellSet){
-        List<Map<String,Object>> maps=new ArrayList<Map<String, Object>>();
+        List<Map<String,Object>> maps=new ArrayList<>();
         for (Position column : cellSet.getAxes().get(0)) {
             Map<String,Object> map=new HashMap<>();
             for (Member member : column.getMembers()) {
