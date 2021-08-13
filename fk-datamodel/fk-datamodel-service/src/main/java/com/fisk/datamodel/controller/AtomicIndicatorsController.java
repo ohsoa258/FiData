@@ -58,4 +58,10 @@ public class AtomicIndicatorsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAtomicIndicatorList(query));
     }
 
+    @ApiOperation("根据原子指标下拉列表")
+    @GetMapping("/getAtomicIndicatorsDropList")
+    public ResultEntity<Object> getAtomicIndicatorsDropList(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorDropList(id));
+    }
+
 }

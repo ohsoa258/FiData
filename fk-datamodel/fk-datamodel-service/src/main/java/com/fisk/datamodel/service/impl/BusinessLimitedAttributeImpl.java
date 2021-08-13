@@ -44,6 +44,7 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
             BusinessLimitedDTO businessLimitedDto = new BusinessLimitedDTO();
             businessLimitedAddDTO.updateTime=new Date();
             businessLimitedAddDTO.updateUser=id;
+            businessLimitedAddDTO.delFlag=1;
             businessLimitedDto=businessLimitedAddDTO;
             businessLimitedMapper.updateById(BusinessLimitedMap.INSTANCES.dtoTopo(businessLimitedDto));
         } else {
@@ -87,17 +88,11 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId, businessLimitedId);
         List<BusinessLimitedAttributePO> businessLimitedAttributePos = businessLimitedAttributeMapper.selectList(queryWrapper);
         ArrayList<BusinessLimitedAttributeAddDTO> businessLimitedAttributeDtos = new ArrayList<>();
-        BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto = new BusinessLimitedAttributeAddDTO();
         for (BusinessLimitedAttributePO businessLimitedAttributePo : businessLimitedAttributePos) {
             BusinessLimitedAttributeDTO businessLimitedAttributeDTO = BusinessLimitedAttributeMap.INSTANCES.poTodto(businessLimitedAttributePo);
-            BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(businessLimitedAttributeDTO, businessLimitedAttributeAddDto);
-            businessLimitedAttributeDtos.add(businessLimitedAttributeAddDto);
+            businessLimitedAttributeDtos.add(BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(businessLimitedAttributeDTO));
         }
-        //赋值业务限定字段条件
-        businessLimitedAddDto.businessLimitedAttributeAddDTOList = businessLimitedAttributeDtos;
-        //获取下拉框事实表字段
-        List<FactAttributeListDTO> factAttributeList = factAttributeMapper.getFactAttributeList(businessLimitedPo.factId);
-        businessLimitedAddDto.factAttributeListDtoList=factAttributeList;
+        businessLimitedAddDto.businessLimitedAttributeAddDTOList=businessLimitedAttributeDtos;
         return businessLimitedAddDto;
     }
 
@@ -112,7 +107,8 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         businessLimitedAddDto.factId = businessLimitedDto.factId;
     }
 
-    private void BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(BusinessLimitedAttributeDTO businessLimitedAttributeDto, BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto) {
+    private BusinessLimitedAttributeAddDTO BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(BusinessLimitedAttributeDTO businessLimitedAttributeDto) {
+        BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto = new BusinessLimitedAttributeAddDTO();
         businessLimitedAttributeAddDto.id = businessLimitedAttributeDto.id;
         businessLimitedAttributeAddDto.businessLimitedId = businessLimitedAttributeDto.businessLimitedId;
         businessLimitedAttributeAddDto.factAttributeId = businessLimitedAttributeDto.factAttributeId;
@@ -122,5 +118,6 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         businessLimitedAttributeAddDto.createUser = businessLimitedAttributeDto.createUser;
         businessLimitedAttributeAddDto.updateTime = businessLimitedAttributeDto.updateTime;
         businessLimitedAttributeAddDto.updateUser = businessLimitedAttributeDto.updateUser;
+        return businessLimitedAttributeAddDto;
     }
 }
