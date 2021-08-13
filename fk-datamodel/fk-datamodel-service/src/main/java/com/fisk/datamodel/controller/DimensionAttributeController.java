@@ -4,7 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.dimensionAttribute})
+@Api(tags = {SwaggerConfig.DIMENSION_ATTRIBUTE})
 @RestController
 @RequestMapping("/attribute")
 @Slf4j
@@ -38,13 +38,7 @@ public class DimensionAttributeController {
     @PostMapping("/addAttribute")
     public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
     {
-        ResultEnum result=service.addDimensionAttribute(dto.dimensionId,dto.list);
-        if (result==ResultEnum.SUCCESS)
-        {
-            //发送消息
-
-        }
-        return ResultEntityBuild.build(result);
+        return ResultEntityBuild.build(service.addDimensionAttribute(dto.dimensionId,dto.list));
     }
 
     @ApiOperation("删除维度字段")
@@ -60,7 +54,7 @@ public class DimensionAttributeController {
     }
 
     @ApiOperation("获取维度字段表列表")
-    @GetMapping("/getDimensionAttributeList") ////@PathVariable/{dimensionId}
+    @GetMapping("/getDimensionAttributeList")
     public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
     }
@@ -73,7 +67,7 @@ public class DimensionAttributeController {
 
     @GetMapping("/getDimensionEntity")
     @ApiOperation("获取维度表元数据(用于Doris创建表)")
-    public ResultEntity<DimensionMetaDataDTO> getDimensionEntity(@RequestParam("id") int id) {
+    public ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }
 

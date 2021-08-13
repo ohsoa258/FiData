@@ -23,13 +23,18 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String factAttribute = "fact-attribute-controller";
-    public static final String fact="fact-controller";
-    public static final String dimension="dimension-controller";
-    public static final String dimensionAttribute="dimension-attribute-controller";
-    public static final String businessProcess="business-process-controller";
-    public static final String businessArea="business-area-controller";
-    public static final String dataSourceArea="data-source-area-controller";
+    public static final String FACT_ATTRIBUTE = "fact-attribute-controller";
+    public static final String FACT="fact-controller";
+    public static final String DIMENSION ="dimension-controller";
+    public static final String DIMENSION_ATTRIBUTE ="dimension-attribute-controller";
+    public static final String BUSINESS_PROCESS ="business-process-controller";
+    public static final String BUSINESS_AREA ="business-area-controller";
+    public static final String DATASOURCE_AREA ="data-source-area-controller";
+    public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
+    public static final String DATA_AREA ="data-area-controller";
+    public static final String PROJECT_INFO ="project-info-controller";
+    public static final String DERIVED_INDICATOR="derived-indicators-controller";
+    public static final String BUSINES_LIMITE ="busines-limited-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -41,13 +46,18 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
-                .tags(new Tag(factAttribute, "数仓建模-事实字段"))
-                .tags(new Tag(fact,"数仓建模-事实表"))
-                .tags(new Tag(dimension,"数仓建模--维度"))
-                .tags(new Tag(dimensionAttribute,"数仓建模–维度字段"))
-                .tags(new Tag(businessProcess,"业务过程"))
-                .tags(new Tag(businessArea,"业务域"))
-                .tags(new Tag(dataSourceArea,"计算数据源"))
+                .tags(new Tag(FACT_ATTRIBUTE, "数仓建模-事实字段"))
+                .tags(new Tag(FACT,"数仓建模-事实表"))
+                .tags(new Tag(DIMENSION,"数仓建模--维度"))
+                .tags(new Tag(DIMENSION_ATTRIBUTE,"数仓建模–维度字段"))
+                .tags(new Tag(BUSINESS_PROCESS,"业务过程"))
+                .tags(new Tag(BUSINESS_AREA,"业务域"))
+                .tags(new Tag(DATASOURCE_AREA,"计算数据源"))
+                .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–原子指标"))
+                .tags(new Tag(DATA_AREA,"数据域"))
+                .tags(new Tag(PROJECT_INFO,"项目信息"))
+                .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))
+                .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
                 .securityContexts(securityContexts());
     }
 

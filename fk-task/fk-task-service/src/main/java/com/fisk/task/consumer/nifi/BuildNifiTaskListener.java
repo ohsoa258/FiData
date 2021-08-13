@@ -602,7 +602,7 @@ public class BuildNifiTaskListener {
      */
     private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId) {
         NifiAccessDTO dto = new NifiAccessDTO();
-        dto.appid = appId;
+        dto.appId = appId;
         dto.appGroupId = appComponentId;
         dto.tableId = tableId;
         dto.tableGroupId = tableComponentId;

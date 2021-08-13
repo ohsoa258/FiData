@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 public class ChartPropertyVO {
     public int id;
+    public Long fid;
     public String name;
     public String content;
     public String details;

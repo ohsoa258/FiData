@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.fact })
+@Api(tags = { SwaggerConfig.FACT })
 @RestController
 @RequestMapping("/fact")
 @Slf4j
@@ -61,6 +61,12 @@ public class FactController {
     @GetMapping("/getFactDropList")
     public ResultEntity<Object> getFactDropList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactDropList());
+    }
+
+    @ApiOperation("获取事实表下拉列表")
+    @GetMapping("/getFactScreenDropList")
+    public ResultEntity<Object> getFactScreenDropList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactScreenDropList());
     }
 
 }

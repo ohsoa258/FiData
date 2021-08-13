@@ -35,7 +35,6 @@
             <groupId>com.atlasapi</groupId>
             <artifactId>common-atlasapi</artifactId>
             <version>1.0-ATLASCLIENT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

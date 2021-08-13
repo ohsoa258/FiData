@@ -15,7 +15,7 @@ public class AppDataSourcePO extends BasePO {
     /**
      * tb_app_registration表id
      */
-    private long appid;
+    private long appId;
 
     /**
      * tb_app_drivetype表type

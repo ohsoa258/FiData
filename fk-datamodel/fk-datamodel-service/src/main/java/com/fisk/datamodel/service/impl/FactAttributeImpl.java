@@ -4,15 +4,23 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.FactAttributePO;
+import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
+import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
+import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFactAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -28,7 +36,15 @@ public class FactAttributeImpl
         implements IFactAttribute {
 
     @Resource
+    FactMapper factMapper;
+    @Resource
     FactAttributeMapper mapper;
+    @Resource
+    DimensionAttributeMapper attributeMapper;
+    @Resource
+    UserHelper userHelper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -44,9 +60,7 @@ public class FactAttributeImpl
         List<FactAttributePO> list = new ArrayList<>();
         for (FactAttributeDTO item : dto) {
             FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
-                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
-                    .eq(FactAttributePO::getFactFieldType, item.factFieldType)
-                    .eq(FactAttributePO::getTableSourceFieldId, item.tableSourceFieldId));
+                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName));
             if (po != null) {
                 isExit = true;
                 break;
@@ -58,7 +72,25 @@ public class FactAttributeImpl
         if (isExit) {
             return ResultEnum.DATA_EXISTS;
         }
-        return this.saveBatch(list) == true ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        boolean flat=this.saveBatch(list);
+        if (flat)
+        {
+            try
+            {
+                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+                pushDto.dimensionId=factId;
+                pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
+                pushDto.userId=userHelper.getLoginUserInfo().id;
+                //发送消息
+                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            }
+            catch (Exception ex){
+                log.error(ex.getMessage());
+                return ResultEnum.SUCCESS;
+            }
+
+        }
+        return flat ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 
@@ -76,13 +108,67 @@ public class FactAttributeImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,po.factId)
+                .eq(FactAttributePO::getFactFieldEnName,dto.factFieldEnName);
+        FactAttributePO model=mapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         po.factFieldCnName=dto.factFieldCnName;
         po.factFieldDes=dto.factFieldDes;
         po.factFieldLength=dto.factFieldLength;
         po.factFieldEnName=dto.factFieldEnName;
         po.factFieldType=dto.factFieldType;
-        //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ModelMetaDataDTO getFactMetaData(int id)
+    {
+        ModelMetaDataDTO data=new ModelMetaDataDTO();
+        FactPO po=factMapper.selectById(id);
+        if (po==null)
+        {
+            return data;
+        }
+        data.tableName =po.factTableEnName;
+        data.id=po.id;
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,id);
+        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
+        List<FactAttributePO> list=mapper.selectList(queryWrapper);
+        for (FactAttributePO item:list)
+        {
+            ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
+            //判断是否为关联维度
+            if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            {
+                //查看关联维度字段相关信息
+                DimensionAttributePO po1=attributeMapper.selectById(item.associateDimensionId);
+                if (po1 !=null)
+                {
+                    dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                    dto.fieldEnName=po1.dimensionFieldEnName;
+                    dto.fieldLength=po1.dimensionFieldLength;
+                    dto.fieldType=po1.dimensionFieldType;
+                    dto.fieldCnName=po1.dimensionFieldCnName;
+                    dtoList.add(dto);
+                }
+            }
+            else {
+                dto.attributeType=item.attributeType;
+                dto.fieldEnName=item.factFieldEnName;
+                dto.fieldLength=item.factFieldLength;
+                dto.fieldType=item.factFieldType;
+                dto.fieldCnName=item.factFieldCnName;
+                dtoList.add(dto);
+            }
+        }
+        data.dto=dtoList;
+        return data;
     }
 
 }

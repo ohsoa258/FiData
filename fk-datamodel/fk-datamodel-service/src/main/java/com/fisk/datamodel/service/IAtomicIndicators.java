@@ -2,10 +2,9 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsDetailDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.atomicIndicators.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.dto.atomicindicator.*;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -46,5 +45,12 @@ public interface IAtomicIndicators {
      * @return
      */
     Page<AtomicIndicatorsResultDTO> getAtomicIndicatorList(AtomicIndicatorsQueryDTO dto);
+
+    /**
+     * 获取原子指标下拉列表
+     * @param factId
+     * @return
+     */
+    List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId);
 
 }

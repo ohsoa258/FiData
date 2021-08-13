@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
@@ -39,5 +40,12 @@ public interface IFactAttribute {
      * @return
      */
     ResultEnum updateFactAttribute(FactAttributeUpdateDTO dto);
+
+    /**
+     * 根据维度id获取事实字段详情
+     * @param id
+     * @return
+     */
+    ModelMetaDataDTO getFactMetaData(int id);
 
 }

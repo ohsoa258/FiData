@@ -2,17 +2,16 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.dto.MetaDataConfigDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.datamodel.dto.BusinessAreaDTO;
-import com.fisk.datamodel.dto.BusinessPageDTO;
-import com.fisk.datamodel.dto.BusinessPageResultDTO;
-import com.fisk.datamodel.dto.BusinessQueryDTO;
+import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
@@ -39,6 +38,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     UserHelper userHelper;
     @Resource
     BusinessAreaMapper mapper;
+    @Resource
+    GetConfigDTO getConfig;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -112,7 +113,13 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
     @Override
     public List<FilterFieldDTO> getBusinessAreaColumn() {
-        return getMetadata.getMetadataList("dmp_datamodel_db", "tb_area_business", "");
+        MetaDataConfigDTO dto=new MetaDataConfigDTO();
+        dto.url= getConfig.url;
+        dto.userName=getConfig.username;
+        dto.password=getConfig.password;
+        dto.tableName="tb_area_business";
+        dto.filterSql=FilterSqlConstants.BUSINESS_AREA_SQL;
+        return getMetadata.getMetadataList(dto);
     }
 
     @Override

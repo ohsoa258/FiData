@@ -6,6 +6,7 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
+import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
 
 import java.util.List;
 
@@ -54,5 +55,11 @@ public interface IFact {
      * @return
      */
     List<FactDropDTO> getFactDropList();
+
+    /**
+     * 获取事实筛选列表
+     * @return
+     */
+    List<FactScreenDropDTO> getFactScreenDropList();
 
 }

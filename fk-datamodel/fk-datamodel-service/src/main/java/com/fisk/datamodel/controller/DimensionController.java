@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags ={SwaggerConfig.dimension})
+@Api(tags ={SwaggerConfig.DIMENSION})
 @RestController
 @RequestMapping("/dimension")
 @Slf4j

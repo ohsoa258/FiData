@@ -2,8 +2,10 @@ package task;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.fisk.task.FkTaskApplication;
+import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.mapper.TBETLLogMapper;
+import com.fisk.task.service.IDorisIncrementalService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,13 +31,15 @@ public class doris {
     private TBETLLogMapper logMapper;
     @Resource
     private JdbcTemplate template;
+    @Resource
+    private IDorisIncrementalService doris;
 
     @Test
     public void contextLoads() {
         System.out.println(("----- selectAll method test ------"));
-        List<TBETLlogPO> loglist = logMapper.selectList(null);
-        //Assert.assertEquals(5, userList.size());
-        loglist.forEach(System.out::println);
+        UpdateLogAndImportDataDTO dd=new UpdateLogAndImportDataDTO();
+        dd.code="1488de4e-f431-11eb-8d50-0242ac110003";
+        doris.updateNifiLogsAndImportOdsData(dd);
     }
 
     @DS("datainputdb")

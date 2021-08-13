@@ -1,5 +1,6 @@
 package com.fisk.dataaccess;
 
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +25,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.user"})
 @MapperScan("com.fisk.dataaccess.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
+//@Configuration
+@EnableApolloConfig
 public class FkDataAccessApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkDataAccessApplication.class, args);

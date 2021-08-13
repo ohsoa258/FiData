@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.dimension.DimensionMetaDataDTO;
+import com.fisk.common.user.UserHelper;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
@@ -14,6 +16,7 @@ import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +36,10 @@ public class DimensionAttributeImpl
     DimensionMapper mapper;
     @Resource
     DimensionAttributeMapper attributeMapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -90,7 +97,23 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
-        return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        boolean flat=this.saveBatch(list);
+        if (flat)
+        {
+            try{
+                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+                pushDto.dimensionId=dimensionId;
+                pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
+                pushDto.userId=userHelper.getLoginUserInfo().id;
+                //发送消息
+                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            }
+            catch (Exception ex){
+                log.error(ex.getMessage());
+                return ResultEnum.SUCCESS;
+            }
+        }
+        return flat?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -115,34 +138,42 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,po.dimensionId)
+                .eq(DimensionAttributePO::getDimensionFieldEnName,dto.dimensionFieldEnName);
+        DimensionAttributePO model=attributeMapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         po.dimensionFieldCnName=dto.dimensionFieldCnName;
         po.dimensionFieldDes=dto.dimensionFieldDes;
         po.dimensionFieldLength=dto.dimensionFieldLength;
         po.dimensionFieldEnName=dto.dimensionFieldEnName;
         po.dimensionFieldType=dto.dimensionFieldType;
-        //po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
+        po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
 
     @Override
-    public DimensionMetaDataDTO getDimensionMetaData(int id)
+    public ModelMetaDataDTO getDimensionMetaData(int id)
     {
-        DimensionMetaDataDTO data=new DimensionMetaDataDTO();
+        ModelMetaDataDTO data=new ModelMetaDataDTO();
         DimensionPO po=mapper.selectById(id);
         if (po==null)
         {
             return data;
         }
-        data.dimensionTabName=po.dimensionTabName;
+        data.tableName =po.dimensionTabName;
         data.id=po.id;
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
-        List<DimensionAttributeMetaDataDTO> dtoList=new ArrayList<>();
+        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         for (DimensionAttributePO item:list)
         {
-            DimensionAttributeMetaDataDTO dto=new DimensionAttributeMetaDataDTO();
+            ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
             //判断是否为关联维度
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
@@ -150,12 +181,19 @@ public class DimensionAttributeImpl
                 DimensionAttributePO po1=attributeMapper.selectById(item.associateDimensionId);
                 if (po1 !=null)
                 {
-                    po1.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
-                    dtoList.add(DimensionAttributeMap.INSTANCES.poToMetaDto(po1));
+                    dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                    dto.fieldEnName=po1.dimensionFieldEnName;
+                    dto.fieldLength=po1.dimensionFieldLength;
+                    dto.fieldType=po1.dimensionFieldType;
+                    dtoList.add(dto);
                 }
             }
             else {
-                dtoList.add(DimensionAttributeMap.INSTANCES.poToMetaDto(item));
+                dto.attributeType=item.attributeType;
+                dto.fieldEnName=item.dimensionFieldEnName;
+                dto.fieldLength=item.dimensionFieldLength;
+                dto.fieldType=item.dimensionFieldType;
+                dtoList.add(dto);
             }
         }
         data.dto=dtoList;

@@ -26,6 +26,7 @@ public enum TraceTypeEnum implements BaseEnum {
     ATLASENTITYDELETE_MQ_BUILD(2006,"AtlasEntityDelete_MQ_Build"),
     DORIS_MQ_BUILD(2007,"Doris_MQ_Build"),
     DORIS_INCREMENTAL_MQ_BUILD(2007,"Doris_Incremental_MQ_Build"),
+    DATAMODEL_DORIS_TABLE_MQ_BUILD(2008,"DataModel_Doris_Table_MQ_Build"),
     DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN(3001,"GetAtlasBuildTableAndColumn_Error"),
     DATAACCESS_GET_ATLAS_ENTITY(3002,"GetAtlasEntity_Error"),
     DATAACCESS_GET_ATLAS_WRITEBACKDATA(3003,"GetAtlasWriteBackData_Error"),

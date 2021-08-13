@@ -34,7 +34,7 @@ public interface ProjectInfoMapper extends BaseMapper<ProjectInfoPO> {
             "\tb.project_flag\n" +
             "FROM `tb_area_business` a\n" +
             "LEFT JOIN `tb_project_info` AS b \n" +
-            "ON a.id = b.businessid\n" +
+            "ON a.id = b.business_id\n" +
             "WHERE business_name LIKE concat('%',#{key},'%') \n" +
             "AND b.del_flag = 1\n" +
             "ORDER BY b.update_time DESC ")

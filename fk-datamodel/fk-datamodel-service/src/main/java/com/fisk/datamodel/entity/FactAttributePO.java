@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FactAttributePO extends BasePO {
     /**
-     * 业务过程id
+     * 事实表id
      */
     public int factId;
     /**

@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.service.IFactAttribute;
@@ -19,8 +20,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.factAttribute })
-//@Api(description = "事实字段")
+@Api(tags = { SwaggerConfig.FACT_ATTRIBUTE })
 @RestController
 @RequestMapping("/factAttribute")
 @Slf4j
@@ -53,6 +53,12 @@ public class FactAttributeController {
     @PutMapping("/editFactAttribute")
     public ResultEntity<Object> editFactAttribute(@Validated @RequestBody FactAttributeUpdateDTO dto) {
         return ResultEntityBuild.build(service.updateFactAttribute(dto));
+    }
+
+    @GetMapping("/getFactEntity")
+    @ApiOperation("获取事实表元数据(用于Doris创建表)")
+    public ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactMetaData(id));
     }
 
 }

@@ -10,5 +10,5 @@ import lombok.Data;
 public class DataAreaPageDTO {
     public String where;
     public Page<DataAreaDTO> page;
-    public long businessid;
+    public long businessId;
 }

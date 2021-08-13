@@ -39,7 +39,7 @@ public class ProjectInfoImpl extends ServiceImpl<ProjectInfoMapper, ProjectInfoP
         }
 
         ProjectInfoPO po = dto.toEntity(ProjectInfoPO.class);
-        po.setBusinessid(bpo.getId());
+        po.setBusinessId(bpo.getId());
 
         Date date = new Date(System.currentTimeMillis());
         po.setCreateTime(date);
@@ -65,7 +65,7 @@ public class ProjectInfoImpl extends ServiceImpl<ProjectInfoMapper, ProjectInfoP
         ProjectInfoDTO dto = new ProjectInfoDTO(po);
 
         // 将businessName封装进去
-        long bid = po.getBusinessid();
+        long bid = po.getBusinessId();
         if (bid == 0) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -103,7 +103,7 @@ public class ProjectInfoImpl extends ServiceImpl<ProjectInfoMapper, ProjectInfoP
                 .eq("del_flag", 1)
                 .one();
 
-        po.setBusinessid(bpo.getId());
+        po.setBusinessId(bpo.getId());
         po.setDelFlag(1);
         Date date = new Date(System.currentTimeMillis());
         po.setUpdateTime(date);

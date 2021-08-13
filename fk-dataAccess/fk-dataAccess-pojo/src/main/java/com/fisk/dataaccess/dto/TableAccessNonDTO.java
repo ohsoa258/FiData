@@ -26,7 +26,7 @@ public class TableAccessNonDTO extends BaseDTO {
     /**
      *  tb_app_registration表id
      */
-    public long appid;
+    public long appId;
 
     /**
      * 应用名称

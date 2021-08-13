@@ -55,7 +55,7 @@ public class RoleServiceAssignmentImpl
         queryWrapper.lambda().eq(RoleServiceAssignmentPO::getRoleId,dto.id);
         List<RoleServiceAssignmentPO>  dataList;
         dataList=serviceMapper.selectList(queryWrapper);
-        if (dataList.size()>0)
+        if ( dataList !=null && dataList.size()>0)
         {
             boolean res=this.remove(queryWrapper);
             if (res == false) {
@@ -124,9 +124,16 @@ public class RoleServiceAssignmentImpl
             for (ServiceRegistryPO item : listChild)
             {
                 LoginServiceDTO obj=new LoginServiceDTO();
-                obj.name=po.serveUrl;
-                obj.path="/"+po.serveUrl;
+                obj.name=item.serveUrl;
+                obj.path=item.serveUrl;
                 obj.component=item.serveUrl;
+                IconDTO iconChildren=new IconDTO();
+                iconChildren.title=item.serveCnName;
+                iconChildren.noCache=false;
+                iconChildren.icon=item.icon;
+                obj.meta=iconChildren;
+                List<LoginServiceDTO> child=new ArrayList<>();
+                obj.children=child;
                 data.add(obj);
             }
             dto.setChildren(data);

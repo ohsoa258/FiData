@@ -12,6 +12,7 @@ public class ChartQueryDTO {
     public Long id;
     public String name;
     public String details;
+    public String content;
     public Long folderId;
     public Page<ChartPropertyVO> page;
 }

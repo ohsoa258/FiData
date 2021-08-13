@@ -21,6 +21,10 @@ public enum TaskTypeEnum implements BaseEnum {
      */
     BUILD_DORIS_TASK(2,"Doris生成"),
     /**
+     * doris create stg&ods table
+     */
+    BUILD_DATAMODEL_DORIS_TABLE(4,"Doris创建表"),
+    /**
      * doris incremental update
      */
     BUILD_DORIS_INCREMENTAL_UPDATE_TASK(2,"Doris数据增量更新"),

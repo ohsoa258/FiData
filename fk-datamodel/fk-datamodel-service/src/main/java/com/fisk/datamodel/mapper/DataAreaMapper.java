@@ -31,7 +31,7 @@ public interface DataAreaMapper extends FKBaseMapper<DataAreaPO> {
             "\tb.data_des\n" +
             "FROM `tb_area_business` a\n" +
             "LEFT JOIN `tb_area_data` AS b\n" +
-            "ON a.id = b.businessid\n" +
+            "ON a.id = b.business_id\n" +
             "WHERE business_name LIKE concat('%',#{key},'%') \n" +
             "AND b.del_flag = 1\n" +
             "ORDER BY a.update_time DESC ")

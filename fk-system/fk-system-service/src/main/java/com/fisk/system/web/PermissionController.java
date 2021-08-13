@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.permission})
+@Api(tags = {SwaggerConfig.PERMISSION})
 @RestController
 @RequestMapping("/auth")
 @Slf4j

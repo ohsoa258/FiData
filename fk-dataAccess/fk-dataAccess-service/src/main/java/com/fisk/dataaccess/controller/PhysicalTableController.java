@@ -211,14 +211,14 @@ public class PhysicalTableController {
 
     @GetMapping("/getAtlasBuildTableAndColumn")
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(
-            @RequestParam("id") long id, @RequestParam("appid") long appid) {
+            @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 
         return service.getAtlasBuildTableAndColumn(id, appid);
     }
 
     @GetMapping("/getAtlasWriteBackDataDTO")
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("id") long id) {
 
         return service.getAtlasWriteBackDataDTO(appid, id);
@@ -232,7 +232,7 @@ public class PhysicalTableController {
 
     @GetMapping("/dataAccessConfig")
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(
-            @RequestParam("id") long id, @RequestParam("appid") long appid) {
+            @RequestParam("id") long id, @RequestParam("app_id") long appid) {
 
         return service.dataAccessConfig(id, appid);
     }

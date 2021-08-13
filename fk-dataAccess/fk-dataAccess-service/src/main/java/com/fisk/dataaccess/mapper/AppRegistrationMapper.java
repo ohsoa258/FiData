@@ -45,7 +45,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      * 倒序查询
      * @return 返回值
      */
-    @Select("select app_name,app_des,create_time from tb_app_registration order by create_time desc limit 0,10")
+    @Select("select id,app_name,app_des,create_time from tb_app_registration order by create_time desc limit 0,10")
     List<AppRegistrationPO> getDescDate();
 
     /**

@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
 import java.util.List;
@@ -23,7 +25,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param dto 请求参数
      * @return 返回值
      */
-    ResultEnum addData(AppRegistrationDTO dto);
+    ResultEntity<AtlasEntityQueryVO> addData(AppRegistrationDTO dto);
 
     /**
      * 分页查询

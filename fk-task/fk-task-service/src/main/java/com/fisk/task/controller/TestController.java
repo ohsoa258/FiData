@@ -4,6 +4,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.service.IBuildTaskService;
@@ -105,5 +106,13 @@ public class TestController {
         ltc.add(tl3);
         tab.columns = ltc;
         service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DORIS_FLOW, tab);
+    }
+    @PostMapping("/testDorisBuildtable")
+    public void publishBuildDorisTableTask() {
+        DimensionAttributeAddDTO tab = new DimensionAttributeAddDTO();
+        tab.dimensionId=8;
+        tab.createType=1;
+        tab.userId = 60L;
+        service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);
     }
 }

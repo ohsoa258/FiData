@@ -7,10 +7,17 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum DimensionAttributeEnum implements BaseEnum {
 
+    /**
+     * 业务主键
+     */
     BUSINESS_KEY(0,"业务主键"),
-
+    /**
+     * 关联维度
+     */
     ASSOCIATED_DIMENSION(1,"关联维度"),
-
+    /**
+     * 属性
+     */
     ATTRIBUTE(2,"属性");
 
 

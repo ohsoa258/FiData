@@ -1,6 +1,5 @@
 package com.fisk.system.web;
 
-import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -13,12 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author JianWenYang
  */
-@Api(tags = {SwaggerConfig.serviceRegistry})
+@Api(tags = {SwaggerConfig.SERVICE_REGISTRY})
 @RestController
 @RequestMapping("/ServiceRegistry")
 @Slf4j

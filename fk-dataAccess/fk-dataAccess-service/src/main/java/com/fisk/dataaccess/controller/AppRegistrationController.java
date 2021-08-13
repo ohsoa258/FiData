@@ -1,18 +1,24 @@
 package com.fisk.dataaccess.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.apollo.config.ApolloConfigureSwitch;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +36,8 @@ public class AppRegistrationController {
 
     @Resource
     private IAppRegistration service;
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     /**
      * 添加应用
@@ -41,7 +49,21 @@ public class AppRegistrationController {
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addData(@RequestBody AppRegistrationDTO dto) {
 
-        return ResultEntityBuild.build(service.addData(dto));
+        ResultEntity<AtlasEntityQueryVO> resultEntity = service.addData(dto);
+        AtlasEntityQueryVO vo = resultEntity.data;
+        if (vo == null) {
+            return ResultEntityBuild.buildData(resultEntity.code, resultEntity.msg);
+        }
+
+        // TODO: atlas对接应用注册
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.appId = vo.appId;
+        atlasEntityQueryDTO.userId = vo.userId;
+        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
+        log.info("task:" + JSON.toJSONString(task));
+        System.out.println("task = " + task);
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }
 
     /**
@@ -122,14 +144,14 @@ public class AppRegistrationController {
 
     @PostMapping("/pageFilter")
     @ApiOperation(value = "过滤器")
-    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.listData(query));
+    public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
 
     @GetMapping("/getColumn")
     @ApiOperation(value = "过滤器字段")
-    public ResultEntity<Object> getColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }
 
     @GetMapping("/getAtlasEntity")
@@ -140,7 +162,7 @@ public class AppRegistrationController {
 
     @PostMapping("/addAtlasInstanceIdAndDbId")
     public ResultEntity<Object> addAtlasInstanceIdAndDbId(
-            @RequestParam("appid") long appid,
+            @RequestParam("app_id") long appid,
             @RequestParam("atlas_instance_id") String atlasInstanceId,
             @RequestParam("atlas_db_id") String atlasDbId) {
 
@@ -153,4 +175,19 @@ public class AppRegistrationController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+    @GetMapping("/test")
+    public ResultEntity<Object> test() {
+        ApolloConfigureSwitch apolloConfigureSwitch = new ApolloConfigureSwitch();
+
+//        String username = apolloConfigureSwitch.getUsername();
+//        System.out.println(username);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, username);
+    }
+
 }

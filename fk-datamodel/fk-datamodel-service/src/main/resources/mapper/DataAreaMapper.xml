@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datamodel.mapper.DataAreaMapper">
     <select id="queryFilter" resultType="com.fisk.datamodel.dto.DataAreaDTO">
         select a.id,
-        a.businessid,
+        a.business_id,
         b.business_name,
         a.data_name,
         a.data_des

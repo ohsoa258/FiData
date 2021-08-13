@@ -1,0 +1,17 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.task.mapper.TBETLLogMapper">
+
+    <select id="getThisTimeStgRows" resultType="Integer">
+        select count(1)
+        from ${tablename}
+        where  fk_doris_increment_code='${code}'
+    </select>
+
+    <select id="stgToOds" resultType="Integer">
+        insert into  ${ods_tablename}
+        select * from ${stg_tablename} where fk_doris_increment_code='${code}'
+    </select>
+    
+</mapper>

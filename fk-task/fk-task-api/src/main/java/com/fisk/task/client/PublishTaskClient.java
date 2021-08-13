@@ -1,6 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -49,4 +50,11 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/atlasEntityDelete")
     ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody String entityId);
+    /**
+     * doris创建表BUILD_DATAMODEL_DORIS_TABLE
+     * @param atlasEntityQueryDTO
+     * @return
+     */
+    @PostMapping("/publishTask/atlasDorisTable")
+    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO atlasEntityQueryDTO);
 }
