@@ -31,7 +31,7 @@
     </appender>
 
     <!-- TODO: 日志配置不详细 -->
-    <root level="ERROR">
+    <root level="WARN">
         <appender-ref ref="LOGSTASH" />
         <appender-ref ref="CONSOLE" />
     </root>

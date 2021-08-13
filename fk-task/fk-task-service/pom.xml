@@ -82,6 +82,17 @@
             <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
             <version>3.1.0</version>
         </dependency>
+        <!--引入apollo整合springboot依赖-->
+        <dependency>
+            <groupId>com.ctrip.framework.apollo</groupId>
+            <artifactId>apollo-client</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ctrip.framework.apollo</groupId>
+            <artifactId>apollo-core</artifactId>
+            <version>1.8.1</version>
+        </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fk-datamodel-service</artifactId>
