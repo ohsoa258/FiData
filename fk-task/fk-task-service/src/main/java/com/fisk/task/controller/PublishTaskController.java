@@ -99,7 +99,7 @@ public class PublishTaskController {
     }
 
     /**
-     * Atlas删除实体
+     * Atlas 删除实体
      * @param entityId
      * @return
      */

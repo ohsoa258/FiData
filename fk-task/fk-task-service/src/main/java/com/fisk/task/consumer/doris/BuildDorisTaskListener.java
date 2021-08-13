@@ -33,7 +33,6 @@ public class BuildDorisTaskListener {
     @Resource
     DataAccessClient dc;
 
-
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
@@ -70,10 +69,10 @@ public class BuildDorisTaskListener {
                 sqlSelectStrBuild.append(l.columnName + ",");
             });
             sqlFileds.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' ,");
-            sqlDuplicate.append("doris_custom_data_flag");
+            sqlDuplicate.append(")");
             sqlDistributed.append(") BUCKETS 10");
             String DuplicateStr = sqlDuplicate.toString();
-            //DuplicateStr = DuplicateStr.substring(0, DuplicateStr.lastIndexOf(",")) + ")";
+            DuplicateStr = DuplicateStr.substring(0, DuplicateStr.lastIndexOf(",")) + ")";
             sql.append(sqlFileds.append(" doris_custom_data_flag varchar(2) DEFAULT \"1\" comment '系统字段，默认分桶'").toString());
             sql.append(")");
             sql.append(DuplicateStr);
@@ -110,12 +109,12 @@ public class BuildDorisTaskListener {
             StringBuilder sqlDistributed_build = new StringBuilder("DISTRIBUTED BY HASH(");
             dto.columns.forEach((l) -> {
                 if (l.isKey.equals("1")) {
-                    sqlUnique_build.append("'" + l.columnName + "'");
+                    sqlUnique_build.append(l.columnName + ",");
                     sqlDistributed_build.append(l.columnName + ",");
                 }
                 sqlFileds_build.append(l.columnName + " " + l.dataType + " comment " + "'" + l.comment + "' ,");
             });
-            sqlFileds_build.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识'");
+            sqlFileds_build.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
             String sqlFileds = sqlFileds_build.toString();
             //sqlFileds = sqlFileds.substring(0, sqlFileds.lastIndexOf(",")) + ")";
             String sqlUnique = sqlUnique_build.toString();
@@ -128,8 +127,8 @@ public class BuildDorisTaskListener {
         String ods_sql = sql.toString().replace("tableName", ods_table);
         doris.dorisBuildTable(stg_sql);
         doris.dorisBuildTable(ods_sql);
-        log.info("【STG】" + stg_sql);
-        log.info("【ODS】" + ods_sql);
+        log.info("【DORIS_STG】" + stg_sql);
+        log.info("【DORIS_ODS】" + ods_sql);
         log.info("Doris执行结束");
     }
 
