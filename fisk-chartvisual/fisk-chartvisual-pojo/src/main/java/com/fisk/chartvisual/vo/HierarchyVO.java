@@ -10,7 +10,5 @@ import lombok.Data;
 public class HierarchyVO {
     public String name;
     public String uniqueName;
-    public String uniqueNameAll;
-    public String uniqueNameAllMember;
     public DimensionTypeEnum dimensionType;
 }

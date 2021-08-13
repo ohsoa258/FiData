@@ -4,6 +4,7 @@ import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DimensionPO;
 import com.fisk.chartvisual.entity.HierarchyPO;
 import com.fisk.chartvisual.entity.MeasurePO;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
@@ -17,10 +18,7 @@ import java.io.PrintWriter;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.fisk.common.constants.SSASConstant.HierarchyAllMember_UniqueName;
 
@@ -152,9 +150,9 @@ public class AmoHelper {
                     HierarchyPO hierarchyPo=new HierarchyPO();
                     hierarchyPo.name = hierarchy.getName();
                     hierarchyPo.uniqueName = hierarchy.getUniqueName();
-                    NamedList<Level> levels= hierarchy.getLevels();
-                    hierarchyPo.uniqueNameAll=levels.get(0).getUniqueName();
-                    hierarchyPo.uniqueNameAllMember=levels.get(1).getUniqueName()+HierarchyAllMember_UniqueName;
+//                    NamedList<Level> levels= hierarchy.getLevels();
+//                    hierarchyPo.uniqueNameAll=levels.get(0).getUniqueName();
+//                    hierarchyPo.uniqueNameAllMember=levels.get(1).getUniqueName()+HierarchyAllMember_UniqueName;
                     hierarchyPoList.add(hierarchyPo);
                 }
                 dimensionPo.hierarchies= hierarchyPoList;
@@ -166,18 +164,23 @@ public class AmoHelper {
         return cubePo;
     }
 
-    public List<Map<String,Object>> qeury(String mdx){
+    /**
+     * 查询
+     * @param mdx mdx语句
+     * @return
+     */
+    public DataServiceResult qeury(String mdx){
         StopWatch stopWatch = new StopWatch();
         String code = UUID.randomUUID().toString();
+        DataServiceResult res=new DataServiceResult();
         OlapStatement stmt = null;
-        List<Map<String,Object>> data=null;
         try {
             stopWatch.start();
             log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
             stmt = connection.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);
             stmt.close();
-            data=getDataByAnalyticalCellSet(cellset);
+            res.data =getDataByAnalyticalCellSet(cellset);
         } catch (Exception ex) {
             log.error("【execQuery】【" + code + "】执行MDX查询报错, ex", ex);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
@@ -185,9 +188,14 @@ public class AmoHelper {
             stopWatch.stop();
             log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }
-        return data;
+        return res;
     }
 
+    /**
+     * 解析 cellSet
+     * @param cellSet 单元格集合
+     * @return
+     */
     public List<Map<String,Object>>  getDataByAnalyticalCellSet(CellSet cellSet){
         List<Map<String,Object>> data=null;
         List<CellSetAxis> axis=cellSet.getAxes();
@@ -205,20 +213,32 @@ public class AmoHelper {
         return data;
     }
 
+    /**
+     * 解析2轴cellSet
+     * @param cellSet 单元格集合
+     * @return
+     */
     public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
 
         return  null;
     }
 
+    /**
+     * 解析1轴cellSet
+     * @param cellSet 单元格集合
+     * @return
+     */
     public List<Map<String,Object>> getOneAxisData(CellSet cellSet){
+        List<Map<String,Object>> maps=new ArrayList<Map<String, Object>>();
         for (Position column : cellSet.getAxes().get(0)) {
+            Map<String,Object> map=new HashMap<>();
             for (Member member : column.getMembers()) {
-                if ()
-                member.isAll()
-                System.out.println(member.getUniqueName());
-                final Cell cell = cellSet.getCell(column);
-                System.out.println(cell.getOrdinal() + "=" + cell.getFormattedValue()+"="+cell.getValue());
+                map.put("name",member.getName());
             }
+            final Cell cell = cellSet.getCell(column);
+            map.put("value",cell.getValue());
+            maps.add(map);
         }
+        return maps;
     }
 }

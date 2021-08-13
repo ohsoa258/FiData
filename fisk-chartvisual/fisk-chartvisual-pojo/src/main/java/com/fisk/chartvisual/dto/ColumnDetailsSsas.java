@@ -9,8 +9,6 @@ import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
 public class ColumnDetailsSsas {
     public String name;
     public String uniqueName;
-    public String uniqueNameAll;
-    public String uniqueNameAllMember;
     public DimensionTypeEnum dimensionType;
     public MatrixElemTypeEnum matrixElemType;
 }
