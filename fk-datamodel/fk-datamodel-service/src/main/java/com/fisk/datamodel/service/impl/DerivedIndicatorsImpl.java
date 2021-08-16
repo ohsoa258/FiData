@@ -11,14 +11,12 @@ import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.derivedindicatorslimited.DerivedIndicatorsLimitedDTO;
-import com.fisk.datamodel.entity.DerivedIndicatorsAttributePO;
-import com.fisk.datamodel.entity.DerivedIndicatorsLimitedPO;
-import com.fisk.datamodel.entity.DerivedIndicatorsPO;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.map.DerivedIndicatorsLimitedMap;
 import com.fisk.datamodel.map.DerivedIndicatorsMap;
-import com.fisk.datamodel.mapper.DerivedIndicatorsLimitedMapper;
-import com.fisk.datamodel.mapper.DerivedIndicatorsMapper;
-import com.fisk.datamodel.mapper.DerivedIndicatorsAttributeMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDerivedIndicators;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +40,10 @@ public class DerivedIndicatorsImpl
     DerivedIndicatorsAttributeMapper attributeMapper;
     @Resource
     DerivedIndicatorsLimitedMapper derivedIndicatorsLimitedMapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
+    @Resource
+    DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     UserHelper userHelper;
 
@@ -188,6 +190,48 @@ public class DerivedIndicatorsImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR,"数据保存失败");
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<ModelAttributeMetaDataDTO> getDerivedIndicatorsParticle(int id)
+    {
+        //获取聚合字段列表
+        QueryWrapper<DerivedIndicatorsAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("fact_attribute_id").lambda().eq(DerivedIndicatorsAttributePO::getDerivedIndicatorsId,id);
+        List<Object> idList=attributeMapper.selectObjs(queryWrapper);
+        //根据聚合字段列表查询事实表字段集合
+        QueryWrapper<FactAttributePO> factAttributeQueryWrapper=new QueryWrapper<>();
+        factAttributeQueryWrapper.in("id",idList);
+        List<FactAttributePO> list=factAttributeMapper.selectList(factAttributeQueryWrapper);
+        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
+        for (FactAttributePO item:list)
+        {
+            ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
+            //判断是否为关联维度
+            if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            {
+                //查看关联维度字段相关信息
+                DimensionAttributePO po1=dimensionAttributeMapper.selectById(item.associateDimensionId);
+                if (po1 !=null)
+                {
+                    dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                    dto.fieldEnName=po1.dimensionFieldEnName;
+                    dto.fieldLength=po1.dimensionFieldLength;
+                    dto.fieldType=po1.dimensionFieldType;
+                    dto.fieldCnName=po1.dimensionFieldCnName;
+                    dtoList.add(dto);
+                }
+            }
+            else {
+                dto.attributeType=item.attributeType;
+                dto.fieldEnName=item.factFieldEnName;
+                dto.fieldLength=item.factFieldLength;
+                dto.fieldType=item.factFieldType;
+                dto.fieldCnName=item.factFieldCnName;
+                dtoList.add(dto);
+            }
+        }
+        return dtoList;
     }
 
 }

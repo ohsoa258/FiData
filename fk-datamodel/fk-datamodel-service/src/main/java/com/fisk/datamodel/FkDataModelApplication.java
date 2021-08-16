@@ -1,5 +1,6 @@
 package com.fisk.datamodel;
 
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,6 +22,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients(basePackages = {"com.fisk.auth.client",
         "com.fisk.task.client",
         "com.fisk.dataaccess.client"})
+@EnableApolloConfig
 public class FkDataModelApplication {
 
     public static void main(String[] args) {
