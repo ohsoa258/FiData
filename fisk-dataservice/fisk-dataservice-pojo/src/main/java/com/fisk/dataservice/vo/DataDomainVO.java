@@ -13,6 +13,7 @@ import java.util.List;
  */
 @Data
 public class DataDomainVO {
+    public Long businessId;
     public String businessName;
     public List<DimensionDTO> dimensionList;
     public List<BusinessProcessDTO> businessProcessList;

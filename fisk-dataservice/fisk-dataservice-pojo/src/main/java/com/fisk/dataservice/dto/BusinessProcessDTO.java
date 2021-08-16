@@ -14,9 +14,9 @@ public class BusinessProcessDTO {
 
     public String businessProcessCnName;
     /**
-     * 原子指标 三级
+     * 事实表 三级
      */
-    public List<AtomicIndicatorsDTO> atomicIndicatorsList;
+    public List<FactDTO> factList;
     /**
      * 派生指标 三级
      */
