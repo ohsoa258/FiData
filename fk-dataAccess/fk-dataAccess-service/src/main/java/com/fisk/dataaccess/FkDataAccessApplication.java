@@ -28,7 +28,18 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 //@Configuration
 @EnableApolloConfig
 public class FkDataAccessApplication {
+
+//    private static String[] args;
+//    private static ConfigurableApplicationContext context;
+
+
     public static void main(String[] args) {
-        SpringApplication.run(FkDataAccessApplication.class, args);
+//        FkDataAccessApplication.args = args;
+        /*FkDataAccessApplication.context = */SpringApplication.run(FkDataAccessApplication.class, args);
     }
+
+//    public static void restart() {
+//        context.close();
+//        FkDataAccessApplication.context = SpringApplication.run(FkDataAccessApplication.class, args);
+//    }
 }
