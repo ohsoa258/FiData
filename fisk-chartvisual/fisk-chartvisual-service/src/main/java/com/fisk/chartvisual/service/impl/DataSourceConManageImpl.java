@@ -56,8 +56,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Resource
     UserHelper userHelper;
     @Resource
-    TabularHelper tabularHelper;
-    @Resource
     CubeHelper cubeHelper;
 
     @Override
@@ -116,6 +114,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Override
     public ResultEnum testConnection(TestConnectionDTO dto) {
         if (dto.conType == DataSourceTypeEnum.TABULAR || dto.conType == DataSourceTypeEnum.CUBE) {
+            CubeHelper cubeHelper=new CubeHelper();
             return cubeHelper.connection(dto.conStr, dto.conAccount, dto.conPassword)
                     ?
                     ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
@@ -173,16 +172,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         } else {
             cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
             try {
-                CubePO ModelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
+                CubePO modelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
                 //度量
                 DimensionVO dimensionVO_Mea = new DimensionVO();
                 dimensionVO_Mea.name = Measures_Name;
                 dimensionVO_Mea.uniqueName = Measures_UniqueName;
                 dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
-                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(ModelStructure.measures);
+                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(modelStructure.measures);
                 dimensionVOList.add(dimensionVO_Mea);
                 //维度
-                ModelStructure.dimensions.forEach(d -> {
+                modelStructure.dimensions.forEach(d -> {
                     DimensionVO dimensionVO_Dim = new DimensionVO();
                     dimensionVO_Dim.name = d.name;
                     dimensionVO_Dim.uniqueName = d.uniqueName;

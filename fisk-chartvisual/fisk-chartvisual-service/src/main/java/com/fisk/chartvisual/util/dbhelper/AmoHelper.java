@@ -204,7 +204,11 @@ public class AmoHelper {
      * @return map 集合
      */
     public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
+        for (Position row :cellSet.getAxes().get(1)){
+            for (Position cloumn:cellSet.getAxes().get(0)){
 
+            }
+        }
         return  null;
     }
 

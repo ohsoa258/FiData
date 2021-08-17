@@ -38,6 +38,8 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     RedisUtil redis;
     @Resource
     CubeHelper cubeHelper;
+    @Resource
+    MdxHelper mdxHelper;
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
@@ -81,9 +83,8 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     @Override
     public DataServiceResult querySsas(ChartQueryObjectSsas query) {
         DataSourceConVO model = getDataSourceCon(query.id);
-        MdxHelper mdxHelper=new MdxHelper();
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
-        String mdx=mdxHelper.GetMdxByColumnRowValue(query.columnDetails,model.conCube);
+        String mdx=mdxHelper.GetMdxByColumnRowValue(query,model.conCube);
         return  cubeHelper.query(mdx);
     }
 
