@@ -9,7 +9,7 @@
         a.indicators_name,
         a.indicators_des,
         c.id as fact_id
-        from tb_atomic_indicators a
+        from tb_indicators a
         left join tb_fact_attribute b on a.fact_attribute_id = b.id
         left join tb_fact c on b.fact_id=c.id
         where a.del_flag=1 and a.id = ${id}
@@ -22,10 +22,10 @@
         a.indicators_des,
         b.fact_field_en_name as factFieldName,
         c.fact_table_en_name as factName
-        from tb_atomic_indicators a
+        from tb_indicators a
         LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
         LEFT JOIN tb_fact c on b.fact_id=c.id
-        where a.del_flag=1
+        where a.del_flag=1 and a.indicators_type=0
         <if test="query.factId !=0 ">
             and c.id= ${query.factId}
         </if>

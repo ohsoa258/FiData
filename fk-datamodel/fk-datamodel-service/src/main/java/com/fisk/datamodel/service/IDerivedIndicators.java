@@ -56,4 +56,10 @@ public interface IDerivedIndicators {
      */
     List<ModelAttributeMetaDataDTO> getDerivedIndicatorsParticle(int id);
 
+    /**
+     * 获取所有指标
+     * @return
+     */
+    List<String> getIndicatorsList(int businessId);
+
 }

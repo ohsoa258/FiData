@@ -7,6 +7,7 @@ import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
@@ -25,38 +26,27 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
 
     @Resource
     AtomicIndicatorsMapper mapper;
-    @Resource
-    FactAttributeMapper factAttributeMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(AtomicIndicatorsDTO dto)
     {
         //查询原子指标数据
-        QueryWrapper<AtomicIndicatorsPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(AtomicIndicatorsPO::getFactAttributeId,dto.factAttributeId)
-                .eq(AtomicIndicatorsPO::getCalculationLogic,dto.calculationLogic)
-                .eq(AtomicIndicatorsPO::getIndicatorsName,dto.indicatorsName);
-        AtomicIndicatorsPO po=mapper.selectOne(queryWrapper);
+        QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
+                .eq(IndicatorsPO::getIndicatorsName,dto.indicatorsName);
+        IndicatorsPO po=mapper.selectOne(queryWrapper);
         //判断是否重复
         if (po !=null)
         {
             return ResultEnum.DATA_EXISTS;
         }
-        //查询factId
-        FactAttributePO factAttributePO=factAttributeMapper.selectById(dto.factAttributeId);
-        if (factAttributePO==null)
-        {
-            return  ResultEnum.DATA_NOTEXISTS;
-        }
-        AtomicIndicatorsPO model=AtomicIndicatorsMap.INSTANCES.dtoToPo(dto);
-        model.factId=factAttributePO.factId;
-        return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return mapper.insert(AtomicIndicatorsMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum deleteAtomicIndicators(int id)
     {
-        AtomicIndicatorsPO po=mapper.selectById(id);
+        IndicatorsPO po=mapper.selectById(id);
         if (po==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
@@ -73,12 +63,23 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
     @Override
     public ResultEnum updateAtomicIndicatorDetails(AtomicIndicatorsDTO dto)
     {
-        AtomicIndicatorsPO po=mapper.selectById(dto.id);
+        IndicatorsPO po=mapper.selectById(dto.id);
         if (po==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        return mapper.updateById(AtomicIndicatorsMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
+                .eq(IndicatorsPO::getIndicatorsName,dto.indicatorsName);
+        IndicatorsPO model=mapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
+        po.indicatorsName=dto.indicatorsName;
+        po.indicatorsDes=dto.indicatorsDes;
+        po.calculationLogic=dto.calculationLogic;
+        return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -90,10 +91,10 @@ public class AtomicIndicatorsImpl implements IAtomicIndicators {
     @Override
     public List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId)
     {
-        QueryWrapper<AtomicIndicatorsPO> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
         if (factId !=0)
         {
-            queryWrapper.lambda().eq(AtomicIndicatorsPO::getFactId,factId);
+            queryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
         }
         return AtomicIndicatorsMap.INSTANCES.poToDtoList(mapper.selectList(queryWrapper));
     }

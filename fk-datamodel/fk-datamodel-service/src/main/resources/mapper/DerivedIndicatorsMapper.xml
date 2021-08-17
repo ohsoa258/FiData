@@ -5,22 +5,47 @@
     <select id="queryList" resultType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO">
         select a.id,
         a.fact_id,
-        a.derived_name,
-        a.derived_des,
+        a.indicators_name,
+        a.indicators_des,
         a.time_period,
         a.atomic_id,
         b.indicators_name as atomicName
-        from tb_derived_indicators a
-        LEFT JOIN tb_atomic_indicators b on a.atomic_id=b.id
-        where a.del_flag=1
+        from tb_indicators a
+        LEFT JOIN tb_indicators b on a.atomic_id=b.id
+        where a.del_flag=1 and a.indicators_type=1
         <if test="query.factId !=0 ">
             and a.fact_id= ${query.factId}
         </if>
     </select>
 
     <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsAddDTO">
-	    insert into tb_derived_indicators(fact_id,derived_name,derived_des,atomic_id,time_period,create_user,create_time)
-	    values(#{factId},#{derivedName},#{derivedDes},#{atomicId},#{timePeriod},#{createUser},#{createTime})
+	    insert into tb_indicators
+	    (fact_id,
+	    indicators_name,
+	    indicators_des,
+	    atomic_id,
+	    business_id,
+	    time_period,
+	    indicators_type,
+	    derived_indicators_type,
+	    indicators_formula,
+	    aggregated_fields,
+	    del_flag,
+	    create_user,
+	    create_time)
+	    values(#{factId},
+	    #{indicatorsName},
+	    #{indicatorsDes},
+	    #{atomicId},
+	    #{businessId},
+	    #{timePeriod},
+	    #{indicatorsType},
+	    #{derivedIndicatorsType},
+	    #{indicatorsFormula},
+	    #{aggregatedFields},
+	    1,
+	    #{createUser},
+	    #{createTime})
     </insert>
 
 </mapper>

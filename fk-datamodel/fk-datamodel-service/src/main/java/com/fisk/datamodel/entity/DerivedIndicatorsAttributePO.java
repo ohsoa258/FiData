@@ -21,6 +21,6 @@ public class DerivedIndicatorsAttributePO extends BasePO {
     /**
      * 派生指标id
      */
-    public long derivedIndicatorsId;
+    public long indicatorsId;
 
 }
