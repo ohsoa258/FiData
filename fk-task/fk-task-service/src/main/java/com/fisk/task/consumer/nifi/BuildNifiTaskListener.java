@@ -309,7 +309,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, putSqlRes.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建json参数组件
-        ProcessorEntity jsonTextRes = replaceTextProcessor(groupId);
+        ProcessorEntity jsonTextRes = replaceTextProcessor(config,groupId);
         //连接器
         componentConnector(groupId, mergeRes.getId(), jsonTextRes.getId(), AutoEndBranchTypeEnum.MERGED);
         //创建mq发送组件
@@ -371,13 +371,13 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity replaceTextProcessor(String groupId) {
+    private ProcessorEntity replaceTextProcessor(DataAccessConfigDTO config,String groupId) {
         BuildReplaceTextProcessorDTO dto = new BuildReplaceTextProcessorDTO();
         dto.name = "Build MQ Message";
         dto.details = "build json string";
         dto.groupId = groupId;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        dto.replacementValue = "{ \"code\": \"${" + NifiConstants.AttrConstants.LOG_CODE + "}\" }";
+        dto.replacementValue = "{ \"code\": \"${" + NifiConstants.AttrConstants.LOG_CODE + "}\" "+","+"\"corn\":\""+config.processorConfig.scheduleExpression+"\"}";
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildReplaceTextProcess(dto);
         verifyProcessorResult(res);
