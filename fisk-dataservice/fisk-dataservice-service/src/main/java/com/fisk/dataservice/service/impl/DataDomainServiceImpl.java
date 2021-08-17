@@ -42,10 +42,7 @@ public class DataDomainServiceImpl implements DataDomainService {
     private FactMapper factMapper;
 
     @Resource
-    private AtomicIndicatorsMapper atomicIndicatorsMapper;
-
-    @Resource
-    private DerivedIndicatorsMapper derivedIndicatorsMapper;
+    private IndicatorsMapper indicatorsMapper;
 
     @DS("datamodel")
     @Override
@@ -200,16 +197,17 @@ public class DataDomainServiceImpl implements DataDomainService {
             return;
         }
 
-        QueryWrapper<AtomicIndicatorsPO> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<IndicatorsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AtomicIndicatorsPO::getFactId, processId)
-                .select(AtomicIndicatorsPO::getIndicatorsName);
-        List<AtomicIndicatorsPO> atomicIndicators = atomicIndicatorsMapper.selectList(queryWrapper);
+                .eq(IndicatorsPO::getFactId, processId)
+                .eq(IndicatorsPO::getIndicatorsType, 0)
+                .select(IndicatorsPO::getIndicatorsName);
+        List<IndicatorsPO> atomicIndicators = indicatorsMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(atomicIndicators)) {
             return;
         }
 
-        for (AtomicIndicatorsPO atomicIndicator : atomicIndicators) {
+        for (IndicatorsPO atomicIndicator : atomicIndicators) {
             AtomicIndicatorsDTO indicators = new AtomicIndicatorsDTO();
             indicators.setIndicatorsName(atomicIndicator.getIndicatorsName());
             atomicIndicatorsList.add(indicators);
@@ -227,17 +225,18 @@ public class DataDomainServiceImpl implements DataDomainService {
             return;
         }
 
-        QueryWrapper<DerivedIndicatorsPO> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<IndicatorsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DerivedIndicatorsPO::getFactId, processId);
-        List<DerivedIndicatorsPO> derivedIndicators = derivedIndicatorsMapper.selectList(queryWrapper);
+                .eq(IndicatorsPO::getFactId, processId)
+                .eq(IndicatorsPO::getIndicatorsType,1);
+        List<IndicatorsPO> derivedIndicators = indicatorsMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(derivedIndicators)){
             return;
         }
 
-        for (DerivedIndicatorsPO derivedIndicator : derivedIndicators) {
+        for (IndicatorsPO derivedIndicator : derivedIndicators) {
             DerivedIndicatorsDTO indicators = new DerivedIndicatorsDTO();
-            indicators.setDerivedName(derivedIndicator.getDerivedName());
+            indicators.setDerivedName(derivedIndicator.getIndicatorsName());
             derivedIndicatorsList.add(indicators);
         }
     }
