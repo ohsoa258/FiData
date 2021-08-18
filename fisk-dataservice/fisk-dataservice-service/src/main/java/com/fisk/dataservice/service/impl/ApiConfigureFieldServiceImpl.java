@@ -128,7 +128,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
 
         ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(id);
         if (apiConfigureField == null){
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return null;
         }else {
             return apiConfigureField;
         }

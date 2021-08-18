@@ -171,7 +171,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     public ConfigureUserPO byUserId(Integer id) {
         ConfigureUserPO user = configureUserMapper.selectById(id);
         if (user == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return null;
         } else {
             return user;
         }
@@ -186,7 +186,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .select(MiddleConfigurePO::getConfigureId);
         List<MiddleConfigurePO> configureList = middleMapper.selectList(query);
         if (CollectionUtils.isEmpty(configureList)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            return null;
         }
 
         List<UserApiDTO> userApiList = new ArrayList<>();
