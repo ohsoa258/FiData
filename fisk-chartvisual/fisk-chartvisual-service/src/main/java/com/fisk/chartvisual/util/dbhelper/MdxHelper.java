@@ -5,6 +5,8 @@ import com.fisk.chartvisual.dto.ColumnDetailsSsas;
 import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,10 +25,16 @@ public class MdxHelper {
      */
     public  String GetMdxByColumnRowValue(ChartQueryObjectSsas query, String cubeName){
         List<ColumnDetailsSsas> columns=filterList(query.columnDetails,MatrixElemTypeEnum.COLUMN);
+        //是否下钻
         List<ColumnDetailsSsas> rows=filterList(query.columnDetails,MatrixElemTypeEnum.ROW);
+        if (query.chartDrillDown.isChartDrillDown){
+            List<ColumnDetailsSsas> drillDownRow= new ArrayList<>();
+            drillDownRow.add(rows.get(query.chartDrillDown.level-1));
+            rows=drillDownRow;
+        }
         List<ColumnDetailsSsas> values=filterList(query.columnDetails,MatrixElemTypeEnum.VALUE);
         String columnMdx=getColumnMdx(columns,values);
-        String rowMdx=getRowMdx(rows,columns,values);
+        String rowMdx=getRowMdx(rows);
         String whereMdx=getWhereMdx(values,query.queryFilters);
         return replaceMdxTemplateByColumnRowValue(columnMdx,rowMdx,whereMdx,cubeName);
     }
@@ -58,13 +66,13 @@ public class MdxHelper {
      * @param rows 列
      * @return mdx语句
      */
-    private  String getRowMdx(List<ColumnDetailsSsas> rows,List<ColumnDetailsSsas> columns,List<ColumnDetailsSsas> values){
+    private  String getRowMdx(List<ColumnDetailsSsas> rows){
         // 无列 并且 值大于2
-        if(columns.size()==0&&values.size()<2){
+        if(rows.size()==0){
             return "";
         }else
         {
-            return " , "+getHierarchicalMdx(rows, MatrixElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
+            return " , NON EMPTY "+getHierarchicalMdx(rows, MatrixElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
         }
     }
 
@@ -79,9 +87,15 @@ public class MdxHelper {
         if (values!=null&&(values.size()==1||wheres.size()>0)){
             StringBuilder whereMdxSb=new StringBuilder();
             whereMdxSb.append("WHERE(");
-            whereMdxSb.append(StringUtils.join(wheres,","));
-            if(wheres.size()>0){
-                whereMdxSb.append(" , ");
+            for(ChartQueryFilter where: wheres){
+                String valuesStr= where.value.stream().map(e->{
+                    return where.columnName+".&["+e+"]";
+                }).collect(Collectors.joining(" , "," { "," } "));
+                whereMdxSb.append(valuesStr);
+                whereMdxSb.append(",");
+            }
+            if(values.size()>0&&wheres.size()>0){
+                whereMdxSb.deleteCharAt(whereMdxSb.length()-1);
             }
             if (values.size()==1){
                 whereMdxSb.append(values.get(0).uniqueName);

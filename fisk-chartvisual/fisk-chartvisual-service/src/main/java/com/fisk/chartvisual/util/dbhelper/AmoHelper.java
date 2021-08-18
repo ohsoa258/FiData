@@ -169,6 +169,7 @@ public class AmoHelper {
             log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
             OlapStatement stmt = connection.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);
+
             stmt.close();
             res.data =getDataByAnalyticalCellSet(cellset);
         } catch (Exception ex) {
@@ -204,12 +205,21 @@ public class AmoHelper {
      * @return map 集合
      */
     public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
+        List<Map<String,Object>> mapList=new ArrayList<>();
         for (Position row :cellSet.getAxes().get(1)){
-            for (Position cloumn:cellSet.getAxes().get(0)){
-
+            Map<String,Object> map=new HashMap<>();
+            for (Member member:row.getMembers()){
+                map.put("name",member.getName());
             }
+            for (Position column:cellSet.getAxes().get(0)){
+                final Cell cell=cellSet.getCell(column,row);
+                for (Member member:column.getMembers()){
+                    map.put(member.getName(),cell.getValue());
+                }
+            }
+            mapList.add(map);
         }
-        return  null;
+        return  mapList;
     }
 
     /**

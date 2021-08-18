@@ -17,5 +17,6 @@ public class ChartQueryObjectSsas {
     public Integer id;
     public List<ColumnDetailsSsas> columnDetails;
     public List<ChartQueryFilter> queryFilters;
+    public ChartDrillDown chartDrillDown;
     public InteractiveTypeEnum interactiveType;
 }
