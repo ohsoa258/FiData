@@ -1,5 +1,6 @@
-package com.fisk.dataservice.dto;
+package com.fisk.dataservice.vo;
 
+import com.fisk.dataservice.dto.ApiConfigureField;
 import lombok.Data;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  * @date 2021/7/20 15:21
  */
 @Data
-public class ApiFieldDataDTO {
+public class ApiFieldDataVO {
     public String apiName;
     public String apiInfo;
     public String tableName;

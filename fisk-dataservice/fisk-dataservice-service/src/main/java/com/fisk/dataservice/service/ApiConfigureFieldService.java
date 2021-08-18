@@ -2,7 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import java.util.List;
@@ -17,7 +17,7 @@ public interface ApiConfigureFieldService {
      * @param dto
      * @return
      */
-    ResultEnum saveConfigure(ApiFieldDataDTO dto);
+    ResultEnum saveConfigure(ApiFieldDataVO dto);
 
     /**
      * 根据主键id删除字段
@@ -41,9 +41,15 @@ public interface ApiConfigureFieldService {
     List<ApiConfigureFieldPO> getDataById(Integer configureId);
 
     /**
-     * 分页查询
-     * @param page
+     * 根据id查询字段
+     * @param id
      * @return
      */
-    List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page);
+    ApiConfigureFieldPO getById(Integer id);
+
+    /**
+     * 获取每张表的所有字段拼接
+     * @return
+     */
+    Object getAllField();
 }

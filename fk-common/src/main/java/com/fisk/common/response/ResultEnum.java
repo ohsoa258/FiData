@@ -70,7 +70,16 @@ public enum ResultEnum {
      */
     TASK_PUBLISH_ERROR(6001,"任务发布失败"),
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002,"Nifi组件创建失败"),
-    TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件");
+    TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件"),
+
+    /**
+     * 数据域接入模块
+     * @param code
+     * @param msg
+     */
+    API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
+    DELETE_ERROR(7002,"删除失败"),
+    API_FIELD_ERROR(7003,"api没有sql执行!");
 
     ResultEnum(int code, String msg) {
         this.code = code;

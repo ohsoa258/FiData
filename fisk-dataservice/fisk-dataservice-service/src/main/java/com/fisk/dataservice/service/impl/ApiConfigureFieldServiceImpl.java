@@ -1,10 +1,13 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.ApiFieldDataDTO;
+import com.fisk.dataservice.dto.FieldDTO;
+import com.fisk.dataservice.entity.GbfPO;
+import com.fisk.dataservice.vo.ApiFieldDataVO;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fisk.dataservice.utils.TransformationUtils.toFirstChar;
@@ -34,7 +38,7 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     private ApiConfigureMapper configureMapper;
 
     @Override
-    public ResultEnum saveConfigure(ApiFieldDataDTO dto) {
+    public ResultEnum saveConfigure(ApiFieldDataVO dto) {
         if (StringUtils.isEmpty(dto)) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
@@ -117,7 +121,46 @@ public class ApiConfigureFieldServiceImpl implements ApiConfigureFieldService {
     }
 
     @Override
-    public List<ApiConfigureFieldPO> listData(Page<ApiConfigureFieldPO> page) {
-        return configureFieldMapper.selectPage(page, null).getRecords();
+    public ApiConfigureFieldPO getById(Integer id) {
+        if (id == null){
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+
+        ApiConfigureFieldPO apiConfigureField = configureFieldMapper.selectById(id);
+        if (apiConfigureField == null){
+            return null;
+        }else {
+            return apiConfigureField;
+        }
+    }
+
+    @Override
+    public Object getAllField() {
+        List<GbfPO> gbfList = new ArrayList<>();
+        List<FieldDTO> fieldList = new ArrayList<>();
+        List<String> field = new ArrayList<>();
+        field.add("id");
+        field.add("studentNo");
+        field.add("name");
+        field.add("age");
+        field.add("height");
+        field.add("weight");
+        field.add("gender");
+        for (String s : field) {
+            FieldDTO fieldDTO = fieldName(s);
+            fieldList.add(fieldDTO);
+        }
+
+        GbfPO gbf = new GbfPO();
+        gbf.setName("gbf");
+        gbf.setChildren(fieldList);
+        gbfList.add(gbf);
+        return gbfList;
+    }
+
+    public FieldDTO fieldName(String name){
+        FieldDTO field = new FieldDTO();
+        field.setName(name);
+        return field;
     }
 }
