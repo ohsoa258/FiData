@@ -10,6 +10,8 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorsDTO {
 
+    public Long indicatorsId;
+
     public String indicatorsName;
 
 }

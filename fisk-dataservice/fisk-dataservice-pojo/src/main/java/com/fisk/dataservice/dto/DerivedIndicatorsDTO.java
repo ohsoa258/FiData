@@ -10,6 +10,8 @@ import lombok.Data;
 @Data
 public class DerivedIndicatorsDTO {
 
+    public Long indicatorsId;
+
     public String derivedName;
 
 }

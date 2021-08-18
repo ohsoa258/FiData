@@ -11,6 +11,14 @@ import java.util.List;
  */
 @Data
 public class FactDTO {
+    public Long factId;
     public String factTableEnName;
+    /**
+     * 原子指标 三级
+     */
     public List<AtomicIndicatorsDTO> atomicIndicatorsList;
+    /**
+     * 派生指标 三级
+     */
+    public List<DerivedIndicatorsDTO> derivedIndicatorsList;
 }

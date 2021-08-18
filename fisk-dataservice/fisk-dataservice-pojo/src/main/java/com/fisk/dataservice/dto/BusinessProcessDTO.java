@@ -12,13 +12,10 @@ import java.util.List;
 @Data
 public class BusinessProcessDTO {
 
+    public Long businessProcessId;
     public String businessProcessCnName;
     /**
      * 事实表 三级
      */
     public List<FactDTO> factList;
-    /**
-     * 派生指标 三级
-     */
-    public List<DerivedIndicatorsDTO> derivedIndicatorsList;
 }

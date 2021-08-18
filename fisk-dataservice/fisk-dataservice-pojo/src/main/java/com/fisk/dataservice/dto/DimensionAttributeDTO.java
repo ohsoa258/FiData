@@ -9,5 +9,6 @@ import lombok.Data;
  */
 @Data
 public class DimensionAttributeDTO {
+    public Long dimensionAttributeId;
     public String dimensionFieldCnName;
 }
