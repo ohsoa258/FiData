@@ -89,7 +89,7 @@ public class DerivedIndicatorsImpl
         if (dto.derivedIndicatorsType== DerivedIndicatorsEnum.BASED_FORMULA.getValue())
         {
             boolean exit=false;
-            String formula="([asd]+[xad])]";
+            String formula=dto.indicatorsFormula;
             String regex = "\\[(.*?)]";
             //截取中括号
             Pattern pattern = Pattern.compile(regex);
