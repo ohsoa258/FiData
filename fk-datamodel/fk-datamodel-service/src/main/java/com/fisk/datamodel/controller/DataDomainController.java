@@ -27,7 +27,7 @@ public class DataDomainController {
 
     @ApiOperation("获取数据域")
     @GetMapping("/getAll")
-    public ResultEntity<Object> getAll(String businessName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getDataDomain(businessName));
+    public ResultEntity<Object> getAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getDataDomain());
     }
 }

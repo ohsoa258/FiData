@@ -8,8 +8,8 @@ public interface DataDomainService {
 
     /**
      * 获取数据域
-     * @param businessName 一级的业务域名称
+     * @param
      * @return
      */
-    Object getDataDomain(String businessName);
+    Object getDataDomain();
 }

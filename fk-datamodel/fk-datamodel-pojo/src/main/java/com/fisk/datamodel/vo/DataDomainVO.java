@@ -1,7 +1,6 @@
 package com.fisk.datamodel.vo;
 
-import com.fisk.datamodel.dto.DataDomain.DimensionDTO;
-import com.fisk.datamodel.dto.DataDomain.BusinessProcessDTO;
+import com.fisk.datamodel.dto.DataDomain.AreaBusinessDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -9,12 +8,9 @@ import java.util.List;
 /**
  * @author WangYan
  * @date 2021/8/12 11:01
- * 一级业务域
+ * 数据域
  */
 @Data
 public class DataDomainVO {
-    public Long businessId;
-    public String businessName;
-    public List<DimensionDTO> dimensionList;
-    public List<BusinessProcessDTO> businessProcessList;
+    public List<AreaBusinessDTO> areaBusinessList;
 }
