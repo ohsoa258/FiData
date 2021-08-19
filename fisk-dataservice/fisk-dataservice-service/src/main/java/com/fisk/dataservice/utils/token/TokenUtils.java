@@ -1,4 +1,4 @@
-package com.fisk.dataservice.utils;
+package com.fisk.dataservice.utils.token;
 
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import io.jsonwebtoken.Claims;
@@ -7,7 +7,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
 import java.util.UUID;
 
 /**

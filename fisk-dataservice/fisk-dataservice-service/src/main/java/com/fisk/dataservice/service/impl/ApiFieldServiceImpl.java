@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.fisk.dataservice.enums.ConfigureFieldTypeEnum.*;
-import static com.fisk.dataservice.utils.TokenUtils.analysisToken;
-import static com.fisk.dataservice.utils.TokenUtils.createJwt;
+import static com.fisk.dataservice.utils.token.TokenUtils.analysisToken;
+import static com.fisk.dataservice.utils.token.TokenUtils.createJwt;
 import static java.util.stream.Collectors.joining;
 
 /**
