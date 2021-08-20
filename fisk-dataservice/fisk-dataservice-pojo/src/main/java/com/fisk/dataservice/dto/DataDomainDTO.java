@@ -10,6 +10,9 @@ import java.util.List;
 @Data
 public class DataDomainDTO {
 
+    /**
+     * 筛选器 列  值
+     */
     List<DataDoFieldDTO> dataDoFieldList;
 
 }
