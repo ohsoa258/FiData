@@ -119,7 +119,19 @@
             <artifactId>apollo-core</artifactId>
             <version>1.8.1</version>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-datamodel-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-datamodel-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <!--        <dependency>-->
 <!--            <groupId>org.springframework.boot</groupId>-->
 <!--            <artifactId>spring-boot-devtools</artifactId>-->
 <!--            <optional>true</optional>-->
