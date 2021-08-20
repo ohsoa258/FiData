@@ -37,7 +37,6 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     private String atlas_username;
     @Value("${atlasconstr.password}")
     private String atlas_pwd;
-    private AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
 
     @Resource
     IAtlasBuildInstance atlas;
@@ -52,6 +51,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildInstance(EnttityRdbmsInstance.entity_rdbms_instance data) {
         BusinessResult resInstance;
         try {
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             String res = ac.CreateEntity_rdbms_instance(data);
             res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
             resInstance = BusinessResult.of(true, "atlas instance 创建成功", res);
@@ -72,6 +72,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildDb(EntityRdbmsDB.entity_rdbms_db data) {
         BusinessResult resDB;
         try {
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             String res = ac.CreateEntity_rdbms_db(data);
             res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
             resDB = BusinessResult.of(true, "atlas db 创建成功", res);
@@ -92,6 +93,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildProcess(EntityProcess.entity_rdbms_process data) {
         BusinessResult resProcess;
         try {
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             resProcess = new BusinessResult(true, ac.CreateEntityProcess(data));
         } catch (Exception e) {
             resProcess = new BusinessResult(false, e.getMessage());
@@ -103,6 +105,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     @Override
     public BusinessResult atlasBuildProcess(AtlasEntityProcessDTO data) {
         BusinessResult resProcessPlus;
+        AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         EntityProcess.entity_rdbms_process entity_rdbms_process_db = new EntityProcess.entity_rdbms_process();
@@ -144,8 +147,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildTable(EntityRdbmsTable.entity_rdbms_table data) {
         BusinessResult resTb;
         try {
-            String a=config.getProperty("spring.redis.host","200");
-            String b=a;
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             String res = ac.CreateEntity_rdbms_table(data);
             res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
             resTb = BusinessResult.of(true, "atlas table 创建成功", res);
@@ -166,6 +168,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildTableColumn(EntityRdbmsColumn.entity_rdbms_column data) {
         BusinessResult resCl;
         try {
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             String res = ac.CreateEntity_rdbms_table_column(data);
             res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
             resCl = BusinessResult.of(true, "atlas table 创建成功", res);
@@ -186,6 +189,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasEntityDelete(AtlasEntityDeleteDTO data) {
         BusinessResult resDel;
         try {
+            AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
             String res = ac.DeleteEntity(data.entityId);
             resDel = new BusinessResult(true, "atlas entity 删除成功");
         } catch (Exception e) {
