@@ -133,6 +133,10 @@ public class DataDomainServiceImpl implements DataDomainService {
     public void splicingBusinessProcessList(List<BusinessProcessPO> businessProcessList,
                                             AreaBusinessDTO area,
                                             List<Long> businessIds) {
+        if(CollectionUtils.isEmpty(businessProcessList)){
+            return;
+        }
+
         List<BusinessProcessDTO> businessProcessDTOList = new ArrayList<>();
         for (BusinessProcessPO businessProcess : businessProcessList) {
             // 每一个二级业务过程
