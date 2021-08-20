@@ -1,5 +1,7 @@
 package com.fisk.task.service.impl;
 
+import com.ctrip.framework.apollo.Config;
+import com.ctrip.framework.apollo.spring.annotation.ApolloConfig;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityProcessDTO;
@@ -24,11 +26,16 @@ import java.util.List;
 @Service
 @Slf4j
 public class AtlasBuildInstance implements IAtlasBuildInstance {
-    @Value("{atlasconstr.url}")
+
+    @ApolloConfig
+    private Config config;
+    //private String jvm=config.getProperty("spring.rabbitmq.virtual-host",null);
+    private String spring_redis_host;
+    @Value("${atlasconstr.url}")
     private String atlas_url;
-    @Value("{atlasconstr.username}")
+    @Value("${atlasconstr.username}")
     private String atlas_username;
-    @Value("{atlasconstr.password}")
+    @Value("${atlasconstr.password}")
     private String atlas_pwd;
     private AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
 
@@ -137,6 +144,8 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     public BusinessResult atlasBuildTable(EntityRdbmsTable.entity_rdbms_table data) {
         BusinessResult resTb;
         try {
+            String a=config.getProperty("spring.redis.host","200");
+            String b=a;
             String res = ac.CreateEntity_rdbms_table(data);
             res = res.substring(res.lastIndexOf(":") + 2, res.lastIndexOf("\""));
             resTb = BusinessResult.of(true, "atlas table 创建成功", res);
