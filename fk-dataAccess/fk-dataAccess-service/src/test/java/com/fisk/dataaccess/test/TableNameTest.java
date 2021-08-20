@@ -17,6 +17,7 @@ public class TableNameTest {
 
     @Test
     public void test() {
+
         System.out.println(client.getTableName(36, DataDoFieldTypeEnum.VALUE));
     }
 }
