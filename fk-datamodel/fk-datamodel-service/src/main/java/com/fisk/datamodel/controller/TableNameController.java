@@ -1,7 +1,7 @@
 package com.fisk.datamodel.controller;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableData;
+import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,7 @@ public class TableNameController {
     private ITableName service;
 
     @GetMapping("/get")
-    public ResultEntity<TableData> getTableName(
+    public ResultEntity<TableDataDTO> getTableName(
             @RequestParam("id") Integer id,
             @RequestParam("type")DataDoFieldTypeEnum type,
             @RequestParam("field")String field) {

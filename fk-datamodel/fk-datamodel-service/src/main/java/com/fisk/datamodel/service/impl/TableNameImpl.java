@@ -3,7 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.table.TableData;
+import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
@@ -36,8 +36,8 @@ public class TableNameImpl implements ITableName {
     FactMapper factMapper;
 
     @Override
-    public ResultEntity<TableData> getTableName(Integer id, DataDoFieldTypeEnum type,String field) {
-        TableData tableData = new TableData();
+    public ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field) {
+        TableDataDTO tableDataDTO = new TableDataDTO();
         DimensionPO dimension;
         switch (type) {
             case VALUE:
@@ -47,11 +47,11 @@ public class TableNameImpl implements ITableName {
                 }
                 FactPO fact = factMapper.selectById(indicators.getFactId());
 
-
-                tableData.type = DataDoFieldTypeEnum.VALUE;
-                tableData.tableField = field;
-                tableData.tableName = fact.factTableEnName;
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableData);
+                tableDataDTO.id = id;
+                tableDataDTO.type = DataDoFieldTypeEnum.VALUE;
+                tableDataDTO.tableField = field;
+                tableDataDTO.tableName = fact.factTableEnName;
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             case WHERE:
             case COLUMN:
                 DimensionAttributePO po = dimensionAttributeMapper.selectById(id);
@@ -60,15 +60,15 @@ public class TableNameImpl implements ITableName {
                 }
                 dimension = dimensionMapper.selectById(po.getDimensionId());
                 if (type == DataDoFieldTypeEnum.WHERE) {
-                    tableData.type = DataDoFieldTypeEnum.WHERE;
+                    tableDataDTO.type = DataDoFieldTypeEnum.WHERE;
                 }else {
 
-                    tableData.type = DataDoFieldTypeEnum.COLUMN;
+                    tableDataDTO.type = DataDoFieldTypeEnum.COLUMN;
                 }
-
-                tableData.tableField = field;
-                tableData.tableName = dimension.dimensionTabName;
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableData);
+                tableDataDTO.id = id;
+                tableDataDTO.tableField = field;
+                tableDataDTO.tableName = dimension.dimensionTabName;
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
         }

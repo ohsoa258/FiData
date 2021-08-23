@@ -2,7 +2,7 @@ package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.dto.table.TableData;
+import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,7 +40,7 @@ public interface DimensionClient {
      * @return 执行结果
      */
     @GetMapping("/tableName/get")
-    ResultEntity<TableData> getTableName(
+    ResultEntity<TableDataDTO> getTableName(
             @RequestParam("id") Integer id,
             @RequestParam("type") DataDoFieldTypeEnum type,
             @RequestParam("field") String field);

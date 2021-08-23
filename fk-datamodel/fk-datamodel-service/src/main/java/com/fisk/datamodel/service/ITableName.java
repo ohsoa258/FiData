@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableData;
+import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 
 /**
@@ -15,7 +15,7 @@ public interface ITableName {
      * @param field field
      * @return tableName
      */
-    ResultEntity<TableData> getTableName(Integer id, DataDoFieldTypeEnum type, String field);
+    ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field);
 
     /**
      * 查询聚合条件

@@ -7,8 +7,11 @@ import lombok.Data;
  * @author Lock
  */
 @Data
-public class TableData {
-
+public class TableDataDTO {
+    /**
+     * 字段所属表id
+     */
+    public Integer id;
     /**
      * 字段类型: 筛选器  列  值
      */
