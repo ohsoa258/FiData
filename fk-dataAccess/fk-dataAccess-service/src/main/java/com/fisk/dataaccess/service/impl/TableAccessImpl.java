@@ -43,6 +43,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Lock
@@ -846,7 +847,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 物理表: tb_table_access
         TableAccessPO modelAccess = this.query()
                 .eq("id", tableId)
-                .eq("appid", appid)
+                .eq("app_id", appid)
                 .eq("del_flag", 1)
                 .one();
         if (modelAccess == null) {
@@ -927,8 +928,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
-        // 先硬编码
-        sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        // 选择驱动类型
+        if(Objects.equals(modelDataSource.driveType,"sqlserver")){
+            sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
+        }else {
+            sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
         sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;

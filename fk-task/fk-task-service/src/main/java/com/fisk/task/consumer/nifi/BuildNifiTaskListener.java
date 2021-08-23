@@ -254,6 +254,9 @@ public class BuildNifiTaskListener {
             case MYSQL:
                 dto.driverLocation = NifiConstants.DriveConstants.MYSQL_DRIVE_PATH;
                 break;
+            case SQLSERVER:
+                dto.driverLocation = NifiConstants.DriveConstants.SQLSERVER_DRIVE_PATH;
+                break;
             default:
                 break;
         }
@@ -504,6 +507,9 @@ public class BuildNifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
         querySqlDto.dbConnectionId = sourceDbPoolId;
+        //querySqlDto.fetchSize="2";
+        querySqlDto.MaxRowsPerFlowFile="1000000";
+        //querySqlDto.outputBatchSize="2";
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);

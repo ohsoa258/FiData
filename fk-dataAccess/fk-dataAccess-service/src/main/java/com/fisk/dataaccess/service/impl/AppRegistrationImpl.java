@@ -355,7 +355,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     .eq("del_flag", 1)
                     .one();
 
-            AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("id", id)
+            AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", id)
                     .eq("del_flag", 1)
                     .one();
 
