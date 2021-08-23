@@ -145,20 +145,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (contains) {
             return ResultEnum.Table_NAME_EXISTS;
         }*/
-        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
-        String tableName = modelAccess.getTableName();
-        // 查询表名对应的应用注册id
-        TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelAccess.appId;
-        tableNameVO.tableName = tableName;
-        if (appIdAndTableNameList.contains(tableNameVO)) {
-            return ResultEnum.Table_NAME_EXISTS;
-        }
-
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
+
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        String tableName = modelAccess.getTableName();
+        // 查询表名对应的应用注册id
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.appId = modelReg.id;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
+            return ResultEnum.Table_NAME_EXISTS;
+        }
 
         // 应用注册id
         long id = modelReg.getId();
@@ -270,21 +270,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
 //        }
 
+        AppRegistrationPO modelReg = appRegistrationImpl.query()
+                .eq("app_name", tableAccessNonDTO.getAppName())
+                .eq("del_flag", 1)
+                .one();
+
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelAccess.appId;
+        tableNameVO.appId = modelReg.id;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
         }
-
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-                .eq("app_name", tableAccessNonDTO.getAppName())
-                .eq("del_flag", 1)
-                .one();
 
         long id = modelReg.getId();
         if (id < 0) {
