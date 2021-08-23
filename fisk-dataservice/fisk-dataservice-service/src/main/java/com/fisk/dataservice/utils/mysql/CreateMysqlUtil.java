@@ -1,16 +1,16 @@
 package com.fisk.dataservice.utils.mysql;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.fisk.dataservice.entity.ApiConfigureFieldPO;
+import com.fisk.datamodel.client.DimensionClient;
+import com.fisk.dataservice.dto.DataDoFieldDTO;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-
-import static com.fisk.dataservice.enums.ConfigureFieldTypeEnum.*;
-import static java.util.stream.Collectors.joining;
+import java.util.*;
+import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
+import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.WHERE;
+import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.VALUE;
+import static java.util.stream.Collectors.*;
 
 /**
  * @author Lock
@@ -20,48 +20,65 @@ public class CreateMysqlUtil {
     @Resource
     private ApiConfigureMapper configureMapper;
 
+    @Resource
+    private DimensionClient dimensionClient;
+
     /**
      * 数据分组拼接
      *
      * @param apiConfigureFieldList 查询字段
-     * @param tableName             字段来源表
      * @param currentPage           当前页
      * @param pageSize              每页显示条数
      * @return 查询字段分类拼接
      */
-    @DS("datamodel")
-    public List<Map> filterData(List<ApiConfigureFieldPO> apiConfigureFieldList, String tableName, Integer currentPage, Integer pageSize) {
+    public List<Map> filterData(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
+        // 转义符
+        String[] escapeStr = getEscapeStr();
+
+        // 所有列的表名field集合
+        List<DataDoFieldDTO> fieldList = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(COLUMN))
+                .collect(toList());
+
+        // k fileds v 表名  (列)
+        Map<Integer, String> map = apiConfigureFieldList.stream()
+                .filter(e -> e.getFieldType().equals(COLUMN))
+                .collect(toMap(DataDoFieldDTO::getFieldId,
+                        e -> dimensionClient.getTableName(e.getFieldId(), COLUMN, e.getFieldName()).getData().tableName));
+
         String queryFieldList = apiConfigureFieldList.stream()
                 // 查询字段: select列
                 // 日期.年,日期.月,维度.金额
                 // `date.year`,`date.month`,`dimension.money`
-                .filter(e -> e.getFieldType().equals(QUERY))
-                .map(e -> "`" + e.getField() + "`")
-                .collect(joining(","));
-
-        String groupingList = apiConfigureFieldList.stream()
-                // 分组字段: group by
-                // 根据年,月,产维度金额分组: `date.year`,`date.month`,`dimension.money`
-                .filter(e -> e.getFieldType().equals(GROUPING))
-                .map(e -> "`" + e.getField() + "`")
-                .collect(joining(","));
-
-        String aggregationList = apiConfigureFieldList.stream()
-                // 聚合字段: avg()  sum()  max()  min()  count()
-                // 如维度金额求和:  sum(`money`)
-                .filter(e -> e.getFieldType().equals(AGGREGATION))
-                .map(e -> e.getFieldConditionValue() + "(" + "`" + e.getField() + "`" + ")")
+                .filter(e -> e.getFieldType().equals(COLUMN))
+                .map(e -> escapeStr[0] + dimensionClient.getTableName(e.getFieldId(),e.getFieldType(),e.getFieldName()) + "." + e.getFieldName()
+                        + escapeStr[1])
                 .collect(joining(","));
 
         String conditionList = apiConfigureFieldList.stream()
                 // 权限控制字段: where条件
                 // `date.year`=`2021` and `date.month`=`3`
-                .filter(e -> e.getFieldType().equals(RESTRICT))
-                .map(e -> "`" + e.getField() + "`" + e.getFieldConditionValue() + "'" + e.getFieldValue() + "'")
+                .filter(e -> e.getFieldType().equals(WHERE))
+                .map(e -> escapeStr[0] + dimensionClient.getTableName(e.getFieldId(), e.getFieldType(),e.getFieldName()).getData().tableName
+                        + "."+ e.getFieldName() + escapeStr[1] + e.getWhere() + escapeStr[0] + e.getWhereValue() + escapeStr[1])
                 .collect(joining("AND "));
 
-        //
-        return this.splicingSql(queryFieldList, aggregationList, groupingList, conditionList, currentPage, pageSize, tableName);
+        String aggregationList = apiConfigureFieldList.stream()
+                // 聚合字段: avg()  sum()  max()  min()  count()
+                // 如维度金额求和:  sum(`money`)
+                .filter(e -> e.getFieldType().equals(VALUE))
+                .map(e -> dimensionClient.getAggregation(e.getFieldId()).getData()
+                        + "(" + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")")
+                .collect(joining(","));
+
+        String groupingList = apiConfigureFieldList.stream()
+                // 分组字段: group by
+                // 根据年,月,产维度金额分组: `date.year`,`date.month`,`dimension.money`
+                .filter(e -> e.getFieldType().equals(COLUMN))
+                .map(e -> escapeStr[0] + dimensionClient.getTableName(e.getFieldId(),e.getFieldType(),e.getFieldName())
+                        + e.getFieldName() + escapeStr[1])
+                .collect(joining(","));
+        return this.splicingSql(queryFieldList, aggregationList, groupingList, conditionList, currentPage, pageSize, map, fieldList);
     }
 
     /**
@@ -72,7 +89,7 @@ public class CreateMysqlUtil {
      * @param conditionList   条件
      * @param currentPage     分页
      * @param pageSize
-     * @param tableName       表名
+     * @param tbNameList      表名
      * @return
      */
     public List<Map> splicingSql(String queryFieldList,
@@ -80,9 +97,10 @@ public class CreateMysqlUtil {
                                  String groupingList,
                                  String conditionList,
                                  Integer currentPage, Integer pageSize,
-                                 String tableName) {
+                                 Map map,
+                                 List<DataDoFieldDTO> fieldList) {
         // 最终SQL
-        String splitSql = this.splitSql(queryFieldList, aggregationList, groupingList, conditionList, tableName);
+        String splitSql = this.splitSql(queryFieldList, aggregationList, groupingList, conditionList, map,fieldList);
 
         // 添加分页
         if (currentPage == null) {
@@ -102,39 +120,37 @@ public class CreateMysqlUtil {
      * @param aggregationList 聚合
      * @param groupingList    分组
      * @param conditionList   条件
-     * @param tableName       表名
+     * @param map             表名
      * @return
      */
-    @DS("datamodel")
-    public String splitSql(String queryFieldList, String aggregationList, String groupingList, String conditionList, String tableName) {
+    public String splitSql(String queryFieldList, String aggregationList, String groupingList, String conditionList, Map map,
+                           List<DataDoFieldDTO> fieldList) {
+        // 转义符
+        String[] escapeStr = getEscapeStr();
+
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
         // select
         // SELECT `date.year`,`date.month`,`dimension.money`
         this.queryField(str, queryFieldList, aggregationList, groupingList);
 
-        // from date
+        // from date  主表
+        str.append(" FROM ").append(escapeStr[0] + map.get(fieldList.get(0).fieldId) + escapeStr[1]).append(" ");
 
+        // 从表
+        for (DataDoFieldDTO dataDoField : fieldList) {
+            // TODO: 缺join
+            str.append("join ").append(map.get(dataDoField.getFieldId())).append(" ");
 
-        str.append(" FROM ").append("`" + tableName + "`").append(" ");
-
-        // TODO: 缺join
-        str.append("join ").append("`" + tableName + "`").append(" ");
-
-        // TODO: 缺on
-        str.append("on ").append("`" + tableName + "`").append(" ");
-
-
+            // TODO: 缺on
+            // A.nian=B.nian
+            str.append("on ").append(map.get(fieldList.get(0).fieldId + "=" + map.get(dataDoField.getFieldId()) + "." +  dataDoField.fieldName)).append(" ");
+        }
 
         // where `date.year`=`2021` and `date.month`=`3`
         if (StringUtils.isNotBlank(conditionList)) {
 //            str.append("WHERE 1 = 1 AND " + conditionList);
-            str.append("WHERE " + conditionList+" ");
-        }
-
-//         order by
-        if (StringUtils.isNotBlank(queryFieldList)) {
-            str.append(" ORDER BY " + queryFieldList.substring(0, queryFieldList.indexOf(",")) + " DESC ");
+            str.append("WHERE " + conditionList + " ");
         }
 
         // group
@@ -143,10 +159,9 @@ public class CreateMysqlUtil {
             // group by data.year
             str.append(groupingList);
         }
-
-        // groupBy
-        this.aggregation(str, queryFieldList, aggregationList, groupingList);
-        this.noAggregation(str, queryFieldList, aggregationList, groupingList);
+//        // groupBy
+//        this.aggregation(str, queryFieldList, aggregationList, groupingList);
+//        this.noAggregation(str, queryFieldList, aggregationList, groupingList);
         return str.toString();
     }
 
@@ -227,8 +242,15 @@ public class CreateMysqlUtil {
         }
     }
 
-//    public String getTableName(Integer fieldId) {
-//
-//    }
-
+    /**
+     * 根据数据源类型获取转义字符
+     *
+     * @return 转义字符
+     */
+    protected static String[] getEscapeStr() {
+        String[] arr = new String[2];
+        arr[0] = "`";
+        arr[1] = "`";
+        return arr;
+    }
 }
