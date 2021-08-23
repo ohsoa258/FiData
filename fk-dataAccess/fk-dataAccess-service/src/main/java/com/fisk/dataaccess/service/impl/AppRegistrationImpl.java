@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.dto.PageDTO;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
@@ -35,6 +36,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -444,6 +448,41 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<AppNameDTO> getDataList() {
 
         return baseMapper.getDataList();
+    }
+
+    @Override
+    public ResultEntity<Object> connectDb(DbConnectionDTO dto) {
+        Connection conn = null;
+        try {
+            switch (dto.driveType) {
+                case "mysql":
+                    Class.forName("com.mysql.jdbc.Driver");
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
+
+                case "sqlserver":
+                    //1.加载驱动程序
+                    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                    //2.获得数据库的连接
+                    conn = (Connection) DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
+
+                default:
+                    return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_WARN);
+            }
+        } catch (Exception e) {
+            return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+        }finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                    throw new FkException(ResultEnum.SUCCESS);
+                }
+            } catch (SQLException e) {
+                throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+            }
+        }
+
     }
 
     /**

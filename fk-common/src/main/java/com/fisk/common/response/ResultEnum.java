@@ -62,7 +62,11 @@ public enum ResultEnum {
      */
     DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败"),
     DATAACCESS_GETTABLE_ERROR(5002,"获取表名失败"),
-    DATAACCESS_SAVEFIELD_ERROR(5002,"添加表字段失败"),
+    DATAACCESS_SAVEFIELD_ERROR(5003,"添加表字段失败"),
+    DATAACCESS_CONNECTDB_ERROR(5004,"连接失败"),
+    DATAACCESS_CONNECTDB_WARN(5005,"当前驱动类型尚未开发"),
+
+
 
 
     /**
