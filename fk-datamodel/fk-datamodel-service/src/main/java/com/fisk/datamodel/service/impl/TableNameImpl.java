@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.table.TableData;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
@@ -35,8 +36,9 @@ public class TableNameImpl implements ITableName {
     FactMapper factMapper;
 
     @Override
-    public ResultEntity<String> getTableName(Integer id, DataDoFieldTypeEnum type) {
-
+    public ResultEntity<TableData> getTableName(Integer id, DataDoFieldTypeEnum type,String field) {
+        TableData tableData = new TableData();
+        DimensionPO dimension;
         switch (type) {
             case VALUE:
                 IndicatorsPO indicators = indicatorsMapper.selectById(id);
@@ -44,15 +46,29 @@ public class TableNameImpl implements ITableName {
                     return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
                 }
                 FactPO fact = factMapper.selectById(indicators.getFactId());
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fact.getFactTableEnName());
+
+
+                tableData.type = DataDoFieldTypeEnum.VALUE;
+                tableData.tableField = field;
+                tableData.tableName = fact.factTableEnName;
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableData);
             case WHERE:
             case COLUMN:
-                DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(id);
-                if (dimensionAttribute == null) {
+                DimensionAttributePO po = dimensionAttributeMapper.selectById(id);
+                if (po == null) {
                     return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
                 }
-                DimensionPO dimension = dimensionMapper.selectById(dimensionAttribute.getDimensionId());
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dimension.getDimensionTabName());
+                dimension = dimensionMapper.selectById(po.getDimensionId());
+                if (type == DataDoFieldTypeEnum.WHERE) {
+                    tableData.type = DataDoFieldTypeEnum.WHERE;
+                }else {
+
+                    tableData.type = DataDoFieldTypeEnum.COLUMN;
+                }
+
+                tableData.tableField = field;
+                tableData.tableName = dimension.dimensionTabName;
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableData);
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
         }

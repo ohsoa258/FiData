@@ -7,12 +7,19 @@ import lombok.Data;
  * @author Lock
  */
 @Data
-public class TableNameDTO {
+public class TableData {
 
-    public Integer id;
-
+    /**
+     * 字段类型: 筛选器  列  值
+     */
     public DataDoFieldTypeEnum type;
-
+    /**
+     * 表所属字段
+     */
+    public String tableField;
+    /**
+     * 表名
+     */
     public String tableName;
 
 }

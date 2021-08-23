@@ -31,6 +31,13 @@ public interface DimensionClient {
     @GetMapping("/factAttribute/getFactEntity")
     ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
 
+    /**
+     * 获取表字段
+     *
+     * @param id id
+     * @param type type
+     * @return 执行结果
+     */
     @GetMapping("/tableName/get")
     ResultEntity<String> getTableName(@RequestParam("id") Integer id, @RequestParam("type") DataDoFieldTypeEnum type);
 
