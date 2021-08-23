@@ -30,4 +30,10 @@ public class TableNameController {
         return service.getTableName(id,type,field);
     }
 
+    @GetMapping("/getAggregation")
+    public ResultEntity<String> getAggregation(@RequestParam("id") Integer id) {
+
+        return service.getAggregation(id);
+    }
+
 }

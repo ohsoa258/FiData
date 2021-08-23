@@ -15,5 +15,12 @@ public interface ITableName {
      * @param field field
      * @return tableName
      */
-    ResultEntity<TableData> getTableName(Integer id, DataDoFieldTypeEnum type,String field);
+    ResultEntity<TableData> getTableName(Integer id, DataDoFieldTypeEnum type, String field);
+
+    /**
+     * 查询聚合条件
+     * @param id id
+     * @return count()
+     */
+    ResultEntity<String> getAggregation(Integer id);
 }

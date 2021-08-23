@@ -73,4 +73,14 @@ public class TableNameImpl implements ITableName {
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
         }
     }
+
+    @Override
+    public ResultEntity<String> getAggregation(Integer id) {
+        IndicatorsPO indicators = indicatorsMapper.selectById(id);
+        if (indicators == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, indicators.getCalculationLogic());
+    }
 }

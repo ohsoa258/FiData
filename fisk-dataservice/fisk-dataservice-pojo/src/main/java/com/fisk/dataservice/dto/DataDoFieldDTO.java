@@ -10,5 +10,7 @@ import lombok.Data;
 public class DataDoFieldDTO {
     public Integer fieldId;
     public String fieldName;
+    public String where;
+    public String whereValue;
     public DataDoFieldTypeEnum fieldType;
 }

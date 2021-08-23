@@ -41,4 +41,12 @@ public interface DimensionClient {
     @GetMapping("/tableName/get")
     ResultEntity<String> getTableName(@RequestParam("id") Integer id, @RequestParam("type") DataDoFieldTypeEnum type);
 
+    /**
+     * 查询聚合条件
+     * @param id
+     * @return
+     */
+    @GetMapping("/tableName/getAggregation")
+    ResultEntity<String> getAggregation(@RequestParam("id") Integer id);
+
 }
