@@ -71,5 +71,10 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }
 
+    @GetMapping("/getDimensionAttributeData")
+    @ApiOperation("根绝维度id获取维度字段详情")
+    public ResultEntity<Object> getDimensionAttributeData(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeData(id));
+    }
 
 }

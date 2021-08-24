@@ -27,7 +27,6 @@ public class DimensionAttributeDTO {
      * 维度表字段描述
      */
     public String dimensionFieldDes;
-
     /**
      * 维度表英文字段名称
      */
@@ -37,8 +36,12 @@ public class DimensionAttributeDTO {
      */
     public int attributeType;
     /**
-     * 关联维度表id
+     * 关联维度字段表id
      */
     public int associateDimensionId;
+    /**
+     * 关联维度id
+     */
+    public int associateId;
 
 }
