@@ -1,9 +1,12 @@
 package com.fisk.dataservice.utils.mysql;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DimensionClient;
+import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -15,6 +18,7 @@ import static java.util.stream.Collectors.*;
 /**
  * @author Lock
  */
+@Component
 public class CreateMysqlUtil {
 
     @Resource
@@ -39,6 +43,9 @@ public class CreateMysqlUtil {
         List<DataDoFieldDTO> fieldList = apiConfigureFieldList.stream()
                 .filter(e -> e.getFieldType().equals(COLUMN))
                 .collect(toList());
+
+
+       ResultEntity<TableDataDTO> resultEntity = dimensionClient.getTableName(155, COLUMN, "year");
 
         // k fileds v 表名  (列)
         Map<Integer, String> map = apiConfigureFieldList.stream()
@@ -89,7 +96,7 @@ public class CreateMysqlUtil {
      * @param conditionList   条件
      * @param currentPage     分页
      * @param pageSize
-     * @param tbNameList      表名
+     * @param       表名
      * @return
      */
     public List<Map> splicingSql(String queryFieldList,

@@ -109,6 +109,10 @@ public class DataDomainServiceImpl implements DataDomainService {
             // 每一个二级对应多个三级
             List<DimensionAttributeDTO> dimensionAttributeDTOList = new ArrayList<>();
             List<DimensionAttributePO> dimensionAttributeList = this.dimensionField(dimension.getId());
+            if (CollectionUtils.isEmpty(dimensionAttributeList)){
+                return;
+            }
+
             for (DimensionAttributePO dimensionAttribute : dimensionAttributeList) {
                 DimensionAttributeDTO dimensionAttributeDTO = new DimensionAttributeDTO();
                 dimensionAttributeDTO.setDimensionAttributeId(dimensionAttribute.getId());
@@ -145,6 +149,10 @@ public class DataDomainServiceImpl implements DataDomainService {
             dto.setBusinessProcessCnName(businessProcess.getBusinessProcessEnName());
 
             List<FactDTO> factList = new ArrayList<>();
+            if (CollectionUtils.isEmpty(businessIds)){
+                return;
+            }
+
             for (Long businessId : businessIds) {
                 this.fact(businessId, factList);
             }
