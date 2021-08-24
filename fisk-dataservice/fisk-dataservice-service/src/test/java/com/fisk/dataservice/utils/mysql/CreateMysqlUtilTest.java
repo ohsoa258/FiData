@@ -33,6 +33,9 @@ public class CreateMysqlUtilTest extends TestCase {
         dataDoFieldDTO3.setFieldName("year");
         dataDoFieldDTO3.setFieldId(116);
 
+        apiConfigureFieldList.add(dataDoFieldDTO1);
+        apiConfigureFieldList.add(dataDoFieldDTO2);
+        apiConfigureFieldList.add(dataDoFieldDTO3);
         CreateMysqlUtil createMysqlUtil = new CreateMysqlUtil();
         createMysqlUtil.filterData(apiConfigureFieldList,1,10);
     }
