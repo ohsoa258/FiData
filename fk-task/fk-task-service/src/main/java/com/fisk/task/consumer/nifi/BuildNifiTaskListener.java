@@ -45,11 +45,11 @@ import java.util.List;
 @Slf4j
 public class BuildNifiTaskListener {
 
-    @Value("${dorisconstr.url}")
+    @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
-    @Value("${dorisconstr.username}")
+    @Value("${datamodeldorisconstr.username}")
     private String dorisUser;
-    @Value("${dorisconstr.password}")
+    @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
 
     @Value("${spring.rabbitmq.host}")
