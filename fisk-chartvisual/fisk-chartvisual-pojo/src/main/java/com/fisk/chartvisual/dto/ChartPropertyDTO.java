@@ -16,4 +16,5 @@ public class ChartPropertyDTO {
     public String details;
     @Length(max = 4000)
     public String content;
+    public String image;
 }

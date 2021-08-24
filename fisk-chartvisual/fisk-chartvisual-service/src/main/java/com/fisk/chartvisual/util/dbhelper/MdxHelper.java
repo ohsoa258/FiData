@@ -84,7 +84,7 @@ public class MdxHelper {
      */
     private  String getWhereMdx(List<ColumnDetailsSsas> values, List<ChartQueryFilter> wheres){
         //where条件中只能包含元组
-        if (values!=null&&(values.size()==1||wheres.size()>0)){
+        if (wheres.size()>0){
             StringBuilder whereMdxSb=new StringBuilder();
             whereMdxSb.append("WHERE(");
             for(ChartQueryFilter where: wheres){
@@ -94,12 +94,7 @@ public class MdxHelper {
                 whereMdxSb.append(valuesStr);
                 whereMdxSb.append(",");
             }
-            if(values.size()>0&&wheres.size()>0){
-                whereMdxSb.deleteCharAt(whereMdxSb.length()-1);
-            }
-            if (values.size()==1){
-                whereMdxSb.append(values.get(0).uniqueName);
-            }
+            whereMdxSb.deleteCharAt(whereMdxSb.length()-1);
             whereMdxSb.append(")");
             return  whereMdxSb.toString();
         }else {

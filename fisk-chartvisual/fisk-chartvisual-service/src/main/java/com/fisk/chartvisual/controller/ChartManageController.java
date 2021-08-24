@@ -13,8 +13,10 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 图表管理
@@ -31,13 +33,14 @@ public class ChartManageController {
 
     @ApiOperation("添加草稿报表")
     @PostMapping("/addDraft")
-    public ResultEntity<Object> addDraft(@Validated @RequestBody ChartPropertyDTO dto) {
+    public ResultEntity<Object> addDraft(@Validated  @RequestBody  ChartPropertyDTO dto) {
         return ResultEntityBuild.build(service.saveChartToDraft(dto));
     }
 
+
     @ApiOperation("添加报表")
     @PostMapping("/add")
-    public ResultEntity<Long> addData(@Validated @RequestBody ReleaseChart dto) {
+    public ResultEntity<Long> addData(@Validated  @RequestBody  ReleaseChart dto) {
         return service.saveChart(dto);
     }
 

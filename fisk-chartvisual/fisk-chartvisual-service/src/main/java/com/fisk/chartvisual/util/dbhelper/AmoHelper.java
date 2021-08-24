@@ -133,7 +133,7 @@ public class AmoHelper {
         for (Dimension dimension: dimensions ) {
             // MEASURE 为度量值 , OTHER 为维度
             Dimension.Type dimensionType = dimension.getDimensionType();
-            if (dimensionType == org.olap4j.metadata.Dimension.Type.OTHER) {
+            if (dimensionType != Dimension.Type.MEASURE) {
                 DimensionPO dimensionPo=new DimensionPO();
                 dimensionPo.name = dimension.getName();
                 dimensionPo.uniqueName= dimension.getUniqueName();
@@ -174,6 +174,7 @@ public class AmoHelper {
             res.data =getDataByAnalyticalCellSet(cellset);
         } catch (Exception ex) {
             log.error("【execQuery】【" + code + "】执行MDX查询报错, ex", ex);
+            log.error("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
         }finally {
             stopWatch.stop();

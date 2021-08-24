@@ -21,15 +21,16 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.annotation.Resource;
 
 /**
  * @author gy
  */
 @Service
+@Slf4j
 public class ChartManageImpl implements IChartManageService {
 
     @Resource
@@ -43,13 +44,14 @@ public class ChartManageImpl implements IChartManageService {
 
     @Override
     public ResultEnum saveChartToDraft(ChartPropertyDTO dto) {
-        DraftChartPO model = DraftChartMap.INSTANCES.dtoToPo(dto);
-        return draftChartMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+                DraftChartPO model = DraftChartMap.INSTANCES.dtoToPo(dto);
+                return draftChartMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEntity<Long> saveChart(ReleaseChart dto) {
+    public ResultEntity<Long> saveChart(ReleaseChart dto ) {
         //判断是不是发布草稿
         if (dto.draftId != null) {
             DraftChartPO draftModel = draftChartMapper.selectById(dto.draftId);
@@ -79,7 +81,8 @@ public class ChartManageImpl implements IChartManageService {
     public ChartPropertyVO getDataById(int id, ChartQueryTypeEnum type) {
         switch (type) {
             case DRAFT:
-                return DraftChartMap.INSTANCES.poToVo(draftChartMapper.selectById(id));
+                DraftChartPO po=  draftChartMapper.selectById(id);
+                return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
                 return ChartMap.INSTANCES.poToVo(chartMapper.selectById((id)));
             default:
