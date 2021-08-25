@@ -54,11 +54,10 @@ public class DimensionImpl implements IDimension {
         }
         //获取数据源
         QueryWrapper<DataAreaPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("businessid",ids.toArray());
+        queryWrapper.in("business_id",ids.toArray());
         List<DataAreaPO> dataArea=dataAreaMapper.selectList(queryWrapper).stream().sorted(Comparator.comparing(DataAreaPO::getCreateTime)).collect(Collectors.toList());
         //降序
         Collections.reverse(dataArea);
-        ////ProjectDimensionMap.INSTANCES.poToDtoList(dataAreaMapper.selectList(queryWrapper));
         //获取维度表
         QueryWrapper<DimensionPO> dimensionList=new QueryWrapper<>();
         List<DimensionPO> dimensionPo=mapper.selectList(dimensionList).stream().sorted(Comparator.comparing(DimensionPO::getCreateTime)).collect(Collectors.toList());
@@ -69,9 +68,6 @@ public class DimensionImpl implements IDimension {
             DimensionSourceDTO dto=new DimensionSourceDTO();
             dto.id=item.id;
             dto.dimensionCnName=item.dataName;
-            /*dto.data= DimensionMap.INSTANCES.listPoToListDto(
-                    dimensionPo.stream().filter(e->e.getDataId()==item.id).collect(Collectors.toList())
-            );*/
             list.add(dto);
         }
         return list;

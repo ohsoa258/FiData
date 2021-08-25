@@ -67,8 +67,6 @@ public enum ResultEnum {
     DATAACCESS_CONNECTDB_WARN(5005,"当前驱动类型尚未开发"),
 
 
-
-
     /**
      * 后台任务模块
      */
@@ -83,7 +81,13 @@ public enum ResultEnum {
      */
     API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
     DELETE_ERROR(7002,"删除失败"),
-    API_FIELD_ERROR(7003,"api没有sql执行!");
+    API_FIELD_ERROR(7003,"api没有sql执行!"),
+
+    /**
+     * 数据建模模块
+     */
+    DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值");
+
 
     ResultEnum(int code, String msg) {
         this.code = code;

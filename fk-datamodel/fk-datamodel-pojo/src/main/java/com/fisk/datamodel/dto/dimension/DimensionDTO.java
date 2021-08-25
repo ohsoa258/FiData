@@ -9,6 +9,7 @@ import lombok.Data;
 public class DimensionDTO {
     public int id;
     public int businessId;
+    public int tableSourceId;
     public String dimensionCnName;
     public String dimensionEnName;
     public String dimensionTabName;

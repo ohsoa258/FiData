@@ -168,14 +168,15 @@ public class DimensionAttributeImpl
         data.tableName =po.dimensionTabName;
         data.id=po.id;
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id)
+        .ne(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         for (DimensionAttributePO item:list)
         {
             ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
             //判断是否为关联维度
-            if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            /*if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
                 //查看关联维度字段相关信息
                 DimensionAttributePO po1=attributeMapper.selectById(item.associateDimensionId);
@@ -187,16 +188,38 @@ public class DimensionAttributeImpl
                     dto.fieldType=po1.dimensionFieldType;
                     dtoList.add(dto);
                 }
-            }
-            else {
+            }*/
+            //else {
                 dto.attributeType=item.attributeType;
                 dto.fieldEnName=item.dimensionFieldEnName;
                 dto.fieldLength=item.dimensionFieldLength;
                 dto.fieldType=item.dimensionFieldType;
                 dtoList.add(dto);
-            }
+            //}
         }
         data.dto=dtoList;
+        return data;
+    }
+
+    @Override
+    public List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id)
+    {
+        List<DimensionAttributeAssociationDTO> data=new ArrayList<>();
+        DimensionPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            return data;
+        }
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id)
+                .ne(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        for (DimensionAttributePO item:list) {
+            DimensionAttributeAssociationDTO dto = new DimensionAttributeAssociationDTO();
+            dto.id = item.id;
+            dto.dimensionFieldEnName = item.dimensionFieldEnName;
+            data.add(dto);
+        }
         return data;
     }
 

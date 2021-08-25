@@ -22,7 +22,7 @@ public interface AtomicIndicatorsMap {
      * @param dto
      * @return
      */
-    IndicatorsPO dtoToPo(AtomicIndicatorsDTO dto);
+    List<IndicatorsPO> dtoToPo(List<AtomicIndicatorsDTO> dto);
 
     /**
      * po==>dtoList
