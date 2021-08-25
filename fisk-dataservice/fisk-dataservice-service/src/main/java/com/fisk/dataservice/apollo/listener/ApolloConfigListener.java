@@ -32,7 +32,7 @@ public class ApolloConfigListener implements ApplicationContextAware {
      * <p>
      * 示例： @ApolloConfigChangeListener(value = {"application", "test_space"})
      */
-    @ApolloConfigChangeListener(value = {"wy-data"})
+    @ApolloConfigChangeListener(value = {"fkDataService-data"})
     private void onChange(ConfigChangeEvent changeEvent) {
         LOGGER.warn("【Apollo-config-change】start");
 
