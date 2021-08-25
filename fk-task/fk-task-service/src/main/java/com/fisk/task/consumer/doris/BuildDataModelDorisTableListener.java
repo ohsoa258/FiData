@@ -3,6 +3,7 @@ package com.fisk.task.consumer.doris;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DimensionClient;
@@ -122,8 +123,8 @@ public class BuildDataModelDorisTableListener {
         stg_sql = sql.toString().replace("tableName", stg_table);
         ods_sql = sql.toString().replace("tableName", ods_table);
         //2.连接jdbc执行sql
-        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, "datamodel");
-        BusinessResult datamodel1 = iPostgreBuild.postgreBuildTable(ods_sql, "datamodel");
+        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL.getName());
+        BusinessResult datamodel1 = iPostgreBuild.postgreBuildTable(ods_sql, BusinessTypeEnum.DATAMODEL.getName());
         log.info("【PGSTG】" + stg_sql);
         log.info("【PGODS】" + ods_sql);
         if(datamodel.success==true&&datamodel1.success==true){

@@ -1,6 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.task.service.IPostgreBuild;
 import com.fisk.task.utils.DorisHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,9 @@ public class PostgreBuildImpl implements IPostgreBuild {
         Statement stmt = null;
         try {
             // 1获得连接
-            if(Objects.equals(dbName,"datamodel")){
+            if(Objects.equals(dbName, BusinessTypeEnum.DATAMODEL.getName())){
                 conn = DorisHelper.getConnection(pgDatamodelUrl, pgDriverClassName, pgUsername, pgPassword);
-            }else{
+            }else if(Objects.equals(dbName, BusinessTypeEnum.DATAINPUT.getName())){
                 conn = DorisHelper.getConnection(pgDatainputUrl, pgDriverClassName, pgUsername, pgPassword);
             }
             // 2执行对象
