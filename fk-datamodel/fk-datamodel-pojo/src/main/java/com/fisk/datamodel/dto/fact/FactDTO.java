@@ -15,6 +15,10 @@ public class FactDTO {
      */
     public int businessProcessId;
     /**
+     * 来源表id
+     */
+    public int tableSourceId;
+    /**
      * 事实表中文名称
      */
     public String factTableCnName;
