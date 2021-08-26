@@ -62,6 +62,6 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      *
      * @return 应用名称
      */
-    @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1;")
+    @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1 ORDER BY create_time DESC;")
     List<AppNameDTO> getDataList();
 }
