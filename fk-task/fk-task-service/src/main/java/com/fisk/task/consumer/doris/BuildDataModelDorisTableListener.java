@@ -6,7 +6,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.client.DimensionClient;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildDataModelDorisTableListener {
     @Resource
-    DimensionClient dc;
+    DataModelClient dc;
     @Resource
     IDorisBuild doris;
     @Resource

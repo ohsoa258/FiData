@@ -1,7 +1,7 @@
 package com.fisk.dataservice;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.client.DimensionClient;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.table.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import javax.annotation.Resource;
 @RunWith(SpringRunner.class)
 public class TableNameTest {
     @Resource
-    DimensionClient client;
+    DataModelClient client;
 
     @Test
     public void test() {

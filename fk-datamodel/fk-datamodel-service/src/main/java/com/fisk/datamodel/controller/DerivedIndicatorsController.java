@@ -58,11 +58,11 @@ public class DerivedIndicatorsController {
         return ResultEntityBuild.build(service.updateDerivedIndicators(dto));
     }
 
-    @ApiOperation("根据id获取派生指标聚合粒度")
+    /*@ApiOperation("根据id获取派生指标聚合粒度")
     @GetMapping("/getDerivedIndicatorsParticle/{id}")
     public ResultEntity<Object> getDerivedIndicatorsParticle(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDerivedIndicatorsParticle(id));
-    }
+    }*/
 
     @ApiOperation("根据业务域id获取指标列表")
     @GetMapping("/getIndicators/{id}")
