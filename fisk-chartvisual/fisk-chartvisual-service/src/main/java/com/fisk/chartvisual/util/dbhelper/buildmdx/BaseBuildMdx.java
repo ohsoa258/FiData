@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.util.dbhelper;
+package com.fisk.chartvisual.util.dbhelper.buildmdx;
 import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.ColumnDetailsSsas;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @author JinXingWang
  */
 @Service
-public class MdxHelper {
+public abstract class BaseBuildMdx {
 
     /**
      * 通过列行值获取mdx语句
@@ -23,7 +23,7 @@ public class MdxHelper {
      * @param cubeName 模型名称
      * @return mdx语句
      */
-    public  String GetMdxByColumnRowValue(ChartQueryObjectSsas query, String cubeName){
+    public  String buildMdx(ChartQueryObjectSsas query, String cubeName){
         List<ColumnDetailsSsas> columns=filterList(query.columnDetails,MatrixElemTypeEnum.COLUMN);
         //是否下钻
         List<ColumnDetailsSsas> rows=filterList(query.columnDetails,MatrixElemTypeEnum.ROW);
@@ -33,19 +33,19 @@ public class MdxHelper {
             rows=drillDownRow;
         }
         List<ColumnDetailsSsas> values=filterList(query.columnDetails,MatrixElemTypeEnum.VALUE);
-        String columnMdx=getColumnMdx(columns,values);
-        String rowMdx=getRowMdx(rows);
-        String whereMdx=getWhereMdx(values,query.queryFilters);
+        String columnMdx=buildColumnMdx(columns,values);
+        String rowMdx=buildRowMdx(rows);
+        String whereMdx=buildWhereMdx(values,query.queryFilters);
         return replaceMdxTemplateByColumnRowValue(columnMdx,rowMdx,whereMdx,cubeName);
     }
 
     /**
-     * 获取列mdx语句
+     * 生成列mdx语句
      * @param columns 列
      * @param values 值
      * @return mdx语句
      */
-    private  String getColumnMdx(List<ColumnDetailsSsas> columns,List<ColumnDetailsSsas> values){
+    public  String buildColumnMdx(List<ColumnDetailsSsas> columns,List<ColumnDetailsSsas> values){
         StringBuilder mdxColumn=new StringBuilder();
         mdxColumn.append("NON EMPTY");
         if (columns.size()==0){
@@ -54,10 +54,9 @@ public class MdxHelper {
             mdxColumn.append("}");
         }else
         {
-            mdxColumn.append(getHierarchicalMdx(columns,MatrixElemTypeEnum.COLUMN,values));
+            mdxColumn.append(buildHierarchicalMdx(columns,MatrixElemTypeEnum.COLUMN,values));
         }
         mdxColumn.append("DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON COLUMNS");
-
         return mdxColumn.toString();
     }
 
@@ -66,13 +65,13 @@ public class MdxHelper {
      * @param rows 列
      * @return mdx语句
      */
-    private  String getRowMdx(List<ColumnDetailsSsas> rows){
+    public  String buildRowMdx(List<ColumnDetailsSsas> rows){
         // 无列 并且 值大于2
         if(rows.size()==0){
             return "";
         }else
         {
-            return " , NON EMPTY "+getHierarchicalMdx(rows, MatrixElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
+            return " , NON EMPTY "+buildHierarchicalMdx(rows, MatrixElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
         }
     }
 
@@ -82,15 +81,13 @@ public class MdxHelper {
      * @param wheres where
      * @return mdx语句
      */
-    private  String getWhereMdx(List<ColumnDetailsSsas> values, List<ChartQueryFilter> wheres){
+    public  String buildWhereMdx(List<ColumnDetailsSsas> values, List<ChartQueryFilter> wheres){
         //where条件中只能包含元组
         if (wheres.size()>0){
             StringBuilder whereMdxSb=new StringBuilder();
             whereMdxSb.append("WHERE(");
             for(ChartQueryFilter where: wheres){
-                String valuesStr= where.value.stream().map(e->{
-                    return where.columnName+".&["+e+"]";
-                }).collect(Collectors.joining(" , "," { "," } "));
+                String valuesStr= where.value.stream().map(e-> where.columnName+".&["+e+"]").collect(Collectors.joining(" , "," { "," } "));
                 whereMdxSb.append(valuesStr);
                 whereMdxSb.append(",");
             }
@@ -109,7 +106,7 @@ public class MdxHelper {
      * @param values 值
      * @return mdx 语句
      */
-    private  String getHierarchicalMdx(List<ColumnDetailsSsas> hierarchyPos, MatrixElemTypeEnum matrixElemTypeEnum,List<ColumnDetailsSsas> values){
+    public  String buildHierarchicalMdx(List<ColumnDetailsSsas> hierarchyPos, MatrixElemTypeEnum matrixElemTypeEnum,List<ColumnDetailsSsas> values){
         int hierarchySize=hierarchyPos.size();
         StringBuilder hMdxSb=new StringBuilder();
         if(hierarchySize==0){
@@ -120,7 +117,7 @@ public class MdxHelper {
             hMdxSb.append(".[All]");
             hMdxSb.append("},,,INCLUDE_CALC_MEMBERS)})");
         }else {
-            hMdxSb.append(getHierarchicalGreaterThanTwoMdx(hierarchyPos));
+            hMdxSb.append(buildHierarchicalGreaterThanTwoMdx(hierarchyPos));
         }
         //多值,并且是列元素,使用join语法.
         if (matrixElemTypeEnum==MatrixElemTypeEnum.COLUMN&& values!=null&& values.size()>1){
@@ -136,12 +133,12 @@ public class MdxHelper {
 
     /**
      *获取列或行长度大于二的部分mdx语句
-     * @param hierarchyPOS 维度
+     * @param hierarchyPoS 维度
      * @return mdx语句
      */
-    private  String getHierarchicalGreaterThanTwoMdx(List<ColumnDetailsSsas> hierarchyPOS){
+    public  String buildHierarchicalGreaterThanTwoMdx(List<ColumnDetailsSsas> hierarchyPoS){
         StringBuilder hMdxSb=new StringBuilder();
-        int hierarchySize=hierarchyPOS.size();
+        int hierarchySize=hierarchyPoS.size();
         StringBuilder dmBeforeMdxSb=new StringBuilder();
         StringBuilder dmAfterMdxSb=new StringBuilder();
         //所有层级
@@ -150,16 +147,16 @@ public class MdxHelper {
         for (int i =0;i<hierarchySize;i++ ){
             if (i<hierarchySize-1){
                 dmBeforeMdxSb.append("DrilldownMember(");
-                dmAfterMdxSb.append(", "+hierarchyPOS.get(i).uniqueName+".["+hierarchyPOS.get(i).name+"].AllMembers\n" +
-                        ", "+hierarchyPOS.get(i+1).uniqueName+"\n" +
+                dmAfterMdxSb.append(", "+hierarchyPoS.get(i).uniqueName+".["+hierarchyPoS.get(i).name+"].AllMembers\n" +
+                        ", "+hierarchyPoS.get(i+1).uniqueName+"\n" +
                         ")");
             }
             if (i>=1){
                 if (i==1){
-                    cjMdxSb.append(hierarchyPOS.get(i).uniqueName+".[All]");
+                    cjMdxSb.append(hierarchyPoS.get(i).uniqueName+".[All]");
                 }else {
                     cjMdxSb.append(",");
-                    cjMdxSb.append(hierarchyPOS.get(i).uniqueName);
+                    cjMdxSb.append(hierarchyPoS.get(i).uniqueName);
                     cjMdxSb.append(".[All]");
                 }
             }
@@ -168,7 +165,7 @@ public class MdxHelper {
         hMdxSb.append("Hierarchize(");
         hMdxSb.append(dmBeforeMdxSb);
         hMdxSb.append("CrossJoin(" +
-                "{"+hierarchyPOS.get(0).uniqueName+".[All] ,"+hierarchyPOS.get(0).uniqueName+".["+hierarchyPOS.get(0).name+"].AllMembers}" +
+                "{"+hierarchyPoS.get(0).uniqueName+".[All] ,"+hierarchyPoS.get(0).uniqueName+".["+hierarchyPoS.get(0).name+"].AllMembers}" +
                 ","+cjMdxSb.toString()+")");
         hMdxSb.append(dmAfterMdxSb);
         hMdxSb.append(")");
@@ -183,7 +180,7 @@ public class MdxHelper {
      * @param cubeName 模型名称
      * @return 完整mdx语句
      */
-    private  String replaceMdxTemplateByColumnRowValue(String columnMdx,String rowMdx,String whereMdx,String cubeName){
+    public  String replaceMdxTemplateByColumnRowValue(String columnMdx,String rowMdx,String whereMdx,String cubeName){
         return "SELECT \n" +
                 columnMdx + "\n" +
                 rowMdx + "\n" +
@@ -194,7 +191,7 @@ public class MdxHelper {
                 " CELL PROPERTIES VALUE, FORMAT_STRING, LANGUAGE, BACK_COLOR, FORE_COLOR, FONT_FLAGS";
     }
 
-    private   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas,MatrixElemTypeEnum matrixElemType){
+    public   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas,MatrixElemTypeEnum matrixElemType){
        return columnDetailsSsas.stream()
                 .filter(p -> matrixElemType==p.matrixElemType)
                 .collect(Collectors.toList());

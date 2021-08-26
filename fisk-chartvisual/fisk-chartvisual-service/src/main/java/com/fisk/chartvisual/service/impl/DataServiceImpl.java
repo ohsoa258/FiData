@@ -8,6 +8,7 @@ import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.util.dbhelper.*;
+import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
@@ -39,7 +40,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     @Resource
     CubeHelper cubeHelper;
     @Resource
-    MdxHelper mdxHelper;
+    BaseBuildMdx mdxHelper;
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
@@ -84,7 +85,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     public DataServiceResult querySsas(ChartQueryObjectSsas query) {
         DataSourceConVO model = getDataSourceCon(query.id);
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
-        String mdx=mdxHelper.GetMdxByColumnRowValue(query,model.conCube);
+        String mdx=mdxHelper.buildMdx(query,model.conCube);
         return  cubeHelper.query(mdx);
     }
 
