@@ -11,6 +11,22 @@ public class DbConnectionDTO {
      * 驱动类型
      */
     public String driveType;
+
+    /**
+     * 主机名
+     */
+    public String host;
+
+    /**
+     * 端口号
+     */
+    public String port;
+
+    /**
+     * 数据库名
+     */
+    public String dbName;
+
     /**
      * 连接字符串
      */
