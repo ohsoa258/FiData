@@ -24,5 +24,9 @@ public class DimensionAttributeListDTO extends DimensionAttributeDTO {
      * 源表字段
      */
     public String tableSourceField;
+    /**
+     * 维度关联维度名称
+     */
+    public String associationAttributeName;
 
 }

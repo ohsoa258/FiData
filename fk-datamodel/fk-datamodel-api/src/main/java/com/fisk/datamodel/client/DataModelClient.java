@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author JianWenYang
  */
 @FeignClient("datamodel-service")
-public interface DimensionClient {
+public interface DataModelClient {
 
     /**
      * 获取维度表元数据字段

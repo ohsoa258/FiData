@@ -254,12 +254,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 查询所有应用名称
         List<AppRegistrationPO> list = this.query()
                 .eq("del_flag", 1)
+                .orderByDesc("create_time")
                 .list();
         List<AppNameDTO> listAppName = new ArrayList<>();
         for (AppRegistrationPO po : list) {
 
             AppNameDTO appNameDTO = new AppNameDTO();
             String appName = po.getAppName();
+            appNameDTO.setId(po.id);
             appNameDTO.setAppName(appName);
             appNameDTO.setAppType((byte) po.getAppType());
 

@@ -126,8 +126,6 @@ public class RoleInfoImpl implements IRoleInfoService{
             queryWrapper.lambda()
                     .like(RoleInfoPO::getRoleName, dto.name);
         }
-
-
         Page<RoleInfoPO> data=new Page<RoleInfoPO>(dto.getPage(),dto.getSize());
         return RoleInfoMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
     }

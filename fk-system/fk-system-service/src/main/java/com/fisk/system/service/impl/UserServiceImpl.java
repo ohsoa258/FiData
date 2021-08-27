@@ -8,6 +8,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.*;
+import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
 import com.fisk.system.mapper.UserMapper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
