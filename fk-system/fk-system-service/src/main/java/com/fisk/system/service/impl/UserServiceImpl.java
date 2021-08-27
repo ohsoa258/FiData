@@ -11,6 +11,7 @@ import com.fisk.system.dto.*;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
+import com.fisk.system.mapper.RoleUserAssignmentMapper;
 import com.fisk.system.mapper.UserMapper;
 import com.fisk.system.service.IUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,8 @@ public class UserServiceImpl implements IUserService {
     UserMapper mapper;
     @Resource
     UserHelper userHelper;
+    @Resource
+    RoleUserAssignmentMapper roleUserAssignmentMapper;
 
     /**
      * 校验手机号或用户名是否存在
@@ -116,11 +119,26 @@ public class UserServiceImpl implements IUserService {
     @Override
     public IPage<UserPowerDTO> getPageUserData(QueryDTO dto)
     {
+        //List<UserPO> data=new ArrayList<>();
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         if (dto !=null && StringUtils.isNotEmpty(dto.name))
         {
             queryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
         }
+
+        //查询点击角色下所有用户
+        /*if (dto.roleId !=0)
+        {
+            QueryWrapper<RoleUserAssignmentPO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.select("user_id").lambda().eq(RoleUserAssignmentPO::getRoleId,dto.roleId);
+            List<Object> list=roleUserAssignmentMapper.selectObjs(queryWrapper1);
+            List<Integer> ids=(List<Integer>)(List)list;
+            queryWrapper.in("id",ids);
+            data.addAll(mapper.selectList(queryWrapper));
+
+
+        }*/
+
         Page<UserPO> data=new Page<UserPO>(dto.getPage(),dto.getSize());
         return UserMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.orderByDesc("create_time")));
     }
