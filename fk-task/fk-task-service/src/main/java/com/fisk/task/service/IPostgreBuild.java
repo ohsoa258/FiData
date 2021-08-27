@@ -18,4 +18,12 @@ public interface IPostgreBuild {
       * @return 返回执行sql查到的结果与sql执行结果
       */
      <T> BusinessResult postgreQuery(String executsql,String businessType,T data);
+
+     /**
+      * pgsql stg表数据同步到ods
+      * @param stgTable stg表
+      * @param odsTable ods表
+      * @return
+      */
+     BusinessResult postgreDataStgToOds(String stgTable,String odsTable);
 }

@@ -15,7 +15,7 @@ public class PostgreBuildImpl implements IPostgreBuild {
         boolean re = false;
         String msg = null;
         try {
-            PostgreHelper.postgreExecute(executsql,businessType);
+            PostgreHelper.postgreExecuteSql(executsql,businessType);
             re = true;
         } catch (Exception e) {
             //捕捉错误
@@ -42,4 +42,13 @@ public class PostgreBuildImpl implements IPostgreBuild {
         res = BusinessResult.of(re, msg, data);
         return res;
     }
+    @Override
+    public BusinessResult postgreDataStgToOds(String stgTable,String odsTable)
+    {
+        boolean re = false;
+        String msg = null;
+        BusinessResult res = new BusinessResult(re, msg);
+        return res;
+    }
+
 }

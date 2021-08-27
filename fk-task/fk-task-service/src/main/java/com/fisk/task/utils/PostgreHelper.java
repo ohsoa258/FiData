@@ -112,7 +112,12 @@ public class PostgreHelper {
         }
     }
 
-    public static void postgreExecute(String executsql, String businessType) {
+    /**
+     * 执行pgsql语句 2021年08月27日10:29:12 Dennyhui
+     * @param executsql
+     * @param businessType
+     */
+    public static void postgreExecuteSql(String executsql, String businessType) {
         Connection conn = null;
         Statement stmt = null;
         try {
@@ -132,7 +137,6 @@ public class PostgreHelper {
             PostgreHelper.closeConn(conn);
         }
     }
-
     //关闭连接
     public static void closeConn(Connection conn) {
         if (conn != null) {
