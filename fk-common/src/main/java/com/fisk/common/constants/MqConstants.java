@@ -29,6 +29,8 @@ public class MqConstants {
 
         public static final String BUILD_DATAMODEL_DORIS_TABLE= "task.build.datamodel.doris.table.flow";
 
+        public static final String BUILD_DATAINPUT_PGSQL_TABLE_FLOW= "task.build.datainput.pgsql.table.flow";
+
     }
 
     public static final class RouterConstants{
@@ -41,6 +43,6 @@ public class MqConstants {
         public static final String TASK_BUILD_DORIS_ROUTER = "task.build.doris.#";
         public static final String TASK_BUILD_DATAMODEL_DORIS_TABLE_ROUTER = "task.build.datamodel.doris.table.#";
         public static final String TASK_BUILD_DORIS_INCREMENTAL_ROUTER = "task.build.doris.incremental.#";
-
+        public static final String TASK_BBUILD_DATAINPUT_PGSQL_TABLE_ROUTER = "task.build.datainput.pgsql.table.incremental.#";
     }
 }
