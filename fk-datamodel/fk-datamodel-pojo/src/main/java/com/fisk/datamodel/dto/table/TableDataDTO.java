@@ -24,5 +24,16 @@ public class TableDataDTO {
      * 表名
      */
     public String tableName;
-
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
+    /**
+     * 别名
+     */
+    public String alias;
+    /**
+     * 关联哪个维度表id
+     */
+    public int relationId;
 }

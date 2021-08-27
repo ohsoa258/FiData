@@ -13,4 +13,8 @@ public class DataDoFieldDTO {
     public String where;
     public String whereValue;
     public DataDoFieldTypeEnum fieldType;
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
 }

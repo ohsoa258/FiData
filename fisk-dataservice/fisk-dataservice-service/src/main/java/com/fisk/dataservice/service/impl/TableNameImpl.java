@@ -38,10 +38,11 @@ public class TableNameImpl implements ITableName {
 
     @DS("datamodel")
     @Override
-    public ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field) {
+    public ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field,int isDimension) {
         TableDataDTO tableDataDTO = new TableDataDTO();
         DimensionPO dimension;
         switch (type) {
+            // 值
             case VALUE:
                 IndicatorsPO indicators = indicatorsMapper.selectById(id);
                 if (indicators == null) {
@@ -53,6 +54,7 @@ public class TableNameImpl implements ITableName {
                 tableDataDTO.type = DataDoFieldTypeEnum.VALUE;
                 tableDataDTO.tableField = field;
                 tableDataDTO.tableName = fact.getFactTableEnName();
+                tableDataDTO.dimension = isDimension;
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             case WHERE:
             case COLUMN:
@@ -70,6 +72,7 @@ public class TableNameImpl implements ITableName {
                 tableDataDTO.id = id;
                 tableDataDTO.tableField = field;
                 tableDataDTO.tableName = dimension.getDimensionTabName();
+                tableDataDTO.dimension = isDimension;
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);

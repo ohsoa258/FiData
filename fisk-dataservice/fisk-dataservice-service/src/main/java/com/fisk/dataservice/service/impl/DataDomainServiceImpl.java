@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.table.TableDataDTO;
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
 import static java.util.stream.Collectors.*;
@@ -47,25 +50,91 @@ public class DataDomainServiceImpl implements DataDomainService {
      * @return 查询字段分类拼接
      */
     public List<Map> filterData(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
+
         // 转义符
         String[] escapeStr = getEscapeStr();
 
+        // 非维度数据
+        List<TableDataDTO> noTableData = apiConfigureFieldList.stream()
+                .filter(e -> e.getDimension() == 0)
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
+                .collect(toList());
+
+        // 所有维度的data
+        List<TableDataDTO> existTableData = apiConfigureFieldList.stream()
+                .filter(e -> e.getDimension() == 1)
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
+                .collect(toList());
+        // 全局sql
+        StringBuilder wholeStr = new StringBuilder();
+        // 维度
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+
+        // select
+        String queryField = existTableData.stream()
+                .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
+                .collect(joining(","));
+
+        str.append(queryField);
+
+        // 主表
+        str.append(" FROM " + existTableData.get(0).tableName);
+        existTableData.remove(0);
+
+        str.append(" INNER JOIN ");
+
+        // 从表
+        String collect = existTableData.stream()
+                .map(e -> e.tableName + " ON 1=1")
+                .collect(joining(" INNER JOIN "));
+        str.append(collect);
+        // 只有维度的的情况
+        System.out.println(str);
+
+        // 存在非维度
+        if (CollectionUtils.isNotEmpty(noTableData)) {
+            // 所有维度的data
+            List<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
+                    .filter(e -> e.getDimension() == 1)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
+                    .collect(toList());
+
+            String existTableField = tableDataList.stream().map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
+                    .collect(joining("," + DIMENSION_ALL_ALIAS_NAME + "."));
+
+            wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
+            wholeStr.append("FROM (" + str + ")" + " AS " + DIMENSION_ALL_ALIAS_NAME + " ");
+
+            // LEFT JOIN
+            AtomicInteger num = new AtomicInteger();
+            String leftJoin = noTableData.stream()
+                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
+                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getTableName() + "_key"
+                            + "=" + NO_DIMENSION_ALIAS_NAME + num + "." + e.getTableName() + "_key")
+                    .collect(joining(" "));
+            wholeStr.append(leftJoin);
+        }
+
+        System.err.println(wholeStr);
+
+
         // 所有列的表名field集合
         List<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
-                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName()).getData())
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
                 .collect(toList());
 
 
-        ResultEntity<TableDataDTO> resultEntity3 = iTableName.getTableName(10, WHERE, "year");
-        ResultEntity<TableDataDTO> resultEntity1 = iTableName.getTableName(10, COLUMN, "year");
-        ResultEntity<TableDataDTO> resultEntity2 = iTableName.getTableName(116, VALUE, "money");
+        ResultEntity<TableDataDTO> resultEntity3 = iTableName.getTableName(10, WHERE, "year", 1);
+        ResultEntity<TableDataDTO> resultEntity1 = iTableName.getTableName(10, COLUMN, "year", 1);
+        ResultEntity<TableDataDTO> resultEntity2 = iTableName.getTableName(116, VALUE, "money", 1);
 
         String queryFieldList = apiConfigureFieldList.stream()
                 // 查询字段: select列
                 // 日期.年,日期.月,维度.金额
                 // `date.year`,`date.month`,`dimension.money`
                 .filter(e -> e.getFieldType().equals(COLUMN))
-                .map(e -> iTableName.getTableName(e.getFieldId(),e.getFieldType(),e.getFieldName()).getData().tableName
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().tableName
                         + "." + escapeStr[0] + e.getFieldName()
                         + escapeStr[1])
                 .collect(joining(","));
@@ -74,8 +143,8 @@ public class DataDomainServiceImpl implements DataDomainService {
                 // 权限控制字段: where条件
                 // `date.year`=`2021` and `date.month`=`3`
                 .filter(e -> e.getFieldType().equals(WHERE))
-                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(),e.getFieldName()).getData().tableName
-                        + "."+ escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + "'" + e.getWhereValue() + "'")
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().tableName
+                        + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + "'" + e.getWhereValue() + "'")
                 .collect(joining("AND "));
 
         String aggregationList = apiConfigureFieldList.stream()
@@ -83,7 +152,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 // 如维度金额求和:  sum(`money`)
                 .filter(e -> e.getFieldType().equals(VALUE))
                 .map(e -> iTableName.getAggregation(e.getFieldId()).getData()
-                        + "(" + iTableName.getTableName(e.getFieldId(), e.getFieldType(),e.getFieldName()).getData().tableName +
+                        + "(" + iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().tableName +
                         "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")")
                 .collect(joining(","));
 
@@ -91,7 +160,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 // 分组字段: group by
                 // 根据年,月,产维度金额分组: `date.year`,`date.month`,`dimension.money`
                 .filter(e -> e.getFieldType().equals(COLUMN))
-                .map(e -> iTableName.getTableName(e.getFieldId(),e.getFieldType(),e.getFieldName()).getData().tableName
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().tableName
                         + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                 .collect(joining(","));
         return this.splicingSql(queryFieldList, aggregationList, groupingList, conditionList, currentPage, pageSize, tableDataList);
@@ -105,7 +174,7 @@ public class DataDomainServiceImpl implements DataDomainService {
      * @param conditionList   条件
      * @param currentPage     分页
      * @param pageSize
-     * @param       表名
+     * @param
      * @return
      */
     public List<Map> splicingSql(String queryFieldList,
@@ -115,7 +184,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                                  Integer currentPage, Integer pageSize,
                                  List<TableDataDTO> tableDataList) {
         // 最终SQL
-        String splitSql = this.splitSql(queryFieldList, aggregationList, groupingList, conditionList,tableDataList);
+        String splitSql = this.splitSql(queryFieldList, aggregationList, groupingList, conditionList, tableDataList);
         System.err.println(splitSql);
 
         // 添加分页
@@ -136,7 +205,7 @@ public class DataDomainServiceImpl implements DataDomainService {
      * @param aggregationList 聚合
      * @param groupingList    分组
      * @param conditionList   条件
-     * @param map             表名
+     * @param
      * @return
      */
     public String splitSql(String queryFieldList, String aggregationList, String groupingList, String conditionList,
@@ -159,7 +228,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
         TableDataDTO tableData = new TableDataDTO();
         for (TableDataDTO dto : tableDataList) {
-            if (dto.getType().equals(VALUE)){
+            if (dto.getType().equals(VALUE)) {
                 tableData.setId(dto.getId());
                 tableData.setTableField(dto.getTableField());
                 tableData.setTableName(dto.getTableName());

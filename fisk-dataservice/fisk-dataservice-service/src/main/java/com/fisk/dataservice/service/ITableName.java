@@ -15,7 +15,7 @@ public interface ITableName {
      * @param field field
      * @return tableName
      */
-    ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field);
+    ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field,int isDimension);
 
     /**
      * 查询聚合条件
