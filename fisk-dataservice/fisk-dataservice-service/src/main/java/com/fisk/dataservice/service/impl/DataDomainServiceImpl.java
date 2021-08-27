@@ -104,9 +104,6 @@ public class DataDomainServiceImpl implements DataDomainService {
             String existTableField = tableDataList.stream().map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining("," + DIMENSION_ALL_ALIAS_NAME + "."));
 
-            wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
-            wholeStr.append("FROM (" + str + ")" + " AS " + DIMENSION_ALL_ALIAS_NAME + " ");
-
             // 带有维度名称
             List<TableDataDTO> collect3 = noTableData.stream()
                     .filter(e -> e.getRelationId() != null)
@@ -131,10 +128,20 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             int num1 = 0;
             for (TableDataDTO noTableDatum : noTableData) {
-                if (noTableDatum.getRelationId() != null){
-                    noTableDatum.setAlias(NO_DIMENSION_ALIAS_NAME + num1);
-                }
+                noTableDatum.setAlias(NO_DIMENSION_ALIAS_NAME + ++num1);
             }
+
+            String collect4 = noTableData.stream()
+                    .map(e -> e.getAlias() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
+                    .collect(joining(","));
+
+            if (StringUtils.isBlank(collect4)){
+                wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
+            }else {
+                wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField + "," + collect4);
+            }
+
+            wholeStr.append("FROM (" + str + ")" + " AS " + DIMENSION_ALL_ALIAS_NAME + " ");
 
             // 判断追加 LEFT JOIN 还是笛卡尔积
             if (StringUtils.isBlank(leftJoin)){
@@ -144,7 +151,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             }
 
             // WHERE
-            wholeStr.append("WHERE");
+            wholeStr.append("WHERE ");
             String collect2 = noTableData.stream()
                     .map(e -> e.alias + "." + e.tableField + " IS NOT NULL")
                     .collect(joining(" AND "));
