@@ -111,6 +111,28 @@ public class PostgreHelper {
             PostgreHelper.closeConn(conn);
         }
     }
+
+    public static void postgreExecute(String executsql, String businessType) {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            // 1获得连接
+            conn = getConnection(businessType==BusinessTypeEnum.DATAMODEL.getName()? pgsqlDatamodelUrl:pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
+            // 2执行对象
+            stmt = conn.createStatement();
+            // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
+            stmt.executeUpdate(executsql);
+        } catch (Exception e) {
+            //捕捉错误
+            log.error(e.getMessage());
+        } finally {
+            //关闭操作对象
+            PostgreHelper.closeStatement(stmt);
+            //关闭连接
+            PostgreHelper.closeConn(conn);
+        }
+    }
+
     //关闭连接
     public static void closeConn(Connection conn) {
         if (conn != null) {

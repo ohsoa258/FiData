@@ -15,8 +15,7 @@ public class PostgreBuildImpl implements IPostgreBuild {
         boolean re = false;
         String msg = null;
         try {
-            // 1获得连接
-            PostgreHelper.postgreUpdate(executsql,businessType);
+            PostgreHelper.postgreExecute(executsql,businessType);
             re = true;
         } catch (Exception e) {
             //捕捉错误
