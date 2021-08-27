@@ -158,24 +158,20 @@ public class AmoHelper {
     }
 
     /**
-     * 查询
-     * @param query 条件
-     * @param cubeName cube名称
-     * @return
+     *查询
+     * @param mdx
+     * @return CellSet
      */
-    public DataServiceResult query(ChartQueryObjectSsas query, String cubeName){
-        BaseBuildMdx  baseBuildMdx= GraphicsFactory.getMdxHelper(query.graphicType);
+    public CellSet query(String mdx){
+        CellSet cellSet=null;
         StopWatch stopWatch = new StopWatch();
         String code = UUID.randomUUID().toString();
-        DataServiceResult res=new DataServiceResult();
-        String mdx= baseBuildMdx.buildMdx(query,cubeName);
         try {
             stopWatch.start();
             log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
             OlapStatement stmt = connection.createStatement();
-            CellSet cellset = stmt.executeOlapQuery(mdx);
+             cellSet = stmt.executeOlapQuery(mdx);
             stmt.close();
-            res =baseBuildMdx.getDataByAnalyticalCellSet(cellset);
         } catch (Exception ex) {
             log.error("【execQuery】【" + code + "】执行MDX查询报错, ex", ex);
             log.error("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
@@ -184,7 +180,36 @@ public class AmoHelper {
             stopWatch.stop();
             log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }
+        return cellSet;
+    }
+
+    /**
+     * 获取数据
+     * @param query 条件
+     * @param cubeName cube名称
+     * @return
+     */
+    public DataServiceResult getData(ChartQueryObjectSsas query, String cubeName){
+        BaseBuildMdx  baseBuildMdx= GraphicsFactory.getMdxHelper(query.graphicType);
+        DataServiceResult res=new DataServiceResult();
+        String mdx= baseBuildMdx.buildMdx(query,cubeName);
+        res =baseBuildMdx.getDataByAnalyticalCellSet(query(mdx));
         return res;
     }
 
+    /**
+     * 获取层级下的成员
+     */
+    public List<String>  getMembers(String cubeName,String hierarchyName){
+        String mdx=" SELECT  NON EMPTY "+hierarchyName+".allmembers ON COLUMNS\n" +
+                " FROM "+cubeName+" ";
+        CellSet cellSet= query(mdx);
+        List<String> data=new ArrayList<>();
+        for (Position column:cellSet.getAxes().get(0)){
+            for (Member member:column.getMembers()){
+                data.add(member.getName());
+            }
+        }
+        return  data;
+    }
 }

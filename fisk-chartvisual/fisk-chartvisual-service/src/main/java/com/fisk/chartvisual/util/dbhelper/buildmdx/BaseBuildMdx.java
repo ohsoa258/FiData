@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author JinXingWang
  */
 @Service
-public abstract class BaseBuildMdx {
+public class BaseBuildMdx    {
 
     /**
      * 通过列行值获取mdx语句
@@ -41,7 +41,7 @@ public abstract class BaseBuildMdx {
         }
         List<ColumnDetailsSsas> values=filterList(query.columnDetails,MatrixElemTypeEnum.VALUE);
         String columnMdx=buildColumnMdx(columns,values);
-        String rowMdx=buildRowMdx(rows);
+        String rowMdx=buildRowMdx(rows,columns);
         String whereMdx=buildWhereMdx(values,query.queryFilters);
         return replaceMdxTemplateByColumnRowValue(columnMdx,rowMdx,whereMdx,cubeName);
     }
@@ -54,16 +54,16 @@ public abstract class BaseBuildMdx {
      */
     public  String buildColumnMdx(List<ColumnDetailsSsas> columns,List<ColumnDetailsSsas> values){
         StringBuilder mdxColumn=new StringBuilder();
-        mdxColumn.append("NON EMPTY");
+        mdxColumn.append("NON EMPTY ");
         if (columns.size()==0){
-            mdxColumn.append("{");
+            mdxColumn.append(" {");
             mdxColumn.append(StringUtils.join(values.stream().map(en->en.uniqueName).collect(Collectors.toList()), ","));
-            mdxColumn.append("}");
+            mdxColumn.append("} ");
         }else
         {
             mdxColumn.append(buildHierarchicalMdx(columns,MatrixElemTypeEnum.COLUMN,values));
         }
-        mdxColumn.append("DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON COLUMNS");
+        mdxColumn.append(" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON COLUMNS ");
         return mdxColumn.toString();
     }
 
@@ -72,7 +72,7 @@ public abstract class BaseBuildMdx {
      * @param rows 列
      * @return mdx语句
      */
-    public  String buildRowMdx(List<ColumnDetailsSsas> rows){
+    public  String buildRowMdx(List<ColumnDetailsSsas> rows,List<ColumnDetailsSsas> columns){
         // 无列 并且 值大于2
         if(rows.size()==0){
             return "";
@@ -129,11 +129,9 @@ public abstract class BaseBuildMdx {
         //多值,并且是列元素,使用join语法.
         if (matrixElemTypeEnum==MatrixElemTypeEnum.COLUMN&& values!=null&& values.size()>1){
             hMdxSb.insert(0, "CrossJoin(");
-            for (ColumnDetailsSsas value: values ){
-                hMdxSb.append(",");
-                hMdxSb.append(value.uniqueName);
-            }
-            hMdxSb.append(")");
+            hMdxSb.append(",{");
+            hMdxSb.append(values.stream().map(e->e.uniqueName).collect(Collectors.joining(",")));
+            hMdxSb.append("})");
         }
         return  hMdxSb.toString();
     }
@@ -220,7 +218,6 @@ public abstract class BaseBuildMdx {
         List<Map<String,Object>> mapList=new ArrayList<>();
         for (Position row :cellSet.getAxes().get(1)){
             Map<String,Object> map=new HashMap<>();
-
             for (Position column:cellSet.getAxes().get(0)){
                 final Cell cell=cellSet.getCell(column,row);
                 for (Member member:column.getMembers()){

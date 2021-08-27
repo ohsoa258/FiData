@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
+import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
@@ -39,8 +40,6 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     RedisUtil redis;
     @Resource
     CubeHelper cubeHelper;
-    @Resource
-    BaseBuildMdx mdxHelper;
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
@@ -81,13 +80,21 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         return DbHelper.execQueryResultMaps(command.buildQuerySlicer(query), model);
     }
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public DataServiceResult querySsas(ChartQueryObjectSsas query) {
         DataSourceConVO model = getDataSourceCon(query.id);
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
-        return  cubeHelper.query(query,model.conCube);
+        return  cubeHelper.getData(query,model.conCube);
     }
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
+    @Override
+    public List<String> querySsasSlicer(SlicerQuerySsasObject query) {
+        DataSourceConVO model = getDataSourceCon(query.id);
+        cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+        return  cubeHelper.getMembers(model.conCube,query.hierarchyName);
+    }
 
     private DataSourceConVO getDataSourceCon(int id) {
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
