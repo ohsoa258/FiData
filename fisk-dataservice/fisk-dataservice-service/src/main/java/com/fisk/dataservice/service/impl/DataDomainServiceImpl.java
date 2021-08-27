@@ -118,20 +118,19 @@ public class DataDomainServiceImpl implements DataDomainService {
             // LEFT JOIN
             AtomicInteger num = new AtomicInteger();
             String leftJoin = collect3.stream()
-                    .filter(e -> e.getRelationId() != null)
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
                             + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
                             + "=" + NO_DIMENSION_ALIAS_NAME + num + "." + e.getDimensionName() + "_key ")
                     .collect(joining(" "));
 
-            String collect1 = collect3.stream()
+            String collect1 = noTableData.stream()
                     .filter(e -> e.getRelationId() == null)
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
                             + " ON " + "1 = 1 ")
                     .collect(joining(" "));
 
             int num1 = 0;
-            for (TableDataDTO noTableDatum : collect3) {
+            for (TableDataDTO noTableDatum : noTableData) {
                 if (noTableDatum.getRelationId() != null){
                     noTableDatum.setAlias(NO_DIMENSION_ALIAS_NAME + num1);
                 }
@@ -146,7 +145,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // WHERE
             wholeStr.append("WHERE");
-            String collect2 = collect3.stream()
+            String collect2 = noTableData.stream()
                     .map(e -> e.alias + "." + e.tableField + " IS NOT NULL")
                     .collect(joining(" AND "));
             wholeStr.append(collect2);
