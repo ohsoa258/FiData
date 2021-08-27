@@ -3,11 +3,18 @@ import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.ColumnDetailsSsas;
 import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
+import com.fisk.chartvisual.vo.DataServiceResult;
 import org.apache.commons.lang.StringUtils;
+import org.olap4j.Cell;
+import org.olap4j.CellSet;
+import org.olap4j.Position;
+import org.olap4j.metadata.Member;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -191,10 +198,38 @@ public abstract class BaseBuildMdx {
                 " CELL PROPERTIES VALUE, FORMAT_STRING, LANGUAGE, BACK_COLOR, FORE_COLOR, FONT_FLAGS";
     }
 
+    /**
+     * 获取行列值筛选条件
+     * @param columnDetailsSsas
+     * @param matrixElemType
+     * @return
+     */
     public   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas,MatrixElemTypeEnum matrixElemType){
        return columnDetailsSsas.stream()
                 .filter(p -> matrixElemType==p.matrixElemType)
                 .collect(Collectors.toList());
+    }
 
+    /**
+     * 解析 cellSet
+     * @param cellSet 单元格集合
+     * @return map集合
+     */
+    public DataServiceResult getDataByAnalyticalCellSet(CellSet cellSet){
+        DataServiceResult rs=new DataServiceResult();
+        List<Map<String,Object>> mapList=new ArrayList<>();
+        for (Position row :cellSet.getAxes().get(1)){
+            Map<String,Object> map=new HashMap<>();
+
+            for (Position column:cellSet.getAxes().get(0)){
+                final Cell cell=cellSet.getCell(column,row);
+                for (Member member:column.getMembers()){
+                    map.put(member.getName(),cell.getValue());
+                }
+            }
+            mapList.add(map);
+        }
+        rs.data=mapList;
+        return rs;
     }
 }

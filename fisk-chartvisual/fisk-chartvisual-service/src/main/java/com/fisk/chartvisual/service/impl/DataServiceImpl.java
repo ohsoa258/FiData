@@ -85,8 +85,7 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     public DataServiceResult querySsas(ChartQueryObjectSsas query) {
         DataSourceConVO model = getDataSourceCon(query.id);
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
-        String mdx=mdxHelper.buildMdx(query,model.conCube);
-        return  cubeHelper.query(mdx);
+        return  cubeHelper.query(query,model.conCube);
     }
 
 

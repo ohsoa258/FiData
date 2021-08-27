@@ -12,4 +12,5 @@ import java.util.Map;
 public class DataServiceResult {
     public Map<String,Object> aggregation;
     public List<Map<String, Object>> data;
+    public List<Map<String, Object>> tableColumn;
 }

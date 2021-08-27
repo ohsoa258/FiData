@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.dto;
 
+import com.fisk.chartvisual.enums.GraphicTypeEnum;
 import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
-
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -19,4 +19,5 @@ public class ChartQueryObjectSsas {
     public List<ChartQueryFilter> queryFilters;
     public ChartDrillDown chartDrillDown;
     public InteractiveTypeEnum interactiveType;
+    public GraphicTypeEnum graphicType;
 }

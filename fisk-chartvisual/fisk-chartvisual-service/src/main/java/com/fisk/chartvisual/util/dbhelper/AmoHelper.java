@@ -1,9 +1,11 @@
 package com.fisk.chartvisual.util.dbhelper;
 
+import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DimensionPO;
 import com.fisk.chartvisual.entity.HierarchyPO;
 import com.fisk.chartvisual.entity.MeasurePO;
+import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.exception.FkException;
@@ -157,21 +159,23 @@ public class AmoHelper {
 
     /**
      * 查询
-     * @param mdx mdx语句
-     * @return 数据集合
+     * @param query 条件
+     * @param cubeName cube名称
+     * @return
      */
-    public DataServiceResult query(String mdx){
+    public DataServiceResult query(ChartQueryObjectSsas query, String cubeName){
+        BaseBuildMdx  baseBuildMdx= GraphicsFactory.getMdxHelper(query.graphicType);
         StopWatch stopWatch = new StopWatch();
         String code = UUID.randomUUID().toString();
         DataServiceResult res=new DataServiceResult();
+        String mdx= baseBuildMdx.buildMdx(query,cubeName);
         try {
             stopWatch.start();
             log.info("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
             OlapStatement stmt = connection.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);
-
             stmt.close();
-            res.data =getDataByAnalyticalCellSet(cellset);
+            res =baseBuildMdx.getDataByAnalyticalCellSet(cellset);
         } catch (Exception ex) {
             log.error("【execQuery】【" + code + "】执行MDX查询报错, ex", ex);
             log.error("【execQuery】【" + code + "】执行MDX: 【" + mdx + "】");
@@ -183,62 +187,4 @@ public class AmoHelper {
         return res;
     }
 
-    /**
-     * 解析 cellSet
-     * @param cellSet 单元格集合
-     * @return map集合
-     */
-    public List<Map<String,Object>>  getDataByAnalyticalCellSet(CellSet cellSet){
-        List<CellSetAxis> axis=cellSet.getAxes();
-        switch (axis.size()){
-            case 2:
-                return getTwoAxisData(cellSet);
-            case 1:
-                return getOneAxisData(cellSet);
-            default:
-                return new ArrayList<>();
-        }
-    }
-
-    /**
-     * 解析2轴cellSet
-     * @param cellSet 单元格集合
-     * @return map 集合
-     */
-    public List<Map<String,Object>> getTwoAxisData(CellSet cellSet){
-        List<Map<String,Object>> mapList=new ArrayList<>();
-        for (Position row :cellSet.getAxes().get(1)){
-            Map<String,Object> map=new HashMap<>();
-            for (Member member:row.getMembers()){
-                map.put("name",member.getName());
-            }
-            for (Position column:cellSet.getAxes().get(0)){
-                final Cell cell=cellSet.getCell(column,row);
-                for (Member member:column.getMembers()){
-                    map.put(member.getName(),cell.getValue());
-                }
-            }
-            mapList.add(map);
-        }
-        return  mapList;
-    }
-
-    /**
-     * 解析1轴cellSet
-     * @param cellSet 单元格集合
-     * @return map集合
-     */
-    public List<Map<String,Object>> getOneAxisData(CellSet cellSet){
-        List<Map<String,Object>> maps=new ArrayList<>();
-        for (Position column : cellSet.getAxes().get(0)) {
-            Map<String,Object> map=new HashMap<>();
-            for (Member member : column.getMembers()) {
-                map.put("name",member.getName());
-            }
-            final Cell cell = cellSet.getCell(column);
-            map.put("value",cell.getValue());
-            maps.add(map);
-        }
-        return maps;
-    }
 }
