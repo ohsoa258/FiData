@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -30,7 +31,7 @@ public class AtomicIndicatorsController {
 
     @ApiOperation("添加原子指标")
     @PostMapping("/addAtomicIndicators")
-    public ResultEntity<Object> addAtomicIndicators(@Validated @RequestBody AtomicIndicatorsDTO dto) {
+    public ResultEntity<Object> addAtomicIndicators(@Validated @RequestBody List<AtomicIndicatorsDTO> dto) {
         return ResultEntityBuild.build(service.addAtomicIndicators(dto));
     }
 

@@ -3,7 +3,7 @@ package com.fisk.dataservice.map;
 import com.fisk.dataservice.dto.ApiConfigureField;
 import com.fisk.dataservice.dto.ApiConfigureFieldEditDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
-import com.fisk.dataservice.dto.UserDTO;
+import com.fisk.dataservice.vo.UserVO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import org.mapstruct.*;
@@ -51,5 +51,5 @@ public interface ApiConfigureFieldMap {
      * @param dto source
      * @return target
      */
-    UserDTO poToDto(ConfigureUserPO dto);
+    UserVO poToDto(ConfigureUserPO dto);
 }

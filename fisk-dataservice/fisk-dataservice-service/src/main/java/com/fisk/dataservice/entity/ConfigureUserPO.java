@@ -12,10 +12,15 @@ import lombok.Data;
 @Data
 @TableName("configure_user")
 public class ConfigureUserPO extends BasePO {
+
     /**
-     * 访问服务的id
+     * 下游系统名称
      */
-    private Integer configureId;
+    private String downSystemName;
+    /**
+     * 描述
+     */
+    private String systemInfo;
     /**
      * 用户名
      */

@@ -45,11 +45,11 @@ import java.util.List;
 @Slf4j
 public class BuildNifiTaskListener {
 
-    @Value("${dorisconstr.url}")
+    @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
-    @Value("${dorisconstr.username}")
+    @Value("${datamodeldorisconstr.username}")
     private String dorisUser;
-    @Value("${dorisconstr.password}")
+    @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
 
     @Value("${spring.rabbitmq.host}")
@@ -254,6 +254,9 @@ public class BuildNifiTaskListener {
             case MYSQL:
                 dto.driverLocation = NifiConstants.DriveConstants.MYSQL_DRIVE_PATH;
                 break;
+            case SQLSERVER:
+                dto.driverLocation = NifiConstants.DriveConstants.SQLSERVER_DRIVE_PATH;
+                break;
             default:
                 break;
         }
@@ -309,7 +312,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, putSqlRes.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建json参数组件
-        ProcessorEntity jsonTextRes = replaceTextProcessor(groupId);
+        ProcessorEntity jsonTextRes = replaceTextProcessor(config,groupId);
         //连接器
         componentConnector(groupId, mergeRes.getId(), jsonTextRes.getId(), AutoEndBranchTypeEnum.MERGED);
         //创建mq发送组件
@@ -371,13 +374,13 @@ public class BuildNifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity replaceTextProcessor(String groupId) {
+    private ProcessorEntity replaceTextProcessor(DataAccessConfigDTO config,String groupId) {
         BuildReplaceTextProcessorDTO dto = new BuildReplaceTextProcessorDTO();
         dto.name = "Build MQ Message";
         dto.details = "build json string";
         dto.groupId = groupId;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        dto.replacementValue = "{ \"code\": \"${" + NifiConstants.AttrConstants.LOG_CODE + "}\" }";
+        dto.replacementValue = "{ \"code\": \"${" + NifiConstants.AttrConstants.LOG_CODE + "}\" "+","+"\"corn\":\""+config.processorConfig.scheduleExpression+"\"}";
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildReplaceTextProcess(dto);
         verifyProcessorResult(res);
@@ -504,6 +507,9 @@ public class BuildNifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
         querySqlDto.dbConnectionId = sourceDbPoolId;
+        //querySqlDto.fetchSize="2";
+        querySqlDto.MaxRowsPerFlowFile="1000000";
+        //querySqlDto.outputBatchSize="2";
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);

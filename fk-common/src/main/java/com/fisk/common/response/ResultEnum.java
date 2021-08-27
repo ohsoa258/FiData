@@ -62,7 +62,9 @@ public enum ResultEnum {
      */
     DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败"),
     DATAACCESS_GETTABLE_ERROR(5002,"获取表名失败"),
-    DATAACCESS_SAVEFIELD_ERROR(5002,"添加表字段失败"),
+    DATAACCESS_SAVEFIELD_ERROR(5003,"添加表字段失败"),
+    DATAACCESS_CONNECTDB_ERROR(5004,"连接失败"),
+    DATAACCESS_CONNECTDB_WARN(5005,"当前驱动类型尚未开发"),
 
 
     /**
@@ -70,7 +72,22 @@ public enum ResultEnum {
      */
     TASK_PUBLISH_ERROR(6001,"任务发布失败"),
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002,"Nifi组件创建失败"),
-    TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件");
+    TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件"),
+
+    /**
+     * 数据域接入模块
+     * @param code
+     * @param msg
+     */
+    API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
+    DELETE_ERROR(7002,"删除失败"),
+    API_FIELD_ERROR(7003,"api没有sql执行!"),
+
+    /**
+     * 数据建模模块
+     */
+    DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值");
+
 
     ResultEnum(int code, String msg) {
         this.code = code;

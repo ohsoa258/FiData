@@ -123,4 +123,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 应用名称
      */
     List<AppNameDTO> getDataList();
+
+    /**
+     * 测试连接
+     * @param dto dto
+     * @return 连接结果
+     */
+    ResultEntity<Object> connectDb(DbConnectionDTO dto);
 }

@@ -1,4 +1,4 @@
-package com.fisk.dataservice.utils;
+package com.fisk.dataservice.utils.token;
 
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import io.jsonwebtoken.Claims;
@@ -7,7 +7,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -35,7 +34,7 @@ public class TokenUtils {
         try{
             Claims claims1 = claimsJws.getBody();
             ConfigureUserPO configureUser = new ConfigureUserPO();
-            configureUser.setConfigureId(claims1.get("id", Integer.class));
+            configureUser.setId(claims1.get("id", Long.class));
             configureUser.setUserName(claims1.get("username", String.class));
             return configureUser;
         }catch (Exception e){
@@ -54,7 +53,7 @@ public class TokenUtils {
         // 2.生成token
         return Jwts.builder().signWith(SignatureAlgorithm.HS512,SECRET)
                 .setId(jti)
-                .claim("id", user.getConfigureId())
+                .claim("id", user.getId())
                 .claim("username", user.getUserName())
                 .compact();
     }

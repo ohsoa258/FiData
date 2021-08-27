@@ -1,4 +1,4 @@
-package com.fisk.dataservice.utils;
+package com.fisk.dataservice.utils.transformation;
 
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;

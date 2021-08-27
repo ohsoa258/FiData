@@ -35,6 +35,7 @@ public class SwaggerConfig {
     public static final String PROJECT_INFO ="project-info-controller";
     public static final String DERIVED_INDICATOR="derived-indicators-controller";
     public static final String BUSINES_LIMITE ="busines-limited-controller";
+    public static final String TAG_4 = "data-domain-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -58,6 +59,7 @@ public class SwaggerConfig {
                 .tags(new Tag(PROJECT_INFO,"项目信息"))
                 .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))
                 .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
+                .tags(new Tag(TAG_4,"数据源"))
                 .securityContexts(securityContexts());
     }
 

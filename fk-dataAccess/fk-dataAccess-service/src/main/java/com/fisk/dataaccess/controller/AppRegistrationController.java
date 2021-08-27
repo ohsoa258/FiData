@@ -190,4 +190,12 @@ public class AppRegistrationController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, username);
     }
 
+    @ApiOperation("测试连接")
+    @PostMapping("/connect")
+    public ResultEntity<Object> connectDb(@RequestBody DbConnectionDTO dto) {
+
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.connectDb(dto));
+        return service.connectDb(dto);
+    }
+
 }

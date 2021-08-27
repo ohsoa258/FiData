@@ -61,4 +61,10 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactMetaData(id));
     }
 
+    @GetMapping("/getFactAttributeData")
+    @ApiOperation("根绝事实id获取事实字段详情")
+    public ResultEntity<Object> getFactAttributeData(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(id));
+    }
+
 }

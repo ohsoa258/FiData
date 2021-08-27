@@ -66,7 +66,6 @@ public class PublishTaskController {
 
     /**
      * 在Atlas中生成数据库、表、字段的血缘关系
-     *
      * @param ArDto
      * @return
      */
@@ -77,11 +76,17 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
                 ArDto);
-        //Doris
-        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
+         //pgsql
+                return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_PGSQL_TABLE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
+                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
                 ArDto);
+        //Doris
+//        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
+//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+//                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
+//                ArDto);
+
 
     }
 
