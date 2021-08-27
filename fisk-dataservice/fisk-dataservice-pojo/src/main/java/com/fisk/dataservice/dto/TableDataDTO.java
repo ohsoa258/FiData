@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.table;
+package com.fisk.dataservice.dto;
 
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import lombok.Data;
@@ -35,5 +35,9 @@ public class TableDataDTO {
     /**
      * 关联哪个维度表id
      */
-    public int relationId;
+    public Integer relationId;
+    /**
+     * 关联维度的表名
+     */
+    public String dimensionName;
 }

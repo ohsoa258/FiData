@@ -2,7 +2,7 @@ package com.fisk.dataservice;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;

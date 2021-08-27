@@ -1,8 +1,10 @@
 package com.fisk.dataservice.service;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
+
+import java.sql.ResultSet;
 
 /**
  * @author Lock
@@ -23,4 +25,11 @@ public interface ITableName {
      * @return count()
      */
     ResultEntity<String> getAggregation(Integer id);
+
+    /**
+     * 查询关联维度的表名
+     * @param relationId
+     * @return
+     */
+    ResultEntity<String> getDimensionName(Integer relationId);
 }

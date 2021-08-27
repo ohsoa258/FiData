@@ -4,16 +4,10 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.table.TableDataDTO;
-import com.fisk.dataservice.entity.DimensionAttributePO;
-import com.fisk.dataservice.entity.DimensionPO;
-import com.fisk.dataservice.entity.FactPO;
-import com.fisk.dataservice.entity.IndicatorsPO;
+import com.fisk.dataservice.dto.TableDataDTO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
-import com.fisk.dataservice.mapper.DimensionAttributeMapper;
-import com.fisk.dataservice.mapper.DimensionMapper;
-import com.fisk.dataservice.mapper.FactMapper;
-import com.fisk.dataservice.mapper.IndicatorsMapper;
+import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.ITableName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +29,8 @@ public class TableNameImpl implements ITableName {
     IndicatorsMapper indicatorsMapper;
     @Resource
     FactMapper factMapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @DS("datamodel")
     @Override
@@ -48,12 +44,20 @@ public class TableNameImpl implements ITableName {
                 if (indicators == null) {
                     return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
                 }
-                FactPO fact = factMapper.selectById(indicators.getFactId());
 
+                FactPO fact = factMapper.selectById(indicators.getFactId());
+                FactAttributePO factAttribute = factAttributeMapper.selectById(indicators.getFactId());
+
+                if (fact != null){
+                    tableDataDTO.tableName = fact.getFactTableEnName();
+                }
+
+                if (factAttribute != null){
+                    tableDataDTO.relationId = factAttribute.associateDimensionId;
+                }
                 tableDataDTO.id = id;
                 tableDataDTO.type = DataDoFieldTypeEnum.VALUE;
                 tableDataDTO.tableField = field;
-                tableDataDTO.tableName = fact.getFactTableEnName();
                 tableDataDTO.dimension = isDimension;
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
             case WHERE:
@@ -88,5 +92,17 @@ public class TableNameImpl implements ITableName {
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, indicators.getCalculationLogic());
+    }
+
+    @DS("datamodel")
+    @Override
+    public ResultEntity<String> getDimensionName(Integer relationId) {
+        DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(relationId);
+        if (dimensionAttribute == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DimensionPO dimension = dimensionMapper.selectById(dimensionAttribute.getDimensionId());
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,dimension.getDimensionTabName());
     }
 }

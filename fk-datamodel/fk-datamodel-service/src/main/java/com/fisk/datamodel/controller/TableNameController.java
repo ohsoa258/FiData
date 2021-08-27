@@ -1,7 +1,7 @@
 package com.fisk.datamodel.controller;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.web.bind.annotation.GetMapping;

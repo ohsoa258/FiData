@@ -2,7 +2,7 @@ package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -3,7 +3,7 @@ package com.fisk.dataservice.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
 import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.service.DataDomainService;
@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
@@ -106,14 +107,49 @@ public class DataDomainServiceImpl implements DataDomainService {
             wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
             wholeStr.append("FROM (" + str + ")" + " AS " + DIMENSION_ALL_ALIAS_NAME + " ");
 
+            // 带有维度名称
+            List<TableDataDTO> collect3 = noTableData.stream()
+                    .filter(e -> e.getRelationId() != null)
+                    .map(e -> {
+                        e.setDimensionName(iTableName.getDimensionName(e.getRelationId()).data);
+                        return e;
+                    }).collect(toList());
+
             // LEFT JOIN
             AtomicInteger num = new AtomicInteger();
-            String leftJoin = noTableData.stream()
+            String leftJoin = collect3.stream()
+                    .filter(e -> e.getRelationId() != null)
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
-                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getTableName() + "_key"
-                            + "=" + NO_DIMENSION_ALIAS_NAME + num + "." + e.getTableName() + "_key")
+                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
+                            + "=" + NO_DIMENSION_ALIAS_NAME + num + "." + e.getDimensionName() + "_key ")
                     .collect(joining(" "));
-            wholeStr.append(leftJoin);
+
+            String collect1 = collect3.stream()
+                    .filter(e -> e.getRelationId() == null)
+                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
+                            + " ON " + "1 = 1 ")
+                    .collect(joining(" "));
+
+            int num1 = 0;
+            for (TableDataDTO noTableDatum : collect3) {
+                if (noTableDatum.getRelationId() != null){
+                    noTableDatum.setAlias(NO_DIMENSION_ALIAS_NAME + num1);
+                }
+            }
+
+            // 判断追加 LEFT JOIN 还是笛卡尔积
+            if (StringUtils.isBlank(leftJoin)){
+                wholeStr.append(collect1);
+            }else {
+                wholeStr.append(leftJoin);
+            }
+
+            // WHERE
+            wholeStr.append("WHERE");
+            String collect2 = collect3.stream()
+                    .map(e -> e.alias + "." + e.tableField + " IS NOT NULL")
+                    .collect(joining(" AND "));
+            wholeStr.append(collect2);
         }
 
         System.err.println(wholeStr);

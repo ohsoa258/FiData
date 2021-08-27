@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.table.TableDataDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 
 /**
