@@ -1,12 +1,15 @@
 package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -31,6 +34,14 @@ public interface DataModelClient {
      */
     @GetMapping("/factAttribute/getFactEntity")
     ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
+
+    /**
+     * 获取事实表下所有原子指标以及事实表关联维度
+     * @param id
+     * @return
+     */
+    @GetMapping("/AtomicIndicators/getAtomicIndicators")
+    ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id);
 
     /**
      * 获取表字段

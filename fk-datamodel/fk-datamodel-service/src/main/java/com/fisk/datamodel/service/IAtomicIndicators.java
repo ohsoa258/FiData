@@ -53,4 +53,11 @@ public interface IAtomicIndicators {
      */
     List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId);
 
+    /**
+     * 根据事实表id推送所有原子指标
+     * @param factId
+     * @return
+     */
+    List<AtomicIndicatorPushDTO> atomicIndicatorPush(int factId);
+
 }

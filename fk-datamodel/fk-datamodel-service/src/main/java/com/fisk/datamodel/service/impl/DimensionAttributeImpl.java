@@ -172,6 +172,11 @@ public class DimensionAttributeImpl
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         for (DimensionAttributePO item:list) {
             ModelAttributeMetaDataDTO dto = new ModelAttributeMetaDataDTO();
+            dto.sourceFieldId=item.tableSourceFieldId;
+            dto.attributeType = item.attributeType;
+            dto.fieldEnName = item.dimensionFieldEnName;
+            dto.fieldLength = item.dimensionFieldLength;
+            dto.fieldType = item.dimensionFieldType;
             //判断是否为关联维度
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
@@ -182,12 +187,17 @@ public class DimensionAttributeImpl
                     break;
                 }
                 DimensionPO dimensionPO=mapper.selectById(attributePO.dimensionId);
-                dto.associationTable=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                if (dimensionPO==null)
+                {
+                    break;
+                }
+                dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
+                dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
+                //获取关联维度与本表关联字段名称
+                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateId);
+                dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName; //关联维度与本表字段关联名称
+                dto.sourceFieldId=dimensionAttributePO.tableSourceFieldId; //本表字段来源
             }
-            dto.attributeType = item.attributeType;
-            dto.fieldEnName = item.dimensionFieldEnName;
-            dto.fieldLength = item.dimensionFieldLength;
-            dto.fieldType = item.dimensionFieldType;
             dtoList.add(dto);
         }
         data.dto=dtoList;

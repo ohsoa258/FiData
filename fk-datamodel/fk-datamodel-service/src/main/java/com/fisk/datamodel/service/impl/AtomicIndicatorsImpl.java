@@ -5,10 +5,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
-import com.fisk.datamodel.entity.AtomicIndicatorsPO;
+import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.IndicatorsPO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
+import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
+import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +21,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -27,6 +33,12 @@ public class AtomicIndicatorsImpl
 
     @Resource
     AtomicIndicatorsMapper mapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
+    @Resource
+    DimensionMapper dimensionMapper;
+    @Resource
+    IndicatorsMapper indicatorsMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(List<AtomicIndicatorsDTO> dto)
@@ -116,6 +128,39 @@ public class AtomicIndicatorsImpl
             queryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
         }
         return AtomicIndicatorsMap.INSTANCES.poToDtoList(mapper.selectList(queryWrapper));
+    }
+
+    @Override
+    public List<AtomicIndicatorPushDTO> atomicIndicatorPush(int factId)
+    {
+        List<AtomicIndicatorPushDTO> data=new ArrayList<>();
+        //获取事实表关联的维度
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,factId)
+                .eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
+        List<Integer> ids= (List<Integer>)(List)list.stream().distinct().collect(Collectors.toList());
+        QueryWrapper<DimensionPO> dimensionQueryWrapper=new QueryWrapper<>();
+        dimensionQueryWrapper.in("id",ids);
+        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionQueryWrapper);
+        for (DimensionPO item:dimensionPOList)
+        {
+            AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+            dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+            dto.dimensionTableName=item.dimensionTabName;
+            data.add(dto);
+        }
+        //获取事实表下所有原子指标
+        QueryWrapper<IndicatorsPO> indicatorsQueryWrapper=new QueryWrapper<>();
+        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
+        List<IndicatorsPO> indicatorsPO=indicatorsMapper.selectList(indicatorsQueryWrapper);
+        for (IndicatorsPO item:indicatorsPO)
+        {
+            AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+            dto.atomicIndicatorName=item.indicatorsName;
+            data.add(dto);
+        }
+        return data;
     }
 
 }
