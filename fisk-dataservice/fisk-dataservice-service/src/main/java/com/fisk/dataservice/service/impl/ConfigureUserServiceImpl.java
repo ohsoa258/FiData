@@ -41,14 +41,17 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
     @Override
     public Page<UserDTO> listData(Page<ConfigureUserPO> page,String downSystemName) {
+        QueryWrapper<ConfigureUserPO> query = new QueryWrapper<>();
+        query.lambda()
+                .orderByDesc(ConfigureUserPO::getCreateTime);
+
         if(StringUtils.isNotBlank(downSystemName)){
-            QueryWrapper<ConfigureUserPO> query = new QueryWrapper<>();
             query.lambda()
                     .like(ConfigureUserPO::getDownSystemName,downSystemName);
             return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, query));
         }
 
-        return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, null));
+        return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, query));
     }
 
     @Override
