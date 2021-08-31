@@ -1,6 +1,7 @@
 package com.fisk.task.service;
 
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 
 public interface IPostgreBuild {
 
@@ -9,7 +10,7 @@ public interface IPostgreBuild {
       * businessType   执行的数据库
       * @return 返回语句执行结果
       */
-     BusinessResult postgreBuildTable(String executsql,String businessType);
+     BusinessResult postgreBuildTable(String executsql, BusinessTypeEnum businessTypeEnum);
 
      /**
       * executsql   执行的sql语句
@@ -17,7 +18,7 @@ public interface IPostgreBuild {
       * 传入要返回数据类型,不可为null
       * @return 返回执行sql查到的结果与sql执行结果
       */
-     <T> BusinessResult postgreQuery(String executsql,String businessType,T data);
+     <T> BusinessResult postgreQuery(String executsql,BusinessTypeEnum businessTypeEnum,T data);
 
      /**
       * pgsql stg表数据同步到ods

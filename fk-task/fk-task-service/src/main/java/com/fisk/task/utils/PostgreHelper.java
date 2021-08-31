@@ -54,15 +54,15 @@ public class PostgreHelper {
         return conn;
     }
 
-    public static <T> T postgreQuery(String executsql, String businessType, T data) {
+    public static <T> T postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum, T data) {
         Connection conn = null;
         Statement stmt = null;
         ResultSet resultSet = null;
         try {
             // 1获得连接
-            if (Objects.equals(businessType, BusinessTypeEnum.DATAMODEL.getName())) {
+            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
                 conn = getConnection(pgsqlDatamodelUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            } else if (Objects.equals(businessType, BusinessTypeEnum.DATAINPUT.getName())) {
+            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 conn = getConnection(pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
             }
             // 2执行对象
@@ -87,14 +87,14 @@ public class PostgreHelper {
         return data;
     }
 
-    public static void postgreUpdate(String executsql, String businessType) {
+    public static void postgreUpdate(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            if (Objects.equals(businessType, BusinessTypeEnum.DATAMODEL.getName())) {
+            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
                 conn = getConnection(pgsqlDatamodelUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            } else if (Objects.equals(businessType, BusinessTypeEnum.DATAINPUT.getName())) {
+            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 conn = getConnection(pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
             }
             // 2执行对象
@@ -117,12 +117,12 @@ public class PostgreHelper {
      * @param executsql
      * @param businessType
      */
-    public static void postgreExecuteSql(String executsql, String businessType) {
+    public static void postgreExecuteSql(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            conn = getConnection(businessType==BusinessTypeEnum.DATAMODEL.getName()? pgsqlDatamodelUrl:pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
+            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL? pgsqlDatamodelUrl:pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
