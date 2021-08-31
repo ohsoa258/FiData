@@ -70,7 +70,7 @@ public class TableNameImpl implements ITableName {
                 if (type == DataDoFieldTypeEnum.WHERE) {
                     tableDataDTO.type = DataDoFieldTypeEnum.WHERE;
                 }else {
-
+                    tableDataDTO.tableNameKey = dimension.getDimensionTabName()+"_key";
                     tableDataDTO.type = DataDoFieldTypeEnum.COLUMN;
                 }
                 tableDataDTO.id = id;

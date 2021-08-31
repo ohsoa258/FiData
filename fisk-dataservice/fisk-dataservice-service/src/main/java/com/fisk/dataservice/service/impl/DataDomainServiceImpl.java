@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.fisk.common.constants.AliasConstants.*;
+import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Collectors.joining;
 
@@ -64,10 +65,23 @@ public class DataDomainServiceImpl implements DataDomainService {
 
         // select
         String queryField = existTableData.stream()
+                .filter(e -> e.getType() == COLUMN)
                 .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
                 .collect(joining(","));
 
+        String queryKey = existTableData.stream()
+                .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableNameKey() + escapeStr[1])
+                .collect(joining(","));
+
+        // 追加select
         str.append(queryField);
+
+        if (StringUtils.isNotBlank(queryField) && StringUtils.isNotBlank(queryKey)){
+            str.append(",");
+        }
+
+        // 追加表名_key
+        str.append(queryKey);
 
         // 主表
         str.append(" FROM " + existTableData.get(0).tableName);
@@ -85,6 +99,17 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .collect(joining(" INNER JOIN "));
 
         str.append(collect);
+
+        String whereField = apiConfigureFieldList.stream()
+                .filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
+                .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().getTableName()
+                        + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + e.getWhereValue())
+                .collect(joining());
+
+        // WHERE
+        if (StringUtils.isNotBlank(whereField)){
+            str.append(" WHERE "+whereField);
+        }
 
         // 只有维度的的情况
         System.out.println(str);
@@ -117,7 +142,9 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
                 .collect(toList());
 
-        String existTableField = tableDataList.stream().map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
+        String existTableField = tableDataList.stream()
+                .filter(e -> e.getType() == COLUMN)
+                .map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
                 .collect(joining("," + DIMENSION_ALL_ALIAS_NAME + "."));
 
         // 带有维度名称
@@ -152,13 +179,28 @@ public class DataDomainServiceImpl implements DataDomainService {
         }
 
         String collect4 = noTableData.stream()
+                .filter(e -> e.getType() == COLUMN)
                 .map(e -> e.getAlias() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
                 .collect(joining(","));
 
-        if (StringUtils.isBlank(collect4)) {
-            wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
-        } else {
-            wholeStr.append("SELECT " + DIMENSION_ALL_ALIAS_NAME + "." + existTableField + "," + collect4);
+        // 获取聚合条件
+        String aggregation = noTableData.stream()
+                .filter(e -> e.getType() == VALUE)
+                .map(e -> iTableName.getAggregation(e.getId()).getData()
+                        + "(" + e.getAlias() + "." + escapeStr[0] + e.getTableField() + escapeStr[1] + ")")
+                .collect(joining(","));
+
+        // SELECT字段
+        wholeStr.append("SELECT ");
+        this.queryField(collect4,existTableField,wholeStr);
+
+        if (StringUtils.isNotBlank(existTableField) && StringUtils.isNotBlank(aggregation)){
+            wholeStr.append(",");
+        }
+
+        // 追加聚合条件
+        if (StringUtils.isNotBlank(aggregation)){
+            wholeStr.append(aggregation);
         }
 
         wholeStr.append("FROM (" + str + ")" + " AS " + DIMENSION_ALL_ALIAS_NAME + " ");
@@ -177,9 +219,27 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .collect(joining(" AND "));
         wholeStr.append(collect2);
 
+        // GROUP BY
+        if (StringUtils.isNotBlank(aggregation)){
+            wholeStr.append(" GROUP BY ");
+            wholeStr.append(DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
+        }
         System.err.println(wholeStr);
     }
 
+    /**
+     * select字段
+     * @param collect4
+     * @param existTableField select字段
+     * @param wholeStr
+     */
+    public void queryField(String collect4,String existTableField,StringBuilder wholeStr){
+        if (StringUtils.isBlank(collect4)) {
+            wholeStr.append(DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
+        } else {
+            wholeStr.append(DIMENSION_ALL_ALIAS_NAME + "." + existTableField + "," + collect4);
+        }
+    }
 
     /**
      * 根据数据源类型获取转义字符
