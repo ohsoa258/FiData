@@ -18,9 +18,11 @@ import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,6 +93,15 @@ public class DimensionAttributeImpl
             }
             DimensionAttributePO data= DimensionAttributeMap.INSTANCES.dtoToPo(item);
             data.dimensionId=dimensionId;
+            if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            {
+                //获取维度表id
+                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateDimensionFieldId);
+                if (dimensionAttributePO !=null)
+                {
+                    data.associateDimensionId=dimensionAttributePO.dimensionId;
+                }
+            }
             list.add(data);
         }
         if (isExit)
@@ -170,6 +181,10 @@ public class DimensionAttributeImpl
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
         List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list))
+        {
+            return data;
+        }
         for (DimensionAttributePO item:list) {
             ModelAttributeMetaDataDTO dto = new ModelAttributeMetaDataDTO();
             dto.sourceFieldId=item.tableSourceFieldId;
@@ -181,7 +196,7 @@ public class DimensionAttributeImpl
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
                 //获取维度关联维度表名称,用于创建关联key
-                DimensionAttributePO attributePO=attributeMapper.selectById(item.associateDimensionId);
+                DimensionAttributePO attributePO=attributeMapper.selectById(item.associateDimensionFieldId);
                 if (attributePO==null)
                 {
                     break;
@@ -195,6 +210,10 @@ public class DimensionAttributeImpl
                 dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
                 //获取关联维度与本表关联字段名称
                 DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateId);
+                if (dimensionAttributePO==null)
+                {
+                    break;
+                }
                 dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName; //关联维度与本表字段关联名称
                 dto.sourceFieldId=dimensionAttributePO.tableSourceFieldId; //本表字段来源
             }
@@ -217,6 +236,10 @@ public class DimensionAttributeImpl
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id)
                 .ne(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list))
+        {
+            return data;
+        }
         for (DimensionAttributePO item:list) {
             DimensionAttributeAssociationDTO dto = new DimensionAttributeAssociationDTO();
             dto.id = item.id;

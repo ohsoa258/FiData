@@ -123,8 +123,8 @@ public class BuildDataModelDorisTableListener {
         stg_sql = sql.toString().replace("tableName", stg_table);
         ods_sql = sql.toString().replace("tableName", ods_table);
         //2.连接jdbc执行sql
-        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL.getName());
-        BusinessResult datamodel1 = iPostgreBuild.postgreBuildTable(ods_sql, BusinessTypeEnum.DATAMODEL.getName());
+        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
+        BusinessResult datamodel1 = iPostgreBuild.postgreBuildTable(ods_sql, BusinessTypeEnum.DATAMODEL);
         log.info("【PGSTG】" + stg_sql);
         log.info("【PGODS】" + ods_sql);
         if(datamodel.success==true&&datamodel1.success==true){

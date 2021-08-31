@@ -1,6 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.task.service.IPostgreBuild;
 import com.fisk.task.utils.PostgreHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -11,11 +12,11 @@ import org.springframework.stereotype.Service;
 public class PostgreBuildImpl implements IPostgreBuild {
 
     @Override
-    public BusinessResult postgreBuildTable(String executsql, String businessType) {
+    public BusinessResult postgreBuildTable(String executsql, BusinessTypeEnum businessTypeEnum) {
         boolean re = false;
         String msg = null;
         try {
-            PostgreHelper.postgreExecuteSql(executsql,businessType);
+            PostgreHelper.postgreExecuteSql(executsql,businessTypeEnum);
             re = true;
         } catch (Exception e) {
             //捕捉错误
@@ -27,12 +28,12 @@ public class PostgreBuildImpl implements IPostgreBuild {
     }
 
     @Override
-    public <T> BusinessResult postgreQuery(String executsql, String businessType,T data) {
+    public <T> BusinessResult postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum,T data) {
         boolean re = false;
         String msg = null;
         BusinessResult res = null;
         try {
-            data = PostgreHelper.postgreQuery(executsql, businessType, data);
+            data = PostgreHelper.postgreQuery(executsql, businessTypeEnum, data);
             re = true;
         } catch (Exception e) {
             //捕捉错误

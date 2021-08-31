@@ -41,6 +41,10 @@ public class FactAttributeDTO {
      */
     public int associateDimensionId;
     /**
+     * 关联维度字段id
+     */
+    public int associateDimensionFieldId;
+    /**
      * 关联维度id
      */
     public int associateId;

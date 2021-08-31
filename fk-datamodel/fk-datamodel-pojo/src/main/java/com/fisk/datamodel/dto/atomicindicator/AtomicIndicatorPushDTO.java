@@ -19,4 +19,16 @@ public class AtomicIndicatorPushDTO {
      * 原子指标名称
      */
     public String atomicIndicatorName;
+    /**
+     * 聚合字段
+     */
+    public String aggregatedField;
+    /**
+     * 聚合逻辑:sum、avg...
+     */
+    public String aggregationLogic;
+    /**
+     * 原子指标所属事实表
+     */
+    public String factTable;
 }
