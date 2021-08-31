@@ -40,4 +40,8 @@ public class TableDataDTO {
      * 关联维度的表名
      */
     public String dimensionName;
+    /**
+     * 表名的key
+     */
+    public String tableNameKey;
 }
