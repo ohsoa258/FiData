@@ -35,7 +35,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * 数据接入 创建pg table
      */
-    BUILD_DATAINPUT_PGSQL_TABLE_TASK(6,"数据接入创建pg table");
+    BUILD_DATAINPUT_PGSQL_TABLE_TASK(6,"数据接入创建pg table"),
+    /**
+     * 数据接入 stg to ods
+     */
+    BUILD_DATAINPUT_PGSQL_STGTOODS_TASK(7,"数据接入 STG TO ODS");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

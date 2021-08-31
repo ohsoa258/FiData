@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
-import java.util.Objects;
 @Slf4j
 @Component
 public class PostgreHelper {
@@ -38,12 +37,12 @@ public class PostgreHelper {
         PostgreHelper.pgsqlPassword = pgsqlPassword;
     }
 
-    public static Connection getConnection(String url, String driver, String username, String password) {
+    public static Connection getConnection(String url) {
         Connection conn = null;
         try {
             // 加载驱动类
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, username, password);
+            Class.forName(pgsqlDriverClassName);
+            conn = DriverManager.getConnection(url, pgsqlUsername, pgsqlPassword);
         } catch (ClassNotFoundException e) {
             System.out.println("找不到驱动程序类 ，加载驱动失败！");
             e.printStackTrace();
@@ -60,11 +59,7 @@ public class PostgreHelper {
         ResultSet resultSet = null;
         try {
             // 1获得连接
-            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
-                conn = getConnection(pgsqlDatamodelUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
-                conn = getConnection(pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            }
+            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -92,11 +87,7 @@ public class PostgreHelper {
         Statement stmt = null;
         try {
             // 1获得连接
-            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
-                conn = getConnection(pgsqlDatamodelUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
-                conn = getConnection(pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
-            }
+            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -115,14 +106,14 @@ public class PostgreHelper {
     /**
      * 执行pgsql语句 2021年08月27日10:29:12 Dennyhui
      * @param executsql
-     * @param businessType
+     * @param businessTypeEnum
      */
     public static void postgreExecuteSql(String executsql, BusinessTypeEnum businessTypeEnum) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL? pgsqlDatamodelUrl:pgsqlDatainputUrl, pgsqlDriverClassName, pgsqlUsername, pgsqlPassword);
+            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
@@ -137,6 +128,8 @@ public class PostgreHelper {
             PostgreHelper.closeConn(conn);
         }
     }
+
+
     //关闭连接
     public static void closeConn(Connection conn) {
         if (conn != null) {

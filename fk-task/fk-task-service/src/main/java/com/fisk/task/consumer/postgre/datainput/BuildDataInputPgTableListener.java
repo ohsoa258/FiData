@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.postgre.datainput;
-
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -15,7 +15,6 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
-
 import javax.annotation.Resource;
 
 /**
@@ -46,5 +45,28 @@ public class BuildDataInputPgTableListener {
         String stg_table = dto.appAbbreviation + "_stg_" + dto.tableName;
         String ods_table = dto.appAbbreviation + "_ods_" + dto.tableName;
         StringBuilder sql = new StringBuilder();
+        StringBuilder pksql=new StringBuilder("PRIMARY KEY(");
+        StringBuilder comsql=new StringBuilder();
+        sql.append("CREATE TABLE publick.tableName");
+        sql.append("("+tableName+"_pk varchar(32) NOT NULL DEFAULT sys_guid()");
+        dto.columns.forEach((l) -> {
+            if (l.isKey.equals("1")) {
+                pksql.append(l.columnName+",");
+            }
+            sql.append(l.columnName + " " + l.dataType+",");
+            comsql.append("COMMENT ON COLUMN public."+tableName+"."+l.columnName+"IS "+l.comment+";");
+        });
+        String pksqlstr=pksql.toString();
+        pksqlstr=pksql.substring(0,pksqlstr.lastIndexOf(","))+")";
+        String comsqlstr=comsql.toString();
+        sql.append(pksqlstr).append(")").append(comsqlstr);
+        String stg_sql = sql.toString().replace("tableName", stg_table);
+        String ods_sql = sql.toString().replace("tableName", ods_table);
+        log.info("pg：开始建表");
+        log.info(stg_sql);
+        log.info(ods_sql);
+        pg.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAINPUT);
+        pg.postgreBuildTable(ods_sql, BusinessTypeEnum.DATAINPUT);
+        log.info("pg：建表完成");
     }
 }

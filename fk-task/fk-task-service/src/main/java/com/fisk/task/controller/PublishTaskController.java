@@ -91,6 +91,19 @@ public class PublishTaskController {
     }
 
     /**
+     *pgsql stg to ods
+     * @param entityId
+     * @return
+     */
+    @PostMapping("/pgsqlStgOdsIncrementalUpdate")
+    public ResultEntity<Object> publishBuildPGSqlStgToOdsTask(@RequestBody AtlasEntityDeleteDTO entityId) {
+        return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_PGSQL_STGTOODS_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW,
+                entityId);
+    };
+
+    /**
      * Doris 增量更新
      * @param entityId
      * @return
