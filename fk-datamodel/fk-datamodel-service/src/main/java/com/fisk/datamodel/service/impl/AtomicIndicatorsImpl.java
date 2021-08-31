@@ -7,13 +7,11 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactAttributePO;
+import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
-import com.fisk.datamodel.mapper.AtomicIndicatorsMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
-import com.fisk.datamodel.mapper.FactAttributeMapper;
-import com.fisk.datamodel.mapper.IndicatorsMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +37,8 @@ public class AtomicIndicatorsImpl
     DimensionMapper dimensionMapper;
     @Resource
     IndicatorsMapper indicatorsMapper;
+    @Resource
+    FactMapper factMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(List<AtomicIndicatorsDTO> dto)
@@ -158,6 +158,14 @@ public class AtomicIndicatorsImpl
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
             dto.atomicIndicatorName=item.indicatorsName;
+            dto.aggregationLogic=item.calculationLogic;
+            dto.aggregatedField=item.aggregatedFields;
+            //获取事实表
+            FactPO factPO=factMapper.selectById(item.factId);
+            if (factPO==null)
+            {
+                dto.factTable=factPO.factTableEnName;
+            }
             data.add(dto);
         }
         return data;

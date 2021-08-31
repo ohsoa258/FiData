@@ -45,9 +45,13 @@ public class FactAttributePO extends BasePO {
      */
     public int attributeType;
     /**
-     * 关联业务过程字段表id
+     * 关联维度id
      */
     public int associateDimensionId;
+    /**
+     * 关联维度字段id
+     */
+    public int associateDimensionFieldId;
     /**
      * 关联维度id
      */
