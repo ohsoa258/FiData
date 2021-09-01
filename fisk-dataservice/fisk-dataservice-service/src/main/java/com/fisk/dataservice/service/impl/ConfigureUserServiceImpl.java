@@ -2,9 +2,8 @@ package com.fisk.dataservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.UserApiDTO;
+import com.fisk.dataservice.dto.ConfigureDTO;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
@@ -23,6 +22,8 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * @author WangYan
  * @date 2021/7/30 14:18
@@ -40,14 +41,14 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     private MiddleConfigureMapper middleMapper;
 
     @Override
-    public Page<UserDTO> listData(Page<ConfigureUserPO> page,String downSystemName) {
+    public Page<UserDTO> listData(Page<ConfigureUserPO> page, String downSystemName) {
         QueryWrapper<ConfigureUserPO> query = new QueryWrapper<>();
         query.lambda()
                 .orderByDesc(ConfigureUserPO::getCreateTime);
 
-        if(StringUtils.isNotBlank(downSystemName)){
+        if (StringUtils.isNotBlank(downSystemName)) {
             query.lambda()
-                    .like(ConfigureUserPO::getDownSystemName,downSystemName);
+                    .like(ConfigureUserPO::getDownSystemName, downSystemName);
             return ConfigureUserMap.INSTANCES.poToDtoPage(configureUserMapper.selectPage(page, query));
         }
 
@@ -62,7 +63,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
         // 用户不存在，先添加用户
         ConfigureUserPO configureUser = configureUserMapper.selectById(dto.id);
-        if (configureUser == null){
+        if (configureUser == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -162,7 +163,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             queryWrapper.lambda()
                     .eq(MiddleConfigurePO::getUserId, dto.id)
                     .eq(MiddleConfigurePO::getConfigureId, configureId);
-            if (middleMapper.delete(queryWrapper) <= 0){
+            if (middleMapper.delete(queryWrapper) <= 0) {
                 return ResultEnum.DELETE_ERROR;
             }
         }
@@ -181,25 +182,77 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public List<UserApiDTO> configureByUserId(Integer id) {
-        // 查询用户id下所有服务的id
-        QueryWrapper<MiddleConfigurePO> query = new QueryWrapper<>();
-        query.lambda()
-                .eq(MiddleConfigurePO::getUserId, id)
-                .select(MiddleConfigurePO::getConfigureId);
-        List<MiddleConfigurePO> configureList = middleMapper.selectList(query);
-        if (CollectionUtils.isEmpty(configureList)) {
+    public List<ConfigureDTO> configureByUserId(Integer id) {
+        if (id == null) {
             return null;
         }
 
-        List<UserApiDTO> userApiList = new ArrayList<>();
-        for (MiddleConfigurePO middleConfigure : configureList) {
-            UserApiDTO user = new UserApiDTO();
-            user.setUserId(id);
-            user.setConfigureId(middleConfigure.getConfigureId());
-            userApiList.add(user);
+        // 用户下的服务id
+        QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(MiddleConfigurePO::getUserId, id)
+                .select(MiddleConfigurePO::getId, MiddleConfigurePO::getUserId, MiddleConfigurePO::getConfigureId);
+        List<MiddleConfigurePO> userConfigureList = middleMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(userConfigureList)) {
+            return null;
         }
-        return userApiList;
+
+        // 获取api服务Id集合
+        List<Integer> userApiConfigureIdList = userConfigureList.stream().map(e -> e.getConfigureId()).collect(toList());
+        if (CollectionUtils.isEmpty(userApiConfigureIdList)){
+            return null;
+        }
+
+        // 不是用户下的服务api
+        QueryWrapper<ApiConfigurePO> query = new QueryWrapper<>();
+        query.lambda()
+                .notIn(ApiConfigurePO::getId, userApiConfigureIdList);
+        List<ApiConfigurePO> configureList = apiConfigureMapper.selectList(query);
+
+        return this.mergeList(userConfigureList, configureList);
+    }
+
+    /**
+     * 查询出来的Api集合进行合并
+     *
+     * @param userConfigureList 用户Api集合
+     * @param configureList     非用户Api集合
+     * @return
+     */
+    public List<ConfigureDTO> mergeList(List<MiddleConfigurePO> userConfigureList, List<ApiConfigurePO> configureList) {
+
+        List<Integer> userConfigureIdList = userConfigureList.stream().map(e -> e.getConfigureId()).collect(toList());
+
+        List<ConfigureDTO> userConfigureApiList = ConfigureUserMap.INSTANCES.poToDto(this.queryApi(userConfigureIdList))
+                .stream().map(e -> {
+                    e.setCheck(1);
+                    return e;
+                }).collect(toList());
+
+        List<ConfigureDTO> apiConfigureList = ConfigureUserMap.INSTANCES.poToDto(configureList)
+                .stream().map(e -> {
+                    e.setCheck(0);
+                    return e;
+                }).collect(toList());
+
+        List<ConfigureDTO> dtoList = new ArrayList<>();
+        dtoList.addAll(userConfigureApiList);
+        dtoList.addAll(apiConfigureList);
+
+        return dtoList;
+    }
+
+    /**
+     * 根据id查询对应的Api服务
+     *
+     * @param ConfigureIdList
+     * @return
+     */
+    public List<ApiConfigurePO> queryApi(List<Integer> ConfigureIdList) {
+        QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .in(ApiConfigurePO::getId, ConfigureIdList);
+        return apiConfigureMapper.selectList(queryWrapper);
     }
 
     /**
@@ -219,9 +272,10 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
     /**
      * 判断用户是否存在
+     *
      * @param userId 用户id
      */
-    public ConfigureUserPO userExistent(Integer userId){
+    public ConfigureUserPO userExistent(Integer userId) {
         return configureUserMapper.selectById(userId);
     }
 }

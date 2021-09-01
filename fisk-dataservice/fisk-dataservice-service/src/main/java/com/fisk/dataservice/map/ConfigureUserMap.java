@@ -1,11 +1,15 @@
 package com.fisk.dataservice.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.dataservice.dto.ConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
+import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -30,4 +34,11 @@ public interface ConfigureUserMap {
      * @return
      */
     Page<UserDTO> poToDtoPage(Page<ConfigureUserPO> page);
+
+    /**
+     * po => dt0
+     * @param po
+     * @return
+     */
+    List<ConfigureDTO> poToDto(List<ApiConfigurePO> po);
 }

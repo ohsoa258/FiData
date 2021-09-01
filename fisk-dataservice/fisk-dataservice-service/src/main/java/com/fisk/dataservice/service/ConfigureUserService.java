@@ -2,7 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.UserApiDTO;
+import com.fisk.dataservice.dto.ConfigureDTO;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
@@ -69,5 +69,5 @@ public interface ConfigureUserService {
      * @param id
      * @return
      */
-    List<UserApiDTO> configureByUserId(Integer id);
+    List<ConfigureDTO> configureByUserId(Integer id);
 }
