@@ -13,6 +13,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author WangYan
@@ -360,5 +361,49 @@ public class DataDomainServiceImpl implements DataDomainService {
         } else {
             return dimensionAttributeList;
         }
+    }
+
+
+
+    @Override
+    public Object getDimension(){
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .select(DimensionPO::getId,DimensionPO::getDimensionCnName);
+
+        List<DimensionPO> dimensionList = dimensionMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(dimensionList)){
+            return null;
+        }
+
+        return dimensionList.stream()
+                .map(e -> {
+                    DimensionNameDTO dto = new DimensionNameDTO();
+                    dto.setDimensionId(e.getId());
+                    dto.setDimensionCnName(e.getDimensionCnName());
+                    dto.setFlag(2);
+                    return dto;
+                }).collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    public Object getBusiness(){
+        // 查询业务域
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
+
+        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(null);
+        if (CollectionUtils.isEmpty(businessAreaList)) {
+            return null;
+        }
+
+//        businessAreaList.stream()
+//                .map(e -> {
+//
+//                })
+        return null;
     }
 }

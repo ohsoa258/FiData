@@ -30,4 +30,16 @@ public class DataDomainController {
     public ResultEntity<Object> getAll() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getDataDomain());
     }
+
+    @ApiOperation("获取维度")
+    @GetMapping("/getDimension")
+    public ResultEntity<Object> getDimension() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getDimension());
+    }
+
+    @ApiOperation("获取业务板块")
+    @GetMapping("/getBusiness")
+    public ResultEntity<Object> getBusiness() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getBusiness());
+    }
 }
