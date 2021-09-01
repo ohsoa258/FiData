@@ -77,7 +77,7 @@ public interface IUserService {
      * @param dto dto
      * @return 查询结果
      */
-    IPage<UserPowerDTO> getPageUserData(QueryDTO dto);
+    Page<UserPowerDTO> getPageUserData(QueryDTO dto);
 
     /**
      * 获取当前登录人信息
