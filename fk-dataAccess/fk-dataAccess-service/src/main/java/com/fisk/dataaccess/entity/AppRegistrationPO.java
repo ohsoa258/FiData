@@ -62,4 +62,17 @@ public class AppRegistrationPO extends BasePO {
      * 应用负责人邮箱
      */
     public String appPrincipalEmail;
+
+    /**
+     * 同步方式
+     */
+    public String syncMode;
+    /**
+     * 表达式
+     */
+    public String expression;
+    /**
+     * 日志
+     */
+    public String msg;
 }
