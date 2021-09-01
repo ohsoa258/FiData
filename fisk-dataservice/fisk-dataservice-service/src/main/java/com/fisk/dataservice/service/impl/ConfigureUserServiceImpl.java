@@ -61,11 +61,16 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
-        // 用户不存在，先添加用户
+        // 用户不存在
         ConfigureUserPO configureUser = configureUserMapper.selectById(dto.id);
         if (configureUser == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(MiddleConfigurePO::getUserId,dto.id);
+        middleMapper.delete(queryWrapper);
 
         // 用户存在，添加Api服务
         List<Integer> apiIds = new ArrayList<>();
