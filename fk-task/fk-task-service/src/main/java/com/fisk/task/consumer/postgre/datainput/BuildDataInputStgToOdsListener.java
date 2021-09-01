@@ -34,7 +34,7 @@ public class BuildDataInputStgToOdsListener {
         log.info("dataInfo:" + dataInfo);
         UpdateLogAndImportDataDTO inpData = JSON.parseObject(dataInfo, UpdateLogAndImportDataDTO.class);
         //doris.updateNifiLogsAndImportOdsData(inpData);
-        pg.postgreDataStgToOds(inpData.tablename.replace("ods", "stg"),inpData.tablename);
+        pg.postgreDataStgToOds(inpData.tablename.replace("ods", "stg"),inpData.tablename,inpData);
         log.info("stg数据同步完成");
     }
 }

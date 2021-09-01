@@ -2,6 +2,7 @@ package com.fisk.task.service;
 
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 
 public interface IPostgreBuild {
 
@@ -26,5 +27,5 @@ public interface IPostgreBuild {
       * @param odsTable ods表
       * @return
       */
-     BusinessResult postgreDataStgToOds(String stgTable,String odsTable);
+     BusinessResult postgreDataStgToOds(String stgTable, String odsTable,UpdateLogAndImportDataDTO dto);
 }

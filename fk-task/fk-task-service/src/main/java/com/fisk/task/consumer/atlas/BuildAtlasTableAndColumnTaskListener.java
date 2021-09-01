@@ -212,14 +212,14 @@ public class BuildAtlasTableAndColumnTaskListener {
             //获取下次运行时间
             List<Date> nextExecTime = null;
             try {
-                nextExecTime = getNextExecTime(expressiion, 5);
+                nextExecTime = getNextExecTime(expressiion, 1);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
             nextExecTime.stream().forEach(d -> {
                 System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
             });
-        }
+        };
         //endregion
 
         //启动nifi
