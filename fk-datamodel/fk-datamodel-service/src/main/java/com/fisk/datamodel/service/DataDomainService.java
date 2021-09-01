@@ -12,4 +12,18 @@ public interface DataDomainService {
      * @return
      */
     Object getDataDomain();
+
+    /**
+     * 获取维度
+     * @param
+     * @return
+     */
+    Object getDimension();
+
+    /**
+     * 获取业务板块
+     * @param
+     * @return
+     */
+    Object getBusiness();
 }

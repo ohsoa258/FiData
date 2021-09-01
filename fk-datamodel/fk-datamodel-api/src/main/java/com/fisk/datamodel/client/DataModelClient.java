@@ -7,6 +7,7 @@ import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -42,6 +43,14 @@ public interface DataModelClient {
      */
     @GetMapping("/AtomicIndicators/getAtomicIndicators")
     ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id);
+
+    /**
+     *根据同步方式id获取相关数据
+     * @param id
+     * @return
+     */
+    @GetMapping("/FactSyncMode/factSyncModePush")
+    ResultEntity<Object> factSyncModePush(@PathVariable("id") int id);
 
     /**
      * 获取表字段

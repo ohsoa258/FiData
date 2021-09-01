@@ -117,30 +117,66 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public IPage<UserPowerDTO> getPageUserData(QueryDTO dto)
+    public Page<UserPowerDTO> getPageUserData(QueryDTO dto)
     {
-        //List<UserPO> data=new ArrayList<>();
+        List<UserPO> data=new ArrayList<>();
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         if (dto !=null && StringUtils.isNotEmpty(dto.name))
         {
             queryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
         }
-
         //查询点击角色下所有用户
-        /*if (dto.roleId !=0)
+        if (dto.roleId !=0)
         {
+            //获取已选中用户
+            QueryWrapper<UserPO> userPOQueryWrapper = new QueryWrapper<>();
+            if (dto !=null && StringUtils.isNotEmpty(dto.name))
+            {
+                userPOQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+            }
             QueryWrapper<RoleUserAssignmentPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.select("user_id").lambda().eq(RoleUserAssignmentPO::getRoleId,dto.roleId);
             List<Object> list=roleUserAssignmentMapper.selectObjs(queryWrapper1);
             List<Integer> ids=(List<Integer>)(List)list;
-            queryWrapper.in("id",ids);
-            data.addAll(mapper.selectList(queryWrapper));
+            userPOQueryWrapper.in("id",ids);
+            data.addAll(mapper.selectList(userPOQueryWrapper.orderByDesc("create_time")));
+            //获取未选中用户
+            queryWrapper.notIn("id",ids);
+            //获取下标
+            int index=data.size();
+            data.addAll(index,mapper.selectList(queryWrapper.orderByDesc("create_time")));
+        }
+        else {
+            data=mapper.selectList(queryWrapper.orderByDesc("create_time"));
+        }
 
+        //计算分页
+        Integer count = data.size(); // 记录总数
+        Integer pageCount = 0; // 页数
+        if (count % dto.size == 0) {
+            pageCount = count / dto.size;
+        } else {
+            pageCount = count / dto.size + 1;
+        }
+        int fromIndex = 0; // 开始索引
+        int toIndex = 0; // 结束索引
 
-        }*/
+        if (dto.page != pageCount) {
+            fromIndex = (dto.page - 1) * dto.size;
+            toIndex = fromIndex + dto.size;
+        } else {
+            fromIndex = (dto.page - 1) * dto.size;
+            toIndex = count;
+        }
+        int total=data.size();
+        Page<UserPowerDTO> page=new Page<>();
+        data=data.subList(fromIndex,toIndex);
+        page.setRecords(UserMap.INSTANCES.poToPageDto(data));
+        page.setCurrent(dto.getPage());
+        page.setSize(dto.getSize());
+        page.setTotal(total);
 
-        Page<UserPO> data=new Page<UserPO>(dto.getPage(),dto.getSize());
-        return UserMap.INSTANCES.poToPageDto(mapper.selectPage(data,queryWrapper.orderByDesc("create_time")));
+        return page;
     }
 
     /**

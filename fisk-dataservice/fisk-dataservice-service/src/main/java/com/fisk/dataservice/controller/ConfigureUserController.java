@@ -73,7 +73,7 @@ public class ConfigureUserController {
 
     @ApiOperation("根据用户id查询Api服务")
     @GetMapping("/configureByUserId")
-    public ResultEntity<Object> configureByUserId(Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.configureByUserId(id));
+    public ResultEntity<Object> configureByUserId(Integer id,Integer currentPage, Integer pageSize) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.configureByUserId(id,currentPage,pageSize));
     }
 }

@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fisk.dataservice.utils.paging.PagingUtils.startPage;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -187,7 +188,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public List<ConfigureDTO> configureByUserId(Integer id) {
+    public Page<ConfigureDTO> configureByUserId(Integer id,Integer currentPage, Integer pageSize) {
         if (id == null) {
             return null;
         }
@@ -214,7 +215,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .notIn(ApiConfigurePO::getId, userApiConfigureIdList);
         List<ApiConfigurePO> configureList = apiConfigureMapper.selectList(query);
 
-        return this.mergeList(userConfigureList, configureList);
+        return this.mergeList(userConfigureList, configureList, currentPage, pageSize);
     }
 
     /**
@@ -224,7 +225,8 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
      * @param configureList     非用户Api集合
      * @return
      */
-    public List<ConfigureDTO> mergeList(List<MiddleConfigurePO> userConfigureList, List<ApiConfigurePO> configureList) {
+    public Page<ConfigureDTO> mergeList(List<MiddleConfigurePO> userConfigureList, List<ApiConfigurePO> configureList,
+                                        Integer currentPage, Integer pageSize) {
 
         List<Integer> userConfigureIdList = userConfigureList.stream().map(e -> e.getConfigureId()).collect(toList());
 
@@ -244,7 +246,28 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         dtoList.addAll(userConfigureApiList);
         dtoList.addAll(apiConfigureList);
 
-        return dtoList;
+        return paginating(dtoList,currentPage,pageSize);
+    }
+
+    /**
+     * 分页
+     * @param dtoList
+     * @param currentPage
+     * @param pageSize
+     * @return
+     */
+    public Page<ConfigureDTO> paginating(List<ConfigureDTO> dtoList,
+                                    Integer currentPage,
+                                    Integer pageSize){
+        // 总条数
+        int total = dtoList.size();
+
+        Page<ConfigureDTO> configureDTOPage = new Page<>();
+        configureDTOPage.setRecords(startPage(dtoList,currentPage,pageSize));
+        configureDTOPage.setCurrent(currentPage);
+        configureDTOPage.setSize(pageSize);
+        configureDTOPage.setTotal(total);
+        return configureDTOPage;
     }
 
     /**

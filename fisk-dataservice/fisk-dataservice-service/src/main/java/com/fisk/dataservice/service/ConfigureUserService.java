@@ -69,5 +69,5 @@ public interface ConfigureUserService {
      * @param id
      * @return
      */
-    List<ConfigureDTO> configureByUserId(Integer id);
+    Page<ConfigureDTO> configureByUserId(Integer id,Integer currentPage, Integer pageSize);
 }
