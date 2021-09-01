@@ -159,4 +159,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 表名及表字段
      */
     List<TableNameDTO> getDataAccessMeta();
+
+    /**
+     * 应用注册tree
+     * @return tree
+     */
+    List<DataAccessTreeDTO> getTree();
 }

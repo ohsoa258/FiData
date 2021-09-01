@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
+import com.fisk.dataaccess.dto.DataAccessTreeDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -64,4 +65,11 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      */
     @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1 ORDER BY create_time DESC;")
     List<AppNameDTO> getDataList();
+
+    /**
+     * 获取应用注册name及id
+     * @return tree
+     */
+    @Select("SELECT id,app_name,sync_mode,expression,msg FROM tb_app_registration WHERE del_flag = 1;")
+    List<DataAccessTreeDTO> listAppTree();
 }

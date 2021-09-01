@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -929,9 +930,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
         // 选择驱动类型
-        if(Objects.equals(modelDataSource.driveType,"sqlserver")){
+        if (Objects.equals(modelDataSource.driveType, "sqlserver")) {
             sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
-        }else {
+        } else {
             sourceDsConfig.setType(DriverTypeEnum.MYSQL);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
@@ -1106,4 +1107,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return list;
     }
+
+    @Override
+    public List<DataAccessTreeDTO> getTree() {
+
+        List<DataAccessTreeDTO> appTree = registrationMapper.listAppTree();
+
+        return appTree.stream().map(e -> {
+            e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
+
+                f.setPid(e.id);
+                return f;
+            }).collect(Collectors.toList()));
+            return e;
+        }).collect(Collectors.toList());
+    }
+
 }
