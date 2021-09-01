@@ -87,6 +87,20 @@ public class RabbitMQConfig {
     public Queue incrementDorisFlowQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DORIS_INCREMENTAL_FLOW).build();
     }
+    /**
+     * 声明队列
+     */
+    @Bean("datainputPgBuildTableQueue")
+    public Queue datainputPgBuildTableQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW).build();
+    }
+    /**
+     * 声明队列
+     */
+    @Bean("datainputPgStgToOdsQueue")
+    public Queue datainputPgStgToOdsQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW).build();
+    }
 
     /**
      * 绑定队列和交换机
@@ -158,13 +172,29 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DORIS_INCREMENTAL_ROUTER).noargs();
     }
 
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding datainputPgBuildTableQueueExchange(@Qualifier("datainputPgBuildTableQueue") Queue queue,
+                                                   @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAINPUT_PGSQL_TABLE_ROUTER).noargs();
+    }
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding datainputPgStgToOdsQueueExchange(@Qualifier("datainputPgStgToOdsQueue") Queue queue,
+                                                      @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAINPUT_PGSQL_STGTOODS_ROUTER).noargs();
+    }
+
     @Bean
     public RabbitTemplate createRabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate();
         rabbitTemplate.setConnectionFactory(connectionFactory);
         //设置开启Mandatory,才能触发回调函数,无论消息推送结果怎么样都强制调用回调函数
         rabbitTemplate.setMandatory(true);
-
         return rabbitTemplate;
     }
 }
