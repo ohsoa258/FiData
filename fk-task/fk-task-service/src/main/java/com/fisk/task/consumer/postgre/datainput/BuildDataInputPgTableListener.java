@@ -47,19 +47,21 @@ public class BuildDataInputPgTableListener {
         StringBuilder sql = new StringBuilder();
         StringBuilder pksql=new StringBuilder("PRIMARY KEY(");
         StringBuilder comsql=new StringBuilder();
-        sql.append("CREATE TABLE publick.tableName");
-        sql.append("("+tableName+"_pk varchar(32) NOT NULL DEFAULT sys_guid()");
+        sql.append("CREATE TABLE public.tableName");
+        sql.append(" ( ");
         dto.columns.forEach((l) -> {
             if (l.isKey.equals("1")) {
-                pksql.append(l.columnName+",");
+                //pksql.append(l.columnName+",");
+                sql.append(l.columnName + " " + l.dataType+ " PRIMARY KEY NOT NULL,");
             }
             sql.append(l.columnName + " " + l.dataType+",");
-            comsql.append("COMMENT ON COLUMN public."+tableName+"."+l.columnName+"IS "+l.comment+";");
+            comsql.append("COMMENT ON COLUMN public.tableName."+l.columnName+" IS '"+l.comment+"';");
         });
-        String pksqlstr=pksql.toString();
-        pksqlstr=pksql.substring(0,pksqlstr.lastIndexOf(","))+")";
+        //String pksqlstr=pksql.toString();
+        //pksqlstr=pksqlstr.substring(0,pksqlstr.lastIndexOf(","))+")";
         String comsqlstr=comsql.toString();
-        sql.append(pksqlstr).append(")").append(comsqlstr);
+        //sql.append(pksqlstr).append(")").append(comsqlstr);
+        sql.append("tableName_pk varchar(32) PRIMARY KEY NOT NULL DEFAULT sys_guid() );").append(comsqlstr);
         String stg_sql = sql.toString().replace("tableName", stg_table);
         String ods_sql = sql.toString().replace("tableName", ods_table);
         log.info("pg：开始建表");
