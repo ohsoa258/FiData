@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.dto;
+package com.fisk.taskschedule.dto;
 
 import lombok.Data;
 
@@ -6,16 +6,16 @@ import lombok.Data;
  * @author Lock
  */
 @Data
-public class TableNameTreeDTO {
-
+public class TaskScheduleDTO {
+    public int id;
     /**
-     * id
+     * 子节点id
      */
-    public long id;
+    public int jobId;
     /**
-     * 父id
+     * 父节点id
      */
-    public long pid;
+    public int jobPid;
     /**
      * 同步方式
      */
@@ -29,11 +29,7 @@ public class TableNameTreeDTO {
      */
     public String msg;
     /**
-     * 物理表名
-     */
-    public String tableName;
-    /**
-     * 1: 数据接入; 2:数据建模
+     * tree标识
      */
     public int flag;
 }
