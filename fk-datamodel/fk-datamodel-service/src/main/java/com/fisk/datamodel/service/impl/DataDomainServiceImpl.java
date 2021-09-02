@@ -395,15 +395,84 @@ public class DataDomainServiceImpl implements DataDomainService {
         queryWrapper.lambda()
                 .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
 
-        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(null);
+        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
-//        businessAreaList.stream()
-//                .map(e -> {
-//
-//                })
-        return null;
+        return businessAreaList.stream()
+                .map(e -> {
+                    AreaBusinessNameDTO businessName = new AreaBusinessNameDTO();
+                    businessName.setBusinessId(e.getId());
+                    businessName.setBusinessName(e.getBusinessName());
+
+                    List<BusinessProcessPO> businessProcessList = this.queryBusinessProcess(e.getId());
+                    if (CollectionUtils.isEmpty(businessProcessList)){
+                        return null;
+                    }
+
+                    businessName.setFlag(2);
+                    List<BusinessProcessNameDTO> businessProcessNameDtoList = businessProcessList.stream()
+                            .map(a -> {
+                                BusinessProcessNameDTO businessProcessName = new BusinessProcessNameDTO();
+                                businessProcessName.setBusinessProcessId(a.getId());
+                                businessProcessName.setBusinessProcessCnName(a.getBusinessProcessCnName());
+
+                                List<FactPO> factList = this.queryFact(a.getId());
+                                if (CollectionUtils.isEmpty(factList)){
+                                    return null;
+                                }
+
+                                businessProcessName.setFlag(2);
+                                List<FactNameDTO> factDtoList = factList.stream()
+                                        .map(b -> {
+                                            FactNameDTO factName = new FactNameDTO();
+                                            factName.setFactId(b.getId());
+                                            factName.setFactTableEnName(b.getFactTableEnName());
+                                            factName.setFlag(2);
+                                            return factName;
+                                        }).collect(Collectors.toList());
+                                businessProcessName.setFactList(factDtoList);
+                                return businessProcessName;
+                            }).collect(Collectors.toList());
+                    businessName.setBusinessProcessList(businessProcessNameDtoList);
+                    return businessName;
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据业务域id查询业务过程
+     * @param businessId 业务域Id
+     * @return
+     */
+    public List<BusinessProcessPO> queryBusinessProcess(Long businessId){
+        QueryWrapper<BusinessProcessPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(BusinessProcessPO::getBusinessId,businessId)
+                .select(BusinessProcessPO::getId,BusinessProcessPO::getBusinessProcessCnName);;
+        List<BusinessProcessPO> businessProcessList = businessProcessMapper.selectList(query);
+        if (CollectionUtils.isEmpty(businessProcessList)){
+            return null;
+        }else {
+            return businessProcessList;
+        }
+    }
+
+    /**
+     * 根据业务过程id查询事实表
+     * @param businessProcessId 业务过程id
+     * @return
+     */
+    public List<FactPO> queryFact(Long businessProcessId){
+        QueryWrapper<FactPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(FactPO::getBusinessProcessId,businessProcessId)
+                .select(FactPO::getId,FactPO::getFactTableEnName);
+        List<FactPO> factList = factMapper.selectList(query);
+        if (CollectionUtils.isEmpty(factList)){
+            return null;
+        }else {
+            return factList;
+        }
     }
 }
