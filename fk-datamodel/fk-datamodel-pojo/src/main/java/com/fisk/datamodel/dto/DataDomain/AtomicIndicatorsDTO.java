@@ -14,4 +14,8 @@ public class AtomicIndicatorsDTO {
 
     public String indicatorsName;
 
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
 }

@@ -14,4 +14,8 @@ public class DerivedIndicatorsDTO {
 
     public String derivedName;
 
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
 }

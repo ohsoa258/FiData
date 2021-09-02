@@ -18,4 +18,9 @@ public class BusinessProcessDTO {
      * 事实表 三级
      */
     public List<FactDTO> factList;
+
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
 }

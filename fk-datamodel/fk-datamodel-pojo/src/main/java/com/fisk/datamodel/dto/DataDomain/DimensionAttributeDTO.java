@@ -11,4 +11,8 @@ import lombok.Data;
 public class DimensionAttributeDTO {
     public Long dimensionAttributeId;
     public String dimensionFieldCnName;
+    /**
+     * 是否维度 0 否  1 是维度
+     */
+    public int dimension;
 }

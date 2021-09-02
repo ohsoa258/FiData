@@ -106,6 +106,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             DimensionDTO dto = new DimensionDTO();
             dto.setDimensionId(dimension.getId());
             dto.setDimensionCnName(dimension.getDimensionEnName());
+            dto.setDimension(1);
 
             // 每一个二级对应多个三级
             List<DimensionAttributeDTO> dimensionAttributeDTOList = new ArrayList<>();
@@ -118,6 +119,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 DimensionAttributeDTO dimensionAttributeDTO = new DimensionAttributeDTO();
                 dimensionAttributeDTO.setDimensionAttributeId(dimensionAttribute.getId());
                 dimensionAttributeDTO.setDimensionFieldCnName(dimensionAttribute.getDimensionFieldEnName());
+                dimensionAttributeDTO.setDimension(1);
                 dimensionAttributeDTOList.add(dimensionAttributeDTO);
             }
             dto.setDimensionAttributeList(dimensionAttributeDTOList);
@@ -148,6 +150,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             BusinessProcessDTO dto = new BusinessProcessDTO();
             dto.setBusinessProcessId(businessProcess.getId());
             dto.setBusinessProcessCnName(businessProcess.getBusinessProcessEnName());
+            dto.setDimension(0);
 
             List<FactDTO> factList = new ArrayList<>();
             if (CollectionUtils.isEmpty(businessIds)){
@@ -197,6 +200,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             dto.setFactTableEnName(factPO.getFactTableEnName());
             dto.setAtomicIndicatorsList(atomicIndicatorsList);
             dto.setDerivedIndicatorsList(derivedIndicatorsList);
+            dto.setDimension(0);
             factList.add(dto);
         }
     }
@@ -226,6 +230,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             AtomicIndicatorsDTO indicators = new AtomicIndicatorsDTO();
             indicators.setIndicatorsId(atomicIndicator.getId());
             indicators.setIndicatorsName(atomicIndicator.getIndicatorsName());
+            indicators.setDimension(0);
             atomicIndicatorsList.add(indicators);
         }
     }
@@ -254,6 +259,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             DerivedIndicatorsDTO indicators = new DerivedIndicatorsDTO();
             indicators.setIndicatorsId(derivedIndicator.getId());
             indicators.setDerivedName(derivedIndicator.getIndicatorsName());
+            indicators.setDimension(0);
             derivedIndicatorsList.add(indicators);
         }
     }
