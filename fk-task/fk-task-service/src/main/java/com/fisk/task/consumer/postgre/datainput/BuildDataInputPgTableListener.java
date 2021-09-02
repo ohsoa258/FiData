@@ -52,7 +52,6 @@ public class BuildDataInputPgTableListener {
         dto.columns.forEach((l) -> {
             if (l.isKey.equals("1")) {
                 pksql.append(l.columnName+",");
-                sql.append(l.columnName + " " + l.dataType+ " PRIMARY KEY NOT NULL,");
             }
             sql.append(l.columnName + " " + l.dataType+",");
             comsql.append("COMMENT ON COLUMN public.tableName."+l.columnName+" IS '"+l.comment+"';");
@@ -60,7 +59,7 @@ public class BuildDataInputPgTableListener {
         String pksqlstr=pksql.toString();
         pksqlstr=pksqlstr.substring(0,pksqlstr.lastIndexOf(","))+")";
         String comsqlstr=comsql.toString();
-        sql.append(pksqlstr).append(");").append(comsqlstr);
+        sql.append(" fk_doris_increment_code VARCHAR(50), ").append(pksqlstr).append(");").append(comsqlstr);
         String stg_sql = sql.toString().replace("tableName", stg_table);
         String ods_sql = sql.toString().replace("tableName", ods_table);
         log.info("pg：开始建表");
