@@ -638,6 +638,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String url = modelDataSource.getConnectStr();
         String user = modelDataSource.getConnectAccount();
         String pwd = modelDataSource.getConnectPwd();
+        String dbName = modelDataSource.dbName;
 
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
         List<TablePyhNameDTO> list = new ArrayList<>();
@@ -648,7 +649,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd);
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,dbName);
                 break;
             default:
                 break;
@@ -1115,7 +1116,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return appTree.stream().map(e -> {
             e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
-
                 f.setPid(e.id);
                 return f;
             }).collect(Collectors.toList()));
