@@ -1116,9 +1116,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return appTree.stream().map(e -> {
             e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
+                f.flag = 1;
                 f.setPid(e.id);
                 return f;
             }).collect(Collectors.toList()));
+            e.flag = 1;
             return e;
         }).collect(Collectors.toList());
     }
