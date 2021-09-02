@@ -36,9 +36,16 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
         }
+
+        boolean save = this.save(model);
         String cronNextTime = "";
         if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            CronSequenceGenerator cron = new CronSequenceGenerator(model.expression);
+            CronSequenceGenerator cron = null;
+            try {
+                cron = new CronSequenceGenerator(model.expression);
+            } catch (Exception e) {
+                return ResultEntityBuild.build(ResultEnum.TASK_SCHEDULE_CRONEXPRESSION_ERROR);
+            }
             Date d = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -47,7 +54,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         }
 
         TaskCronDTO taskCronDTO = new TaskCronDTO();
-        boolean save = this.save(model);
         if (save) {
             taskCronDTO.code = ResultEnum.SUCCESS;
             taskCronDTO.cronNextTime = cronNextTime;
@@ -78,7 +84,12 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
         String cronNextTime = "";
         if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            CronSequenceGenerator cron = new CronSequenceGenerator(model.expression);
+            CronSequenceGenerator cron = null;
+            try {
+                cron = new CronSequenceGenerator(model.expression);
+            } catch (Exception e) {
+                return ResultEntityBuild.build(ResultEnum.TASK_SCHEDULE_CRONEXPRESSION_ERROR);
+            }
             Date d = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -116,7 +127,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             if (model == null) {
                 return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
             }
-
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, INSTANCES.poToDto(model));

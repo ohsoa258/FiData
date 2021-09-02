@@ -86,7 +86,9 @@ public enum ResultEnum {
     /**
      * 数据建模模块
      */
-    DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值");
+    DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值"),
+
+    TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001,"添加成功,暂无法解析此表达式");
 
 
     ResultEnum(int code, String msg) {
