@@ -22,5 +22,6 @@ public class UpdateLogAndImportDataDTO extends BaseDTO {
     public int datarows;
     public int status;
     public String code;
+    public String corn;
     public String errordesc;
 }

@@ -36,5 +36,9 @@ public class BuildDataInputStgToOdsListener {
         //doris.updateNifiLogsAndImportOdsData(inpData);
         pg.postgreDataStgToOds(inpData.tablename.replace("ods", "stg"),inpData.tablename,inpData);
         log.info("stg数据同步完成");
+        //#region 更新增量表
+        log.info("开始更新增量表");
+
+        //#endregion
     }
 }
