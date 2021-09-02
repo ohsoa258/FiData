@@ -514,7 +514,8 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
+        //+ " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' "先把时间段去掉
+        querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery;
         querySqlDto.dbConnectionId = sourceDbPoolId;
         //querySqlDto.fetchSize="2";
         querySqlDto.MaxRowsPerFlowFile="1000000";
