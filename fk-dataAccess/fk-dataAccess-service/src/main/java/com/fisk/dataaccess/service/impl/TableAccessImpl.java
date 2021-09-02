@@ -278,6 +278,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        // TODO: tableName 物理表名称
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
@@ -353,6 +354,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 应用注册id
         atlasIdsVO.appId = String.valueOf(id);
         atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
+        atlasIdsVO.tableName = tableName;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
