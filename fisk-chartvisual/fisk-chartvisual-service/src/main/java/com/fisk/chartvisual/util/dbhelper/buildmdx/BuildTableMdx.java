@@ -1,10 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper.buildmdx;
-
-import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ColumnDetailsSsas;
-import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import org.apache.commons.lang.StringUtils;
 import org.olap4j.Cell;
 import org.olap4j.CellSet;
 import org.olap4j.Position;
@@ -21,35 +17,30 @@ import java.util.stream.Collectors;
  * @author JinXingWang
  */
 public class BuildTableMdx extends BaseBuildMdx {
-    @Override
     /**
      * 生成列mdx语句
      * @param columns 列
      * @param values 值
      * @return mdx语句
      */
+    @Override
     public  String buildColumnMdx(List<ColumnDetailsSsas> columns,List<ColumnDetailsSsas> values) {
-        StringBuilder mdxColumn=new StringBuilder();
-        mdxColumn.append("  NON EMPTY { ");
-        mdxColumn.append(values.stream().map(e-> e.uniqueName).collect(Collectors.joining(" , ")));
-        mdxColumn.append(" } ON COLUMNS ");
-        return mdxColumn.toString();
+        return "  NON EMPTY { " +
+                values.stream().map(e -> e.uniqueName).collect(Collectors.joining(" , ")) +
+                " } ON COLUMNS ";
     }
 
-    @Override
     /**
      * 获取行mdx语句
      * @param rows 列
      * @return mdx语句
      */
+    @Override
     public  String buildRowMdx(List<ColumnDetailsSsas> rows,List<ColumnDetailsSsas> columns){
-        StringBuilder mdxRow=new StringBuilder();
-        mdxRow.append(", NON EMPTY {( ");
-        mdxRow.append(columns.stream().map(e-> e.uniqueName+".["+e.name+"].ALLMEMBERS").collect(Collectors.joining(" * ")));
-        mdxRow.append(" )} DIMENSION PROPERTIES MEMBER_CAPTION, MEMBER_UNIQUE_NAME ON ROWS ");
-        return mdxRow.toString();
+        return ", NON EMPTY {( " +
+                columns.stream().map(e -> e.uniqueName + ".[" + e.name + "].ALLMEMBERS").collect(Collectors.joining(" * ")) +
+                " )} DIMENSION PROPERTIES MEMBER_CAPTION, MEMBER_UNIQUE_NAME ON ROWS ";
     }
-
 
     @Override
     public DataServiceResult getDataByAnalyticalCellSet(CellSet cellSet){
@@ -61,6 +52,7 @@ public class BuildTableMdx extends BaseBuildMdx {
         int index=0;
         for (Position row :cellSet.getAxes().get(1)){
             Map<String,Object> map=new HashMap<>();
+            //行成员
             for (Member member : row.getMembers()) {
                 String columnName= member.getHierarchy().getName();
                 String value=member.getName();
@@ -72,6 +64,7 @@ public class BuildTableMdx extends BaseBuildMdx {
                 }
                 map.put(columnName,value);
             }
+            //列成员
             for (Position column:cellSet.getAxes().get(0)){
                 final Cell cell=cellSet.getCell(column,row);
                 String columnName="";

@@ -2,7 +2,8 @@ package com.fisk.chartvisual.util.dbhelper.buildmdx;
 import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.ColumnDetailsSsas;
-import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
+import com.fisk.chartvisual.enums.DragElemTypeEnum;
+import com.fisk.chartvisual.enums.SsasChartFilterTypeEnum;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import org.apache.commons.lang.StringUtils;
 import org.olap4j.Cell;
@@ -25,25 +26,26 @@ import java.util.stream.Collectors;
 public class BaseBuildMdx    {
 
     /**
-     * 通过列行值获取mdx语句
+     * 生成mdx语句
      * @param query  查询条件
      * @param cubeName 模型名称
      * @return mdx语句
      */
     public  String buildMdx(ChartQueryObjectSsas query, String cubeName){
-        List<ColumnDetailsSsas> columns=filterList(query.columnDetails,MatrixElemTypeEnum.COLUMN);
-        //是否下钻
-        List<ColumnDetailsSsas> rows=filterList(query.columnDetails,MatrixElemTypeEnum.ROW);
+        List<ColumnDetailsSsas> columns=filterList(query.columnDetails, DragElemTypeEnum.COLUMN);
+        //是否下钻 折线 柱状 饼图存在下钻
+        List<ColumnDetailsSsas> rows=filterList(query.columnDetails, DragElemTypeEnum.ROW);
         if (query.chartDrillDown.isChartDrillDown){
             List<ColumnDetailsSsas> drillDownRow= new ArrayList<>();
             drillDownRow.add(rows.get(query.chartDrillDown.level-1));
             rows=drillDownRow;
         }
-        List<ColumnDetailsSsas> values=filterList(query.columnDetails,MatrixElemTypeEnum.VALUE);
+        List<ColumnDetailsSsas> values=filterList(query.columnDetails, DragElemTypeEnum.VALUE);
         String columnMdx=buildColumnMdx(columns,values);
         String rowMdx=buildRowMdx(rows,columns);
         String whereMdx=buildWhereMdx(values,query.queryFilters);
-        return replaceMdxTemplateByColumnRowValue(columnMdx,rowMdx,whereMdx,cubeName);
+        String fromMdx=buildFromMdx(query.queryFilters,cubeName);
+        return replaceMdxTemplateByColumnRowValue(columnMdx,rowMdx,whereMdx,fromMdx);
     }
 
     /**
@@ -61,14 +63,14 @@ public class BaseBuildMdx    {
             mdxColumn.append("} ");
         }else
         {
-            mdxColumn.append(buildHierarchicalMdx(columns,MatrixElemTypeEnum.COLUMN,values));
+            mdxColumn.append(buildHierarchicalMdx(columns, DragElemTypeEnum.COLUMN,values));
         }
         mdxColumn.append(" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON COLUMNS ");
         return mdxColumn.toString();
     }
 
     /**
-     * 获取行mdx语句
+     * 生成行mdx语句
      * @param rows 列
      * @return mdx语句
      */
@@ -78,32 +80,77 @@ public class BaseBuildMdx    {
             return "";
         }else
         {
-            return " , NON EMPTY "+buildHierarchicalMdx(rows, MatrixElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
+            return " , NON EMPTY "+buildHierarchicalMdx(rows, DragElemTypeEnum.ROW,null)+" DIMENSION PROPERTIES PARENT_UNIQUE_NAME,HIERARCHY_UNIQUE_NAME ON ROWS";
         }
     }
 
     /**
-     * 获取where mdx语句（切片器）
+     * 生成where mdx语句
      * @param values 值
-     * @param wheres where
+     * @param drills 下钻
      * @return mdx语句
      */
-    public  String buildWhereMdx(List<ColumnDetailsSsas> values, List<ChartQueryFilter> wheres){
+    public  String buildWhereMdx(List<ColumnDetailsSsas> values, List<ChartQueryFilter> drills){
         //where条件中只能包含元组
+        List<ChartQueryFilter> wheres=drills.stream().filter(e->e.ssasChartFilterType== SsasChartFilterTypeEnum.DRILL).collect(Collectors.toList());
         if (wheres.size()>0){
             StringBuilder whereMdxSb=new StringBuilder();
             whereMdxSb.append("WHERE(");
-            for(ChartQueryFilter where: wheres){
-                String valuesStr= where.value.stream().map(e-> where.columnName+".&["+e+"]").collect(Collectors.joining(" , "," { "," } "));
-                whereMdxSb.append(valuesStr);
-                whereMdxSb.append(",");
-            }
-            whereMdxSb.deleteCharAt(whereMdxSb.length()-1);
+            joinTupleMdx(wheres, whereMdxSb);
             whereMdxSb.append(")");
             return  whereMdxSb.toString();
         }else {
             return "";
         }
+    }
+
+    /**
+     * 生成from mdx语句
+     * @param filters 切片器 筛选器过滤条件
+     * @param CubeName cube名称
+     * @return  from mdx语句
+     */
+    public String  buildFromMdx(List<ChartQueryFilter> filters,String CubeName){
+        //筛选器条件
+        List<ChartQueryFilter> filterList=filters.stream().filter(e->e.ssasChartFilterType==SsasChartFilterTypeEnum.FILTER).collect(Collectors.toList());
+        //切片器
+        List<ChartQueryFilter> sliceList=filters.stream().filter(e->e.ssasChartFilterType==SsasChartFilterTypeEnum.SLICE).collect(Collectors.toList());
+        StringBuilder fromMdx=new StringBuilder();
+        fromMdx.append("[");
+        fromMdx.append(CubeName);
+        fromMdx.append("]");
+        //筛选器数据过滤
+        joinPartFromMdx(filterList,fromMdx );
+        //切片器数据的过滤
+        joinPartFromMdx(sliceList,fromMdx );
+        return fromMdx.toString();
+    }
+
+    /**
+     * 拼接部分from mdx语句
+     * @param filters 条件过滤
+     */
+    private void joinPartFromMdx(List<ChartQueryFilter> filters,StringBuilder fromMdx){
+        if (filters.size()>0){
+            StringBuilder  fromFilterMdx =new StringBuilder();
+            joinTupleMdx(filters, fromFilterMdx);
+            fromMdx.insert(0,"(SELECT ("+fromFilterMdx+")  ON COLUMNS ");
+            fromMdx.append(" )");
+        }
+    }
+
+    /**
+     * 拼接筛选元组mdx语句
+     * @param filterList 筛选
+     * @param sb stringBuilder
+     */
+    private void joinTupleMdx(List<ChartQueryFilter> filterList, StringBuilder sb) {
+        for(ChartQueryFilter filter: filterList){
+            String valuesStr= filter.value.stream().map(e-> filter.columnName+".&["+e+"]").collect(Collectors.joining(" , "," { "," } "));
+            sb.append(valuesStr);
+            sb.append(",");
+        }
+        sb.deleteCharAt(sb.length()-1);
     }
 
     /**
@@ -113,7 +160,7 @@ public class BaseBuildMdx    {
      * @param values 值
      * @return mdx 语句
      */
-    public  String buildHierarchicalMdx(List<ColumnDetailsSsas> hierarchyPos, MatrixElemTypeEnum matrixElemTypeEnum,List<ColumnDetailsSsas> values){
+    public  String buildHierarchicalMdx(List<ColumnDetailsSsas> hierarchyPos, DragElemTypeEnum matrixElemTypeEnum, List<ColumnDetailsSsas> values){
         int hierarchySize=hierarchyPos.size();
         StringBuilder hMdxSb=new StringBuilder();
         if(hierarchySize==0){
@@ -127,7 +174,7 @@ public class BaseBuildMdx    {
             hMdxSb.append(buildHierarchicalGreaterThanTwoMdx(hierarchyPos));
         }
         //多值,并且是列元素,使用join语法.
-        if (matrixElemTypeEnum==MatrixElemTypeEnum.COLUMN&& values!=null&& values.size()>1){
+        if (matrixElemTypeEnum== DragElemTypeEnum.COLUMN&& values!=null&& values.size()>1){
             hMdxSb.insert(0, "CrossJoin(");
             hMdxSb.append(",{");
             hMdxSb.append(values.stream().map(e->e.uniqueName).collect(Collectors.joining(",")));
@@ -171,7 +218,7 @@ public class BaseBuildMdx    {
         hMdxSb.append(dmBeforeMdxSb);
         hMdxSb.append("CrossJoin(" +
                 "{"+hierarchyPoS.get(0).uniqueName+".[All] ,"+hierarchyPoS.get(0).uniqueName+".["+hierarchyPoS.get(0).name+"].AllMembers}" +
-                ","+cjMdxSb.toString()+")");
+                ","+cjMdxSb+")");
         hMdxSb.append(dmAfterMdxSb);
         hMdxSb.append(")");
         return hMdxSb.toString();
@@ -182,29 +229,29 @@ public class BaseBuildMdx    {
      * @param columnMdx 列mdx语句
      * @param rowMdx 行mdx语句
      * @param whereMdx 条件mdx语句
-     * @param cubeName 模型名称
+     * @param fromMdx from mdx语句
      * @return 完整mdx语句
      */
-    public  String replaceMdxTemplateByColumnRowValue(String columnMdx,String rowMdx,String whereMdx,String cubeName){
+    public  String replaceMdxTemplateByColumnRowValue(String columnMdx,String rowMdx,String whereMdx,String fromMdx){
         return "SELECT \n" +
                 columnMdx + "\n" +
                 rowMdx + "\n" +
-                " FROM [" +
-                cubeName +
-                "] \n" +
+                " FROM " +
+                fromMdx +
+                " \n" +
                 whereMdx + "\n" +
                 " CELL PROPERTIES VALUE, FORMAT_STRING, LANGUAGE, BACK_COLOR, FORE_COLOR, FONT_FLAGS";
     }
 
     /**
      * 获取行列值筛选条件
-     * @param columnDetailsSsas
-     * @param matrixElemType
-     * @return
+     * @param columnDetailsSsas 拖拽的维度
+     * @param dragElemType 拖拽类型
+     * @return 筛选条件
      */
-    public   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas,MatrixElemTypeEnum matrixElemType){
+    public   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas, DragElemTypeEnum dragElemType){
        return columnDetailsSsas.stream()
-                .filter(p -> matrixElemType==p.matrixElemType)
+                .filter(p -> dragElemType==p.DragElemType)
                 .collect(Collectors.toList());
     }
 

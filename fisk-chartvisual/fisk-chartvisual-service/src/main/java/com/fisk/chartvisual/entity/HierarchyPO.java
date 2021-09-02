@@ -1,7 +1,6 @@
 package com.fisk.chartvisual.entity;
 
 import com.fisk.chartvisual.enums.DimensionTypeEnum;
-import com.fisk.chartvisual.enums.MatrixElemTypeEnum;
 import lombok.Data;
 
 import java.util.List;

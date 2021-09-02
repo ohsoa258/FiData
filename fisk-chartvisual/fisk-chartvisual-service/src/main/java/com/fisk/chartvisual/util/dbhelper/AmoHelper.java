@@ -187,14 +187,12 @@ public class AmoHelper {
      * 获取数据
      * @param query 条件
      * @param cubeName cube名称
-     * @return
+     * @return 数据
      */
     public DataServiceResult getData(ChartQueryObjectSsas query, String cubeName){
         BaseBuildMdx  baseBuildMdx= GraphicsFactory.getMdxHelper(query.graphicType);
-        DataServiceResult res=new DataServiceResult();
         String mdx= baseBuildMdx.buildMdx(query,cubeName);
-        res =baseBuildMdx.getDataByAnalyticalCellSet(query(mdx));
-        return res;
+        return baseBuildMdx.getDataByAnalyticalCellSet(query(mdx));
     }
 
     /**
@@ -202,7 +200,7 @@ public class AmoHelper {
      */
     public List<String>  getMembers(String cubeName,String hierarchyName){
         String mdx=" SELECT  NON EMPTY "+hierarchyName+".allmembers ON COLUMNS\n" +
-                " FROM "+cubeName+" ";
+                " FROM ["+cubeName+"] ";
         CellSet cellSet= query(mdx);
         List<String> data=new ArrayList<>();
         for (Position column:cellSet.getAxes().get(0)){
