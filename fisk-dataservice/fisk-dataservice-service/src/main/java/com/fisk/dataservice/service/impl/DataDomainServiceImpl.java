@@ -70,6 +70,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .collect(joining(","));
 
         String queryKey = existTableData.stream()
+                .filter(e -> e.getType() == COLUMN)
                 .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableNameKey() + escapeStr[1])
                 .collect(joining(","));
 
@@ -83,16 +84,16 @@ public class DataDomainServiceImpl implements DataDomainService {
         // 追加表名_key
         str.append(queryKey);
 
-        // 主表
-        str.append(" FROM " + existTableData.get(0).tableName);
-        existTableData.remove(0);
-
-        str.append(" INNER JOIN ");
-
         // 从表去重表名
         ArrayList<TableDataDTO> joinTableDataList = existTableData.stream()
                 .collect(collectingAndThen
                         (toCollection(() -> new TreeSet<>(Comparator.comparing(TableDataDTO::getTableName))), ArrayList::new));
+
+        // 主表
+        str.append(" FROM " + joinTableDataList.get(0).tableName);
+        joinTableDataList.remove(0);
+
+        str.append(" INNER JOIN ");
 
         String collect = joinTableDataList.stream()
                 .map(e -> e.tableName + " ON 1=1")

@@ -278,6 +278,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        // TODO: tableName 物理表名称
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
@@ -353,6 +354,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 应用注册id
         atlasIdsVO.appId = String.valueOf(id);
         atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
+        atlasIdsVO.tableName = tableName;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
@@ -921,9 +923,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         // 回写应用注册组件id
         groupConfig.setComponentId(modelReg.componentId);
-        // 2.任务组配置
-        taskGroupConfig.setAppName(modelReg.getAppName());
-        taskGroupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
@@ -947,6 +946,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
+        // 2.任务组配置
+        taskGroupConfig.setAppName(modelAccess.getTableName());
+        taskGroupConfig.setAppDetails(modelAccess.getTableDes());
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
@@ -1116,9 +1118,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return appTree.stream().map(e -> {
             e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
+                f.flag = 1;
                 f.setPid(e.id);
                 return f;
             }).collect(Collectors.toList()));
+            e.flag = 1;
             return e;
         }).collect(Collectors.toList());
     }

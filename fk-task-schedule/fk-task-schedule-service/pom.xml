@@ -99,7 +99,7 @@
     </dependencies>
 
     <build>
-        <finalName>data-access</finalName>
+        <finalName>task-schedule</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

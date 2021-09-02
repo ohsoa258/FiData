@@ -106,6 +106,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             DimensionDTO dto = new DimensionDTO();
             dto.setDimensionId(dimension.getId());
             dto.setDimensionCnName(dimension.getDimensionEnName());
+            dto.setDimension(1);
 
             // 每一个二级对应多个三级
             List<DimensionAttributeDTO> dimensionAttributeDTOList = new ArrayList<>();
@@ -118,6 +119,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 DimensionAttributeDTO dimensionAttributeDTO = new DimensionAttributeDTO();
                 dimensionAttributeDTO.setDimensionAttributeId(dimensionAttribute.getId());
                 dimensionAttributeDTO.setDimensionFieldCnName(dimensionAttribute.getDimensionFieldEnName());
+                dimensionAttributeDTO.setDimension(1);
                 dimensionAttributeDTOList.add(dimensionAttributeDTO);
             }
             dto.setDimensionAttributeList(dimensionAttributeDTOList);
@@ -148,6 +150,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             BusinessProcessDTO dto = new BusinessProcessDTO();
             dto.setBusinessProcessId(businessProcess.getId());
             dto.setBusinessProcessCnName(businessProcess.getBusinessProcessEnName());
+            dto.setDimension(0);
 
             List<FactDTO> factList = new ArrayList<>();
             if (CollectionUtils.isEmpty(businessIds)){
@@ -197,6 +200,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             dto.setFactTableEnName(factPO.getFactTableEnName());
             dto.setAtomicIndicatorsList(atomicIndicatorsList);
             dto.setDerivedIndicatorsList(derivedIndicatorsList);
+            dto.setDimension(0);
             factList.add(dto);
         }
     }
@@ -226,6 +230,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             AtomicIndicatorsDTO indicators = new AtomicIndicatorsDTO();
             indicators.setIndicatorsId(atomicIndicator.getId());
             indicators.setIndicatorsName(atomicIndicator.getIndicatorsName());
+            indicators.setDimension(0);
             atomicIndicatorsList.add(indicators);
         }
     }
@@ -254,6 +259,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             DerivedIndicatorsDTO indicators = new DerivedIndicatorsDTO();
             indicators.setIndicatorsId(derivedIndicator.getId());
             indicators.setDerivedName(derivedIndicator.getIndicatorsName());
+            indicators.setDimension(0);
             derivedIndicatorsList.add(indicators);
         }
     }
@@ -395,15 +401,84 @@ public class DataDomainServiceImpl implements DataDomainService {
         queryWrapper.lambda()
                 .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
 
-        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(null);
+        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
-//        businessAreaList.stream()
-//                .map(e -> {
-//
-//                })
-        return null;
+        return businessAreaList.stream()
+                .map(e -> {
+                    AreaBusinessNameDTO businessName = new AreaBusinessNameDTO();
+                    businessName.setBusinessId(e.getId());
+                    businessName.setBusinessName(e.getBusinessName());
+
+                    List<BusinessProcessPO> businessProcessList = this.queryBusinessProcess(e.getId());
+                    if (CollectionUtils.isEmpty(businessProcessList)){
+                        return null;
+                    }
+
+                    businessName.setFlag(2);
+                    List<BusinessProcessNameDTO> businessProcessNameDtoList = businessProcessList.stream()
+                            .map(a -> {
+                                BusinessProcessNameDTO businessProcessName = new BusinessProcessNameDTO();
+                                businessProcessName.setBusinessProcessId(a.getId());
+                                businessProcessName.setBusinessProcessCnName(a.getBusinessProcessCnName());
+
+                                List<FactPO> factList = this.queryFact(a.getId());
+                                if (CollectionUtils.isEmpty(factList)){
+                                    return null;
+                                }
+
+                                businessProcessName.setFlag(2);
+                                List<FactNameDTO> factDtoList = factList.stream()
+                                        .map(b -> {
+                                            FactNameDTO factName = new FactNameDTO();
+                                            factName.setFactId(b.getId());
+                                            factName.setFactTableEnName(b.getFactTableEnName());
+                                            factName.setFlag(2);
+                                            return factName;
+                                        }).collect(Collectors.toList());
+                                businessProcessName.setFactList(factDtoList);
+                                return businessProcessName;
+                            }).collect(Collectors.toList());
+                    businessName.setBusinessProcessList(businessProcessNameDtoList);
+                    return businessName;
+                }).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据业务域id查询业务过程
+     * @param businessId 业务域Id
+     * @return
+     */
+    public List<BusinessProcessPO> queryBusinessProcess(Long businessId){
+        QueryWrapper<BusinessProcessPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(BusinessProcessPO::getBusinessId,businessId)
+                .select(BusinessProcessPO::getId,BusinessProcessPO::getBusinessProcessCnName);;
+        List<BusinessProcessPO> businessProcessList = businessProcessMapper.selectList(query);
+        if (CollectionUtils.isEmpty(businessProcessList)){
+            return null;
+        }else {
+            return businessProcessList;
+        }
+    }
+
+    /**
+     * 根据业务过程id查询事实表
+     * @param businessProcessId 业务过程id
+     * @return
+     */
+    public List<FactPO> queryFact(Long businessProcessId){
+        QueryWrapper<FactPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(FactPO::getBusinessProcessId,businessProcessId)
+                .select(FactPO::getId,FactPO::getFactTableEnName);
+        List<FactPO> factList = factMapper.selectList(query);
+        if (CollectionUtils.isEmpty(factList)){
+            return null;
+        }else {
+            return factList;
+        }
     }
 }
