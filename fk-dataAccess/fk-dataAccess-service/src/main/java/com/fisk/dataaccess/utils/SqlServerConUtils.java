@@ -24,12 +24,12 @@ public class SqlServerConUtils {
      * @param conn conn
      * @return 表名
      */
-    public List<String> getTables(Connection conn) {
+    public List<String> getTables(Connection conn,String dbName) {
         ArrayList<String> tableList = null;
         try {
             Statement stmt = conn.createStatement();
 
-            ResultSet resultSet = stmt.executeQuery("SELECT name FROM TestDB..sysobjects Where xtype='U' ORDER BY name");
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM "+dbName+"..sysobjects Where xtype='U' ORDER BY name");
             tableList = new ArrayList<>();
             while (resultSet.next()) {
                 tableList.add(resultSet.getString("name"));
@@ -80,7 +80,7 @@ public class SqlServerConUtils {
      * @param password password
      * @return 表及表字段
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password,String dbName) {
 
         List<TablePyhNameDTO> list = null;
 
@@ -93,7 +93,7 @@ public class SqlServerConUtils {
             list = new ArrayList<>();
 
             // 获取指定数据库所有表
-            List<String> tableNames = this.getTables(conn);
+            List<String> tableNames = this.getTables(conn,dbName);
 
             int tag = 0;
             for (String tableName : tableNames) {

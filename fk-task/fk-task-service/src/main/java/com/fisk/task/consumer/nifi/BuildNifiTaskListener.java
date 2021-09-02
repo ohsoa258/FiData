@@ -51,6 +51,12 @@ public class BuildNifiTaskListener {
     private String dorisUser;
     @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
+    @Value("${pgsql-datainput.url}")
+    private String pgsqlDatainputUrl;
+    @Value("${pgsql-datainput.username}")
+    private String pgsqlDatainputUsername;
+    @Value("${pgsql-datainput.password}")
+    private String pgsqlDatainputPassword;
 
     @Value("${spring.rabbitmq.host}")
     private String host;
@@ -110,10 +116,10 @@ public class BuildNifiTaskListener {
         }
         //target doris
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
-        targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
-        targetDbPoolConfig.user = dorisUser;
-        targetDbPoolConfig.password = dorisPwd;
-        targetDbPoolConfig.jdbcStr = dorisUrl;
+        targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
+        targetDbPoolConfig.user = pgsqlDatainputUsername;
+        targetDbPoolConfig.password = pgsqlDatainputPassword;
+        targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }
@@ -256,6 +262,9 @@ public class BuildNifiTaskListener {
                 break;
             case SQLSERVER:
                 dto.driverLocation = NifiConstants.DriveConstants.SQLSERVER_DRIVE_PATH;
+                break;
+            case POSTGRESQL:
+                dto.driverLocation = NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
                 break;
             default:
                 break;
@@ -505,7 +514,8 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec DataSource Query";
         querySqlDto.details = "Execute SQL query in the data source";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery + " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' ";
+        //+ " where time >= '${IncrementStart}' and time <= '${IncrementEnd}' "先把时间段去掉
+        querySqlDto.querySql = config.processorConfig.sourceExecSqlQuery;
         querySqlDto.dbConnectionId = sourceDbPoolId;
         //querySqlDto.fetchSize="2";
         querySqlDto.MaxRowsPerFlowFile="1000000";

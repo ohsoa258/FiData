@@ -177,7 +177,7 @@ public class SqlServerTest {
                 list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd);
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,"");
                 break;
             default:
                 break;
