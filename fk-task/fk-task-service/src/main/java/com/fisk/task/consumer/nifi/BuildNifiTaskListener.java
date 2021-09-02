@@ -263,6 +263,9 @@ public class BuildNifiTaskListener {
             case SQLSERVER:
                 dto.driverLocation = NifiConstants.DriveConstants.SQLSERVER_DRIVE_PATH;
                 break;
+            case POSTGRESQL:
+                dto.driverLocation = NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
+                break;
             default:
                 break;
         }
