@@ -378,6 +378,29 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     }
 
     @Override
+    public BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data) {
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoRes.add(AutoEndBranchTypeEnum.SPLIT.getName());
+        Map<String, String> map = new HashMap<>(1);
+        map.put("JsonPath Expression", "$.*11");
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.SplitJson.getName());
+        dto.setPosition(data.getPositionDTO());
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessorEntity> buildUpdateAttribute(BuildUpdateAttributeDTO data) {
         //流程分支，是否自动结束

@@ -19,7 +19,8 @@ public enum ProcessorTypeEnum implements BaseEnum {
     UpdateAttribute(5, "org.apache.nifi.processors.attributes.UpdateAttribute"),
     MergeContent(6, "org.apache.nifi.processors.standard.MergeContent"),
     ReplaceText(7, "org.apache.nifi.processors.standard.ReplaceText"),
-    PublishAMQP(8, "org.apache.nifi.amqp.processors.PublishAMQP");
+    PublishAMQP(8, "org.apache.nifi.amqp.processors.PublishAMQP"),
+    SplitJson(9,"org.apache.nifi.processors.standard.SplitJson");
 
     ProcessorTypeEnum(int value, String name) {
         this.value = value;
