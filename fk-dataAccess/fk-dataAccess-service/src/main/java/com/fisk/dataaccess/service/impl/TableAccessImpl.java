@@ -921,9 +921,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         // 回写应用注册组件id
         groupConfig.setComponentId(modelReg.componentId);
-        // 2.任务组配置
-        taskGroupConfig.setAppName(modelReg.getAppName());
-        taskGroupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
@@ -947,6 +944,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
+        // 2.任务组配置
+        taskGroupConfig.setAppName(modelAccess.getTableName());
+        taskGroupConfig.setAppDetails(modelAccess.getTableDes());
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
