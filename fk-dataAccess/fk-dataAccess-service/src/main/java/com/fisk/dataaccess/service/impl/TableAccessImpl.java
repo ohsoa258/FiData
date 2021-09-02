@@ -714,6 +714,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
 
+        // TODO:驱动类型
+        if (StringUtils.isNotBlank(modelDataSource.driveType)) {
+            dto.dbType = modelDataSource.driveType;
+        }
+
         // TODO 新增cron表达式
         dto.cornExpress = modelSync.cornExpression;
 
@@ -805,6 +810,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
+
+        // TODO:驱动类型
+        if (StringUtils.isNotBlank(modelDataSource.driveType)) {
+            atlasDTO.dbType = modelDataSource.driveType;
+        }
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
