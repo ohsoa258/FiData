@@ -125,7 +125,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         List<AtlasEntityColumnDTO> l_acd = new ArrayList<>();
         StringBuilder sqlStr = new StringBuilder();
         ae.columns.forEach((c) -> {
-            sqlStr.append("CASE WHEN "+c.columnName + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName+" END "+c.columnName+" ,");
+            sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
