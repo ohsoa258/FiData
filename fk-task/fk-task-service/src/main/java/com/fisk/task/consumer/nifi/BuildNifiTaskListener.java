@@ -51,6 +51,12 @@ public class BuildNifiTaskListener {
     private String dorisUser;
     @Value("${datamodeldorisconstr.password}")
     private String dorisPwd;
+    @Value("${pgsql-datainput.url}")
+    private String pgsqlDatainputUrl;
+    @Value("${pgsql-datainput.username}")
+    private String pgsqlDatainputUsername;
+    @Value("${pgsql-datainput.password}")
+    private String pgsqlDatainputPassword;
 
     @Value("${spring.rabbitmq.host}")
     private String host;
@@ -110,10 +116,10 @@ public class BuildNifiTaskListener {
         }
         //target doris
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
-        targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
-        targetDbPoolConfig.user = dorisUser;
-        targetDbPoolConfig.password = dorisPwd;
-        targetDbPoolConfig.jdbcStr = dorisUrl;
+        targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
+        targetDbPoolConfig.user = pgsqlDatainputUsername;
+        targetDbPoolConfig.password = pgsqlDatainputPassword;
+        targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }
