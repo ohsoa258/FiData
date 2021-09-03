@@ -45,7 +45,7 @@ public class BuildDataInputPgTableListener {
         String stg_table = dto.appAbbreviation + "_stg_" + dto.tableName;
         String ods_table = dto.appAbbreviation + "_ods_" + dto.tableName;
         StringBuilder sql = new StringBuilder();
-        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( tableName_pk,");
+        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( fk_table_pk,");
         StringBuilder comsql=new StringBuilder();
         sql.append("CREATE TABLE public.tableName");
         sql.append(" ( tableName_pk varchar(32) NOT NULL DEFAULT sys_guid(),");
