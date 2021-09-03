@@ -22,4 +22,8 @@ public class BusinessProcessNameDTO {
      * 1数据接入  2数据建模
      */
     public Integer flag;
+    /**
+     * 业务域的id
+     */
+    public Long businessId;
 }

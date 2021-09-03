@@ -1,10 +1,8 @@
 package com.fisk.task.consumer.nifi;
 
 import com.alibaba.fastjson.JSON;
-import com.davis.client.model.ConnectionEntity;
-import com.davis.client.model.ControllerServiceEntity;
-import com.davis.client.model.ProcessGroupEntity;
-import com.davis.client.model.ProcessorEntity;
+import com.davis.client.ApiException;
+import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
@@ -23,6 +21,7 @@ import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.INifiComponentsBuild;
+import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +35,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author gy
@@ -308,10 +308,14 @@ public class BuildNifiTaskListener {
         ProcessorEntity toJsonRes = convertJsonProcessor(groupId, 7);
         //连接器
         componentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //SplitJson  json拆分
+        ProcessorEntity processorEntity = splitJsonProcessor(groupId);
+        //连接器
+        componentConnector(groupId, toJsonRes.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建json转sql组件
         ProcessorEntity toSqlRes = convertJsonToSqlProcessor(config, groupId, targetDbPoolId);
         //连接器
-        componentConnector(groupId, toJsonRes.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, processorEntity.getId(), toSqlRes.getId(), AutoEndBranchTypeEnum.ORIGINAL);
         //创建执行sql组件
         ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
         //连接器
@@ -320,15 +324,10 @@ public class BuildNifiTaskListener {
         ProcessorEntity mergeRes = mergeContentProcessor(groupId);
         //连接器
         componentConnector(groupId, putSqlRes.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //创建json参数组件
-        ProcessorEntity jsonTextRes = replaceTextProcessor(config,groupId);
-        //连接器
-        componentConnector(groupId, mergeRes.getId(), jsonTextRes.getId(), AutoEndBranchTypeEnum.MERGED);
-        //创建mq发送组件
-        ProcessorEntity mqRes = pulishMqProcessor(groupId);
-        //连接器
-        componentConnector(groupId, jsonTextRes.getId(), mqRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-
+       //用组件,调存储过程把stg里的数据向ods里面插入
+        ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId);
+        componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
+        // 用组件然后再调存储过程写日志
 
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
@@ -338,11 +337,11 @@ public class BuildNifiTaskListener {
         res.add(delSqlRes);
         res.add(querySqlRes);
         res.add(toJsonRes);
+        res.add(processorEntity);
         res.add(toSqlRes);
         res.add(putSqlRes);
         res.add(mergeRes);
-        res.add(jsonTextRes);
-        res.add(mqRes);
+        res.add(processorEntity1);
         return res;
     }
 
@@ -370,7 +369,7 @@ public class BuildNifiTaskListener {
         dto.name = "Merge Content";
         dto.details = "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildMergeContentProcess(dto);
         verifyProcessorResult(res);
@@ -388,7 +387,7 @@ public class BuildNifiTaskListener {
         dto.name = "Build MQ Message";
         dto.details = "build json string";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         dto.replacementValue = "{ \"code\": \"${" + NifiConstants.AttrConstants.LOG_CODE + "}\" "+","+"\"corn\":\""+config.processorConfig.scheduleExpression+"\"}";
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildReplaceTextProcess(dto);
@@ -407,7 +406,7 @@ public class BuildNifiTaskListener {
         dto.name = "Put Log to Config Db";
         dto.details = "Put Log to Config Db";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         dto.host = host;
         dto.port = port;
         dto.exchange = MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME;
@@ -456,11 +455,43 @@ public class BuildNifiTaskListener {
         putSqlDto.details = "Put sql to target data source";
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = dbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
         verifyProcessorResult(putSqlRes);
         return putSqlRes.data;
     }
+    /*
+    SplitJson
+    */
+    private ProcessorEntity splitJsonProcessor(String groupId){
+        BuildSplitJsonProcessorDTO buildSplitJsonProcessorDTO = new BuildSplitJsonProcessorDTO();
+        buildSplitJsonProcessorDTO.name = "SplitJson";
+        buildSplitJsonProcessorDTO.details = "SplitJson";
+        buildSplitJsonProcessorDTO.groupId = groupId;
+        buildSplitJsonProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(8);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildSplitJsonProcess(buildSplitJsonProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+    private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config,String groupId){
+        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
+        callDbProcedureProcessorDTO.name = "CallDbProcedure";
+        callDbProcedureProcessorDTO.details = "CallDbProcedure";
+        callDbProcedureProcessorDTO.groupId = groupId;
+        String executsql="";
+        String stg_TableName = config.processorConfig.targetTableName;
+        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_");
+        String syncMode= config.cfgDsConfig.syncMode==1?"full_volume":"timestamp_incremental";
+        System.out.println("同步类型为:"+syncMode+config.cfgDsConfig.syncMode);
+        executsql="select public.data_stg_to_ods ('"+stg_TableName+"','"+ods_TableName+"','"+syncMode+"','${" + NifiConstants.AttrConstants.LOG_CODE + "}'"+")";
+        callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+        callDbProcedureProcessorDTO.executsql=executsql;
+        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(12);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
 
     /**
      * json转sql组件
@@ -476,14 +507,13 @@ public class BuildNifiTaskListener {
         toSqlDto.details = "Convert data to sql";
         toSqlDto.dbConnectionId = targetDbPoolId;
         toSqlDto.groupId = groupId;
-        toSqlDto.tableName = config.processorConfig.targetTableName;
+        toSqlDto.tableName = config.processorConfig.targetTableName.toLowerCase();
         toSqlDto.sqlType = StatementSqlTypeEnum.INSERT;
-        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
+        toSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> toSqlRes = componentsBuild.buildConvertJsonToSqlProcess(toSqlDto);
         verifyProcessorResult(toSqlRes);
         return toSqlRes.data;
     }
-
     /**
      * data转json组件
      *
