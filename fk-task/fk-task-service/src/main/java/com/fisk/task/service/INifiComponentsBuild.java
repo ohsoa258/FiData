@@ -198,4 +198,6 @@ public interface INifiComponentsBuild {
      */
     BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data);
 
+    BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
+
 }

@@ -383,7 +383,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         autoRes.add(AutoEndBranchTypeEnum.SPLIT.getName());
         Map<String, String> map = new HashMap<>(1);
-        map.put("JsonPath Expression", "$.*11");
+        map.put("JsonPath Expression", "$.*");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -398,6 +398,30 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
         return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        Map<String, String> map = new HashMap<>(2);
+        map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
+        map.put("SQL select query",buildCallDbProcedureProcessorDTO.executsql);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(buildCallDbProcedureProcessorDTO.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(buildCallDbProcedureProcessorDTO.name);
+        dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
+        dto.setPosition(buildCallDbProcedureProcessorDTO.getPositionDTO());
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(buildCallDbProcedureProcessorDTO.groupId, entity, dto, config);
     }
 
     @Override

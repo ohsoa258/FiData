@@ -955,6 +955,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelSync == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // TODO: 新增同步方式
+        targetDsConfig.syncMode = modelSync.syncMode;
+
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         // 2.任务组配置
         taskGroupConfig.setAppName(modelAccess.getTableName());

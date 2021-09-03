@@ -123,7 +123,7 @@ public class AppRegistrationController {
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
             @PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.deleteAppRegistration(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.deleteAppRegistration(id));
     }
 
     /**

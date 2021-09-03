@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
 import java.util.List;
@@ -50,7 +51,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param id 请求参数
      * @return 返回值
      */
-    ResultEnum deleteAppRegistration(long id);
+    ResultEntity<NifiVO> deleteAppRegistration(long id);
 
     /**
      * 根据是否为实时,查询应用名称集合
