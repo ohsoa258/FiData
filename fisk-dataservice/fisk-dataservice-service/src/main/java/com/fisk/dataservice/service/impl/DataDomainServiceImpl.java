@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
+import static com.fisk.dataservice.utils.mysql.MysqlConnect.executeSql;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Collectors.joining;
 
@@ -28,9 +29,8 @@ public class DataDomainServiceImpl implements DataDomainService {
     private ITableName iTableName;
 
     @Override
-    public List<Map> query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
-        List<Map> maps = this.filterData(apiConfigureFieldList, currentPage, pageSize);
-        return maps;
+    public Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
+        return this.filterData(apiConfigureFieldList, currentPage, pageSize);
     }
 
 
@@ -42,7 +42,7 @@ public class DataDomainServiceImpl implements DataDomainService {
      * @param pageSize              每页显示条数
      * @return 查询字段分类拼接
      */
-    public List<Map> filterData(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
+    public Object filterData(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
 
         // 转义符
         String[] escapeStr = getEscapeStr();
@@ -113,13 +113,15 @@ public class DataDomainServiceImpl implements DataDomainService {
         }
 
         // 只有维度的的情况
-        System.out.println(str);
+        System.err.println(str);
 
         // 存在非维度
         if (CollectionUtils.isNotEmpty(noTableData)) {
             this.noDimension(noTableData, apiConfigureFieldList, str);
         }
-        return null;
+        Object data = executeSql(str.toString(), apiConfigureFieldList).data;
+        System.err.println(data);
+        return data;
     }
 
     /**
@@ -129,7 +131,7 @@ public class DataDomainServiceImpl implements DataDomainService {
      * @param apiConfigureFieldList 拖动字段集合
      * @param str                   维度sql
      */
-    public void noDimension(List<TableDataDTO> noTableData, List<DataDoFieldDTO> apiConfigureFieldList, StringBuilder str) {
+    public Object noDimension(List<TableDataDTO> noTableData, List<DataDoFieldDTO> apiConfigureFieldList, StringBuilder str) {
 
         // 全局sql
         StringBuilder wholeStr = new StringBuilder();
@@ -226,6 +228,8 @@ public class DataDomainServiceImpl implements DataDomainService {
             wholeStr.append(DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
         }
         System.err.println(wholeStr);
+
+        return executeSql(wholeStr.toString(), apiConfigureFieldList, aggregation).data;
     }
 
     /**

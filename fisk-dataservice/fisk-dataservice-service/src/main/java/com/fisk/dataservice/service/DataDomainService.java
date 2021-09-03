@@ -11,5 +11,5 @@ import java.util.Map;
  */
 public interface DataDomainService {
 
-    List<Map> query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize);
+    Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize);
 }
