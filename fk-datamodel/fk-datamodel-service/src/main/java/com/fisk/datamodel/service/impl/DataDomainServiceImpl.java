@@ -430,12 +430,14 @@ public class DataDomainServiceImpl implements DataDomainService {
                                 }
 
                                 businessProcessName.setFlag(2);
+                                businessProcessName.setBusinessId(e.getId());
                                 List<FactNameDTO> factDtoList = factList.stream()
                                         .map(b -> {
                                             FactNameDTO factName = new FactNameDTO();
                                             factName.setFactId(b.getId());
                                             factName.setFactTableEnName(b.getFactTableEnName());
-                                            factName.setFlag(2);
+                                            factName.setFlag(3);
+                                            factName.setBusinessProcessId(a.getId());
                                             return factName;
                                         }).collect(Collectors.toList());
                                 businessProcessName.setFactList(factDtoList);

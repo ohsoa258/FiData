@@ -14,7 +14,11 @@ public class FactNameDTO {
     public Long factId;
     public String factTableEnName;
     /**
-     * 1数据接入  2数据建模
+     * 1数据接入  2数据建模  3.三级菜单树
      */
     public Integer flag;
+    /**
+     * 业务过程id
+     */
+    public Long businessProcessId;
 }
