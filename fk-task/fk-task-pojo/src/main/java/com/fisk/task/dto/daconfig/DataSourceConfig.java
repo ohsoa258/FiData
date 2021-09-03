@@ -13,4 +13,5 @@ public class DataSourceConfig {
     public DriverTypeEnum type;
     public String user;
     public String password;
+    public int syncMode;
 }
