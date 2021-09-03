@@ -48,7 +48,7 @@ public class BuildDataInputPgTableListener {
         StringBuilder pksql=new StringBuilder("PRIMARY KEY ( fk_table_pk,");
         StringBuilder comsql=new StringBuilder();
         sql.append("CREATE TABLE public.tableName");
-        sql.append(" ( tableName_pk varchar(32) NOT NULL DEFAULT sys_guid(),");
+        sql.append(" ( fk_table_pk varchar(32) NOT NULL DEFAULT sys_guid(),");
         dto.columns.forEach((l) -> {
             if (l.isKey.equals("1")) {
                 pksql.append(l.columnName+",");
