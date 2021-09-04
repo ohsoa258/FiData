@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
-import com.fisk.datamodel.entity.DimensionPO;
-import com.fisk.datamodel.entity.FactAttributePO;
-import com.fisk.datamodel.entity.FactPO;
-import com.fisk.datamodel.entity.IndicatorsPO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IAtomicIndicators;
@@ -39,6 +37,10 @@ public class AtomicIndicatorsImpl
     IndicatorsMapper indicatorsMapper;
     @Resource
     FactMapper factMapper;
+    @Resource
+    BusinessAreaMapper businessAreaMapper;
+    @Resource
+    BusinessProcessMapper businessProcessMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(List<AtomicIndicatorsDTO> dto)
@@ -131,7 +133,54 @@ public class AtomicIndicatorsImpl
     }
 
     @Override
-    public List<AtomicIndicatorPushDTO> atomicIndicatorPush(int factId)
+    public List<AtomicIndicatorFactDTO> atomicIndicatorPush(int businessAreaId)
+    {
+        List<AtomicIndicatorFactDTO> list=new ArrayList<>();
+        //判断业务域是否存在
+        BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(businessAreaId);
+        if (businessAreaPO==null)
+        {
+            return list;
+        }
+        //获取业务域下的所有业务过程
+        QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessProcessPO::getBusinessId,businessAreaId);
+        List<BusinessProcessPO> businessProcessPOList=businessProcessMapper.selectList(queryWrapper);
+        if (businessProcessPOList==null || businessProcessPOList.size()==0)
+        {
+            return list;
+        }
+        for (BusinessProcessPO item:businessProcessPOList)
+        {
+            AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
+            QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
+            factPOQueryWrapper.lambda().eq(FactPO::getBusinessProcessId,item.id);
+            List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
+            if (factPOList==null || factPOList.size()==0)
+            {
+                break;
+            }
+            for (FactPO factPO:factPOList)
+            {
+                data.factTable=factPO.factTableEnName;
+                List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)item.id);
+                if (atomicIndicator!=null)
+                {
+                    data.list=atomicIndicator;
+                    list.add(data);
+                }
+            }
+
+        }
+        return list;
+    }
+
+    /**
+     * 根据事实表获取所有原子指标
+     * @param factId
+     * @return
+     */
+    public List<AtomicIndicatorPushDTO> getAtomicIndicator(int factId)
     {
         List<AtomicIndicatorPushDTO> data=new ArrayList<>();
         //获取事实表关联的维度
@@ -140,6 +189,10 @@ public class AtomicIndicatorsImpl
                 .eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
         List<Integer> ids= (List<Integer>)(List)list.stream().distinct().collect(Collectors.toList());
+        if (ids==null || ids.size()==0)
+        {
+            return null;
+        }
         QueryWrapper<DimensionPO> dimensionQueryWrapper=new QueryWrapper<>();
         dimensionQueryWrapper.in("id",ids);
         List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionQueryWrapper);
@@ -152,20 +205,17 @@ public class AtomicIndicatorsImpl
         }
         //获取事实表下所有原子指标
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper=new QueryWrapper<>();
-        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
+        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId)
+                .eq(IndicatorsPO::getIndicatorsType, IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue());
         List<IndicatorsPO> indicatorsPO=indicatorsMapper.selectList(indicatorsQueryWrapper);
         for (IndicatorsPO item:indicatorsPO)
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
             dto.atomicIndicatorName=item.indicatorsName;
             dto.aggregationLogic=item.calculationLogic;
-            dto.aggregatedField=item.aggregatedFields;
-            //获取事实表
-            FactPO factPO=factMapper.selectById(item.factId);
-            if (factPO==null)
-            {
-                dto.factTable=factPO.factTableEnName;
-            }
+            //获取聚合字段
+            FactAttributePO factAttributePO=factAttributeMapper.selectById(item.factAttributeId);
+            dto.aggregatedField=factAttributePO==null?"":factAttributePO.factFieldEnName;
             data.add(dto);
         }
         return data;

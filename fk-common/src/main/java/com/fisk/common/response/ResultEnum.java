@@ -88,6 +88,7 @@ public enum ResultEnum {
      * 数据建模模块
      */
     DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值"),
+    PUBLISH_FAILURE(8002,"发布失败"),
 
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001,"添加成功,暂无法解析此表达式");
 

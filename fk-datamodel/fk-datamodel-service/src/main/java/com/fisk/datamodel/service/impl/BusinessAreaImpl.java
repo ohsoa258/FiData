@@ -12,6 +12,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
@@ -40,6 +41,10 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     BusinessAreaMapper mapper;
     @Resource
     GetConfigDTO getConfig;
+    @Resource
+    DimensionAttributeImpl dimensionAttribute;
+    @Resource
+    AtomicIndicatorsImpl atomicIndicators;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -135,6 +140,37 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         data.where = str.toString();
 
         return baseMapper.queryList(query.page, data);
+    }
+
+    @Override
+    public ResultEnum businessAreaPublic(int id)
+    {
+        try
+        {
+            BusinessAreaPublishDTO dto=new BusinessAreaPublishDTO();
+        }
+        catch (Exception ex)
+        {
+            log.error(ex.getMessage());
+            return ResultEnum.PUBLISH_FAILURE;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public BusinessAreaGetDataDTO getBusinessAreaPublicData(int businessAreaId)
+    {
+        BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
+        try {
+            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(businessAreaId);
+            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(businessAreaId);
+        }
+        catch (Exception e)
+        {
+            log.error("BusinessAreaImpl,getBusinessAreaPublicData："+e.getMessage());
+            data=null;
+        }
+        return data;
     }
 
 }

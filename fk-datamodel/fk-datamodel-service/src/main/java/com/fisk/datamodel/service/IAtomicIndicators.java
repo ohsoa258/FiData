@@ -58,6 +58,6 @@ public interface IAtomicIndicators {
      * @param factId
      * @return
      */
-    List<AtomicIndicatorPushDTO> atomicIndicatorPush(int factId);
+    List<AtomicIndicatorFactDTO> atomicIndicatorPush(int factId);
 
 }

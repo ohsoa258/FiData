@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.BusinessPageResultDTO;
 import com.fisk.datamodel.dto.BusinessQueryDTO;
 import com.fisk.datamodel.service.IBusinessArea;
@@ -77,6 +78,18 @@ public class BusinessAreaController {
     @ApiOperation(value = "获取业务域数据列表")
     public ResultEntity<Page<BusinessPageResultDTO>> getDataList(@RequestBody BusinessQueryDTO query){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataList(query));
+    }
+
+    /*@GetMapping("/getBusinessAreaPublicData")
+    @ApiOperation(value = "根据业务域id,获取相关维度以及原子指标")
+    public ResultEntity<Object> getBusinessAreaPublicData(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaPublicData(id));
+    }*/
+
+    @GetMapping("/businessAreaPublic")
+    @ApiOperation(value = "根据业务域id,推送业务域下相关维度以及原子指标数据")
+    public ResultEntity<Object> businessAreaPublic(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessAreaPublic(id));
     }
 
 }

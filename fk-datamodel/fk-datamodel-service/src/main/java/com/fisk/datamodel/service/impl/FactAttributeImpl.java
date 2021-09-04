@@ -87,25 +87,7 @@ public class FactAttributeImpl
         if (isExit) {
             return ResultEnum.DATA_EXISTS;
         }
-        boolean flat=this.saveBatch(list);
-        if (flat)
-        {
-            try
-            {
-                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
-                pushDto.dimensionId=factId;
-                pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
-                pushDto.userId=userHelper.getLoginUserInfo().id;
-                //发送消息
-                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
-            }
-            catch (Exception ex){
-                log.error(ex.getMessage());
-                return ResultEnum.SUCCESS;
-            }
-
-        }
-        return flat ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return this.saveBatch(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
 

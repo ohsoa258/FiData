@@ -383,7 +383,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data) {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SPLIT.getName());
+        autoRes.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
         Map<String, String> map = new HashMap<>(1);
         map.put("JsonPath Expression", "$.*");
         //组件配置信息
@@ -437,8 +437,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         map.put("Destination", "flowfile-attribute");
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
-            map.put(tableFieldsDTO.fieldName,"$."+tableFieldsDTO.fieldName);
+            map.put(tableFieldsDTO.fieldName.toLowerCase(),"$."+tableFieldsDTO.fieldName.toLowerCase());
         }
+        map.put("fk_doris_increment_code","$.fk_doris_increment_code");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -463,18 +464,19 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         Map<String, String> map = new HashMap<>();
-        String sql="insert into "+dataAccessConfigDTO.targetDsConfig.targetTableName;
+        String sql="insert into "+dataAccessConfigDTO.targetDsConfig.targetTableName.toLowerCase();
         String sqlfiled=" (";
         String sqlValue=" values (";
         //后面把fieldName替换成字段
         String sqlTemplate="${fieldName:isEmpty():ifElse('null',${fieldName:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})}";
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
+        System.out.println("第二次拿到list长度"+tableFieldsList.size());
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
-             sqlfiled+=tableFieldsDTO.fieldName+",";
-            sqlValue+="${"+tableFieldsDTO.fieldName+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
+             sqlfiled+=tableFieldsDTO.fieldName.toLowerCase()+",";
+            sqlValue+="${"+tableFieldsDTO.fieldName.toLowerCase()+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName.toLowerCase()+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
         }
-        sqlfiled=sqlfiled.substring(0,sqlfiled.length()-1)+")";
-        sqlValue=sqlValue.substring(0,sqlfiled.length()-1)+");";
+        sqlfiled+="fk_doris_increment_code) ";
+        sqlValue+="${fk_doris_increment_code:isEmpty():ifElse('null',${fk_doris_increment_code:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})});";
         sql+=sqlfiled+sqlValue;
         map.put("Replacement Value",sql);
         //组件配置信息
@@ -486,7 +488,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setType(ProcessorTypeEnum.EvaluateJsonPath.getName());
+        dto.setType(ProcessorTypeEnum.ReplaceText.getName());
         dto.setPosition(data.positionDTO);
 
         //组件传输对象

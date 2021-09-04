@@ -26,6 +26,7 @@ public class SwaggerConfig {
     public static final String TAG_1 = "app-registration-controller";
     public static final String TAG_2 = "physical-table-controller";
     public static final String TAG_3 = "data-access-controller";
+    public static final String TAG_4 = "data-review-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -35,6 +36,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_1,"应用注册"))
                 .tags(new Tag(TAG_2,"物理表"))
                 .tags(new Tag(TAG_3,"应用注册tree"))
+                .tags(new Tag(TAG_4,"数据查看"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

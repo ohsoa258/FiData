@@ -24,4 +24,8 @@ public class BusinessProcessDTO {
      * 业务过程描述
      */
     public String businessProcessDesc;
+    /**
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     */
+    public int isPublish;
 }
