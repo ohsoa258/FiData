@@ -120,6 +120,8 @@ public class BuildNifiTaskListener {
         targetDbPoolConfig.user = pgsqlDatainputUsername;
         targetDbPoolConfig.password = pgsqlDatainputPassword;
         targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+        targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
+        targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }

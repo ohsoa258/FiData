@@ -473,8 +473,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
              sqlfiled+=tableFieldsDTO.fieldName+",";
             sqlValue+="${"+tableFieldsDTO.fieldName+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
         }
-        sqlfiled=sqlfiled.substring(0,sqlfiled.length()-1)+")";
-        sqlValue=sqlValue.substring(0,sqlfiled.length()-1)+");";
+        sqlfiled+="fk_doris_increment_code) ";
+        sqlValue+="${fk_doris_increment_code:isEmpty():ifElse('null',${fk_doris_increment_code:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})});";
         sql+=sqlfiled+sqlValue;
         map.put("Replacement Value",sql);
         //组件配置信息
