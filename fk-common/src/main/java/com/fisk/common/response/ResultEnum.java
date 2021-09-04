@@ -82,6 +82,7 @@ public enum ResultEnum {
     API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
     DELETE_ERROR(7002,"删除失败"),
     API_FIELD_ERROR(7003,"api没有sql执行!"),
+    SQL_ERROR(7004,"执行sql语法错误!"),
 
     /**
      * 数据建模模块
