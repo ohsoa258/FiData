@@ -16,5 +16,6 @@ public class OlapDimensionPO extends BasePO {
     public long businessAreaId;
     public String dimensionTableName;
     public String createDimensionTableSql;
+    public String selectDimensionDataSql;
 
 }

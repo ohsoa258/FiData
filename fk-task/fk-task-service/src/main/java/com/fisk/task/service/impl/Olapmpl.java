@@ -32,7 +32,7 @@ public class Olapmpl   implements IOlap {
      * 生成建模sql(创建指标表sql，创建维度表sql,查询指标表数据sql)
      * @param businessAreaId 业务域id
      * @param dto 业务域维度表以及原子指标
-     * @return
+     * @return 生成建模语句
      */
     @Override
     public boolean build(int businessAreaId, BusinessAreaGetDataDTO dto) {
@@ -44,6 +44,7 @@ public class Olapmpl   implements IOlap {
         dto.dimensionList.forEach(e->{
             OlapDimensionPO olapDimensionPO=new OlapDimensionPO();
             olapDimensionPO.businessAreaId=businessAreaId;
+            olapDimensionPO.selectDimensionDataSql="SELECT * FROM "+e.tableName+"";
             olapDimensionPO.dimensionTableName=e.tableName;
             olapDimensionPO.createDimensionTableSql=buildCreateUniqModelSql(e);
             olapDimensionPOs.add(olapDimensionPO);
@@ -96,8 +97,8 @@ public class Olapmpl   implements IOlap {
 
     /**
      * 生成创建聚合模型sql
-     * @param dto
-     * @return
+     * @param dto 原子指标
+     * @return 聚合模型sql
      */
     public String buildCreateAggregateModelSql(AtomicIndicatorFactDTO dto){
         StringBuilder sql=new StringBuilder();
@@ -126,8 +127,8 @@ public class Olapmpl   implements IOlap {
     }
 
     /**
-     * 生成查询聚合模型数据
-     * @param dto
+     * 生成查询聚合模型数据sql
+     * @param dto 原子指标
      * @return sql
      */
     public String buildSelectAggregateModelDataSql(AtomicIndicatorFactDTO dto){
