@@ -12,6 +12,8 @@ import com.fisk.task.mapper.OlapKpiMapper;
 import com.fisk.task.service.IOlap;
 import com.fisk.task.service.IOlapDimension;
 import com.fisk.task.service.IOlapKpi;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  * 建模
  * @author JinXingWang
  */
+@Service
+@Slf4j
 public class Olapmpl   implements IOlap {
 
     @Resource
