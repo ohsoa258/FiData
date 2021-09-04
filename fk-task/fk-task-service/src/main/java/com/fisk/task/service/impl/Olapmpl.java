@@ -81,11 +81,12 @@ public class Olapmpl   implements IOlap {
         StringBuilder sqlFileds_build = new StringBuilder();
         StringBuilder sqlUnique_build = new StringBuilder("ENGINE=OLAP  UNIQUE KEY(");
         StringBuilder sqlDistributed_build = new StringBuilder("DISTRIBUTED BY HASH(");
+        //主键
+        String keyName=dto.tableName+"_key";
+        sqlUnique_build.append(keyName+",");
+        sqlDistributed_build.append(keyName+",");
+        sqlFileds_build.append(keyName + " VARCHAR(50)  comment " + "'" + keyName + "' ,");
         dto.dto.forEach((l) -> {
-            if (l.fieldCnName.equals(dto.tableName+"_key")) {
-                sqlUnique_build.append(l.fieldEnName + ",");
-                sqlDistributed_build.append(l.fieldEnName + ",");
-            }
             sqlFileds_build.append(l.fieldEnName + " " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,");
         });
         sqlFileds_build.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
