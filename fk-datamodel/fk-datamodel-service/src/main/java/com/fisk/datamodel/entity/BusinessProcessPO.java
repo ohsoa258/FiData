@@ -29,8 +29,8 @@ public class BusinessProcessPO extends BasePO {
      */
     public String businessProcessDesc;
     /**
-     * 是否发布
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
      */
-    public Boolean isPublish;
+    public int isPublish;
 
 }

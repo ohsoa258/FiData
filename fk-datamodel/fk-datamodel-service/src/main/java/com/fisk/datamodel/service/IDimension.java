@@ -67,6 +67,6 @@ public interface IDimension {
      * @param id
      * @param isSuccess
      */
-    void updatePublishStatus(int id,boolean isSuccess);
+    void updatePublishStatus(int id,int isSuccess);
 
 }
