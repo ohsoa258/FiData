@@ -437,7 +437,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         map.put("Destination", "flowfile-attribute");
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
-            map.put(tableFieldsDTO.fieldName,"$."+tableFieldsDTO.fieldName);
+            map.put(tableFieldsDTO.fieldName.toLowerCase(),"$."+tableFieldsDTO.fieldName.toLowerCase());
         }
         map.put("fk_doris_increment_code","$.fk_doris_increment_code");
         //组件配置信息
@@ -464,7 +464,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         Map<String, String> map = new HashMap<>();
-        String sql="insert into "+dataAccessConfigDTO.targetDsConfig.targetTableName;
+        String sql="insert into "+dataAccessConfigDTO.targetDsConfig.targetTableName.toLowerCase();
         String sqlfiled=" (";
         String sqlValue=" values (";
         //后面把fieldName替换成字段
@@ -472,8 +472,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
         System.out.println("第二次拿到list长度"+tableFieldsList.size());
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
-             sqlfiled+=tableFieldsDTO.fieldName+",";
-            sqlValue+="${"+tableFieldsDTO.fieldName+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
+             sqlfiled+=tableFieldsDTO.fieldName.toLowerCase()+",";
+            sqlValue+="${"+tableFieldsDTO.fieldName.toLowerCase()+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName.toLowerCase()+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
         }
         sqlfiled+="fk_doris_increment_code) ";
         sqlValue+="${fk_doris_increment_code:isEmpty():ifElse('null',${fk_doris_increment_code:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})});";
