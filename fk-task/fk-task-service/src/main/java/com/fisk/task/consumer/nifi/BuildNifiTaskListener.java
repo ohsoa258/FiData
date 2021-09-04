@@ -324,7 +324,7 @@ public class BuildNifiTaskListener {
         //创建执行sql组件
         ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
         //连接器
-        componentConnector(groupId, assembleSql.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SQL);
+        componentConnector(groupId, assembleSql.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //合并流文件组件
         ProcessorEntity mergeRes = mergeContentProcessor(groupId);
         //连接器
