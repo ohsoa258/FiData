@@ -27,8 +27,4 @@ public class AtomicIndicatorPushDTO {
      * 聚合逻辑:sum、avg...
      */
     public String aggregationLogic;
-    /**
-     * 原子指标所属事实表
-     */
-    public String factTable;
 }

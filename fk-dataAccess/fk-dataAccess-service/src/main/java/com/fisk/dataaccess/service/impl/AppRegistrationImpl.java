@@ -17,17 +17,14 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppDriveTypePO;
-import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
-import com.fisk.dataaccess.mapper.AppDataSourceMapper;
-import com.fisk.dataaccess.mapper.AppDriveTypeMapper;
-import com.fisk.dataaccess.mapper.AppRegistrationMapper;
+import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +38,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -68,6 +66,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    private TableAccessMapper tableAccessMapper;
+    @Resource
+    private TableAccessImpl tableAccessImpl;
+    @Resource
+    private TableFieldsMapper tableFieldsMapper;
+    @Resource
+    private TableFieldsImpl tableFieldsImpl;
 
     /**
      * 添加应用
@@ -218,21 +224,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 删除应用注册
+     * TODO: 删除应用时,同时删除下属所有物理表,nifi流程,元数据
      *
      * @param id 请求参数
      * @return 返回值
      */
     @Override
-    public ResultEnum deleteAppRegistration(long id) {
+    public ResultEntity<NifiVO> deleteAppRegistration(long id) {
+        UserInfo userInfo = userHelper.getLoginUserInfo();
 
         AppRegistrationPO model = this.getById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         // 1.删除tb_app_registration表数据
         int deleteReg = mapper.deleteByIdWithFill(model);
         if (deleteReg < 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         // 2.删除tb_app_datasource表数据
@@ -240,7 +248,46 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("app_id", id)
                 .one();
 
-        return appDataSourceMapper.deleteByIdWithFill(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int delDataSource = appDataSourceMapper.deleteByIdWithFill(modelDataSource);
+        if (delDataSource < 0) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        List<TableAccessPO> accessList = tableAccessImpl.query()
+                .eq("app_id", model.id)
+                .eq("del_flag", 1)
+                .list();
+        accessList.forEach(tableAccessPO -> tableAccessMapper.deleteByIdWithFill(tableAccessPO));
+        // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+        accessList.stream().map(
+                        po -> tableFieldsImpl.query()
+                                .eq("table_access_id", po.id)
+                                .eq("del_flag", 1).list())
+                .flatMap(Collection::stream)
+                .forEachOrdered(fieldsPO -> tableFieldsMapper.deleteByIdWithFill(fieldsPO));
+
+//        accessList.stream().map(e -> {
+
+//             tableFieldsImpl.query()
+//                    .eq("table_access_id", e.id)
+//                    .eq("del_flag", 1)
+//                    .list();
+
+//            tableFieldsList.stream().peek(f -> {
+//                tableFieldsMapper.deleteByIdWithFill(f);
+//            });
+
+//            int i = tableAccessMapper.deleteByIdWithFill(e);
+//            return i > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+//        });
+
+
+        NifiVO vo = new NifiVO();
+        vo.userId = userInfo.id;
+        vo.appId = String.valueOf(model.id);
+        vo.componentId = model.componentId;
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
     /**
@@ -474,7 +521,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
-        }finally {
+        } finally {
             try {
                 if (conn != null) {
                     conn.close();

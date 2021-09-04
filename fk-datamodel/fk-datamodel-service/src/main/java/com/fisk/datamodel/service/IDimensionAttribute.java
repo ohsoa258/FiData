@@ -55,6 +55,13 @@ public interface IDimensionAttribute {
     ModelMetaDataDTO getDimensionMetaData(int id);
 
     /**
+     * 根据业务域发布
+     * @param businessAreaId
+     * @return
+     */
+    List<ModelMetaDataDTO> getDimensionMetaDataList(int businessAreaId);
+
+    /**
      * 根据维度id获取维度下相关字段
      * @param id
      * @return

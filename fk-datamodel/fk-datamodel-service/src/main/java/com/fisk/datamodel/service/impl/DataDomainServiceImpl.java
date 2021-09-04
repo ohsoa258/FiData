@@ -395,7 +395,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
 
     @Override
-    public Object getBusiness(){
+    public List<AreaBusinessNameDTO> getBusiness(){
         // 查询业务域
         QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -417,7 +417,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                         return null;
                     }
 
-                    businessName.setFlag(2);
+                    businessName.setFlag(3);
                     List<BusinessProcessNameDTO> businessProcessNameDtoList = businessProcessList.stream()
                             .map(a -> {
                                 BusinessProcessNameDTO businessProcessName = new BusinessProcessNameDTO();
@@ -429,15 +429,15 @@ public class DataDomainServiceImpl implements DataDomainService {
                                     return null;
                                 }
 
-                                businessProcessName.setFlag(2);
-                                businessProcessName.setBusinessId(e.getId());
+                                businessProcessName.setFlag(4);
+                                businessProcessName.setPid(e.getId());
                                 List<FactNameDTO> factDtoList = factList.stream()
                                         .map(b -> {
                                             FactNameDTO factName = new FactNameDTO();
                                             factName.setFactId(b.getId());
                                             factName.setFactTableEnName(b.getFactTableEnName());
-                                            factName.setFlag(3);
-                                            factName.setBusinessProcessId(a.getId());
+                                            factName.setFlag(5);
+                                            factName.setPid(a.getId());
                                             return factName;
                                         }).collect(Collectors.toList());
                                 businessProcessName.setFactList(factDtoList);

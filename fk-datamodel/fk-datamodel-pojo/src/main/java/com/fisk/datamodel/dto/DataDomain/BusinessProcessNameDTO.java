@@ -19,11 +19,11 @@ public class BusinessProcessNameDTO {
      */
     public List<FactNameDTO> factList;
     /**
-     * 1数据接入  2数据建模
+     * 3.业务域 4.业务流程  5.事实表
      */
     public Integer flag;
     /**
      * 业务域的id
      */
-    public Long businessId;
+    public Long pid;
 }

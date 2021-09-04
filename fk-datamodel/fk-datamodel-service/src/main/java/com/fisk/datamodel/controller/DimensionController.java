@@ -67,6 +67,16 @@ public class DimensionController {
         return ResultEntityBuild.build(service.updateDimension(dto));
     }
 
+    @ApiOperation("根据维度id发布")
+    @GetMapping("/publicDimension/{id}")
+    public ResultEntity<Object> publicDimension(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dimensionPublish(id));
+    }
 
+    @ApiOperation("修改维度发布状态")
+    @PutMapping("/editPublishStatus")
+    public void editPublishStatus(int id,int isSuccess) {
+        service.updatePublishStatus(id,isSuccess);
+    }
 
 }

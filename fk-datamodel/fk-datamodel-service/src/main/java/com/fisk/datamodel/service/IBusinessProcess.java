@@ -6,6 +6,8 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPushListDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
 
@@ -54,5 +56,19 @@ public interface IBusinessProcess {
      * @return
      */
     List<BusinessProcessDropDTO> getBusinessProcessDropList();
+
+    /**
+     * 根据业务过程id,发布事实表相关信息
+     * @param id
+     * @return
+     */
+    ResultEnum businessProcessPublish(int id);
+
+    /**
+     * 业务过程发布
+     * @param businessProcessId
+     * @return
+     */
+    List<ModelMetaDataDTO> businessProcessPush(int businessProcessId);
 
 }

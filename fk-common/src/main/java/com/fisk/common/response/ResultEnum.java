@@ -82,11 +82,13 @@ public enum ResultEnum {
     API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
     DELETE_ERROR(7002,"删除失败"),
     API_FIELD_ERROR(7003,"api没有sql执行!"),
+    SQL_ERROR(7004,"执行sql语法错误!"),
 
     /**
      * 数据建模模块
      */
     DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值"),
+    PUBLISH_FAILURE(8002,"发布失败"),
 
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001,"添加成功,暂无法解析此表达式");
 

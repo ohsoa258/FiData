@@ -95,6 +95,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    private NifiSettingImpl getNifiSettingImpl;
 
     /**
      * 添加物理表(实时)
@@ -907,6 +909,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * nifi流程
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return
+     */
     @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid) {
@@ -982,7 +990,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
-        String timerDriver = "timer driver";
+        String timerDriver = "Timer driven";
         String corn = "CORN driven";
         if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
             processorConfig.scheduleType = SchedulingStrategyTypeEnum.TIMER;
@@ -1007,6 +1015,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (StringUtils.isNotEmpty(nifiKey)) {
             cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
         }
+
+        // TODO: 2021/9/4 nifi流程需要物理表字段
+//        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
+        NifiSettingPO settingPO = nifiSettingImpl.query().eq("table_id", id).eq("app_id", appid).one();
+        List<TableFieldsPO> list = this.tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+        List<TableFieldsDTO> tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(list);
+
+        if (list != null && !list.isEmpty()) {
+            targetDsConfig.targetTableName = settingPO.tableName;
+            targetDsConfig.tableFieldsList = tableFieldsDTOS;
+        }
+
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;

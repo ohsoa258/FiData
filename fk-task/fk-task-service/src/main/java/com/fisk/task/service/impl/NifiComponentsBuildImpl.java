@@ -10,6 +10,8 @@ import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
@@ -381,7 +383,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data) {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SPLIT.getName());
+        autoRes.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
         Map<String, String> map = new HashMap<>(1);
         map.put("JsonPath Expression", "$.*");
         //组件配置信息
@@ -422,6 +424,78 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
         return buildProcessor(buildCallDbProcedureProcessorDTO.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO dataAccessConfigDTO,BuildProcessEvaluateJsonPathDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.UNNMATCHED.getName());
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>();
+        //添加字段
+        map.put("Destination", "flowfile-attribute");
+        List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
+        for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
+            map.put(tableFieldsDTO.fieldName.toLowerCase(),"$."+tableFieldsDTO.fieldName.toLowerCase());
+        }
+        map.put("fk_doris_increment_code","$.fk_doris_increment_code");
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.EvaluateJsonPath.getName());
+        dto.setPosition(data.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildAssembleSqlProcess(DataAccessConfigDTO dataAccessConfigDTO, BuildReplaceTextProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>();
+        String sql="insert into "+dataAccessConfigDTO.targetDsConfig.targetTableName.toLowerCase();
+        String sqlfiled=" (";
+        String sqlValue=" values (";
+        //后面把fieldName替换成字段
+        String sqlTemplate="${fieldName:isEmpty():ifElse('null',${fieldName:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})}";
+        List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
+        System.out.println("第二次拿到list长度"+tableFieldsList.size());
+        for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
+             sqlfiled+=tableFieldsDTO.fieldName.toLowerCase()+",";
+            sqlValue+="${"+tableFieldsDTO.fieldName.toLowerCase()+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName.toLowerCase()+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
+        }
+        sqlfiled+="fk_doris_increment_code) ";
+        sqlValue+="${fk_doris_increment_code:isEmpty():ifElse('null',${fk_doris_increment_code:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})});";
+        sql+=sqlfiled+sqlValue;
+        map.put("Replacement Value",sql);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.ReplaceText.getName());
+        dto.setPosition(data.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
     @Override

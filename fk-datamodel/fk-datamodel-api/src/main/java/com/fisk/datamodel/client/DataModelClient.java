@@ -19,13 +19,22 @@ import java.util.List;
 public interface DataModelClient {
 
     /**
-     * 获取维度表元数据字段
+     * 获取维度表元数据字段--用于DW建表
      *
      * @param id
      * @return 执行结果
      */
     @GetMapping("/attribute/getDimensionEntity")
-    ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id);
+    ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id);
+
+    /**
+     * 获取维度表元数据列表以及字段--用于Doris
+     *
+     * @param businessAreaId
+     * @return 执行结果
+     */
+    /*@GetMapping("/attribute/getDimensionListEntity")
+    ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId);*/
 
     /**
      * 获取事实表元数据字段
@@ -34,7 +43,7 @@ public interface DataModelClient {
      * @return 执行结果
      */
     @GetMapping("/factAttribute/getFactEntity")
-    ResultEntity<ModelMetaDataDTO> getFactEntity(@RequestParam("id") int id);
+    ResultEntity<Object> getFactEntity(@RequestParam("id") int id);
 
     /**
      * 获取事实表下所有原子指标以及事实表关联维度
@@ -51,6 +60,14 @@ public interface DataModelClient {
      */
     @GetMapping("/FactSyncMode/factSyncModePush")
     ResultEntity<Object> factSyncModePush(@PathVariable("id") int id);
+
+    /**
+     * 根据业务域id获取相关维度以及原子指标
+     * @param id
+     * @return
+     */
+    @GetMapping("/business/getBusinessAreaPublicData")
+    ResultEntity<Object> getBusinessAreaPublicData(@RequestParam("id") int id);
 
     /**
      * 获取表字段

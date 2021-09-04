@@ -15,4 +15,8 @@ public class DimensionDTO {
     public String dimensionTabName;
     public String dimensionDesc;
     public boolean share;
+    /**
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     */
+    public int isPublish;
 }

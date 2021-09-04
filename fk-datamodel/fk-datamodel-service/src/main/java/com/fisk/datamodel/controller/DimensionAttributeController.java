@@ -66,8 +66,8 @@ public class DimensionAttributeController {
     }
 
     @GetMapping("/getDimensionEntity")
-    @ApiOperation("获取维度表元数据(用于Doris创建表)")
-    public ResultEntity<ModelMetaDataDTO> getDimensionEntity(@RequestParam("id") int id) {
+    @ApiOperation("获取维度表元数据(用于DW创建表)")
+    public ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }
 
@@ -76,5 +76,11 @@ public class DimensionAttributeController {
     public ResultEntity<Object> getDimensionAttributeData(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeData(id));
     }
+
+    /*@GetMapping("/getDimensionListEntity")
+    @ApiOperation("获取维度表元数据(用于Doris创建表)")
+    public ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaDataList(businessAreaId));
+    }*/
 
 }

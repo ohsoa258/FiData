@@ -16,10 +16,6 @@ public class NifiVO {
      */
     public String appId;
     /**
-     * 物理表id
-     */
-    public String tableId;
-    /**
      * nifi流程回写的组件
      */
     public String componentId;

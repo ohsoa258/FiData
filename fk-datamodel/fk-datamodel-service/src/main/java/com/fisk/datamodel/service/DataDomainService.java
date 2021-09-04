@@ -1,5 +1,9 @@
 package com.fisk.datamodel.service;
 
+import com.fisk.datamodel.dto.DataDomain.AreaBusinessNameDTO;
+
+import java.util.List;
+
 /**
  * @author WangYan
  * @date 2021/8/12 11:32
@@ -25,5 +29,5 @@ public interface DataDomainService {
      * @param
      * @return
      */
-    Object getBusiness();
+    List<AreaBusinessNameDTO> getBusiness();
 }

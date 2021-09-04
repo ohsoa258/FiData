@@ -3,6 +3,7 @@ package com.fisk.task.service;
 import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.vo.ProcessGroupsVO;
 
@@ -199,5 +200,9 @@ public interface INifiComponentsBuild {
     BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data);
 
     BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
+
+    BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO config,BuildProcessEvaluateJsonPathDTO buildProcessEvaluateJsonPathDTO);
+
+    BusinessResult<ProcessorEntity> buildAssembleSqlProcess(DataAccessConfigDTO config,BuildReplaceTextProcessorDTO data);
 
 }

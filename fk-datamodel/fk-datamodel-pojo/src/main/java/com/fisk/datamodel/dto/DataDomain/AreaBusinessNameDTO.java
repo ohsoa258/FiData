@@ -15,7 +15,7 @@ public class AreaBusinessNameDTO {
     public String businessName;
     public List<BusinessProcessNameDTO> businessProcessList;
     /**
-     * 1数据接入  2数据建模
+     * 3.业务域 4.业务流程  5.事实表
      */
     public Integer flag;
 }
