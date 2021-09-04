@@ -22,7 +22,7 @@ import java.sql.Statement;
 public class DorisBuildImpl implements IDorisBuild {
     @Resource
     IDorisBuild doris;
-    @Value("${datamodeldorisconstr.url}")
+   @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
     @Value("${datamodeldorisconstr.username}")
     private String dorisUser;

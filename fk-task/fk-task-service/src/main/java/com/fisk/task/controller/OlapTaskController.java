@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 @Slf4j
 @RestController
 @RequestMapping("/olapTask")
-public class OLAPTaskController {
+public class OlapTaskController {
 
     @Resource
     IBuildTaskService service;
