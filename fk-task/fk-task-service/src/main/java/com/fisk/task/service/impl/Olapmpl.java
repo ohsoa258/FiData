@@ -1,52 +1,83 @@
 package com.fisk.task.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.task.entity.OlapPO;
-import com.fisk.task.mapper.MessageLogMapper;
-import com.fisk.task.mapper.OlapMapper;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.task.entity.OlapDimensionPO;
+import com.fisk.task.entity.OlapKpiPO;
+import com.fisk.task.mapper.OlapDimensionMapper;
+import com.fisk.task.mapper.OlapKpiMapper;
 import com.fisk.task.service.IOlap;
+import com.fisk.task.service.IOlapDimension;
+import com.fisk.task.service.IOlapKpi;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 建模
  * @author JinXingWang
  */
-public class Olapmpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
+public class Olapmpl   implements IOlap {
 
     @Resource
-    OlapMapper mapper;
-
+    IOlapDimension olapDimension;
+    @Resource
+    IOlapKpi olapKpi;
     /**
      * 生成建模sql(创建指标表sql，创建维度表sql,查询指标表数据sql)
-     * @param modelMetaDataDTOS
+     * @param businessAreaId 业务域id
+     * @param dto 业务域维度表以及原子指标
      * @return
      */
     @Override
-    public boolean build(List<ModelMetaDataDTO> modelMetaDataDTOS) {
-//        mapper.deleteByBusinessId(modelMetaDataDTOS);
+    public boolean build(int businessAreaId, BusinessAreaGetDataDTO dto) {
+        //删除历史数据
+        olapDimension.deleteByBusinessAreaId(businessAreaId);
+        olapKpi.deleteByBusinessAreaId(businessAreaId);
+        //维度表
+        List<OlapDimensionPO> olapDimensionPOs=new ArrayList<>();
+        dto.dimensionList.forEach(e->{
+            OlapDimensionPO olapDimensionPO=new OlapDimensionPO();
+            olapDimensionPO.businessAreaId=businessAreaId;
+            olapDimensionPO.dimensionTableName=e.tableName;
+            olapDimensionPO.createDimensionTableSql=buildCreateUniqModelSql(e);
+            olapDimensionPOs.add(olapDimensionPO);
+        });
+        olapDimension.batchAdd(olapDimensionPOs);
+        //指标表
+        List<OlapKpiPO> olapKpiPOS=new ArrayList<>();
+        dto.atomicIndicatorList.forEach(e->{
+            OlapKpiPO olapKpiPO=new OlapKpiPO();
+            olapKpiPO.businessAreaId=businessAreaId;
+            olapKpiPO.kpiTableName=e.factTable;
+            olapKpiPO.createKpiTableSql=buildCreateAggregateModelSql(e);
+            olapKpiPO.selectKpiDataSql=buildSelectAggregateModelDataSql(e);
+        });
+        olapKpi.batchAdd(olapKpiPOS);
         return true;
 
     }
 
     /**
      * 生成创建主键模型sql
-     * @param modelMetaDataDTO 维度表信息
+     * @param dto 维度表信息
      * @return sql
      */
-    public String buildCreateUniqModelSql(ModelMetaDataDTO modelMetaDataDTO){
+    public String buildCreateUniqModelSql(ModelMetaDataDTO dto){
         StringBuilder sql = new StringBuilder();
         sql.append("CREATE TABLE ");
-        sql.append(modelMetaDataDTO.tableName);
+        sql.append(dto.tableName);
         sql.append("(");
         StringBuilder sqlFileds_build = new StringBuilder();
         StringBuilder sqlUnique_build = new StringBuilder("ENGINE=OLAP  UNIQUE KEY(");
         StringBuilder sqlDistributed_build = new StringBuilder("DISTRIBUTED BY HASH(");
-        modelMetaDataDTO.dto.forEach((l) -> {
-            if (l.fieldCnName.equals(modelMetaDataDTO.tableName+"_key")) {
+        dto.dto.forEach((l) -> {
+            if (l.fieldCnName.equals(dto.tableName+"_key")) {
                 sqlUnique_build.append(l.fieldEnName + ",");
                 sqlDistributed_build.append(l.fieldEnName + ",");
             }
@@ -64,10 +95,71 @@ public class Olapmpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     /**
-     * 创建聚合模型sql
+     * 生成创建聚合模型sql
+     * @param dto
+     * @return
+     */
+    public String buildCreateAggregateModelSql(AtomicIndicatorFactDTO dto){
+        StringBuilder sql=new StringBuilder();
+        //聚合key
+        List<String> aggregateKeys=new ArrayList<>();
+        sql.append("CREATE TABLE");
+        sql.append(dto.factTable);
+        sql.append(" ( ");
+        dto.list.forEach(e->{
+            if(e.dimensionTableName!=null&&e.dimensionTableName.length()>0){
+                sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT /\"/\", \n");
+                aggregateKeys.add(e.dimensionTableName);
+            }
+            sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT /\"/\", ");
+        });
+        sql.append(" ) ");
+        if (aggregateKeys.size()>0){
+            String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"`").collect(Collectors.joining(","));
+            //排序字段
+            sql.append(" DUPLICATE KEY ("+aggregateKeysSql+") ");
+            sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 10");
+            sql.append("PROPERTIES(\"replication_num\" = \"1\")");
+        }
+
+        return "";
+    }
+
+    /**
+     * 生成查询聚合模型数据
+     * @param dto
      * @return sql
      */
-    public String buildCreateAggregateModelSql(){
+    public String buildSelectAggregateModelDataSql(AtomicIndicatorFactDTO dto){
+        StringBuilder sql=new StringBuilder();
+        StringBuilder aggregationFunSql=new StringBuilder();
+        StringBuilder groupSql=new StringBuilder();
+        dto.list.forEach(e->{
+            aggregationFunSql.append(e.aggregationLogic);
+            aggregationFunSql.append("(");
+            aggregationFunSql.append(e.aggregatedField);
+            aggregationFunSql.append(") AS");
+            aggregationFunSql.append(e.atomicIndicatorName);
+            aggregationFunSql.append(",");
+            //是否关联维度
+            if(e.dimensionTableName!=null&&e.dimensionTableName.length()>0){
+                groupSql.append("`"+e.dimensionTableName+"_key` , ");
+                aggregationFunSql.append("`"+e.dimensionTableName+"_key` AS `"+e.dimensionTableName+"` , ");
+            }
+        });
+        if (aggregationFunSql.length()>0){
+            aggregationFunSql.deleteCharAt(aggregationFunSql.length()-1);
+        }
+        sql.append("SELECT ");
+        sql.append(aggregationFunSql);
+        sql.append(" FROM `");
+        sql.append(dto.factTable);
+        sql.append("` ");
+        if (groupSql.length()>0){
+            groupSql.deleteCharAt(groupSql.length()-1);
+            sql.append("GROUP BY ");
+            sql.append(groupSql);
+        }
         return "";
     }
 }

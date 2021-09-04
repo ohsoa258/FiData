@@ -4,6 +4,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.service.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,14 +27,14 @@ public class OLAPTaskController {
     IBuildTaskService service;
     /**
      * 创建模型
-     * @param dimensionAttributeAddDTO
+     * @param buildCreateModelTaskDto
      * @return
      */
-    @PostMapping("/atlasDorisTable")
-    public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody DimensionAttributeAddDTO dimensionAttributeAddDTO){
+    @PostMapping("/CreateModel")
+    public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto){
         return service.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
-                dimensionAttributeAddDTO);
+                buildCreateModelTaskDto);
     }
 }

@@ -4,10 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.service.IOlap;
 import com.rabbitmq.client.Channel;
 import jdk.nashorn.internal.parser.JSONParser;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +33,14 @@ public class BuildModelTaskListener {
 
     @Resource
     DataModelClient client;
+    @Resource
+    IOlap olap;
+
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
-//         client.getDimensionEntity(inpData.businessAreaId);
-
+        BusinessAreaGetDataDTO result=(BusinessAreaGetDataDTO) client.getBusinessAreaPublicData(inpData.businessAreaId).data;
+        olap.build(inpData.businessAreaId,result);
     }
 }

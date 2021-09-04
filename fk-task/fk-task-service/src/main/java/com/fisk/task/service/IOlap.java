@@ -1,5 +1,6 @@
 package com.fisk.task.service;
 
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
@@ -11,7 +12,9 @@ import java.util.List;
 public interface IOlap {
     /**
      * 生成创建模型sql
+     * @param businessAreaId 业务域Id
+     * @param dto 业务域维度建模
      * @return
      */
-    boolean build(List<ModelMetaDataDTO> modelMetaDataDTOS);
+    boolean build(int businessAreaId,BusinessAreaGetDataDTO dto);
 }

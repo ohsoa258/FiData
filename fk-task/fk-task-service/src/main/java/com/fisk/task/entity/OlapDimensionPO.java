@@ -6,17 +6,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 创建模型PO
+ * 创建模型维度PO
  * @author JinXingWang
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("tb_task_olap")
-public class OlapPO extends BasePO {
+@TableName("tb_task_olap_dimension")
+public class OlapDimensionPO extends BasePO {
     public long businessAreaId;
     public String dimensionTableName;
     public String createDimensionTableSql;
-    public String kpiTableName;
-    public String createKpiTableSql;
-    public String selectKpiDataSql;
+
 }
