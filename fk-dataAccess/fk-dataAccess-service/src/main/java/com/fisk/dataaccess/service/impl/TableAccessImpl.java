@@ -95,6 +95,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    private NifiSettingImpl getNifiSettingImpl;
 
     /**
      * 添加物理表(实时)
@@ -1015,7 +1017,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         // TODO: 2021/9/4 nifi流程需要物理表字段
-        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
+//        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
+        NifiSettingPO settingPO = nifiSettingImpl.query().eq("table_id", id).eq("app_id", appid).one();
         List<TableFieldsPO> list = this.tableFieldsImpl.query()
                 .eq("table_access_id", id)
                 .eq("del_flag", 1)
@@ -1023,7 +1026,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsDTO> tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(list);
 
         if (list != null && !list.isEmpty()) {
-            targetDsConfig.targetTableName = one.tableName;
+            targetDsConfig.targetTableName = settingPO.tableName;
             targetDsConfig.tableFieldsList = tableFieldsDTOS;
         }
 
