@@ -217,7 +217,6 @@ public class BuildAtlasTableAndColumnTaskListener {
                 //解释cron表达式
                 String s = describeCron(expressiion);
                 //获取下次运行时间
-
                 try {
                     nextExecTime = getNextExecTime(expressiion, 1);
                 } catch (ParseException e) {
