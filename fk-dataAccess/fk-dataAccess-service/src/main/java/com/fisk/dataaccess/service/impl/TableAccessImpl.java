@@ -1023,7 +1023,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsDTO> tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(list);
 
         if (list != null && !list.isEmpty()) {
-            dto.tableFieldsList = tableFieldsDTOS;
+            targetDsConfig.targetTableName = one.tableName;
+            targetDsConfig.tableFieldsList = tableFieldsDTOS;
         }
 
         dto.groupConfig = groupConfig;
