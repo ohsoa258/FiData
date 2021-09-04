@@ -28,5 +28,9 @@ public class BusinessProcessPO extends BasePO {
      * 业务过程描述
      */
     public String businessProcessDesc;
+    /**
+     * 是否发布
+     */
+    public Boolean isPublish;
 
 }

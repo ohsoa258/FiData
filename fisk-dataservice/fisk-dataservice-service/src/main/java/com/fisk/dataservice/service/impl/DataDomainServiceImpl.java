@@ -117,11 +117,11 @@ public class DataDomainServiceImpl implements DataDomainService {
 
         // 存在非维度
         if (CollectionUtils.isNotEmpty(noTableData)) {
-            this.noDimension(noTableData, apiConfigureFieldList, str);
+            System.err.println(this.noDimension(noTableData, apiConfigureFieldList, str));
+            return this.noDimension(noTableData, apiConfigureFieldList, str);
         }
-        Object data = executeSql(str.toString(), apiConfigureFieldList).data;
-        System.err.println(data);
-        return data;
+        System.err.println(executeSql(str.toString(), apiConfigureFieldList).data);
+        return executeSql(str.toString(), apiConfigureFieldList).data;
     }
 
     /**

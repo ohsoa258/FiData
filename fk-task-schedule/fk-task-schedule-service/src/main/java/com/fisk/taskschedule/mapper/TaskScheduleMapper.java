@@ -46,4 +46,13 @@ public interface TaskScheduleMapper extends FKBaseMapper<TaskSchedulePO> {
      */
     @Select("select * from tb_task_schedule where job_id = #{job_id} and job_pid = #{job_pid} and flag = 1 and del_flag = 1")
     TaskSchedulePO getDataTwo(@Param("job_id") int jobId, @Param("job_pid") int jobPid);
+
+    /**
+     * 查询对象
+     * @param jobId jobId
+     * @param flag flag
+     * @return TaskSchedulePO
+     */
+    @Select("select * from tb_task_schedule where job_id = #{job_id} and flag = #{flag} and del_flag = 1")
+    TaskSchedulePO getTaskSchedule(@Param("job_id") int jobId, @Param("flag") int flag);
 }

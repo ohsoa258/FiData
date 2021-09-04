@@ -5,28 +5,48 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPushListDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
+import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.mapper.BusinessProcessMapper;
+import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
+import com.fisk.task.client.PublishTaskClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class BusinessProcessImpl implements IBusinessProcess {
 
     @Resource
     BusinessProcessMapper mapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
+    @Resource
+    FactMapper factMapper;
+    @Resource
+    FactAttributeImpl factAttribute;
+    @Resource
+    AtomicIndicatorsImpl atomicIndicators;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -95,6 +115,42 @@ public class BusinessProcessImpl implements IBusinessProcess {
     {
         QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
         return BusinessProcessMap.INSTANCES.poToDropPo(mapper.selectList(queryWrapper.select().orderByDesc("create_time")));
+    }
+
+    @Override
+    public ResultEnum businessProcessPublish(int id)
+    {
+        try{
+            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+            pushDto.dimensionId=id;
+            pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
+            pushDto.userId=userHelper.getLoginUserInfo().id;
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+        }
+        catch (Exception ex){
+            log.error(ex.getMessage());
+            return ResultEnum.PUBLISH_FAILURE;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<ModelMetaDataDTO> businessProcessPush(int businessProcessId)
+    {
+        List<ModelMetaDataDTO> list=new ArrayList<>();
+        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(FactPO::getBusinessProcessId,businessProcessId);
+        List<Object> data=factMapper.selectObjs(queryWrapper);
+        List<Integer> ids = (List)data;
+        //循环获取事实表
+        for (Integer id:ids)
+        {
+            //获取事实表先关字段
+            ModelMetaDataDTO metaDataDTO= factAttribute.getFactMetaData(id);
+            list.add(metaDataDTO);
+        }
+        return list;
     }
 
 }

@@ -7,12 +7,14 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.map.DimensionAttributeMap;
+import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
@@ -42,6 +44,8 @@ public class DimensionAttributeImpl
     PublishTaskClient publishTaskClient;
     @Resource
     UserHelper userHelper;
+    @Resource
+    BusinessAreaMapper businessAreaMapper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -108,23 +112,7 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
-        boolean flat=this.saveBatch(list);
-        if (flat)
-        {
-            try{
-                DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
-                pushDto.dimensionId=dimensionId;
-                pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
-                pushDto.userId=userHelper.getLoginUserInfo().id;
-                //发送消息
-                publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
-            }
-            catch (Exception ex){
-                log.error(ex.getMessage());
-                return ResultEnum.SUCCESS;
-            }
-        }
-        return flat?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return this.saveBatch(list)?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -165,6 +153,30 @@ public class DimensionAttributeImpl
         ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Override
+    public List<ModelMetaDataDTO> getDimensionMetaDataList(int businessAreaId)
+    {
+        List<ModelMetaDataDTO> list=new ArrayList<>();
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionPO::getBusinessId,businessAreaId);
+        List<DimensionPO> poList=mapper.selectList(queryWrapper);
+        if (poList==null || poList.size()==0)
+        {
+            return list;
+        }
+        for (DimensionPO item:poList)
+        {
+            ModelMetaDataDTO dto=getDimensionMetaData((int)item.id);
+            if (dto==null)
+            {
+                break;
+            }
+            list.add(dto);
+        }
+        return list;
+    }
+
 
     @Override
     public ModelMetaDataDTO getDimensionMetaData(int id)

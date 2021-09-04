@@ -35,4 +35,5 @@ public class DataAccessConfigDTO {
     public DataSourceConfig cfgDsConfig;
 
     public ProcessorConfig processorConfig;
+
 }

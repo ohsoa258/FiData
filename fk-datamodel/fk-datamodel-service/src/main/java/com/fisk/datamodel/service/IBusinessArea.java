@@ -73,4 +73,18 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query);
 
+    /**
+     * 根据业务域id发布
+     * @param id
+     * @return
+     */
+    ResultEnum businessAreaPublic(int id);
+
+    /**
+     * 获取业务域下所有维度以及原子指标
+     * @param businessArea
+     * @return
+     */
+    BusinessAreaGetDataDTO getBusinessAreaPublicData(int businessArea);
+
 }

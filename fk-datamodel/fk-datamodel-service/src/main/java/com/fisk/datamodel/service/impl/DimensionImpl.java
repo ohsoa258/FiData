@@ -3,21 +3,26 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.DataAreaMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.ProjectInfoMapper;
 import com.fisk.datamodel.service.IDimension;
+import com.fisk.task.client.PublishTaskClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,6 +36,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DimensionImpl implements IDimension {
 
     @Resource
@@ -39,6 +45,10 @@ public class DimensionImpl implements IDimension {
     DimensionMapper mapper;
     @Resource
     ProjectInfoMapper projectInfoMapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public List<DimensionSourceDTO> getDimensionList()
@@ -137,6 +147,39 @@ public class DimensionImpl implements IDimension {
         }
         Page<DimensionPO> data=new Page<>(dto.getPage(),dto.getSize());
         return DimensionMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
+    }
+
+    @Override
+    public ResultEnum dimensionPublish(int id)
+    {
+        try{
+            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
+            pushDto.dimensionId=id;
+            pushDto.createType= CreateTypeEnum.CREATE_DIMENSION.getValue();
+            pushDto.userId=userHelper.getLoginUserInfo().id;
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+        }
+        catch (Exception ex){
+            log.error(ex.getMessage());
+            return ResultEnum.PUBLISH_FAILURE;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public void updatePublishStatus(int id,boolean isSuccess)
+    {
+        DimensionPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            log.info(id+":数据不存在");
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+        po.isPublish=isSuccess;
+        int flat=mapper.updateById(po);
+        String msg=flat>0?"发布成功":"发布失败";
+        log.info(po.dimensionTabName+":"+msg);
     }
 
 
