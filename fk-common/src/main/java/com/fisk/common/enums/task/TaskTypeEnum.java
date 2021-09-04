@@ -39,7 +39,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * 数据接入 stg to ods
      */
-    BUILD_DATAINPUT_PGSQL_STGTOODS_TASK(7,"数据接入 STG TO ODS");
+    BUILD_DATAINPUT_PGSQL_STGTOODS_TASK(7,"数据接入 STG TO ODS"),
+    /**
+     * OLAP创建模型
+     */
+    BUILD_CREATEMODEL_TASK(8,"创建模型");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;
