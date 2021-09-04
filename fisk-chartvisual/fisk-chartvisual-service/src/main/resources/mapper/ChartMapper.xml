@@ -14,7 +14,6 @@
         image
         from tb_chart
         where del_flag = 1
-        and create_user = #{query.id}
         <if test=" query.name != null ">
             and name like concat('%', #{query.name}, '%')
         </if>
@@ -38,7 +37,6 @@
         image
         from tb_draft_chart
         where del_flag = 1
-        and create_user = #{query.id}
         <if test=" query.name != null ">
             and name like concat('%', #{query.name}, '%')
         </if>

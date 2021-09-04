@@ -10,5 +10,5 @@ public class ColumnDetailsSsas {
     public String name;
     public String uniqueName;
     public DimensionTypeEnum dimensionType;
-    public DragElemTypeEnum DragElemType;
+    public DragElemTypeEnum dragElemType;
 }

@@ -11,7 +11,6 @@ import org.olap4j.CellSet;
 import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -134,7 +133,7 @@ public class BaseBuildMdx    {
         if (filters.size()>0){
             StringBuilder  fromFilterMdx =new StringBuilder();
             joinTupleMdx(filters, fromFilterMdx);
-            fromMdx.insert(0,"(SELECT ("+fromFilterMdx+")  ON COLUMNS ");
+            fromMdx.insert(0,"(SELECT ("+fromFilterMdx+")  ON COLUMNS FROM ");
             fromMdx.append(" )");
         }
     }
@@ -251,7 +250,7 @@ public class BaseBuildMdx    {
      */
     public   List<ColumnDetailsSsas> filterList(List<ColumnDetailsSsas> columnDetailsSsas, DragElemTypeEnum dragElemType){
        return columnDetailsSsas.stream()
-                .filter(p -> dragElemType==p.DragElemType)
+                .filter(p -> dragElemType==p.dragElemType)
                 .collect(Collectors.toList());
     }
 
@@ -265,6 +264,17 @@ public class BaseBuildMdx    {
         List<Map<String,Object>> mapList=new ArrayList<>();
         for (Position row :cellSet.getAxes().get(1)){
             Map<String,Object> map=new HashMap<>();
+            boolean isCurrentAll=false;
+            for (Member member:row.getMembers()){
+                if(member.isAll()){
+                    isCurrentAll=true;
+                }else {
+                    map.put("name",member.getName());
+                }
+            }
+            if (isCurrentAll){
+                continue;
+            }
             for (Position column:cellSet.getAxes().get(0)){
                 final Cell cell=cellSet.getCell(column,row);
                 for (Member member:column.getMembers()){
