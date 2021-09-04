@@ -506,8 +506,8 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.details = "CallDbProcedure";
         callDbProcedureProcessorDTO.groupId = groupId;
         String executsql="";
-        String stg_TableName = config.processorConfig.targetTableName;
-        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_");
+        String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
+        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_").toLowerCase();
         String syncMode= config.cfgDsConfig.syncMode==1?"full_volume":"timestamp_incremental";
         System.out.println("同步类型为:"+syncMode+config.cfgDsConfig.syncMode);
         executsql="select public.data_stg_to_ods ('"+stg_TableName+"','"+ods_TableName+"','"+syncMode+"','${" + NifiConstants.AttrConstants.LOG_CODE + "}'"+")";
