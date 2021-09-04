@@ -439,6 +439,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
             map.put(tableFieldsDTO.fieldName,"$."+tableFieldsDTO.fieldName);
         }
+        map.put("fk_doris_increment_code","$.fk_doris_increment_code");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -469,6 +470,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //后面把fieldName替换成字段
         String sqlTemplate="${fieldName:isEmpty():ifElse('null',${fieldName:replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})}";
         List<TableFieldsDTO> tableFieldsList = dataAccessConfigDTO.targetDsConfig.tableFieldsList;
+        System.out.println("第二次拿到list长度"+tableFieldsList.size());
         for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
              sqlfiled+=tableFieldsDTO.fieldName+",";
             sqlValue+="${"+tableFieldsDTO.fieldName+":isEmpty():ifElse('null',${"+tableFieldsDTO.fieldName+":replace(\"'\",\"''\"):append(\"'\"):prepend(\"'\")})},";
@@ -486,7 +488,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
-        dto.setType(ProcessorTypeEnum.EvaluateJsonPath.getName());
+        dto.setType(ProcessorTypeEnum.ReplaceText.getName());
         dto.setPosition(data.positionDTO);
 
         //组件传输对象

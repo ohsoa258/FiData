@@ -122,6 +122,7 @@ public class BuildNifiTaskListener {
         targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
         targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
         targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
+        System.out.println("第一次拿到list长度"+targetDbPoolConfig.tableFieldsList.size());
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }
