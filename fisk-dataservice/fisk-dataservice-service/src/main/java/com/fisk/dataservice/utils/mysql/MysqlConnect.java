@@ -5,6 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;
@@ -17,6 +18,7 @@ import static java.util.stream.Collectors.joining;
  * @date 2021/9/3 16:01
  * mysql连接器
  */
+@Slf4j
 public class MysqlConnect {
 
     /**
@@ -90,9 +92,14 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            log.error("【connection】数据库连接获取失败, ex", e);
+            return ResultEntityBuild.build(ResultEnum.ERROR, e);
+        }catch (ClassNotFoundException e){
+            log.error("MYSQL数据库驱动加载失败, ex", e);
             return ResultEntityBuild.build(ResultEnum.ERROR, e);
         }
+
         return ResultEntityBuild.build(ResultEnum.SUCCESS,str);
     }
 
@@ -171,9 +178,14 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            log.error("【connection】数据库连接获取失败, ex", e);
+            return ResultEntityBuild.build(ResultEnum.ERROR, e);
+        } catch (ClassNotFoundException e){
+            log.error("MYSQL数据库驱动加载失败, ex", e);
             return ResultEntityBuild.build(ResultEnum.ERROR, e);
         }
+
         return ResultEntityBuild.build(ResultEnum.SUCCESS,str);
     }
 }
