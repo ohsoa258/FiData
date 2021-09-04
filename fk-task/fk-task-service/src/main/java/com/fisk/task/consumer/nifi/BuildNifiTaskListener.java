@@ -456,15 +456,15 @@ public class BuildNifiTaskListener {
      * @return 组件对象
      */
     private ProcessorEntity putSqlProcessor(String groupId, String dbPoolId) {
-        BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
-        putSqlDto.name = "Put sql to target data source";
-        putSqlDto.details = "Put sql to target data source";
-        putSqlDto.groupId = groupId;
-        putSqlDto.dbConnectionId = dbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
-        verifyProcessorResult(putSqlRes);
-        return putSqlRes.data;
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Put sql to target data source";
+        querySqlDto.details = "Put sql to target data source";
+        querySqlDto.groupId = groupId;
+        querySqlDto.dbConnectionId = dbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
     }
     /*
     SplitJson
@@ -506,8 +506,8 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.details = "CallDbProcedure";
         callDbProcedureProcessorDTO.groupId = groupId;
         String executsql="";
-        String stg_TableName = config.processorConfig.targetTableName;
-        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_");
+        String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
+        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_").toLowerCase();
         String syncMode= config.cfgDsConfig.syncMode==1?"full_volume":"timestamp_incremental";
         System.out.println("同步类型为:"+syncMode+config.cfgDsConfig.syncMode);
         executsql="select public.data_stg_to_ods ('"+stg_TableName+"','"+ods_TableName+"','"+syncMode+"','${" + NifiConstants.AttrConstants.LOG_CODE + "}'"+")";

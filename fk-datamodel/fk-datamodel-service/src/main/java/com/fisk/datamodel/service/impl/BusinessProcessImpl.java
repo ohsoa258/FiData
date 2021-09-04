@@ -16,6 +16,7 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.mapper.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.FactMapper;
@@ -45,8 +46,6 @@ public class BusinessProcessImpl implements IBusinessProcess {
     FactMapper factMapper;
     @Resource
     FactAttributeImpl factAttribute;
-    @Resource
-    AtomicIndicatorsImpl atomicIndicators;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -70,6 +69,7 @@ public class BusinessProcessImpl implements IBusinessProcess {
         {
             return ResultEnum.DATA_EXISTS;
         }
+        dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
         BusinessProcessPO model=BusinessProcessMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }

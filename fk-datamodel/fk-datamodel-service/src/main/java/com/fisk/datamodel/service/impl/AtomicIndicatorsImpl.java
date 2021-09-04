@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IAtomicIndicators;
@@ -163,8 +164,11 @@ public class AtomicIndicatorsImpl
             {
                 data.factTable=factPO.factTableEnName;
                 List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)item.id);
-                data.list=atomicIndicator;
-                list.add(data);
+                if (atomicIndicator!=null)
+                {
+                    data.list=atomicIndicator;
+                    list.add(data);
+                }
             }
 
         }
@@ -185,6 +189,10 @@ public class AtomicIndicatorsImpl
                 .eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
         List<Integer> ids= (List<Integer>)(List)list.stream().distinct().collect(Collectors.toList());
+        if (ids==null || ids.size()==0)
+        {
+            return null;
+        }
         QueryWrapper<DimensionPO> dimensionQueryWrapper=new QueryWrapper<>();
         dimensionQueryWrapper.in("id",ids);
         List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionQueryWrapper);
@@ -197,14 +205,17 @@ public class AtomicIndicatorsImpl
         }
         //获取事实表下所有原子指标
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper=new QueryWrapper<>();
-        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
+        indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId)
+                .eq(IndicatorsPO::getIndicatorsType, IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue());
         List<IndicatorsPO> indicatorsPO=indicatorsMapper.selectList(indicatorsQueryWrapper);
         for (IndicatorsPO item:indicatorsPO)
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
             dto.atomicIndicatorName=item.indicatorsName;
             dto.aggregationLogic=item.calculationLogic;
-            dto.aggregatedField=item.aggregatedFields;
+            //获取聚合字段
+            FactAttributePO factAttributePO=factAttributeMapper.selectById(item.factAttributeId);
+            dto.aggregatedField=factAttributePO==null?"":factAttributePO.factFieldEnName;
             data.add(dto);
         }
         return data;

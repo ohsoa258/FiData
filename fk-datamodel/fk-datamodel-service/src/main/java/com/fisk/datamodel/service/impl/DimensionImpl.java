@@ -16,6 +16,7 @@ import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.DataAreaMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
@@ -95,6 +96,7 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_EXISTS;
         }
+        dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
         DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -168,7 +170,7 @@ public class DimensionImpl implements IDimension {
     }
 
     @Override
-    public void updatePublishStatus(int id,boolean isSuccess)
+    public void updatePublishStatus(int id,int isSuccess)
     {
         DimensionPO po=mapper.selectById(id);
         if (po==null)

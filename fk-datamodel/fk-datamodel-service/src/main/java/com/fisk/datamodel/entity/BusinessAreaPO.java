@@ -32,4 +32,8 @@ public class BusinessAreaPO extends BasePO {
      * 应用负责人邮箱
      */
     private String businessEmail;
+    /**
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     */
+    public int isPublish;
 }
