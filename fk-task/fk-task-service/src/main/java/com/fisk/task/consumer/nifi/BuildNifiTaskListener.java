@@ -456,15 +456,15 @@ public class BuildNifiTaskListener {
      * @return 组件对象
      */
     private ProcessorEntity putSqlProcessor(String groupId, String dbPoolId) {
-        BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
-        putSqlDto.name = "Put sql to target data source";
-        putSqlDto.details = "Put sql to target data source";
-        putSqlDto.groupId = groupId;
-        putSqlDto.dbConnectionId = dbPoolId;
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
-        verifyProcessorResult(putSqlRes);
-        return putSqlRes.data;
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Put sql to target data source";
+        querySqlDto.details = "Put sql to target data source";
+        querySqlDto.groupId = groupId;
+        querySqlDto.dbConnectionId = dbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
     }
     /*
     SplitJson
