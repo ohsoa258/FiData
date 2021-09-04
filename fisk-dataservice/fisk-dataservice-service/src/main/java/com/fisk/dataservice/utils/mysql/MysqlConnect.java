@@ -1,9 +1,11 @@
 package com.fisk.dataservice.utils.mysql;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
+import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.sql.*;
 import java.util.List;
 
+import static com.fisk.dataservice.doris.DorisDataSource.*;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -22,28 +25,7 @@ import static java.util.stream.Collectors.joining;
 public class MysqlConnect {
 
     /**
-     *  1.反射加载Driver
-     */
-    public static final String DRIVER = "com.mysql.jdbc.Driver";
-
-    /**
-     * 2.创建连接
-     */
-    public static final String URL = "jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db"+"?useUnicode=true&characterEncoding=utf-8&useSSL=false";
-
-    /**
-     * 3.用户名
-     */
-    public static final String USER = "root";
-
-    /**
-     * 4.密码
-     */
-    public static final String PASSWORD = "root123";
-
-
-    /**
-     * 存在非维度
+     * 存在非维度  todo 代码可优化
      * @param sql
      * @param apiConfigureFieldList
      * @param aggregation
@@ -51,7 +33,8 @@ public class MysqlConnect {
      */
     public static ResultEntity<Object> executeSql(String sql,
                                                   List<DataDoFieldDTO> apiConfigureFieldList,
-                                                  String aggregation){
+                                                  String aggregation,
+                                                  List<TableDataDTO> noTableData){
         ResultSet rs;
         StringBuffer str = new StringBuffer();
         String collect;
@@ -82,7 +65,7 @@ public class MysqlConnect {
                         }).collect(joining(","));
 
                 str.append(collect);
-                addToAggregation(aggregation,collect,str,rs);
+                addToAggregation(aggregation,collect,str,rs,noTableData);
                 // 不是最后一条数据库数据
                 str.append(",");
             }
@@ -92,15 +75,12 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (SQLException e) {
-            log.error("【connection】数据库连接获取失败, ex", e);
-            return ResultEntityBuild.build(ResultEnum.ERROR, e);
-        }catch (ClassNotFoundException e){
-            log.error("MYSQL数据库驱动加载失败, ex", e);
-            return ResultEntityBuild.build(ResultEnum.ERROR, e);
+        } catch (Exception e){
+            log.error("执行SQL失败:", e);
+            return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,str);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));
     }
 
 
@@ -109,7 +89,7 @@ public class MysqlConnect {
      * @param aggregation
      * @param str
      */
-    public static void addToAggregation(String aggregation,String collect,StringBuffer str,ResultSet rs){
+    public static void addToAggregation(String aggregation,String collect,StringBuffer str,ResultSet rs,List<TableDataDTO> noTableData){
         if (StringUtils.isEmpty(aggregation)){
             return;
         }
@@ -124,7 +104,9 @@ public class MysqlConnect {
 
         for (String s : aggregation.split(",")) {
             try {
-                str.append("\"" + s + "\"" + ":" + rs.getString(s)+"}");
+                for (TableDataDTO datum : noTableData) {
+                    str.append("\"" + s.replace(datum.getAlias()+".", "") + "\"" + ":" + rs.getString(s)+"}");
+                }
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
@@ -178,14 +160,11 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (SQLException e) {
-            log.error("【connection】数据库连接获取失败, ex", e);
-            return ResultEntityBuild.build(ResultEnum.ERROR, e);
-        } catch (ClassNotFoundException e){
-            log.error("MYSQL数据库驱动加载失败, ex", e);
-            return ResultEntityBuild.build(ResultEnum.ERROR, e);
+        } catch (Exception e){
+            log.error("执行SQL失败:", e);
+            return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,str);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));
     }
 }
