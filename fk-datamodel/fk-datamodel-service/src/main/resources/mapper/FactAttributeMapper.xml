@@ -14,7 +14,8 @@
 	a.attribute_type,
 	b.dimension_cn_name,
 	c.field_name AS tableSourceField,
-	d.table_name AS tableSource
+	d.table_name AS tableSource,
+	d.table_name as associationAttributeName
     FROM
 	dmp_datamodel_db.tb_fact_attribute a
 	LEFT JOIN dmp_datamodel_db.tb_dimension b ON a.associate_dimension_id = b.id
@@ -36,10 +37,11 @@
 		a.attribute_type,
 		c.dimension_cn_name,
 		b.dimension_field_en_name AS tableSourceField,
-		c.dimension_tab_name AS tableSource
-	    FROM
-		dmp_datamodel_db.tb_fact_attribute a
-		LEFT JOIN dmp_datamodel_db.tb_dimension_attribute b ON a.associate_dimension_id = b.id
+		c.dimension_tab_name AS tableSource,
+		d.fact_field_en_name as associationAttributeName
+	    FROM dmp_datamodel_db.tb_fact_attribute a
+		LEFT JOIN dmp_datamodel_db.tb_dimension_attribute b ON a.associate_dimension_field_id = b.id
+		LEFT JOIN dmp_datamodel_db.tb_fact_attribute d ON a.associate_id = d.id
 		LEFT JOIN dmp_datamodel_db.tb_dimension c ON b.dimension_id = c.id
 	    WHERE
 		a.del_flag = 1

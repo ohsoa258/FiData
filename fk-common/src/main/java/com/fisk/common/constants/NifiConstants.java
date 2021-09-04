@@ -19,6 +19,9 @@ public class NifiConstants {
 
     public static final class DriveConstants {
         public static final String MYSQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
+        public static final String SQLSERVER_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/sqljdbc42.jar";
+        public static final String POSTGRESQL_DRIVE_PATH="/opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar";
+
     }
 
     public static final class AttrConstants {

@@ -5,6 +5,9 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
+import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -45,5 +48,18 @@ public interface IDerivedIndicators {
      * @return
      */
     ResultEnum updateDerivedIndicators(DerivedIndicatorsDTO dto);
+
+    /**
+     * 获取派生指标聚合字段列表
+     * @param id
+     * @return
+     */
+    List<ModelAttributeMetaDataDTO> getDerivedIndicatorsParticle(int id);
+
+    /**
+     * 获取所有指标
+     * @return
+     */
+    List<String> getIndicatorsList(int businessId);
 
 }

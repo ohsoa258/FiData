@@ -20,5 +20,9 @@ public class QueryDTO {
      *角查询字段名称
      */
     public String name;
+    /**
+     * 查询角色id
+     */
+    public int roleId;
 
 }

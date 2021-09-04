@@ -30,8 +30,9 @@ public enum TraceTypeEnum implements BaseEnum {
     DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN(3001,"GetAtlasBuildTableAndColumn_Error"),
     DATAACCESS_GET_ATLAS_ENTITY(3002,"GetAtlasEntity_Error"),
     DATAACCESS_GET_ATLAS_WRITEBACKDATA(3003,"GetAtlasWriteBackData_Error"),
-    DATAACCESS_CONFIG(3004,"DataAccessConfig_Error");
-
+    DATAACCESS_CONFIG(3004,"DataAccessConfig_Error"),
+    DATAINPUT_PG_TABLE_BUILD(3005,"DataInputBuildPGTable"),
+    DATAINPUT_PG_STGTOODS_BUILD(3006,"DataInputBuildPGStgToOds");
     TraceTypeEnum(int value, String name) {
         this.value = value;
         this.name = name;

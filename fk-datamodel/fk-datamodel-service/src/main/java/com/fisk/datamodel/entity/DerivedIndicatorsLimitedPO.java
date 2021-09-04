@@ -21,7 +21,7 @@ public class DerivedIndicatorsLimitedPO extends BasePO {
     /**
      * 派生指标id
      */
-    public int derivedIndicatorsId;
+    public int indicatorsId;
 
     /**
      * 条件(AND、OR)

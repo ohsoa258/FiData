@@ -44,9 +44,9 @@ public class DorisIncrementallmpl implements IDorisIncrementalService {
             tp.setStatus(2);
             tp.setDatarows(rows);
             Integer upres = logMapper.update(tp, updateWrapper);
-            log.info("log日志更新完成，开始同步ods数据");
+            log.info("log日志更新完成，开始同步stg to ods数据");
             //stg到ods
-            Integer importRes = logMapper.stgToOds(dto.tablename, dto.tablename.replace("stg", "ods"), dto.code);
+            Integer importRes = logMapper.stgToOds(dto.tablename, dto.tablename.replace("ods", "stg"), dto.code);
             log.info("ods数据同步完成");
         } catch (Exception ex) {
             log.error(ex.getMessage());

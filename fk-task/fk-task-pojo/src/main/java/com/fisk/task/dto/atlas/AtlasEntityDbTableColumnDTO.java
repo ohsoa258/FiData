@@ -14,6 +14,10 @@ import java.util.List;
 @Data
 public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
     public String dbId;
+    /**
+     * 数据库类型
+     */
+    public String dbType;
     public String tableName;
     /**
      * 应用简称

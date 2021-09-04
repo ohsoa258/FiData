@@ -51,4 +51,11 @@ public interface UserMap {
      */
     Page<UserPowerDTO> poToPageDto(IPage<UserPO> po);
 
+    /**
+     * po==>pageDto
+     * @param po
+     * @return
+     */
+    List<UserPowerDTO> poToPageDto(List<UserPO> po);
+
 }

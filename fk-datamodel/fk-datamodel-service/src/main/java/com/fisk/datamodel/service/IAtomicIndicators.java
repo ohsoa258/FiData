@@ -16,7 +16,7 @@ public interface IAtomicIndicators {
      * @param dto
      * @return
      */
-    ResultEnum addAtomicIndicators(AtomicIndicatorsDTO dto);
+    ResultEnum addAtomicIndicators(List<AtomicIndicatorsDTO> dto);
 
     /**
      * 根据id删除原子指标
@@ -52,5 +52,12 @@ public interface IAtomicIndicators {
      * @return
      */
     List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId);
+
+    /**
+     * 根据事实表id推送所有原子指标
+     * @param factId
+     * @return
+     */
+    List<AtomicIndicatorPushDTO> atomicIndicatorPush(int factId);
 
 }

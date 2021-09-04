@@ -190,4 +190,14 @@ public interface INifiComponentsBuild {
      * @return 组件entity
      */
     ProcessorEntity getProcessor(String id);
+    /**
+     * 创建splitjson组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data);
+
+    BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
+
 }

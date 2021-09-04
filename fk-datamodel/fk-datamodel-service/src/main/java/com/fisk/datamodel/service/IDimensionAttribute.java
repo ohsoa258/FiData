@@ -54,4 +54,11 @@ public interface IDimensionAttribute {
      */
     ModelMetaDataDTO getDimensionMetaData(int id);
 
+    /**
+     * 根据维度id获取维度下相关字段
+     * @param id
+     * @return
+     */
+    List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id);
+
 }

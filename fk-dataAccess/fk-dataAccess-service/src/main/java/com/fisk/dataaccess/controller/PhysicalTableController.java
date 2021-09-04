@@ -122,14 +122,16 @@ public class PhysicalTableController {
             return ResultEntityBuild.buildData(atlasIdsVO.code,atlasIdsVO.msg);
         }
 
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = atlasIds.userId;
-        // 应用注册id
-        atlasEntityQueryDTO.appId = atlasIds.appId;
-        atlasEntityQueryDTO.dbId = atlasIds.dbId;
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-        log.info("task:" + JSON.toJSONString(task));
-        System.out.println(task);
+        if (atlasIdsVO.code == 0) {
+            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+            atlasEntityQueryDTO.userId = atlasIds.userId;
+            // 应用注册id
+            atlasEntityQueryDTO.appId = atlasIds.appId;
+            atlasEntityQueryDTO.dbId = atlasIds.dbId;
+            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+            log.info("task:" + JSON.toJSONString(task));
+            System.out.println(task);
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }

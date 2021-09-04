@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.TableNameDTO;
 import com.fisk.dataaccess.dto.TableAccessPageDTO;
+import com.fisk.dataaccess.dto.TableNameTreeDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -101,4 +102,14 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      */
     @Select("SELECT id,table_name FROM tb_table_access WHERE del_flag = 1;")
     List<TableNameDTO> listTableName();
+
+    /**
+     * 物理表tree
+     * @param appId appId
+     * @return tree
+     */
+    @Select("SELECT id,table_name FROM tb_table_access WHERE app_id = #{app_id} and del_flag = 1;")
+    List<TableNameTreeDTO> listTableNameTree(@Param("app_id")long appId);
+
+
 }

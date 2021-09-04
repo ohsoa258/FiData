@@ -1,5 +1,6 @@
 package com.fisk.dataservice;
 
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,11 +14,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.advice",
         "com.fisk.common.mdc",
         "com.fisk.common.mybatis",
+        "com.fisk.common.constants",
         "com.fisk.common.redis",
         "com.fisk.common.user",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.dataservice.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
+@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client","com.fisk.datamodel.client"})
+@EnableApolloConfig
 public class FkDataServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkDataServiceApplication.class, args);

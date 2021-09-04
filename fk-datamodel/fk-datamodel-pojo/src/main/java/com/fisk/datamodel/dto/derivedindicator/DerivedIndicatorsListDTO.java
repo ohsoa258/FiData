@@ -13,9 +13,4 @@ public class DerivedIndicatorsListDTO extends DerivedIndicatorsDTO {
      */
     public String atomicName;
 
-    /**
-     * 业务限定名称
-     */
-    public String businessLimitedName;
-
 }

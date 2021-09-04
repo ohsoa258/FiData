@@ -115,6 +115,11 @@ spring:
         predicates:
         - Path=/dataservice/**
 
+      - id: task-schedule # 数据源接入服务
+        uri: lb://task-schedule
+        predicates:
+          - Path=/taskschedule/**
+
 
   redis:
     host: 192.168.11.130

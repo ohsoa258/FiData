@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -26,11 +23,18 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    public static final String TAG_1 = "api-field-controller";
+    public static final String TAG_2 = "configure-field-controller";
+    public static final String TAG_3 = "configure-user-controller";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataServiceApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
+                .tags(new Tag(TAG_1,"Api接口"))
+                .tags(new Tag(TAG_2,"接口服务字段配置"))
+                .tags(new Tag(TAG_3,"用户服务配置"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

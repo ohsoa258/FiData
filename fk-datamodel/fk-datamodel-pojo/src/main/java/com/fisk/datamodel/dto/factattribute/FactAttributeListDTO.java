@@ -24,5 +24,9 @@ public class FactAttributeListDTO extends FactAttributeDTO {
      * 源表字段
      */
     public String tableSourceField;
+    /**
+     * 维度关联维度名称
+     */
+    public String associationAttributeName;
 
 }

@@ -1,6 +1,11 @@
 package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
+import com.cronutils.descriptor.CronDescriptor;
+import com.cronutils.model.Cron;
+import com.cronutils.model.definition.CronDefinition;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
@@ -19,16 +24,22 @@ import fk.atlas.api.model.EntityProcess;
 import fk.atlas.api.model.EntityRdbmsColumn;
 import fk.atlas.api.model.EntityRdbmsTable;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.TriggerUtils;
+import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import static com.cronutils.model.CronType.QUARTZ;
 
 /**
  * @author: DennyHui
@@ -114,7 +125,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         List<AtlasEntityColumnDTO> l_acd = new ArrayList<>();
         StringBuilder sqlStr = new StringBuilder();
         ae.columns.forEach((c) -> {
-            sqlStr.append(c.columnName + ",");
+            sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
@@ -139,7 +150,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
         //nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
         if (ae.appAbbreviation.equals(OdsDataSyncTypeEnum.timestamp_incremental.getName())) {
-            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and time <= '${IncrementEnd}'";
+            nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and " + ae.syncField + " <= '${IncrementEnd}'";
         } else {
             nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName;
         }
@@ -191,6 +202,26 @@ public class BuildAtlasTableAndColumnTaskListener {
         ResultEntity<Object> writeBackRes=dc.addAtlasTableIdAndDorisSql(awbd);
         log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
         //endregion
+
+        //region 用户corn表达书计算数据下次同步时间
+        String expressiion= ae.cornExpress;
+        boolean b = checkValid(expressiion);
+        if (b) {
+            //解释cron表达式
+            String s = describeCron(expressiion);
+            //获取下次运行时间
+            List<Date> nextExecTime = null;
+            try {
+                nextExecTime = getNextExecTime(expressiion, 1);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            nextExecTime.stream().forEach(d -> {
+                System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
+            });
+        };
+        //endregion
+
         //启动nifi
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
@@ -200,5 +231,46 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
+    }
+    /**
+     * 解释cron表达式
+     */
+    public  String describeCron(String expressiion) {
+        CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(QUARTZ);
+        CronParser parser = new CronParser(cronDefinition);
+        Cron cron = parser.parse(expressiion);
+        //设置语言
+        CronDescriptor descriptor = CronDescriptor.instance(Locale.CHINESE);
+        return descriptor.describe(cron);
+    }
+    /**
+     * 检查cron表达式的合法性
+     *
+     * @param cron cron exp
+     * @return true if valid
+     */
+    public  boolean checkValid(String cron) {
+        try {
+            CronDefinition cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(QUARTZ);
+            CronParser parser = new CronParser(cronDefinition);
+            parser.parse(cron);
+        } catch (IllegalArgumentException e) {
+            System.out.println(String.format("cron=%s not valid", cron));
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param cronExpression cron表达式
+     * @param numTimes       下一(几)次运行的时间
+     * @return
+     */
+    public  List<Date> getNextExecTime(String cronExpression, Integer numTimes) throws ParseException {
+        List<String> list = new ArrayList<>();
+        CronTriggerImpl cronTriggerImpl = new CronTriggerImpl();
+        cronTriggerImpl.setCronExpression(cronExpression);
+        // 这个是重点，一行代码搞定
+        return TriggerUtils.computeFireTimes(cronTriggerImpl, null, numTimes);
     }
 }

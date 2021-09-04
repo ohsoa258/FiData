@@ -8,6 +8,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -30,7 +32,7 @@ public class AtomicIndicatorsController {
 
     @ApiOperation("添加原子指标")
     @PostMapping("/addAtomicIndicators")
-    public ResultEntity<Object> addAtomicIndicators(@Validated @RequestBody AtomicIndicatorsDTO dto) {
+    public ResultEntity<Object> addAtomicIndicators(@Validated @RequestBody List<AtomicIndicatorsDTO> dto) {
         return ResultEntityBuild.build(service.addAtomicIndicators(dto));
     }
 
@@ -62,6 +64,12 @@ public class AtomicIndicatorsController {
     @GetMapping("/getAtomicIndicatorsDropList")
     public ResultEntity<Object> getAtomicIndicatorsDropList(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorDropList(id));
+    }
+
+    @GetMapping("/getAtomicIndicators")
+    @ApiOperation("获取事实表原子指标(用于Doris创建表)")
+    public ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorPush(id));
     }
 
 }

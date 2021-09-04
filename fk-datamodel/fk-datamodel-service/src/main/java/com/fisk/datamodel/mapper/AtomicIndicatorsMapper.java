@@ -6,6 +6,7 @@ import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
+import com.fisk.datamodel.entity.IndicatorsPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -13,7 +14,7 @@ import org.apache.ibatis.annotations.Param;
  * @author JianWenYang
  */
 @Mapper
-public interface AtomicIndicatorsMapper extends FKBaseMapper<AtomicIndicatorsPO> {
+public interface AtomicIndicatorsMapper extends FKBaseMapper<IndicatorsPO> {
 
     /**
      * 获取原子指标详情

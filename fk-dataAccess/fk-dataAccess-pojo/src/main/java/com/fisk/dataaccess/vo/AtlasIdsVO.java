@@ -11,5 +11,5 @@ public class AtlasIdsVO {
     public Long userId;
     public String appId;
     public String dbId;
-
+    public String tableName;
 }

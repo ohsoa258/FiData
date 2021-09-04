@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class DerivedIndicatorsLimitedDTO {
     public int businessLimitedId;
-    public long derivedIndicatorsId;
+    public long indicatorsId;
     public String conditions;
 }
 

@@ -3,6 +3,7 @@ package com.fisk.datamodel.map;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorDropListDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
 import com.fisk.datamodel.entity.AtomicIndicatorsPO;
+import com.fisk.datamodel.entity.IndicatorsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -21,14 +22,14 @@ public interface AtomicIndicatorsMap {
      * @param dto
      * @return
      */
-    AtomicIndicatorsPO dtoToPo(AtomicIndicatorsDTO dto);
+    List<IndicatorsPO> dtoToPo(List<AtomicIndicatorsDTO> dto);
 
     /**
      * po==>dtoList
      * @param PO
      * @return
      */
-    List<AtomicIndicatorDropListDTO> poToDtoList(List<AtomicIndicatorsPO> PO);
+    List<AtomicIndicatorDropListDTO> poToDtoList(List<IndicatorsPO> PO);
 
 
 }

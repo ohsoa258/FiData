@@ -6,7 +6,6 @@ import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.apollo.config.ApolloConfigureSwitch;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -38,6 +37,8 @@ public class AppRegistrationController {
     private IAppRegistration service;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Value("${spring.datasource.username}")
+    private String username;
 
     /**
      * 添加应用
@@ -122,7 +123,7 @@ public class AppRegistrationController {
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
             @PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.deleteAppRegistration(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.deleteAppRegistration(id));
     }
 
     /**
@@ -176,18 +177,16 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
     }
 
-    @Value("${spring.datasource.password}")
-    private String password;
-
-    @Value("${spring.datasource.username}")
-    private String username;
     @GetMapping("/test")
     public ResultEntity<Object> test() {
-        ApolloConfigureSwitch apolloConfigureSwitch = new ApolloConfigureSwitch();
-
-//        String username = apolloConfigureSwitch.getUsername();
-//        System.out.println(username);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, username);
+    }
+
+    @ApiOperation("测试连接")
+    @PostMapping("/connect")
+    public ResultEntity<Object> connectDb(@RequestBody DbConnectionDTO dto) {
+
+        return service.connectDb(dto);
     }
 
 }

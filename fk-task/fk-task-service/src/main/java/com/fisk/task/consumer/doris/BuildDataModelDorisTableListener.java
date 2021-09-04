@@ -2,14 +2,17 @@ package com.fisk.task.consumer.doris;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.client.DimensionClient;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;
+import com.fisk.task.service.IPostgreBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -31,9 +34,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildDataModelDorisTableListener {
     @Resource
-    DimensionClient dc;
+    DataModelClient dc;
     @Resource
     IDorisBuild doris;
+    @Resource
+    IPostgreBuild iPostgreBuild;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
@@ -46,6 +51,8 @@ public class BuildDataModelDorisTableListener {
             dimensionAttributeList=dc.getFactEntity(inpData.dimensionId);
         }
         ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+        boolean pgdbTable = createPgdbTable(modelMetaDataDTO);
+        log.info("pg数据库创表结果为" + pgdbTable);
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
         StringBuilder sql = new StringBuilder();
         String stg_table = "stg_" + modelMetaDataDTO.tableName;
@@ -95,5 +102,35 @@ public class BuildDataModelDorisTableListener {
         doris.dorisBuildTable(ods_sql);
         log.info("【STG】" + stg_sql);
         log.info("【ODS】" + ods_sql);
+    }
+    private boolean createPgdbTable(ModelMetaDataDTO modelMetaDataDTO){
+        //创建pgdb表
+        //1.拼接sql
+        StringBuilder sql = new StringBuilder();
+        String stg_table = "stg_" + modelMetaDataDTO.tableName;
+        String ods_table = "ods_" + modelMetaDataDTO.tableName;
+        String stg_sql = "";
+        String ods_sql = "";
+        sql.append("CREATE TABLE tableName (");
+        StringBuilder sqlFileds = new StringBuilder();
+        List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
+        dto.forEach((l) -> {
+            sqlFileds.append( l.fieldEnName + " " + l.fieldType + " ,");
+        });
+        sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
+        sqlFileds.append(")");
+        sql.append(sqlFileds);
+        stg_sql = sql.toString().replace("tableName", stg_table);
+        ods_sql = sql.toString().replace("tableName", ods_table);
+        //2.连接jdbc执行sql
+        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
+        BusinessResult datamodel1 = iPostgreBuild.postgreBuildTable(ods_sql, BusinessTypeEnum.DATAMODEL);
+        log.info("【PGSTG】" + stg_sql);
+        log.info("【PGODS】" + ods_sql);
+        if(datamodel.success==true&&datamodel1.success==true){
+            return true;
+        }else {
+            return false;
+        }
     }
 }

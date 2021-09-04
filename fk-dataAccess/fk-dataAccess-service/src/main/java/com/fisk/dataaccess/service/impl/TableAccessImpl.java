@@ -43,6 +43,8 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -144,20 +146,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (contains) {
             return ResultEnum.Table_NAME_EXISTS;
         }*/
-        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
-        String tableName = modelAccess.getTableName();
-        // 查询表名对应的应用注册id
-        TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelAccess.appId;
-        tableNameVO.tableName = tableName;
-        if (appIdAndTableNameList.contains(tableNameVO)) {
-            return ResultEnum.Table_NAME_EXISTS;
-        }
-
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
+
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        String tableName = modelAccess.getTableName();
+        // 查询表名对应的应用注册id
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.appId = modelReg.id;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
+            return ResultEnum.Table_NAME_EXISTS;
+        }
 
         // 应用注册id
         long id = modelReg.getId();
@@ -269,21 +271,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
 //        }
 
-        // 判断table_name是否已存在(不同应用注册下,名称可以相同)
-        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
-        String tableName = modelAccess.getTableName();
-        // 查询表名对应的应用注册id
-        TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelAccess.appId;
-        tableNameVO.tableName = tableName;
-        if (appIdAndTableNameList.contains(tableNameVO)) {
-            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
-        }
-
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessNonDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
+
+        // 判断table_name是否已存在(不同应用注册下,名称可以相同)
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        // TODO: tableName 物理表名称
+        String tableName = modelAccess.getTableName();
+        // 查询表名对应的应用注册id
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.appId = modelReg.id;
+        tableNameVO.tableName = tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
+            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
+        }
 
         long id = modelReg.getId();
         if (id < 0) {
@@ -351,6 +354,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 应用注册id
         atlasIdsVO.appId = String.valueOf(id);
         atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
+        atlasIdsVO.tableName = tableName;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
@@ -636,6 +640,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String url = modelDataSource.getConnectStr();
         String user = modelDataSource.getConnectAccount();
         String pwd = modelDataSource.getConnectPwd();
+        String dbName = modelDataSource.dbName;
 
         // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
         List<TablePyhNameDTO> list = new ArrayList<>();
@@ -646,7 +651,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd);
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,dbName);
                 break;
             default:
                 break;
@@ -708,6 +713,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
+
+        // TODO:驱动类型
+        if (StringUtils.isNotBlank(modelDataSource.driveType)) {
+            dto.dbType = modelDataSource.driveType;
+        }
 
         // TODO 新增cron表达式
         dto.cornExpress = modelSync.cornExpression;
@@ -801,6 +811,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
 
+        // TODO:驱动类型
+        if (StringUtils.isNotBlank(modelDataSource.driveType)) {
+            atlasDTO.dbType = modelDataSource.driveType;
+        }
+
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
         List<TableFieldsPO> list = tableFieldsImpl.query()
@@ -846,7 +861,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 物理表: tb_table_access
         TableAccessPO modelAccess = this.query()
                 .eq("id", tableId)
-                .eq("appid", appid)
+                .eq("app_id", appid)
                 .eq("del_flag", 1)
                 .one();
         if (modelAccess == null) {
@@ -918,17 +933,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         // 回写应用注册组件id
         groupConfig.setComponentId(modelReg.componentId);
-        // 2.任务组配置
-        taskGroupConfig.setAppName(modelReg.getAppName());
-        taskGroupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
-        // 先硬编码
-        sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        // 选择驱动类型
+        if (Objects.equals(modelDataSource.driveType, "sqlserver")) {
+            sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
+        } else {
+            sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
         sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
@@ -939,7 +955,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelSync == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // TODO: 新增同步方式
+        targetDsConfig.syncMode = modelSync.syncMode;
+
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
+        // 2.任务组配置
+        taskGroupConfig.setAppName(modelAccess.getTableName());
+        taskGroupConfig.setAppDetails(modelAccess.getTableDes());
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
@@ -1101,4 +1124,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return list;
     }
+
+    @Override
+    public List<DataAccessTreeDTO> getTree() {
+
+        List<DataAccessTreeDTO> appTree = registrationMapper.listAppTree();
+
+        return appTree.stream().map(e -> {
+            e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
+                f.flag = 1;
+                f.setPid(e.id);
+                return f;
+            }).collect(Collectors.toList()));
+            e.flag = 1;
+            return e;
+        }).collect(Collectors.toList());
+    }
+
 }
