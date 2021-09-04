@@ -383,7 +383,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data) {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SPLIT.getName());
+        autoRes.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
         Map<String, String> map = new HashMap<>(1);
         map.put("JsonPath Expression", "$.*");
         //组件配置信息
