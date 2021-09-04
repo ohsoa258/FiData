@@ -37,6 +37,7 @@ public class SwaggerConfig {
     public static final String BUSINES_LIMITE ="busines-limited-controller";
     public static final String TAG_4 = "data-domain-controller";
     public static final String FACT_SYNC_MODE="factsyncmode--controller";
+    public static final String META_DATA_KINSHIP="metadataKinship-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -62,6 +63,7 @@ public class SwaggerConfig {
                 .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
                 .tags(new Tag(TAG_4,"数据源"))
                 .tags(new Tag(FACT_SYNC_MODE,"事实表同步方式"))
+                .tags(new Tag(META_DATA_KINSHIP,"元数据血缘关系"))
                 .securityContexts(securityContexts());
     }
 

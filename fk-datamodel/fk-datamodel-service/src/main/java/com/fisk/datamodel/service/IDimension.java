@@ -55,4 +55,18 @@ public interface IDimension {
      */
     IPage<DimensionDTO> getDimensionList(QueryDTO dto);
 
+    /**
+     * 发布维度
+     * @param id
+     * @return
+     */
+    ResultEnum dimensionPublish(int id);
+
+    /**
+     * 维度是否发布成功
+     * @param id
+     * @param isSuccess
+     */
+    void updatePublishStatus(int id,boolean isSuccess);
+
 }

@@ -42,5 +42,9 @@ public class DimensionPO extends BasePO {
      * 是否共享
      */
     public Boolean share;
+    /**
+     * 是否发布
+     */
+    public Boolean isPublish;
 
 }
