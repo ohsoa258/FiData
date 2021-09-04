@@ -72,14 +72,17 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
         }
 
-        int id = 0;
-        // 判断jobPid不为空
-        if (dto.jobPid != 0) {
-            id = mapper.getIdTwo(dto.jobPid, dto.jobId);
-        } else {
-            id = mapper.getId(model.jobId);
-        }
-        model.id = id;
+//        int id = 0;
+//        // 判断jobPid不为空
+//        if (dto.jobPid != 0) {
+//            id = mapper.getIdTwo(dto.jobPid, dto.jobId);
+//        } else {
+//            id = mapper.getId(model.jobId);
+//        }
+
+        TaskSchedulePO taskSchedule = mapper.getTaskSchedule(dto.jobId, dto.flag);
+
+        model.id = taskSchedule.id;
         boolean update = this.updateById(model);
 
         String cronNextTime = "";
@@ -113,20 +116,25 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
     public ResultEntity<TaskScheduleDTO> getData(TaskScheduleDTO dto) {
 
         if (dto == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
-        TaskSchedulePO model;
-        // 判断jobPid不为空
-        if (dto.jobPid != 0) {
-            model = mapper.getDataTwo(dto.jobId, dto.jobPid);
-            if (model == null) {
-                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-            }
-        } else {
-            model = mapper.getData(dto.jobId);
-            if (model == null) {
-                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-            }
+//        TaskSchedulePO model;
+//        // 判断jobPid不为空
+//        if (dto.jobPid != 0) {
+//            model = mapper.getDataTwo(dto.jobId);
+//            if (model == null) {
+//                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//            }
+//        } else {
+//            model = mapper.getData(dto.jobId,dto.flag);
+//            if (model == null) {
+//                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//            }
+//        }
+
+        TaskSchedulePO model = mapper.getTaskSchedule(dto.jobId, dto.flag);
+        if (model == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, INSTANCES.poToDto(model));
