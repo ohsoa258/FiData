@@ -907,6 +907,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * nifi流程
+     * @param id 物理表id
+     * @param appid 应用注册id
+     * @return
+     */
     @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid) {
@@ -1007,6 +1013,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (StringUtils.isNotEmpty(nifiKey)) {
             cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
         }
+
+        // TODO: 2021/9/4 nifi流程需要物理表字段
+        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
+        List<TableFieldsPO> list = this.tableFieldsImpl.query()
+                .eq("table_access_id", id)
+                .eq("del_flag", 1)
+                .list();
+        List<TableFieldsDTO> tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(list);
+
+        if (list != null && !list.isEmpty()) {
+            dto.tableFieldsList = tableFieldsDTOS;
+        }
+
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;

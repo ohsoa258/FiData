@@ -1,6 +1,9 @@
 package com.fisk.task.dto.daconfig;
 
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 数据接入配置项
@@ -35,4 +38,8 @@ public class DataAccessConfigDTO {
     public DataSourceConfig cfgDsConfig;
 
     public ProcessorConfig processorConfig;
+    /**
+     * 物理表字段
+     */
+    public List<TableFieldsDTO> tableFieldsList;
 }
