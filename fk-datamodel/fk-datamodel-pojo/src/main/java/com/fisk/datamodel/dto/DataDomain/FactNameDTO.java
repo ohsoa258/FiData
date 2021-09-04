@@ -14,11 +14,11 @@ public class FactNameDTO {
     public Long factId;
     public String factTableEnName;
     /**
-     * 1数据接入  2数据建模  3.三级菜单树
+     * 3.业务域 4.业务流程  5.事实表
      */
     public Integer flag;
     /**
      * 业务过程id
      */
-    public Long businessProcessId;
+    public Long pid;
 }
