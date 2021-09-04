@@ -37,7 +37,7 @@ public class BuildModelTaskListener {
     IOlap olap;
 
     @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
+    @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
         BusinessAreaGetDataDTO result=(BusinessAreaGetDataDTO) client.getBusinessAreaPublicData(inpData.businessAreaId).data;
