@@ -144,14 +144,15 @@ public class Olapmpl   implements IOlap {
         StringBuilder aggregationFunSql=new StringBuilder();
         StringBuilder groupSql=new StringBuilder();
         dto.list.forEach(e->{
-            aggregationFunSql.append(e.aggregationLogic);
-            aggregationFunSql.append("(");
-            aggregationFunSql.append(e.aggregatedField);
-            aggregationFunSql.append(") AS");
-            aggregationFunSql.append(e.atomicIndicatorName);
-            aggregationFunSql.append(",");
-            //是否关联维度
-            if(e.dimensionTableName!=null&&e.dimensionTableName.length()>0){
+            if(e.attributeType==0){
+
+                aggregationFunSql.append(e.aggregationLogic);
+                aggregationFunSql.append("(");
+                aggregationFunSql.append(e.aggregatedField);
+                aggregationFunSql.append(") AS");
+                aggregationFunSql.append(e.atomicIndicatorName);
+                aggregationFunSql.append(",");
+            }else {
                 groupSql.append("`"+e.dimensionTableName+"_key` , ");
                 aggregationFunSql.append("`"+e.dimensionTableName+"_key` AS `"+e.dimensionTableName+"` , ");
             }
