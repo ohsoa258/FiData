@@ -1,14 +1,10 @@
 package com.fisk.task.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.task.entity.OlapDimensionPO;
 import com.fisk.task.entity.OlapKpiPO;
-import com.fisk.task.mapper.OlapDimensionMapper;
-import com.fisk.task.mapper.OlapKpiMapper;
 import com.fisk.task.service.IOlap;
 import com.fisk.task.service.IOlapDimension;
 import com.fisk.task.service.IOlapKpi;
@@ -26,7 +22,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class Olapmpl   implements IOlap {
+public class OlapImpl implements IOlap {
 
     @Resource
     IOlapDimension olapDimension;
@@ -44,29 +40,28 @@ public class Olapmpl   implements IOlap {
         olapDimension.deleteByBusinessAreaId(businessAreaId);
         olapKpi.deleteByBusinessAreaId(businessAreaId);
         //维度表
-        List<OlapDimensionPO> olapDimensionPOs=new ArrayList<>();
+        List<OlapDimensionPO> olapDimensionPos =new ArrayList<>();
         dto.dimensionList.forEach(e->{
-            OlapDimensionPO olapDimensionPO=new OlapDimensionPO();
-            olapDimensionPO.businessAreaId=businessAreaId;
-            olapDimensionPO.selectDimensionDataSql="SELECT * FROM "+e.tableName+"";
-            olapDimensionPO.dimensionTableName=e.tableName;
-            olapDimensionPO.createDimensionTableSql=buildCreateUniqModelSql(e);
-            olapDimensionPOs.add(olapDimensionPO);
+            OlapDimensionPO olapDimensionPo=new OlapDimensionPO();
+            olapDimensionPo.businessAreaId=businessAreaId;
+            olapDimensionPo.selectDimensionDataSql="SELECT * FROM "+e.tableName+"";
+            olapDimensionPo.dimensionTableName=e.tableName;
+            olapDimensionPo.createDimensionTableSql=buildCreateUniqModelSql(e);
+            olapDimensionPos.add(olapDimensionPo);
         });
-        olapDimension.batchAdd(olapDimensionPOs);
+        olapDimension.batchAdd(olapDimensionPos);
         //指标表
-        List<OlapKpiPO> olapKpiPOS=new ArrayList<>();
+        List<OlapKpiPO> olapKpiPoS=new ArrayList<>();
         dto.atomicIndicatorList.forEach(e->{
-            OlapKpiPO olapKpiPO=new OlapKpiPO();
-            olapKpiPO.businessAreaId=businessAreaId;
-            olapKpiPO.kpiTableName=e.factTable;
-            olapKpiPO.createKpiTableSql=buildCreateAggregateModelSql(e);
-            olapKpiPO.selectKpiDataSql=buildSelectAggregateModelDataSql(e);
-            olapKpiPOS.add(olapKpiPO);
+            OlapKpiPO olapKpiPo =new OlapKpiPO();
+            olapKpiPo.businessAreaId=businessAreaId;
+            olapKpiPo.kpiTableName=e.factTable;
+            olapKpiPo.createKpiTableSql=buildCreateAggregateModelSql(e);
+            olapKpiPo.selectKpiDataSql=buildSelectAggregateModelDataSql(e);
+            olapKpiPoS.add(olapKpiPo);
         });
-        olapKpi.batchAdd(olapKpiPOS);
+        olapKpi.batchAdd(olapKpiPoS);
         return true;
-
     }
 
     /**
@@ -79,25 +74,20 @@ public class Olapmpl   implements IOlap {
         sql.append("CREATE TABLE ");
         sql.append(dto.tableName);
         sql.append("(");
-        StringBuilder sqlFileds_build = new StringBuilder();
-        StringBuilder sqlUnique_build = new StringBuilder("ENGINE=OLAP  UNIQUE KEY(");
-        StringBuilder sqlDistributed_build = new StringBuilder("DISTRIBUTED BY HASH(");
+        StringBuilder sqlFiledBuild = new StringBuilder();
         //主键
         String keyName=dto.tableName+"_key";
-        sqlUnique_build.append(keyName+",");
-        sqlDistributed_build.append(keyName+",");
-        sqlFileds_build.append(keyName + " VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> {
-            sqlFileds_build.append(l.fieldEnName + " " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,");
-        });
-        sqlFileds_build.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
-        String sqlFileds = sqlFileds_build.toString();
-        //sqlFileds = sqlFileds.substring(0, sqlFileds.lastIndexOf(",")) + ")";
-        String sqlUnique = sqlUnique_build.toString();
+        String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(" + keyName + ",";
+        String sqlDistributedBuild = "DISTRIBUTED BY HASH(" + keyName + ",";
+        sqlFiledBuild.append(keyName + " VARCHAR(50)  comment " + "'" + keyName + "' ,");
+        dto.dto.forEach((l) -> sqlFiledBuild.append(l.fieldEnName + " " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
+        sqlFiledBuild.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
+        String sqlFiled = sqlFiledBuild.toString();
+        String sqlUnique = sqlUniqueBuild;
         sqlUnique = sqlUnique.substring(0, sqlUnique.lastIndexOf(",")) + ")";
-        String sqlDistributed = sqlDistributed_build.toString();
+        String sqlDistributed = sqlDistributedBuild;
         sqlDistributed = sqlDistributed.substring(0, sqlDistributed.lastIndexOf(",")) + ") BUCKETS 10";
-        sql.append(sqlFileds).append(sqlUnique).append(sqlDistributed).append("\n" + "PROPERTIES(\"replication_num\" = \"1\");");
+        sql.append(sqlFiled).append(sqlUnique).append(sqlDistributed).append("\n" + "PROPERTIES(\"replication_num\" = \"1\");");
         return sql.toString();
     }
 
@@ -119,16 +109,14 @@ public class Olapmpl   implements IOlap {
             aggregateKeys.add(e.dimensionTableName);
         });
         //聚合字段
-        dto.list.stream().filter(e->e.attributeType==1).forEach(e->{
-            sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", ");
-        });
+        dto.list.stream().filter(e->e.attributeType==1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", "));
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
             String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"`").collect(Collectors.joining(","));
             //排序字段
             sql.append(" DUPLICATE KEY ("+aggregateKeysSql+") ");
             sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 10");
-            sql.append("PROPERTIES(\"replication_num\" = \"1\")");
+            sql.append(" PROPERTIES(\"replication_num\" = \"1\")");
         }
 
         return sql.toString();
