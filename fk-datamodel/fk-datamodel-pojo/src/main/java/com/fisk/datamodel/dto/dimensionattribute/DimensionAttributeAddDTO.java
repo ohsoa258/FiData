@@ -12,6 +12,11 @@ import java.util.List;
 @Data
 public class DimensionAttributeAddDTO extends MQBaseDTO {
     public int dimensionId;
+    public String dimensionName;
+    /**
+     * 业务域名称
+     */
+    public String businessAreaName;
     public int createType;
     public List<DimensionAttributeDTO> list;
 }

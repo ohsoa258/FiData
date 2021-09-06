@@ -47,6 +47,15 @@ public interface DataModelClient {
     ResultEntity<Object> getFactEntity(@RequestParam("id") int id);
 
     /**
+     * 获取业务过程id,获取业务过程下相关事实
+     *
+     * @param id
+     * @return 执行结果
+     */
+    @GetMapping("/businessProcess/getBusinessProcessFact")
+    ResultEntity<Object> getBusinessProcessFact(@RequestParam("id") int id);
+
+    /**
      * 获取事实表下所有原子指标以及事实表关联维度
      * @param id
      * @return

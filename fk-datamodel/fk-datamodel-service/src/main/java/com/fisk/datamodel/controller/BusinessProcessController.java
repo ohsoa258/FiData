@@ -68,5 +68,11 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPublish(id));
     }
 
+    @ApiOperation("根据业务过程id,获取业务过程下相关事实")
+    @GetMapping("/getBusinessProcessFact/{id}")
+    public ResultEntity<Object> getBusinessProcessFact(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPush(id));
+    }
+
 
 }
