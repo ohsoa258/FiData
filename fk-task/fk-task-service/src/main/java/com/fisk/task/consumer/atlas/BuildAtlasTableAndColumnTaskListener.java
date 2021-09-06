@@ -15,9 +15,11 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.enums.AtlasProcessEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
 import fk.atlas.api.model.EntityProcess;
@@ -56,6 +58,8 @@ public class BuildAtlasTableAndColumnTaskListener {
     DataAccessClient dc;
     @Resource
     PublishTaskController pc;
+    @Resource
+    private TBETLIncrementalMapper incrementalMapper;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
@@ -149,7 +153,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info(nifiSelectSql);
         nifiSelectSql = nifiSelectSql.substring(0, nifiSelectSql.lastIndexOf(","));
         //nifiSelectSql = "select " + nifiSelectSql + " from " + ae.tableName;
-        if (ae.appAbbreviation.equals(OdsDataSyncTypeEnum.timestamp_incremental.getName())) {
+        if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
             nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName + "where where " + ae.syncField + " >= '${IncrementStart}' and " + ae.syncField + " <= '${IncrementEnd}'";
         } else {
             nifiSelectSql = "select " + nifiSelectSql + ",'${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code from " + ae.tableName;
@@ -203,23 +207,58 @@ public class BuildAtlasTableAndColumnTaskListener {
         log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
         //endregion
 
-        //region 用户corn表达书计算数据下次同步时间
-        String expressiion= ae.cornExpress;
-        boolean b = checkValid(expressiion);
-        if (b) {
-            //解释cron表达式
-            String s = describeCron(expressiion);
-            //获取下次运行时间
+        //incremental insert
+        if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
+            //region 用户corn表达书计算数据下次同步时间
+            String expressiion= ae.cornExpress;
+            boolean b = checkValid(expressiion);
             List<Date> nextExecTime = null;
+            if (b) {
+                //解释cron表达式
+                String s = describeCron(expressiion);
+                //获取下次运行时间
+                try {
+                    nextExecTime = getNextExecTime(expressiion, 1);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                nextExecTime.stream().forEach(d -> {
+                    System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
+                });
+            };
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
+            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.enable_flag="1";
+            ETLIncremental.incremental_objectivescore_batchno="";
+            Date startdate = null;
             try {
-                nextExecTime = getNextExecTime(expressiion, 1);
+                // 注意格式需要与上面一致，不然会出现异常
+                startdate = sdf.parse("1900-01-01 00:00:00");
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            nextExecTime.stream().forEach(d -> {
-                System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
-            });
-        };
+            ETLIncremental.incremental_objectivescore_start=startdate;
+            ETLIncremental.incremental_objectivescore_end=nextExecTime.stream().findFirst().orElse(null);
+            incrementalMapper.insert(ETLIncremental);
+        }
+        else{
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
+            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.enable_flag="1";
+            ETLIncremental.incremental_objectivescore_batchno="";
+            Date startdate = null;
+            try {
+                // 注意格式需要与上面一致，不然会出现异常
+                startdate = sdf.parse("1900-01-01 00:00:00");
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            ETLIncremental.incremental_objectivescore_start=null;
+            ETLIncremental.incremental_objectivescore_end=null;
+            incrementalMapper.insert(ETLIncremental);
+        }
         //endregion
 
         //启动nifi

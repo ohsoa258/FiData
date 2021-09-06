@@ -1,6 +1,7 @@
 package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
@@ -67,7 +68,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/business/getBusinessAreaPublicData")
-    ResultEntity<Object> getBusinessAreaPublicData(@RequestParam("id") int id);
+    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") int id);
 
     /**
      * 获取表字段

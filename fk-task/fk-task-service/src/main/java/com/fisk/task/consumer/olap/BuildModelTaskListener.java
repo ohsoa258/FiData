@@ -3,6 +3,7 @@ package com.fisk.task.consumer.olap;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -24,6 +25,7 @@ import java.util.List;
 
 /**
  * Description: 创建模型
+ *
  * @author JinXingWang
  */
 @Component
@@ -40,7 +42,9 @@ public class BuildModelTaskListener {
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
-        BusinessAreaGetDataDTO result=(BusinessAreaGetDataDTO) client.getBusinessAreaPublicData(inpData.businessAreaId).data;
-        olap.build(inpData.businessAreaId,result);
+        ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
+        if (data.code == 0) {
+            olap.build(inpData.businessAreaId, data.data);
+        }
     }
 }

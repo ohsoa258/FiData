@@ -101,7 +101,21 @@ public class RabbitMQConfig {
     public Queue datainputPgStgToOdsQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW).build();
     }
-
+    /**
+     * 声明队列
+     */
+    @Bean("buildOlapCreatemodelQueue")
+    public Queue buildOlapCreatemodelQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW).build();
+    }
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding buildOlapCreatemodelExchange(@Qualifier("buildOlapCreatemodelQueue") Queue queue,
+                                     @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_OLAP_CREATEMODEL_ROUTER).noargs();
+    }
     /**
      * 绑定队列和交换机
      */
