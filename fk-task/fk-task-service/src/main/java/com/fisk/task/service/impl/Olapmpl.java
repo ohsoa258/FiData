@@ -62,6 +62,7 @@ public class Olapmpl   implements IOlap {
             olapKpiPO.kpiTableName=e.factTable;
             olapKpiPO.createKpiTableSql=buildCreateAggregateModelSql(e);
             olapKpiPO.selectKpiDataSql=buildSelectAggregateModelDataSql(e);
+            olapKpiPOS.add(olapKpiPO);
         });
         olapKpi.batchAdd(olapKpiPOS);
         return true;
@@ -130,7 +131,7 @@ public class Olapmpl   implements IOlap {
             sql.append("PROPERTIES(\"replication_num\" = \"1\")");
         }
 
-        return "";
+        return sql.toString();
     }
 
     /**
@@ -168,6 +169,6 @@ public class Olapmpl   implements IOlap {
             sql.append("GROUP BY ");
             sql.append(groupSql);
         }
-        return "";
+        return sql.toString();
     }
 }

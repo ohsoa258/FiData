@@ -149,7 +149,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEnum businessAreaPublic(int id)
+    public ResultEntity<Object> businessAreaPublic(int id)
     {
         try
         {
@@ -162,9 +162,9 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         catch (Exception ex)
         {
             log.error(ex.getMessage());
-            return ResultEnum.PUBLISH_FAILURE;
+            return ResultEntityBuild.build(ResultEnum.PUBLISH_FAILURE);
         }
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     @Override
