@@ -112,11 +112,13 @@ public class Olapmpl   implements IOlap {
         sql.append("CREATE TABLE");
         sql.append(dto.factTable);
         sql.append(" ( ");
-        dto.list.forEach(e->{
-            if(e.dimensionTableName!=null&&e.dimensionTableName.length()>0){
-                sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT /\"/\", \n");
-                aggregateKeys.add(e.dimensionTableName);
-            }
+        //维度字段
+        dto.list.stream().filter(e->e.attributeType!=1).forEach(e->{
+            sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT /\"/\", \n");
+            aggregateKeys.add(e.dimensionTableName);
+        });
+        //聚合字段
+        dto.list.stream().filter(e->e.attributeType!=1).forEach(e->{
             sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT /\"/\", ");
         });
         sql.append(" ) ");
