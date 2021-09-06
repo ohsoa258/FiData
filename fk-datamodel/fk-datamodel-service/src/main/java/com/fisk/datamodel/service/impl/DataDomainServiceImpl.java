@@ -490,6 +490,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             BusinessDTO dto = new BusinessDTO();
             dto.setBusinessId(e.getId());
             dto.setBusinessName(e.getBusinessName());
+            dto.setFlag(6);
             return dto;
         }).collect(Collectors.toList());
     }
