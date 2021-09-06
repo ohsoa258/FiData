@@ -30,4 +30,11 @@ public interface DataDomainService {
      * @return
      */
     List<AreaBusinessNameDTO> getBusiness();
+
+    /**
+     * 获取业务域
+     * @param
+     * @return
+     */
+    Object getAreaBusiness();
 }

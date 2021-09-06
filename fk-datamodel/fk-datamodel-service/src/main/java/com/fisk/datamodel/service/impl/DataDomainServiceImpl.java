@@ -396,13 +396,8 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @Override
     public List<AreaBusinessNameDTO> getBusiness(){
-        // 查询业务域
-        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
-
-        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(businessAreaList)) {
+        List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
+        if (CollectionUtils.isEmpty(businessAreaList)){
             return null;
         }
 
@@ -482,5 +477,37 @@ public class DataDomainServiceImpl implements DataDomainService {
         }else {
             return factList;
         }
+    }
+
+    @Override
+    public Object getAreaBusiness() {
+        List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
+        if (CollectionUtils.isEmpty(businessAreaList)){
+            return null;
+        }
+
+        return businessAreaList.stream().map(e -> {
+            BusinessDTO dto = new BusinessDTO();
+            dto.setBusinessId(e.getId());
+            dto.setBusinessName(e.getBusinessName());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询业务域
+     * @return
+     */
+    public List<BusinessAreaPO> selectBusinessArea(){
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
+
+        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(businessAreaList)) {
+            return null;
+        }
+
+        return businessAreaList;
     }
 }
