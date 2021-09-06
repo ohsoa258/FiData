@@ -115,12 +115,12 @@ public class Olapmpl   implements IOlap {
         sql.append(" ( ");
         //维度字段
         dto.list.stream().filter(e->e.attributeType!=1).forEach(e->{
-            sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT /\"/\", \n");
+            sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT \"\", \n");
             aggregateKeys.add(e.dimensionTableName);
         });
         //聚合字段
-        dto.list.stream().filter(e->e.attributeType!=1).forEach(e->{
-            sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT /\"/\", ");
+        dto.list.stream().filter(e->e.attributeType==1).forEach(e->{
+            sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", ");
         });
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
@@ -145,13 +145,12 @@ public class Olapmpl   implements IOlap {
         StringBuilder groupSql=new StringBuilder();
         dto.list.forEach(e->{
             if(e.attributeType==0){
-
                 aggregationFunSql.append(e.aggregationLogic);
                 aggregationFunSql.append("(");
                 aggregationFunSql.append(e.aggregatedField);
-                aggregationFunSql.append(") AS");
+                aggregationFunSql.append(") AS ");
                 aggregationFunSql.append(e.atomicIndicatorName);
-                aggregationFunSql.append(",");
+                aggregationFunSql.append(" ,");
             }else {
                 groupSql.append("`"+e.dimensionTableName+"_key` , ");
                 aggregationFunSql.append("`"+e.dimensionTableName+"_key` AS `"+e.dimensionTableName+"` , ");
