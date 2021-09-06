@@ -79,7 +79,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param id
      * @return
      */
-    ResultEnum businessAreaPublic(int id);
+    ResultEntity<Object> businessAreaPublic(int id);
 
     /**
      * 获取业务域下所有维度以及原子指标
