@@ -189,4 +189,18 @@ public class AppRegistrationController {
         return service.connectDb(dto);
     }
 
+    @ApiOperation("判断应用名称是否重复")
+    @PostMapping("/getRepeatAppName")
+    public ResultEntity<Object> getRepeatAppName(@RequestParam("appName") String appName) {
+        return service.getRepeatAppName(appName);
+    }
+
+    @ApiOperation("判断应用简称是否重复")
+    @PostMapping("/getRepeatAppAbbreviation")
+    public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation) {
+        return service.getRepeatAppAbbreviation(appAbbreviation);
+    }
+
+
+
 }
