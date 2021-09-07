@@ -2,6 +2,7 @@ package com.fisk.common.response;
 
 /**
  * 请求返回结果类型
+ *
  * @author gy
  */
 
@@ -60,37 +61,42 @@ public enum ResultEnum {
     /**
      * 数据接入模块
      */
-    DATAACCESS_GETFIELD_ERROR(5001,"获取表字段失败"),
-    DATAACCESS_GETTABLE_ERROR(5002,"获取表名失败"),
-    DATAACCESS_SAVEFIELD_ERROR(5003,"添加表字段失败"),
-    DATAACCESS_CONNECTDB_ERROR(5004,"连接失败"),
-    DATAACCESS_CONNECTDB_WARN(5005,"当前驱动类型尚未开发"),
+    DATAACCESS_GETFIELD_ERROR(5001, "获取表字段失败"),
+    DATAACCESS_GETTABLE_ERROR(5002, "获取表名失败"),
+    DATAACCESS_SAVEFIELD_ERROR(5003, "添加表字段失败"),
+    DATAACCESS_CONNECTDB_ERROR(5004, "连接失败"),
+    DATAACCESS_CONNECTDB_WARN(5005, "当前驱动类型尚未开发"),
+    DATAACCESS_APPNAME_SUCCESS(5006, "应用名称有效"),
+    DATAACCESS_APPNAME_ERROR(5007, "应用名称不可重复"),
+    DATAACCESS_APPABBREVIATION_SUCCESS(5008, "应用简称有效"),
+    DATAACCESS_APPABBREVIATION_ERROR(5009, "应用简称不可重复"),
 
 
     /**
      * 后台任务模块
      */
-    TASK_PUBLISH_ERROR(6001,"任务发布失败"),
-    TASK_NIFI_BUILD_COMPONENTS_ERROR(6002,"Nifi组件创建失败"),
-    TASK_NIFI_NO_COMPONENTS_FOUND(6003,"未找到组件"),
+    TASK_PUBLISH_ERROR(6001, "任务发布失败"),
+    TASK_NIFI_BUILD_COMPONENTS_ERROR(6002, "Nifi组件创建失败"),
+    TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
 
     /**
      * 数据域接入模块
+     *
      * @param code
      * @param msg
      */
     API_DELETE_ERROR(7001, "请先删除用户下的Api接口"),
-    DELETE_ERROR(7002,"删除失败"),
-    API_FIELD_ERROR(7003,"api没有sql执行!"),
-    SQL_ERROR(7004,"执行sql语法错误!"),
+    DELETE_ERROR(7002, "删除失败"),
+    API_FIELD_ERROR(7003, "api没有sql执行!"),
+    SQL_ERROR(7004, "执行sql语法错误!"),
 
     /**
      * 数据建模模块
      */
-    DARAMODEL_INPUT_REPEAT(8001,"输入数据存在重复值"),
-    PUBLISH_FAILURE(8002,"发布失败"),
+    DARAMODEL_INPUT_REPEAT(8001, "输入数据存在重复值"),
+    PUBLISH_FAILURE(8002, "发布失败"),
 
-    TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001,"添加成功,暂无法解析此表达式");
+    TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式");
 
 
     ResultEnum(int code, String msg) {

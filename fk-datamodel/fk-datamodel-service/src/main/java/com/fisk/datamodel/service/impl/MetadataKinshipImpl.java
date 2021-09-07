@@ -109,6 +109,7 @@ public class MetadataKinshipImpl implements IMetadataKinship {
                     {
                         break;
                     }
+
                     for(RelationsDTO relationsDTO:toEntityIds)
                     {
                         //获取数据库名称

@@ -131,4 +131,18 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 连接结果
      */
     ResultEntity<Object> connectDb(DbConnectionDTO dto);
+
+    /**
+     * 判断应用名称是否重复
+     * @param appName appName
+     * @return 执行结果
+     */
+    ResultEntity<Object> getRepeatAppName(String appName);
+
+    /**
+     * 判断应用简称是否重复
+     * @param appAbbreviation appAbbreviation
+     * @return 执行结果
+     */
+    ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation);
 }

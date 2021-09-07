@@ -17,7 +17,10 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppDriveTypePO;
+import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
@@ -98,6 +101,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         boolean contains = appNameList.contains(appName);
         if (contains) {
             return ResultEntityBuild.build(ResultEnum.DATA_EXISTS);
+        }
+
+        // 判断
+        List<String> appAbbreviationList = baseMapper.getAppAbbreviation();
+        if (appAbbreviationList.contains(po.appAbbreviation)) {
+            return ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
         }
 
         // 保存tb_app_registration数据
@@ -534,21 +543,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     }
 
-    /**
-     * 筛选器左边的模糊搜索查询SQL拼接
-     *
-     * @param key   字段名称
-     * @param value 字段值
-     * @return SQL语句
-     */
-//    private StringBuilder getQuerySql(String key, String value) {
-//
-//        StringBuilder querySql = new StringBuilder();
-//        if (value != null && value.length() > 0) {
-//            querySql.append(" and " + key + " like concat('%', " + "'" + value + "'" + ", '%') ");
-//        }
-//
-//        return querySql;
-//    }
+    @Override
+    public ResultEntity<Object> getRepeatAppName(String appName) {
 
+        List<String> appNameList = baseMapper.getAppName();
+
+        return appNameList.contains(appName) ? ResultEntityBuild.build(ResultEnum.DATAACCESS_APPNAME_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPNAME_SUCCESS);
+    }
+
+    @Override
+    public ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation) {
+        List<String> appAbbreviationList = baseMapper.getAppAbbreviation();
+
+        return appAbbreviationList.contains(appAbbreviation)?ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
+    }
 }
