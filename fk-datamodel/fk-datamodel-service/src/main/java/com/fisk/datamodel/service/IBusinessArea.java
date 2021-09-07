@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
@@ -78,13 +79,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param id
      * @return
      */
-    ResultEnum businessAreaPublic(int id);
+    ResultEntity<Object> businessAreaPublic(int id);
 
     /**
      * 获取业务域下所有维度以及原子指标
      * @param businessArea
      * @return
      */
-    BusinessAreaGetDataDTO getBusinessAreaPublicData(int businessArea);
+    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(int businessArea);
 
 }

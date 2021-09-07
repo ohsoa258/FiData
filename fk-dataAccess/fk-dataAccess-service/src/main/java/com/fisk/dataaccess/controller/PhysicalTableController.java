@@ -251,4 +251,10 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessMeta());
     }
 
+    @ApiOperation("添加")
+    @GetMapping("/getDimensionMeta")
+    public ResultEntity<Object> getDimensionMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMeta());
+    }
+
 }

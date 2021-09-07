@@ -80,16 +80,16 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataList(query));
     }
 
-    /*@GetMapping("/getBusinessAreaPublicData")
+    @GetMapping("/getBusinessAreaPublicData")
     @ApiOperation(value = "根据业务域id,获取相关维度以及原子指标")
-    public ResultEntity<Object> getBusinessAreaPublicData(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaPublicData(id));
-    }*/
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") int id) {
+        return service.getBusinessAreaPublicData(id);
+    }
 
     @GetMapping("/businessAreaPublic")
     @ApiOperation(value = "根据业务域id,推送业务域下相关维度以及原子指标数据")
     public ResultEntity<Object> businessAreaPublic(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessAreaPublic(id));
+        return service.businessAreaPublic(id);
     }
 
 }

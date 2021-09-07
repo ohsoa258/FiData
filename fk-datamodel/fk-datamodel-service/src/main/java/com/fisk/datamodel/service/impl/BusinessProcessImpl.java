@@ -6,18 +6,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.QueryDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessPushListDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessProcessMap;
+import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
@@ -46,6 +46,10 @@ public class BusinessProcessImpl implements IBusinessProcess {
     FactMapper factMapper;
     @Resource
     FactAttributeImpl factAttribute;
+    @Resource
+    BusinessAreaMapper businessAreaMapper;
+    @Resource
+    BusinessProcessMapper businessProcessMapper;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -121,8 +125,20 @@ public class BusinessProcessImpl implements IBusinessProcess {
     public ResultEnum businessProcessPublish(int id)
     {
         try{
+            BusinessProcessPO po=businessProcessMapper.selectById(id);
+            if (po==null)
+            {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(po.businessId);
+            if (businessAreaPO==null)
+            {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
             DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
             pushDto.dimensionId=id;
+            pushDto.dimensionName=po.businessProcessEnName;
+            pushDto.businessAreaName=businessAreaPO.getBusinessName();
             pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
             pushDto.userId=userHelper.getLoginUserInfo().id;
             //发送消息
@@ -148,6 +164,10 @@ public class BusinessProcessImpl implements IBusinessProcess {
         {
             //获取事实表先关字段
             ModelMetaDataDTO metaDataDTO= factAttribute.getFactMetaData(id);
+            if (metaDataDTO==null)
+            {
+                break;
+            }
             list.add(metaDataDTO);
         }
         return list;

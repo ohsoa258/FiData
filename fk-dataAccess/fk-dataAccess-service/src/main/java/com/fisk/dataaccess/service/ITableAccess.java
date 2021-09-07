@@ -165,4 +165,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return tree
      */
     List<DataAccessTreeDTO> getTree();
+
+    Object getDimensionMeta();
 }

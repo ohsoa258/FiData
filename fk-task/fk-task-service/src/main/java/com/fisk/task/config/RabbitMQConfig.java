@@ -114,7 +114,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding buildOlapCreatemodelExchange(@Qualifier("buildOlapCreatemodelQueue") Queue queue,
                                      @Qualifier("itemTopicExchange") Exchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_OLAP_CREATEMODEL_FLOW).noargs();
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_OLAP_CREATEMODEL_ROUTER).noargs();
     }
     /**
      * 绑定队列和交换机

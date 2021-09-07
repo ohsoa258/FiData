@@ -8,6 +8,8 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.dto.MetaDataConfigDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -17,6 +19,8 @@ import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.service.IBusinessArea;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +49,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     DimensionAttributeImpl dimensionAttribute;
     @Resource
     AtomicIndicatorsImpl atomicIndicators;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -143,22 +149,26 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEnum businessAreaPublic(int id)
+    public ResultEntity<Object> businessAreaPublic(int id)
     {
         try
         {
-            BusinessAreaPublishDTO dto=new BusinessAreaPublishDTO();
+            BuildCreateModelTaskDto dto=new BuildCreateModelTaskDto();
+            dto.businessAreaId=id;
+            dto.userId=userHelper.getLoginUserInfo().id;
+            ResultEntity<Object> objectResultEntity = publishTaskClient.publishOlapCreateModel(dto);
+            System.out.println(objectResultEntity);
         }
         catch (Exception ex)
         {
             log.error(ex.getMessage());
-            return ResultEnum.PUBLISH_FAILURE;
+            return ResultEntityBuild.build(ResultEnum.PUBLISH_FAILURE);
         }
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     @Override
-    public BusinessAreaGetDataDTO getBusinessAreaPublicData(int businessAreaId)
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(int businessAreaId)
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         try {
@@ -168,9 +178,11 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         catch (Exception e)
         {
             log.error("BusinessAreaImpl,getBusinessAreaPublicData："+e.getMessage());
-            data=null;
+//            data=null;
+            return ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR,data);
         }
-        return data;
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,data);
     }
 
 }

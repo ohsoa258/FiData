@@ -163,7 +163,7 @@ public class AtomicIndicatorsImpl
             for (FactPO factPO:factPOList)
             {
                 data.factTable=factPO.factTableEnName;
-                List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)item.id);
+                List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
                 if (atomicIndicator!=null)
                 {
                     data.list=atomicIndicator;

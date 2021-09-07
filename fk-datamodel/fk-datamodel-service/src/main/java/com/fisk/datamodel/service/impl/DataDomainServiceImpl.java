@@ -13,6 +13,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -396,17 +397,12 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @Override
     public List<AreaBusinessNameDTO> getBusiness(){
-        // 查询业务域
-        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
-
-        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(businessAreaList)) {
+        List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
+        if (CollectionUtils.isEmpty(businessAreaList)){
             return null;
         }
 
-        return businessAreaList.stream()
+        List<AreaBusinessNameDTO> dtoList = businessAreaList.stream()
                 .map(e -> {
                     AreaBusinessNameDTO businessName = new AreaBusinessNameDTO();
                     businessName.setBusinessId(e.getId());
@@ -446,6 +442,8 @@ public class DataDomainServiceImpl implements DataDomainService {
                     businessName.setBusinessProcessList(businessProcessNameDtoList);
                     return businessName;
                 }).collect(Collectors.toList());
+
+        return dtoList.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     /**
@@ -482,5 +480,38 @@ public class DataDomainServiceImpl implements DataDomainService {
         }else {
             return factList;
         }
+    }
+
+    @Override
+    public Object getAreaBusiness() {
+        List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
+        if (CollectionUtils.isEmpty(businessAreaList)){
+            return null;
+        }
+
+        return businessAreaList.stream().map(e -> {
+            BusinessDTO dto = new BusinessDTO();
+            dto.setBusinessId(e.getId());
+            dto.setBusinessName(e.getBusinessName());
+            dto.setFlag(6);
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询业务域
+     * @return
+     */
+    public List<BusinessAreaPO> selectBusinessArea(){
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
+
+        List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(businessAreaList)) {
+            return null;
+        }
+
+        return businessAreaList;
     }
 }

@@ -1,6 +1,7 @@
 package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
@@ -46,6 +47,15 @@ public interface DataModelClient {
     ResultEntity<Object> getFactEntity(@RequestParam("id") int id);
 
     /**
+     * 获取业务过程id,获取业务过程下相关事实
+     *
+     * @param id
+     * @return 执行结果
+     */
+    @GetMapping("/businessProcess/getBusinessProcessFact")
+    ResultEntity<Object> getBusinessProcessFact(@RequestParam("id") int id);
+
+    /**
      * 获取事实表下所有原子指标以及事实表关联维度
      * @param id
      * @return
@@ -67,7 +77,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/business/getBusinessAreaPublicData")
-    ResultEntity<Object> getBusinessAreaPublicData(@RequestParam("id") int id);
+    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") int id);
 
     /**
      * 获取表字段

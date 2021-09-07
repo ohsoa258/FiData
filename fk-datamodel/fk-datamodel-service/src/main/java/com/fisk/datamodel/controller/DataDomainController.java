@@ -44,4 +44,10 @@ public class DataDomainController {
     public ResultEntity<List<AreaBusinessNameDTO>> getBusiness() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getBusiness());
     }
+
+    @ApiOperation("获取业务域")
+    @GetMapping("/getAreaBusiness")
+    public ResultEntity<Object> getAreaBusiness() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getAreaBusiness());
+    }
 }
