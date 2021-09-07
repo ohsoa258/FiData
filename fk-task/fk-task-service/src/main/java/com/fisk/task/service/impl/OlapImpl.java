@@ -147,6 +147,9 @@ public class OlapImpl implements IOlap {
         if (aggregationFunSql.length()>0){
             aggregationFunSql.deleteCharAt(aggregationFunSql.length()-1);
         }
+        if(groupSql.length()>0){
+            groupSql.deleteCharAt(groupSql.length()-1);
+        }
         sql.append("SELECT ");
         sql.append(aggregationFunSql);
         sql.append(" FROM `");
