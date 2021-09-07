@@ -13,6 +13,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -401,7 +402,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             return null;
         }
 
-        return businessAreaList.stream()
+        List<AreaBusinessNameDTO> dtoList = businessAreaList.stream()
                 .map(e -> {
                     AreaBusinessNameDTO businessName = new AreaBusinessNameDTO();
                     businessName.setBusinessId(e.getId());
@@ -441,6 +442,8 @@ public class DataDomainServiceImpl implements DataDomainService {
                     businessName.setBusinessProcessList(businessProcessNameDtoList);
                     return businessName;
                 }).collect(Collectors.toList());
+
+        return dtoList.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     /**
