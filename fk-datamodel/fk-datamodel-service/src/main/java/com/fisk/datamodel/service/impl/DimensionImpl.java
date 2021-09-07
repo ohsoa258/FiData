@@ -12,12 +12,14 @@ import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.ProjectInfoPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
+import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DataAreaMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.ProjectInfoMapper;
@@ -50,6 +52,8 @@ public class DimensionImpl implements IDimension {
     PublishTaskClient publishTaskClient;
     @Resource
     UserHelper userHelper;
+    @Resource
+    BusinessAreaMapper businessAreaMapper;
 
     @Override
     public List<DimensionSourceDTO> getDimensionList()
@@ -155,8 +159,20 @@ public class DimensionImpl implements IDimension {
     public ResultEnum dimensionPublish(int id)
     {
         try{
+            DimensionPO po=mapper.selectById(id);
+            if (po==null)
+            {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(po.businessId);
+            if (businessAreaPO==null)
+            {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
             DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
             pushDto.dimensionId=id;
+            pushDto.dimensionName=po.dimensionTabName;
+            pushDto.businessAreaName=businessAreaPO.getBusinessName();
             pushDto.createType= CreateTypeEnum.CREATE_DIMENSION.getValue();
             pushDto.userId=userHelper.getLoginUserInfo().id;
             //发送消息
