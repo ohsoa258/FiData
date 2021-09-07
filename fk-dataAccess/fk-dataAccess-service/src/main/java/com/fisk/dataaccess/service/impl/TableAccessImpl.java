@@ -990,6 +990,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
+        if (modelSync.syncField.length() > 0) {
+            // 增量字段
+            processorConfig.syncField = modelSync.syncField;
+        }
+
         String timerDriver = "Timer driven";
         String corn = "CORN driven";
         if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
@@ -1162,6 +1167,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             e.flag = 1;
             return e;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Object getDimensionMeta() {
+        return null;
     }
 
 }
