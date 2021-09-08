@@ -71,7 +71,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
         awbd.appId=inpData.appId;
-        awbd.tableName= ae.appAbbreviation+"_stg_"+ae.tableName;
+        awbd.tableName= ae.appAbbreviation+"_"+ae.tableName;
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表
