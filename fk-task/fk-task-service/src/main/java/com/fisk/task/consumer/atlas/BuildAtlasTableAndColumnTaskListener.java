@@ -225,7 +225,7 @@ public class BuildAtlasTableAndColumnTaskListener {
                     System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
                 });
             };
-            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.object_name=ae.appAbbreviation+"_"+ae.tableName;
             ETLIncremental.enable_flag="1";
             ETLIncremental.incremental_objectivescore_batchno= UUID.randomUUID().toString();;
             Date startdate = null;
@@ -240,7 +240,7 @@ public class BuildAtlasTableAndColumnTaskListener {
             incrementalMapper.insert(ETLIncremental);
         }
         else{
-            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.object_name=ae.appAbbreviation+"_"+ae.tableName;;
             ETLIncremental.enable_flag="1";
             ETLIncremental.incremental_objectivescore_batchno=UUID.randomUUID().toString();;
             Date startdate = null;
