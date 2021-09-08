@@ -11,5 +11,6 @@ public class PutDatabaseRecordDTO   extends BaseProcessorDTO{
     public String statementType;
     public String databaseConnectionPoolingService;
     public String TableName;
+    public String concurrentTasks;
 
 }

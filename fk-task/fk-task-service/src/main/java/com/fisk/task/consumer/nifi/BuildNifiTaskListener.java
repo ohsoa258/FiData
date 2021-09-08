@@ -71,6 +71,14 @@ public class BuildNifiTaskListener {
     private String password;
     @Value("${spring.rabbitmq.virtual-host}")
     private String vhost;
+    @Value("${nifi-MaxRowsPerFlowFile}")
+    public String MaxRowsPerFlowFile;
+    @Value("${nifi-OutputBatchSize}")
+    public String OutputBatchSize;
+    @Value("${nifi-FetchSize}")
+    public String FetchSize;
+    @Value("${nifi-ConcurrentTasks}")
+    public String ConcurrentTasks;
 
     @Resource
     INifiComponentsBuild componentsBuild;
@@ -408,9 +416,9 @@ public class BuildNifiTaskListener {
         executeSQLRecordDTO.name = "executeSQLRecord";
         executeSQLRecordDTO.details = "executeSQLRecord";
         executeSQLRecordDTO.groupId = groupId;
-        executeSQLRecordDTO.FetchSize="30000";
-        executeSQLRecordDTO.maxRowsPerFlowFile="10000";
-        executeSQLRecordDTO.outputBatchSize="1";
+        executeSQLRecordDTO.FetchSize=FetchSize;
+        executeSQLRecordDTO.maxRowsPerFlowFile=MaxRowsPerFlowFile;
+        executeSQLRecordDTO.outputBatchSize=OutputBatchSize;
         executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
         executeSQLRecordDTO.sqlSelectQuery=config.processorConfig.sourceExecSqlQuery;
         executeSQLRecordDTO.recordwriter=id;
@@ -442,18 +450,10 @@ public class BuildNifiTaskListener {
         putDatabaseRecordDTO.recordReader=id;
         putDatabaseRecordDTO.statementType="INSERT";
         putDatabaseRecordDTO.TableName=config.processorConfig.targetTableName;
+        putDatabaseRecordDTO.concurrentTasks=ConcurrentTasks;
         putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
         verifyProcessorResult(res);
-        try {
-            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("be3f07ba-017b-1000-96ea-6b26f389bf95");
-            ProcessorDTO component = processor.getComponent();
-            ProcessorConfigDTO config1 = component.getConfig();
-            Map<String, String> properties = config1.getProperties();
-            System.out.println("我擦2"+properties);
-        } catch (ApiException e) {
-            e.printStackTrace();
-        }
         return res.data;
     }
 

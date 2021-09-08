@@ -615,7 +615,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
-        config.setConcurrentlySchedulableTaskCount(3);
+        config.setConcurrentlySchedulableTaskCount(Integer.valueOf(putDatabaseRecordDTO.concurrentTasks));
         config.setComments(putDatabaseRecordDTO.details);
 
         //组件整体配置
