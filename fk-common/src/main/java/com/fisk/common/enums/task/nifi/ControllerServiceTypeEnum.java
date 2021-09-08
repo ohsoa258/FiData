@@ -8,9 +8,13 @@ import com.fisk.common.enums.BaseEnum;
 public enum ControllerServiceTypeEnum implements BaseEnum {
 
     /**
-     * 控制器服务类型
+     * 控制器服务类型ExecuteSQLRecord   Record Reader
+     * org.apache.nifi.avro.AvroRecordSetWriter
      */
-    DBCP_CONNECTION_POOL(0, "org.apache.nifi.dbcp.DBCPConnectionPool");
+    DBCP_CONNECTION_POOL(0, "org.apache.nifi.dbcp.DBCPConnectionPool"),
+    AVROREADER(1, "org.apache.nifi.avro.AvroReader"),
+    AVRORECORDSETWRITER(2, "org.apache.nifi.avro.AvroRecordSetWriter");
+
 
     ControllerServiceTypeEnum(int value, String name) {
         this.value = value;

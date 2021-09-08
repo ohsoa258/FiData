@@ -104,6 +104,14 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     List<TableNameDTO> listTableName();
 
     /**
+     * 根据应用id获取物理表
+     * @param id app_id
+     * @return 物理表
+     */
+    @Select("SELECT id,table_name FROM tb_table_access WHERE app_id = #{app_id} and del_flag = 1;")
+    List<TableNameDTO> listTableNameByAppId(@Param("app_id")long id);
+
+    /**
      * 物理表tree
      * @param appId appId
      * @return tree

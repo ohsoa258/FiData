@@ -30,10 +30,13 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +71,14 @@ public class BuildNifiTaskListener {
     private String password;
     @Value("${spring.rabbitmq.virtual-host}")
     private String vhost;
+    @Value("${nifi-MaxRowsPerFlowFile}")
+    public String MaxRowsPerFlowFile;
+    @Value("${nifi-OutputBatchSize}")
+    public String OutputBatchSize;
+    @Value("${nifi-FetchSize}")
+    public String FetchSize;
+    @Value("${nifi-ConcurrentTasks}")
+    public String ConcurrentTasks;
 
     @Resource
     INifiComponentsBuild componentsBuild;
@@ -94,9 +105,8 @@ public class BuildNifiTaskListener {
         List<ControllerServiceEntity> dbPool = buildDsConnectionPool(configDTO, groupEntity.getId());
         //4. 创建任务组
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
-
         //5. 创建组件
-        List<ProcessorEntity> processors = buildProcessor(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
+        List<ProcessorEntity> processors = buildProcessorVersion2(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
@@ -275,15 +285,15 @@ public class BuildNifiTaskListener {
         return dto;
     }
 
-    /**
-     * 创建nifi流程
-     *
-     * @param config         数据接入配置
-     * @param groupId        组id
-     * @param sourceDbPoolId 数据源连接池id
-     * @param targetDbPoolId 目标连接池id
-     * @param cfgDbPoolId    增量配置库id
-     */
+        /**
+         * 创建nifi流程
+         *
+         * @param config         数据接入配置
+         * @param groupId        组id
+         * @param sourceDbPoolId 数据源连接池id
+         * @param targetDbPoolId 目标连接池id
+         * @param cfgDbPoolId    增量配置库id
+         */
     private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
         //读取增量字段组件
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
@@ -350,6 +360,102 @@ public class BuildNifiTaskListener {
         res.add(processorEntity1);
         return res;
     }
+    private List<ProcessorEntity> buildProcessorVersion2(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
+        //读取增量字段组件
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
+        //创建数据转换json组件
+        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 2);
+        //连接器
+        componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //字段转换nifi变量
+        ProcessorEntity evaluateJson = evaluateJsonPathProcessor(groupId);
+        //连接器
+        componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //创建log
+        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, config.processorConfig.targetTableName);
+        //连接器
+        componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
+        //创建执行删除组件
+        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
+        //连接器
+        componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //执行查询组件
+        ProcessorEntity executeSQLRecord = createExecuteSQLRecord(config,groupId);
+        //连接器
+        componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //数据入库
+        ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config,groupId);
+        //连接器
+        componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        List<ProcessorEntity> res = new ArrayList<>();
+        res.add(queryField);
+        res.add(jsonRes);
+        res.add(evaluateJson);
+        res.add(logProcessor);
+        res.add(delSqlRes);
+        res.add(executeSQLRecord);
+        res.add(putDatabaseRecord);
+        return res;
+    }
+
+    private ProcessorEntity createExecuteSQLRecord(DataAccessConfigDTO config,String groupId){
+        BaseProcessorDTO data=new BaseProcessorDTO();
+        data.details="AvroRecordSetWriter";
+        data.name="AvroRecordSetWriter";
+        data.groupId=groupId;
+        String id="";
+        //创建buildAvroRecordSetWriterService
+        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(data);
+        if(controllerServiceEntityBusinessResult.success){
+             id = controllerServiceEntityBusinessResult.data.getId();
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+        }
+
+        ExecuteSQLRecordDTO executeSQLRecordDTO = new ExecuteSQLRecordDTO();
+        executeSQLRecordDTO.name = "executeSQLRecord";
+        executeSQLRecordDTO.details = "executeSQLRecord";
+        executeSQLRecordDTO.groupId = groupId;
+        executeSQLRecordDTO.FetchSize=FetchSize;
+        executeSQLRecordDTO.maxRowsPerFlowFile=MaxRowsPerFlowFile;
+        executeSQLRecordDTO.outputBatchSize=OutputBatchSize;
+        executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
+        executeSQLRecordDTO.sqlSelectQuery=config.processorConfig.sourceExecSqlQuery;
+        executeSQLRecordDTO.recordwriter=id;
+        executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
+        BusinessResult<ProcessorEntity> res = componentsBuild.buildExecuteSQLRecordProcess(executeSQLRecordDTO);
+        verifyProcessorResult(res);
+        return res.data;
+    }
+
+    private ProcessorEntity createPutDatabaseRecord(DataAccessConfigDTO config,String groupId){
+        BaseProcessorDTO data=new BaseProcessorDTO();
+        data.details="PutDatabaseRecord";
+        data.name="PutDatabaseRecord";
+        data.groupId=groupId;
+        String id="";
+        //创建buildAvroReaderService
+        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroReaderService(data);
+        if(controllerServiceEntityBusinessResult.success){
+            id = controllerServiceEntityBusinessResult.data.getId();
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+        }
+        PutDatabaseRecordDTO putDatabaseRecordDTO = new PutDatabaseRecordDTO();
+        putDatabaseRecordDTO.name = "executeSQLRecord";
+        putDatabaseRecordDTO.details = "executeSQLRecord";
+        putDatabaseRecordDTO.groupId = groupId;
+        putDatabaseRecordDTO.databaseConnectionPoolingService=config.targetDsConfig.componentId;
+        putDatabaseRecordDTO.databaseType="MS SQL 2012+";//数据库类型,定义枚举
+        putDatabaseRecordDTO.recordReader=id;
+        putDatabaseRecordDTO.statementType="INSERT";
+        putDatabaseRecordDTO.TableName=config.processorConfig.targetTableName;
+        putDatabaseRecordDTO.concurrentTasks=ConcurrentTasks;
+        putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
+        BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
+        verifyProcessorResult(res);
+        return res.data;
+    }
 
     /**
      * 组件连接器
@@ -359,6 +465,7 @@ public class BuildNifiTaskListener {
      * @param targetId 连接器下方组件id
      * @param type     连接类型
      */
+
     private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
         verifyProcessorResult(sqlToPutRes);
@@ -518,7 +625,28 @@ public class BuildNifiTaskListener {
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }
-
+    private ProcessorEntity  CallDbLogProcedure(DataAccessConfigDTO config,String groupId){
+        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
+        callDbProcedureProcessorDTO.name = "CallDbLogProcedure";
+        callDbProcedureProcessorDTO.details = "CallDbLogProcedure";
+        callDbProcedureProcessorDTO.groupId = groupId;
+        //调用存储过程sql,存日志
+        String cronNextTime = "";
+        CronSequenceGenerator cron = null;
+        cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
+        Date d = new Date();
+        Date date = cron.next(d);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        cronNextTime = sdf.format(date);
+        String executsql="call nifi_update_etl_log_and_Incremental(";
+        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+",2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}',"+cronNextTime+")";
+        callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;
+        callDbProcedureProcessorDTO.executsql=executsql;
+        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(14);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
 
     /**
      * json转sql组件
