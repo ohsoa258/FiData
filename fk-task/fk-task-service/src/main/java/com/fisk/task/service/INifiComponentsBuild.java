@@ -198,11 +198,25 @@ public interface INifiComponentsBuild {
      * @return Processor组件
      */
     BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data);
-
+    /*
+    * 调用存储过程
+    * */
     BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
-
+    /*
+    * 定义insert语句values参数
+    * */
     BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO config,BuildProcessEvaluateJsonPathDTO buildProcessEvaluateJsonPathDTO);
-
+    /*
+    * 拼装insert语句
+    * */
     BusinessResult<ProcessorEntity> buildAssembleSqlProcess(DataAccessConfigDTO config,BuildReplaceTextProcessorDTO data);
+
+    BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcess(ExecuteSQLRecordDTO executeSQLRecordDTO);
+
+    BusinessResult<ProcessorEntity> buildPutDatabaseRecordProcess(PutDatabaseRecordDTO putDatabaseRecordDTO);
+
+    BusinessResult<ControllerServiceEntity> buildAvroReaderService(BaseProcessorDTO data);
+
+    BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BaseProcessorDTO data);
 
 }

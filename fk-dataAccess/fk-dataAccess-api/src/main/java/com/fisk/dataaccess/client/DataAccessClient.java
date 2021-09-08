@@ -94,4 +94,7 @@ public interface DataAccessClient {
      */
     @PostMapping("/physicalTable/addComponentId")
     public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto);
+
+    @PostMapping("/tableFields/getTableField")
+    public ResultEntity<Object> getTableField(@RequestParam("id") int id);
 }
