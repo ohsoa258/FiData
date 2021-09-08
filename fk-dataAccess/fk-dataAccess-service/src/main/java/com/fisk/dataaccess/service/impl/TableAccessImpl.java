@@ -990,7 +990,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
-        if (modelSync.syncField.length() > 0) {
+        if (modelSync.syncField!=null) {
             // 增量字段
             processorConfig.syncField = modelSync.syncField;
         }
