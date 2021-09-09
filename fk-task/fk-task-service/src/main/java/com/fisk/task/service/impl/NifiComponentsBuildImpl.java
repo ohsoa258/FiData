@@ -8,6 +8,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
+import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
@@ -339,8 +340,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         if (data.scheduleType != null) {
             config.setSchedulingStrategy(data.scheduleType.getName());
         }
-        if (StringUtils.isNotEmpty(data.scheduleExpression)) {
+        if (Objects.equals(data.scheduleType.getName(), SchedulingStrategyTypeEnum.TIMER.getName())) {
             config.setSchedulingPeriod(data.scheduleExpression+" sec");
+        }else {
+            config.setSchedulingPeriod(data.scheduleExpression);
         }
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoEnd);
