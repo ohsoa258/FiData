@@ -1,6 +1,8 @@
 package com.fisk.dataaccess.test;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.entity.TableSyncmodePO;
+import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
@@ -16,6 +18,8 @@ import javax.annotation.Resource;
 public class TableNameTest {
     @Resource
     DataModelClient client;
+    @Resource
+    TableSyncmodeMapper mapper;
 
     @Test
     public void test() {
@@ -24,4 +28,13 @@ public class TableNameTest {
         ResultEntity<TableDataDTO> name = client.getTableName(155, DataDoFieldTypeEnum.COLUMN, "year");
         System.out.println(name.data);
     }
+
+    @Test
+    public void test02() {
+        TableSyncmodePO data = mapper.getData(1651);
+        System.out.println(data);
+        System.out.println(data.syncField.length());
+    }
+
+
 }

@@ -990,6 +990,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
+        if (modelSync.syncField!=null) {
+            // 增量字段
+            processorConfig.syncField = modelSync.syncField;
+        }
+
         String timerDriver = "Timer driven";
         String corn = "CORN driven";
         if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
@@ -1133,16 +1138,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         for (TableNameDTO tableNameDTO : listTableName) {
 
-            TableNameDTO dto = new TableNameDTO();
-
-            // 根据tb_access_id获取表字段及id
-            List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
-
-            dto.id = tableNameDTO.id;
-            dto.tableName = tableNameDTO.tableName;
-            dto.field = listFieldName;
-
-            list.add(dto);
+            getTableFieldsById(list, tableNameDTO);
         }
 
         return list;
@@ -1162,6 +1158,40 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             e.flag = 1;
             return e;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Object getDimensionMeta() {
+        return null;
+    }
+
+    @Override
+    public List<TableNameDTO> getTableName(long id) {
+        List<TableNameDTO> list = new ArrayList<>();
+
+        // 获取物理表
+        List<TableNameDTO> listTableName = baseMapper.listTableNameByAppId(id);
+
+        // 根据tb_access_id获取表字段及id
+        listTableName.forEach(tableNameDTO -> {
+            getTableFieldsById(list, tableNameDTO);
+        });
+
+        return list;
+    }
+
+    /**
+     * 封装物理表及字段
+     * @param list list
+     * @param tableNameDTO tableNameDTO
+     */
+    private void getTableFieldsById(List<TableNameDTO> list, TableNameDTO tableNameDTO) {
+        TableNameDTO dto = new TableNameDTO();
+        List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
+        dto.id = tableNameDTO.id;
+        dto.tableName = tableNameDTO.tableName;
+        dto.field = listFieldName;
+        list.add(dto);
     }
 
 }

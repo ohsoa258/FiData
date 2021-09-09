@@ -165,4 +165,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return tree
      */
     List<DataAccessTreeDTO> getTree();
+
+    Object getDimensionMeta();
+
+    /**
+     * 添加维度时需要的应用下的物理表
+     * @param id 应用id
+     * @return TableNameAndFieldDTO
+     */
+    List<TableNameDTO> getTableName(long id);
 }

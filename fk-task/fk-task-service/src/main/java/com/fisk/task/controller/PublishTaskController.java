@@ -30,7 +30,7 @@ public class PublishTaskController {
 
     @PostMapping("/nifiFlow")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
-        return service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
+        return service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
@@ -136,7 +136,7 @@ public class PublishTaskController {
      */
     @PostMapping("/atlasDorisTable")
     public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO dimensionAttributeAddDTO){
-        return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
+        return service.publishTask("创建表:"+dimensionAttributeAddDTO.dimensionName,
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
                 dimensionAttributeAddDTO);

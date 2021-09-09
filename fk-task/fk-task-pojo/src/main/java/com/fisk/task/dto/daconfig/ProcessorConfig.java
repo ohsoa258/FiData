@@ -11,6 +11,11 @@ public class ProcessorConfig {
     public String targetTableName;
 
     /**
+     * 增量字段
+     */
+    public String syncField;
+
+    /**
      * 数据源执行的sql查询
      */
     public String sourceExecSqlQuery;

@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.QueryDTO;
@@ -171,6 +172,21 @@ public class BusinessProcessImpl implements IBusinessProcess {
             list.add(metaDataDTO);
         }
         return list;
+    }
+
+    @Override
+    public void updatePublishStatus(int id,int isSuccess)
+    {
+        BusinessProcessPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            log.info(id+":数据不存在");
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+        po.isPublish=isSuccess;
+        int flat=mapper.updateById(po);
+        String msg=flat>0?"发布成功":"发布失败";
+        log.info(po.businessProcessCnName+":"+msg);
     }
 
 }

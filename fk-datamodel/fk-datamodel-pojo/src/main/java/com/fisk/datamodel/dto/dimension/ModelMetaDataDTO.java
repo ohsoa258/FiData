@@ -23,4 +23,6 @@ public class ModelMetaDataDTO {
      */
     public List<ModelAttributeMetaDataDTO> dto;
 
+    public List<String> fieldEnNames;
+
 }
