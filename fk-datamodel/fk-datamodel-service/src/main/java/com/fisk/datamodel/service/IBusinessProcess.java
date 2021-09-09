@@ -71,4 +71,11 @@ public interface IBusinessProcess {
      */
     List<ModelMetaDataDTO> businessProcessPush(int businessProcessId);
 
+    /**
+     * 更改业务过程发布状态
+     * @param id
+     * @param isSuccess
+     */
+    void updatePublishStatus(int id,int isSuccess);
+
 }
