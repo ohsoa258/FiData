@@ -387,6 +387,14 @@ public class BuildNifiTaskListener {
         ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config,groupId);
         //连接器
         componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //合并流文件组件
+        ProcessorEntity mergeRes = mergeContentProcessor(groupId);
+        //连接器
+        componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //用组件,调存储过程把stg里的数据向ods里面插入
+        ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId);
+        componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
+
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
         res.add(jsonRes);
@@ -395,6 +403,8 @@ public class BuildNifiTaskListener {
         res.add(delSqlRes);
         res.add(executeSQLRecord);
         res.add(putDatabaseRecord);
+        res.add(mergeRes);
+        res.add(processorEntity1);
         return res;
     }
 
@@ -449,7 +459,7 @@ public class BuildNifiTaskListener {
         putDatabaseRecordDTO.databaseType="MS SQL 2012+";//数据库类型,定义枚举
         putDatabaseRecordDTO.recordReader=id;
         putDatabaseRecordDTO.statementType="INSERT";
-        putDatabaseRecordDTO.TableName=config.processorConfig.targetTableName;
+        putDatabaseRecordDTO.TableName="stg_"+config.processorConfig.targetTableName.toLowerCase();
         putDatabaseRecordDTO.concurrentTasks=ConcurrentTasks;
         putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
@@ -482,7 +492,7 @@ public class BuildNifiTaskListener {
         dto.name = "Merge Content";
         dto.details = "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildMergeContentProcess(dto);
         verifyProcessorResult(res);
@@ -613,14 +623,15 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.details = "CallDbProcedure";
         callDbProcedureProcessorDTO.groupId = groupId;
         String executsql="";
+        config.processorConfig.targetTableName="stg_"+config.processorConfig.targetTableName;
         String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
-        String ods_TableName = config.processorConfig.targetTableName.replaceAll("_stg_","_ods_").toLowerCase();
+        String ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_","ods_").toLowerCase();
         String syncMode= config.cfgDsConfig.syncMode==1?"full_volume":"timestamp_incremental";
         System.out.println("同步类型为:"+syncMode+config.cfgDsConfig.syncMode);
         executsql="select public.data_stg_to_ods ('"+stg_TableName+"','"+ods_TableName+"','"+syncMode+"','${" + NifiConstants.AttrConstants.LOG_CODE + "}'"+")";
         callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql=executsql;
-        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(13);
+        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -724,7 +735,7 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "Execute Delete SQL in the data target";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
+        querySqlDto.querySql = "TRUNCATE table " + "stg_"+config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());

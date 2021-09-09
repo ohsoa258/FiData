@@ -603,7 +603,6 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         //流程分支，是否自动结束
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
         autoRes.add(AutoEndBranchTypeEnum.RETRY.getName());
         Map<String, String> map = new HashMap<>();
         map.put("put-db-record-record-reader",putDatabaseRecordDTO.recordReader);
