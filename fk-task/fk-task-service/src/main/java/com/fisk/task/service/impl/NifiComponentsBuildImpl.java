@@ -340,7 +340,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             config.setSchedulingStrategy(data.scheduleType.getName());
         }
         if (StringUtils.isNotEmpty(data.scheduleExpression)) {
-            config.setSchedulingPeriod(data.scheduleExpression);
+            config.setSchedulingPeriod(data.scheduleExpression+" sec");
         }
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoEnd);
