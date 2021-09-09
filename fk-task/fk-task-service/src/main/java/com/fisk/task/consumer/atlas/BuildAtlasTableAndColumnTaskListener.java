@@ -262,6 +262,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
+        bfd.tableName=ae.tableName;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

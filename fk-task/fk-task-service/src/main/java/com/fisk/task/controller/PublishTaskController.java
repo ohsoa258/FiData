@@ -30,7 +30,7 @@ public class PublishTaskController {
 
     @PostMapping("/nifiFlow")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
-        return service.publishTask(TaskTypeEnum.BUILD_NIFI_FLOW.getName(),
+        return service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
