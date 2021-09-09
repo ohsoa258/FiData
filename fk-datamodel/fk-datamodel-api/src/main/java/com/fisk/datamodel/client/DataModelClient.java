@@ -77,7 +77,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/dimension/editPublishStatus")
-    ResultEntity<Object> editPublishStatus(int id,int isSuccess);
+    ResultEntity<Object> editPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
     /**
      *更改业务过程发布状态
@@ -85,7 +85,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/businessProcess/editBusinessProcessPublishStatus")
-    ResultEntity<Object> editBusinessProcessPublishStatus(int id,int isSuccess);
+    ResultEntity<Object> editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
     /**
      * 根据业务域id获取相关维度以及原子指标
