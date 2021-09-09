@@ -340,10 +340,12 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         if (data.scheduleType != null) {
             config.setSchedulingStrategy(data.scheduleType.getName());
         }
-        if (Objects.equals(data.scheduleType.getName(), SchedulingStrategyTypeEnum.TIMER.getName())) {
-            config.setSchedulingPeriod(data.scheduleExpression+" sec");
-        }else {
-            config.setSchedulingPeriod(data.scheduleExpression);
+        if (StringUtils.isNotEmpty(data.scheduleExpression)) {
+            if (Objects.equals(data.scheduleType.getName(), SchedulingStrategyTypeEnum.TIMER.getName())) {
+                config.setSchedulingPeriod(data.scheduleExpression + " sec");
+            } else {
+                config.setSchedulingPeriod(data.scheduleExpression);
+            }
         }
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoEnd);
