@@ -374,26 +374,92 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @Override
     public Object getDimension(){
+        List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
+        if (CollectionUtils.isEmpty(businessAreaList)){
+            return null;
+        }
+
+        List<AreaBusinessDimDTO> areaBusinessDTOList = businessAreaList.stream()
+                .map(e -> {
+                    AreaBusinessDimDTO dto = new AreaBusinessDimDTO();
+                    dto.setBusinessId(e.getId());
+                    dto.setBusinessName(e.getBusinessName());
+
+                    List<DimensionPO> dimensionList = this.getDimension(e.getId());
+                    if (CollectionUtils.isEmpty(dimensionList)) {
+                        return null;
+                    }
+
+                    // 二级 维度
+                    List<DimensionDimDTO> dimensionDtoList = dimensionList.stream()
+                            .map(a -> {
+                                DimensionDimDTO dimension = new DimensionDimDTO();
+                                dimension.setDimensionId(a.getId());
+                                dimension.setDimensionCnName(a.getDimensionCnName());
+                                dimension.setFlag(8);
+                                dimension.setPid(e.getId());
+                                return dimension;
+                            }).collect(Collectors.toList());
+
+                    List<BusinessProcessPO> businessProcessList = this.queryBusinessProcess(e.getId());
+                    if (CollectionUtils.isEmpty(businessProcessList)) {
+                        return null;
+                    }
+
+                    // 二级 业务过程
+                    List<BusinessProcessDimDTO> businessProcessDtoList = businessProcessList.stream()
+                            .map(b -> {
+                                BusinessProcessDimDTO businessProcess = new BusinessProcessDimDTO();
+                                businessProcess.setBusinessProcessId(b.getId());
+                                businessProcess.setBusinessProcessCnName(b.getBusinessProcessCnName());
+
+                                List<FactPO> factList = this.queryFact(b.getId());
+                                if (CollectionUtils.isEmpty(factList)) {
+                                    return null;
+                                }
+
+                                List<FactDimDTO> factDtoList = factList.stream()
+                                        .map(c -> {
+                                            FactDimDTO fact = new FactDimDTO();
+                                            fact.setFactId(c.getId());
+                                            fact.setFactTableEnName(c.getFactTableEnName());
+                                            fact.setFlag(10);
+                                            fact.setPid(b.getId());
+                                            return fact;
+                                        }).collect(Collectors.toList());
+                                businessProcess.setFlag(9);
+                                businessProcess.setPid(e.getId());
+                                businessProcess.setFactList(factDtoList);
+                                return businessProcess;
+                            }).collect(Collectors.toList());
+
+                    dto.setFlag(7);
+                    dto.setDimensionList(dimensionDtoList);
+                    dto.setBusinessProcessList(businessProcessDtoList);
+                    return dto;
+                }).collect(Collectors.toList());
+
+        return areaBusinessDTOList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据业务域id查询维度表
+     * @param businessId
+     * @return
+     */
+    public List<DimensionPO> getDimension(Long businessId){
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
+                .eq(DimensionPO::getBusinessId,businessId)
                 .select(DimensionPO::getId,DimensionPO::getDimensionCnName);
 
         List<DimensionPO> dimensionList = dimensionMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(dimensionList)){
             return null;
+        }else {
+            return dimensionList;
         }
-
-        return dimensionList.stream()
-                .map(e -> {
-                    DimensionNameDTO dto = new DimensionNameDTO();
-                    dto.setDimensionId(e.getId());
-                    dto.setDimensionCnName(e.getDimensionCnName());
-                    dto.setFlag(2);
-                    return dto;
-                }).collect(Collectors.toList());
     }
-
-
 
     @Override
     public List<AreaBusinessNameDTO> getBusiness(){
