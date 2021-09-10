@@ -73,10 +73,17 @@ public class PhysicalTableController {
      * @return 返回值
      */
     @GetMapping("/getFields/{appName}")
-    @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段(非实时)")
+    @ApiOperation(value = "根据应用名称,获取物理表名及表对应的字段")
     public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFields(appName));
+    }
+
+    @GetMapping("/getTableNameByAppId")
+    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    public ResultEntity<Object> queryNonRealTimeTable(@RequestParam("appId") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableName(id));
     }
 
 

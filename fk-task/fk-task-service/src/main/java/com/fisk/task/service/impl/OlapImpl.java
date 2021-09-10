@@ -100,7 +100,7 @@ public class OlapImpl implements IOlap {
         StringBuilder sql=new StringBuilder();
         //聚合key
         List<String> aggregateKeys=new ArrayList<>();
-        sql.append("CREATE TABLE");
+        sql.append("CREATE TABLE ");
         sql.append(dto.factTable);
         sql.append(" ( ");
         //维度字段
@@ -110,6 +110,7 @@ public class OlapImpl implements IOlap {
         });
         //聚合字段
         dto.list.stream().filter(e->e.attributeType==1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", "));
+
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
             String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"`").collect(Collectors.joining(","));

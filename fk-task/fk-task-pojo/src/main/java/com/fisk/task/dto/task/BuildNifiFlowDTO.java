@@ -12,4 +12,5 @@ import lombok.EqualsAndHashCode;
 public class BuildNifiFlowDTO extends MQBaseDTO {
     public Long id;
     public Long appId;
+    public String tableName;
 }

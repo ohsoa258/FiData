@@ -8,6 +8,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
+import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
@@ -118,6 +119,76 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             return BusinessResult.of(false, "创建连接池失败: " + e.getMessage(), null);
         }
     }
+    //创建AvroRecordSetWriter
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BaseProcessorDTO data) {
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(5);
+
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.AVRORECORDSETWRITER.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+                BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+                if (model.success) {
+                    return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+                } else {
+                    return BusinessResult.of(false, model.msg, null);
+                }
+        } catch (ApiException e) {
+            log.error("创建AvroRecordSetWriter失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建AvroRecordSetWriter失败: " + e.getMessage(), null);
+        }
+    }
+
+    //创建AvroReader
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ControllerServiceEntity> buildAvroReaderService(BaseProcessorDTO data) {
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(5);
+
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.AVROREADER.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+            BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+            if (model.success) {
+                return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+            } else {
+                return BusinessResult.of(false, model.msg, null);
+            }
+        } catch (ApiException e) {
+            log.error("创建AvroReader失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建AvroReader失败: " + e.getMessage(), null);
+        }
+    }
+
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -270,7 +341,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             config.setSchedulingStrategy(data.scheduleType.getName());
         }
         if (StringUtils.isNotEmpty(data.scheduleExpression)) {
-            config.setSchedulingPeriod(data.scheduleExpression);
+            if (Objects.equals(data.scheduleType.getName(), SchedulingStrategyTypeEnum.TIMER.getName())) {
+                config.setSchedulingPeriod(data.scheduleExpression + " sec");
+            } else {
+                config.setSchedulingPeriod(data.scheduleExpression);
+            }
         }
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoEnd);
@@ -496,6 +571,67 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         entity.setRevision(NifiHelper.buildRevisionDTO());
 
         return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcess(ExecuteSQLRecordDTO executeSQLRecordDTO) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>();
+        map.put("Database Connection Pooling Service",executeSQLRecordDTO.databaseConnectionPoolingService);
+        map.put("esqlrecord-record-writer",executeSQLRecordDTO.recordwriter);
+        map.put("esql-max-rows",executeSQLRecordDTO.maxRowsPerFlowFile);
+        map.put("esql-output-batch-size",executeSQLRecordDTO.outputBatchSize);
+        map.put("esql-fetch-size",executeSQLRecordDTO.FetchSize);
+        map.put("SQL select query",executeSQLRecordDTO.sqlSelectQuery);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(executeSQLRecordDTO.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(executeSQLRecordDTO.name);
+        dto.setType(ProcessorTypeEnum.ExecuteSQLRecord.getName());
+        dto.setPosition(executeSQLRecordDTO.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(executeSQLRecordDTO.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildPutDatabaseRecordProcess(PutDatabaseRecordDTO putDatabaseRecordDTO) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoRes.add(AutoEndBranchTypeEnum.RETRY.getName());
+        Map<String, String> map = new HashMap<>();
+        map.put("put-db-record-record-reader",putDatabaseRecordDTO.recordReader);
+        map.put("db-type",putDatabaseRecordDTO.databaseType);
+        map.put("put-db-record-statement-type",putDatabaseRecordDTO.statementType);
+        map.put("put-db-record-dcbp-service",putDatabaseRecordDTO.databaseConnectionPoolingService);
+        map.put("put-db-record-table-name",putDatabaseRecordDTO.TableName);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setConcurrentlySchedulableTaskCount(Integer.valueOf(putDatabaseRecordDTO.concurrentTasks));
+        config.setComments(putDatabaseRecordDTO.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(putDatabaseRecordDTO.name);
+        dto.setType(ProcessorTypeEnum.PutDatabaseRecord.getName());
+        dto.setPosition(putDatabaseRecordDTO.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(putDatabaseRecordDTO.groupId, entity, dto, config);
     }
 
     @Override

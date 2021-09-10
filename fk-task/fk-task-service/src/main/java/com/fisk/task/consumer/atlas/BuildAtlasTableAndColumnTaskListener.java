@@ -36,10 +36,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static com.cronutils.model.CronType.QUARTZ;
 
@@ -74,7 +71,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
         awbd.appId=inpData.appId;
-        awbd.tableName= ae.appAbbreviation+"_stg_"+ae.tableName;
+        awbd.tableName= ae.appAbbreviation+"_"+ae.tableName;
         //设置日期格式
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region atlas创建表
@@ -208,6 +205,8 @@ public class BuildAtlasTableAndColumnTaskListener {
         //endregion
 
         //incremental insert
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
         if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
             //region 用户corn表达书计算数据下次同步时间
             String expressiion= ae.cornExpress;
@@ -226,11 +225,9 @@ public class BuildAtlasTableAndColumnTaskListener {
                     System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d));
                 });
             };
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
-            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.object_name=ae.appAbbreviation+"_"+ae.tableName;
             ETLIncremental.enable_flag="1";
-            ETLIncremental.incremental_objectivescore_batchno="";
+            ETLIncremental.incremental_objectivescore_batchno= UUID.randomUUID().toString();;
             Date startdate = null;
             try {
                 // 注意格式需要与上面一致，不然会出现异常
@@ -243,11 +240,9 @@ public class BuildAtlasTableAndColumnTaskListener {
             incrementalMapper.insert(ETLIncremental);
         }
         else{
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
-            ETLIncremental.object_name=ae.tableName;
+            ETLIncremental.object_name=ae.appAbbreviation+"_"+ae.tableName;;
             ETLIncremental.enable_flag="1";
-            ETLIncremental.incremental_objectivescore_batchno="";
+            ETLIncremental.incremental_objectivescore_batchno=UUID.randomUUID().toString();;
             Date startdate = null;
             try {
                 // 注意格式需要与上面一致，不然会出现异常
@@ -267,6 +262,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
+        bfd.tableName=ae.tableName;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

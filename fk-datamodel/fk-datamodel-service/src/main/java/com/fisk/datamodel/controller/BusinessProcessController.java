@@ -74,5 +74,11 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPush(id));
     }
 
+    @ApiOperation("修改业务过程发布状态")
+    @PutMapping("/editBusinessProcessPublishStatus")
+    public void editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
+        service.updatePublishStatus(id,isSuccess);
+    }
+
 
 }
