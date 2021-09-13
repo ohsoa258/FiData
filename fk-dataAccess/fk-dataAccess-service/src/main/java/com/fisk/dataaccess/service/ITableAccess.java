@@ -174,4 +174,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return TableNameAndFieldDTO
      */
     List<TableNameDTO> getTableName(long id);
+
+    /**
+     * 根据表id获取表详情
+     * @param id
+     * @return
+     */
+    TableAccessDTO getTableAccess(int id);
+
 }

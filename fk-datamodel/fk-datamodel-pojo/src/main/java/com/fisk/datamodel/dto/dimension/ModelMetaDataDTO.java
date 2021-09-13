@@ -23,6 +23,10 @@ public class ModelMetaDataDTO {
      */
     public String appbAbreviation;
     /**
+     * 维度来源表名称(ODS)
+     */
+    public String sourceTableName;
+    /**
      * 维度字段列表
      */
     public List<ModelAttributeMetaDataDTO> dto;

@@ -8,6 +8,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
@@ -187,10 +188,17 @@ public class DimensionAttributeImpl
         }
         data.tableName =po.dimensionTabName;
         data.id=po.id;
+        //获取注册表相关数据
         ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
         {
             data.appbAbreviation=appAbbreviation.data.appAbbreviation;
+        }
+        //获取来源表相关数据
+        ResultEntity<TableAccessDTO> tableAccess = client.getTableAccess(po.tableSourceId);
+        if (tableAccess.code==ResultEnum.SUCCESS.getCode() || tableAccess.data !=null)
+        {
+            data.sourceTableName=tableAccess.data.tableName;
         }
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
