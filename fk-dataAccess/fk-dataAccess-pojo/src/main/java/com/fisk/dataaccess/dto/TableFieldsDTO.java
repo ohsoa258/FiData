@@ -90,9 +90,6 @@ public class TableFieldsDTO extends BaseDTO {
         super(entity);
     }
 
-    public TableFieldsDTO() {
-
-    }
 
     /**
      * 将PO集合转为DTO对象
