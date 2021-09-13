@@ -111,7 +111,7 @@ public interface DataAccessClient {
      * @param id 请求参数
      * @return 返回值
      */
-    @GetMapping("/getData/get/{id}")
+    @GetMapping("/appRegistration/get/{id}")
     @ApiOperation(value = "回显")
     public ResultEntity<AppRegistrationDTO> getData(
             @PathVariable("id") long id);
