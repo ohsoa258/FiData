@@ -6,9 +6,16 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class DimensionDTO {
+public class
+
+
+DimensionDTO {
     public int id;
     public int businessId;
+    /**
+     * 应用id
+     */
+    public int appId;
     public int tableSourceId;
     public String dimensionCnName;
     public String dimensionEnName;

@@ -19,6 +19,10 @@ public class DimensionPO extends BasePO {
      */
     public int businessId;
     /**
+     * 应用id
+     */
+    public int appId;
+    /**
      * 来源表id
      */
     public int tableSourceId;
