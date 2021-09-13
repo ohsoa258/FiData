@@ -253,9 +253,9 @@ public class BuildDataModelDorisTableListener {
         storedProcedureSql+= "mysql1 text;\nmysql2 text;\nresrow1 record;\ngeshu text;\ninsert_sql TEXT;\n update_sql TEXT;\n";
         storedProcedureSql+="begin\n";
         storedProcedureSql+="mysql1:='"+selectSql(modelMetaDataDTO)+"';\n";
-        storedProcedureSql+="mysql2:='select case when count(*)>0 THEN ''y'' ELSE ''n'' end from "+modelMetaDataDTO.tableName+" where "+modelMetaDataDTO.tableName+"_pk=';\n";
         storedProcedureSql+="FOR resrow1 IN EXECUTE mysql1\n";
         storedProcedureSql+="LOOP\n";
+        storedProcedureSql+="mysql2:='select case when count(*)>0 THEN ''y'' ELSE ''n'' end from "+modelMetaDataDTO.tableName+" where "+modelMetaDataDTO.tableName+"_pk=';\n";
         storedProcedureSql+="mysql2:=mysql2 ||''''|| resrow1."+modelMetaDataDTO.tableName+"_pk||'''';\n";
         storedProcedureSql+="raise notice'%',mysql2;";
         storedProcedureSql+="EXECUTE mysql2 into geshu;\n";
@@ -264,14 +264,15 @@ public class BuildDataModelDorisTableListener {
         storedProcedureSql+="insert_sql:='insert into "+modelMetaDataDTO.tableName+"( "+modelMetaDataDTO.tableName+"_pk,";
         for (String field:fieldEnNames) {
             fieldString+=field+",";
-            fieldValue+="'||resrow1."+field+"||',";
-            fieldUpdate+=field+"='||resrow1."+field+"||',";
+            fieldValue+="'''||resrow1."+field+"||''',";
+            fieldUpdate+=field+"='''||resrow1."+field+"||''',";
         }
         fieldString=fieldString.substring(0,fieldString.length()-1);
         fieldValue=fieldValue.substring(0,fieldValue.length()-1)+")';\n";
-        fieldUpdate=fieldUpdate.substring(0,fieldUpdate.length()-1)+" where "+modelMetaDataDTO.tableName+"_pk= '||resrow1."+modelMetaDataDTO.tableName+"_pk||'';\n";
+        fieldUpdate=fieldUpdate.substring(0,fieldUpdate.length()-1)+" where "+modelMetaDataDTO.tableName+"_pk= '''||resrow1."+modelMetaDataDTO.tableName+"_pk||'''';\n";
         storedProcedureSql+=fieldString+" ) values ( '''||resrow1."+modelMetaDataDTO.tableName+"_pk||''',";
         storedProcedureSql+=fieldValue;
+        storedProcedureSql+="EXECUTE insert_sql;\n";
         storedProcedureSql+="else\n";
         storedProcedureSql+="update_sql:='update "+modelMetaDataDTO.tableName+" set "+fieldUpdate;//塞字段,慢慢塞吧
         storedProcedureSql+="EXECUTE update_sql;\n";
@@ -318,9 +319,9 @@ public class BuildDataModelDorisTableListener {
         }
         selectSql1=selectSql1.substring(0,selectSql1.length()-1)+" from ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName;
         selectSql=selectSql+selectSql1+selectSql2;
-        selectSql="'select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
+        selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
         selectSql3=modelMetaDataDTO.tableName+"_pk varchar,"+selectSql3;
-        selectSql=selectSql+selectSql3+selectSql4+")'";
+        selectSql=selectSql+selectSql3+selectSql4+")";
         return selectSql;
     }
 
