@@ -654,8 +654,8 @@ public class BuildNifiTaskListener {
         Date date = cron.next(d);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         cronNextTime = sdf.format(date);
-        String executsql="call nifi_update_etl_log_and_Incremental(";
-        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+",2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}',"+cronNextTime+")";
+        String executsql="call nifi_update_etl_log_and_Incremental('";
+        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+"',2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}','"+cronNextTime+"')";
         callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql=executsql;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(10);

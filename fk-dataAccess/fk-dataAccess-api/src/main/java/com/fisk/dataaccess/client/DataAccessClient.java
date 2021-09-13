@@ -1,16 +1,14 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Lock
@@ -94,7 +92,12 @@ public interface DataAccessClient {
      */
     @PostMapping("/physicalTable/addComponentId")
     public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto);
-
+    /**
+     * getTableField
+     *
+     * @param id
+     * @return
+     */
     @PostMapping("/tableFields/getTableField")
     public ResultEntity<Object> getTableField(@RequestParam("id") int id);
 }

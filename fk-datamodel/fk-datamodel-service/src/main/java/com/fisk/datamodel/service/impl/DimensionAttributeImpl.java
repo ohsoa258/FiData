@@ -6,6 +6,8 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
@@ -46,6 +48,8 @@ public class DimensionAttributeImpl
     UserHelper userHelper;
     @Resource
     BusinessAreaMapper businessAreaMapper;
+    @Resource
+    DataAccessClient client;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()

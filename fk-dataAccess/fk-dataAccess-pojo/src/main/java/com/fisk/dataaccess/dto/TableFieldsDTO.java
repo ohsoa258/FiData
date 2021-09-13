@@ -76,6 +76,10 @@ public class TableFieldsDTO extends BaseDTO {
      * 1是时间戳，0非时间戳
      */
     public int isTimestamp;
+    /**
+     * 应用简写
+     */
+    public String appbAbreviation;
 
     /**
      * 1：实时物理表的字段，0：非实时物理表的字段
@@ -84,6 +88,10 @@ public class TableFieldsDTO extends BaseDTO {
 
     public TableFieldsDTO(BaseEntity entity) {
         super(entity);
+    }
+
+    public TableFieldsDTO() {
+
     }
 
     /**
