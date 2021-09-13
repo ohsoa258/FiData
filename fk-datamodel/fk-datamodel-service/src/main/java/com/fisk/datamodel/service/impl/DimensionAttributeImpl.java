@@ -43,12 +43,6 @@ public class DimensionAttributeImpl
     @Resource
     DimensionAttributeMapper attributeMapper;
     @Resource
-    PublishTaskClient publishTaskClient;
-    @Resource
-    UserHelper userHelper;
-    @Resource
-    BusinessAreaMapper businessAreaMapper;
-    @Resource
     DataAccessClient client;
 
     @Override
@@ -193,6 +187,11 @@ public class DimensionAttributeImpl
         }
         data.tableName =po.dimensionTabName;
         data.id=po.id;
+        ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
+        if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
+        {
+            data.appbAbreviation=appAbbreviation.data.appAbbreviation;
+        }
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
         List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();

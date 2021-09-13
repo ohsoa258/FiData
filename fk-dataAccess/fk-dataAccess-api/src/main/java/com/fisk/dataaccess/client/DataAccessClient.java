@@ -1,12 +1,15 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -100,4 +103,17 @@ public interface DataAccessClient {
      */
     @PostMapping("/tableFields/getTableField")
     public ResultEntity<Object> getTableField(@RequestParam("id") int id);
+
+
+    /**
+     * 根据id查询数据,用于数据回显
+     *
+     * @param id 请求参数
+     * @return 返回值
+     */
+    @GetMapping("/getData/get/{id}")
+    @ApiOperation(value = "回显")
+    public ResultEntity<AppRegistrationDTO> getData(
+            @PathVariable("id") long id);
+
 }
