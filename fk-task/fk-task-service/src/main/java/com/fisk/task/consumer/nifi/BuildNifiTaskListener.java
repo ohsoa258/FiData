@@ -394,6 +394,10 @@ public class BuildNifiTaskListener {
         //用组件,调存储过程把stg里的数据向ods里面插入
         ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId);
         componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
+        //更新日志
+        ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
+        //连接器
+        componentConnector(groupId, processorEntity1.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
         List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
@@ -405,6 +409,7 @@ public class BuildNifiTaskListener {
         res.add(putDatabaseRecord);
         res.add(mergeRes);
         res.add(processorEntity1);
+        res.add(processorEntity);
         return res;
     }
 
@@ -649,11 +654,11 @@ public class BuildNifiTaskListener {
         Date date = cron.next(d);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         cronNextTime = sdf.format(date);
-        String executsql="call nifi_update_etl_log_and_Incremental(";
-        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+",2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}',"+cronNextTime+")";
+        String executsql="call nifi_update_etl_log_and_Incremental('";
+        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+"',2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}','"+cronNextTime+"')";
         callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql=executsql;
-        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(14);
+        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(10);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;

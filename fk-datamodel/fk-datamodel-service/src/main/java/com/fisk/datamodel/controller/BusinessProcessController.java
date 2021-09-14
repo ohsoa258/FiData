@@ -76,7 +76,7 @@ public class BusinessProcessController {
 
     @ApiOperation("修改业务过程发布状态")
     @PutMapping("/editBusinessProcessPublishStatus")
-    public void editBusinessProcessPublishStatus(int id,int isSuccess) {
+    public void editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
         service.updatePublishStatus(id,isSuccess);
     }
 

@@ -110,7 +110,8 @@ public class TestController {
     @PostMapping("/testDorisBuildtable")
     public void publishBuildDorisTableTask() {
         DimensionAttributeAddDTO tab = new DimensionAttributeAddDTO();
-        tab.dimensionId=8;
+        tab.dimensionId=18;
+        //tab.dimensionId=144;
         tab.createType=1;
         tab.userId = 60L;
         service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);

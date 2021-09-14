@@ -52,8 +52,8 @@ public interface DataModelClient {
      * @param id
      * @return 执行结果
      */
-    @GetMapping("/businessProcess/getBusinessProcessFact")
-    ResultEntity<Object> getBusinessProcessFact(@RequestParam("id") int id);
+    @GetMapping("/businessProcess/getBusinessProcessFact/{id}")
+    ResultEntity<Object> getBusinessProcessFact(@PathVariable("id") int id);
 
     /**
      * 获取事实表下所有原子指标以及事实表关联维度
@@ -77,7 +77,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/dimension/editPublishStatus")
-    ResultEntity<Object> editPublishStatus(int id,int isSuccess);
+    ResultEntity<Object> editPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
     /**
      *更改业务过程发布状态
@@ -85,7 +85,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/businessProcess/editBusinessProcessPublishStatus")
-    ResultEntity<Object> editBusinessProcessPublishStatus(int id,int isSuccess);
+    ResultEntity<Object> editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
     /**
      * 根据业务域id获取相关维度以及原子指标

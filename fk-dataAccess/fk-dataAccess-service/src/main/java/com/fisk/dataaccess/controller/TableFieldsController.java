@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
@@ -27,8 +28,8 @@ public class TableFieldsController {
      */
     @PostMapping("/getTableField")
     @ApiOperation(value = "查询表字段")
-    public ResultEntity<TableFieldsPO> getTableField(@RequestParam("id") int id) {
+    public ResultEntity<TableFieldsDTO> getTableField(@RequestParam("id") int id) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iTableFields.getById(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iTableFields.getTableField(id));
     }
 }

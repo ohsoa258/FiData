@@ -7,9 +7,9 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@TableName("tb_msg_log")
+@TableName("tb_task_dw_dim")
 public class TaskDwDimPO extends BasePO {
-public String areaBusinessBame;
+public String areaBusinessName;
 public String tableName;
 public String sqlContent;
 public String storedProcedureName;

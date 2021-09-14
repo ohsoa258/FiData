@@ -1194,4 +1194,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         list.add(dto);
     }
 
+    @Override
+    public TableAccessDTO getTableAccess(int id)
+    {
+        TableAccessDTO dto=new TableAccessDTO();
+        TableAccessPO po=accessMapper.selectById(id);
+        if (po==null)
+        {
+            return dto;
+        }
+        return dto=TableAccessMap.INSTANCES.poToDto(po);
+    }
+
 }

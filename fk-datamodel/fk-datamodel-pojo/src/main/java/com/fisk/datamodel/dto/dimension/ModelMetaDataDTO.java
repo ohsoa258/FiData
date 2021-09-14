@@ -19,10 +19,20 @@ public class ModelMetaDataDTO {
      */
     public String tableName;
     /**
+     * 维度表table简称前缀名称
+     */
+    public String appbAbreviation;
+    /**
+     * 维度来源表名称(ODS)
+     */
+    public String sourceTableName;
+    /**
      * 维度字段列表
      */
     public List<ModelAttributeMetaDataDTO> dto;
-
+    //处理后的表字段
     public List<String> fieldEnNames;
+    //存放存储过程名称
+    public String sqlName;
 
 }

@@ -264,4 +264,16 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMeta());
     }
 
+    /**
+     * 根据表id，获取表详情
+     *
+     * @param id 请求参数
+     * @return 返回值
+     */
+    @GetMapping("/getTableAccess/{id}")
+    @ApiOperation("修改接口的回显数据")
+    public ResultEntity<TableAccessDTO> getTableAccess(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccess(id));
+    }
+
 }

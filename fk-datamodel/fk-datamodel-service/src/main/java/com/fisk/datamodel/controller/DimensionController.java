@@ -75,7 +75,7 @@ public class DimensionController {
 
     @ApiOperation("修改维度发布状态")
     @PutMapping("/editPublishStatus")
-    public void editPublishStatus(int id,int isSuccess) {
+    public void editPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
         service.updatePublishStatus(id,isSuccess);
     }
 
