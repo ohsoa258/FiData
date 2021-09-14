@@ -104,21 +104,21 @@ public class OlapImpl implements IOlap {
         sql.append(dto.factTable);
         sql.append(" ( ");
         //维度字段
-        dto.list.stream().filter(e->e.attributeType!=1).forEach(e->{
+        dto.list.stream().filter(e->e.attributeType==1).forEach(e->{
             sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT \"\", \n");
             aggregateKeys.add(e.dimensionTableName);
         });
         //聚合字段
-        dto.list.stream().filter(e->e.attributeType==1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", "));
-
+        dto.list.stream().filter(e->e.attributeType!=1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", "));
+        sql.deleteCharAt(sql.length()-2);
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
             String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"`").collect(Collectors.joining(","));
             //排序字段
             sql.append(" DUPLICATE KEY ("+aggregateKeysSql+") ");
             sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 10");
-            sql.append(" PROPERTIES(\"replication_num\" = \"1\")");
         }
+        sql.append(" PROPERTIES(\"replication_num\" = \"1\")");
         return sql.toString();
     }
 
@@ -134,14 +134,14 @@ public class OlapImpl implements IOlap {
         dto.list.forEach(e->{
             if(e.attributeType==0){
                 aggregationFunSql.append(e.aggregationLogic);
-                aggregationFunSql.append("(");
+                aggregationFunSql.append("(\"");
                 aggregationFunSql.append(e.aggregatedField);
-                aggregationFunSql.append(") AS ");
+                aggregationFunSql.append("\") AS ");
                 aggregationFunSql.append(e.atomicIndicatorName);
                 aggregationFunSql.append(" ,");
             }else {
-                groupSql.append("`"+e.dimensionTableName+"_key` , ");
-                aggregationFunSql.append("`"+e.dimensionTableName+"_key` AS `"+e.dimensionTableName+"` , ");
+                groupSql.append("\""+e.dimensionTableName+"_key\" , ");
+                aggregationFunSql.append("\""+e.dimensionTableName+"_key\" AS \""+e.dimensionTableName+"\" , ");
             }
         });
         if (aggregationFunSql.length()>0){
@@ -152,9 +152,9 @@ public class OlapImpl implements IOlap {
         }
         sql.append("SELECT ");
         sql.append(aggregationFunSql);
-        sql.append(" FROM `");
+        sql.append(" FROM ");
         sql.append(dto.factTable);
-        sql.append("` ");
+        sql.append(" ");
         if (groupSql.length()>0){
             groupSql.deleteCharAt(groupSql.length()-1);
             sql.append("GROUP BY ");
