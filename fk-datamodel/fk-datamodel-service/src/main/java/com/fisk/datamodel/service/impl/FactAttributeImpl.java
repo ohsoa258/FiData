@@ -158,6 +158,7 @@ public class FactAttributeImpl
             dto.fieldLength = item.factFieldLength;
             dto.fieldType = item.factFieldType;
             dto.fieldCnName = item.factFieldCnName;
+            dto.sourceFieldId=item.tableSourceFieldId;
             //判断是否为关联维度
             if (item.attributeType == DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
