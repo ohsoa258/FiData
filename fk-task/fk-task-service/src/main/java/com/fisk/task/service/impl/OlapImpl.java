@@ -119,7 +119,6 @@ public class OlapImpl implements IOlap {
             sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 10");
             sql.append(" PROPERTIES(\"replication_num\" = \"1\")");
         }
-
         return sql.toString();
     }
 
