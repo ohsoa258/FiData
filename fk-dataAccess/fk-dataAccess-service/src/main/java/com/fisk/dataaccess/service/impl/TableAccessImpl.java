@@ -653,7 +653,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
-                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,dbName);
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
                 break;
             default:
                 break;
@@ -911,7 +911,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     /**
      * nifi流程
-     * @param id 物理表id
+     *
+     * @param id    物理表id
      * @param appid 应用注册id
      * @return
      */
@@ -990,7 +991,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
-        if (modelSync.syncField!=null) {
+        if (modelSync.syncField != null) {
             // 增量字段
             processorConfig.syncField = modelSync.syncField;
         }
@@ -1173,16 +1174,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableNameDTO> listTableName = baseMapper.listTableNameByAppId(id);
 
         // 根据tb_access_id获取表字段及id
-        listTableName.forEach(tableNameDTO -> {
+        for (TableNameDTO tableNameDTO : listTableName) {
             getTableFieldsById(list, tableNameDTO);
-        });
+        }
 
         return list;
     }
 
     /**
      * 封装物理表及字段
-     * @param list list
+     *
+     * @param list         list
      * @param tableNameDTO tableNameDTO
      */
     private void getTableFieldsById(List<TableNameDTO> list, TableNameDTO tableNameDTO) {
@@ -1195,15 +1197,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public TableAccessDTO getTableAccess(int id)
-    {
-        TableAccessDTO dto=new TableAccessDTO();
-        TableAccessPO po=accessMapper.selectById(id);
-        if (po==null)
-        {
+    public TableAccessDTO getTableAccess(int id) {
+        TableAccessDTO dto = new TableAccessDTO();
+        TableAccessPO po = accessMapper.selectById(id);
+        if (po == null) {
             return dto;
         }
-        return dto=TableAccessMap.INSTANCES.poToDto(po);
+        return dto = TableAccessMap.INSTANCES.poToDto(po);
     }
 
 }

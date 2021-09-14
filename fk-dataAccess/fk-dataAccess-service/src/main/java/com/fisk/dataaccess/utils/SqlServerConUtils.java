@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.utils;
 
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -19,17 +20,18 @@ public class SqlServerConUtils {
     private static Statement stmt = null;
 
     /**
-     * 查询获取数据库所有表名
+     * 获取SQL server具体库中所有表名
      *
-     * @param conn conn
-     * @return 表名
+     * @param conn   连接通道
+     * @param dbName 库名
+     * @return tableName集合
      */
-    public List<String> getTables(Connection conn,String dbName) {
+    public List<String> getTables(Connection conn, String dbName) {
         ArrayList<String> tableList = null;
         try {
             Statement stmt = conn.createStatement();
 
-            ResultSet resultSet = stmt.executeQuery("SELECT name FROM "+dbName+"..sysobjects Where xtype='U' ORDER BY name");
+            ResultSet resultSet = stmt.executeQuery("SELECT name FROM " + dbName + "..sysobjects Where xtype='U' ORDER BY name");
             tableList = new ArrayList<>();
             while (resultSet.next()) {
                 tableList.add(resultSet.getString("name"));
@@ -45,42 +47,44 @@ public class SqlServerConUtils {
 
 
     /**
-     * 查询获取数据库表的所有字段
+     * 根据tableName获取tableFields
      *
      * @param tableName tableName
-     * @return 表字段
+     * @return tableName中的表字段
      */
-    public List<String> getColumnsName(String tableName) {
-        List<String> colNameList = null;
+    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName) {
+        List<TableStructureDTO> colNameList = null;
         try {
-            // SELECT * FROM syscolumns WHERE id=Object_Id('表名');
-            ResultSet resultSet = stmt.executeQuery("SELECT name FROM syscolumns WHERE id=Object_Id('" + tableName + "');");
-
             colNameList = new ArrayList<>();
 
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
             while (resultSet.next()) {
-
-                String name = resultSet.getString("name");
-                colNameList.add(name);
+                TableStructureDTO dto = new TableStructureDTO();
+                dto.fieldName = resultSet.getString("COLUMN_NAME");
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+                dto.fieldDes = resultSet.getString("REMARKS");
+                colNameList.add(dto);
             }
-//            System.out.println(colNameList);
 
-            return colNameList;
         } catch (Exception e) {
             log.error("【getColumnsName】获取表字段报错, ex", e);
             return null;
         }
+        return colNameList;
     }
 
     /**
-     * 获取表及表字段
+     * 根据库名获取下属表及表字段
      *
      * @param url      url
      * @param user     user
      * @param password password
-     * @return 表及表字段
+     * @param dbName   库名
+     * @return 下属表及表字段
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password,String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, String dbName) {
 
         List<TablePyhNameDTO> list = null;
 
@@ -88,16 +92,17 @@ public class SqlServerConUtils {
             //1.加载驱动程序
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             //2.获得数据库的连接
-            conn = (Connection) DriverManager.getConnection(url, user, password);
+            conn = DriverManager.getConnection(url, user, password);
             stmt = conn.createStatement();
             list = new ArrayList<>();
 
             // 获取指定数据库所有表
-            List<String> tableNames = this.getTables(conn,dbName);
+            List<String> tableNames = this.getTables(conn, dbName);
 
             int tag = 0;
             for (String tableName : tableNames) {
-                List<String> columnsName = getColumnsName(tableName);
+                // 获取字段名
+                List<TableStructureDTO> columnsName = getColumnsName(conn, tableName);
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(columnsName);

@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.test;
 
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 /**
  * @author: Lock
- *
+ * <p>
  * JDBC获取所有表及获取表所有字段
  */
 @SpringBootTest
@@ -30,19 +31,19 @@ public class MysqlTest {
         System.out.println("====================================================");
         Statement st = conn.createStatement();
 
-        Map<String, List<String>> map = new HashMap<>();
-        for (String tableName : tableNames) {
-            ResultSet rs = st.executeQuery("select * from "+tableName);
+        Map<String, List<TableStructureDTO>> map = new HashMap<>();
+//        for (String tableName : tableNames) {
+        ResultSet rs = st.executeQuery("select * from tb_table_syncmode");
 //            System.out.print(tableName+":  ");
-            List<String> colNames = getColNames(rs);
+        List<TableStructureDTO> colNames = getColNames(rs);
 //            System.out.println(colNames);
 
 //            System.out.println("==================================================");
 
-            map.put(tableName, colNames);
+        map.put("tb_table_syncmode", colNames);
 //            System.out.println(map);
-            rs.close();
-        }
+        rs.close();
+//        }
         System.out.println(map);
 
 //        ResultSet rs = st.executeQuery("select * from tb_table_access");
@@ -62,7 +63,9 @@ public class MysqlTest {
         conn.close();
     }
 
-    /**获取数据库中所有表名称
+    /**
+     * 获取数据库中所有表名称
+     *
      * @param conn
      * @return
      * @throws SQLException
@@ -77,11 +80,13 @@ public class MysqlTest {
         return tablesList;
     }
 
-    /**获取表中所有字段名称
+    /**
+     * 获取表中所有字段名称
+     *
      * @param rs
      * @throws SQLException
      */
-    private List<String> getColNames(ResultSet rs) throws SQLException {
+    private List<TableStructureDTO> getColNames(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         int count = metaData.getColumnCount();
 /*
@@ -98,9 +103,30 @@ public class MysqlTest {
 //        System.out.println("getSchemaName(int column) 获取指定列的表模式。 "+metaData.getSchemaName(1));
         System.out.println("getTableName(int column) 获取指定列的名称。 "+metaData.getTableName(1));
 */
-        List<String> colNameList = new ArrayList<String>();
-        for(int i = 1; i<=count; i++){
-            colNameList.add(metaData.getColumnName(i));
+        while (rs.next()) {
+
+            String comment = rs.getString("name");
+            System.out.println("测试注释" + comment);
+        }
+
+        List<TableStructureDTO> colNameList = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+
+            TableStructureDTO tableStructureDTO = new TableStructureDTO();
+
+            tableStructureDTO.fieldName = metaData.getColumnName(i);
+            tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
+            tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+
+//            colNameList.add(metaData.getColumnName(i));
+            colNameList.add(tableStructureDTO);
+
+//            System.out.println("字段名称" + metaData.getColumnName(i));
+            // 与原表的结构可能不一致
+//            System.out.println("字段类型" + metaData.getColumnTypeName(i));
+            // 列的正常最大宽度(与原表的结构可能不一致)
+//            System.out.println("字段长度" + metaData.getColumnDisplaySize(i));
+            System.out.println("---------------");
         }
         // 打印
 //        System.out.println(colNameList);
