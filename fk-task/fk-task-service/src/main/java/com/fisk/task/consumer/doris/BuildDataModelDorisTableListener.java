@@ -307,11 +307,11 @@ public class BuildDataModelDorisTableListener {
                 //这里要改,前缀
                 selectSql1+="ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable+"."+tableFieldsDTO.appbAbreviation+d.associationTable+"_pk,";
                 //别名我说的算
-                selectSql4+=d.associationTable+"_pk,  varchar";
+                selectSql4+=d.associationTable+"_pk  varchar,";
             }
             if(d.associationField!=null){
                 //这里要改,前缀
-                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable+" on "+d.associationTable+"."+d.associationField+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName;
+                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+"."+d.associationField+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName;
             }
         }
         if(Objects.equals(selectSql1," ")){
@@ -322,7 +322,7 @@ public class BuildDataModelDorisTableListener {
         selectSql=selectSql+selectSql1+selectSql2;
         selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
         selectSql3=modelMetaDataDTO.tableName+"_pk varchar, fk_doris_increment_code varchar,"+selectSql3;
-        selectSql=selectSql+selectSql3+selectSql4+")";
+        selectSql=selectSql+selectSql3+selectSql4.substring(0,selectSql4.length()-1)+")";
         return selectSql;
     }
 

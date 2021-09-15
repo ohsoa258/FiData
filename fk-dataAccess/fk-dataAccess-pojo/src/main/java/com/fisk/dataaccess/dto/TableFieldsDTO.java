@@ -80,6 +80,10 @@ public class TableFieldsDTO extends BaseDTO {
      * 应用简写
      */
     public String appbAbreviation;
+    /**
+     * 原表名
+     */
+    public String originalTableName;
 
     /**
      * 1：实时物理表的字段，0：非实时物理表的字段
