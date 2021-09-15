@@ -112,6 +112,7 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
+        po.factAttributeId=dto.factAttributeId;//聚合字段id
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
