@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.filter.dto.FilterFieldDTO;
@@ -32,6 +33,7 @@ import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -97,6 +99,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GetMetadata getMetadata;
     @Resource
     private NifiSettingImpl getNifiSettingImpl;
+    @Resource
+    private TableSyncmodeImpl tableSyncmodeImpl;
+    @Resource
+    private EtlIncrementalMapper etlIncrementalMapper;
 
     /**
      * 添加物理表(实时)
@@ -951,8 +957,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 选择驱动类型
         if (Objects.equals(modelDataSource.driveType, "sqlserver")) {
             sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
-        } else {
+        } else if(Objects.equals(modelDataSource.driveType,"mysql")){
             sourceDsConfig.setType(DriverTypeEnum.MYSQL);
+        }else if(Objects.equals(modelDataSource.driveType,"postgreSQL")){
+            sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
@@ -1044,6 +1052,56 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.cfgDsConfig = cfgDsConfig;
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
+    }
+    public TableAccessPO insertTableAccessPO(TableAccessPO tableAccessPO){
+        accessMapper.insertTableAccessPO(tableAccessPO);
+        return tableAccessPO;
+    }
+
+    @Override
+    public BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql){
+        //添五张表tb_app_registration  tb_app_datasource   tb_table_access  tb_nifi_setting; tb_etl_Incremental
+        BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
+        AppRegistrationPO appRegistrationPO = new AppRegistrationPO();
+        AppDataSourcePO appDataSourcePO = new AppDataSourcePO();
+        TableAccessPO tableAccessPO = new TableAccessPO();
+        TableSyncmodePO tableSyncmodePO = new TableSyncmodePO();
+        NifiSettingPO nifiSettingPO = new NifiSettingPO();
+        appRegistrationPO.appName="postgerToDoris";
+        appRegistrationPO.appDes="postgerToDoris";
+        appRegistrationPO.appType=1;
+        appRegistrationPO.delFlag=1;
+        appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
+        appDataSourcePO.appId=appRegistrationPO.id;//后面加上AppRegistrationPO.id
+        appDataSourcePO.driveType="postgresql";
+        appDataSourcePO.dbName="dmp_dw";
+        appDataSourcePO.host="192.168.1.250";//这个可以写道配置文件里pg 连接信息：
+        appDataSourcePO.connectAccount="postgres";
+        appDataSourcePO.connectPwd="Password01!";
+        appDataSourcePO.port="5432";
+        appDataSourcePO.connectStr="jdbc:postgresql://192.168.1.250:5432/dmp_dw";
+        appDataSourceImpl.save(appDataSourcePO);
+        tableAccessPO.appId=appRegistrationPO.id;//后续补上AppRegistrationPO.id
+        tableAccessPO.isRealtime=1;
+        tableAccessPO.tableName=tableName;
+        tableAccessPO.delFlag=1;
+        insertTableAccessPO(tableAccessPO);//可能都要返回id
+        tableSyncmodePO.syncMode=1;
+        tableSyncmodePO.id=tableAccessPO.id;//tableAccess.id
+        tableSyncmodeImpl.save(tableSyncmodePO);
+        nifiSettingPO.tableId=tableAccessPO.id;//tableAccess.id
+        nifiSettingPO.appId=tableAccessPO.id;
+        nifiSettingPO.selectSql=selectSql;
+        nifiSettingPO.tableName=tableName;
+        nifiSettingImpl.save(nifiSettingPO);
+        EtlIncrementalPO etlIncrementalPO = new EtlIncrementalPO();
+        //待定
+        etlIncrementalPO.objectName=nifiSettingPO.tableName;
+        etlIncrementalMapper.insert(etlIncrementalPO);
+        buildNifiFlowDTO.appId=appRegistrationPO.id;
+        buildNifiFlowDTO.id=tableAccessPO.id;
+        buildNifiFlowDTO.synchronousTypeEnum= SynchronousTypeEnum.PGTODORIS;
+        return buildNifiFlowDTO;
     }
 
 
