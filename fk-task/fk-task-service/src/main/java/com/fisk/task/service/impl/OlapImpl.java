@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -77,17 +78,17 @@ public class OlapImpl implements IOlap {
         StringBuilder sqlFiledBuild = new StringBuilder();
         //主键
         String keyName=dto.tableName+"_key";
-        String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(" + keyName + ",";
-        String sqlDistributedBuild = "DISTRIBUTED BY HASH(" + keyName + ",";
-        sqlFiledBuild.append(keyName + " VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> sqlFiledBuild.append(l.fieldEnName + " " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
+        String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
+        String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
+        sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
+        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName + "` " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
         sqlFiledBuild.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
         String sqlFiled = sqlFiledBuild.toString();
         String sqlUnique = sqlUniqueBuild;
-        sqlUnique = sqlUnique.substring(0, sqlUnique.lastIndexOf(",")) + ")";
+        sqlUnique = sqlUnique.substring(0, sqlUnique.lastIndexOf(",")) + ") ";
         String sqlDistributed = sqlDistributedBuild;
-        sqlDistributed = sqlDistributed.substring(0, sqlDistributed.lastIndexOf(",")) + ") BUCKETS 10";
-        sql.append(sqlFiled).append(sqlUnique).append(sqlDistributed).append("\n" + "PROPERTIES(\"replication_num\" = \"1\");");
+        sqlDistributed = sqlDistributed.substring(0, sqlDistributed.lastIndexOf(",")) + ") BUCKETS 10 ";
+        sql.append(sqlFiled).append(sqlUnique).append(sqlDistributed).append("\n" + " PROPERTIES(\"replication_num\" = \"1\");");
         return sql.toString();
     }
 
@@ -103,27 +104,32 @@ public class OlapImpl implements IOlap {
         sql.append("CREATE TABLE ");
         sql.append(dto.factTable);
         sql.append(" ( ");
+        String keyName=dto.factTable+"_key";
+        sql.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
+        aggregateKeys.add(keyName);
         //维度字段
         dto.list.stream().filter(e->e.attributeType==1).forEach(e->{
             sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT \"\", \n");
             aggregateKeys.add(e.dimensionTableName);
         });
         //聚合字段
-        dto.list.stream().filter(e->e.attributeType!=1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` INT "+e.aggregationLogic+" COMMENT \"\", "));
+        dto.list.stream().filter(e->e.attributeType!=1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` BIGINT "+e.aggregationLogic+" COMMENT \"\", "));
         sql.deleteCharAt(sql.length()-2);
         sql.append(" ) ");
+        sql.append(" ENGINE=OLAP ");
         if (aggregateKeys.size()>0){
             String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"`").collect(Collectors.joining(","));
             //排序字段
-            sql.append(" DUPLICATE KEY ("+aggregateKeysSql+") ");
-            sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 10");
+            sql.append(" AGGREGATE  KEY ("+aggregateKeysSql+") ");
+            sql.append(" DISTRIBUTED BY HASH(`"+keyName+"`) BUCKETS 16");
         }
+
         sql.append(" PROPERTIES(\"replication_num\" = \"1\")");
         return sql.toString();
     }
 
     /**
-     * 生成查询聚合模型数据sql
+     * 生成查询数据sql
      * @param dto 原子指标
      * @return sql
      */
@@ -133,15 +139,16 @@ public class OlapImpl implements IOlap {
         StringBuilder groupSql=new StringBuilder();
         dto.list.forEach(e->{
             if(e.attributeType==0){
+                aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
                 aggregationFunSql.append("(\"");
                 aggregationFunSql.append(e.aggregatedField);
-                aggregationFunSql.append("\") AS ");
-                aggregationFunSql.append(e.atomicIndicatorName);
+                aggregationFunSql.append("\") ,0)AS ");
+                aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" ,");
             }else {
                 groupSql.append("\""+e.dimensionTableName+"_key\" , ");
-                aggregationFunSql.append("\""+e.dimensionTableName+"_key\" AS \""+e.dimensionTableName+"\" , ");
+                aggregationFunSql.append("COALESCE(\""+e.dimensionTableName+"_key\",'') AS \""+e.dimensionTableName.toLowerCase()+"\" , ");
             }
         });
         if (aggregationFunSql.length()>0){
