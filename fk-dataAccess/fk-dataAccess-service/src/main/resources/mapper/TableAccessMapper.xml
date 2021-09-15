@@ -15,8 +15,13 @@
         FROM
         tb_table_access a
         LEFT JOIN `tb_table_syncmode` AS b ON a.id = b.id
-        LEFT JOIN `tb_etl_Incremental` AS c ON CONCAT(( SELECT app_abbreviation FROM tb_app_registration WHERE id =
-        a.app_id ), "_", a.`table_name` )= c.object_name
+        LEFT JOIN (
+        SELECT
+        *
+        FROM
+        `tb_etl_Incremental` t
+        WHERE
+        id = ( SELECT MAX( id ) FROM tb_etl_Incremental WHERE object_name = t.object_name )) AS c ON CONCAT(( SELECT app_abbreviation FROM tb_app_registration WHERE id = a.app_id ), "_", a.`table_name` ) = c.object_name
         WHERE
         a.del_flag = 1
         <if test="query.where !=null and query.where.length()>0 ">
