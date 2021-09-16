@@ -137,7 +137,7 @@ public class SqlServerTest {
             List<String> columnsName = getColumnsName(tableName);
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
             tablePyhNameDTO.setTableName(tableName);
-            tablePyhNameDTO.setFields(columnsName);
+//            tablePyhNameDTO.setFields(columnsName);
 
             tag++;
             tablePyhNameDTO.setTag(tag);

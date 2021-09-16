@@ -6,6 +6,7 @@ import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.DbPoolTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
@@ -35,10 +36,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author gy
@@ -90,7 +88,7 @@ public class BuildNifiTaskListener {
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         //获取数据接入配置项
-        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId);
+        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId,dto.synchronousTypeEnum);
         if (configDTO == null) {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
@@ -106,7 +104,7 @@ public class BuildNifiTaskListener {
         //4. 创建任务组
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
         //5. 创建组件
-        List<ProcessorEntity> processors = buildProcessorVersion2(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
+        List<ProcessorEntity> processors = buildProcessorVersion2(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(),dto.synchronousTypeEnum);
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
@@ -119,20 +117,29 @@ public class BuildNifiTaskListener {
      * @param appId 配置的id
      * @return 数据接入配置
      */
-    private DataAccessConfigDTO getConfigData(long id, long appId) {
+    private DataAccessConfigDTO getConfigData(long id, long appId,SynchronousTypeEnum synchronousTypeEnum) {
         ResultEntity<DataAccessConfigDTO> res = client.dataAccessConfig(id, appId);
         if (res.code != ResultEnum.SUCCESS.getCode()) {
             return null;
         }
         //target doris
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
-        targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
-        targetDbPoolConfig.user = pgsqlDatainputUsername;
-        targetDbPoolConfig.password = pgsqlDatainputPassword;
-        targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
-        targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
-        targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
-        System.out.println("第一次拿到list长度"+targetDbPoolConfig.tableFieldsList.size());
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.TOPGODS)){//各种数据源,首先入pg_ods
+            targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
+            targetDbPoolConfig.user = pgsqlDatainputUsername;
+            targetDbPoolConfig.password = pgsqlDatainputPassword;
+            targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+            targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
+            targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
+        }else if(Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)){//pg_dw----doris_olap
+            targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
+            targetDbPoolConfig.user = dorisUser;
+            targetDbPoolConfig.password = dorisPwd;
+            targetDbPoolConfig.jdbcStr = dorisUrl;
+            targetDbPoolConfig.targetTableName=null;
+            targetDbPoolConfig.tableFieldsList=null;
+        }
+
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }
@@ -360,7 +367,8 @@ public class BuildNifiTaskListener {
         res.add(processorEntity1);
         return res;
     }
-    private List<ProcessorEntity> buildProcessorVersion2(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
+    private List<ProcessorEntity> buildProcessorVersion2(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId,SynchronousTypeEnum synchronousTypeEnum) {
+
         //读取增量字段组件
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
         //创建数据转换json组件
@@ -407,9 +415,11 @@ public class BuildNifiTaskListener {
         res.add(delSqlRes);
         res.add(executeSQLRecord);
         res.add(putDatabaseRecord);
-        res.add(mergeRes);
-        res.add(processorEntity1);
-        res.add(processorEntity);
+        if(!Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTODORIS)){
+            res.add(mergeRes);
+            res.add(processorEntity1);
+            res.add(processorEntity);
+        }
         return res;
     }
 

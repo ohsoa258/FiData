@@ -276,4 +276,10 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccess(id));
     }
 
+    @ApiOperation("添加同步配置信息")
+    @GetMapping("/createPgToDorisConfig")
+    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createPgToDorisConfig(tableName,selectSql));
+    }
+
 }

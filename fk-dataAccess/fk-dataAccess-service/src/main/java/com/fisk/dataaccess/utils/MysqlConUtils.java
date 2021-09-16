@@ -3,6 +3,7 @@ package com.fisk.dataaccess.utils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class MysqlConUtils {
 
     /**
-     * 获取实时及非实时的表 表字段(暂时不使用此方法)
+     * 获取实时及非实时的表 表字段(TODO: 弃用)
      * @param url url
      * @param user user
      * @param pwd pwd
@@ -34,21 +35,13 @@ public class MysqlConUtils {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(url, user, pwd);
             List<String> tableNames = getTables(conn);
-//        System.out.println(tableNames);
-//        System.out.println("====================================================");
             Statement st = conn.createStatement();
 
-            map = new HashMap<>(1000);
+            map = new HashMap<>();
             for (String tableName : tableNames) {
                 ResultSet rs = st.executeQuery("select * from " + tableName);
-    //            System.out.print(tableName+":  ");
-                List<String> colNames = getColNames(rs);
-    //            System.out.println(colNames);
-
-    //            System.out.println("==================================================");
-
-                map.put(tableName, colNames);
-    //            System.out.println(map);
+//                List<String> colNames = getColNames(rs);
+//                map.put(tableName, colNames);
                 rs.close();
             }
 
@@ -85,7 +78,7 @@ public class MysqlConUtils {
             for (String tableName : tableNames) {
                 ResultSet rs = st.executeQuery("select * from " + tableName);
 
-                List<String> colNames = getColNames(rs);
+                List<TableStructureDTO> colNames = getColNames(rs);
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
@@ -135,19 +128,24 @@ public class MysqlConUtils {
      *
      * @param rs rs
      */
-    private List<String> getColNames(ResultSet rs){
-        List<String> colNameList = null;
+    private List<TableStructureDTO> getColNames(ResultSet rs){
+        List<TableStructureDTO> colNameList = null;
         try {
             ResultSetMetaData metaData = rs.getMetaData();
             int count = metaData.getColumnCount();
 
-            colNameList = new ArrayList<String>();
+            colNameList = new ArrayList<>();
             for (int i = 1; i <= count; i++) {
-                colNameList.add(metaData.getColumnName(i));
+                TableStructureDTO tableStructureDTO = new TableStructureDTO();
+
+                // 字段名称
+                tableStructureDTO.fieldName = metaData.getColumnName(i);
+                // 字段类型
+                tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
+                // 字段长度
+                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                colNameList.add(tableStructureDTO);
             }
-            // 打印
-//        System.out.println(colNameList);
-//		rs.close();
             rs.first();
         } catch (SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);

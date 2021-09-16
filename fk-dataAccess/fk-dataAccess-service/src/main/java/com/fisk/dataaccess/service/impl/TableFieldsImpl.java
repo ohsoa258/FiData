@@ -50,6 +50,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableFieldsDTO.appbAbreviation=data1.appAbbreviation;
         tableFieldsDTO.fieldName=tableFieldsPO.fieldName;
         tableFieldsDTO.fieldType=tableFieldsPO.fieldType;
+        tableFieldsDTO.originalTableName=data.tableName;
         return tableFieldsDTO;
     }
 

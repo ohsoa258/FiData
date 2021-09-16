@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,7 @@ public class TablePyhNameDTO extends BaseDTO {
     /**
      * 表字段
      */
-    public List<String> fields;
+    public List<TableStructureDTO> fields;
 
     public TablePyhNameDTO(BaseEntity entity) {
         super(entity);

@@ -52,8 +52,8 @@ public interface DataModelClient {
      * @param id
      * @return 执行结果
      */
-    @GetMapping("/businessProcess/getBusinessProcessFact")
-    ResultEntity<Object> getBusinessProcessFact(@RequestParam("id") int id);
+    @GetMapping("/businessProcess/getBusinessProcessFact/{id}")
+    ResultEntity<Object> getBusinessProcessFact(@PathVariable("id") int id);
 
     /**
      * 获取事实表下所有原子指标以及事实表关联维度

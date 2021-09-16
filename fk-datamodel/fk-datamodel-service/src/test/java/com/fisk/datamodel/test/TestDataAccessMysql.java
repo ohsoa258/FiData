@@ -100,7 +100,7 @@ public class TestDataAccessMysql {
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
-                tablePyhNameDTO.setFields(colNames);
+//                tablePyhNameDTO.setFields(colNames);
 
                 tag++;
                 tablePyhNameDTO.setTag(tag);

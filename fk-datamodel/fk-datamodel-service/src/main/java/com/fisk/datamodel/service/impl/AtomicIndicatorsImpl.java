@@ -112,6 +112,7 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
+        po.factAttributeId=dto.factAttributeId;//聚合字段id
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -189,19 +190,18 @@ public class AtomicIndicatorsImpl
                 .eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
         List<Integer> ids= (List<Integer>)(List)list.stream().distinct().collect(Collectors.toList());
-        if (ids==null || ids.size()==0)
+        if (ids!=null && ids.size()>0)
         {
-            return null;
-        }
-        QueryWrapper<DimensionPO> dimensionQueryWrapper=new QueryWrapper<>();
-        dimensionQueryWrapper.in("id",ids);
-        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionQueryWrapper);
-        for (DimensionPO item:dimensionPOList)
-        {
-            AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-            dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
-            dto.dimensionTableName=item.dimensionTabName;
-            data.add(dto);
+            QueryWrapper<DimensionPO> dimensionQueryWrapper=new QueryWrapper<>();
+            dimensionQueryWrapper.in("id",ids);
+            List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionQueryWrapper);
+            for (DimensionPO item:dimensionPOList)
+            {
+                AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+                dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                dto.dimensionTableName=item.dimensionTabName;
+                data.add(dto);
+            }
         }
         //获取事实表下所有原子指标
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper=new QueryWrapper<>();

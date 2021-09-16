@@ -557,4 +557,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         return appAbbreviationList.contains(appAbbreviation)?ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
     }
+
+    @Override
+    public AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO){
+        mapper.insertAppRegistrationPO(appRegistrationPO);
+        return appRegistrationPO;
+    }
 }

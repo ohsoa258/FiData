@@ -4,12 +4,17 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.entity.OlapPO;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IOlap;
 import com.rabbitmq.client.Channel;
 import jdk.nashorn.internal.parser.JSONParser;
@@ -37,6 +42,12 @@ public class BuildModelTaskListener {
     DataModelClient client;
     @Resource
     IOlap olap;
+    @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
+    PublishTaskController pc;
+    @Resource
+    IDorisBuild doris;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
@@ -44,7 +55,15 @@ public class BuildModelTaskListener {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
         ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
         if (data.code == 0) {
-            olap.build(inpData.businessAreaId, data.data);
+         List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
         }
+        log.info("Doris建表开始");
+        doris.dorisBuildTable("建表语句");
+        log.info("Doris建表结束,开始创建nifi配置");
+        ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig("表名", "查询语句");
+        BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
+        log.info("nifi配置结束,开始创建nifi流程");
+        pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
+        log.info("nifi流程配置结束");
     }
 }

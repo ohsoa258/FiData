@@ -27,7 +27,7 @@ public class SwaggerConfig {
     public static final String TAG_2 = "physical-table-controller";
     public static final String TAG_3 = "data-access-controller";
     public static final String TAG_4 = "data-review-controller";
-    public static final String TAG_5 = "data-review-controller";
+    public static final String TAG_5 = "table-fields-controller";
 
     @Bean
     public Docket createRestApi() {

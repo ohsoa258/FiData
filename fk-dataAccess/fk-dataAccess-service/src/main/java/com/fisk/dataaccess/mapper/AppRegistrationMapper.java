@@ -87,4 +87,12 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      */
     @Select("select app_abbreviation from tb_app_registration where del_flag=1")
     List<String> getAppAbbreviation();
+
+    /**
+     * appRegistrationDTO
+     *
+     * @return
+     */
+    int insertAppRegistrationPO(@Param("appRegistrationPO")AppRegistrationPO appRegistrationPO);
+
 }

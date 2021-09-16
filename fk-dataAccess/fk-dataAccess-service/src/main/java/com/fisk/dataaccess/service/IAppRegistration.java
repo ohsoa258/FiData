@@ -145,4 +145,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 执行结果
      */
     ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation);
+
+    /**
+     * insertAppRegistrationPO
+     * @param appRegistrationPO dto
+     * @return
+     */
+    AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO);
 }

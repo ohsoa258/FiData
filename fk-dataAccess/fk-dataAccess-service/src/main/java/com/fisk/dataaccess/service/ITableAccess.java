@@ -12,6 +12,7 @@ import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -181,5 +182,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     TableAccessDTO getTableAccess(int id);
+
+    /**
+     *nifiSettingPO
+     * @return 表名及查询语句
+     */
+    BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
 
 }

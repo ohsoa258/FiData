@@ -28,21 +28,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.auth.client",
         "com.fisk.task.client",
         "com.fisk.datamodel.client"})
-//@Configuration
 @EnableApolloConfig
 public class FkDataAccessApplication {
 
-//    private static String[] args;
-//    private static ConfigurableApplicationContext context;
-
-
     public static void main(String[] args) {
-//        FkDataAccessApplication.args = args;
-        /*FkDataAccessApplication.context = */SpringApplication.run(FkDataAccessApplication.class, args);
+        SpringApplication.run(FkDataAccessApplication.class, args);
     }
 
-//    public static void restart() {
-//        context.close();
-//        FkDataAccessApplication.context = SpringApplication.run(FkDataAccessApplication.class, args);
-//    }
 }

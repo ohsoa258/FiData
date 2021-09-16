@@ -2,6 +2,7 @@ package com.fisk.task.service;
 
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.task.entity.OlapPO;
 
 import java.util.List;
 
@@ -16,5 +17,5 @@ public interface IOlap {
      * @param dto 业务域维度建模
      * @return
      */
-    boolean build(int businessAreaId,BusinessAreaGetDataDTO dto);
+    List<OlapPO> build(int businessAreaId, BusinessAreaGetDataDTO dto);
 }

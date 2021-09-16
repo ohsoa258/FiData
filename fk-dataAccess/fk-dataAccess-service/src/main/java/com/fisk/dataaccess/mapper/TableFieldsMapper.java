@@ -23,7 +23,7 @@ public interface TableFieldsMapper extends FKBaseMapper<TableFieldsPO> {
      * @param id tb_access_id
      * @return 表字段及id
      */
-    @Select("SELECT id,field_name FROM tb_table_fields WHERE table_access_id = #{id} AND del_flag = 1;")
+    @Select("SELECT id,field_name,field_des,field_type,field_length FROM tb_table_fields WHERE table_access_id = #{id} AND del_flag = 1;")
     List<FieldNameDTO> listTableName(@Param("id") long id);
 
     /**

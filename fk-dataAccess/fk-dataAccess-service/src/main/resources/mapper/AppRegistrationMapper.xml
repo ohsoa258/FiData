@@ -15,4 +15,9 @@
             ${query.where}
         </if>
     </select>
+    <insert id="insertAppRegistrationPO" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+            parameterType="com.fisk.dataaccess.entity.AppRegistrationPO">
+        insert into tb_app_registration (app_name,app_des,app_type,del_flag) values
+        (#{appRegistrationPO.appName},#{appRegistrationPO.appDes},#{appRegistrationPO.appType},#{appRegistrationPO.delFlag})
+    </insert>
 </mapper>
