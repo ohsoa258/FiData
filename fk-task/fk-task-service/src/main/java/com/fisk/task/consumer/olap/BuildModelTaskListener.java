@@ -55,7 +55,7 @@ public class BuildModelTaskListener {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
         ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
         if (data.code == 0) {
-         List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
+            List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
         }
         log.info("Doris建表开始");
         doris.dorisBuildTable("建表语句");

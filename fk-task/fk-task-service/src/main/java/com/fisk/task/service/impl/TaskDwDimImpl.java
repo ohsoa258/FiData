@@ -1,9 +1,7 @@
 package com.fisk.task.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.task.entity.OlapDimensionPO;
 import com.fisk.task.entity.TaskDwDimPO;
-import com.fisk.task.mapper.OlapDimensionMapper;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.service.ITaskDwDim;
 import lombok.extern.slf4j.Slf4j;

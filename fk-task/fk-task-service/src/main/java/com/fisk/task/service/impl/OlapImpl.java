@@ -4,22 +4,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.task.entity.OlapDimensionPO;
-import com.fisk.task.entity.OlapKpiPO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.mapper.OlapDimensionMapper;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.IOlap;
-import com.fisk.task.service.IOlapDimension;
-import com.fisk.task.service.IOlapKpi;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -30,10 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
 
-    @Resource
-    IOlapDimension olapDimension;
-    @Resource
-    IOlapKpi olapKpi;
     @Resource
     OlapMapper mapper;
     /**
@@ -143,6 +133,8 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder sql=new StringBuilder();
         StringBuilder aggregationFunSql=new StringBuilder();
         StringBuilder groupSql=new StringBuilder();
+        String keyName=dto.factTable+"_key";
+        aggregationFunSql.append(keyName.toLowerCase()+" , ");
         dto.list.forEach(e->{
             if(e.attributeType==0){
                 aggregationFunSql.append("COALESCE(");
@@ -151,17 +143,17 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append(e.aggregatedField);
                 aggregationFunSql.append("\") ,0)AS ");
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
-                aggregationFunSql.append(" ,");
+                aggregationFunSql.append(" , ");
             }else {
                 groupSql.append("\""+e.dimensionTableName+"_key\" , ");
                 aggregationFunSql.append("COALESCE(\""+e.dimensionTableName+"_key\",'') AS \""+e.dimensionTableName.toLowerCase()+"\" , ");
             }
         });
         if (aggregationFunSql.length()>0){
-            aggregationFunSql.deleteCharAt(aggregationFunSql.length()-1);
+            aggregationFunSql.deleteCharAt(aggregationFunSql.length()-2);
         }
         if(groupSql.length()>0){
-            groupSql.deleteCharAt(groupSql.length()-1);
+            groupSql.deleteCharAt(groupSql.length()-2);
         }
         sql.append("SELECT ");
         sql.append(aggregationFunSql);
