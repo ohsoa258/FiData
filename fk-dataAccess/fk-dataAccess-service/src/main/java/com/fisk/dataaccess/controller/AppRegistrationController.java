@@ -9,8 +9,10 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -35,6 +37,8 @@ public class AppRegistrationController {
 
     @Resource
     private IAppRegistration service;
+    @Resource
+    private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
     @Value("${spring.datasource.username}")
@@ -123,7 +127,13 @@ public class AppRegistrationController {
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(
             @PathVariable("id") long id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.deleteAppRegistration(id));
+
+        ResultEntity<NifiVO> result = service.deleteAppRegistration(id);
+
+        log.info("方法返回值,{}", result.data);
+
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
     /**
@@ -200,7 +210,6 @@ public class AppRegistrationController {
     public ResultEntity<Object> getRepeatAppAbbreviation(@RequestParam("appAbbreviation") String appAbbreviation) {
         return service.getRepeatAppAbbreviation(appAbbreviation);
     }
-
 
 
 }

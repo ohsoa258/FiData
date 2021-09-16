@@ -43,6 +43,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -275,26 +276,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .flatMap(Collection::stream)
                 .forEachOrdered(fieldsPO -> tableFieldsMapper.deleteByIdWithFill(fieldsPO));
 
-//        accessList.stream().map(e -> {
-
-//             tableFieldsImpl.query()
-//                    .eq("table_access_id", e.id)
-//                    .eq("del_flag", 1)
-//                    .list();
-
-//            tableFieldsList.stream().peek(f -> {
-//                tableFieldsMapper.deleteByIdWithFill(f);
-//            });
-
-//            int i = tableAccessMapper.deleteByIdWithFill(e);
-//            return i > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-//        });
-
 
         NifiVO vo = new NifiVO();
         vo.userId = userInfo.id;
         vo.appId = String.valueOf(model.id);
         vo.componentId = model.componentId;
+
+        vo.tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
+
+        System.out.println(vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
@@ -555,7 +545,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation) {
         List<String> appAbbreviationList = baseMapper.getAppAbbreviation();
 
-        return appAbbreviationList.contains(appAbbreviation)?ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
+        return appAbbreviationList.contains(appAbbreviation) ? ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_ERROR) : ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
     }
 
     @Override

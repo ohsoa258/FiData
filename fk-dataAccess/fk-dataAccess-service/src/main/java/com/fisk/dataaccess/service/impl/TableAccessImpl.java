@@ -209,12 +209,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         // 保存同步频率
+/*
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
         TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
         po.setId(modelAccess.getId());
         boolean saveSync = syncmodeImpl.save(po);
+*/
 
-        return saveSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return saveFields ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -431,11 +433,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 ////        System.out.println(i);
 
         // 修改tb_table_syncmode
+/*
         TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
         TableSyncmodePO modelSync = dto.toEntity(TableSyncmodePO.class);
         boolean updateSync = syncmodeImpl.updateById(modelSync);
+*/
 
-        return updateSync ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return updateFields ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
