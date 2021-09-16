@@ -1,10 +1,15 @@
 package com.fisk.task.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.task.entity.OlapDimensionPO;
 import com.fisk.task.entity.OlapKpiPO;
+import com.fisk.task.entity.OlapPO;
+import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.mapper.OlapDimensionMapper;
+import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.IOlap;
 import com.fisk.task.service.IOlapDimension;
 import com.fisk.task.service.IOlapKpi;
@@ -23,12 +28,14 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class OlapImpl implements IOlap {
+public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
 
     @Resource
     IOlapDimension olapDimension;
     @Resource
     IOlapKpi olapKpi;
+    @Resource
+    OlapMapper mapper;
     /**
      * 生成建模sql(创建指标表sql，创建维度表sql,查询指标表数据sql)
      * @param businessAreaId 业务域id
@@ -36,33 +43,32 @@ public class OlapImpl implements IOlap {
      * @return 生成建模语句
      */
     @Override
-    public boolean build(int businessAreaId, BusinessAreaGetDataDTO dto) {
+    public List<OlapPO> build(int businessAreaId, BusinessAreaGetDataDTO dto) {
         //删除历史数据
-        olapDimension.deleteByBusinessAreaId(businessAreaId);
-        olapKpi.deleteByBusinessAreaId(businessAreaId);
+        mapper.deleteByBusinessId(businessAreaId);
         //维度表
-        List<OlapDimensionPO> olapDimensionPos =new ArrayList<>();
+        List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
-            OlapDimensionPO olapDimensionPo=new OlapDimensionPO();
-            olapDimensionPo.businessAreaId=businessAreaId;
-            olapDimensionPo.selectDimensionDataSql="SELECT * FROM "+e.tableName+"";
-            olapDimensionPo.dimensionTableName=e.tableName;
-            olapDimensionPo.createDimensionTableSql=buildCreateUniqModelSql(e);
-            olapDimensionPos.add(olapDimensionPo);
+            OlapPO po=new OlapPO();
+            po.businessAreaId=businessAreaId;
+            po.selectDataSql="SELECT * FROM "+e.tableName+"";
+            po.tableName=e.tableName;
+            po.createTableSql=buildCreateUniqModelSql(e);
+            po.type= OlapTableEnum.DIMENSION;
+            poList.add(po);
         });
-        olapDimension.batchAdd(olapDimensionPos);
         //指标表
-        List<OlapKpiPO> olapKpiPoS=new ArrayList<>();
         dto.atomicIndicatorList.forEach(e->{
-            OlapKpiPO olapKpiPo =new OlapKpiPO();
-            olapKpiPo.businessAreaId=businessAreaId;
-            olapKpiPo.kpiTableName=e.factTable;
-            olapKpiPo.createKpiTableSql=buildCreateAggregateModelSql(e);
-            olapKpiPo.selectKpiDataSql=buildSelectAggregateModelDataSql(e);
-            olapKpiPoS.add(olapKpiPo);
+            OlapPO po =new OlapPO();
+            po.businessAreaId=businessAreaId;
+            po.tableName=e.factTable;
+            po.createTableSql=buildCreateAggregateModelSql(e);
+            po.selectDataSql=buildSelectAggregateModelDataSql(e);
+            po.type=OlapTableEnum.KPI;
+            poList.add(po);
         });
-        olapKpi.batchAdd(olapKpiPoS);
-        return true;
+        saveBatch(poList);
+        return poList;
     }
 
     /**
