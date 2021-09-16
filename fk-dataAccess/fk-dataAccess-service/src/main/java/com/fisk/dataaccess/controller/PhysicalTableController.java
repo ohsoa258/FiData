@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
+import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -194,7 +195,11 @@ public class PhysicalTableController {
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除物理表")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.deleteData(id));
+        ResultEntity<NifiVO> result = service.deleteData(id);
+        log.info("方法返回值,{}", result.data);
+        // TODO: 删除nifi流程
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }
 
 

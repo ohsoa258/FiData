@@ -284,7 +284,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         vo.tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
 
-        System.out.println(vo);
+        log.info("删除的应用信息,{}", vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
@@ -549,7 +549,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO){
+    public AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO) {
         mapper.insertAppRegistrationPO(appRegistrationPO);
         return appRegistrationPO;
     }
