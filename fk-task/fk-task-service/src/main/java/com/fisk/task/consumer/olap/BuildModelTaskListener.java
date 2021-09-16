@@ -12,6 +12,7 @@ import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.entity.OlapPO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IOlap;
@@ -54,7 +55,7 @@ public class BuildModelTaskListener {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
         ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
         if (data.code == 0) {
-            olap.build(inpData.businessAreaId, data.data);
+         List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
         }
         log.info("Doris建表开始");
         doris.dorisBuildTable("建表语句");
