@@ -101,11 +101,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append(dto.factTable);
         sql.append(" ( ");
         String keyName=dto.factTable+"_key";
-        sql.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
+        sql.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' , ");
         aggregateKeys.add(keyName);
         //维度字段
         dto.list.stream().filter(e->e.attributeType==1).forEach(e->{
-            sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT \"\", \n");
+            sql.append("`"+e.dimensionTableName+"` VARCHAR(50) COMMENT \"\" , ");
             aggregateKeys.add(e.dimensionTableName);
         });
         //聚合字段
