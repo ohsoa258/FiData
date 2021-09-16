@@ -30,7 +30,7 @@ public class EtlIncrementalPO implements Serializable {
     /**
      * 预留字段；数据同步批次号
      */
-    public String incrementalObjectivescoreBatchNo;
+    public String incrementalObjectivescoreBatchno;
 
     /**
      * 最近一次同步的数据的时间范围的开始时间: 1970

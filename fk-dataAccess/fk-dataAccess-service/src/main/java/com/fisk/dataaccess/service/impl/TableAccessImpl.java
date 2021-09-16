@@ -42,10 +42,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -963,7 +960,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
         } else if(Objects.equals(modelDataSource.driveType,"mysql")){
             sourceDsConfig.setType(DriverTypeEnum.MYSQL);
-        }else if(Objects.equals(modelDataSource.driveType,"postgreSQL")){
+        }else if(Objects.equals(modelDataSource.driveType,"postgresql")){
             sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
@@ -1094,13 +1091,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableSyncmodePO.id=tableAccessPO.id;//tableAccess.id
         tableSyncmodeImpl.save(tableSyncmodePO);
         nifiSettingPO.tableId=tableAccessPO.id;//tableAccess.id
-        nifiSettingPO.appId=tableAccessPO.id;
+        nifiSettingPO.appId=appRegistrationPO.id;
         nifiSettingPO.selectSql=selectSql;
         nifiSettingPO.tableName=tableName;
         nifiSettingImpl.save(nifiSettingPO);
         EtlIncrementalPO etlIncrementalPO = new EtlIncrementalPO();
-        //待定
         etlIncrementalPO.objectName=nifiSettingPO.tableName;
+        etlIncrementalPO.incrementalObjectivescoreBatchno= UUID.randomUUID().toString();
         etlIncrementalMapper.insert(etlIncrementalPO);
         buildNifiFlowDTO.appId=appRegistrationPO.id;
         buildNifiFlowDTO.id=tableAccessPO.id;

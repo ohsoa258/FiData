@@ -55,15 +55,18 @@ public class BuildModelTaskListener {
         BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
         ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
         if (data.code == 0) {
-            List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
+         List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
+            for (OlapPO olapPO:olapPOS) {
+                log.info("Doris建表开始:"+olapPO.tableName);
+                doris.dorisBuildTable(olapPO.createTableSql);
+                log.info("Doris建表结束,开始创建nifi配置");
+                ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig(olapPO.tableName, olapPO.selectDataSql);
+                BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
+                log.info("nifi配置结束,开始创建nifi流程");
+                buildNifiFlowDTO.userId=60L;
+                pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
+                log.info("nifi流程配置结束");
+            }
         }
-        log.info("Doris建表开始");
-        doris.dorisBuildTable("建表语句");
-        log.info("Doris建表结束,开始创建nifi配置");
-        ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig("表名", "查询语句");
-        BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
-        log.info("nifi配置结束,开始创建nifi流程");
-        pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
-        log.info("nifi流程配置结束");
     }
 }
