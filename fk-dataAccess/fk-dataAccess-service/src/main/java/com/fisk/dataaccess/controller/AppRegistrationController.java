@@ -132,6 +132,8 @@ public class AppRegistrationController {
 
         log.info("方法返回值,{}", result.data);
 
+        // TODO 删除Atlas和nifi流程
+
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }

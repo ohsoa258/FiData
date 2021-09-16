@@ -151,28 +151,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (contains) {
             return ResultEnum.Table_NAME_EXISTS;
         }*/
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-                .eq("app_name", tableAccessDTO.getAppName())
-                .eq("del_flag", 1)
-                .one();
+//        AppRegistrationPO modelReg = appRegistrationImpl.query()
+//                .eq("app_name", tableAccessDTO.getAppName())
+//                .eq("del_flag", 1)
+//                .one();
 
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelReg.id;
+//        tableNameVO.appId = modelReg.id;
+        tableNameVO.appId = tableAccessDTO.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEnum.Table_NAME_EXISTS;
         }
 
         // 应用注册id
-        long id = modelReg.getId();
-        if (id < 0) {
+//        long id = modelReg.getId();
+
+        if (tableAccessDTO.appId < 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         modelAccess.setCreateUser(String.valueOf(userId));
-        modelAccess.setAppId(id);
+//        modelAccess.setAppId(id);
+        modelAccess.appId = tableAccessDTO.appId;
 
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessDTO.getSyncSrc());
@@ -278,28 +281,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
 //        }
 
+/*
         AppRegistrationPO modelReg = appRegistrationImpl.query()
                 .eq("app_name", tableAccessNonDTO.getAppName())
                 .eq("del_flag", 1)
                 .one();
 
+*/
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         // TODO: tableName 物理表名称
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-        tableNameVO.appId = modelReg.id;
+//        tableNameVO.appId = modelReg.id;
+        tableNameVO.appId = tableAccessNonDTO.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
         }
 
-        long id = modelReg.getId();
-        if (id < 0) {
+//        long id = modelReg.getId();
+        if (tableAccessNonDTO.appId < 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
-        modelAccess.setAppId(id);
+        modelAccess.setAppId(tableAccessNonDTO.appId);
         // 0是实时物理表，1是非实时物理表
         modelAccess.setSyncSrc(tableAccessNonDTO.getSyncSrc());
         // 非实时
@@ -359,7 +365,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AtlasIdsVO atlasIdsVO = new AtlasIdsVO();
         atlasIdsVO.userId = userId;
         // 应用注册id
-        atlasIdsVO.appId = String.valueOf(id);
+        atlasIdsVO.appId = String.valueOf(tableAccessNonDTO.appId);
         atlasIdsVO.dbId = String.valueOf(modelAccess.getId());
         atlasIdsVO.tableName = tableName;
 
