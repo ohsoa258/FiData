@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.fisk.dataservice.doris.DorisDataSource.*;
 import static java.util.stream.Collectors.joining;
@@ -57,7 +58,7 @@ public class MysqlConnect {
                         .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.COLUMN)
                         .map(e -> {
                             try {
-                                return "\""+e.getFieldName() + "\"" + ":" + rs.getString(e.getFieldName());
+                                return "\""+e.getFieldName() + "\"" + ":" + "\"" + rs.getString(e.getFieldName()) + "\"";
                             } catch (SQLException throwables) {
                                 throwables.printStackTrace();
                             }
@@ -65,7 +66,7 @@ public class MysqlConnect {
                         }).collect(joining(","));
 
                 str.append(collect);
-                addToAggregation(aggregation,collect,str,rs,noTableData);
+                addToAggregation(aggregation,collect,str,rs,noTableData,apiConfigureFieldList);
                 // 不是最后一条数据库数据
                 str.append(",");
             }
@@ -75,9 +76,12 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (Exception e){
+        } catch (SQLException e){
             log.error("执行SQL失败:", e);
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
+        } catch (Exception e){
+            log.error("数据解析失败:", e);
+            return ResultEntityBuild.build(ResultEnum.SQL_ANALYSIS);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));
@@ -87,9 +91,15 @@ public class MysqlConnect {
     /**
      * 追加聚合的字段
      * @param aggregation
+     * @param collect
      * @param str
+     * @param rs
+     * @param noTableData
+     * @param apiConfigureFieldList
      */
-    public static void addToAggregation(String aggregation,String collect,StringBuffer str,ResultSet rs,List<TableDataDTO> noTableData){
+    public static void addToAggregation(String aggregation,String collect,StringBuffer str,ResultSet rs,
+                                        List<TableDataDTO> noTableData,
+                                        List<DataDoFieldDTO> apiConfigureFieldList){
         if (StringUtils.isEmpty(aggregation)){
             return;
         }
@@ -104,8 +114,11 @@ public class MysqlConnect {
 
         for (String s : aggregation.split(",")) {
             try {
-                for (TableDataDTO datum : noTableData) {
-                    str.append("\"" + s.replace(datum.getAlias()+".", "") + "\"" + ":" + rs.getString(s)+"}");
+                List<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
+                        .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE).collect(Collectors.toList());
+
+                for (DataDoFieldDTO dto : aggregationList) {
+                    str.append("\"" + dto.getFieldName() + "\"" + ":" + "\"" + rs.getString(s)+ "\"" + "}");
                 }
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
@@ -143,7 +156,7 @@ public class MysqlConnect {
                         .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.COLUMN)
                         .map(e -> {
                             try {
-                                return "\""+e.getFieldName() + "\"" + ":" + rs.getString(e.getFieldName());
+                                return "\""+e.getFieldName() + "\"" + ":" + "\"" + rs.getString(e.getFieldName()) + "\"";
                             } catch (SQLException throwables) {
                                 throwables.printStackTrace();
                             }
@@ -160,9 +173,12 @@ public class MysqlConnect {
             rs.close();
             statement.close();
             conn.close();
-        } catch (Exception e){
+        } catch (SQLException e){
             log.error("执行SQL失败:", e);
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
+        } catch (Exception e){
+            log.error("数据解析失败:", e);
+            return ResultEntityBuild.build(ResultEnum.SQL_ANALYSIS);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));

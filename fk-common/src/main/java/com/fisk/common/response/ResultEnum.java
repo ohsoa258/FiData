@@ -89,6 +89,7 @@ public enum ResultEnum {
     DELETE_ERROR(7002, "删除失败"),
     API_FIELD_ERROR(7003, "api没有sql执行!"),
     SQL_ERROR(7004, "执行sql语法错误!"),
+    SQL_ANALYSIS(7005, "数据解析失败!"),
 
     /**
      * 数据建模模块
