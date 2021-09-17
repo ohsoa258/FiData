@@ -269,7 +269,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             System.err.println("---------------------------------- \n"+wholeStr);
             log.info("****************************SQL******************************"+wholeStr);
 
-            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation,noTableData).data;
+            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation).data;
         }catch (Exception e){
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }
