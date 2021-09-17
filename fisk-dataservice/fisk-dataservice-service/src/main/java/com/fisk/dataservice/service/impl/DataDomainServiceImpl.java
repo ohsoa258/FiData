@@ -4,15 +4,19 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.InputParameterDTO;
+import com.fisk.dataservice.dto.OutParameterDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
 import com.fisk.dataservice.service.DataDomainService;
 import com.fisk.dataservice.service.ITableName;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
@@ -24,6 +28,7 @@ import static java.util.stream.Collectors.joining;
  * @author WangYan
  * @date 2021/8/23 16:38
  */
+@Slf4j
 @Service
 public class DataDomainServiceImpl implements DataDomainService {
 
@@ -59,7 +64,11 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining(","));
 
-            String queryKey = existTableData.stream()
+            // 根据 TableNameKey 进行去重
+            ArrayList<TableDataDTO> tableKey = existTableData.stream()
+                    .collect(collectingAndThen(toCollection(() -> new TreeSet<>(Comparator.comparing(U -> U.getTableNameKey()))), ArrayList::new));
+
+            String queryKey = tableKey.stream()
                     .filter(e -> e.getType() == COLUMN)
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableNameKey() + escapeStr[1])
                     .collect(joining(","));
@@ -96,7 +105,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             String whereField = apiConfigureFieldList.stream()
                     .filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
                     .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().getTableName()
-                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + e.getWhereValue())
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + "'" + e.getWhereValue() + "'")
                     .collect(joining());
 
             // WHERE
@@ -105,7 +114,8 @@ public class DataDomainServiceImpl implements DataDomainService {
             }
 
             // 只有维度的的情况
-            System.err.println(str);
+            System.err.println("---------------------------------- \n"+str);
+            log.info("****************************SQL******************************"+str);
 
             // 存在非维度
             if (CollectionUtils.isNotEmpty(noTableData)) {
@@ -113,7 +123,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 return this.noDimension(noTableData, apiConfigureFieldList, str);
             }
             System.err.println(executeSql(str.toString(), apiConfigureFieldList).data);
-            return executeSql(str.toString(), apiConfigureFieldList);
+            return executeSql(str.toString(), apiConfigureFieldList).data;
         }catch (Exception e){
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }
@@ -146,13 +156,45 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining("," + DIMENSION_ALL_ALIAS_NAME + "."));
 
-            // 带有维度名称
+            // 非维度名称
             List<TableDataDTO> collect3 = noTableData.stream()
                     .filter(e -> e.getRelationId() != null)
                     .map(e -> {
                         e.setDimensionName(iTableName.getDimensionName(e.getRelationId()).data);
                         return e;
                     }).collect(toList());
+
+            List<Integer> columnFieldIds = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() != VALUE)
+                    .map(e -> e.getFieldId())
+                    .collect(toList());
+
+            List<Integer> valueFieldIds = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == VALUE)
+                    .map(e -> e.getFieldId())
+                    .collect(toList());
+
+            InputParameterDTO inputParameterDTO = new InputParameterDTO();
+            inputParameterDTO.setIds(columnFieldIds);
+            inputParameterDTO.setIndicatorsIds(valueFieldIds);
+
+            List<OutParameterDTO> relationShip = iTableName.getRelationShip(inputParameterDTO);
+
+            AtomicInteger numll = new AtomicInteger();
+            String collect = relationShip.stream()
+                    .filter(e -> e.getWhether() == 1)
+                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getFactName() + ") AS " + NO_DIMENSION_ALIAS_NAME + numll.incrementAndGet()
+                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
+                            + "=" + NO_DIMENSION_ALIAS_NAME + numll + "." + e.getDimensionName() + "_key ")
+                    .collect(joining(" "));  
+
+            String collect5 = relationShip.stream()
+                    .filter(e -> e.getWhether() == 0)
+                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getFactName() + ") AS " + NO_DIMENSION_ALIAS_NAME + numll.incrementAndGet()
+                            + " ON " + "1 = 1 ")
+                    .collect(joining(" "));
+            System.out.println(collect);
+            System.out.println(collect5);
 
             // LEFT JOIN 去重表名
             ArrayList<TableDataDTO> leftJoinList = collect3.stream()
@@ -162,8 +204,8 @@ public class DataDomainServiceImpl implements DataDomainService {
             AtomicInteger num = new AtomicInteger();
             String leftJoin = leftJoinList.stream()
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
-                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
-                            + "=" + NO_DIMENSION_ALIAS_NAME + num + "." + e.getDimensionName() + "_key ")
+                            + " ON " + "1 = 1 "
+                        )
                     .collect(joining(" "));
 
             String collect1 = noTableData.stream()
@@ -224,8 +266,10 @@ public class DataDomainServiceImpl implements DataDomainService {
                 wholeStr.append(DIMENSION_ALL_ALIAS_NAME + "." + existTableField);
             }
             System.err.println(wholeStr);
+            System.err.println("---------------------------------- \n"+wholeStr);
+            log.info("****************************SQL******************************"+wholeStr);
 
-            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation,noTableData);
+            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation,noTableData).data;
         }catch (Exception e){
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }

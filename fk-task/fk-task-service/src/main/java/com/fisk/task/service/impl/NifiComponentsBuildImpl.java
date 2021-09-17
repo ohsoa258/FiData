@@ -5,6 +5,7 @@ import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
@@ -609,6 +610,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<String> autoRes = new ArrayList<>();
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         autoRes.add(AutoEndBranchTypeEnum.RETRY.getName());
+        if(Objects.equals(putDatabaseRecordDTO.synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)){
+            autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        }
         Map<String, String> map = new HashMap<>();
         map.put("put-db-record-record-reader",putDatabaseRecordDTO.recordReader);
         map.put("db-type",putDatabaseRecordDTO.databaseType);

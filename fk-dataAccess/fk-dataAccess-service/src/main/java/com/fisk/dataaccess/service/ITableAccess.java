@@ -8,10 +8,12 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
+import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param id 请求参数
      * @return 返回值
      */
-    ResultEnum deleteData(long id);
+    ResultEntity<NifiVO> deleteData(long id);
 
     /**
      * 添加物理表(非实时)
@@ -181,5 +183,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     TableAccessDTO getTableAccess(int id);
+
+    /**
+     *nifiSettingPO
+     * @return 表名及查询语句
+     */
+    BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
 
 }

@@ -2,6 +2,8 @@ package com.fisk.dataaccess.vo;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author Lock
  */
@@ -19,4 +21,8 @@ public class NifiVO {
      * nifi流程回写的组件
      */
     public String componentId;
+    /**
+     * 物理表id
+     */
+    public List<Long> tableIdList;
 }

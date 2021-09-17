@@ -1,5 +1,6 @@
 package com.fisk.task.dto.nifi;
 
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,5 +13,6 @@ public class PutDatabaseRecordDTO   extends BaseProcessorDTO{
     public String databaseConnectionPoolingService;
     public String TableName;
     public String concurrentTasks;
+    public SynchronousTypeEnum synchronousTypeEnum;
 
 }

@@ -7,6 +7,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.utils.WsSessionManager;
 import com.fisk.task.utils.YamlReader;
@@ -115,5 +116,20 @@ public class TestController {
         tab.createType=1;
         tab.userId = 60L;
         service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);
+    }
+    /**
+     * 创建模型
+     * @param
+     * @return
+     */
+    @PostMapping("/testCreateModel")
+    public void publishBuildAtomicKpiTask(){
+        BuildCreateModelTaskDto buildCreateModelTaskDto=new BuildCreateModelTaskDto();
+        buildCreateModelTaskDto.businessAreaId=1;
+        buildCreateModelTaskDto.userId=60L;
+         service.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
+                buildCreateModelTaskDto);
     }
 }

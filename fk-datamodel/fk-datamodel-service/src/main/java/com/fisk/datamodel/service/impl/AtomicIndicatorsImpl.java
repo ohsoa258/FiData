@@ -112,6 +112,7 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
+        po.factAttributeId=dto.factAttributeId;//聚合字段id
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -152,7 +153,6 @@ public class AtomicIndicatorsImpl
         }
         for (BusinessProcessPO item:businessProcessPOList)
         {
-            AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
             QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
             factPOQueryWrapper.lambda().eq(FactPO::getBusinessProcessId,item.id);
             List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
@@ -162,6 +162,7 @@ public class AtomicIndicatorsImpl
             }
             for (FactPO factPO:factPOList)
             {
+                AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
                 data.factTable=factPO.factTableEnName;
                 List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
                 if (atomicIndicator!=null)

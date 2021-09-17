@@ -126,4 +126,15 @@ public interface DataAccessClient {
     @ApiOperation("修改接口的回显数据")
     public ResultEntity<TableAccessDTO> getTableAccess(@PathVariable("id") int id);
 
+    /**
+     * 提供给nifi的数据
+     *
+     * @param tableName tableName
+     * @param selectSql selectSql
+     * @return DataAccessConfigDTO
+     */
+    @GetMapping("/physicalTable/createPgToDorisConfig")
+    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql);
+
+
 }

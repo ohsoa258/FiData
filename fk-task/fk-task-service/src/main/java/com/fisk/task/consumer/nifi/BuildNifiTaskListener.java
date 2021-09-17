@@ -6,6 +6,7 @@ import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.DbPoolTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
@@ -35,10 +36,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author gy
@@ -90,7 +88,7 @@ public class BuildNifiTaskListener {
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         //获取数据接入配置项
-        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId);
+        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId,dto.synchronousTypeEnum);
         if (configDTO == null) {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
@@ -106,7 +104,7 @@ public class BuildNifiTaskListener {
         //4. 创建任务组
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
         //5. 创建组件
-        List<ProcessorEntity> processors = buildProcessorVersion2(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
+        List<ProcessorEntity> processors = buildProcessorVersion2(configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(),dto.synchronousTypeEnum);
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
@@ -119,20 +117,29 @@ public class BuildNifiTaskListener {
      * @param appId 配置的id
      * @return 数据接入配置
      */
-    private DataAccessConfigDTO getConfigData(long id, long appId) {
+    private DataAccessConfigDTO getConfigData(long id, long appId,SynchronousTypeEnum synchronousTypeEnum) {
         ResultEntity<DataAccessConfigDTO> res = client.dataAccessConfig(id, appId);
         if (res.code != ResultEnum.SUCCESS.getCode()) {
             return null;
         }
         //target doris
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
-        targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
-        targetDbPoolConfig.user = pgsqlDatainputUsername;
-        targetDbPoolConfig.password = pgsqlDatainputPassword;
-        targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
-        targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
-        targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
-        System.out.println("第一次拿到list长度"+targetDbPoolConfig.tableFieldsList.size());
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.TOPGODS)){//各种数据源,首先入pg_ods
+            targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
+            targetDbPoolConfig.user = pgsqlDatainputUsername;
+            targetDbPoolConfig.password = pgsqlDatainputPassword;
+            targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+            targetDbPoolConfig.targetTableName=res.data.targetDsConfig.targetTableName;
+            targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
+        }else if(Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)){//pg_dw----doris_olap
+            targetDbPoolConfig.type = DriverTypeEnum.MYSQL;
+            targetDbPoolConfig.user = dorisUser;
+            targetDbPoolConfig.password = dorisPwd;
+            targetDbPoolConfig.jdbcStr = dorisUrl;
+            targetDbPoolConfig.targetTableName=null;
+            targetDbPoolConfig.tableFieldsList=null;
+        }
+
         if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = res.data.targetDsConfig.componentId;
         }
@@ -310,7 +317,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         //创建执行删除组件
-        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
+        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, SynchronousTypeEnum.PGTOPG);
         //连接器
         componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建查询组件
@@ -340,7 +347,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, putSqlRes.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
        //用组件,调存储过程把stg里的数据向ods里面插入
-        ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId);
+        ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId,targetDbPoolId);
         componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
         // 用组件然后再调存储过程写日志
 
@@ -360,7 +367,8 @@ public class BuildNifiTaskListener {
         res.add(processorEntity1);
         return res;
     }
-    private List<ProcessorEntity> buildProcessorVersion2(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
+    private List<ProcessorEntity> buildProcessorVersion2(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId,SynchronousTypeEnum synchronousTypeEnum) {
+        List<ProcessorEntity> res = new ArrayList<>();
         //读取增量字段组件
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
         //创建数据转换json组件
@@ -376,30 +384,35 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         //创建执行删除组件
-        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId);
+        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId,synchronousTypeEnum);
         //连接器
         componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //执行查询组件
-        ProcessorEntity executeSQLRecord = createExecuteSQLRecord(config,groupId);
+        ProcessorEntity executeSQLRecord = createExecuteSQLRecord(config,groupId,sourceDbPoolId);
         //连接器
         componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //数据入库
-        ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config,groupId);
+        ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config,groupId,targetDbPoolId,synchronousTypeEnum);
         //连接器
         componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //合并流文件组件
-        ProcessorEntity mergeRes = mergeContentProcessor(groupId);
-        //连接器
-        componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //用组件,调存储过程把stg里的数据向ods里面插入
-        ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId);
-        componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
-        //更新日志
-        ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
-        //连接器
-        componentConnector(groupId, processorEntity1.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //pg2doris不需要调用存储过程
+        if(!Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTODORIS)){
+            //合并流文件组件
+            ProcessorEntity mergeRes = mergeContentProcessor(groupId);
+            //连接器
+            componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            //用组件,调存储过程把stg里的数据向ods里面插入
+            ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId,targetDbPoolId);
+            componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
+            //更新日志
+            ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
+            //连接器
+            componentConnector(groupId, processorEntity1.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            res.add(mergeRes);
+            res.add(processorEntity1);
+            res.add(processorEntity);
+        }
 
-        List<ProcessorEntity> res = new ArrayList<>();
         res.add(queryField);
         res.add(jsonRes);
         res.add(evaluateJson);
@@ -407,13 +420,10 @@ public class BuildNifiTaskListener {
         res.add(delSqlRes);
         res.add(executeSQLRecord);
         res.add(putDatabaseRecord);
-        res.add(mergeRes);
-        res.add(processorEntity1);
-        res.add(processorEntity);
         return res;
     }
 
-    private ProcessorEntity createExecuteSQLRecord(DataAccessConfigDTO config,String groupId){
+    private ProcessorEntity createExecuteSQLRecord(DataAccessConfigDTO config,String groupId,String sourceDbPoolId){
         BaseProcessorDTO data=new BaseProcessorDTO();
         data.details="AvroRecordSetWriter";
         data.name="AvroRecordSetWriter";
@@ -434,7 +444,8 @@ public class BuildNifiTaskListener {
         executeSQLRecordDTO.FetchSize=FetchSize;
         executeSQLRecordDTO.maxRowsPerFlowFile=MaxRowsPerFlowFile;
         executeSQLRecordDTO.outputBatchSize=OutputBatchSize;
-        executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
+        //executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
+        executeSQLRecordDTO.databaseConnectionPoolingService=sourceDbPoolId;
         executeSQLRecordDTO.sqlSelectQuery=config.processorConfig.sourceExecSqlQuery;
         executeSQLRecordDTO.recordwriter=id;
         executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
@@ -443,7 +454,7 @@ public class BuildNifiTaskListener {
         return res.data;
     }
 
-    private ProcessorEntity createPutDatabaseRecord(DataAccessConfigDTO config,String groupId){
+    private ProcessorEntity createPutDatabaseRecord(DataAccessConfigDTO config,String groupId,String targetDbPoolId,SynchronousTypeEnum synchronousTypeEnum){
         BaseProcessorDTO data=new BaseProcessorDTO();
         data.details="PutDatabaseRecord";
         data.name="PutDatabaseRecord";
@@ -460,12 +471,17 @@ public class BuildNifiTaskListener {
         putDatabaseRecordDTO.name = "executeSQLRecord";
         putDatabaseRecordDTO.details = "executeSQLRecord";
         putDatabaseRecordDTO.groupId = groupId;
-        putDatabaseRecordDTO.databaseConnectionPoolingService=config.targetDsConfig.componentId;
+        //putDatabaseRecordDTO.databaseConnectionPoolingService=config.targetDsConfig.componentId;
+        putDatabaseRecordDTO.databaseConnectionPoolingService=targetDbPoolId;
         putDatabaseRecordDTO.databaseType="MS SQL 2012+";//数据库类型,定义枚举
         putDatabaseRecordDTO.recordReader=id;
         putDatabaseRecordDTO.statementType="INSERT";
         putDatabaseRecordDTO.TableName="stg_"+config.processorConfig.targetTableName.toLowerCase();
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTODORIS)){
+            putDatabaseRecordDTO.TableName=config.processorConfig.targetTableName.toLowerCase();
+        }
         putDatabaseRecordDTO.concurrentTasks=ConcurrentTasks;
+        putDatabaseRecordDTO.synchronousTypeEnum=synchronousTypeEnum;
         putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
         verifyProcessorResult(res);
@@ -622,7 +638,7 @@ public class BuildNifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config,String groupId){
+    private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config,String groupId,String targetDbPoolId){
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
         callDbProcedureProcessorDTO.details = "CallDbProcedure";
@@ -634,7 +650,8 @@ public class BuildNifiTaskListener {
         String syncMode= config.cfgDsConfig.syncMode==1?"full_volume":"timestamp_incremental";
         System.out.println("同步类型为:"+syncMode+config.cfgDsConfig.syncMode);
         executsql="select public.data_stg_to_ods ('"+stg_TableName+"','"+ods_TableName+"','"+syncMode+"','${" + NifiConstants.AttrConstants.LOG_CODE + "}'"+")";
-        callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+        //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+        callDbProcedureProcessorDTO.dbConnectionId=targetDbPoolId;
         callDbProcedureProcessorDTO.executsql=executsql;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
@@ -735,12 +752,15 @@ public class BuildNifiTaskListener {
      * @param targetDbPoolId ods连接池id
      * @return 组件对象
      */
-    private ProcessorEntity execDeleteSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+    private ProcessorEntity execDeleteSqlProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId,SynchronousTypeEnum synchronousTypeEnum) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "Execute Delete SQL in the data target";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "TRUNCATE table " + "stg_"+config.processorConfig.targetTableName;
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTODORIS)){
+            querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
+        }
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
