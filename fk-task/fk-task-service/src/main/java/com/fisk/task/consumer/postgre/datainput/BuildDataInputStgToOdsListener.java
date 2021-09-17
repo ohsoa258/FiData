@@ -33,7 +33,7 @@ import static com.cronutils.model.CronType.QUARTZ;
 /**
  * @author: DennyHui
  * CreateTime: 2021/8/31 13:04
- * Description:
+ * Description:pgsql stg表的数据同步到ogs中，目前已弃用，改用存储过程实现。
  */
 @Component
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW)

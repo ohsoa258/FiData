@@ -20,7 +20,7 @@ import javax.annotation.Resource;
 /**
  * @author: DennyHui
  * CreateTime: 2021/8/27 12:57
- * Description:
+ * Description:在pgsql库中创建表
  */
 @Component
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW)

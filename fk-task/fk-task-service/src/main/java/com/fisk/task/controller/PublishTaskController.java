@@ -7,6 +7,7 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +128,18 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW,
                 entityId);
+    }
+    /**
+     * pgsql 删除表
+     * @param delTable
+     * @return
+     */
+    @PostMapping("/deletePgsqlTable")
+    public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable) {
+        return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_DELETE_PGSQL_STGTOODS_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW,
+                delTable);
     }
 
     /**
