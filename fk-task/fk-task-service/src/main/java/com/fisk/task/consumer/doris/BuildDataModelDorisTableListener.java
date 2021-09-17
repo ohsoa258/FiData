@@ -39,10 +39,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -197,6 +194,7 @@ public class BuildDataModelDorisTableListener {
         //1.拼接sql
         StringBuilder sql = new StringBuilder();
         List<String> strings = new ArrayList<>();
+        Map<String, String> Map = new HashMap<>();
         String stg_table =  modelMetaDataDTO.tableName;
         String stg_sql = "";
         sql.append("CREATE TABLE tableName ( "+modelMetaDataDTO.tableName+"_pk varchar,fk_doris_increment_code varchar,");
@@ -205,7 +203,10 @@ public class BuildDataModelDorisTableListener {
         dto.forEach((l) -> {
             if(l.associationTable==null){
             sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + " ,");
-                strings.add(l.fieldEnName);
+            ResultEntity<Object> tableField = client.getTableField(l.sourceFieldId);
+            TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
+            Map.put(l.fieldEnName,tableFieldsDTO.fieldName);
+            strings.add(l.fieldEnName);
             }
         });
         List<String> collect1 = dto.stream().map(e -> e.associationTable).collect(Collectors.toList());
@@ -213,10 +214,12 @@ public class BuildDataModelDorisTableListener {
         collect.forEach((l) -> {
             if(l!=null){
                 sqlFileds.append( l+"_pk" + " " + "varchar" + " ,");
+                Map.put(l+"_pk",l+"_pk");
                 strings.add(l+"_pk");
             }
         });
         modelMetaDataDTO.fieldEnNames=strings;
+        modelMetaDataDTO.fieldEnNameMaps=Map;
         sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
         sqlFileds.append(")");
         sql.append(sqlFileds);
@@ -262,10 +265,15 @@ public class BuildDataModelDorisTableListener {
         storedProcedureSql+="raise notice'%',geshu;\n";
         storedProcedureSql+="if geshu!='y' then \n";
         storedProcedureSql+="insert_sql:='insert into "+modelMetaDataDTO.tableName+"( "+modelMetaDataDTO.tableName+"_pk, fk_doris_increment_code,";
-        for (String field:fieldEnNames) {
+       /* for (String field:fieldEnNames) {
             fieldString+=field+",";
             fieldValue+="'''||resrow1."+field+"||''',";
             fieldUpdate+=field+"='''||resrow1."+field+"||''',";
+        }*/
+        for (String key : modelMetaDataDTO.fieldEnNameMaps.keySet()) {
+            fieldString+=key+",";
+            fieldValue+="'''||resrow1."+modelMetaDataDTO.fieldEnNameMaps.get(key)+"||''',";
+            fieldUpdate+=key+"='''||resrow1."+modelMetaDataDTO.fieldEnNameMaps.get(key)+"||''',";
         }
         fieldString=fieldString.substring(0,fieldString.length()-1);
         fieldValue=fieldValue.substring(0,fieldValue.length()-1)+")';\n";
@@ -299,9 +307,12 @@ public class BuildDataModelDorisTableListener {
             ResultEntity<Object> tableField = client.getTableField(id);
             TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
             //拼接selectsql
-
-            selectSql+="coalesce( ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName+",''''null''''),";
-            //主表
+            if(Objects.equals(d.fieldType.toLowerCase(),"int")){
+                selectSql+="coalesce( ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName+",0),";
+            }else{
+                selectSql+="coalesce( ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName+",''''null''''),";
+            }
+             //主表
             selectSql3+=tableFieldsDTO.fieldName +" "+tableFieldsDTO.fieldType.toLowerCase()+",";
             if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
                 //这里要改,前缀

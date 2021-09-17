@@ -665,12 +665,12 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         //调用存储过程sql,存日志
         String cronNextTime = "";
-        CronSequenceGenerator cron = null;
+        /*CronSequenceGenerator cron = null;
         cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
         Date d = new Date();
         Date date = cron.next(d);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        cronNextTime = sdf.format(date);
+        cronNextTime = sdf.format(date);*/
         String executsql="call nifi_update_etl_log_and_Incremental('";
         executsql+=config.targetDsConfig.targetTableName.toLowerCase()+"',2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}','"+cronNextTime+"')";
         callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;

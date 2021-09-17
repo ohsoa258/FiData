@@ -4,6 +4,7 @@ import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -34,5 +35,7 @@ public class ModelMetaDataDTO {
     public List<String> fieldEnNames;
     //存放存储过程名称
     public String sqlName;
+
+    public Map<String, String> fieldEnNameMaps;
 
 }
