@@ -101,6 +101,15 @@ public class RabbitMQConfig {
     public Queue datainputPgStgToOdsQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW).build();
     }
+
+    /**
+     * 声明队列
+     */
+    @Bean("datainputDeletePgsqlTableQueue")
+    public Queue datainputDeletePgStgTableQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW).build();
+    }
+
     /**
      * 声明队列
      */
@@ -193,6 +202,14 @@ public class RabbitMQConfig {
     public Binding datainputPgBuildTableQueueExchange(@Qualifier("datainputPgBuildTableQueue") Queue queue,
                                                    @Qualifier("itemTopicExchange") Exchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAINPUT_PGSQL_TABLE_ROUTER).noargs();
+    }
+    /**
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding datainputDeletePgsqlTableQueueExchange(@Qualifier("datainputDeletePgsqlTableQueue") Queue queue,
+                                                      @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_DATAINPUT_DELETE_PGSQL_TABLE_ROUTER).noargs();
     }
     /**
      * 绑定队列和交换机

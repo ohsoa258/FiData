@@ -1,5 +1,7 @@
 package com.fisk.task.controller;
 
+import com.davis.client.ApiException;
+import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
@@ -9,6 +11,7 @@ import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.service.IBuildTaskService;
+import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.WsSessionManager;
 import com.fisk.task.utils.YamlReader;
 import fk.atlas.api.AtlasClient;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -111,7 +115,7 @@ public class TestController {
     @PostMapping("/testDorisBuildtable")
     public void publishBuildDorisTableTask() {
         DimensionAttributeAddDTO tab = new DimensionAttributeAddDTO();
-        tab.dimensionId=18;
+        tab.dimensionId=23;
         //tab.dimensionId=144;
         tab.createType=1;
         tab.userId = 60L;
@@ -131,5 +135,25 @@ public class TestController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
                 buildCreateModelTaskDto);
+    }
+    @PostMapping("/testNifi")
+    public void testNifi(){
+        try {
+
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("ee11b478-017b-1000-20d7-4292a5b109c4");
+            ProcessorStatusDTO status = processor.getStatus();
+            status.setRunStatus("Stopped");
+            processor.setStatus(status);
+            ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().updateProcessor("ee11b478-017b-1000-20d7-4292a5b109c4", processor);
+           /* ProcessorStatusDTO processorStatusDTO = new ProcessorStatusDTO();
+            processor.setStatus(processorStatusDTO);
+            ProcessorDTO component = processor.getComponent();
+
+            ProcessorConfigDTO config1 = component.getConfig();
+            Map<String, String> properties = config1.getProperties();
+            System.out.println("我擦"+properties);*/
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
     }
 }
