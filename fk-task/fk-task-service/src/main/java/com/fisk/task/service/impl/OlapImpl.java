@@ -41,11 +41,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
             e.tableName=e.tableName.toLowerCase();
-            List<String> fileds=e.dto.stream().map(d->"`"+d.fieldEnName.toLowerCase()+"`").collect(Collectors.toList());
-            fileds.add("`"+e.tableName+"_pk`");
+            List<String> fields=e.dto.stream().map(d->"`"+d.fieldEnName.toLowerCase()+"`").collect(Collectors.toList());
+            fields.add("`"+e.tableName+"_pk`");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            po.selectDataSql="SELECT "+fileds.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
+            po.selectDataSql="SELECT "+fields.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
