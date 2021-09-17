@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -39,9 +40,12 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         //维度表
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
+            e.tableName=e.tableName.toLowerCase();
+            List<String> fileds=e.dto.stream().map(d->"`"+d.fieldEnName.toLowerCase()+"`").collect(Collectors.toList());
+            fileds.add("`"+e.tableName+"_pk`");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            po.selectDataSql="SELECT * FROM "+e.tableName+"";
+            po.selectDataSql="SELECT "+fileds.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
@@ -50,6 +54,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         //指标表
         dto.atomicIndicatorList.forEach(e->{
             OlapPO po =new OlapPO();
+            e.factTable=e.factTable.toLowerCase();
             po.businessAreaId=businessAreaId;
             po.tableName=e.factTable;
             po.createTableSql=buildCreateAggregateModelSql(e);
@@ -73,11 +78,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append("(");
         StringBuilder sqlFiledBuild = new StringBuilder();
         //主键
-        String keyName=dto.tableName+"_key";
+        String keyName=dto.tableName+"_pk";
         String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
         String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName + "` " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
+        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
         sqlFiledBuild.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
         String sqlFiled = sqlFiledBuild.toString();
         String sqlUnique = sqlUniqueBuild;
@@ -97,10 +102,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder sql=new StringBuilder();
         //聚合key
         List<String> aggregateKeys=new ArrayList<>();
+        String tableName=dto.factTable.toLowerCase();
         sql.append("CREATE TABLE ");
-        sql.append(dto.factTable);
+        sql.append(tableName);
         sql.append(" ( ");
-        String keyName=dto.factTable+"_key";
+        String keyName=(dto.factTable+"_pk").toLowerCase();
         sql.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' , ");
         aggregateKeys.add(keyName);
         //维度字段
@@ -110,7 +116,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         });
         //聚合字段
         dto.list.stream().filter(e->e.attributeType!=1).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` BIGINT "+e.aggregationLogic+" COMMENT \"\", "));
-        sql.deleteCharAt(sql.length()-2);
+        sql.deleteCharAt(sql.lastIndexOf(","));
         sql.append(" ) ");
         sql.append(" ENGINE=OLAP ");
         if (aggregateKeys.size()>0){
@@ -133,8 +139,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder sql=new StringBuilder();
         StringBuilder aggregationFunSql=new StringBuilder();
         StringBuilder groupSql=new StringBuilder();
-        String keyName=dto.factTable+"_key";
-        aggregationFunSql.append(keyName.toLowerCase()+" , ");
+        String tableName=dto.factTable;
+        String keyName=tableName+"_pk";
+        aggregationFunSql.append(keyName+" , ");
         dto.list.forEach(e->{
             if(e.attributeType==0){
                 aggregationFunSql.append("COALESCE(");
@@ -158,7 +165,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append("SELECT ");
         sql.append(aggregationFunSql);
         sql.append(" FROM ");
-        sql.append(dto.factTable);
+        sql.append(tableName);
         sql.append(" ");
         if (groupSql.length()>0){
             groupSql.deleteCharAt(groupSql.length()-1);

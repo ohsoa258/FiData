@@ -32,4 +32,8 @@ public class TaskScheduleDTO {
      * tree标识
      */
     public int flag;
+    /**
+     * 0:实时  1:非实时
+     */
+    public int appType;
 }
