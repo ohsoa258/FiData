@@ -12,5 +12,17 @@ import java.util.List;
  */
 @Data
 public class PgsqlDelTableDTO extends MQBaseDTO {
-    public List<String> tableList;
+    /**
+     * 应用id
+     */
+    public String appId;
+    /**
+     * 表数组
+     */
+    public List<TableListDTO> tableList;
+
+    public boolean delApp;
+
 }
+
+
