@@ -307,22 +307,25 @@ public class BuildDataModelDorisTableListener {
             ResultEntity<Object> tableField = client.getTableField(id);
             TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
             //拼接selectsql
-            if(Objects.equals(d.fieldType.toLowerCase(),"int")){
-                selectSql+="coalesce( ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName+",0),";
-            }else{
-                selectSql+="coalesce( ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName+",''''null''''),";
+            if (Objects.equals(d.attributeType, 2)) {
+                if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
+                    selectSql += "coalesce( ods_" + modelMetaDataDTO.appbAbreviation + "_" + modelMetaDataDTO.sourceTableName + "." + tableFieldsDTO.fieldName + ",0),";
+                } else {
+                    selectSql += "coalesce( ods_" + modelMetaDataDTO.appbAbreviation + "_" + modelMetaDataDTO.sourceTableName + "." + tableFieldsDTO.fieldName + ",''''null''''),";
+                }
+                //主表
+                selectSql3 += tableFieldsDTO.fieldName + " " + tableFieldsDTO.fieldType.toLowerCase() + ",";
             }
-             //主表
-            selectSql3+=tableFieldsDTO.fieldName +" "+tableFieldsDTO.fieldType.toLowerCase()+",";
+
             if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
                 //这里要改,前缀
-                selectSql1+="ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable+"."+tableFieldsDTO.appbAbreviation+d.associationTable+"_pk,";
+                selectSql1+="coalesce( ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+tableFieldsDTO.appbAbreviation+d.associationTable.substring(4)+"_pk,''''null''''),";
                 //别名我说的算
                 selectSql4+=d.associationTable+"_pk  varchar,";
             }
             if(d.associationField!=null){
                 //这里要改,前缀
-                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+"."+d.associationField+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName;
+                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+d.associationField+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName;
             }
         }
         if(Objects.equals(selectSql1," ")){
