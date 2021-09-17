@@ -1,11 +1,11 @@
 package com.fisk.dataservice.utils.mysql;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.Feature;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
-import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,8 +34,7 @@ public class MysqlConnect {
      */
     public static ResultEntity<Object> executeSql(String sql,
                                                   List<DataDoFieldDTO> apiConfigureFieldList,
-                                                  String aggregation,
-                                                  List<TableDataDTO> noTableData){
+                                                  String aggregation){
         ResultSet rs;
         StringBuffer str = new StringBuffer();
         String collect;
@@ -66,7 +65,7 @@ public class MysqlConnect {
                         }).collect(joining(","));
 
                 str.append(collect);
-                addToAggregation(aggregation,collect,str,rs,noTableData,apiConfigureFieldList);
+                addToAggregation(aggregation,collect,str,rs,apiConfigureFieldList);
                 // 不是最后一条数据库数据
                 str.append(",");
             }
@@ -84,7 +83,7 @@ public class MysqlConnect {
             return ResultEntityBuild.build(ResultEnum.SQL_ANALYSIS);
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString(), Feature.OrderedField));
     }
 
 
@@ -94,11 +93,9 @@ public class MysqlConnect {
      * @param collect
      * @param str
      * @param rs
-     * @param noTableData
      * @param apiConfigureFieldList
      */
     public static void addToAggregation(String aggregation,String collect,StringBuffer str,ResultSet rs,
-                                        List<TableDataDTO> noTableData,
                                         List<DataDoFieldDTO> apiConfigureFieldList){
         if (StringUtils.isEmpty(aggregation)){
             return;
@@ -181,6 +178,6 @@ public class MysqlConnect {
             return ResultEntityBuild.build(ResultEnum.SQL_ANALYSIS);
         }
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString()));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.parse(str.toString(), Feature.OrderedField));
     }
 }

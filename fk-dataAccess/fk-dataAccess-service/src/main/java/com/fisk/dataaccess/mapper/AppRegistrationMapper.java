@@ -44,6 +44,13 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     Long getIdByAppName(@Param("app_name")String appName);
 
     /**
+     * 根据appName查询id
+     * @param appName appName
+     * @return 返回值
+     */
+    @Select("select * from tb_app_registration where app_name=#{app_name} and del_flag=1")
+    List<AppRegistrationPO> getByAppName(@Param("app_name")String appName);
+    /**
      * 倒序查询
      * @return 返回值
      */
@@ -71,7 +78,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      * 获取应用注册name及id
      * @return tree
      */
-    @Select("SELECT id,app_name,sync_mode,expression,msg FROM tb_app_registration WHERE del_flag = 1;")
+    @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1;")
     List<DataAccessTreeDTO> listAppTree();
 
     /**

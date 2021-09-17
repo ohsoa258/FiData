@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
+import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.taskschedule.entity.TaskSchedulePO;
 import com.fisk.taskschedule.mapper.TaskScheduleMapper;
 import com.fisk.taskschedule.service.ITaskSchedule;
@@ -20,7 +21,7 @@ import java.util.Date;
 import static com.fisk.taskschedule.map.TaskScheduleMap.INSTANCES;
 
 /**
- * @author Lock
+ * @author wangyan and Lock
  */
 @Service
 @Slf4j
@@ -54,10 +55,30 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         }
 
         TaskCronDTO taskCronDTO = new TaskCronDTO();
+        DataAccessIdDTO dataAccessIdDTO = new DataAccessIdDTO();
         if (save) {
             taskCronDTO.code = ResultEnum.SUCCESS;
             taskCronDTO.cronNextTime = cronNextTime;
-        } else {
+            taskCronDTO.flag = dto.flag;
+            switch (dto.flag) {
+                // 数据接入data-access
+                case 1:
+                    //
+                    if (dto.jobPid != 0 && dto.appType == 1) {
+                        dataAccessIdDTO.appId = dto.jobPid;
+                        dataAccessIdDTO.tableId = dto.jobId;
+                        dataAccessIdDTO.syncMode = dto.syncMode;
+                        dataAccessIdDTO.expression = dto.expression;
+                        taskCronDTO.dto = dataAccessIdDTO;
+                    }
+                    break;
+                case 2:
+                    break;
+                default:
+                    break;
+            }
+
+        } else{
             taskCronDTO.code = ResultEnum.SAVE_DATA_ERROR;
             taskCronDTO.cronNextTime = null;
         }
@@ -71,14 +92,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
         }
-
-//        int id = 0;
-//        // 判断jobPid不为空
-//        if (dto.jobPid != 0) {
-//            id = mapper.getIdTwo(dto.jobPid, dto.jobId);
-//        } else {
-//            id = mapper.getId(model.jobId);
-//        }
 
         TaskSchedulePO taskSchedule = mapper.getTaskSchedule(dto.jobId, dto.flag);
 
@@ -101,9 +114,28 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         }
 
         TaskCronDTO taskCronDTO = new TaskCronDTO();
+        DataAccessIdDTO dataAccessIdDTO = new DataAccessIdDTO();
         if (update) {
             taskCronDTO.code = ResultEnum.SUCCESS;
             taskCronDTO.cronNextTime = cronNextTime;
+            taskCronDTO.flag = dto.flag;
+            switch (dto.flag) {
+                // 数据接入data-access
+                case 1:
+                    //
+                    if (dto.jobPid != 0 && dto.appType == 1) {
+                        dataAccessIdDTO.appId = dto.jobPid;
+                        dataAccessIdDTO.tableId = dto.jobId;
+                        dataAccessIdDTO.syncMode = dto.syncMode;
+                        dataAccessIdDTO.expression = dto.expression;
+                        taskCronDTO.dto = dataAccessIdDTO;
+                    }
+                    break;
+                case 2:
+                    break;
+                default:
+                    break;
+            }
         } else {
             taskCronDTO.code = ResultEnum.SAVE_DATA_ERROR;
             taskCronDTO.cronNextTime = null;
@@ -118,19 +150,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         if (dto == null) {
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
-//        TaskSchedulePO model;
-//        // 判断jobPid不为空
-//        if (dto.jobPid != 0) {
-//            model = mapper.getDataTwo(dto.jobId);
-//            if (model == null) {
-//                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-//            }
-//        } else {
-//            model = mapper.getData(dto.jobId,dto.flag);
-//            if (model == null) {
-//                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-//            }
-//        }
 
         TaskSchedulePO model = mapper.getTaskSchedule(dto.jobId, dto.flag);
         if (model == null) {
