@@ -26,4 +26,8 @@ public class TableListVO {
      * 物理表id
      */
     public Long tableId;
+    /**
+     * nifi流程回写的物理表组件
+     */
+    public String tableComponentId;
 }

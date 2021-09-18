@@ -17,4 +17,12 @@ public class DataAccessIdDTO {
      * 表达式 OR 秒
      */
     public String expression;
+    /**
+     * nifi流程回写的应用组件id
+     */
+    public String appComponentId;
+    /**
+     * nifi流程回写的物理表组件
+     */
+    public String tableComponentId;
 }

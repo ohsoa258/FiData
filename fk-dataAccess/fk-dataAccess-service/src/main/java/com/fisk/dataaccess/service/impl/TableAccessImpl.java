@@ -719,7 +719,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-        vo.componentId = registrationPO.componentId;
+        vo.appComponentId = registrationPO.componentId;
         vo.appAtlasId = registrationPO.atlasInstanceId;
 
         List<TableListVO> voList = new ArrayList<>();
