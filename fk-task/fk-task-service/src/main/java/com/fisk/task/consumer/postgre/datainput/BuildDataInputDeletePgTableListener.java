@@ -2,10 +2,8 @@ package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
@@ -18,6 +16,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,7 +38,7 @@ public class BuildDataInputDeletePgTableListener {
         log.info("dataInfo:" + dataInfo);
         PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
         StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
-        List<String> atlasEntityId=null;
+        List<String> atlasEntityId=new ArrayList();;
         inputData.tableList.forEach((t)->{
             buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+"");
             atlasEntityId.add(t.tableAtlasId);
@@ -51,8 +50,8 @@ public class BuildDataInputDeletePgTableListener {
         log.info("执行pg delete table 完成");
         log.info("开始删除atals实例");
         atlasEntityId.forEach((a)->{
-            AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
-            BusinessResult resDel=atlas.atlasEntityDelete(ad);
+            //AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
+            //BusinessResult resDel=atlas.atlasEntityDelete(ad);
         });
         log.info("Atlas实例删除完成");
     }
