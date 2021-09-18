@@ -26,9 +26,10 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.utils.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -687,6 +688,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEntity<NifiVO> deleteData(long id) {
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+
         // 1.删除tb_table_access数据
         TableAccessPO modelAccess = this.getById(id);
         if (modelAccess == null) {
@@ -711,11 +714,30 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("id", modelAccess.appId).eq("del_flag", 1).one();
+
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
+        vo.userId = userInfo.id;
+        vo.componentId = registrationPO.componentId;
+        vo.appAtlasId = registrationPO.atlasInstanceId;
+
+        List<TableListVO> voList = new ArrayList<>();
+        TableListVO tableListVO = new TableListVO();
+        tableListVO.userId = userInfo.id;
+        tableListVO.tableAtlasId = modelAccess.atlasTableId;
+        NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", modelAccess.id).eq("app_id", modelAccess.appId).one();
+
+        tableListVO.nifiSettingTableName = nifiSettingPO.tableName;
+        voList.add(tableListVO);
+
+        vo.tableList = voList;
+
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
         vo.tableIdList = tableIdList;
+
+
         log.info("删除的物理表信息,{}",vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,vo);
