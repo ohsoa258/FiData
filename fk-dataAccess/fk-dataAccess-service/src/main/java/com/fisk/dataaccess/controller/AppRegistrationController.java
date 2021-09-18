@@ -139,6 +139,7 @@ public class AppRegistrationController {
         NifiVO nifiVO = result.data;
 
         PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+        pgsqlDelTableDTO.userId = nifiVO.userId;
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = true;
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
@@ -146,6 +147,7 @@ public class AppRegistrationController {
                 TableListDTO dto = new TableListDTO();
                 dto.tableAtlasId = e.tableAtlasId;
                 dto.tableName = e.nifiSettingTableName;
+                dto.userId = nifiVO.userId;
                 return dto;
             }).collect(Collectors.toList());
 
