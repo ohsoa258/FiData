@@ -38,10 +38,10 @@ public class BuildDataInputDeletePgTableListener {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
         PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
-        StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE ");
+        StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
         List<String> atlasEntityId=null;
         inputData.tableList.forEach((t)->{
-            buildDelSqlStr.append(t.tableName+",");
+            buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+"");
             atlasEntityId.add(t.tableAtlasId);
         });
         String delSqlStr=buildDelSqlStr.toString();
