@@ -40,7 +40,7 @@ public class BuildDataInputDeletePgTableListener {
         StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
         List<String> atlasEntityId=new ArrayList();;
         inputData.tableList.forEach((t)->{
-            buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+"");
+            buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+", ");
             atlasEntityId.add(t.tableAtlasId);
         });
         String delSqlStr=buildDelSqlStr.toString();
