@@ -17,6 +17,7 @@ import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.enums.AtlasProcessEnum;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
@@ -145,7 +146,7 @@ public class BuildAtlasTableAndColumnTaskListener {
             acd.columnId=c.columnId;
             l_acd.add(acd);
         });
-        sqlStr.insert(0,ae.dbType.toLowerCase()=="sqlserver"?" NEWID()":"UUID()"+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
+        sqlStr.insert(0,ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":"UUID()"+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
         log.info("atlas创建字段 完成");
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);

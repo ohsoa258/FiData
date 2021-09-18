@@ -15,7 +15,7 @@ public class PgsqlDelTableDTO extends MQBaseDTO {
     /**
      * 应用id
      */
-    public String appId;
+    public String appAtlasId;
     /**
      * 表数组
      */
