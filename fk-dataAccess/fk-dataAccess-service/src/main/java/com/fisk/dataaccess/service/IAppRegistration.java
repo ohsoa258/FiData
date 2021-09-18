@@ -10,7 +10,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
-import com.fisk.dataaccess.vo.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 
 import java.util.List;

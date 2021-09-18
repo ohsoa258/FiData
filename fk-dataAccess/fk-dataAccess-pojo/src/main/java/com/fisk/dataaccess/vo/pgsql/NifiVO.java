@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.vo;
+package com.fisk.dataaccess.vo.pgsql;
 
 import lombok.Data;
 
@@ -22,7 +22,15 @@ public class NifiVO {
      */
     public String componentId;
     /**
+     * 应用注册下保存的atlasId
+     */
+    public String appAtlasId;
+    /**
      * 物理表id
      */
     public List<Long> tableIdList;
+    /**
+     * 表数组
+     */
+    public List<TableListVO> tableList;
 }

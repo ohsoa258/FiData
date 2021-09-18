@@ -17,17 +17,15 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppDriveTypePO;
-import com.fisk.dataaccess.entity.AppRegistrationPO;
-import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
-import com.fisk.dataaccess.vo.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +76,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsMapper tableFieldsMapper;
     @Resource
     private TableFieldsImpl tableFieldsImpl;
+    @Resource
+    private NifiSettingImpl nifiSettingImpl;
 
     /**
      * 添加应用
@@ -247,6 +247,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // atlas实例id
+        String atlasInstanceId = model.atlasInstanceId;
+
         // 1.删除tb_app_registration表数据
         int deleteReg = mapper.deleteByIdWithFill(model);
         if (deleteReg < 0) {
@@ -267,22 +271,51 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 .eq("app_id", model.id)
                 .eq("del_flag", 1)
                 .list();
-        accessList.forEach(tableAccessPO -> tableAccessMapper.deleteByIdWithFill(tableAccessPO));
-        // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
-        accessList.stream().map(
-                        po -> tableFieldsImpl.query()
-                                .eq("table_access_id", po.id)
-                                .eq("del_flag", 1).list())
-                .flatMap(Collection::stream)
-                .forEachOrdered(fieldsPO -> tableFieldsMapper.deleteByIdWithFill(fieldsPO));
 
+        List<Long> tableIdList = new ArrayList<>();
 
         NifiVO vo = new NifiVO();
+        List<TableListVO> tableList = new ArrayList<>();
+
+        if (accessList != null && !accessList.isEmpty()) {
+            // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
+            tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
+            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
+
+            for (Long tableId : tableIdList) {
+                TableListVO tableVO = new TableListVO();
+                TableAccessPO tableAccessPO = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
+                NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", tableAccessPO.id).eq("app_id", id).one();
+                tableVO.tableAtlasId = tableAccessPO.atlasTableId;
+                tableVO.nifiSettingTableName = nifiSettingPO.tableName;
+                tableList.add(tableVO);
+            }
+
+
+
+            // 删除应用下面的所有表及表结构
+            accessList.forEach(tableAccessPO -> tableAccessMapper.deleteByIdWithFill(tableAccessPO));
+            // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+            accessList.stream().map(
+                            po -> tableFieldsImpl.query()
+                                    .eq("table_access_id", po.id)
+                                    .eq("del_flag", 1).list())
+                    .flatMap(Collection::stream)
+                    .forEachOrdered(fieldsPO -> tableFieldsMapper.deleteByIdWithFill(fieldsPO));
+        }
+
+
+        /**
+         * 将方法的返回值封装
+         */
         vo.userId = userInfo.id;
         vo.appId = String.valueOf(model.id);
         vo.componentId = model.componentId;
-
-        vo.tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
+        vo.tableIdList = tableIdList;
+        // atlas应用id
+        vo.appAtlasId = atlasInstanceId;
+        // atlas物理表信息
+        vo.tableList = tableList;
 
         log.info("删除的应用信息,{}", vo);
 
