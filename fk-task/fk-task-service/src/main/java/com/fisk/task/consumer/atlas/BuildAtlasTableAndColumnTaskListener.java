@@ -9,6 +9,7 @@ import com.cronutils.parser.CronParser;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -264,6 +265,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
+        bfd.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
         bfd.tableName=ae.tableName;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);

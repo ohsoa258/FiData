@@ -219,4 +219,12 @@ public interface INifiComponentsBuild {
 
     BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BaseProcessorDTO data);
 
+    /*
+     * 更新组件配置
+     * */
+    List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities);
+    /*
+     * 停止组件
+     * */
+     List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities);
 }
