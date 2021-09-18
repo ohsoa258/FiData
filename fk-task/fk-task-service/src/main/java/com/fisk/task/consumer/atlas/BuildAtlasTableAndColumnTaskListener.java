@@ -147,7 +147,7 @@ public class BuildAtlasTableAndColumnTaskListener {
             acd.columnId=c.columnId;
             l_acd.add(acd);
         });
-        sqlStr.insert(0,ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":"UUID()"+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
+        sqlStr.insert(0,(ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
         log.info("atlas创建字段 完成");
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
