@@ -178,8 +178,8 @@ public class TestController {
         BuildNifiFlowDTO data=new BuildNifiFlowDTO();
         data.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
         data.userId=60L;
-        data.id=1870L;
-        data.appId=632L;
+        data.id=1918L;
+        data.appId=636L;
          service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,

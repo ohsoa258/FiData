@@ -418,7 +418,7 @@ public class BuildNifiTaskListener {
             //更新日志
             ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
             //连接器
-            componentConnector(groupId, processorEntity1.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            componentConnector(groupId, queryNumbers.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
             res.add(mergeRes);
             res.add(processorEntity1);
             res.add(processorEntity);
@@ -667,6 +667,7 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.dbConnectionId=targetDbPoolId;
         callDbProcedureProcessorDTO.executsql=executsql;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(9);
+        callDbProcedureProcessorDTO.haveNextOne=true;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -692,7 +693,7 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         //调用存储过程sql,存日志
         String cronNextTime = "";
-        if (config.processorConfig.scheduleExpression != null) {
+        if (config.processorConfig.scheduleExpression != null&&config.processorConfig.scheduleExpression !="") {
             if (Objects.equals(config.processorConfig.scheduleType, SchedulingStrategyTypeEnum.CRON)) {
                 CronSequenceGenerator cron = null;
                 cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
@@ -713,6 +714,7 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql=executsql;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(11);
+        callDbProcedureProcessorDTO.haveNextOne=false;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
