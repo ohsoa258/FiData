@@ -3,6 +3,7 @@ package com.fisk.task.service.impl;
 import com.davis.client.ApiException;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
+import com.davis.client.model.ProcessorEntity;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
@@ -816,7 +817,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         for (ProcessorEntity item : entities) {
             try {
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
-                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.STOPPED) {
                     continue;
                 }
 
