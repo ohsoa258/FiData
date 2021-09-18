@@ -174,7 +174,7 @@ public class BuildDataModelDorisTableListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         callDbProcedureProcessorDTO.dbConnectionId=componentId;
         callDbProcedureProcessorDTO.executsql="call "+executsql;
-
+        callDbProcedureProcessorDTO.haveNextOne=true;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         if( !processorEntityBusinessResult.success){

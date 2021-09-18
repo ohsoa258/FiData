@@ -481,6 +481,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     @Override
     public BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
         List<String> autoRes = new ArrayList<>();
+        if (buildCallDbProcedureProcessorDTO.haveNextOne == false) {
+            autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        }
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
         Map<String, String> map = new HashMap<>(2);
         map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
