@@ -1,11 +1,10 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -136,5 +135,7 @@ public interface DataAccessClient {
     @GetMapping("/physicalTable/createPgToDorisConfig")
     public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql);
 
+    @GetMapping("/dataAccessTree/getComponentId")
+    public ResultEntity<Object> getComponentId(@RequestBody DataAccessIdsDTO dto);
 
 }
