@@ -38,15 +38,16 @@ public class BuildDataInputDeletePgTableListener {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
         PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
-        StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE");
+        StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE ");
         List<String> atlasEntityId=null;
         inputData.tableList.forEach((t)->{
             buildDelSqlStr.append(t.tableName+",");
             atlasEntityId.add(t.tableAtlasId);
         });
         String delSqlStr=buildDelSqlStr.toString();
-        delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+";";
+        delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
         PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAINPUT);
+        log.info("delsql:"+delSqlStr);
         log.info("执行pg delete table 完成");
         log.info("开始删除atals实例");
         atlasEntityId.forEach((a)->{
