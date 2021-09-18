@@ -35,6 +35,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -741,9 +742,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
 
-        // TODO:驱动类型
+        // TODO:驱动类型(改为枚举类型)
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-            dto.dbType = modelDataSource.driveType;
+//            dto.dbType = modelDataSource.driveType;
+
+            switch (modelDataSource.driveType) {
+                case "sqlserver":
+                    dto.dbType = DbTypeEnum.sqlserver;
+                    break;
+                case "mysql":
+                    dto.dbType = DbTypeEnum.mysql;
+                    break;
+                case "postgresql":
+                    dto.dbType = DbTypeEnum.postgresql;
+                    break;
+                case "oracle":
+                    dto.dbType = DbTypeEnum.oracle;
+                    break;
+                default:
+                    break;
+            }
         }
 
         // TODO 新增cron表达式
@@ -840,7 +858,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO:驱动类型
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-            atlasDTO.dbType = modelDataSource.driveType;
+//            atlasDTO.dbType = modelDataSource.driveType;
+            switch (modelDataSource.driveType) {
+                case "sqlserver":
+                    atlasDTO.dbType = DbTypeEnum.sqlserver;
+                    break;
+                case "mysql":
+                    atlasDTO.dbType = DbTypeEnum.mysql;
+                    break;
+                case "postgresql":
+                    atlasDTO.dbType = DbTypeEnum.postgresql;
+                    break;
+                case "oracle":
+                    atlasDTO.dbType = DbTypeEnum.oracle;
+                    break;
+                default:
+                    break;
+            }
         }
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
