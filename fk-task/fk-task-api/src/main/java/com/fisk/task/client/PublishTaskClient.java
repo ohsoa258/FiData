@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,5 +68,14 @@ public interface PublishTaskClient {
      */
     @PostMapping("/olapTask/CreateModel")
     ResultEntity<Object> publishOlapCreateModel(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto);
+
+    /**
+     * pgsql 删除表
+     *
+     * @param delTable
+     * @return
+     */
+    @PostMapping("/publishTask/deletePgsqlTable")
+    public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable);
 
 }
