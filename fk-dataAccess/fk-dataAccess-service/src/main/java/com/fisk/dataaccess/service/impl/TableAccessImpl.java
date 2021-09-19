@@ -17,6 +17,8 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.map.TableAccessMap;
@@ -719,7 +721,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-        vo.componentId = registrationPO.componentId;
+        vo.appComponentId = registrationPO.componentId;
         vo.appAtlasId = registrationPO.atlasInstanceId;
 
         List<TableListVO> voList = new ArrayList<>();
@@ -1178,6 +1180,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         buildNifiFlowDTO.id = tableAccessPO.id;
         buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
         return buildNifiFlowDTO;
+    }
+
+    @Override
+    public ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto) {
+
+        ComponentIdDTO componentIdDTO = new ComponentIdDTO();
+
+        AppRegistrationPO appRegistrationPO = appRegistrationImpl.query().eq("id", dto.appId).eq("del_flag", 1).one();
+        TableAccessPO tableAccessPO = this.query().eq("id", dto.tableId).eq("del_flag", 1).one();
+        componentIdDTO.appComponentId = appRegistrationPO.componentId;
+        componentIdDTO.tableComponentId = tableAccessPO.componentId;
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,componentIdDTO);
     }
 
 

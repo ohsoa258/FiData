@@ -6,10 +6,12 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -190,4 +192,5 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
 
+    ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto);
 }

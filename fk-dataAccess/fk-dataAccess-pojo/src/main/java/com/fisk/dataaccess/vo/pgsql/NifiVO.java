@@ -18,9 +18,9 @@ public class NifiVO {
      */
     public String appId;
     /**
-     * nifi流程回写的组件
+     * nifi流程回写的应用组件id
      */
-    public String componentId;
+    public String appComponentId;
     /**
      * 应用注册下保存的atlasId
      */
