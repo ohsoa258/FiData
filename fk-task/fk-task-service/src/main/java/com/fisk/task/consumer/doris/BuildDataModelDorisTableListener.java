@@ -194,10 +194,10 @@ public class BuildDataModelDorisTableListener {
         String tableName1="";
         if(modelMetaDataDTO.tableName.startsWith("dim_")){
             tableName=modelMetaDataDTO.tableName.substring(0,4)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4);
-            tableName1=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName.substring(4)+"_pk";
+            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4)+"_pk";
         }else if (modelMetaDataDTO.tableName.startsWith("fact_")){
             tableName=modelMetaDataDTO.tableName.substring(0,5)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5);
-            tableName1=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName.substring(5)+"_pk";
+            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5)+"_pk";
         }
         //创建pgdb表
         //1.拼接sql
@@ -310,7 +310,7 @@ public class BuildDataModelDorisTableListener {
     * */
     public String selectSql(ModelMetaDataDTO modelMetaDataDTO){
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
-        String selectSql="select  ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.sourceTableName +"_pk,ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+".fk_doris_increment_code ,";
+        String selectSql="select  ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName +"_pk,ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+".fk_doris_increment_code ,";
         String selectSql1=" ";
         String selectSql2="";
         String selectSql3="";
@@ -334,7 +334,7 @@ public class BuildDataModelDorisTableListener {
 
             if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
                 //这里要改,前缀
-                selectSql1+="coalesce( ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+tableFieldsDTO.appbAbreviation+d.associationTable.substring(4)+"_pk,''''null''''),";
+                selectSql1+="coalesce( ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"_pk,''''null''''),";
                 //别名我说的算
                 selectSql4+=d.associationTable+"_pk  varchar,";
             }
@@ -360,10 +360,10 @@ public class BuildDataModelDorisTableListener {
         String tableName1="";
         if(modelMetaDataDTO.tableName.startsWith("dim_")){
             tableName=modelMetaDataDTO.tableName.substring(0,4)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4);
-            tableName1=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName.substring(4)+"_pk";
+            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4)+"_pk";
         }else if (modelMetaDataDTO.tableName.startsWith("fact_")){
             tableName=modelMetaDataDTO.tableName.substring(0,5)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5);
-            tableName1=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName.substring(5)+"_pk";
+            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5)+"_pk";
         }
         String fieldValue="";
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
