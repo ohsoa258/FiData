@@ -175,10 +175,10 @@ public class FactAttributeImpl
                 }
                 dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
                 dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
+                dto.sourceFieldId=attributePO.tableSourceFieldId; //关联字段来源
                 //获取关联维度与本表关联字段名称
                 FactAttributePO factAttributePO=mapper.selectById(item.associateId);
                 dto.fieldEnName=factAttributePO.factFieldEnName; //关联维度与本表字段关联名称
-                dto.sourceFieldId=factAttributePO.tableSourceFieldId; //本表字段来源
             }
             dtoList.add(dto);
         }
