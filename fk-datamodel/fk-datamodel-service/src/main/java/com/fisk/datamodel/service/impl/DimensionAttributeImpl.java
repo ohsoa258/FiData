@@ -239,6 +239,7 @@ public class DimensionAttributeImpl
                     break;
                 }
                 dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName; //关联维度与本表字段关联名称
+                dto.associationSourceFieldId=dimensionAttributePO.tableSourceFieldId; //关联维度与本表字段关联来源id
             }
             dtoList.add(dto);
         }

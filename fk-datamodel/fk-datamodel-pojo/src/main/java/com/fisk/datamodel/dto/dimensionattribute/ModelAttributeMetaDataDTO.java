@@ -48,4 +48,9 @@ public class ModelAttributeMetaDataDTO {
      */
     public int sourceFieldId;
 
+    /**
+     * 关联来源表字段id
+     */
+    public int associationSourceFieldId;
+
 }

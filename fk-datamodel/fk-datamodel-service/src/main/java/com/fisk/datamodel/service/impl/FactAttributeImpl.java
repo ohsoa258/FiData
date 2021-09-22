@@ -179,6 +179,7 @@ public class FactAttributeImpl
                 //获取关联维度与本表关联字段名称
                 FactAttributePO factAttributePO=mapper.selectById(item.associateId);
                 dto.fieldEnName=factAttributePO.factFieldEnName; //关联维度与本表字段关联名称
+                dto.associationSourceFieldId=factAttributePO.tableSourceFieldId; //关联维度与本表字段关联来源id
             }
             dtoList.add(dto);
         }
