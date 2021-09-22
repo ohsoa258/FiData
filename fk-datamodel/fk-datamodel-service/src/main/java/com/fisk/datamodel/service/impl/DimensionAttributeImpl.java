@@ -82,18 +82,19 @@ public class DimensionAttributeImpl
         //判断列名是否重复
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
-        boolean isExit=false;
+        //boolean isExit=false;
         List<DimensionAttributePO> list=new ArrayList<>();
         for (DimensionAttributeDTO item:dto)
         {
-            DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
+            /*DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
                     .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
+                    .eq(DimensionAttributePO::getAttributeType,item.attributeType)
             );
             if (po !=null)
             {
                 isExit=true;
                 break;
-            }
+            }*/
             DimensionAttributePO data= DimensionAttributeMap.INSTANCES.dtoToPo(item);
             data.dimensionId=dimensionId;
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
@@ -107,10 +108,10 @@ public class DimensionAttributeImpl
             }
             list.add(data);
         }
-        if (isExit)
+        /*if (isExit)
         {
             return ResultEnum.DATA_EXISTS;
-        }
+        }*/
         return this.saveBatch(list)?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
