@@ -174,7 +174,7 @@ public class BuildDataModelDorisTableListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         callDbProcedureProcessorDTO.dbConnectionId=componentId;
         callDbProcedureProcessorDTO.executsql="call "+executsql;
-        callDbProcedureProcessorDTO.haveNextOne=true;
+        callDbProcedureProcessorDTO.haveNextOne=false;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         if( !processorEntityBusinessResult.success){
@@ -206,7 +206,7 @@ public class BuildDataModelDorisTableListener {
         Map<String, String> Map = new HashMap<>();
         String stg_table =  modelMetaDataDTO.tableName;
         String stg_sql = "";
-        sql.append("CREATE TABLE tableName ( "+tableName1+" varchar,fk_doris_increment_code varchar PRIMARY KEY,");
+        sql.append("CREATE TABLE tableName ( "+tableName1+" varchar PRIMARY KEY,fk_doris_increment_code varchar,");
         StringBuilder sqlFileds = new StringBuilder();
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
         dto.forEach((l) -> {
@@ -366,14 +366,15 @@ public class BuildDataModelDorisTableListener {
             tableName1=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName.substring(5)+"_pk";
         }
         String fieldValue="";
-        String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update "+tableName+"() \n"+
-                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nbegin\n";
-         storedProcedureSql+="INSERT INTO "+tableName+" SELECT * FROM( "+selectSql(modelMetaDataDTO)+") AS ods ON CONFLICT (" ;
+        String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
+                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";
+         storedProcedureSql+="mysql1:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql(modelMetaDataDTO)+")'||' AS ods ON CONFLICT (" ;
         storedProcedureSql+=tableName1+")  DO UPDATE SET ";
         for (String key : modelMetaDataDTO.fieldEnNameMaps.keySet()) {
             fieldValue+=key+"=EXCLUDED."+modelMetaDataDTO.fieldEnNameMaps.get(key)+",";
         }
-        storedProcedureSql+=fieldValue.substring(0,fieldValue.length()-1)+";\n";
+        storedProcedureSql+=fieldValue.substring(0,fieldValue.length()-1)+"';\n";
+        storedProcedureSql+="raise notice'%',mysql1;\nEXECUTE mysql1;\n";
         storedProcedureSql+="end\n$BODY$;\n";
         return storedProcedureSql;
     }
