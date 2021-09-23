@@ -686,6 +686,34 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+    @Override
+    public List<TablePyhNameDTO> getTableFieldsByAppId(long appId) {
+
+        // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appId).one();
+        String url = modelDataSource.getConnectStr();
+        String user = modelDataSource.getConnectAccount();
+        String pwd = modelDataSource.getConnectPwd();
+        String dbName = modelDataSource.dbName;
+
+        // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        switch (modelDataSource.driveType) {
+            case "mysql":
+                // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+                MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+                break;
+            case "sqlserver":
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
+                break;
+            default:
+                break;
+        }
+
+        return list;
+    }
+
 
     /**
      * 删除数据

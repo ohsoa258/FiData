@@ -84,6 +84,13 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFields(appName));
     }
 
+    @GetMapping("/getTableNameAndFieldsByAppId")
+    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    public ResultEntity<Object> queryNonRealTimeTableByAppId(@RequestParam("appId") long appId) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldsByAppId(appId));
+    }
+
     @GetMapping("/getTableNameByAppId")
     @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
     public ResultEntity<Object> queryNonRealTimeTable(@RequestParam("appId") long id) {

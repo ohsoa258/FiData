@@ -100,6 +100,14 @@ public interface ITableAccess extends IService<TableAccessPO> {
     List<TablePyhNameDTO> getTableFields(String appName);
 
     /**
+     * 根据应用名称,获取远程数据库的表及表对应的字段
+     *
+     * @param appId 应用ID
+     * @return 返回值
+     */
+    List<TablePyhNameDTO> getTableFieldsByAppId(long appId);
+
+    /**
      * atlas
      *
      * @param id    id
