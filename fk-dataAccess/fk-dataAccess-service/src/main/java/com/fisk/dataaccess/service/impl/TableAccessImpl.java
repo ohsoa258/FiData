@@ -105,6 +105,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private EtlIncrementalMapper etlIncrementalMapper;
+    @Value("${pgsql-datamodel.url}")
+    public String pgsqlDatamodelUrl;
+    @Value("${pgsql-datamodel.username}")
+    public String pgsqlDatamodelUsername;
+    @Value("${pgsql-datamodel.password}")
+    public String pgsqlDatamodelPassword;
 
     /**
      * 添加物理表(实时)
@@ -1151,13 +1157,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         appRegistrationPO.delFlag = 1;
         appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
         appDataSourcePO.appId = appRegistrationPO.id;//后面加上AppRegistrationPO.id
+        //ConnectStr   driveType   ConnectAccount   ConnectPwd
         appDataSourcePO.driveType = "postgresql";
-        appDataSourcePO.dbName = "dmp_dw";
-        appDataSourcePO.host = "192.168.1.250";//这个可以写道配置文件里pg 连接信息：
-        appDataSourcePO.connectAccount = "postgres";
-        appDataSourcePO.connectPwd = "Password01!";
-        appDataSourcePO.port = "5432";
-        appDataSourcePO.connectStr = "jdbc:postgresql://192.168.1.250:5432/dmp_dw";
+        appDataSourcePO.connectAccount = pgsqlDatamodelUsername;
+        appDataSourcePO.connectPwd = pgsqlDatamodelPassword;
+        appDataSourcePO.connectStr = pgsqlDatamodelUrl;
         appDataSourceImpl.save(appDataSourcePO);
         tableAccessPO.appId = appRegistrationPO.id;//后续补上AppRegistrationPO.id
         tableAccessPO.isRealtime = 1;

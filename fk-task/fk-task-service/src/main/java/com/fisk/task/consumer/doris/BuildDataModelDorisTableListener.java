@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -65,6 +66,13 @@ public class BuildDataModelDorisTableListener {
     DataAccessClient client;
     @Resource
     INifiComponentsBuild componentsBuild;
+    @Value("${pgsql-datamodel.url}")
+    public String pgsqlDatamodelUrl;
+    @Value("${pgsql-datamodel.username}")
+    public String pgsqlDatamodelUsername;
+    @Value("${pgsql-datamodel.password}")
+    public String pgsqlDatamodelPassword;
+
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
@@ -75,7 +83,7 @@ public class BuildDataModelDorisTableListener {
         if(inpData.createType==0){
             dimensionAttributeList=dc.getDimensionEntity(inpData.dimensionId);
             ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
-             pgdbTable = createPgdbTable(modelMetaDataDTO);
+             pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
             log.info("pg数据库创表结果为" + pgdbTable);
             String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
             PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
@@ -88,7 +96,7 @@ public class BuildDataModelDorisTableListener {
             dimensionAttributeList=dc.getBusinessProcessFact(inpData.dimensionId);
             List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
             for (ModelMetaDataDTO modelMetaDataDTO:modelMetaDataDTOS) {
-             pgdbTable = createPgdbTable(modelMetaDataDTO);
+             pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
              log.info(modelMetaDataDTO.tableName+"pg数据库创表结果为" + pgdbTable);
              String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
              PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
@@ -113,14 +121,14 @@ public class BuildDataModelDorisTableListener {
         ProcessGroupEntity data2=new ProcessGroupEntity();
 
         buildDbControllerServiceDTO.driverLocation= NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
-        buildDbControllerServiceDTO.conUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw";
+        buildDbControllerServiceDTO.conUrl=pgsqlDatamodelUrl;
         buildDbControllerServiceDTO.driverName= DriverTypeEnum.POSTGRESQL.getName();
-        buildDbControllerServiceDTO.pwd="Password01!";
-        buildDbControllerServiceDTO.name="pgTopg";
+        buildDbControllerServiceDTO.pwd=pgsqlDatamodelPassword;
+        buildDbControllerServiceDTO.name=businessAreaName;
         buildDbControllerServiceDTO.enabled = true;
         buildDbControllerServiceDTO.groupId = NifiConstants.ApiConstants.ROOT_NODE;;
-        buildDbControllerServiceDTO.details="pgTopg";
-        buildDbControllerServiceDTO.user="postgres";
+        buildDbControllerServiceDTO.details=businessAreaName;
+        buildDbControllerServiceDTO.user=pgsqlDatamodelUsername;
         BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
         if (controllerServiceEntityBusinessResult.success) {
              data = controllerServiceEntityBusinessResult.data;
@@ -129,8 +137,8 @@ public class BuildDataModelDorisTableListener {
         }
         //创建应用组
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-        dto.name = "businessAreaName";//我擦
-        dto.details = "businessAreaName";
+        dto.name = modelMetaDataDTO.tableName;
+        dto.details = modelMetaDataDTO.tableName;
         //根据组个数，定义坐标
         int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
         dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
@@ -189,16 +197,9 @@ public class BuildDataModelDorisTableListener {
     * 创建表
     *
     * */
-    private boolean createPgdbTable(ModelMetaDataDTO modelMetaDataDTO){
-        String tableName="";
-        String tableName1="";
-        if(modelMetaDataDTO.tableName.startsWith("dim_")){
-            tableName=modelMetaDataDTO.tableName.substring(0,4)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4);
-            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4)+"_pk";
-        }else if (modelMetaDataDTO.tableName.startsWith("fact_")){
-            tableName=modelMetaDataDTO.tableName.substring(0,5)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5);
-            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5)+"_pk";
-        }
+    private boolean createPgdbTable(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName){
+        String tableName=modelMetaDataDTO.tableName;
+        String tableKeyName=modelMetaDataDTO.tableName+"_pk";
         //创建pgdb表
         //1.拼接sql
         StringBuilder sql = new StringBuilder();
@@ -206,7 +207,7 @@ public class BuildDataModelDorisTableListener {
         Map<String, String> Map = new HashMap<>();
         String stg_table =  modelMetaDataDTO.tableName;
         String stg_sql = "";
-        sql.append("CREATE TABLE tableName ( "+tableName1+" varchar PRIMARY KEY,fk_doris_increment_code varchar,");
+        sql.append("CREATE TABLE tableName ( "+tableKeyName+" varchar PRIMARY KEY,fk_doris_increment_code varchar,");
         StringBuilder sqlFileds = new StringBuilder();
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
         dto.forEach((l) -> {
@@ -216,21 +217,14 @@ public class BuildDataModelDorisTableListener {
             TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
             Map.put(l.fieldEnName,tableFieldsDTO.fieldName);
             strings.add(l.fieldEnName);
-            }
-        });
-        List<String> collect1 = dto.stream().map(e -> e.associationTable).collect(Collectors.toList());
-        List<String> collect = collect1.stream().distinct().collect(Collectors.toList());//去重
-        collect.forEach((l) -> {
-            String tableName2="";
-            if(l!=null){
-                if(modelMetaDataDTO.tableName.startsWith("dim_")){
-                    tableName2=modelMetaDataDTO.tableName.substring(0,4)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4);
-                }else if (modelMetaDataDTO.tableName.startsWith("fact_")){
-                    tableName2=modelMetaDataDTO.tableName.substring(0,5)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5);
+            }else{
+                String tableName2="";
+                if(l!=null){
+                    tableName2=l.associationTable;
+                    sqlFileds.append( tableName2+"_pk" + " " + "varchar" + " ,");
+                    Map.put(tableName2+"_pk",tableName2+"_pk");
+                    strings.add(tableName2+"_pk");
                 }
-                sqlFileds.append( tableName2+"_pk" + " " + "varchar" + " ,");
-                Map.put(tableName2+"_pk",tableName2+"_pk");
-                strings.add(tableName2+"_pk");
             }
         });
         modelMetaDataDTO.fieldEnNames=strings;
@@ -243,7 +237,7 @@ public class BuildDataModelDorisTableListener {
         BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
         log.info("【PGSTG】" + stg_sql);
         TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
-        taskDwDimPO.areaBusinessName="";//业务域名
+        taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
         taskDwDimPO.sqlContent=stg_sql;//创建表的sql
         taskDwDimPO.tableName=stg_table;
         taskDwDimPO.storedProcedureName="update"+tableName+"()";
@@ -322,7 +316,7 @@ public class BuildDataModelDorisTableListener {
             ResultEntity<Object> tableField = client.getTableField(id);
             TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
             //拼接selectsql
-            if (Objects.equals(d.attributeType, 2)) {
+            if (!Objects.equals(d.attributeType, 1)) {
                 if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
                     selectSql += "coalesce( ods_" + modelMetaDataDTO.appbAbreviation + "_" + modelMetaDataDTO.sourceTableName + "." + tableFieldsDTO.fieldName + ",0),";
                 } else {
@@ -334,13 +328,20 @@ public class BuildDataModelDorisTableListener {
 
             if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
                 //这里要改,前缀
-                selectSql1+="coalesce( ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"_pk,''''null''''),";
+                if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
+                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "_pk,0),";
+                } else {
+                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "_pk,''''null''''),";
+
+                }
                 //别名我说的算
-                selectSql4+=d.associationTable+"_pk  varchar,";
+                selectSql4+="dim_"+tableFieldsDTO.originalTableName+"_pk  varchar,";
             }
             if(d.associationField!=null){
                 //这里要改,前缀
-                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+d.associationTable.substring(4)+"."+d.associationField+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO.fieldName;
+                ResultEntity<Object> tableField1 = client.getTableField(d.associationSourceFieldId);
+                TableFieldsDTO tableFieldsDTO1 = JSON.parseObject(JSON.toJSONString(tableField1.data), TableFieldsDTO.class);
+                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+"."+tableFieldsDTO.fieldName+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO1.fieldName;
             }
         }
         if(Objects.equals(selectSql1," ")){
@@ -350,26 +351,19 @@ public class BuildDataModelDorisTableListener {
         selectSql1=selectSql1.substring(0,selectSql1.length()-1)+" from ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName;
         selectSql=selectSql+selectSql1+selectSql2;
         selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
-        selectSql3=modelMetaDataDTO.appbAbreviation+modelMetaDataDTO.tableName+"_pk varchar, fk_doris_increment_code varchar,"+selectSql3;
+        selectSql3=modelMetaDataDTO.tableName+"_pk varchar, fk_doris_increment_code varchar,"+selectSql3;
         selectSql=selectSql+selectSql3+selectSql4.substring(0,selectSql4.length()-1)+")";
         return selectSql;
     }
 
     public String createStoredProcedure2(ModelMetaDataDTO modelMetaDataDTO){
-        String tableName="";
-        String tableName1="";
-        if(modelMetaDataDTO.tableName.startsWith("dim_")){
-            tableName=modelMetaDataDTO.tableName.substring(0,4)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4);
-            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(4)+"_pk";
-        }else if (modelMetaDataDTO.tableName.startsWith("fact_")){
-            tableName=modelMetaDataDTO.tableName.substring(0,5)+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5);
-            tableName1=modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.tableName.substring(5)+"_pk";
-        }
+        String tableName=modelMetaDataDTO.tableName;
+        String tableKeyName=modelMetaDataDTO.tableName+"_pk";
         String fieldValue="";
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
                 "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";
          storedProcedureSql+="mysql1:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql(modelMetaDataDTO)+")'||' AS ods ON CONFLICT (" ;
-        storedProcedureSql+=tableName1+")  DO UPDATE SET ";
+        storedProcedureSql+=tableKeyName+")  DO UPDATE SET ";
         for (String key : modelMetaDataDTO.fieldEnNameMaps.keySet()) {
             fieldValue+=key+"=EXCLUDED."+modelMetaDataDTO.fieldEnNameMaps.get(key)+",";
         }
