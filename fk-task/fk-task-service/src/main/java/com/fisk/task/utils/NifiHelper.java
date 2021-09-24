@@ -1,8 +1,8 @@
 package com.fisk.task.utils;
 
 import com.davis.client.ApiClient;
-import com.davis.client.api.ControllerservicesApi;
-import com.davis.client.api.ProcessgroupsApi;
+import com.davis.client.api.ControllerServicesApi;
+import com.davis.client.api.ProcessGroupsApi;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.RevisionDTO;
@@ -21,8 +21,11 @@ public class NifiHelper {
      *
      * @return api操作类
      */
-    public static ProcessgroupsApi getProcessGroupsApi() {
-        return new ProcessgroupsApi(getApiClient());
+//    public static ProcessgroupsApi getProcessGroupsApi() {
+//        return new ProcessgroupsApi(getApiClient());
+//    }
+    public static ProcessGroupsApi getProcessGroupsApi() {
+        return new ProcessGroupsApi(getApiClient());
     }
 
     /**
@@ -30,10 +33,15 @@ public class NifiHelper {
      *
      * @return api操作类
      */
-    public static ControllerservicesApi getControllerServicesApi() {
-        return new ControllerservicesApi(getApiClient());
+//    public static ControllerservicesApi getControllerServicesApi() {
+//        return new ControllerservicesApi(getApiClient());
+//    }
+    public static ControllerServicesApi getControllerServicesApi() {
+        return new ControllerServicesApi(getApiClient());
     }
-
+    public void Test() {
+        ControllerServicesApi controllerServicesApi = new ControllerServicesApi();
+    }
     /**
      * 获取controller-service的api操作类
      *
