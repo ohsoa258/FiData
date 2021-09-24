@@ -63,7 +63,7 @@ public class BuildModelTaskListener {
                 ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig(olapPO.tableName, olapPO.selectDataSql);
                 BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
                 log.info("nifi配置结束,开始创建nifi流程");
-                buildNifiFlowDTO.userId=Long.valueOf(olapPO.createUser);
+                buildNifiFlowDTO.userId=inpData.userId;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 log.info("nifi流程配置结束");
             }

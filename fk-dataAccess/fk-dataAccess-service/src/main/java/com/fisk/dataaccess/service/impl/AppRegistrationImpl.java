@@ -587,4 +587,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         mapper.insertAppRegistrationPO(appRegistrationPO);
         return appRegistrationPO;
     }
+
+    @Override
+    public List<AppRegistrationPO> getByAppName(String appName){
+        List<AppRegistrationPO> byAppName = mapper.getByAppName(appName);
+        return byAppName;
+    }
 }

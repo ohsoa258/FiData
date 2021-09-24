@@ -142,18 +142,19 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String tableName=dto.factTable;
         String keyName=tableName+"_pk";
         aggregationFunSql.append(keyName+" , ");
+        groupSql.append(keyName+" ,");
         dto.list.forEach(e->{
             if(e.attributeType==0){
                 aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
-                aggregationFunSql.append("(\"");
+                aggregationFunSql.append("(");
                 aggregationFunSql.append(e.aggregatedField);
-                aggregationFunSql.append("\") ,0)AS ");
+                aggregationFunSql.append(") ,0)AS ");
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");
             }else {
-                groupSql.append("\""+e.dimensionTableName+"_key\" , ");
-                aggregationFunSql.append("COALESCE(\""+e.dimensionTableName+"_key\",'') AS \""+e.dimensionTableName.toLowerCase()+"\" , ");
+                groupSql.append(""+e.dimensionTableName+"_pk , ");
+                aggregationFunSql.append("COALESCE("+e.dimensionTableName+"_pk,'') AS "+e.dimensionTableName.toLowerCase()+" , ");
             }
         });
         if (aggregationFunSql.length()>0){

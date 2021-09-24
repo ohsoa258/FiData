@@ -678,11 +678,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         Map<String, String> map = new HashMap<>(2);
         map.put("Destination", "flowfile-attribute");
-        map.put(NifiConstants.AttrConstants.INCREMENT_START, "$." + NifiConstants.AttrConstants.INCREMENT_START);
-        map.put(NifiConstants.AttrConstants.INCREMENT_END, "$." + NifiConstants.AttrConstants.INCREMENT_END);
-        map.put(NifiConstants.AttrConstants.LOG_CODE, "$." + NifiConstants.AttrConstants.LOG_CODE);
-        map.put(NifiConstants.AttrConstants.NUMBERS, "$." + NifiConstants.AttrConstants.NUMBERS);
-
+        //自定义常量
+        for (String selfDefinedParameter:data.selfDefinedParameter) {
+            map.put(selfDefinedParameter,"$."+selfDefinedParameter);
+        }
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
