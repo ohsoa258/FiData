@@ -152,4 +152,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO);
+
+    /**
+     * 通过名称找应用
+     * insertAppRegistrationPO
+     * @param appName dto
+     * @return
+     */
+    public List<AppRegistrationPO> getByAppName(String appName);
 }
