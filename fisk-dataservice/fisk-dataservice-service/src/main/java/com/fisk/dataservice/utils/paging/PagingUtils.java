@@ -1,5 +1,6 @@
 package com.fisk.dataservice.utils.paging;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,46 +13,38 @@ public class PagingUtils {
      * 开始分页
      *
      * @param list
-     * @param pageNum  页码
-     * @param pageSize 每页多少条数据
+     * @param pageNo  页码
+     * @param dataSize 每页多少条数据
      * @return
      */
-    public static List startPage(List list, Integer pageNum, Integer pageSize) {
-        if(list == null){
-            return null;
+    public static <F> List<F> startPage(List<F> list, int pageNo, int dataSize) {
+        if (list == null) {
+            list = new ArrayList<F>();
         }
-        if(list.size() == 0){
-            return null;
+        if ((Object) pageNo == null) {
+            pageNo = 1;
         }
-
-        //记录总数
-        Integer count = list.size();
-        //页数
-        Integer pageCount = 0;
-        if (count % pageSize == 0) {
-            pageCount = count / pageSize;
-        } else {
-            pageCount = count / pageSize + 1;
+        if ((Object) dataSize == null) {
+            dataSize = 1;
+        }
+        if (pageNo <= 0) {
+            pageNo = 1;
         }
 
-        //开始索引
-        int fromIndex = 0;
-        //结束索引
-        int toIndex = 0;
+        //记录一下数据一共有多少条
+        int totalitems = list.size();
+        //实例化一个接受分页处理之后的数据
+        List<F> afterList = new ArrayList<F>();
 
-        if(pageNum > pageCount){
-            pageNum = pageCount;
-        }
-        if (!pageNum.equals(pageCount)) {
-            fromIndex = (pageNum - 1) * pageSize;
-            toIndex = fromIndex + pageSize;
-        } else {
-            fromIndex = (pageNum - 1) * pageSize;
-            toIndex = count;
+        for (int i = (pageNo - 1) * dataSize;
+         i < (((pageNo - 1) * dataSize) + dataSize >
+                 totalitems ? totalitems : ((pageNo - 1) * dataSize) + dataSize);
+         i++) {
+            //然后将数据存入afterList中
+
+            afterList.add(list.get(i));
         }
 
-        List pageList = list.subList(fromIndex, toIndex);
-
-        return pageList;
+        return afterList;
     }
 }
