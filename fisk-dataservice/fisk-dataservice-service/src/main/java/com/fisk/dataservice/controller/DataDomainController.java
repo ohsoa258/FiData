@@ -28,7 +28,7 @@ public class DataDomainController {
 
     @ApiOperation("拼接sql")
     @PostMapping("/getAll")
-    public ResultEntity<Object> listData(@RequestBody List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.query(apiConfigureFieldList,currentPage,pageSize));
+    public Object listData(@RequestBody List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
+        return domainService.query(apiConfigureFieldList,currentPage,pageSize);
     }
 }
