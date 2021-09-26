@@ -65,15 +65,16 @@ public class FactAttributeImpl
     public ResultEnum addFactAttribute(int factId, List<FactAttributeDTO> dto) {
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
-        boolean isExit = false;
+        //boolean isExit = false;
         List<FactAttributePO> list = new ArrayList<>();
         for (FactAttributeDTO item : dto) {
-            FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
-                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName));
+            /*FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
+                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
+                    .eq(FactAttributePO::getAttributeType,item.attributeType));
             if (po != null) {
                 isExit = true;
                 break;
-            }
+            }*/
             FactAttributePO data = FactAttributeMap.INSTANCES.dtoToPo(item);
             data.factId = factId;
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
@@ -86,9 +87,9 @@ public class FactAttributeImpl
             }
             list.add(data);
         }
-        if (isExit) {
+        /*if (isExit) {
             return ResultEnum.DATA_EXISTS;
-        }
+        }*/
         return this.saveBatch(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -175,10 +176,11 @@ public class FactAttributeImpl
                 }
                 dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
                 dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
+                dto.sourceFieldId=attributePO.tableSourceFieldId; //关联字段来源
                 //获取关联维度与本表关联字段名称
                 FactAttributePO factAttributePO=mapper.selectById(item.associateId);
                 dto.fieldEnName=factAttributePO.factFieldEnName; //关联维度与本表字段关联名称
-                dto.sourceFieldId=factAttributePO.tableSourceFieldId; //本表字段来源
+                dto.associationSourceFieldId=factAttributePO.tableSourceFieldId; //关联维度与本表字段关联来源id
             }
             dtoList.add(dto);
         }

@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -10,13 +11,15 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -78,6 +82,13 @@ public class PhysicalTableController {
     public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFields(appName));
+    }
+
+    @GetMapping("/getTableNameAndFieldsByAppId")
+    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    public ResultEntity<Object> queryNonRealTimeTableByAppId(@RequestParam("appId") long appId) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldsByAppId(appId));
     }
 
     @GetMapping("/getTableNameByAppId")
@@ -196,8 +207,30 @@ public class PhysicalTableController {
     @ApiOperation(value = "删除物理表")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
         ResultEntity<NifiVO> result = service.deleteData(id);
+
         log.info("方法返回值,{}", result.data);
-        // TODO: 删除nifi流程
+        // TODO 删除Atlas和nifi流程
+        NifiVO nifiVO = result.data;
+
+        PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+        pgsqlDelTableDTO.userId = nifiVO.userId;
+        pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
+        pgsqlDelTableDTO.delApp = false;
+        if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
+            List<TableListDTO> collect = nifiVO.tableList.stream().map(e -> {
+                TableListDTO dto = new TableListDTO();
+                dto.tableAtlasId = e.tableAtlasId;
+                dto.tableName = e.nifiSettingTableName;
+                dto.userId = nifiVO.userId;
+                return dto;
+            }).collect(Collectors.toList());
+
+            pgsqlDelTableDTO.tableList = collect;
+        }
+
+        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+        log.info("task删除应用{}", task);
+        System.out.println(task);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }

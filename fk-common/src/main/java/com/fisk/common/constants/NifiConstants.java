@@ -15,6 +15,8 @@ public class NifiConstants {
 
         public static final String ALL_GROUP_RUN_STATUS = "/process-groups/{id}/process-groups";
 
+        public static final String PUTPROCESS="/processors/{id}";
+
     }
 
     public static final class DriveConstants {
@@ -32,6 +34,7 @@ public class NifiConstants {
         public static final String INCREMENT_DB_FIELD_END = "Incremental_ObjectiveScore_End";
         public static final String INCREMENT_END = "IncrementEnd";
         public static final String LOG_CODE = "uuids";
+        public static final String NUMBERS = "numbers";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;

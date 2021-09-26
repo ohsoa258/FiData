@@ -7,10 +7,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
-import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.common.enums.task.nifi.DbPoolTypeEnum;
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
+import com.fisk.common.enums.task.nifi.*;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -35,6 +32,7 @@ import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -403,13 +401,29 @@ public class BuildNifiTaskListener {
             componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //用组件,调存储过程把stg里的数据向ods里面插入
             ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId,targetDbPoolId);
+            //连接器
             componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
+            //查询条数
+            ProcessorEntity queryNumbers = queryNumbersProcessor(config, groupId, targetDbPoolId);
+            //连接器
+            componentConnector(groupId, processorEntity1.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            //转json
+            ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 11);
+            //连接器
+            componentConnector(groupId, queryNumbers.getId(), numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            //定义占位符
+            ProcessorEntity evaluateJsons = evaluateNumbersProcessor(groupId);
+            //连接器
+            componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //更新日志
             ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
             //连接器
-            componentConnector(groupId, processorEntity1.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
             res.add(mergeRes);
             res.add(processorEntity1);
+            res.add(queryNumbers);
+            res.add(numberToJsonRes);
+            res.add(evaluateJsons);
             res.add(processorEntity);
         }
 
@@ -654,10 +668,25 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.dbConnectionId=targetDbPoolId;
         callDbProcedureProcessorDTO.executsql=executsql;
         callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(9);
+        callDbProcedureProcessorDTO.haveNextOne=true;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }
+
+    private ProcessorEntity queryNumbersProcessor(DataAccessConfigDTO config,String groupId ,String targetDbPoolId){
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query Increment Field";
+        querySqlDto.details = "Query Increment Field in the data source";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = "select count(*) as numbers from "+config.processorConfig.targetTableName;
+        querySqlDto.dbConnectionId = targetDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
     private ProcessorEntity  CallDbLogProcedure(DataAccessConfigDTO config,String groupId){
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbLogProcedure";
@@ -665,17 +694,28 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         //调用存储过程sql,存日志
         String cronNextTime = "";
-        /*CronSequenceGenerator cron = null;
-        cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
-        Date d = new Date();
-        Date date = cron.next(d);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        cronNextTime = sdf.format(date);*/
+        if (config.processorConfig.scheduleExpression != null&&config.processorConfig.scheduleExpression !="") {
+            if (Objects.equals(config.processorConfig.scheduleType, SchedulingStrategyTypeEnum.CRON)) {
+                CronSequenceGenerator cron = null;
+                cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
+                Date d = new Date();
+                Date date = cron.next(d);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                cronNextTime = sdf.format(date);
+            } else {
+                Date d = new Date();
+                Long l = d.getTime() + Long.valueOf(config.processorConfig.scheduleExpression).longValue();
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date date = new Date(l);
+                cronNextTime = simpleDateFormat.format(date);
+            }
+        }
         String executsql="call nifi_update_etl_log_and_Incremental('";
-        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+"',2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}','"+cronNextTime+"')";
+        executsql+=config.targetDsConfig.targetTableName.toLowerCase()+"','${"+NifiConstants.AttrConstants.NUMBERS+"}',2,'${"+NifiConstants.AttrConstants.LOG_CODE+"}','${"+NifiConstants.AttrConstants.INCREMENT_END+"}','"+cronNextTime+"')";
         callDbProcedureProcessorDTO.dbConnectionId=config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql=executsql;
-        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(10);
+        callDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(13);
+        callDbProcedureProcessorDTO.haveNextOne=false;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -717,6 +757,20 @@ public class BuildNifiTaskListener {
         BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
         verifyProcessorResult(toJsonRes);
         return toJsonRes.data;
+    }
+
+    public ProcessorEntity evaluateNumbersProcessor(String groupId){
+        BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
+        dto.name = "Set numbers Field";
+        dto.details = "Set numbers";
+        dto.groupId = groupId;
+        List<String> strings = new ArrayList<>();
+        strings.add(NifiConstants.AttrConstants.NUMBERS);
+        dto.selfDefinedParameter=strings;
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
     }
 
     /**
@@ -775,11 +829,16 @@ public class BuildNifiTaskListener {
      * @return 组件对象
      */
     private ProcessorEntity evaluateJsonPathProcessor(String groupId) {
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add(NifiConstants.AttrConstants.INCREMENT_START);
+        strings.add(NifiConstants.AttrConstants.INCREMENT_END);
+        strings.add(NifiConstants.AttrConstants.LOG_CODE);
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
         dto.details = "Set Increment Field to Nifi Data flow";
         dto.groupId = groupId;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        dto.selfDefinedParameter=strings;
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;

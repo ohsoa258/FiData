@@ -4,13 +4,17 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.service.IBuildTaskService;
+import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.WsSessionManager;
 import com.fisk.task.utils.YamlReader;
@@ -40,6 +44,8 @@ public class TestController {
     IBuildTaskService service;
     @Resource
     DataAccessClient dc;
+    @Resource
+    INifiComponentsBuild iNifiComponentsBuild;
 
     @GetMapping
     public void sendMsg(String msg) {
@@ -142,9 +148,19 @@ public class TestController {
 
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("ee11b478-017b-1000-20d7-4292a5b109c4");
             ProcessorStatusDTO status = processor.getStatus();
-            status.setRunStatus("Stopped");
-            processor.setStatus(status);
-            ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().updateProcessor("ee11b478-017b-1000-20d7-4292a5b109c4", processor);
+            List<ProcessorEntity> processorEntities = new ArrayList<>();
+            List<ProcessorEntity> processorEntities1 = new ArrayList<>();
+            processorEntities.add(processor);
+            //先停止组件
+            iNifiComponentsBuild.stopProcessor("",processorEntities);
+            //修改调度
+            processor.getComponent().getConfig().setSchedulingStrategy("");
+            processor.getComponent().getConfig().setSchedulingPeriod("");
+            processorEntities1.add(processor);
+            iNifiComponentsBuild.updateProcessorConfig("",processorEntities1);
+            //启动组件
+            iNifiComponentsBuild.enabledProcessor("",processorEntities1);
+
            /* ProcessorStatusDTO processorStatusDTO = new ProcessorStatusDTO();
             processor.setStatus(processorStatusDTO);
             ProcessorDTO component = processor.getComponent();
@@ -156,4 +172,18 @@ public class TestController {
             e.printStackTrace();
         }
     }
+
+    @PostMapping("/testNifiFlow")
+    public void publishBuildNifiFlowTask() {
+        BuildNifiFlowDTO data=new BuildNifiFlowDTO();
+        data.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
+        data.userId=60L;
+        data.id=1918L;
+        data.appId=636L;
+         service.publishTask("创建表:"+data.tableName+"的数据流任务",
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
+                data);
+    }
+
 }

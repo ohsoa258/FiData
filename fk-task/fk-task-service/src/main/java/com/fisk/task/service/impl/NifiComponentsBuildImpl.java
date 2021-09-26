@@ -14,6 +14,7 @@ import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
@@ -481,8 +482,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     @Override
     public BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
         List<String> autoRes = new ArrayList<>();
+        if (buildCallDbProcedureProcessorDTO.haveNextOne == false) {
+            autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        }
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
         Map<String, String> map = new HashMap<>(2);
         map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
         map.put("SQL select query",buildCallDbProcedureProcessorDTO.executsql);
@@ -675,10 +678,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         Map<String, String> map = new HashMap<>(2);
         map.put("Destination", "flowfile-attribute");
-        map.put(NifiConstants.AttrConstants.INCREMENT_START, "$." + NifiConstants.AttrConstants.INCREMENT_START);
-        map.put(NifiConstants.AttrConstants.INCREMENT_END, "$." + NifiConstants.AttrConstants.INCREMENT_END);
-        map.put(NifiConstants.AttrConstants.LOG_CODE, "$." + NifiConstants.AttrConstants.LOG_CODE);
-
+        //自定义常量
+        for (String selfDefinedParameter:data.selfDefinedParameter) {
+            map.put(selfDefinedParameter,"$."+selfDefinedParameter);
+        }
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -774,7 +777,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         for (ProcessorEntity item : entities) {
-            try {//启动组件判断顺序有点假
+            try {
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
                 if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
                     continue;
@@ -788,6 +791,76 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
 
                 String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    ProcessorEntity newEntity = getProcessor(item.getId());
+                    if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                        res.add(newEntity);
+                    }
+                }
+            } catch (ApiException e) {
+                log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities) {
+        List<ProcessorEntity> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+
+        for (ProcessorEntity item : entities) {
+            try {
+                ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.STOPPED) {
+                    continue;
+                }
+
+                ProcessorRunStatusEntity dto = new ProcessorRunStatusEntity();
+                dto.state = ProcessorDTO.StateEnum.STOPPED.toString();
+                dto.disconnectedNodeAcknowledged = true;
+                dto.revision = entity.getRevision();
+
+                HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
+
+                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    ProcessorEntity newEntity = getProcessor(item.getId());
+                    if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                        res.add(newEntity);
+                    }
+                }
+            } catch (ApiException e) {
+                log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities) {
+        List<ProcessorEntity> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        for (ProcessorEntity item : entities) {
+            try {
+                ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                    continue;
+                }
+
+                ProcessorEntity dto = new ProcessorEntity();
+                dto.getComponent().getConfig().setSchedulingPeriod("");
+                dto.getComponent().getConfig().setSchedulingStrategy("");
+                HttpEntity<ProcessorEntity> request = new HttpEntity<>(dto, headers);
+
+                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PUTPROCESS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
                     ProcessorEntity newEntity = getProcessor(item.getId());

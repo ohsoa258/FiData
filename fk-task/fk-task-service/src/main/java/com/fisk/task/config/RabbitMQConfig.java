@@ -106,7 +106,7 @@ public class RabbitMQConfig {
      * 声明队列
      */
     @Bean("datainputDeletePgsqlTableQueue")
-    public Queue datainputDeletePgStgTableQueue() {
+    public Queue datainputDeletePgsqlTableQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW).build();
     }
 

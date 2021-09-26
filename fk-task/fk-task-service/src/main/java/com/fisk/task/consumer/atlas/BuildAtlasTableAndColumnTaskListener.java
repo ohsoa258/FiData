@@ -18,6 +18,7 @@ import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.enums.AtlasProcessEnum;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
@@ -127,12 +128,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         List<AtlasEntityColumnDTO> l_acd = new ArrayList<>();
         StringBuilder sqlStr = new StringBuilder();
         ae.columns.forEach((c) -> {
-            if(c.dataType=="INT"){
-                sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
-            }
-            else{
-                sqlStr.insert(0,"CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
-            }
+            sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
@@ -151,6 +147,7 @@ public class BuildAtlasTableAndColumnTaskListener {
             acd.columnId=c.columnId;
             l_acd.add(acd);
         });
+        sqlStr.insert(0,(ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
         log.info("atlas创建字段 完成");
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
@@ -268,8 +265,8 @@ public class BuildAtlasTableAndColumnTaskListener {
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
-        bfd.tableName=ae.tableName;
         bfd.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
+        bfd.tableName=ae.tableName;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
