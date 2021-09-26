@@ -1223,6 +1223,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO tableAccessPO = this.query().eq("id", dto.tableId).eq("del_flag", 1).one();
         componentIdDTO.appComponentId = appRegistrationPO.componentId;
         componentIdDTO.tableComponentId = tableAccessPO.componentId;
+        componentIdDTO.schedulerComponentId = tableAccessPO.schedulerComponentId;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,componentIdDTO);
     }
@@ -1259,6 +1260,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
         modelAccess.componentId = dto.tableGroupId;
+        // 调度组件id
+        modelAccess.schedulerComponentId = dto.schedulerComponentId;
         boolean updateAccess = this.updateById(modelAccess);
         if (!updateAccess) {
             return ResultEnum.SAVE_DATA_ERROR;

@@ -43,4 +43,8 @@ public class NifiAccessDTO {
      */
     public String cfgDbPoolComponentId;
 
+    /**
+     * 调度组件id
+     */
+    public String schedulerComponentId;
 }

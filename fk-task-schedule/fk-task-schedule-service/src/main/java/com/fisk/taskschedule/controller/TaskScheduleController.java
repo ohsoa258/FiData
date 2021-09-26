@@ -47,6 +47,8 @@ public class TaskScheduleController {
         ComponentIdDTO data = (ComponentIdDTO) clientComponentId.data;
         taskCronDTO.dto.appComponentId = data.appComponentId;
         taskCronDTO.dto.tableComponentId = data.tableComponentId;
+        // 调度组件id
+        taskCronDTO.dto.schedulerComponentId = data.schedulerComponentId;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
