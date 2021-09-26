@@ -16,18 +16,12 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
-import com.fisk.datamodel.entity.DimensionPO;
-import com.fisk.datamodel.entity.FactAttributePO;
-import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
-import com.fisk.datamodel.mapper.DimensionAttributeMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
-import com.fisk.datamodel.mapper.FactAttributeMapper;
-import com.fisk.datamodel.mapper.FactMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
@@ -52,6 +46,8 @@ public class FactAttributeImpl
     DimensionMapper dimensionMapper;
     @Resource
     DimensionAttributeMapper attributeMapper;
+    @Resource
+    BusinessProcessMapper businessProcessMapper;
     @Resource
     DataAccessClient client;
 
@@ -136,6 +132,15 @@ public class FactAttributeImpl
         }
         data.tableName =po.factTableEnName;
         data.id=po.id;
+
+        //查找业务域id
+        BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
+        if (businessProcessPO==null)
+        {
+            return data;
+        }
+        data.appId=businessProcessPO.businessId;
+
         //获取注册表相关数据
         ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
@@ -160,6 +165,7 @@ public class FactAttributeImpl
             dto.fieldType = item.factFieldType;
             dto.fieldCnName = item.factFieldCnName;
             dto.sourceFieldId=item.tableSourceFieldId;
+            dto.fieldId=String.valueOf(item.id);
             //判断是否为关联维度
             if (item.attributeType == DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {

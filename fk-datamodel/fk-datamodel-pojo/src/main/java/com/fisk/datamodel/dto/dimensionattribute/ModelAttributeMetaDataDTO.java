@@ -9,6 +9,10 @@ import lombok.Data;
 public class ModelAttributeMetaDataDTO {
 
     /**
+     * 字段id
+     */
+    public String fieldId;
+    /**
      * 维度字段名称
      */
     public String fieldEnName;
