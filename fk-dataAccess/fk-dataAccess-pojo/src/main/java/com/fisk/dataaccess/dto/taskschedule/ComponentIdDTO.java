@@ -15,4 +15,8 @@ public class ComponentIdDTO {
      * nifi流程回写的物理表组件
      */
     public String tableComponentId;
+    /**
+     * 调度组件id
+     */
+    public String schedulerComponentId;
 }
