@@ -17,6 +17,9 @@ public class NifiConstants {
 
         public static final String PUTPROCESS="/processors/{id}";
 
+        public static final String CREATE_INPUT_PORT="/process-groups/{id}/input-ports";
+        public static final String INPUT="/input-ports/{id}";
+
     }
 
     public static final class DriveConstants {
