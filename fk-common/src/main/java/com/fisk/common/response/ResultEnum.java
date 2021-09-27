@@ -78,7 +78,7 @@ public enum ResultEnum {
     TASK_PUBLISH_ERROR(6001, "任务发布失败"),
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002, "Nifi组件创建失败"),
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
-
+    TASK_NIFI_DISPATCH_ERROR(6004,"调度失败"),
     /**
      * 数据域接入模块
      *

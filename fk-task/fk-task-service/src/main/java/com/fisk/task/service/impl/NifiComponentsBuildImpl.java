@@ -12,6 +12,7 @@ import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
@@ -851,14 +852,12 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         for (ProcessorEntity item : entities) {
             try {
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                entity.getComponent().getConfig().setSchedulingPeriod(item.getComponent().getConfig().getSchedulingPeriod());
+                entity.getComponent().getConfig().setSchedulingStrategy(item.getComponent().getConfig().getSchedulingStrategy());
                 if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
                     continue;
                 }
-
-                ProcessorEntity dto = new ProcessorEntity();
-                dto.getComponent().getConfig().setSchedulingPeriod("");
-                dto.getComponent().getConfig().setSchedulingStrategy("");
-                HttpEntity<ProcessorEntity> request = new HttpEntity<>(dto, headers);
+                HttpEntity<ProcessorEntity> request = new HttpEntity<>(entity, headers);
 
                 String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PUTPROCESS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
@@ -903,6 +902,31 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         } catch (ApiException e) {
             log.error("【" + dto.getType() + "】组件创建失败，【" + e.getResponseBody() + "】: ", e);
             return BusinessResult.of(false, "【" + dto.getType() + "】组件创建失败" + e.getMessage(), null);
+        }
+    }
+
+    /*
+    * 修改任务组调度
+    *
+    * */
+    @Override
+    public ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod){
+        try {
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessorId);
+            List<ProcessorEntity> processorEntities = new ArrayList<>();
+            processorEntities.add(processor);
+            //先停止组件
+            this.stopProcessor(groupId,processorEntities);
+            //修改调度
+            processor.getComponent().getConfig().setSchedulingStrategy(schedulingStrategy);
+            processor.getComponent().getConfig().setSchedulingPeriod(schedulingPeriod);
+            this.updateProcessorConfig(groupId,processorEntities);
+            //启动组件
+            this.enabledProcessor(groupId, processorEntities);
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("调度修改失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DISPATCH_ERROR;
         }
     }
 

@@ -9,6 +9,7 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 发送任务
@@ -77,5 +78,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/deletePgsqlTable")
     public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable);
+
+    /*
+    * 修改调度
+    *
+    * */
+    @PostMapping("/nifi/modifyScheduling")
+    public ResultEntity<Object> modifyScheduling(@RequestParam("groupId")String groupId, @RequestParam("ProcessorId")String ProcessorId,@RequestParam("schedulingStrategy") String schedulingStrategy,@RequestParam("schedulingPeriod") String schedulingPeriod);
 
 }

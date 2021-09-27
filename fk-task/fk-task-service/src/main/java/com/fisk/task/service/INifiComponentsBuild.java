@@ -3,6 +3,7 @@ package com.fisk.task.service;
 import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.vo.ProcessGroupsVO;
@@ -227,4 +228,9 @@ public interface INifiComponentsBuild {
      * 停止组件
      * */
      List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities);
+
+     /*
+     * 修改组件调度
+     * */
+     ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod);
 }

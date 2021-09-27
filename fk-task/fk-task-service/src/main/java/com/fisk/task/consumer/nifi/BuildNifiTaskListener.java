@@ -93,7 +93,8 @@ public class BuildNifiTaskListener {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
         }
-
+        //调度组件id
+        String schedulerComponentId="";
         log.info(JSON.toJSONString("【数据接入配置项参数】" + configDTO));
         //1. 获取数据接入配置库连接池
         ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
@@ -117,7 +118,13 @@ public class BuildNifiTaskListener {
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
-        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId());
+        for (ProcessorEntity processorEntity:processors) {
+            //调度组件id
+            if(Objects.equals(processorEntity.getComponent().getName(),"Query Increment Field")){
+                schedulerComponentId=processorEntity.getId();
+            }
+        }
+        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(),schedulerComponentId);
     }
 
     /**
@@ -703,8 +710,8 @@ public class BuildNifiTaskListener {
 
     private ProcessorEntity queryNumbersProcessor(DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
-        querySqlDto.name = "Query Increment Field";
-        querySqlDto.details = "Query Increment Field in the data source";
+        querySqlDto.name = "Query numbers Field";
+        querySqlDto.details = "Query numbers Field";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "select count(*) as numbers from " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
@@ -924,7 +931,7 @@ public class BuildNifiTaskListener {
      * @param tableId          物理表id
      * @param tableComponentId 任务组id
      */
-    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId) {
+    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId,String schedulerComponentId) {
         NifiAccessDTO dto = new NifiAccessDTO();
         dto.appId = appId;
         dto.appGroupId = appComponentId;
@@ -933,6 +940,7 @@ public class BuildNifiTaskListener {
         dto.targetDbPoolComponentId = targetDbPoolComponentId;
         dto.sourceDbPoolComponentId = sourceDbPoolComponentId;
         dto.cfgDbPoolComponentId = cfgDbPoolComponentId;
+        dto.schedulerComponentId=schedulerComponentId;
         client.addComponentId(dto);
     }
 
