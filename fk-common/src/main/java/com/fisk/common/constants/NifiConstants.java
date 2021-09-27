@@ -15,17 +15,19 @@ public class NifiConstants {
 
         public static final String ALL_GROUP_RUN_STATUS = "/process-groups/{id}/process-groups";
 
-        public static final String PUTPROCESS="/processors/{id}";
+        public static final String PUTPROCESS = "/processors/{id}";
 
-        public static final String CREATE_INPUT_PORT="/process-groups/{id}/input-ports";
-        public static final String INPUT="/input-ports/{id}";
+        public static final String CREATE_INPUT_PORT = "/process-groups/{id}/input-ports";
+        public static final String CREATE_OUTPUT_PORT = "/process-groups/{id}/output-ports";
+        public static final String CREATE_CONNECTIONS = "/process-groups/{id}/connections";
+        public static final String INPUT = "/input-ports/{id}";
 
     }
 
     public static final class DriveConstants {
         public static final String MYSQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar";
         public static final String SQLSERVER_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/sqljdbc42.jar";
-        public static final String POSTGRESQL_DRIVE_PATH="/opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar";
+        public static final String POSTGRESQL_DRIVE_PATH = "/opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar";
 
     }
 
@@ -42,5 +44,10 @@ public class NifiConstants {
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
         public static final double POSITION_Y = 300;
+    }
+
+    public static final class PortConstants {
+        public static final String INPUT_PORT_NAME = "_input_port";
+        public static final String OUTPUT_PORT_NAME = "_output_port";
     }
 }

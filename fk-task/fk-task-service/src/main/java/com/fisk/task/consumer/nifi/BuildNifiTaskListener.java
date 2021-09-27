@@ -1,6 +1,7 @@
 package com.fisk.task.consumer.nifi;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
@@ -33,7 +34,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author gy
@@ -996,94 +1000,140 @@ public class BuildNifiTaskListener {
     }
 
 
-    public PortEntity buildInputPorts() {
-//        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", "f7fab41b-017b-1000-8f39-12be40ab7aa0");
+    /**
+     * 创建input port
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    public PortEntity buildInputPort(BuildPortDTO buildPortDTO) {
 
-//        PortEntity portEntity = new PortEntity();
+//        String a = "{\n" +
+//                "  \"revision\": {\n" +
+//                "    \"clientId\": \"6eb2baff-9033-4ce6-825f-138936febc61\",\n" +
+//                "    \"version\": 0\n" +
+//                "  },\n" +
+//                "  \"component\": {\n" +
+//                "    \"position\": {\n" +
+//                "      \"x\": 304.0,\n" +
+//                "      \"y\": 88.0\n" +
+//                "    },\n" +
+//                "    \"name\": \"app\",\n" +
+//                "    \"allowRemoteAccess\": \"false\"\n" +
+//                "  }\n" +
+//                "}";
+//
+//        PortEntity body = JSON.parseObject(a, PortEntity.class);
 
+        PortEntity body = new PortEntity();
 
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-//        HttpEntity<PortEntity> request = new HttpEntity<>(portEntity, headers);
-//        ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
-
-//        return response.getBody();
-
-
-
-
-/*
-        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.INPUT.replace("{id}", "cbf61302-1011-117c-a094-f407ce5076dd");
-        ResponseEntity<String> response1 = httpClient.exchange(url, HttpMethod.GET, null, String.class);
-        System.out.println(response1);
-        PortEntity body = JSON.parseObject(response1.getBody(), PortEntity.class);
-
-//        PortEntity body = new PortEntity();
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.setClientId(buildPortDTO.clientId);
+        revisionDTO.setVersion(0L);
 
         PortDTO portDTO = new PortDTO();
-        RevisionDTO revisionDTO = new RevisionDTO();
-
-        String s = UUID.randomUUID().toString();
-        System.out.println(s);
-        revisionDTO.setClientId(s);
-        assert body != null;
-        body.setRevision(revisionDTO);
-        portDTO.setName("testPort");
-        body.setComponent(portDTO);
-
-
-
-        System.out.println(body);
-        */
- /*       PortEntity body = new PortEntity();
-        RevisionDTO revisionDTO = new RevisionDTO();
-        PortDTO portDTO = new PortDTO();
-        portDTO.setName("testPort001");
+        portDTO.setName(buildPortDTO.portName + NifiConstants.PortConstants.INPUT_PORT_NAME);
+        // 是否允许远程访问
         portDTO.setAllowRemoteAccess(false);
 
-        PositionDTO position = new PositionDTO();
+        // 坐标
+        PositionDTO positionDTO = new PositionDTO();
+        positionDTO.setX(50d);
+        positionDTO.setY(50d);
 
-        position.setX(100d);
-        position.setY(100d);
-        portDTO.setPosition(position);
-
-        String s = UUID.randomUUID().toString();
-        System.out.println(s);
-        revisionDTO.setClientId(s);
-        revisionDTO.setVersion(2L);
-
+        body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
-        body.setComponent(portDTO);*/
+        portDTO.setPosition(positionDTO);
+        body.setComponent(portDTO);
 
-        String a = "{\n" +
-                "  \"revision\": {\n" +
-                "    \"clientId\": \"6eb2baff-9033-4ce6-825f-138936febc61\",\n" +
-                "    \"version\": 0\n" +
-                "  },\n" +
-                "  \"component\": {\n" +
-                "    \"position\": {\n" +
-                "      \"x\": 304.0,\n" +
-                "      \"y\": 88.0\n" +
-                "    },\n" +
-                "    \"name\": \"app\",\n" +
-                "    \"allowRemoteAccess\": \"false\"\n" +
-                "  }\n" +
-                "}";
-
-        PortEntity body = JSON.parseObject(a, PortEntity.class);
-
-
-//        int a = 1 / 0;
-
+        // json转换
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         HttpEntity<PortEntity> request = new HttpEntity<>(body, headers);
 
-        String url2 = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", "cbf61301-1011-117c-7765-c6d09a58fc4d");
+        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", buildPortDTO.componentId);
 
+        ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
 
-        ResponseEntity<PortEntity> response2 = httpClient.exchange(url2, HttpMethod.POST, request, PortEntity.class);
-
-        return response2.getBody();
+        return response.getBody();
     }
+
+    /**
+     * 创建output port
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    public PortEntity buildOutputPort(BuildPortDTO buildPortDTO) {
+
+        PortEntity body = new PortEntity();
+
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.setClientId(buildPortDTO.clientId);
+        revisionDTO.setVersion(0L);
+
+        PortDTO portDTO = new PortDTO();
+        portDTO.setName(buildPortDTO.portName + NifiConstants.PortConstants.OUTPUT_PORT_NAME);
+        // 是否允许远程访问
+        portDTO.setAllowRemoteAccess(false);
+
+        // 坐标
+        PositionDTO positionDTO = new PositionDTO();
+        positionDTO.setX(250d);
+        positionDTO.setY(450d);
+
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setRevision(revisionDTO);
+        portDTO.setPosition(positionDTO);
+        body.setComponent(portDTO);
+
+        // json转换
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        HttpEntity<PortEntity> request = new HttpEntity<>(body, headers);
+
+        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
+
+        ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
+
+        return response.getBody();
+    }
+
+    public void buildConnections(BuildConnectDTO buildConnectDTO) {
+
+        String json = "{\n" +
+                "  \"revision\": {\n" +
+                "    \"version\": 0\n" +
+                "  },\n" +
+                "  \"disconnectedNodeAcknowledged\": false,\n" +
+                "  \"component\": {\n" +
+                "      \"destination\": {\n" +
+                "          \"groupId\": \"cbf61301-1011-117c-7765-c6d09a58fc4d\",\n" +
+                "          \"id\": \"cbf61303-1011-117c-3f2b-d876c6f14e97\",\n" +
+                "          \"type\": \"PROCESSOR\"\n" +
+                "      },\n" +
+                "      \"source\": {\n" +
+                "          \"groupId\": \"cbf61301-1011-117c-7765-c6d09a58fc4d\",\n" +
+                "          \"id\": \"26289101-017c-1000-3be7-f1718c728a2f\",\n" +
+                "          \"type\": \"INPUT_PORT\"\n" +
+                "      }\n" +
+                "  }\n" +
+                "}";
+        ConnectionEntity body = JSONObject.parseObject(json, ConnectionEntity.class);
+
+//        ConnectionEntity body = new ConnectionEntity();
+
+        // 构造的参数
+
+
+        // json转换
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        HttpEntity<ConnectionEntity> request = new HttpEntity<>(body, headers);
+
+        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.componentId);
+
+        ResponseEntity<ConnectionEntity> response = httpClient.exchange(url, HttpMethod.POST, request, ConnectionEntity.class);
+    }
+
 }
