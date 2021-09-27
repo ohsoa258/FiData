@@ -189,6 +189,7 @@ public class DimensionAttributeImpl
         }
         data.tableName =po.dimensionTabName;
         data.id=po.id;
+        data.appId=po.businessId;
         //获取注册表相关数据
         ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
@@ -216,6 +217,7 @@ public class DimensionAttributeImpl
             dto.fieldEnName = item.dimensionFieldEnName;
             dto.fieldLength = item.dimensionFieldLength;
             dto.fieldType = item.dimensionFieldType;
+            dto.fieldId= String.valueOf(item.id);
             //判断是否为关联维度
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
@@ -230,9 +232,12 @@ public class DimensionAttributeImpl
                 {
                     break;
                 }
-                dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
-                dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
-                dto.sourceFieldId=attributePO.tableSourceFieldId; //关联字段来源
+                //维度关联表名称
+                dto.associationTable=dimensionPO.dimensionTabName;
+                //维度关联字段名称
+                dto.associationField=attributePO.dimensionFieldEnName;
+                //关联字段来源
+                dto.sourceFieldId=attributePO.tableSourceFieldId;
                 //获取关联维度与本表关联字段名称
                 DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateId);
                 if (dimensionAttributePO==null)

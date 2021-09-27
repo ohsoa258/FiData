@@ -1,6 +1,7 @@
 package com.fisk.task.consumer.doris;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.model.ControllerServiceEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
@@ -19,12 +20,15 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.task.dto.nifi.BuildCallDbProcedureProcessorDTO;
 import com.fisk.task.dto.nifi.BuildDbControllerServiceDTO;
 import com.fisk.task.dto.nifi.BuildProcessGroupDTO;
 import com.fisk.task.entity.TaskDwDimPO;
+import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TaskDwDimMapper;
+import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.IPostgreBuild;
@@ -40,6 +44,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,7 +57,9 @@ import java.util.stream.Collectors;
 @Component
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE)
 @Slf4j
-public class BuildDataModelDorisTableListener {
+public class BuildDataModelDorisTableListener
+        extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO>
+{
     @Resource
     DataModelClient dc;
     @Resource
@@ -83,6 +91,12 @@ public class BuildDataModelDorisTableListener {
         if(inpData.createType==0){
             dimensionAttributeList=dc.getDimensionEntity(inpData.dimensionId);
             ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+
+            //向task库中添加维度数据结构
+            List<ModelMetaDataDTO> list=new ArrayList<>();
+            list.add(modelMetaDataDTO);
+            saveTableStructure(list);
+
              pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
             log.info("pg数据库创表结果为" + pgdbTable);
             String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
@@ -95,6 +109,10 @@ public class BuildDataModelDorisTableListener {
         }else {
             dimensionAttributeList=dc.getBusinessProcessFact(inpData.dimensionId);
             List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+
+            //向task库中添加业务下所有事实表数据结构
+            saveTableStructure(modelMetaDataDTOS);
+
             for (ModelMetaDataDTO modelMetaDataDTO:modelMetaDataDTOS) {
              pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
              log.info(modelMetaDataDTO.tableName+"pg数据库创表结果为" + pgdbTable);
@@ -371,6 +389,51 @@ public class BuildDataModelDorisTableListener {
         storedProcedureSql+="raise notice'%',mysql1;\nEXECUTE mysql1;\n";
         storedProcedureSql+="end\n$BODY$;\n";
         return storedProcedureSql;
+    }
+
+    /**
+     * 保存建模相关表结构数据
+     * @param dto
+     */
+    public void saveTableStructure(List<ModelMetaDataDTO> dto)
+    {
+        try {
+            List<TaskPgTableStructurePO> poList=new ArrayList<>();
+            for (ModelMetaDataDTO item: dto) {
+                Thread.sleep(200);
+                //获取时间戳版本号
+                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                Calendar calendar = Calendar.getInstance();
+                String version = df.format(calendar.getTime());
+                for (ModelAttributeMetaDataDTO fieldData:item.dto)
+                {
+                    TaskPgTableStructurePO po=new TaskPgTableStructurePO();
+                    po.version=version;
+                    po.tableId= String.valueOf(item.id);
+                    po.tableName=item.tableName;
+                    po.fieldId=fieldData.fieldId;
+                    po.fieldName=fieldData.fieldEnName;
+                    po.fieldType=fieldData.fieldType;
+                    po.appId=String.valueOf(item.appId);
+                    if (fieldData.fieldLength !=0)
+                    {
+                        po.fieldType=fieldData.fieldType+"("+fieldData.fieldLength+")";
+                    }
+                    //是否为关联维度
+                    if (fieldData.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+                    {
+                        po.fieldName=fieldData.associationTable+"_pk";
+                        po.fieldType="varchar(100)";
+                    }
+                    poList.add(po);
+                }
+            }
+            this.saveBatch(poList);
+        }
+        catch (Exception ex)
+        {
+            log.error("saveTableStructure:"+ex);
+        }
     }
 
 }

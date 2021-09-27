@@ -60,6 +60,7 @@ public class CategoryImpl implements ICategory {
         {
             return ResultEnum.DATA_EXISTS;
         }
+        po=CategoryMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
