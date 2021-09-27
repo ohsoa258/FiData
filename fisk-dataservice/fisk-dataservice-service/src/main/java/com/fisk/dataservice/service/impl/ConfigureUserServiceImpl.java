@@ -279,7 +279,8 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     public List<ApiConfigurePO> queryApi(List<Integer> ConfigureIdList) {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .in(ApiConfigurePO::getId, ConfigureIdList);
+                .in(ApiConfigurePO::getId, ConfigureIdList)
+                .orderByDesc(ApiConfigurePO::getCreateTime);;
         return apiConfigureMapper.selectList(queryWrapper);
     }
 
