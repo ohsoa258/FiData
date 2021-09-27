@@ -150,6 +150,7 @@ public class BuildAtlasTableAndColumnTaskListener
             BusinessResult resCol = atlas.atlasBuildTableColumn(entity_rdbms_column);
             acd.guid = resCol.data.toString();
             acd.columnId=c.columnId;
+            acd.dataType=c.dataType;
             l_acd.add(acd);
         });
         sqlStr.insert(0,(ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
