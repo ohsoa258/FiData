@@ -13,8 +13,25 @@ import lombok.Data;
 public class BuildConnectDTO {
 
     /**
-     * 指定连接组的componentId
+     * 当前组件在哪个组下的组件id
      */
-    public String componentId;
+    public String fatherComponentId;
+    /**
+     * input_port组件id
+     */
+    public String inputPortComponentId;
+    /**
+     * output_port组件id
+     */
+    public String outputPortComponentId;
+    /**
+     * 连接output_port的组件 id
+     */
+    public String connectOutPutPortComponentId;
+    /**
+     * input_port将连接的组件 id
+     */
+    public String connectInPutPortComponentId;
+
 
 }

@@ -1007,7 +1007,7 @@ public class BuildNifiTaskListener {
 
 
     /**
-     * 创建input port
+     * 创建input port组件
      *
      * @param buildPortDTO buildPortDTO
      * @return 返回值
@@ -1020,10 +1020,10 @@ public class BuildNifiTaskListener {
         revisionDTO.setClientId(buildPortDTO.clientId);
         revisionDTO.setVersion(0L);
 
-        PortDTO portDTO = new PortDTO();
-        portDTO.setName(buildPortDTO.portName + NifiConstants.PortConstants.INPUT_PORT_NAME);
+        PortDTO component = new PortDTO();
+        component.setName(buildPortDTO.portName + NifiConstants.PortConstants.INPUT_PORT_NAME);
         // 是否允许远程访问
-        portDTO.setAllowRemoteAccess(false);
+        component.setAllowRemoteAccess(false);
 
         // 坐标
         PositionDTO positionDTO = new PositionDTO();
@@ -1032,8 +1032,8 @@ public class BuildNifiTaskListener {
 
         body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
-        portDTO.setPosition(positionDTO);
-        body.setComponent(portDTO);
+        component.setPosition(positionDTO);
+        body.setComponent(component);
 
         // json转换
 /*        HttpHeaders headers = new HttpHeaders();
@@ -1045,11 +1045,12 @@ public class BuildNifiTaskListener {
         ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
 
         return response.getBody();*/
-        return null;
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        return sendHttpRequest(body, uri);
     }
 
     /**
-     * 创建output port
+     * 创建output port组件
      *
      * @param buildPortDTO buildPortDTO
      * @return 返回值
@@ -1062,10 +1063,10 @@ public class BuildNifiTaskListener {
         revisionDTO.setClientId(buildPortDTO.clientId);
         revisionDTO.setVersion(0L);
 
-        PortDTO portDTO = new PortDTO();
-        portDTO.setName(buildPortDTO.portName + NifiConstants.PortConstants.OUTPUT_PORT_NAME);
+        PortDTO component = new PortDTO();
+        component.setName(buildPortDTO.portName + NifiConstants.PortConstants.OUTPUT_PORT_NAME);
         // 是否允许远程访问
-        portDTO.setAllowRemoteAccess(false);
+        component.setAllowRemoteAccess(false);
 
         // 坐标
         PositionDTO positionDTO = new PositionDTO();
@@ -1074,23 +1075,19 @@ public class BuildNifiTaskListener {
 
         body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
-        portDTO.setPosition(positionDTO);
-        body.setComponent(portDTO);
+        component.setPosition(positionDTO);
+        body.setComponent(component);
 
-        // json转换
-/*        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        HttpEntity<PortEntity> request = new HttpEntity<>(body, headers);
-
-        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
-
-        ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
-
-        return response.getBody();*/
-        return null;
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        return sendHttpRequest(body, uri);
     }
 
-    public ConnectionEntity buildInputPortConnections() {
+    /**
+     * 创建input_port连接
+     * @param buildConnectDTO buildConnectDTO
+     * @return 执行结果
+     */
+    public ConnectionEntity buildInputPortConnections(BuildConnectDTO buildConnectDTO) {
 
         ConnectionEntity body = new ConnectionEntity();
         RevisionDTO revisionDTO = new RevisionDTO();
@@ -1098,13 +1095,17 @@ public class BuildNifiTaskListener {
 
         ConnectionDTO component = new ConnectionDTO();
         ConnectableDTO destination = new ConnectableDTO();
-        destination.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
-        destination.setId("cbf61303-1011-117c-3f2b-d876c6f14e97");
+        // 当前组件在哪个组下的组件id
+        destination.setGroupId(buildConnectDTO.fatherComponentId);
+        // input_port连接的组件 id
+        destination.setId(buildConnectDTO.connectInPutPortComponentId);
         destination.type(ConnectableDTO.TypeEnum.PROCESSOR);
 
         ConnectableDTO source = new ConnectableDTO();
-        source.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
-        source.setId("26289101-017c-1000-3be7-f1718c728a2f");
+        // 当前组件在哪个组下的组件id
+        source.setGroupId(buildConnectDTO.fatherComponentId);
+        // input_port的组件id
+        source.setId(buildConnectDTO.inputPortComponentId);
         source.setType(ConnectableDTO.TypeEnum.INPUT_PORT);
 
         component.setDestination(destination);
@@ -1115,34 +1116,20 @@ public class BuildNifiTaskListener {
         body.setComponent(component);
         body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
 
-        // 将java对象转为json输出
-        String json = JSON.toJSONString(body);
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+                .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
 
-        HttpClient client = new DefaultHttpClient();
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", "cbf61301-1011-117c-7765-c6d09a58fc4d");
-        // post请求
-        HttpPost request = new HttpPost(uri);
-
-        request.setHeader("Content-Type", "application/json; charset=utf-8");
-        ConnectionEntity connectionEntity = new ConnectionEntity();
-        try {
-            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
-            HttpResponse resp = client.execute(request);
-            HttpEntity entity = resp.getEntity();
-            System.out.println(entity.toString());
-            //解析返回数据
-            String result = EntityUtils.toString(entity, "UTF-8");
-
-            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
-            log.info("创建input_port连接成功,【信息为：】,{}", result);
-        } catch (Exception e) {
-            log.info("创建input_port连接失败,【失败原因为：】,{}", e.getMessage());
-        }
-
-        return connectionEntity;
+        // 发送请求
+        return sendHttpRequest(body, uri);
     }
 
-    public ConnectionEntity buildOutPortPortConnections() {
+    /**
+     * 创建output_port连接
+     *
+     * @param buildConnectDTO buildConnectDTO
+     * @return 返回值
+     */
+    public ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO) {
 
         ConnectionEntity body = new ConnectionEntity();
         RevisionDTO revisionDTO = new RevisionDTO();
@@ -1150,18 +1137,18 @@ public class BuildNifiTaskListener {
 
         ConnectionDTO component = new ConnectionDTO();
         ConnectableDTO destination = new ConnectableDTO();
-        // 所属上级组件 id
-        destination.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // 当前组件在哪个组下的组件id
+        destination.setGroupId(buildConnectDTO.fatherComponentId);
         // output_port组件id
-        destination.setId("26cdf6f5-017c-1000-c76b-8bfdb0c150a8");
+        destination.setId(buildConnectDTO.outputPortComponentId);
         // 组件类型
         destination.type(ConnectableDTO.TypeEnum.OUTPUT_PORT);
 
         ConnectableDTO source = new ConnectableDTO();
-        // 所属上级组件 id
-        source.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // 当前组件在哪个组下的组件id
+        source.setGroupId(buildConnectDTO.fatherComponentId);
         // 连接output_port的组件 id
-        source.setId("cbf61303-1011-117c-3f2b-d876c6f14e97");
+        source.setId(buildConnectDTO.connectOutPutPortComponentId);
         // 源类型
         source.setType(ConnectableDTO.TypeEnum.PROCESSOR);
 
@@ -1177,11 +1164,23 @@ public class BuildNifiTaskListener {
         body.setComponent(component);
         body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
 
-        // 将java对象转为json输出
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+                .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
+
+        return sendHttpRequest(body, uri);
+    }
+
+    /**
+     * 创建port组件连接请求
+     *
+     * @param body body
+     * @param uri  uri
+     * @return 返回值
+     */
+    private ConnectionEntity sendHttpRequest(ConnectionEntity body, String uri) {
         String json = JSON.toJSONString(body);
 
         HttpClient client = new DefaultHttpClient();
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", "cbf61301-1011-117c-7765-c6d09a58fc4d");
         // post请求
         HttpPost request = new HttpPost(uri);
 
@@ -1194,15 +1193,47 @@ public class BuildNifiTaskListener {
             System.out.println(entity.toString());
             //解析返回数据
             String result = EntityUtils.toString(entity, "UTF-8");
-            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
 
-            log.info("创建input_port连接信息:【" + connectionEntity + "】");
-            return connectionEntity;
+            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
+            log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
         } catch (Exception e) {
-            log.error("创建input_port连接失败,【失败原因为：】,{}", e.getMessage());
+            log.info("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
         }
 
         return connectionEntity;
+    }
+
+    /**
+     * 创建port组件请求
+     *
+     * @param body body
+     * @param uri  uri
+     * @return 返回值
+     */
+    private PortEntity sendHttpRequest(PortEntity body, String uri) {
+        String json = JSON.toJSONString(body);
+
+        HttpClient client = new DefaultHttpClient();
+        // post请求
+        HttpPost request = new HttpPost(uri);
+
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+        PortEntity portEntity = new PortEntity();
+        try {
+            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+            HttpResponse resp = client.execute(request);
+            HttpEntity entity = resp.getEntity();
+            System.out.println(entity.toString());
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
+
+            portEntity = JSON.parseObject(result, PortEntity.class);
+            log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
+        } catch (Exception e) {
+            log.info("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
+        }
+
+        return portEntity;
     }
 
 }

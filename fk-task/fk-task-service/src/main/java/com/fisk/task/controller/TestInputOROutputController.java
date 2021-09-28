@@ -30,7 +30,7 @@ public class TestInputOROutputController {
         String clientId = UUID.randomUUID().toString();
         System.out.println(clientId);
 
-        String inputName = "aa";
+        String inputName = "appTest";
 
         BuildPortDTO buildPortDTO = new BuildPortDTO();
         buildPortDTO.clientId = clientId;
@@ -47,7 +47,7 @@ public class TestInputOROutputController {
         String clientId = UUID.randomUUID().toString();
         System.out.println(clientId);
 
-        String outputName = "aa";
+        String outputName = "appTest";
 
         BuildPortDTO buildPortDTO = new BuildPortDTO();
         buildPortDTO.clientId = clientId;
@@ -64,12 +64,15 @@ public class TestInputOROutputController {
         String clientId = UUID.randomUUID().toString();
         System.out.println(clientId);
 
-        String outputName = "aa";
-
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
-        buildConnectDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+        // 当前组件在哪个组下的组件id
+        buildConnectDTO.fatherComponentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+        // input_port将连接的组件 id
+        buildConnectDTO.connectInPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
+        // input_port组件id
+        buildConnectDTO.inputPortComponentId = "26289101-017c-1000-3be7-f1718c728a2f";
 
-        ConnectionEntity connectionEntity = listener.buildInputPortConnections();
+        ConnectionEntity connectionEntity = listener.buildInputPortConnections(buildConnectDTO);
         System.out.println(connectionEntity);
     }
 
@@ -79,12 +82,15 @@ public class TestInputOROutputController {
         String clientId = UUID.randomUUID().toString();
         System.out.println(clientId);
 
-        String outputName = "aa";
-
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
-        buildConnectDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+        // 当前组件在哪个组下的组件id
+        buildConnectDTO.fatherComponentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+        // output_port组件id
+        buildConnectDTO.outputPortComponentId = "26cdf6f5-017c-1000-c76b-8bfdb0c150a8";
+        // 连接output_port的组件 id
+        buildConnectDTO.connectOutPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
 
-        ConnectionEntity connectionEntity = listener.buildOutPortPortConnections();
+        ConnectionEntity connectionEntity = listener.buildOutPortPortConnections(buildConnectDTO);
         System.out.println(connectionEntity);
     }
 
