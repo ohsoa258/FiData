@@ -251,4 +251,35 @@ public interface INifiComponentsBuild {
      * */
      ResultEnum deleteNifiFlow(List<NifiRemoveDTO> nifiRemoveDTOList);
 
+    /**
+     * 创建input port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    PortEntity buildInputPort(BuildPortDTO buildPortDTO);
+
+    /**
+     * 创建output port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    PortEntity buildOutputPort(BuildPortDTO buildPortDTO);
+
+    /**
+     * 创建input_port连接
+     * @param buildConnectDTO buildConnectDTO
+     * @return 执行结果
+     */
+    ConnectionEntity buildInputPortConnections(BuildConnectDTO buildConnectDTO);
+
+    /**
+     * 创建output_port连接
+     *
+     * @param buildConnectDTO buildConnectDTO
+     * @return 返回值
+     */
+    ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO);
+
 }

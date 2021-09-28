@@ -2,9 +2,9 @@ package com.fisk.task.controller;
 
 import com.davis.client.model.ConnectionEntity;
 import com.davis.client.model.PortEntity;
-import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
 import com.fisk.task.dto.nifi.BuildConnectDTO;
 import com.fisk.task.dto.nifi.BuildPortDTO;
+import com.fisk.task.service.INifiComponentsBuild;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +21,10 @@ import java.util.UUID;
 @Slf4j
 public class TestInputOROutputController {
 
+    //    @Resource
+//    BuildNifiTaskListener listener;
     @Resource
-    BuildNifiTaskListener listener;
+    INifiComponentsBuild listener;
 
     @PostMapping("/buildInputPort")
     public void buildInputPort() {
@@ -33,7 +35,6 @@ public class TestInputOROutputController {
         String inputName = "appTest";
 
         BuildPortDTO buildPortDTO = new BuildPortDTO();
-        buildPortDTO.clientId = clientId;
         buildPortDTO.portName = inputName;
         buildPortDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
 
@@ -50,11 +51,11 @@ public class TestInputOROutputController {
         String outputName = "appTest";
 
         BuildPortDTO buildPortDTO = new BuildPortDTO();
-        buildPortDTO.clientId = clientId;
         buildPortDTO.portName = outputName;
         buildPortDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
 
         PortEntity portEntity = listener.buildOutputPort(buildPortDTO);
+
         System.out.println(portEntity);
     }
 
@@ -70,7 +71,7 @@ public class TestInputOROutputController {
         // input_port将连接的组件 id
         buildConnectDTO.connectInPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
         // input_port组件id
-        buildConnectDTO.inputPortComponentId = "26289101-017c-1000-3be7-f1718c728a2f";
+        buildConnectDTO.inputPortComponentId = "2bb1dfef-017c-1000-8882-97f48ae7d05e";
 
         ConnectionEntity connectionEntity = listener.buildInputPortConnections(buildConnectDTO);
         System.out.println(connectionEntity);
@@ -86,7 +87,7 @@ public class TestInputOROutputController {
         // 当前组件在哪个组下的组件id
         buildConnectDTO.fatherComponentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
         // output_port组件id
-        buildConnectDTO.outputPortComponentId = "26cdf6f5-017c-1000-c76b-8bfdb0c150a8";
+        buildConnectDTO.outputPortComponentId = "2bb212fd-017c-1000-9ea6-0c7abec252a7";
         // 连接output_port的组件 id
         buildConnectDTO.connectOutPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
 

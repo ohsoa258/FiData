@@ -13,15 +13,15 @@ import lombok.Data;
 public class BuildPortDTO {
 
     /**
-     * 当前input_port/output_port唯一标识
+     * 当前input_port/output_port唯一标识(可自定义)
      */
     public String clientId;
     /**
-     * 名称
+     * 自定义名称
      */
     public String portName;
     /**
-     * 上级组件id
+     * 属于哪个组件下的组件id
      */
     public String componentId;
 
