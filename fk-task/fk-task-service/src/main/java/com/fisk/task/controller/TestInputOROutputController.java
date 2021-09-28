@@ -1,5 +1,6 @@
 package com.fisk.task.controller;
 
+import com.davis.client.model.ConnectionEntity;
 import com.davis.client.model.PortEntity;
 import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
 import com.fisk.task.dto.nifi.BuildConnectDTO;
@@ -57,8 +58,8 @@ public class TestInputOROutputController {
         System.out.println(portEntity);
     }
 
-    @PostMapping("/buildConnect")
-    public void buildConnect() {
+    @PostMapping("/buildInputPortConnections")
+    public void buildInputPortConnections() {
 
         String clientId = UUID.randomUUID().toString();
         System.out.println(clientId);
@@ -68,8 +69,23 @@ public class TestInputOROutputController {
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
         buildConnectDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
 
-        listener.buildConnections(buildConnectDTO);
+        ConnectionEntity connectionEntity = listener.buildInputPortConnections();
+        System.out.println(connectionEntity);
+    }
 
+    @PostMapping("/buildOutPortPortConnections")
+    public void buildOutPortPortConnections() {
+
+        String clientId = UUID.randomUUID().toString();
+        System.out.println(clientId);
+
+        String outputName = "aa";
+
+        BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
+        buildConnectDTO.componentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+
+        ConnectionEntity connectionEntity = listener.buildOutPortPortConnections();
+        System.out.println(connectionEntity);
     }
 
 

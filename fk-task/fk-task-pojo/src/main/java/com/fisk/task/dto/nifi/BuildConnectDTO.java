@@ -1,5 +1,7 @@
 package com.fisk.task.dto.nifi;
 
+import lombok.Data;
+
 /**
  * <p>
  * input_port or output_port连接组所需参数
@@ -7,6 +9,7 @@ package com.fisk.task.dto.nifi;
  *
  * @author Lock
  */
+@Data
 public class BuildConnectDTO {
 
     /**

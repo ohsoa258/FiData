@@ -1,7 +1,6 @@
 package com.fisk.task.consumer.nifi;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
@@ -23,16 +22,23 @@ import com.fisk.task.utils.NifiPositionHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -98,7 +104,7 @@ public class BuildNifiTaskListener {
             return;
         }
         //调度组件id
-        String schedulerComponentId="";
+        String schedulerComponentId = "";
         log.info(JSON.toJSONString("【数据接入配置项参数】" + configDTO));
         //1. 获取数据接入配置库连接池
         ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
@@ -122,13 +128,13 @@ public class BuildNifiTaskListener {
         //6. 启动组件
         enabledProcessor(taskGroupEntity.getId(), processors);
         //7. 回写id
-        for (ProcessorEntity processorEntity:processors) {
+        for (ProcessorEntity processorEntity : processors) {
             //调度组件id
-            if(Objects.equals(processorEntity.getComponent().getName(),"Query Increment Field")){
-                schedulerComponentId=processorEntity.getId();
+            if (Objects.equals(processorEntity.getComponent().getName(), "Query Increment Field")) {
+                schedulerComponentId = processorEntity.getId();
             }
         }
-        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(),schedulerComponentId);
+        writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(), schedulerComponentId);
     }
 
     /**
@@ -935,7 +941,7 @@ public class BuildNifiTaskListener {
      * @param tableId          物理表id
      * @param tableComponentId 任务组id
      */
-    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId,String schedulerComponentId) {
+    private void writeBackComponentId(long appId, String appComponentId, long tableId, String tableComponentId, String sourceDbPoolComponentId, String targetDbPoolComponentId, String cfgDbPoolComponentId, String schedulerComponentId) {
         NifiAccessDTO dto = new NifiAccessDTO();
         dto.appId = appId;
         dto.appGroupId = appComponentId;
@@ -944,7 +950,7 @@ public class BuildNifiTaskListener {
         dto.targetDbPoolComponentId = targetDbPoolComponentId;
         dto.sourceDbPoolComponentId = sourceDbPoolComponentId;
         dto.cfgDbPoolComponentId = cfgDbPoolComponentId;
-        dto.schedulerComponentId=schedulerComponentId;
+        dto.schedulerComponentId = schedulerComponentId;
         client.addComponentId(dto);
     }
 
@@ -1008,23 +1014,6 @@ public class BuildNifiTaskListener {
      */
     public PortEntity buildInputPort(BuildPortDTO buildPortDTO) {
 
-//        String a = "{\n" +
-//                "  \"revision\": {\n" +
-//                "    \"clientId\": \"6eb2baff-9033-4ce6-825f-138936febc61\",\n" +
-//                "    \"version\": 0\n" +
-//                "  },\n" +
-//                "  \"component\": {\n" +
-//                "    \"position\": {\n" +
-//                "      \"x\": 304.0,\n" +
-//                "      \"y\": 88.0\n" +
-//                "    },\n" +
-//                "    \"name\": \"app\",\n" +
-//                "    \"allowRemoteAccess\": \"false\"\n" +
-//                "  }\n" +
-//                "}";
-//
-//        PortEntity body = JSON.parseObject(a, PortEntity.class);
-
         PortEntity body = new PortEntity();
 
         RevisionDTO revisionDTO = new RevisionDTO();
@@ -1047,7 +1036,7 @@ public class BuildNifiTaskListener {
         body.setComponent(portDTO);
 
         // json转换
-        HttpHeaders headers = new HttpHeaders();
+/*        HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         HttpEntity<PortEntity> request = new HttpEntity<>(body, headers);
 
@@ -1055,7 +1044,8 @@ public class BuildNifiTaskListener {
 
         ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
 
-        return response.getBody();
+        return response.getBody();*/
+        return null;
     }
 
     /**
@@ -1088,7 +1078,7 @@ public class BuildNifiTaskListener {
         body.setComponent(portDTO);
 
         // json转换
-        HttpHeaders headers = new HttpHeaders();
+/*        HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         HttpEntity<PortEntity> request = new HttpEntity<>(body, headers);
 
@@ -1096,44 +1086,123 @@ public class BuildNifiTaskListener {
 
         ResponseEntity<PortEntity> response = httpClient.exchange(url, HttpMethod.POST, request, PortEntity.class);
 
-        return response.getBody();
+        return response.getBody();*/
+        return null;
     }
 
-    public void buildConnections(BuildConnectDTO buildConnectDTO) {
+    public ConnectionEntity buildInputPortConnections() {
 
-        String json = "{\n" +
-                "  \"revision\": {\n" +
-                "    \"version\": 0\n" +
-                "  },\n" +
-                "  \"disconnectedNodeAcknowledged\": false,\n" +
-                "  \"component\": {\n" +
-                "      \"destination\": {\n" +
-                "          \"groupId\": \"cbf61301-1011-117c-7765-c6d09a58fc4d\",\n" +
-                "          \"id\": \"cbf61303-1011-117c-3f2b-d876c6f14e97\",\n" +
-                "          \"type\": \"PROCESSOR\"\n" +
-                "      },\n" +
-                "      \"source\": {\n" +
-                "          \"groupId\": \"cbf61301-1011-117c-7765-c6d09a58fc4d\",\n" +
-                "          \"id\": \"26289101-017c-1000-3be7-f1718c728a2f\",\n" +
-                "          \"type\": \"INPUT_PORT\"\n" +
-                "      }\n" +
-                "  }\n" +
-                "}";
-        ConnectionEntity body = JSONObject.parseObject(json, ConnectionEntity.class);
+        ConnectionEntity body = new ConnectionEntity();
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.version(0L);
 
-//        ConnectionEntity body = new ConnectionEntity();
+        ConnectionDTO component = new ConnectionDTO();
+        ConnectableDTO destination = new ConnectableDTO();
+        destination.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        destination.setId("cbf61303-1011-117c-3f2b-d876c6f14e97");
+        destination.type(ConnectableDTO.TypeEnum.PROCESSOR);
 
+        ConnectableDTO source = new ConnectableDTO();
+        source.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        source.setId("26289101-017c-1000-3be7-f1718c728a2f");
+        source.setType(ConnectableDTO.TypeEnum.INPUT_PORT);
+
+        component.setDestination(destination);
+        component.setSource(source);
         // 构造的参数
+        body.setRevision(revisionDTO);
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setComponent(component);
+        body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
 
+        // 将java对象转为json输出
+        String json = JSON.toJSONString(body);
 
-        // json转换
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        HttpEntity<ConnectionEntity> request = new HttpEntity<>(body, headers);
+        HttpClient client = new DefaultHttpClient();
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", "cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // post请求
+        HttpPost request = new HttpPost(uri);
 
-        String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.componentId);
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+        ConnectionEntity connectionEntity = new ConnectionEntity();
+        try {
+            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+            HttpResponse resp = client.execute(request);
+            HttpEntity entity = resp.getEntity();
+            System.out.println(entity.toString());
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
 
-        ResponseEntity<ConnectionEntity> response = httpClient.exchange(url, HttpMethod.POST, request, ConnectionEntity.class);
+            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
+            log.info("创建input_port连接成功,【信息为：】,{}", result);
+        } catch (Exception e) {
+            log.info("创建input_port连接失败,【失败原因为：】,{}", e.getMessage());
+        }
+
+        return connectionEntity;
+    }
+
+    public ConnectionEntity buildOutPortPortConnections() {
+
+        ConnectionEntity body = new ConnectionEntity();
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.version(0L);
+
+        ConnectionDTO component = new ConnectionDTO();
+        ConnectableDTO destination = new ConnectableDTO();
+        // 所属上级组件 id
+        destination.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // output_port组件id
+        destination.setId("26cdf6f5-017c-1000-c76b-8bfdb0c150a8");
+        // 组件类型
+        destination.type(ConnectableDTO.TypeEnum.OUTPUT_PORT);
+
+        ConnectableDTO source = new ConnectableDTO();
+        // 所属上级组件 id
+        source.setGroupId("cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // 连接output_port的组件 id
+        source.setId("cbf61303-1011-117c-3f2b-d876c6f14e97");
+        // 源类型
+        source.setType(ConnectableDTO.TypeEnum.PROCESSOR);
+
+        List<String> selectedRelationships = new ArrayList<>();
+        selectedRelationships.add("success");
+        component.setSelectedRelationships(selectedRelationships);
+
+        component.setDestination(destination);
+        component.setSource(source);
+        // 构造的参数
+        body.setRevision(revisionDTO);
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setComponent(component);
+        body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
+
+        // 将java对象转为json输出
+        String json = JSON.toJSONString(body);
+
+        HttpClient client = new DefaultHttpClient();
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_CONNECTIONS.replace("{id}", "cbf61301-1011-117c-7765-c6d09a58fc4d");
+        // post请求
+        HttpPost request = new HttpPost(uri);
+
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+        ConnectionEntity connectionEntity = new ConnectionEntity();
+        try {
+            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+            HttpResponse resp = client.execute(request);
+            HttpEntity entity = resp.getEntity();
+            System.out.println(entity.toString());
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
+            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
+
+            log.info("创建input_port连接信息:【" + connectionEntity + "】");
+            return connectionEntity;
+        } catch (Exception e) {
+            log.error("创建input_port连接失败,【失败原因为：】,{}", e.getMessage());
+        }
+
+        return connectionEntity;
     }
 
 }
