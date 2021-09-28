@@ -233,4 +233,22 @@ public interface INifiComponentsBuild {
      * 修改组件调度
      * */
      ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod);
+
+    /*
+     * 清空nifi组件队列
+     * */
+     ResultEnum emptyNifiConnectionQueue(String groupId);
+
+
+    /*
+     * 修改控制器服务状态
+     * */
+     ResultEnum controllerServicesRunStatus(String controllerServicesId);
+
+
+    /*
+     * 删除nifi流程
+     * */
+     ResultEnum deleteNifiFlow(List<NifiRemoveDTO> nifiRemoveDTOList);
+
 }

@@ -3,6 +3,7 @@ package com.fisk.task.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.nifi.NifiRemoveDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -10,6 +11,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * 发送任务
@@ -86,4 +89,9 @@ public interface PublishTaskClient {
     @PostMapping("/nifi/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId")String groupId, @RequestParam("ProcessorId")String ProcessorId,@RequestParam("schedulingStrategy") String schedulingStrategy,@RequestParam("schedulingPeriod") String schedulingPeriod);
 
+    /*
+    * 删除nifi流程
+    * */
+    @PostMapping("/nifi/deleteNifiFlow")
+    public ResultEntity<Object> deleteNifiFlow(@RequestBody List<NifiRemoveDTO> nifiRemoveDTOList);
 }

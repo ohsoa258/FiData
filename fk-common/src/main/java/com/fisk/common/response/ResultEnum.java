@@ -79,6 +79,9 @@ public enum ResultEnum {
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002, "Nifi组件创建失败"),
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
     TASK_NIFI_DISPATCH_ERROR(6004,"调度失败"),
+    TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005,"清空队列失败"),
+    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
+    TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     /**
      * 数据域接入模块
      *

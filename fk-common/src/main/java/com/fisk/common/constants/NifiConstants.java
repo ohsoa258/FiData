@@ -22,6 +22,10 @@ public class NifiConstants {
         public static final String CREATE_CONNECTIONS = "/process-groups/{id}/connections";
         public static final String INPUT = "/input-ports/{id}";
 
+        public static final String EMPTY_ALL_CONNECTIONS_REQUESTS="/process-groups/{id}/empty-all-connections-requests";
+
+        public static final String CONTROLLER_SERVICES_RUN_STATUS="/controller-services/{id}/run-status";
+
     }
 
     public static final class DriveConstants {

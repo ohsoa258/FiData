@@ -907,7 +907,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     /*
     * 修改任务组调度
-    *
+    * groupId             任务组id
+    * ProcessorId         组件id
+    * schedulingStrategy  调度方式
+    * schedulingPeriod    调度频率
     * */
     @Override
     public ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod){
@@ -927,6 +930,78 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         } catch (ApiException e) {
             log.error("调度修改失败，【" + e.getResponseBody() + "】: ", e);
             return ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        }
+    }
+
+    /*
+    * emptyNifiConnectionQueue  清空nifi连接队列
+    * groupId                   任务组id
+    * */
+    @Override
+    public ResultEnum emptyNifiConnectionQueue(String groupId) {
+            String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
+            ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.POST, null, String.class);
+            return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * controllerServicesRunStatus   禁用控制器服务
+    * */
+    @Override
+    public ResultEnum controllerServicesRunStatus(String controllerServicesId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+            ControllerServiceRunStatusEntity controllerServiceRunStatusEntity = new ControllerServiceRunStatusEntity();
+            ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
+            controllerServiceRunStatusEntity.setRevision(controllerService.getRevision());
+            controllerServiceRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            controllerServiceRunStatusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);
+            HttpEntity<ControllerServiceRunStatusEntity> request = new HttpEntity<>(controllerServiceRunStatusEntity, headers);
+            String url1 = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CONTROLLER_SERVICES_RUN_STATUS.replace("{id}", controllerServicesId);
+            ResponseEntity<String> response1 = httpClient.exchange(url1, HttpMethod.PUT, request, String.class);
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("禁用控制器服务失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        }
+    }
+
+    /*
+    * deleteNifiFlow       删除nifi流程
+    * nifiRemoveDTOList
+    * */
+    @Override
+    public ResultEnum deleteNifiFlow(List<NifiRemoveDTO> nifiRemoveDTOList){
+        try {
+            List<ProcessorEntity> processorEntities = new ArrayList<>();
+        for (NifiRemoveDTO nifiRemoveDTO:nifiRemoveDTOList) {
+            processorEntities.clear();
+            for (String ProcessId:nifiRemoveDTO.ProcessIds) {
+                ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
+                processorEntities.add(processor);
+            }
+            //暂停13个组件
+            this.stopProcessor(nifiRemoveDTO.groupId,processorEntities);
+            //清空队列
+            this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
+            //禁用4个控制器服务
+            for (String controllerServicesId:nifiRemoveDTO.controllerServicesIds) {
+                this.controllerServicesRunStatus(controllerServicesId);
+            }
+            //删除任务组
+            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
+            NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()),null,null);
+            //删除应用
+        }
+            if(nifiRemoveDTOList.get(0).delApp){
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()),null,null);
+            }
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DELETE_FLOW;
         }
     }
 
