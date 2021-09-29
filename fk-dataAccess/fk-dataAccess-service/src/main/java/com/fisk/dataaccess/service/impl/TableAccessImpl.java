@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -1389,6 +1390,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return dto;
         }
         return dto = TableAccessMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public List<FieldNameDTO> getTableFieldId(int id)
+    {
+        QueryWrapper<TableFieldsPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(TableFieldsPO::getTableAccessId,id);
+        List<FieldNameDTO> list= fieldsMapper.listTableName(id);
+        //List<Integer> list=(List)fieldsMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
+        return list;
     }
 
 }

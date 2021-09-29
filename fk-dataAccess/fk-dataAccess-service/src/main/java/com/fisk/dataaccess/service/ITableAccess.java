@@ -201,4 +201,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
     BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
 
     ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto);
+
+    /**
+     * 根据id获取接入表所有字段id
+     * @param id
+     * @return
+     */
+    List<FieldNameDTO> getTableFieldId(int id);
+
 }

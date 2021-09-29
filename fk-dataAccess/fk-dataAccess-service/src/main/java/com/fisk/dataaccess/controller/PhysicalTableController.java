@@ -320,4 +320,10 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createPgToDorisConfig(tableName,selectSql));
     }
 
+    @GetMapping("/getTableFieldId/{id}")
+    @ApiOperation("根据接入表id获取所有字段id")
+    public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldId(id));
+    }
+
 }

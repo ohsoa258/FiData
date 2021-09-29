@@ -2,8 +2,10 @@ package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
+import com.squareup.okhttp.internal.Internal;
 
 import java.util.List;
 
@@ -67,5 +69,12 @@ public interface IDimensionAttribute {
      * @return
      */
     List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id);
+
+    /**
+     * 根据维度id获取维度字段所有来源id
+     * @param id
+     * @return
+     */
+    List<FieldNameDTO> getDimensionAttributeSourceId(int id);
 
 }

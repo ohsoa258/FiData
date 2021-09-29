@@ -67,4 +67,10 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(id));
     }
 
+    @ApiOperation("根据事实id获取事实字段所有来源id")
+    @GetMapping("/getFactAttributeSourceId/{id}")
+    public ResultEntity<Object> getFactAttributeSourceId(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeSourceId(id));
+    }
+
 }

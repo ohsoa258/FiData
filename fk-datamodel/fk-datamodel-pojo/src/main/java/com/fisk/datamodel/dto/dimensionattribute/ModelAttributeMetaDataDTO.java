@@ -6,7 +6,9 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ModelAttributeMetaDataDTO {
+public class
+
+ModelAttributeMetaDataDTO {
 
     /**
      * 字段id

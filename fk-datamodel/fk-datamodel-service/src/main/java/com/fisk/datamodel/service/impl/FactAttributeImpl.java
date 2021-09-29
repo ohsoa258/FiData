@@ -1,12 +1,15 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
@@ -29,6 +32,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -88,7 +92,6 @@ public class FactAttributeImpl
         }*/
         return this.saveBatch(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
-
 
     @Override
     public ResultEnum deleteFactAttribute(List<Integer> ids)
@@ -214,6 +217,36 @@ public class FactAttributeImpl
             data.add(dto);
         }
         return data;
+    }
+
+    @Override
+    public List<FieldNameDTO> getFactAttributeSourceId(int id)
+    {
+        FactPO factPO=factMapper.selectById(id);
+        if (factPO==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
+        }
+        ResultEntity<Object> data=client.getTableFieldId(factPO.tableSourceId);
+        if (ResultEnum.SUCCESS.equals(data.code))
+        {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, "获取数据接入表数据失败");
+        }
+        List<FieldNameDTO> list= JSON.parseArray(JSON.toJSONString(data.data), FieldNameDTO.class);
+        System.out.println(list);
+        if (list ==null || list.size()==0)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据接入表数据为空");
+        }
+        //获取维度表存在字段来源id
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("table_source_field_id").lambda()
+                .eq(FactAttributePO::getFactId,id)
+                .ne(FactAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<Integer> ids=(List)mapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
+        //过滤已添加来源表id
+        list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
+        return list;
     }
 
 }

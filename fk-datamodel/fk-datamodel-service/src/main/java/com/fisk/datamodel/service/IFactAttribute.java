@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
@@ -54,5 +55,12 @@ public interface IFactAttribute {
      * @param id
      */
     List<FactAttributeDropDTO> GetFactAttributeData(int id);
+
+    /**
+     * 根据事实表id获取来源表下未添加字段
+     * @param id
+     * @return
+     */
+    List<FieldNameDTO> getFactAttributeSourceId(int id);
 
 }

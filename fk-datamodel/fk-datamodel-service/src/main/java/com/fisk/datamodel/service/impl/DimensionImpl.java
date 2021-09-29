@@ -93,7 +93,7 @@ public class DimensionImpl implements IDimension {
 
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
-                            .eq(DimensionPO::getDimensionCnName,dto.dimensionCnName)
+                            .eq(DimensionPO::getDimensionEnName,dto.dimensionEnName)
                             .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
@@ -121,7 +121,7 @@ public class DimensionImpl implements IDimension {
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
                 .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
-                .eq(DimensionPO::getDimensionCnName,dto.dimensionCnName);
+                .eq(DimensionPO::getDimensionEnName,dto.dimensionEnName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=model.id)
         {
