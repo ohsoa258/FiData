@@ -229,6 +229,8 @@ public class PhysicalTableController {
         }
 
         ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+        nifiVO.delApp=false;
+        publishTaskClient.deleteNifiFlow(nifiVO);
         log.info("task删除应用{}", task);
         System.out.println(task);
 

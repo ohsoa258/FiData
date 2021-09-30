@@ -1,12 +1,15 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.nifi.NifiRemoveDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -93,5 +96,11 @@ public interface PublishTaskClient {
     * 删除nifi流程
     * */
     @PostMapping("/nifi/deleteNifiFlow")
-    public ResultEntity<Object> deleteNifiFlow(@RequestBody List<NifiRemoveDTO> nifiRemoveDTOList);
+    public ResultEntity<Object> deleteNifiFlow(@RequestBody NifiVO nifiVO);
+
+    /*
+    * getTableNifiSetting
+    * */
+    @PostMapping("/nifi/getTableNifiSetting")
+    public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto);
 }

@@ -4,6 +4,7 @@ import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.vo.ProcessGroupsVO;
@@ -249,7 +250,7 @@ public interface INifiComponentsBuild {
     /*
      * 删除nifi流程
      * */
-     ResultEnum deleteNifiFlow(List<NifiRemoveDTO> nifiRemoveDTOList);
+     ResultEnum deleteNifiFlow(NifiVO nifiVO);
 
     /**
      * 创建input port组件

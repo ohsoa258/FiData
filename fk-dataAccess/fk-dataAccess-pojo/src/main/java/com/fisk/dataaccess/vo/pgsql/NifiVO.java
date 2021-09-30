@@ -25,6 +25,11 @@ public class NifiVO {
      * 应用注册下保存的atlasId
      */
     public String appAtlasId;
+
+    /*
+    *delApp
+    * */
+    public Boolean delApp;
     /**
      * 物理表id
      */

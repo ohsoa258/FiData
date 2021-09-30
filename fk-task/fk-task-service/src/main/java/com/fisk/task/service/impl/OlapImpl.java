@@ -41,8 +41,8 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
             e.tableName=e.tableName.toLowerCase();
-            List<String> fileds=e.dto.stream().map(d->"`"+d.fieldEnName.toLowerCase()+"`").collect(Collectors.toList());
-            fileds.add("`"+e.tableName+"_pk`");
+            List<String> fileds=e.dto.stream().map(d->" "+d.fieldEnName.toLowerCase()+" ").collect(Collectors.toList());
+            fileds.add(" "+e.tableName+"_pk ,fk_doris_increment_code,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
             po.selectDataSql="SELECT "+fileds.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
@@ -82,7 +82,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
         String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
+        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType +"("+l.fieldLength+ ") comment " + "'" + l.fieldCnName + "' ,"));
         sqlFiledBuild.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
         String sqlFiled = sqlFiledBuild.toString();
         String sqlUnique = sqlUniqueBuild;
@@ -148,7 +148,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
                 aggregationFunSql.append("(");
-                aggregationFunSql.append(e.aggregatedField);
+                aggregationFunSql.append(e.aggregatedField.toLowerCase());
                 aggregationFunSql.append(") ,0)AS ");
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");

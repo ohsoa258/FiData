@@ -17,6 +17,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.AtlasProcessEnum;
@@ -26,6 +27,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IAtlasBuildInstance;
+import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.rabbitmq.client.Channel;
 import fk.atlas.api.model.EntityProcess;
 import fk.atlas.api.model.EntityRdbmsColumn;
@@ -64,6 +66,8 @@ public class BuildAtlasTableAndColumnTaskListener
     PublishTaskController pc;
     @Resource
     private TBETLIncrementalMapper incrementalMapper;
+    @Resource
+    private TableNifiSettingServiceImpl tableNifiSettingService;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
@@ -212,6 +216,11 @@ public class BuildAtlasTableAndColumnTaskListener
         ResultEntity<Object> writeBackRes=dc.addAtlasTableIdAndDorisSql(awbd);
         log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
         //endregion
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        tableNifiSettingPO.appId=Integer.valueOf(awbd.appId);
+        tableNifiSettingPO.tableName=awbd.tableName;
+        tableNifiSettingPO.tableAccessId=Integer.valueOf(awbd.tableId);
+        tableNifiSettingService.save(tableNifiSettingPO);
 
         //向task库中添加数据接入表结构数据
         saveTableStructure(awbd);

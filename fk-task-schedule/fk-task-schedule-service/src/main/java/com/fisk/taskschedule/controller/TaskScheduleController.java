@@ -4,12 +4,14 @@ package com.fisk.taskschedule.controller;
  * @author Lock
  */
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -29,6 +31,8 @@ public class TaskScheduleController {
     private ITaskSchedule service;
     @Resource
     private DataAccessClient client;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @ApiOperation("添加")
     @PostMapping("/add")
@@ -44,12 +48,13 @@ public class TaskScheduleController {
         accessIdsDTO.appId = taskCronDTO.dto.appId;
         accessIdsDTO.tableId = taskCronDTO.dto.tableId;
         ResultEntity<Object> clientComponentId = client.getComponentId(accessIdsDTO);
-        ComponentIdDTO data = (ComponentIdDTO) clientComponentId.data;
-        taskCronDTO.dto.appComponentId = data.appComponentId;
-        taskCronDTO.dto.tableComponentId = data.tableComponentId;
+        ResultEntity<ComponentIdDTO> componentIdDTO1 = JSON.parseObject(JSON.toJSONString(clientComponentId.data), ResultEntity.class);
+        ComponentIdDTO componentIdDTO = JSON.parseObject(JSON.toJSONString(componentIdDTO1.data), ComponentIdDTO.class);
+        taskCronDTO.dto.tableComponentId = componentIdDTO.tableComponentId;
         // 调度组件id
-        taskCronDTO.dto.schedulerComponentId = data.schedulerComponentId;
-
+        taskCronDTO.dto.schedulerComponentId = componentIdDTO.schedulerComponentId;
+        //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
+        publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,"TIMER_DRIVEN",taskCronDTO.dto.expression+" sec");
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 

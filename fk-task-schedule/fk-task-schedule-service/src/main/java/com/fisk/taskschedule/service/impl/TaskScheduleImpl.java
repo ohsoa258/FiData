@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -29,6 +31,8 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
     @Resource
     TaskScheduleMapper mapper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public ResultEntity<TaskCronDTO> addData(TaskScheduleDTO dto) {
@@ -69,6 +73,11 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
+                        ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
+                        if(tableNifiSetting.code==0){
+                            dataAccessIdDTO.schedulerComponentId=tableNifiSetting.data.queryIncrementProcessorId;
+                        }
+
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
