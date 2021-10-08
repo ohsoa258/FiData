@@ -76,4 +76,10 @@ public class ConfigureUserController {
     public ResultEntity<Object> configureByUserId(Integer id,Integer currentPage, Integer pageSize) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.configureByUserId(id,currentPage,pageSize));
     }
+
+    @ApiOperation("根据用户id查询对应api服务")
+    @GetMapping("/getByUserId")
+    public ResultEntity<Object> getByUserId(Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.configureByUserId(id));
+    }
 }
