@@ -1,9 +1,11 @@
 package com.fisk.task.controller;
 
+import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.ConnectionEntity;
 import com.davis.client.model.PortEntity;
 import com.fisk.task.dto.nifi.BuildConnectDTO;
 import com.fisk.task.dto.nifi.BuildPortDTO;
+import com.fisk.task.dto.nifi.NifiConnectDTO;
 import com.fisk.task.service.INifiComponentsBuild;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,12 +68,30 @@ public class TestInputOROutputController {
         System.out.println(clientId);
 
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
+        NifiConnectDTO destination = new NifiConnectDTO();
+        NifiConnectDTO source = new NifiConnectDTO();
         // 当前组件在哪个组下的组件id
-        buildConnectDTO.fatherComponentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
+        buildConnectDTO.fatherComponentId = "31162cce-017c-1000-c751-e72cc40134c3";
+        destination.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
         // input_port将连接的组件 id
-        buildConnectDTO.connectInPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
+//        buildConnectDTO.connectInPutPortComponentId = "31162e04-017c-1000-4d07-1efdabc64703";
+        destination.id = "31162e04-017c-1000-4d07-1efdabc64703";
+        destination.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
+
+
         // input_port组件id
-        buildConnectDTO.inputPortComponentId = "2bb1dfef-017c-1000-8882-97f48ae7d05e";
+//        buildConnectDTO.inputPortComponentId = "31162ddb-017c-1000-66b4-7e788dca76ac";
+        source.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
+        source.id = "31162ddb-017c-1000-66b4-7e788dca76ac";
+        source.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
+
+        // 目标组件类型
+//        buildConnectDTO.destinationType = ConnectableDTO.TypeEnum.PROCESSOR;
+        // 源组件地址
+//        buildConnectDTO.sourceType = ConnectableDTO.TypeEnum.INPUT_PORT;
+
+        buildConnectDTO.destination = destination;
+        buildConnectDTO.source = source;
 
         ConnectionEntity connectionEntity = listener.buildInputPortConnections(buildConnectDTO);
         System.out.println(connectionEntity);
@@ -84,13 +104,31 @@ public class TestInputOROutputController {
         System.out.println(clientId);
 
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
+        NifiConnectDTO destination = new NifiConnectDTO();
+        NifiConnectDTO source = new NifiConnectDTO();
         // 当前组件在哪个组下的组件id
-        buildConnectDTO.fatherComponentId = "cbf61301-1011-117c-7765-c6d09a58fc4d";
-        // output_port组件id
-        buildConnectDTO.outputPortComponentId = "2bb212fd-017c-1000-9ea6-0c7abec252a7";
-        // 连接output_port的组件 id
-        buildConnectDTO.connectOutPutPortComponentId = "cbf61303-1011-117c-3f2b-d876c6f14e97";
+        buildConnectDTO.fatherComponentId = "31162cce-017c-1000-c751-e72cc40134c3";
+        destination.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
+        destination.id = "31163516-017c-1000-fed6-293a6aac300b";
+        destination.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
 
+        source.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
+        source.id = "31163439-017c-1000-34a8-09ae3a527bf3";
+        source.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
+/*
+
+        // output_port组件id
+        buildConnectDTO.outputPortComponentId = "31163516-017c-1000-fed6-293a6aac300b";
+        // 连接output_port的组件 id
+        buildConnectDTO.connectOutPutPortComponentId = "31163439-017c-1000-34a8-09ae3a527bf3";
+        // 目标组件类型
+        buildConnectDTO.destinationType = ConnectableDTO.TypeEnum.OUTPUT_PORT;
+        // 源组件地址
+        buildConnectDTO.sourceType = ConnectableDTO.TypeEnum.PROCESSOR;
+*/
+
+        buildConnectDTO.destination = destination;
+        buildConnectDTO.source = source;
         ConnectionEntity connectionEntity = listener.buildOutPortPortConnections(buildConnectDTO);
         System.out.println(connectionEntity);
     }
