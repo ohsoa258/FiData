@@ -9,6 +9,7 @@ import java.util.List;
  */
 @Data
 public class AtomicIndicatorFactDTO {
+    public long factId;
     public String factTable;
     public List<AtomicIndicatorPushDTO> list;
 }
