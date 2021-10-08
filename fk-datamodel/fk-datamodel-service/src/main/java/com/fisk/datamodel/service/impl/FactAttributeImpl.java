@@ -183,13 +183,18 @@ public class FactAttributeImpl
                 {
                     break;
                 }
-                dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
-                dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
-                dto.sourceFieldId=attributePO.tableSourceFieldId; //关联字段来源
+                //维度关联表名称
+                dto.associationTable=dimensionPO.dimensionTabName;
+                //维度关联字段名称
+                dto.associationField=attributePO.dimensionFieldEnName;
+                //关联字段来源
+                dto.sourceFieldId=attributePO.tableSourceFieldId;
                 //获取关联维度与本表关联字段名称
                 FactAttributePO factAttributePO=mapper.selectById(item.associateId);
-                dto.fieldEnName=factAttributePO.factFieldEnName; //关联维度与本表字段关联名称
-                dto.associationSourceFieldId=factAttributePO.tableSourceFieldId; //关联维度与本表字段关联来源id
+                //关联维度与本表字段关联名称
+                dto.fieldEnName=factAttributePO.factFieldEnName;
+                //关联维度与本表字段关联来源id
+                dto.associationSourceFieldId=factAttributePO.tableSourceFieldId;
             }
             dtoList.add(dto);
         }
@@ -245,8 +250,7 @@ public class FactAttributeImpl
                 .ne(FactAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
         List<Integer> ids=(List)mapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         //过滤已添加来源表id
-        list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
-        return list;
+        return list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
     }
 
 }

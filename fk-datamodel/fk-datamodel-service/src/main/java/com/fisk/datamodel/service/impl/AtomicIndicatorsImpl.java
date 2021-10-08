@@ -112,7 +112,8 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
-        po.factAttributeId=dto.factAttributeId;//聚合字段id
+        //聚合字段id
+        po.factAttributeId=dto.factAttributeId;
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -163,6 +164,7 @@ public class AtomicIndicatorsImpl
             for (FactPO factPO:factPOList)
             {
                 AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
+                data.factId=factPO.id;
                 data.factTable=factPO.factTableEnName;
                 List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
                 if (atomicIndicator!=null)
@@ -171,7 +173,6 @@ public class AtomicIndicatorsImpl
                     list.add(data);
                 }
             }
-
         }
         return list;
     }
