@@ -74,14 +74,13 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .eq(MiddleConfigurePO::getUserId, dto.id);
         middleMapper.delete(queryWrapper);
 
-        // 用户存在，添加Api服务
-        List<Integer> apiIds = new ArrayList<>();
-        List<String> apiName = dto.getApiName();
-        for (String name : apiName) {
-            apiIds.add(obtainId(name));
+        // 判断添加的api服务不为空
+        if (CollectionUtils.isEmpty(dto.apiIds)){
+            return null;
         }
 
-        for (Integer apiId : apiIds) {
+        // 用户存在，添加Api服务
+        for (Integer apiId : dto.apiIds) {
             MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
             middleConfigure.setUserId(Integer.parseInt(String.valueOf(dto.id)));
             middleConfigure.setConfigureId(apiId);
@@ -159,13 +158,12 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        // 获取Api对应的Id
-        List<Integer> configureIds = new ArrayList<>();
-        for (String apiName : dto.getApiName()) {
-            configureIds.add(obtainId(apiName));
+        // 判断添加的api服务不为空
+        if (CollectionUtils.isEmpty(dto.apiIds)){
+            return null;
         }
 
-        for (Integer configureId : configureIds) {
+        for (Integer configureId : dto.apiIds) {
             QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda()
                     .eq(MiddleConfigurePO::getUserId, dto.id)

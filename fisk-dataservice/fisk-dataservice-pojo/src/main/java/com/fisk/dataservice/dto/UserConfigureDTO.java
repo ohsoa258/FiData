@@ -11,5 +11,5 @@ import java.util.List;
 @Data
 public class UserConfigureDTO {
     public Long id;
-    public List<String> apiName;
+    public List<Integer> apiIds;
 }
