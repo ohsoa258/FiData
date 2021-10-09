@@ -73,22 +73,12 @@ public class TestInputOROutputController {
         // 当前组件在哪个组下的组件id
         buildConnectDTO.fatherComponentId = "31162cce-017c-1000-c751-e72cc40134c3";
         destination.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
-        // input_port将连接的组件 id
-//        buildConnectDTO.connectInPutPortComponentId = "31162e04-017c-1000-4d07-1efdabc64703";
         destination.id = "31162e04-017c-1000-4d07-1efdabc64703";
         destination.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
-
-
         // input_port组件id
-//        buildConnectDTO.inputPortComponentId = "31162ddb-017c-1000-66b4-7e788dca76ac";
         source.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
         source.id = "31162ddb-017c-1000-66b4-7e788dca76ac";
         source.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-
-        // 目标组件类型
-//        buildConnectDTO.destinationType = ConnectableDTO.TypeEnum.PROCESSOR;
-        // 源组件地址
-//        buildConnectDTO.sourceType = ConnectableDTO.TypeEnum.INPUT_PORT;
 
         buildConnectDTO.destination = destination;
         buildConnectDTO.source = source;
@@ -107,25 +97,14 @@ public class TestInputOROutputController {
         NifiConnectDTO destination = new NifiConnectDTO();
         NifiConnectDTO source = new NifiConnectDTO();
         // 当前组件在哪个组下的组件id
-        buildConnectDTO.fatherComponentId = "31162cce-017c-1000-c751-e72cc40134c3";
-        destination.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
-        destination.id = "31163516-017c-1000-fed6-293a6aac300b";
+        buildConnectDTO.fatherComponentId = "63078e58-017c-1000-a06e-9849c03a24f8";
+        destination.groupId = "63078e58-017c-1000-a06e-9849c03a24f8";
+        destination.id = "630791c6-017c-1000-04cc-4dba9c583fc7";
         destination.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
 
-        source.groupId = "31162cce-017c-1000-c751-e72cc40134c3";
-        source.id = "31163439-017c-1000-34a8-09ae3a527bf3";
-        source.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
-/*
-
-        // output_port组件id
-        buildConnectDTO.outputPortComponentId = "31163516-017c-1000-fed6-293a6aac300b";
-        // 连接output_port的组件 id
-        buildConnectDTO.connectOutPutPortComponentId = "31163439-017c-1000-34a8-09ae3a527bf3";
-        // 目标组件类型
-        buildConnectDTO.destinationType = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        // 源组件地址
-        buildConnectDTO.sourceType = ConnectableDTO.TypeEnum.PROCESSOR;
-*/
+        source.groupId = "63079139-017c-1000-f651-3048961cc5c2";
+        source.id = "630798b8-017c-1000-7034-0b796eab71c1";
+        source.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
 
         buildConnectDTO.destination = destination;
         buildConnectDTO.source = source;

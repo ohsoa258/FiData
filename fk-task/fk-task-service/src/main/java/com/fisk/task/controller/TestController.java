@@ -1,12 +1,12 @@
 package com.fisk.task.controller;
 
 import com.davis.client.ApiException;
-import com.davis.client.model.*;
+import com.davis.client.model.ProcessorEntity;
+import com.davis.client.model.ProcessorStatusDTO;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -178,8 +177,8 @@ public class TestController {
         BuildNifiFlowDTO data=new BuildNifiFlowDTO();
         data.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
         data.userId=60L;
-        data.id=1918L;
-        data.appId=636L;
+        data.id=2036L;
+        data.appId=691L;
          service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,

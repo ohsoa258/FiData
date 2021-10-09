@@ -45,4 +45,6 @@ public class BuildConnectDTO {
     public NifiConnectDTO destination;
 
     public NifiConnectDTO source;
+
+    public int level;
 }
