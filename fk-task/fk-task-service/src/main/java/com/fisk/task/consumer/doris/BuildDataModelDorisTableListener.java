@@ -24,8 +24,12 @@ import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.task.dto.nifi.BuildCallDbProcedureProcessorDTO;
 import com.fisk.task.dto.nifi.BuildDbControllerServiceDTO;
 import com.fisk.task.dto.nifi.BuildProcessGroupDTO;
+import com.fisk.task.dto.task.AppNifiSettingPO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
@@ -33,6 +37,9 @@ import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.IPostgreBuild;
 import com.fisk.task.service.ITaskDwDim;
+import com.fisk.task.service.impl.AppNifiSettingServiceImpl;
+import com.fisk.task.service.impl.NifiConfigServiceImpl;
+import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.PostgreHelper;
 import com.rabbitmq.client.Channel;
@@ -80,6 +87,12 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
+    @Resource
+    AppNifiSettingServiceImpl appNifiSettingService;
+    @Resource
+    NifiConfigServiceImpl nifiConfigService;
+    @Resource
+    TableNifiSettingServiceImpl tableNifiSettingService;
 
 
     @RabbitHandler
@@ -102,7 +115,7 @@ public class BuildDataModelDorisTableListener
             String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
             PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
             //nifi组件配置pg-ods2pg-dw,调用存储过程
-            createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName);
+            createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.DIMENSION);
             //根据业务域名称创建组,加数据库连接池
             //根据表名创建任务组
             //创建组件
@@ -119,7 +132,7 @@ public class BuildDataModelDorisTableListener
              String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
              PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
                 //nifi组件配置pg-ods2pg-dw,调用存储过程
-                createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName);
+                createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.FACT);
                 //根据业务域名称创建组,加数据库连接池
                 //根据表名创建任务组
                 //创建组件
@@ -129,7 +142,7 @@ public class BuildDataModelDorisTableListener
 
     }
 
-    private void createNiFiFlow(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName){
+    private void createNiFiFlow(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
         BuildDbControllerServiceDTO buildDbControllerServiceDTO = new BuildDbControllerServiceDTO();
         //数据连接池
         ControllerServiceEntity  data=new ControllerServiceEntity();
@@ -154,6 +167,7 @@ public class BuildDataModelDorisTableListener
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
         }
         //创建应用组
+
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
         dto.name = modelMetaDataDTO.tableName;
         dto.details = modelMetaDataDTO.tableName;
@@ -183,16 +197,35 @@ public class BuildDataModelDorisTableListener
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
         }
         //创建组件,启动组件
-        createComponents(data2.getId(),data.getId(),modelMetaDataDTO.sqlName);
+        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), modelMetaDataDTO.sqlName);
+        //回写
+        savaNifiAllSetting(data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum);
 
+    }
 
-
+    public void savaNifiAllSetting(ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelMetaDataDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
+        AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        appNifiSettingService.query().eq("","").one();
+        appNifiSettingPO.targetDbPoolComponentId=controllerServiceEntity.getId();
+        appNifiSettingPO.appId=modelMetaDataDTO.appId;
+        appNifiSettingPO.type=dataClassifyEnum.getValue();
+        //做判断,是否新增
+        appNifiSettingPO.appComponentId=processGroupEntity1.getId();
+        appNifiSettingService.saveOrUpdate(appNifiSettingPO);
+        tableNifiSettingPO.tableAccessId= Math.toIntExact(modelMetaDataDTO.id);
+        tableNifiSettingPO.tableName=modelMetaDataDTO.tableName;
+        tableNifiSettingPO.appId=modelMetaDataDTO.appId;
+        tableNifiSettingPO.selectSql="call "+modelMetaDataDTO.sqlName;
+        tableNifiSettingPO.saveTargetDbProcessorId=processorEntities.get(0).getId();
+        tableNifiSettingPO.tableComponentId=processGroupEntity2.getId();
+        tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
     }
 
     /*
     * 创建组件
     * */
-    public void createComponents(String groupId,String componentId,String executsql){
+    public List<ProcessorEntity> createComponents(String groupId,String componentId,String executsql){
         List<ProcessorEntity> processors=new ArrayList<>();
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
@@ -207,8 +240,8 @@ public class BuildDataModelDorisTableListener
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processorEntityBusinessResult.msg);
         }
         processors.add(processorEntityBusinessResult.data);
-        componentsBuild.enabledProcessor(groupId, processors);
-
+        List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
+        return processorEntities;
     }
 
     /*
