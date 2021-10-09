@@ -1083,8 +1083,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         // 坐标
         PositionDTO positionDTO = new PositionDTO();
-        positionDTO.setX(50d);
-        positionDTO.setY(50d);
+        positionDTO.setX(25d);
+        positionDTO.setY(25d);
 
         body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
@@ -1144,17 +1144,19 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ConnectionDTO component = new ConnectionDTO();
         ConnectableDTO destination = new ConnectableDTO();
         // 当前组件在哪个组下的组件id
-        destination.setGroupId(buildConnectDTO.fatherComponentId);
-        // input_port连接的组件 id
-        destination.setId(buildConnectDTO.connectInPutPortComponentId);
-        destination.type(ConnectableDTO.TypeEnum.PROCESSOR);
+        destination.setGroupId(buildConnectDTO.destination.groupId);
+        // input_port连接的组件 id(目标组件id)
+        destination.setId(buildConnectDTO.destination.id);
+        // 目标组件类型
+        destination.type(buildConnectDTO.destination.typeEnum);
 
         ConnectableDTO source = new ConnectableDTO();
         // 当前组件在哪个组下的组件id
-        source.setGroupId(buildConnectDTO.fatherComponentId);
-        // input_port的组件id
-        source.setId(buildConnectDTO.inputPortComponentId);
-        source.setType(ConnectableDTO.TypeEnum.INPUT_PORT);
+        source.setGroupId(buildConnectDTO.source.groupId);
+        // input_port的组件id(源组件id)
+        source.setId(buildConnectDTO.source.id);
+        // 源组件类型
+        source.setType(buildConnectDTO.source.typeEnum);
 
         component.setDestination(destination);
         component.setSource(source);
@@ -1187,19 +1189,19 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         ConnectionDTO component = new ConnectionDTO();
         ConnectableDTO destination = new ConnectableDTO();
         // 当前组件在哪个组下的组件id
-        destination.setGroupId(buildConnectDTO.fatherComponentId);
-        // output_port组件id
-        destination.setId(buildConnectDTO.outputPortComponentId);
-        // 组件类型
-        destination.type(ConnectableDTO.TypeEnum.OUTPUT_PORT);
+        destination.setGroupId(buildConnectDTO.destination.groupId);
+        // 目标组件id
+        destination.setId(buildConnectDTO.destination.id);
+        // 目标组件类型
+        destination.type(buildConnectDTO.destination.typeEnum);
 
         ConnectableDTO source = new ConnectableDTO();
         // 当前组件在哪个组下的组件id
-        source.setGroupId(buildConnectDTO.fatherComponentId);
-        // 连接output_port的组件 id
-        source.setId(buildConnectDTO.connectOutPutPortComponentId);
-        // 源类型
-        source.setType(ConnectableDTO.TypeEnum.PROCESSOR);
+        source.setGroupId(buildConnectDTO.source.groupId);
+        // 源组件 id
+        source.setId(buildConnectDTO.source.id);
+        // 源组件类型
+        source.setType(buildConnectDTO.source.typeEnum);
 
         List<String> selectedRelationships = new ArrayList<>();
         selectedRelationships.add("success");
@@ -1211,7 +1213,6 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         body.setRevision(revisionDTO);
         body.setDisconnectedNodeAcknowledged(false);
         body.setComponent(component);
-        body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
 
         String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
                 .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
@@ -1246,7 +1247,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
             log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
         } catch (Exception e) {
-            log.info("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
+            log.error("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
         }
 
         return connectionEntity;
@@ -1279,7 +1280,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             portEntity = JSON.parseObject(result, PortEntity.class);
             log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
         } catch (Exception e) {
-            log.info("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
+            log.error("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
         }
 
         return portEntity;

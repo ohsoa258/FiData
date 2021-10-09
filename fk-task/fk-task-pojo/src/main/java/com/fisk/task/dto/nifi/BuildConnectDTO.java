@@ -1,5 +1,6 @@
 package com.fisk.task.dto.nifi;
 
+import com.davis.client.model.ConnectableDTO;
 import lombok.Data;
 
 /**
@@ -32,6 +33,16 @@ public class BuildConnectDTO {
      * input_port将连接的组件 id
      */
     public String connectInPutPortComponentId;
+    /**
+     * 目标组件类型
+     */
+    public ConnectableDTO.TypeEnum destinationType;
+    /**
+     * 源组件类型
+     */
+    public ConnectableDTO.TypeEnum sourceType;
 
+    public NifiConnectDTO destination;
 
+    public NifiConnectDTO source;
 }
