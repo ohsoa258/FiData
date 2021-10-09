@@ -199,7 +199,12 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .select(MiddleConfigurePO::getId, MiddleConfigurePO::getUserId, MiddleConfigurePO::getConfigureId);
         List<MiddleConfigurePO> userConfigureList = middleMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(userConfigureList)) {
-            return null;
+            List<ConfigureDTO> dtoList = ConfigureUserMap.INSTANCES.poToDto(apiConfigureMapper.selectList(null))
+                    .stream().map(e -> {
+                        e.setCheck(0);
+                        return e;
+                    }).collect(toList());
+            return this.paginating(dtoList,currentPage, pageSize);
         }
 
         // 获取api服务Id集合
