@@ -12,19 +12,19 @@ import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
-import com.fisk.datamodel.entity.BusinessAreaPO;
-import com.fisk.datamodel.entity.DataAreaPO;
-import com.fisk.datamodel.entity.DimensionPO;
-import com.fisk.datamodel.entity.ProjectInfoPO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
-import com.fisk.datamodel.mapper.BusinessAreaMapper;
-import com.fisk.datamodel.mapper.DataAreaMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
-import com.fisk.datamodel.mapper.ProjectInfoMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimension;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +54,10 @@ public class DimensionImpl implements IDimension {
     UserHelper userHelper;
     @Resource
     BusinessAreaMapper businessAreaMapper;
+    @Resource
+    DimensionAttributeMapper dimensionAttributeMapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @Override
     public List<DimensionSourceDTO> getDimensionList()
@@ -138,6 +142,39 @@ public class DimensionImpl implements IDimension {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //判断维度表是否存在关联
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.in("associate_dimension_id",id)
+                .lambda().eq(DimensionAttributePO::getAttributeType, DimensionAttributeEnum.ASSOCIATED_DIMENSION);
+        List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
+        if (poList.size()>0)
+        {
+            return ResultEnum.TABLE_ASSOCIATED;
+        }
+
+        //判断维度表是否与事实表有关联
+        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
+        queryWrapper1.in("associate_dimension_id",id)
+                .lambda().eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION);
+        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
+        if (factAttributePOList.size()>0)
+        {
+            return ResultEnum.TABLE_ASSOCIATED;
+        }
+
+        //删除组合对象
+        DataModelVO vo=new DataModelVO();
+        vo.businessId=model.businessId;
+        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+        vo.delBusiness=false;
+        DataModelTableVO tableVO=new DataModelTableVO();
+        tableVO.type= OlapTableEnum.DIMENSION;
+        List<Integer> ids=new ArrayList<>();
+        ids.add(id);
+        tableVO.ids=ids;
+        vo.dimensionIdList=tableVO;
+
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

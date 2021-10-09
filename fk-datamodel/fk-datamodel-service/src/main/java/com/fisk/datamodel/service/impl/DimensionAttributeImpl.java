@@ -12,13 +12,16 @@ import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -42,6 +45,8 @@ public class DimensionAttributeImpl
     DimensionAttributeMapper attributeMapper;
     @Resource
     DataAccessClient client;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -118,11 +123,30 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ResultEntity<Integer> deleteDimensionAttribute(List<Integer> ids)
+    public ResultEnum deleteDimensionAttribute(List<Integer> ids)
     {
+        //判断字段是否与其他表有关联
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.in("associate_dimension_field_id",ids)
+                .lambda().eq(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        if (list.size()>0)
+        {
+            return ResultEnum.FIELDS_ASSOCIATED;
+        }
+
+        //判断字段是否与事实表有关联
+        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
+        queryWrapper1.in("associate_dimension_field_id",ids)
+                .lambda().eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION);
+        List<FactAttributePO> poList=factAttributeMapper.selectList(queryWrapper1);
+        if (poList.size()>0)
+        {
+            return ResultEnum.FIELDS_ASSOCIATED;
+        }
+
         DimensionAttributePO po=attributeMapper.selectById(ids.get(0));
-        int flat=attributeMapper.deleteBatchIds(ids);
-        return ResultEntityBuild.build(flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR,po.dimensionId);
+        return attributeMapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

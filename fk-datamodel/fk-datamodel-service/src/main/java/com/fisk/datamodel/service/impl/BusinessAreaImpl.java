@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -16,11 +17,21 @@ import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.entity.BusinessProcessPO;
+import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
+import com.fisk.datamodel.mapper.BusinessProcessMapper;
+import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IBusinessArea;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -51,6 +64,12 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     AtomicIndicatorsImpl atomicIndicators;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    DimensionMapper dimensionMapper;
+    @Resource
+    BusinessProcessMapper businessProcessMapper;
+    @Resource
+    FactMapper factMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -109,6 +128,34 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         BusinessAreaPO model = this.getById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        //获取业务域下所有维度、事实相关数据
+        DataModelVO vo=new DataModelVO();
+        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+        vo.businessId=model.id;
+
+        //获取所有维度id
+        DataModelTableVO dimensionTable=new DataModelTableVO();
+        dimensionTable.type= OlapTableEnum.DIMENSION;
+        QueryWrapper<DimensionPO> queryWrapperPo=new QueryWrapper<>();
+        queryWrapperPo.select("id").lambda().eq(DimensionPO::getBusinessId,model.id);
+        dimensionTable.ids=(List)dimensionMapper.selectObjs(queryWrapperPo).stream().collect(Collectors.toList());
+        vo.dimensionIdList=dimensionTable;
+
+        //获取业务域下所有业务过程id
+        QueryWrapper<BusinessProcessPO> businessProcessPOQueryWrapper=new QueryWrapper<>();
+        businessProcessPOQueryWrapper.select("id").lambda().eq(BusinessProcessPO::getBusinessId,model.id);
+        List<Integer> processIds=(List)businessProcessMapper.selectObjs(businessProcessPOQueryWrapper).stream().collect(Collectors.toList());
+        if (processIds.size()>0)
+        {
+            //获取业务过程下所有事实id
+            DataModelTableVO factTable=new DataModelTableVO();
+            factTable.type= OlapTableEnum.FACT;
+            QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
+            factPOQueryWrapper.select("id").in("business_process_id",processIds);
+            factTable.ids=(List) factMapper.selectObjs(factPOQueryWrapper).stream().collect(Collectors.toList());
+            vo.factIdList=factTable;
         }
 
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

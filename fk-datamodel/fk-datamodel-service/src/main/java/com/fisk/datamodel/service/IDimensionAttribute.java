@@ -33,7 +33,7 @@ public interface IDimensionAttribute {
      * @param ids
      * @return 删除结果
      */
-    ResultEntity<Integer> deleteDimensionAttribute(List<Integer> ids);
+    ResultEnum deleteDimensionAttribute(List<Integer> ids);
 
     /**
      * 获取维度字段表数据

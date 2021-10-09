@@ -45,12 +45,7 @@ public class DimensionAttributeController {
     @PostMapping("/deleteAttribute")
     public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids)
     {
-        ResultEntity<Integer> result=service.deleteDimensionAttribute(ids);
-        if (result.code==ResultEnum.SUCCESS.getCode())
-        {
-            //发送消息
-        }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+        return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
     }
 
     @ApiOperation("获取维度字段表列表")
