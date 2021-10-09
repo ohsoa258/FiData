@@ -1,6 +1,5 @@
 package com.fisk.task.dto.nifi;
 
-import com.davis.client.model.ConnectableDTO;
 import lombok.Data;
 
 /**
@@ -18,33 +17,15 @@ public class BuildConnectDTO {
      */
     public String fatherComponentId;
     /**
-     * input_port组件id
+     * 目标组件对象
      */
-    public String inputPortComponentId;
-    /**
-     * output_port组件id
-     */
-    public String outputPortComponentId;
-    /**
-     * 连接output_port的组件 id
-     */
-    public String connectOutPutPortComponentId;
-    /**
-     * input_port将连接的组件 id
-     */
-    public String connectInPutPortComponentId;
-    /**
-     * 目标组件类型
-     */
-    public ConnectableDTO.TypeEnum destinationType;
-    /**
-     * 源组件类型
-     */
-    public ConnectableDTO.TypeEnum sourceType;
-
     public NifiConnectDTO destination;
-
+    /**
+     * 源组件对象
+     */
     public NifiConnectDTO source;
-
+    /**
+     * 区别不同port连接线封装不同的对象
+     */
     public int level;
 }
