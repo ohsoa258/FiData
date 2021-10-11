@@ -1147,8 +1147,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         // 坐标
         PositionDTO positionDTO = new PositionDTO();
-        positionDTO.setX(25d);
-        positionDTO.setY(25d);
+        positionDTO.setX(buildPortDTO.componentX);
+        positionDTO.setY(buildPortDTO.componentY);
 
         body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
@@ -1181,8 +1181,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         // 坐标
         PositionDTO positionDTO = new PositionDTO();
-        positionDTO.setX(250d);
-        positionDTO.setY(450d);
+        positionDTO.setX(buildPortDTO.componentX);
+        positionDTO.setY(buildPortDTO.componentY);
 
         body.setDisconnectedNodeAcknowledged(false);
         body.setRevision(revisionDTO);
@@ -1268,7 +1268,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         source.setType(buildConnectDTO.source.typeEnum);
 
         // 第二层output_port连线没有这个参数
-        if (buildConnectDTO.level != 2) {
+        if (buildConnectDTO.level == 3) {
             List<String> selectedRelationships = new ArrayList<>();
             selectedRelationships.add("success");
             component.setSelectedRelationships(selectedRelationships);

@@ -13,6 +13,7 @@ import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
@@ -120,9 +121,9 @@ public class TestController {
     @PostMapping("/testDorisBuildtable")
     public void publishBuildDorisTableTask() {
         DimensionAttributeAddDTO tab = new DimensionAttributeAddDTO();
-        tab.dimensionId=23;
-        //tab.dimensionId=144;
-        tab.createType=1;
+//        tab.dimensionId=23;
+        tab.dimensionId=165;
+        tab.createType=0;
         tab.userId = 60L;
         service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);
     }
@@ -179,6 +180,7 @@ public class TestController {
         data.userId=60L;
         data.id=2036L;
         data.appId=691L;
+        data.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
          service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,

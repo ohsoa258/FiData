@@ -24,5 +24,13 @@ public class BuildPortDTO {
      * 属于哪个组件下的组件id
      */
     public String componentId;
+    /**
+     * 组件X坐标
+     */
+    public Double componentX;
+    /**
+     * 组件Y坐标
+     */
+    public Double componentY;
 
 }
