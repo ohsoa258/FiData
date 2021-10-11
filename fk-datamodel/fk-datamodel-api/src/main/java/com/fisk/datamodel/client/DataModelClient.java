@@ -116,4 +116,13 @@ public interface DataModelClient {
     @GetMapping("/tableName/getAggregation")
     ResultEntity<String> getAggregation(@RequestParam("id") Integer id);
 
+    /**
+     *根据业务过程获取业务域低
+     * @param id
+     * @return
+     */
+    @GetMapping("/businessProcess/getBusinessId/{id}")
+    ResultEntity<Object> getBusinessId(@PathVariable("id")int id);
+
+
 }

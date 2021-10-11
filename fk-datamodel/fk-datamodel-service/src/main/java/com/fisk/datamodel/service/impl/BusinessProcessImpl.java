@@ -24,6 +24,7 @@ import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -187,6 +188,17 @@ public class BusinessProcessImpl implements IBusinessProcess {
         int flat=mapper.updateById(po);
         String msg=flat>0?"发布成功":"发布失败";
         log.info(po.businessProcessCnName+":"+msg);
+    }
+
+    @Override
+    public int getBusinessId(int businessProcessId)
+    {
+        BusinessProcessPO po=businessProcessMapper.selectById(businessProcessId);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "业务过程不存在");
+        }
+        return po.businessId;
     }
 
 }

@@ -78,4 +78,11 @@ public interface IBusinessProcess {
      */
     void updatePublishStatus(int id,int isSuccess);
 
+    /**
+     * 根据业务过程id,获取业务域id
+     * @param businessProcessId
+     * @return
+     */
+    int getBusinessId(int businessProcessId);
+
 }

@@ -80,5 +80,11 @@ public class BusinessProcessController {
         service.updatePublishStatus(id,isSuccess);
     }
 
+    @ApiOperation("根据业务过程id获取业务域id")
+    @GetMapping("/getBusinessId/{id}")
+    public ResultEntity<Object> getBusinessId(@PathVariable("id")int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessId(id));
+    }
+
 
 }
