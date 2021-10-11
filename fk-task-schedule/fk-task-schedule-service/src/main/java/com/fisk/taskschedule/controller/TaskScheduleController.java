@@ -53,8 +53,8 @@ public class TaskScheduleController {
         taskCronDTO.dto.tableComponentId = componentIdDTO.tableComponentId;
         // 调度组件id
         taskCronDTO.dto.schedulerComponentId = componentIdDTO.schedulerComponentId;
-        //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
-        publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,"TIMER_DRIVEN",taskCronDTO.dto.expression+" sec");
+        //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
+        publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 

@@ -165,13 +165,13 @@ public class DimensionImpl implements IDimension {
 
         //删除组合对象
         DataModelVO vo=new DataModelVO();
-        vo.businessId=model.businessId;
+        vo.businessId= String.valueOf(model.businessId);
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
         vo.delBusiness=false;
         DataModelTableVO tableVO=new DataModelTableVO();
         tableVO.type= OlapTableEnum.DIMENSION;
-        List<Integer> ids=new ArrayList<>();
-        ids.add(id);
+        List<Long> ids=new ArrayList<>();
+        ids.add(Long.valueOf(id));
         tableVO.ids=ids;
         vo.dimensionIdList=tableVO;
 

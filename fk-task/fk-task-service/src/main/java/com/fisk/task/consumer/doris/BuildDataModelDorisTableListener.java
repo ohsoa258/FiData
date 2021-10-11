@@ -151,51 +151,63 @@ public class BuildDataModelDorisTableListener
         //任务组
         ProcessGroupEntity data2=new ProcessGroupEntity();
 
-        buildDbControllerServiceDTO.driverLocation= NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
-        buildDbControllerServiceDTO.conUrl=pgsqlDatamodelUrl;
-        buildDbControllerServiceDTO.driverName= DriverTypeEnum.POSTGRESQL.getName();
-        buildDbControllerServiceDTO.pwd=pgsqlDatamodelPassword;
-        buildDbControllerServiceDTO.name=businessAreaName;
-        buildDbControllerServiceDTO.enabled = true;
-        buildDbControllerServiceDTO.groupId = NifiConstants.ApiConstants.ROOT_NODE;;
-        buildDbControllerServiceDTO.details=businessAreaName;
-        buildDbControllerServiceDTO.user=pgsqlDatamodelUsername;
-        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
-        if (controllerServiceEntityBusinessResult.success) {
-             data = controllerServiceEntityBusinessResult.data;
-        } else {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
-        }
-        //创建应用组
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
+        if(appNifiSettingPO!=null){
+            data.setId(appNifiSettingPO.targetDbPoolComponentId);
+            data1.setId(appNifiSettingPO.appComponentId);
+        }else{
+            buildDbControllerServiceDTO.driverLocation= NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
+            buildDbControllerServiceDTO.conUrl=pgsqlDatamodelUrl;
+            buildDbControllerServiceDTO.driverName= DriverTypeEnum.POSTGRESQL.getName();
+            buildDbControllerServiceDTO.pwd=pgsqlDatamodelPassword;
+            buildDbControllerServiceDTO.name=businessAreaName;
+            buildDbControllerServiceDTO.enabled = true;
+            buildDbControllerServiceDTO.groupId = NifiConstants.ApiConstants.ROOT_NODE;;
+            buildDbControllerServiceDTO.details=businessAreaName;
+            buildDbControllerServiceDTO.user=pgsqlDatamodelUsername;
+            BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
+            if (controllerServiceEntityBusinessResult.success) {
+                data = controllerServiceEntityBusinessResult.data;
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+            }
+            //创建应用组
 
-        BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-        dto.name = modelMetaDataDTO.tableName;
-        dto.details = modelMetaDataDTO.tableName;
-        //根据组个数，定义坐标
-        int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
-        dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
-        //创建任务组
-        BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
-        if (res.success) {
-             data1 = res.data;
-        } else {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+            BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+            dto.name = modelMetaDataDTO.tableName;
+            dto.details = modelMetaDataDTO.tableName;
+            //根据组个数，定义坐标
+            int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+            dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+            BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+            if (res.success) {
+                data1 = res.data;
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+            }
         }
-        //创建任务组
-        BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
-        buildProcessGroupDTO.name = modelMetaDataDTO.tableName;
-        buildProcessGroupDTO.details = modelMetaDataDTO.tableName;
-        buildProcessGroupDTO.groupId = data1.getId();
-        //根据组个数，定义坐标
-        int count1 = componentsBuild.getGroupCount(data1.getId());
-        buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(count1);
-        //创建组
-        BusinessResult<ProcessGroupEntity> res1 = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
-        if (res1.success) {
-            data2= res1.data;
-        } else {
-            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+
+        TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
+        if(tableNifiSettingPO!=null){
+           data2.setId(tableNifiSettingPO.tableComponentId);
+        }else{
+            //创建任务组
+            BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
+            buildProcessGroupDTO.name = modelMetaDataDTO.tableName;
+            buildProcessGroupDTO.details = modelMetaDataDTO.tableName;
+            buildProcessGroupDTO.groupId = data1.getId();
+            //根据组个数，定义坐标
+            int count1 = componentsBuild.getGroupCount(data1.getId());
+            buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(count1);
+            //创建组
+            BusinessResult<ProcessGroupEntity> res1 = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
+            if (res1.success) {
+                data2= res1.data;
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res1.msg);
+            }
         }
+
         //创建组件,启动组件
         List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), modelMetaDataDTO.sqlName);
         //回写
@@ -206,18 +218,25 @@ public class BuildDataModelDorisTableListener
     public void savaNifiAllSetting(ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelMetaDataDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
-        appNifiSettingService.query().eq("","").one();
+        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
+        if(appNifiSettingPO1!=null){
+            appNifiSettingPO=appNifiSettingPO1;
+        }
         appNifiSettingPO.targetDbPoolComponentId=controllerServiceEntity.getId();
         appNifiSettingPO.appId=modelMetaDataDTO.appId;
         appNifiSettingPO.type=dataClassifyEnum.getValue();
         //做判断,是否新增
         appNifiSettingPO.appComponentId=processGroupEntity1.getId();
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
+        TableNifiSettingPO tableNifiSettingPO1 = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
+        if(tableNifiSettingPO1!=null){
+            tableNifiSettingPO=tableNifiSettingPO1;
+        }
         tableNifiSettingPO.tableAccessId= Math.toIntExact(modelMetaDataDTO.id);
         tableNifiSettingPO.tableName=modelMetaDataDTO.tableName;
         tableNifiSettingPO.appId=modelMetaDataDTO.appId;
         tableNifiSettingPO.selectSql="call "+modelMetaDataDTO.sqlName;
-        tableNifiSettingPO.saveTargetDbProcessorId=processorEntities.get(0).getId();
+        tableNifiSettingPO.queryIncrementProcessorId=processorEntities.get(0).getId();
         tableNifiSettingPO.tableComponentId=processGroupEntity2.getId();
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
     }

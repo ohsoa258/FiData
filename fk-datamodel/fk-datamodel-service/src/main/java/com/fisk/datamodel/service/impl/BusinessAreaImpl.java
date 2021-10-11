@@ -133,7 +133,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         //获取业务域下所有维度、事实相关数据
         DataModelVO vo=new DataModelVO();
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-        vo.businessId=model.id;
+        vo.businessId= String.valueOf(model.id);
 
         //获取所有维度id
         DataModelTableVO dimensionTable=new DataModelTableVO();

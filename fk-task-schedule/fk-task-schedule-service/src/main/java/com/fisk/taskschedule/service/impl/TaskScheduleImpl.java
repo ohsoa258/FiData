@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -73,6 +74,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
+                        dataAccessIdDTO.olapTableEnum= OlapTableEnum.PHYSICS;
                         ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
                         if(tableNifiSetting.code==0){
                             dataAccessIdDTO.schedulerComponentId=tableNifiSetting.data.queryIncrementProcessorId;

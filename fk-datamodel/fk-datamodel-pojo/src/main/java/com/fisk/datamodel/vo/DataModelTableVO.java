@@ -14,7 +14,7 @@ public class DataModelTableVO {
     /**
      * 表集合id
      */
-    public List<Integer> ids;
+    public List<Long> ids;
     /**
      * 表类型：维度/事实..
      */

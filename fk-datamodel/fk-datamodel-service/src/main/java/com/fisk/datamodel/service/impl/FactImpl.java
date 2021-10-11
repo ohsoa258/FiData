@@ -75,13 +75,13 @@ public class FactImpl implements IFact {
 
         //删除组合对象
         DataModelVO vo=new DataModelVO();
-        vo.businessId=businessProcessPO.businessId;
+        vo.businessId= String.valueOf(businessProcessPO.businessId);
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
         vo.delBusiness=false;
         DataModelTableVO tableVO=new DataModelTableVO();
         tableVO.type= OlapTableEnum.FACT;
-        List<Integer> ids=new ArrayList<>();
-        ids.add(id);
+        List<Long> ids=new ArrayList<>();
+        ids.add(Long.valueOf(id));
         tableVO.ids=ids;
         vo.factIdList=tableVO;
 

@@ -6,6 +6,7 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.nifi.NifiRemoveDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.service.IBuildTaskService;
@@ -33,14 +34,14 @@ public class NifiController {
     }
 
     @PostMapping("/deleteNifiFlow")
-    public ResultEntity<Object> deleteNifiFlow(@RequestBody NifiVO nifiVO) {
-        return ResultEntityBuild.build(iNifiComponentsBuild.deleteNifiFlow(nifiVO));
+    public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO) {
+        return ResultEntityBuild.build(iNifiComponentsBuild.deleteNifiFlow(dataModelVO));
     }
 
     @PostMapping("/getTableNifiSetting")
     public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto) {
         ResultEntity<TableNifiSettingPO> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data=tableNifiSettingService.query().eq("app_id",dto.appId).eq("table_access_id",dto.tableId).one();
+        objectResultEntity.data=tableNifiSettingService.query().eq("app_id",dto.appId).eq("table_access_id",dto.tableId).eq("type",dto.olapTableEnum.getValue()).one();
         objectResultEntity.code=0;
         return objectResultEntity;
 

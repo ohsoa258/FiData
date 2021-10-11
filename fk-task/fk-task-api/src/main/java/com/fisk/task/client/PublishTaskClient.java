@@ -3,6 +3,7 @@ package com.fisk.task.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.nifi.NifiRemoveDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
@@ -96,7 +97,7 @@ public interface PublishTaskClient {
     * 删除nifi流程
     * */
     @PostMapping("/nifi/deleteNifiFlow")
-    public ResultEntity<Object> deleteNifiFlow(@RequestBody NifiVO nifiVO);
+    public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO);
 
     /*
     * getTableNifiSetting

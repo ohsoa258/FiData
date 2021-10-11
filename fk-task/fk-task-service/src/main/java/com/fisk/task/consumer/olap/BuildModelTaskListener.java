@@ -2,6 +2,7 @@ package com.fisk.task.consumer.olap;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -13,6 +14,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IOlap;
@@ -64,6 +66,11 @@ public class BuildModelTaskListener {
                 BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
                 log.info("nifi配置结束,开始创建nifi流程");
                 buildNifiFlowDTO.userId=inpData.userId;
+                buildNifiFlowDTO.appId=olapPO.businessAreaId;
+                buildNifiFlowDTO.id=olapPO.tableId;
+                buildNifiFlowDTO.type=olapPO.type;
+                buildNifiFlowDTO.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+                buildNifiFlowDTO.synchronousTypeEnum= SynchronousTypeEnum.PGTODORIS;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 log.info("nifi流程配置结束");
             }

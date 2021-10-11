@@ -17,12 +17,12 @@ public class DataModelVO {
     public DataClassifyEnum dataClassifyEnum;
 
     /**
-     * 业务域id
+     * 业务域id/应用id
      */
-    public long businessId;
+    public String businessId;
 
     /**
-     * 是否删除业务域
+     * 是否删除业务域/应用
      */
     public boolean delBusiness;
 
@@ -36,5 +36,14 @@ public class DataModelVO {
      */
     public DataModelTableVO factIdList;
 
+    /*
+    * 物理表id集合
+    * */
+    public DataModelTableVO physicsIdList;
+
+    /*
+    * userid
+    * */
+    public Long userId;
 
 }

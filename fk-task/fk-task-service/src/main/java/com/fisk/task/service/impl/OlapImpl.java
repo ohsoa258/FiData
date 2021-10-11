@@ -45,6 +45,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             fileds.add(" "+e.tableName+"_pk ,fk_doris_increment_code,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
+            po.tableId=e.id;
             po.selectDataSql="SELECT "+fileds.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
@@ -56,6 +57,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             OlapPO po =new OlapPO();
             e.factTable=e.factTable.toLowerCase();
             po.businessAreaId=businessAreaId;
+            po.tableId=e.factId;
             po.tableName=e.factTable;
             po.createTableSql=buildCreateAggregateModelSql(e);
             po.selectDataSql=buildSelectAggregateModelDataSql(e);

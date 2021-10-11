@@ -20,9 +20,7 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
-import com.fisk.task.enums.AtlasProcessEnum;
-import com.fisk.task.enums.DbTypeEnum;
-import com.fisk.task.enums.OdsDataSyncTypeEnum;
+import com.fisk.task.enums.*;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
@@ -285,6 +283,10 @@ public class BuildAtlasTableAndColumnTaskListener
         bfd.id=Long.parseLong(ae.tableId);
         bfd.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
         bfd.tableName=ae.tableName;
+        //类型为物理表
+        bfd.type= OlapTableEnum.PHYSICS;
+        //来源为数据接入
+        bfd.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

@@ -14,11 +14,15 @@ import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -155,8 +159,16 @@ public class AppRegistrationController {
         }
 
         ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
-        nifiVO.delApp=true;
-        publishTaskClient.deleteNifiFlow(nifiVO);
+        DataModelVO dataModelVO = new DataModelVO();
+        dataModelVO.delBusiness=true;
+        DataModelTableVO dataModelTableVO = new DataModelTableVO();
+        dataModelTableVO.ids=nifiVO.tableIdList;
+        dataModelTableVO.type= OlapTableEnum.PHYSICS;
+        dataModelVO.physicsIdList=dataModelTableVO;
+        dataModelVO.businessId=nifiVO.appId;
+        dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
+        dataModelVO.userId=nifiVO.userId;
+        publishTaskClient.deleteNifiFlow(dataModelVO);
         log.info("task删除应用{}", task);
         System.out.println(task);
 
