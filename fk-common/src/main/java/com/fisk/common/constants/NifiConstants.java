@@ -53,5 +53,11 @@ public class NifiConstants {
     public static final class PortConstants {
         public static final String INPUT_PORT_NAME = "_input_port";
         public static final String OUTPUT_PORT_NAME = "_output_port";
+        public static final Double INPUT_PORT_Y = -250d;
+        public static final Double OUTPUT_PORT_Y = 250d;
+        public static final Double INPUT_PORT_OFFSET_Y = -25d;
+        public static final String PORT_NAME_APP_SUFFIX = "_app";
+        public static final String PORT_NAME_TABLE_SUFFIX = "_table";
+        public static final String PORT_NAME_FIELD_SUFFIX = "_field";
     }
 }
