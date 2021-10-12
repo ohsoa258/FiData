@@ -7,10 +7,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessprocess.BusinessAreaContentDTO;
-import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.service.impl.OlapImpl;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -18,7 +15,6 @@ import com.fisk.taskschedule.entity.TaskSchedulePO;
 import com.fisk.taskschedule.mapper.TaskScheduleMapper;
 import com.fisk.taskschedule.service.ITaskSchedule;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +33,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
     @Resource
     TaskScheduleMapper mapper;
-    @Resource
-    PublishTaskClient publishTaskClient;
-    @Autowired(required = false)
-    OlapImpl olap;
     @Resource
     DataModelClient dataModelClient;
 
@@ -91,11 +83,13 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                 // 指标
                 case 5:
                     if (dto.jobPid != 0) {
-                        OlapPO olapPO = olap.query().eq("id", dto.jobId).eq("del_flag", 1).one();
-                        if (olapPO == null) {
-                            return null;
+                        ResultEntity<Object> result = dataModelClient.getBusinessId(dto.jobId);
+                        if (result.code == 0) {
+                            ResultEntity<BusinessAreaContentDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
+                            BusinessAreaContentDTO businessAreaContentDTO = JSON.parseObject(JSON.toJSONString(resultEntity.data), BusinessAreaContentDTO.class);
+                            dataAccessIdDTO.appId = businessAreaContentDTO.businessAreaId;
+                            dataAccessIdDTO.factTableName = businessAreaContentDTO.factTableName;
                         }
-                        dataAccessIdDTO.appId = olapPO.businessAreaId;
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
@@ -119,14 +113,11 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                 // 事实表
                 case 10:
                     if (dto.jobPid != 0) {
-                        ResultEntity<Object> result = dataModelClient.getBusinessId(dto.jobId);
-
+                        ResultEntity<Object> result = dataModelClient.getBusinessId(dto.jobPid);
                         if (result.code == 0) {
-//                            dataAccessIdDTO.appId = (int) result.data;
                             ResultEntity<BusinessAreaContentDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
                             BusinessAreaContentDTO businessAreaContentDTO = JSON.parseObject(JSON.toJSONString(resultEntity.data), BusinessAreaContentDTO.class);
                             dataAccessIdDTO.appId = businessAreaContentDTO.businessAreaId;
-                            dataAccessIdDTO.factTableName = businessAreaContentDTO.factTableName;
                         }
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
