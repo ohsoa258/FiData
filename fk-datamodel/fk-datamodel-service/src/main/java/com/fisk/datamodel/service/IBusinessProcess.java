@@ -2,11 +2,11 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.businessprocess.BusinessAreaContentDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessPushListDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
@@ -80,9 +80,9 @@ public interface IBusinessProcess {
 
     /**
      * 根据业务过程id,获取业务域id
-     * @param businessProcessId
+     * @param factId
      * @return
      */
-    int getBusinessId(int businessProcessId);
+    BusinessAreaContentDTO getBusinessId(int factId);
 
 }

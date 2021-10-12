@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.datamodel.dto.businessprocess.BusinessAreaContentDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
@@ -24,7 +25,6 @@ import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -191,14 +191,24 @@ public class BusinessProcessImpl implements IBusinessProcess {
     }
 
     @Override
-    public int getBusinessId(int businessProcessId)
+    public BusinessAreaContentDTO getBusinessId(int factId)
     {
-        BusinessProcessPO po=businessProcessMapper.selectById(businessProcessId);
+        BusinessAreaContentDTO dto=new BusinessAreaContentDTO();
+        //查询事实表信息
+        FactPO po=factMapper.selectById(factId);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
+        }
+        dto.factTableName=po.factTableEnName;
+        //查询业务过程id
+        BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
         if (po==null)
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "业务过程不存在");
         }
-        return po.businessId;
+        dto.businessAreaId=businessProcessPO.businessId;
+        return  dto;
     }
 
 }
