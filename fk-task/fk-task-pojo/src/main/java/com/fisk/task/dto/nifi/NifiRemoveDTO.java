@@ -27,5 +27,15 @@ public class NifiRemoveDTO {
      * */
     public List<String> controllerServicesIds;
 
+    /*
+    * inputportsid
+    * */
+    public List<String> inputPortIds;
+
+    /*
+     * outputportsid
+     * */
+    public List<String> outputPortIds;
+
 
 }

@@ -77,6 +77,9 @@ public interface PublishTaskClient {
     @PostMapping("/olapTask/CreateModel")
     ResultEntity<Object> publishOlapCreateModel(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto);
 
+    @PostMapping("/olapTask/selectByName")
+    ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName);
+
     /**
      * pgsql 删除表
      *

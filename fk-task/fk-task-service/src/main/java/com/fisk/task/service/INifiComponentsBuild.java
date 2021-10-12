@@ -284,4 +284,24 @@ public interface INifiComponentsBuild {
      */
     ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO);
 
+    /*
+    * 删除input组件
+    * */
+    ResultEnum deleteNifiInputProcessor(List<PortEntity> portEntities);
+
+    /*
+    * 删除output组件
+    * */
+    ResultEnum deleteNifiOutputProcessor(List<PortEntity> portEntities);
+
+    /*
+    * 修改output 组件状态
+    * */
+    ResultEnum updateOutputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
+
+    /**
+     *修改input组件状态
+     */
+    ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
+
 }

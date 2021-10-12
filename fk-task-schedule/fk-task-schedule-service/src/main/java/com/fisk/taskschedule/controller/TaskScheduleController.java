@@ -13,6 +13,8 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.entity.OlapPO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/taskSchedule")
@@ -45,24 +48,19 @@ public class TaskScheduleController {
         // TODO 提供给task模块
         TaskCronDTO taskCronDTO = result.data;
         DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
-
+        if(Objects.equals(dataAccessIdDTO.olapTableEnum, OlapTableEnum.KPI)){
+            ResultEntity<Object> objectResultEntity = publishTaskClient.selectByName(dataAccessIdDTO.factTableName);
+            OlapPO olapPO = JSON.parseObject(JSON.toJSONString(objectResultEntity.data), OlapPO.class);
+            dataAccessIdDTO.tableId=olapPO.id;
+        }
         ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
         if (tableNifiSetting.code == 0) {
             taskCronDTO.dto.schedulerComponentId = tableNifiSetting.data.queryIncrementProcessorId;
+            taskCronDTO.dto.tableComponentId = tableNifiSetting.data.tableComponentId;
+            //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
+            publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
         }
-
-        DataAccessIdsDTO accessIdsDTO = new DataAccessIdsDTO();
-        accessIdsDTO.appId = taskCronDTO.dto.appId;
-        accessIdsDTO.tableId = taskCronDTO.dto.tableId;
-        ResultEntity<Object> clientComponentId = client.getComponentId(accessIdsDTO);
-        ResultEntity<ComponentIdDTO> componentIdDTO1 = JSON.parseObject(JSON.toJSONString(clientComponentId.data), ResultEntity.class);
-        ComponentIdDTO componentIdDTO = JSON.parseObject(JSON.toJSONString(componentIdDTO1.data), ComponentIdDTO.class);
-        taskCronDTO.dto.tableComponentId = componentIdDTO.tableComponentId;
-        // 调度组件id
-        taskCronDTO.dto.schedulerComponentId = componentIdDTO.schedulerComponentId;
-        //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
-        publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
+         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
     @ApiOperation("修改")

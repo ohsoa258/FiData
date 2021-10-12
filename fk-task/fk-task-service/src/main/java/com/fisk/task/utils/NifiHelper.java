@@ -1,9 +1,7 @@
 package com.fisk.task.utils;
 
 import com.davis.client.ApiClient;
-import com.davis.client.api.ControllerServicesApi;
-import com.davis.client.api.ProcessGroupsApi;
-import com.davis.client.api.ProcessorsApi;
+import com.davis.client.api.*;
 import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.RevisionDTO;
 import com.fisk.common.constants.NifiConstants;
@@ -60,6 +58,14 @@ public class NifiHelper {
         ApiClient apiClient = new ApiClient();
         apiClient.setBasePath(NifiConstants.ApiConstants.BASE_PATH);
         return apiClient;
+    }
+
+    public static OutputPortsApi getOutputPortsApi() {
+        return new OutputPortsApi(getApiClient());
+    }
+
+    public static InputPortsApi getInputPortsApi() {
+        return new InputPortsApi(getApiClient());
     }
 
     /**

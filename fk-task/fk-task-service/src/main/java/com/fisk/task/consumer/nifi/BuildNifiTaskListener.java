@@ -140,7 +140,7 @@ public class BuildNifiTaskListener {
         ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
         appNifiSettingPO.appId = Math.toIntExact(dto.appId);
         appNifiSettingPO.appComponentId = groupEntity.getId();
-
+        appNifiSettingPO.type=dto.dataClassifyEnum.getValue();
         appGroupId = groupEntity.getId();
 
         // TODO: 创建input组件功能(第一层应用)
@@ -515,7 +515,9 @@ public class BuildNifiTaskListener {
             tableNifiSettingPO = tableNifiSettingPO1;
         }
         tableNifiSettingPO.tableComponentId = groupId;
-
+        tableNifiSettingPO.tableAccessId= Math.toIntExact(dto.id);
+        tableNifiSettingPO.appId= Math.toIntExact(dto.appId);
+        tableNifiSettingPO.type=dto.type.getValue();
         //读取增量字段组件
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
         PositionDTO position = queryField.getComponent().getPosition();

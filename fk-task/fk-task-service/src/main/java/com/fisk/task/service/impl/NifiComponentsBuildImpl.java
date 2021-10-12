@@ -16,6 +16,7 @@ import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
@@ -961,6 +962,72 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     }
 
     /*
+    * 删除Input
+    * */
+    @Override
+    public ResultEnum deleteNifiInputProcessor(List<PortEntity> portEntities) {
+        for (PortEntity portEntity:portEntities) {
+            try {
+                NifiHelper.getInputPortsApi().removeInputPort(portEntity.getId(),String.valueOf(portEntity.getRevision().getVersion()),null,null);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * 删除Output
+    * */
+    @Override
+    public ResultEnum deleteNifiOutputProcessor(List<PortEntity> portEntities) {
+        for (PortEntity portEntity:portEntities) {
+            try {
+                NifiHelper.getOutputPortsApi().removeOutputPort(portEntity.getId(),String.valueOf(portEntity.getRevision().getVersion()),null,null);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * 暂停OutputStatus
+    * */
+    @Override
+    public ResultEnum updateOutputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity) {
+        for (PortEntity portEntity:portEntities) {
+            portRunStatusEntity.setState(PortRunStatusEntity.StateEnum.STOPPED);
+            portRunStatusEntity.setRevision(portEntity.getRevision());
+            portRunStatusEntity.setDisconnectedNodeAcknowledged(true);
+            try {
+                NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(),portRunStatusEntity);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    *暂停InputStatus
+    * */
+    @Override
+    public ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity) {
+        for (PortEntity portEntity : portEntities) {
+            portRunStatusEntity.setRevision(portEntity.getRevision());
+            portRunStatusEntity.setDisconnectedNodeAcknowledged(true);
+            try {
+                NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
     * controllerServicesRunStatus   禁用控制器服务
     * */
     @Override
@@ -988,40 +1055,51 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     * nifiRemoveDTOList
     * */
     @Override
-    public ResultEnum deleteNifiFlow(DataModelVO dataModelVO){
+    public ResultEnum deleteNifiFlow(DataModelVO dataModelVO) {
         try {
-            List<NifiRemoveDTO> nifiRemoveDTOList =createNifiRemoveDTOs(dataModelVO);
+            List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO);
 
-        for (NifiRemoveDTO nifiRemoveDTO:nifiRemoveDTOList) {
-            List<ProcessorEntity> processorEntities = new ArrayList<>();
-            for (String ProcessId:nifiRemoveDTO.ProcessIds) {
-                ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
-                processorEntities.add(processor);
-            }
-            //暂停13个组件
-            this.stopProcessor(nifiRemoveDTO.groupId,processorEntities);
-            //清空队列
-            this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
-            //禁用2个控制器服务
-            for (String controllerServicesId:nifiRemoveDTO.controllerServicesIds.subList(0,2)) {
-                if(controllerServicesId!=null){
-                    this.controllerServicesRunStatus(controllerServicesId);
+            for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
+                List<ProcessorEntity> processorEntities = new ArrayList<>();
+                List<PortEntity> inputPortEntities = new ArrayList<>();
+                List<PortEntity> outputPortEntities = new ArrayList<>();
+                for (String ProcessId : nifiRemoveDTO.ProcessIds) {
+                    ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
+                    processorEntities.add(processor);
                 }
-            }
-            //删除任务组
-            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
-            NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()),null,null);
-            //删除应用
-        }
-            if(nifiRemoveDTOList.get(0).delApp){
+                //暂停13个组件
+                this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
+                //清空队列
+                this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
                 //禁用2个控制器服务
-                for (String controllerServicesId:nifiRemoveDTOList.get(0).controllerServicesIds.subList(2,4)) {
-                    if(controllerServicesId!=null){
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 2)) {
+                    if (controllerServicesId != null) {
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
                 }
+                //暂停,删除input和output,删除任务组
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
+                operatePorts(nifiRemoveDTO, inputPortEntities, outputPortEntities);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+                //删除应用
+            }
+            if (nifiRemoveDTOList.get(0).delApp) {
+                //禁用2个控制器服务
+                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(2, 4)) {
+                    if (controllerServicesId != null) {
+                        this.controllerServicesRunStatus(controllerServicesId);
+                    }
+                }
+                //删除管道
+                List<PortEntity> inputPortEntity = new ArrayList<>();
+                List<PortEntity> outputPortEntity = new ArrayList<>();
+                PortEntity inputPort = NifiHelper.getInputPortsApi().getInputPort(nifiRemoveDTOList.get(0).inputPortIds.get(0));
+                inputPortEntity.add(inputPort);
+                PortEntity outputPort = NifiHelper.getOutputPortsApi().getOutputPort(nifiRemoveDTOList.get(0).outputPortIds.get(0));
+                outputPortEntity.add(outputPort);
+                deleteNifiInputProcessor(inputPortEntity);
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
-                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()),null,null);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
             }
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
@@ -1030,99 +1108,87 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         }
     }
 
-    private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO) {
-        ArrayList<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
-        NifiRemoveDTO nifiRemoveDTO = new NifiRemoveDTO();
-        ArrayList<String> ProcessIds = new ArrayList<>();
-        ArrayList<String> controllerServicesIds = new ArrayList<>();
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("del_flag", 1).eq("type", dataModelVO.dataClassifyEnum.getValue()).one();
-        //维度表
-        if (dataModelVO.dimensionIdList != null && dataModelVO.dimensionIdList.ids != null) {
-            for (Long tableId : dataModelVO.dimensionIdList.ids) {
-                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("table_access_id", tableId).eq("type", dataModelVO.dimensionIdList.type.getValue()).eq("del_flag", 1).one();
-                nifiRemoveDTO.delApp = dataModelVO.delBusiness;
-                controllerServicesIds.add(tableNifiSettingPO.avroRecordSetWriterId);
-                controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
-                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
-                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
-                ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
-                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
-                ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
-                nifiRemoveDTO.ProcessIds = ProcessIds;
-                nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
-                nifiRemoveDTO.groupId = String.valueOf(tableId);
-                nifiRemoveDTOS.add(nifiRemoveDTO);
+    private void operatePorts(NifiRemoveDTO nifiRemoveDTO,List<PortEntity> inputPortEntities,List<PortEntity> outputPortEntities) {
+        try {
+            PortRunStatusEntity portRunStatusEntity = new PortRunStatusEntity();
+            portRunStatusEntity.setState(PortRunStatusEntity.StateEnum.STOPPED);
+            for (String id : nifiRemoveDTO.inputPortIds) {
+                PortEntity inputPort = NifiHelper.getInputPortsApi().getInputPort(id);
+                inputPortEntities.add(inputPort);
             }
-        }
-        //事实表
-        if (dataModelVO.factIdList != null && dataModelVO.factIdList.ids != null) {
-            for (Long tableId : dataModelVO.factIdList.ids) {
-                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("table_access_id", tableId).eq("type", dataModelVO.factIdList.type.getValue()).eq("del_flag", 1).one();
-                nifiRemoveDTO.delApp = dataModelVO.delBusiness;
-                controllerServicesIds.add(tableNifiSettingPO.avroRecordSetWriterId);
-                controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
-                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
-                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
-                ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
-                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
-                ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
-                nifiRemoveDTO.ProcessIds = ProcessIds;
-                nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
-                nifiRemoveDTO.groupId = String.valueOf(tableId);
-                nifiRemoveDTOS.add(nifiRemoveDTO);
+            for (String id : nifiRemoveDTO.outputPortIds) {
+                PortEntity outputPort = NifiHelper.getOutputPortsApi().getOutputPort(id);
+                outputPortEntities.add(outputPort);
             }
+            this.updateInputStatus(inputPortEntities.subList(1,inputPortEntities.size()), portRunStatusEntity);
+            this.updateOutputStatus(outputPortEntities.subList(1,outputPortEntities.size()), portRunStatusEntity);
+            this.deleteNifiInputProcessor(inputPortEntities.subList(1,inputPortEntities.size()));
+            this.deleteNifiOutputProcessor(outputPortEntities.subList(1,outputPortEntities.size()));
+        } catch (ApiException e) {
+            log.error("nifi--port模块删除失败，【" + e.getResponseBody() + "】: ", e);
         }
-        //物理表
-        if (dataModelVO.physicsIdList != null && dataModelVO.physicsIdList.ids != null) {
-            for (Long tableId : dataModelVO.physicsIdList.ids) {
-                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("table_access_id", tableId).eq("type", dataModelVO.physicsIdList.type.getValue()).eq("del_flag", 1).one();
-                nifiRemoveDTO.delApp = dataModelVO.delBusiness;
-                controllerServicesIds.add(tableNifiSettingPO.avroRecordSetWriterId);
-                controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
-                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
-                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
-                ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
-                ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
-                ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
-                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
-                ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
-                ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
-                nifiRemoveDTO.ProcessIds = ProcessIds;
-                nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
-                nifiRemoveDTO.groupId = String.valueOf(tableId);
-                nifiRemoveDTOS.add(nifiRemoveDTO);
-            }
-        }
-           return nifiRemoveDTOS;
     }
 
+    private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO) {
+        List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("del_flag", 1).eq("type", dataModelVO.dataClassifyEnum.getValue()).one();
+        //维度表
+        List<NifiRemoveDTO> nifiRemoveList1 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.dimensionIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList1);
+        //事实表
+        List<NifiRemoveDTO> nifiRemoveList2 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.factIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList2);
+        //物理表
+        List<NifiRemoveDTO> nifiRemoveList3 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList3);
+        return nifiRemoveDTOS;
+    }
+
+    private List<NifiRemoveDTO> createNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO,Boolean delApp){
+        List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
+        NifiRemoveDTO nifiRemoveDTO = new NifiRemoveDTO();
+        if (dataModelTableVO != null && dataModelTableVO.ids != null) {
+            for (Long tableId : dataModelTableVO.ids) {
+                List<String> ProcessIds = new ArrayList<>();
+                List<String> controllerServicesIds = new ArrayList<>();
+                List<String> inputPortIds = new ArrayList<>();
+                List<String> outputPortIds = new ArrayList<>();
+                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
+                nifiRemoveDTO.delApp = delApp;
+                controllerServicesIds.add(tableNifiSettingPO.avroRecordSetWriterId);
+                controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
+                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
+                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
+                //连接通道id
+                inputPortIds.add(appNifiSettingPO.inputPortId);
+                inputPortIds.add(tableNifiSettingPO.processorInputPortId);
+                inputPortIds.add(tableNifiSettingPO.tableInputPortId);
+                outputPortIds.add(appNifiSettingPO.outputPortId);
+                outputPortIds.add(tableNifiSettingPO.processorOutputPortId);
+                outputPortIds.add(tableNifiSettingPO.tableOutputPortId);
+                ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
+                ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
+                ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
+                ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
+                ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
+                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
+                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
+                ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
+                nifiRemoveDTO.ProcessIds = ProcessIds;
+                nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
+                nifiRemoveDTO.inputPortIds=inputPortIds;
+                nifiRemoveDTO.outputPortIds=outputPortIds;
+                nifiRemoveDTO.groupId = tableNifiSettingPO.tableComponentId;
+                nifiRemoveDTOS.add(nifiRemoveDTO);
+            }
+        }
+        return nifiRemoveDTOS;
+    }
 
 
     /**

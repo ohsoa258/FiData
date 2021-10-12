@@ -18,4 +18,9 @@ public interface IOlap {
      * @return
      */
     List<OlapPO> build(int businessAreaId, BusinessAreaGetDataDTO dto);
+
+    /*
+    * 通过表名查指标表id(表名唯一)
+    * */
+    OlapPO selectByName(String name);
 }

@@ -14,7 +14,6 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_task_olap")
 public class OlapPO extends BasePO {
     public long businessAreaId;
-    public Long tableId;
     public String tableName;
     public String createTableSql;
     public String selectDataSql;

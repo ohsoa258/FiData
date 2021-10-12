@@ -238,6 +238,7 @@ public class BuildDataModelDorisTableListener
         tableNifiSettingPO.selectSql="call "+modelMetaDataDTO.sqlName;
         tableNifiSettingPO.queryIncrementProcessorId=processorEntities.get(0).getId();
         tableNifiSettingPO.tableComponentId=processGroupEntity2.getId();
+        tableNifiSettingPO.type=olapTableEnum.getValue();
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
     }
 
