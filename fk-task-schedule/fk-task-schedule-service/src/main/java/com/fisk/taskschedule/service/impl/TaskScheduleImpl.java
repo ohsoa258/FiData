@@ -1,10 +1,12 @@
 package com.fisk.taskschedule.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.businessprocess.BusinessAreaContentDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.OlapTableEnum;
@@ -37,7 +39,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
     TaskScheduleMapper mapper;
     @Resource
     PublishTaskClient publishTaskClient;
-    @Autowired(required=false)
+    @Autowired(required = false)
     OlapImpl olap;
     @Resource
     DataModelClient dataModelClient;
@@ -117,10 +119,14 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                 // 事实表
                 case 10:
                     if (dto.jobPid != 0) {
-//                        dataAccessIdDTO.appId = dto.jobPid;
-                        ResultEntity<Object> result = dataModelClient.getBusinessId(dto.jobPid);
+                        ResultEntity<Object> result = dataModelClient.getBusinessId(dto.jobId);
+
                         if (result.code == 0) {
-                            dataAccessIdDTO.appId = (int) result.data;
+//                            dataAccessIdDTO.appId = (int) result.data;
+                            ResultEntity<BusinessAreaContentDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
+                            BusinessAreaContentDTO businessAreaContentDTO = JSON.parseObject(JSON.toJSONString(resultEntity.data), BusinessAreaContentDTO.class);
+                            dataAccessIdDTO.appId = businessAreaContentDTO.businessAreaId;
+                            dataAccessIdDTO.factTableName = businessAreaContentDTO.factTableName;
                         }
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;

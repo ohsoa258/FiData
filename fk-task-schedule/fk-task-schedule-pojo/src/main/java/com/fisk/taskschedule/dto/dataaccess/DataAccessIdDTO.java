@@ -1,6 +1,5 @@
 package com.fisk.taskschedule.dto.dataaccess;
 
-import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.Data;
 
@@ -37,4 +36,9 @@ public class DataAccessIdDTO {
     * 数据类别
     * */
     public OlapTableEnum olapTableEnum;
+
+    /**
+     * 事实表名
+     */
+    public String factTableName;
 }
