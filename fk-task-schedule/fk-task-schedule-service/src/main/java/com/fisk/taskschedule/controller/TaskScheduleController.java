@@ -12,6 +12,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
 import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
@@ -44,6 +45,12 @@ public class TaskScheduleController {
         // TODO 提供给task模块
         TaskCronDTO taskCronDTO = result.data;
         DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
+
+        ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
+        if (tableNifiSetting.code == 0) {
+            taskCronDTO.dto.schedulerComponentId = tableNifiSetting.data.queryIncrementProcessorId;
+        }
+
         DataAccessIdsDTO accessIdsDTO = new DataAccessIdsDTO();
         accessIdsDTO.appId = taskCronDTO.dto.appId;
         accessIdsDTO.tableId = taskCronDTO.dto.tableId;

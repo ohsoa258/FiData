@@ -27,7 +27,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
         "com.fisk.dataaccess.client",
-        "com.fisk.task.client"
+        "com.fisk.task.client",
+        "com.fisk.datamodel.client"
 })
 @EnableApolloConfig
 public class FkTaskScheduleApplication {
