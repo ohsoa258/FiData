@@ -42,6 +42,11 @@ public class DataModelVO {
     public DataModelTableVO physicsIdList;
 
     /*
+    * 指标表id集合
+    * */
+    public DataModelTableVO indicatorIdList;
+
+    /*
     * userid
     * */
     public Long userId;

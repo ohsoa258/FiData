@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -181,4 +179,12 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         OlapPO olapPO = this.query().eq("table_name", name).eq("del_flag",1).one();
         return olapPO;
     }
+
+    //查该业务域下所有的Doris里的表
+    @Override
+    public List<OlapPO> selectOlapByBusinessAreaId(String BusinessAreaId){
+        List<OlapPO> list = this.query().eq("business_area_id", BusinessAreaId).eq("del_flag", 1).list();
+        return list;
+    }
+
 }

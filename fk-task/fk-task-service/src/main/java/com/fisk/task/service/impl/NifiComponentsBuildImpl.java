@@ -1081,8 +1081,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
                 operatePorts(nifiRemoveDTO, inputPortEntities, outputPortEntities);
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                //删除应用
+                tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
             }
+            //删除应用
             if (nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
                 for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(2, 4)) {
@@ -1100,6 +1101,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 deleteNifiInputProcessor(inputPortEntity);
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+                appNifiSettingService.removeById(dataModelVO.businessId);
             }
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
@@ -1184,6 +1186,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 nifiRemoveDTO.inputPortIds=inputPortIds;
                 nifiRemoveDTO.outputPortIds=outputPortIds;
                 nifiRemoveDTO.groupId = tableNifiSettingPO.tableComponentId;
+                nifiRemoveDTO.tableId=tableId;
+                nifiRemoveDTO.olapTableEnum=dataModelTableVO.type;
                 nifiRemoveDTOS.add(nifiRemoveDTO);
             }
         }
