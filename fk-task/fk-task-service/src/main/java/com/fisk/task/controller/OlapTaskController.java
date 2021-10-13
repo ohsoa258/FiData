@@ -42,7 +42,7 @@ public class OlapTaskController {
     public ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName){
         ResultEntity<Object> olapPOResultEntity = new ResultEntity<>();
         OlapPO olapPO = olap.selectByName(tableName);
-        olapPOResultEntity.data=olapPO;
+        olapPOResultEntity.data=olapPO.id;
         olapPOResultEntity.code=0;
         return olapPOResultEntity;
     }

@@ -13,7 +13,6 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.taskschedule.dto.TaskCronDTO;
 import com.fisk.taskschedule.dto.TaskScheduleDTO;
@@ -50,8 +49,8 @@ public class TaskScheduleController {
         DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
         if(Objects.equals(dataAccessIdDTO.olapTableEnum, OlapTableEnum.KPI)){
             ResultEntity<Object> objectResultEntity = publishTaskClient.selectByName(dataAccessIdDTO.factTableName);
-            OlapPO olapPO = JSON.parseObject(JSON.toJSONString(objectResultEntity.data), OlapPO.class);
-            dataAccessIdDTO.tableId=olapPO.id;
+            Long id = JSON.parseObject(JSON.toJSONString(objectResultEntity.data), Long.class);
+            dataAccessIdDTO.tableId=id;
         }
         ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
         if (tableNifiSetting.code == 0) {
