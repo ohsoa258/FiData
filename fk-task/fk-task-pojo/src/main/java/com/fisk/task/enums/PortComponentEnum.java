@@ -14,7 +14,12 @@ public enum PortComponentEnum implements BaseEnum {
     COMPONENT_INPUT_PORT_COMPONENT(4, "组件层input_port组件"),
     COMPONENT_OUTPUT_PORT_COMPONENT(5, "组件层output_port组件"),
 
-    ;
+    APP_INPUT_PORT_CONNECTION(6, "应用层input_port连接"),
+    APP_OUTPUT_PORT_CONNECTION(7, "应用层output_port连接"),
+    TASK_INPUT_PORT_CONNECTION(8, "任务层input_port连接"),
+    TASK_OUTPUT_PORT_CONNECTION(9, "任务层output_port连接"),
+    COMPONENT_INPUT_PORT_CONNECTION(10, "组件层input_port连接"),
+    COMPONENT_OUTPUT_PORT_CONNECTION(11, "组件层output_port连接");
 
 
     PortComponentEnum(int value, String name) {
