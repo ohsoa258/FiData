@@ -220,7 +220,7 @@ public class BuildNifiTaskListener {
         }else if(res.data!=null&&appNifiSettingPO==null){
             data.groupConfig.newApp=true;
         }
-        //他喵的,恶心,土匪都不如
+
         if (tableNifiSettingPO != null) {
             if(data.groupConfig!=null){
                 data.groupConfig.componentId = tableNifiSettingPO.tableComponentId;
@@ -648,28 +648,40 @@ public class BuildNifiTaskListener {
                 PortComponentEnum.COMPONENT_OUTPUT_PORT_COMPONENT);
 
         // 创建input_port connection(组)
-        buildPortConnection(groupId, groupId, queryField.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT, 0,PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+        String componentInputPortConnectionId = buildPortConnection(groupId,
+                groupId, queryField.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
         // 创建input_port connection(任务)
-        buildPortConnection(groupEntityId, taskGroupEntityId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                groupEntityId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT, 0,PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
+        String taskInputPortConnectionId = buildPortConnection(groupEntityId,
+                taskGroupEntityId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                groupEntityId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
 
         // 创建input_port connection(应用)
-        buildPortConnection(appParentGroupId, appGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                appParentGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT, 0,PortComponentEnum.APP_INPUT_PORT_CONNECTION);
+        String appInputPortConnectionId = buildPortConnection(appParentGroupId,
+                appGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                appParentGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
 
         // 创建output_port connection(组)
-        buildPortConnection(groupId, groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR, 3,PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+        String componentOutputPortConnectionId = buildPortConnection(groupId,
+                groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
+                3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
         // 创建output connection(任务)
-        buildPortConnection(groupEntityId, groupEntityId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                taskGroupEntityId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 2,PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
+        String taskOutputPortConnectionId = buildPortConnection(groupEntityId,
+                groupEntityId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                taskGroupEntityId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                2, PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
 
         // 创建output connection(应用)
-        buildPortConnection(appParentGroupId, appParentGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 1,PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
+        String appOutputPortConnectionId = buildPortConnection(appParentGroupId,
+                appParentGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
 
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
@@ -1281,6 +1293,19 @@ public class BuildNifiTaskListener {
         return null;
     }
 
+    /**
+     * 创建input_port/output_port connections
+     * @param fatherComponentId 当前组件父id
+     * @param destinationGroupId destinationGroupId
+     * @param destinationId destinationId
+     * @param destinationTypeEnum destinationTypeEnum
+     * @param sourceGroupId sourceGroupId
+     * @param sourceId sourceId
+     * @param sourceTypeEnum sourceTypeEnum
+     * @param level level
+     * @param typeEnum typeEnum
+     * @return connection id
+     */
     private String buildPortConnection(String fatherComponentId, String destinationGroupId, String destinationId, ConnectableDTO.TypeEnum destinationTypeEnum,
                                        String sourceGroupId, String sourceId, ConnectableDTO.TypeEnum sourceTypeEnum, int level, PortComponentEnum typeEnum) {
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();

@@ -27,6 +27,7 @@ import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
@@ -52,8 +53,6 @@ import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import static com.fisk.common.constants.NifiConstants.PortConstants.INPUT_PORT_OFFSET_Y;
 
 /**
  * @author: cfk
@@ -198,7 +197,6 @@ public class BuildDataModelDorisTableListener
             }
 
             // TODO: 创建input组件功能(第一层应用)
-            BuildPortDTO inputPortApp = new BuildPortDTO();
             ProcessGroupEntity processGroupData1 = null;
             try {
                 processGroupData1 = NifiHelper.getProcessGroupsApi().getProcessGroup(data1.getId());
@@ -206,23 +204,16 @@ public class BuildDataModelDorisTableListener
             } catch (ApiException e) {
                 log.error(e.getMessage());
             }
-            inputPortApp.portName = processGroupData1.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_APP_SUFFIX;
+            assert processGroupData1 != null;
             appParentGroupId = processGroupData1.getComponent().getParentGroupId();
-            inputPortApp.componentId = appParentGroupId;
-            inputPortApp.componentX = processGroupData1.getPosition().getX();
-            inputPortApp.componentY = processGroupData1.getPosition().getY() + NifiConstants.PortConstants.INPUT_PORT_Y / 2 + INPUT_PORT_OFFSET_Y;
-            PortEntity buildInputPortApp = componentsBuild.buildInputPort(inputPortApp);
-            // input port 组件id(要保存)
-            appInputPortId = buildInputPortApp.getId();
+
+            appInputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
+                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_INPUT_PORT_COMPONENT);
 
             // TODO: 创建output组件功能(第一层应用)
-            BuildPortDTO outputPortApp = new BuildPortDTO();
-            outputPortApp.portName = processGroupData1.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_APP_SUFFIX;
-            outputPortApp.componentId = appParentGroupId;
-            outputPortApp.componentX = processGroupData1.getPosition().getX();
-            outputPortApp.componentY = processGroupData1.getPosition().getY() + NifiConstants.PortConstants.OUTPUT_PORT_Y;
-            PortEntity buildOutputPortApp = componentsBuild.buildOutputPort(outputPortApp);
-            appOutputPortId = buildOutputPortApp.getId();
+            appOutputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
+                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_OUTPUT_PORT_COMPONENT);
+
         }
 
         TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
@@ -246,7 +237,6 @@ public class BuildDataModelDorisTableListener
             }
 
             // TODO: 创建input组件功能(第二层表)
-            BuildPortDTO inputPortApp = new BuildPortDTO();
             ProcessGroupEntity processGroupData2 = null;
             try {
                 processGroupData2 = NifiHelper.getProcessGroupsApi().getProcessGroup(data2.getId());
@@ -254,23 +244,17 @@ public class BuildDataModelDorisTableListener
             } catch (ApiException e) {
                 log.error(e.getMessage());
             }
-            inputPortApp.portName = processGroupData2.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
+            assert processGroupData2 != null;
             appParentGroupId = processGroupData2.getComponent().getParentGroupId();
-            inputPortApp.componentId = appParentGroupId;
-            inputPortApp.componentX = processGroupData2.getPosition().getX() / NifiConstants.AttrConstants.POSITION_X;
-            inputPortApp.componentY = processGroupData2.getPosition().getY() / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.INPUT_PORT_Y - INPUT_PORT_OFFSET_Y / 2;
-            PortEntity buildInputPortApp = componentsBuild.buildInputPort(inputPortApp);
-            // input port 组件id(要保存)
-            tableInputPortId = buildInputPortApp.getId();
 
             // TODO: 创建output组件功能(第二层表)
-            BuildPortDTO outputPortApp = new BuildPortDTO();
-            outputPortApp.portName = processGroupData2.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
-            outputPortApp.componentId = appParentGroupId;
-            outputPortApp.componentX = processGroupData2.getPosition().getX() / NifiConstants.AttrConstants.POSITION_X;
-            outputPortApp.componentY = processGroupData2.getPosition().getY() / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.OUTPUT_PORT_Y;
-            PortEntity buildOutputPortApp = componentsBuild.buildOutputPort(outputPortApp);
-            tableOutputPortId = buildOutputPortApp.getId();
+            // 创建input_port(任务)   (后期入库)
+            tableInputPortId = buildPortComponent(processGroupData2.getComponent().getName(), appParentGroupId,
+                    processGroupData2.getPosition().getX(), processGroupData2.getPosition().getY(), PortComponentEnum.TASK_INPUT_PORT_COMPONENT);
+            // 创建output_port(任务)   (后期入库)
+            tableOutputPortId = buildPortComponent(processGroupData2.getComponent().getName(), appParentGroupId,
+                    processGroupData2.getPosition().getX(), processGroupData2.getPosition().getY(), PortComponentEnum.TASK_OUTPUT_PORT_COMPONENT);
+
         }
 
         //创建组件,启动组件
@@ -332,116 +316,52 @@ public class BuildDataModelDorisTableListener
 
         appGroupId = data1.getComponent().getParentGroupId();
 
-        // TODO: 创建input组件功能(第三层字段)
-        BuildPortDTO inputPort = new BuildPortDTO();
-        inputPort.portName = processor.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
-        inputPort.componentId = processor.getComponent().getParentGroupId();
-        inputPort.componentX = processor.getPosition().getX();
-        inputPort.componentY = processor.getPosition().getY() + NifiConstants.PortConstants.INPUT_PORT_Y - INPUT_PORT_OFFSET_Y / 2;
-        PortEntity buildInputPort = componentsBuild.buildInputPort(inputPort);
-        // input port 组件id(要保存)
-        String inputPortId = buildInputPort.getId();
+        // TODO 创建input_port(组)   (后期入库)
+        String inputPortId = buildPortComponent(processor.getComponent().getName(), processor.getComponent().getParentGroupId(),
+                processor.getPosition().getX(), processor.getPosition().getY(), PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
 
-        // TODO: 创建output组件功能(第三层字段)
-        BuildPortDTO outputPort = new BuildPortDTO();
-        outputPort.portName = processor.getComponent().getName() + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
-        outputPort.componentId = processor.getComponent().getParentGroupId();
-        outputPort.componentX = processor.getPosition().getX();
-        outputPort.componentY = processor.getPosition().getY() + NifiConstants.PortConstants.OUTPUT_PORT_Y;
-        PortEntity buildOutputPort = componentsBuild.buildOutputPort(outputPort);
-        // output port 组件id(要保存)
-        String outputPortId = buildOutputPort.getId();
+        // TODO 创建output_port(组)   (后期入库)
+        String outputPortId = buildPortComponent(processor.getComponent().getName(), processor.getComponent().getParentGroupId(),
+                processor.getPosition().getX(), processor.getPosition().getY(), PortComponentEnum.COMPONENT_OUTPUT_PORT_COMPONENT);
+
 
         // ===============================================================================================================
-        // TODO: input connection(第三层字段)
-        BuildConnectDTO buildInputConnectDTO = new BuildConnectDTO();
-        NifiConnectDTO inputPortDestination = new NifiConnectDTO();
-        NifiConnectDTO inputPortSource = new NifiConnectDTO();
-        buildInputConnectDTO.fatherComponentId = processor.getComponent().getParentGroupId();
-        inputPortDestination.groupId = processor.getComponent().getParentGroupId();
-        inputPortDestination.id = processor.getId();
-        inputPortDestination.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
-        inputPortSource.groupId = processor.getComponent().getParentGroupId();
-        inputPortSource.id = inputPortId;
-        inputPortSource.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-        buildInputConnectDTO.destination = inputPortDestination;
-        buildInputConnectDTO.source = inputPortSource;
-        componentsBuild.buildInputPortConnections(buildInputConnectDTO);
-        // TODO: output connection(第三层字段)
-        BuildConnectDTO buildOutputConnectDTO = new BuildConnectDTO();
-        NifiConnectDTO outputPortDestination = new NifiConnectDTO();
-        NifiConnectDTO outputPortSource = new NifiConnectDTO();
-        buildOutputConnectDTO.fatherComponentId = processor.getComponent().getParentGroupId();
-        outputPortDestination.groupId = processor.getComponent().getParentGroupId();
-        outputPortDestination.id = outputPortId;
-        outputPortDestination.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        outputPortSource.groupId = processor.getComponent().getParentGroupId();
-        outputPortSource.id = processor.getId();
-        outputPortSource.typeEnum = ConnectableDTO.TypeEnum.PROCESSOR;
-        buildOutputConnectDTO.level = 3;
-        buildOutputConnectDTO.destination = outputPortDestination;
-        buildOutputConnectDTO.source = outputPortSource;
-        componentsBuild.buildOutPortPortConnections(buildOutputConnectDTO);
+        // TODO 创建input_port connection(组)
+        String componentInputPortConnectionId = buildPortConnection(processor.getComponent().getParentGroupId(),
+                processor.getComponent().getParentGroupId(), processor.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                processor.getComponent().getParentGroupId(), inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
-        // TODO: input connection(第二层表)
-        BuildConnectDTO buildInputConnectDTOTable = new BuildConnectDTO();
-        NifiConnectDTO inputPortDestinationTable = new NifiConnectDTO();
-        NifiConnectDTO inputPortSourceTable = new NifiConnectDTO();
-        buildInputConnectDTOTable.fatherComponentId = data1.getId();
-        inputPortDestinationTable.groupId = groupId;
-        inputPortDestinationTable.id = inputPortId;
-        inputPortDestinationTable.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-        inputPortSourceTable.groupId = data1.getId();
-        inputPortSourceTable.id = tableInputPortId;
-        inputPortSourceTable.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-        buildInputConnectDTOTable.destination = inputPortDestinationTable;
-        buildInputConnectDTOTable.source = inputPortSourceTable;
-        componentsBuild.buildInputPortConnections(buildInputConnectDTOTable);
-        // TODO: output connection(第二层表)
-        BuildConnectDTO buildOutputConnectDTOTable = new BuildConnectDTO();
-        NifiConnectDTO outputPortDestinationTable = new NifiConnectDTO();
-        NifiConnectDTO outputPortSourceTable = new NifiConnectDTO();
-        buildOutputConnectDTOTable.fatherComponentId = data1.getId();
-        outputPortDestinationTable.groupId = data1.getId();
-        outputPortDestinationTable.id = tableOutputPortId;
-        outputPortDestinationTable.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        outputPortSourceTable.groupId = groupId;
-        outputPortSourceTable.id = outputPortId;
-        outputPortSourceTable.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        buildOutputConnectDTOTable.level = 2;
-        buildOutputConnectDTOTable.destination = outputPortDestinationTable;
-        buildOutputConnectDTOTable.source = outputPortSourceTable;
-        componentsBuild.buildOutPortPortConnections(buildOutputConnectDTOTable);
+        // TODO 创建output_port connection(组)
+        String componentOutputPortConnectionId = buildPortConnection(processor.getComponent().getParentGroupId(),
+                processor.getComponent().getParentGroupId(), outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                processor.getComponent().getParentGroupId(), processor.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
-        // TODO: input connection(第一层应用)
-        BuildConnectDTO buildInputConnectDTOApp = new BuildConnectDTO();
-        NifiConnectDTO inputPortDestinationApp = new NifiConnectDTO();
-        NifiConnectDTO inputPortSourceApp = new NifiConnectDTO();
-        buildInputConnectDTOApp.fatherComponentId = appGroupId;
-        inputPortDestinationApp.groupId = data1.getId();
-        inputPortDestinationApp.id = tableInputPortId;
-        inputPortDestinationApp.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-        inputPortSourceApp.groupId = appGroupId;
-        inputPortSourceApp.id = appInputPortId;
-        inputPortSourceApp.typeEnum = ConnectableDTO.TypeEnum.INPUT_PORT;
-        buildInputConnectDTOApp.destination = inputPortDestinationApp;
-        buildInputConnectDTOApp.source = inputPortSourceApp;
-        componentsBuild.buildInputPortConnections(buildInputConnectDTOApp);
-        // TODO: output connection(第一层应用)
-        BuildConnectDTO buildOutputConnectDTOApp = new BuildConnectDTO();
-        NifiConnectDTO outputPortDestinationApp = new NifiConnectDTO();
-        NifiConnectDTO outputPortSourceApp = new NifiConnectDTO();
-        buildOutputConnectDTOApp.fatherComponentId = appGroupId;
-        outputPortDestinationApp.groupId = appGroupId;
-        outputPortDestinationApp.id = appOutputPortId;
-        outputPortDestinationApp.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        outputPortSourceApp.groupId = data1.getId();
-        outputPortSourceApp.id = tableOutputPortId;
-        outputPortSourceApp.typeEnum = ConnectableDTO.TypeEnum.OUTPUT_PORT;
-        buildOutputConnectDTOApp.level = 1;
-        buildOutputConnectDTOApp.destination = outputPortDestinationApp;
-        buildOutputConnectDTOApp.source = outputPortSourceApp;
-        componentsBuild.buildOutPortPortConnections(buildOutputConnectDTOApp);
+        // TODO 创建input_port connection(任务)
+        String taskInputPortConnectionId = buildPortConnection(data1.getId(),
+                groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                data1.getId(), tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
+
+        // TODO 创建output connection(任务)
+        String taskOutputPortConnectionId = buildPortConnection(data1.getId(),
+                data1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                2, PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
+
+        // TODO 创建input_port connection(应用)
+        String appInputPortConnectionId = buildPortConnection(appGroupId,
+                data1.getId(), tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                appGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
+
+        // TODO 创建output connection(应用)
+        String appOutputPortConnectionId = buildPortConnection(appGroupId,
+                appGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                data1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
+
 
         return processorEntities;
     }
@@ -669,6 +589,136 @@ public class BuildDataModelDorisTableListener
         {
             log.error("saveTableStructure:"+ex);
         }
+    }
+
+    /**
+     * 创建input_port/output_port组件
+     * @param portName 组件名称
+     * @param componentId 上级id
+     * @param componentX 坐标
+     * @param componentY 坐标
+     * @param typeEnum 组件类型
+     * @return 生成的组件id
+     */
+    private String buildPortComponent(String portName, String componentId, Double componentX, Double componentY, PortComponentEnum typeEnum) {
+
+        BuildPortDTO buildPortDTO = new BuildPortDTO();
+        PortEntity portEntity;
+
+        switch (typeEnum.getValue()) {
+            // 创建input_port(应用)
+            case 0:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_APP_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX;
+                buildPortDTO.componentY = componentY + NifiConstants.PortConstants.INPUT_PORT_Y / 2 + NifiConstants.PortConstants.INPUT_PORT_OFFSET_Y;
+                portEntity = componentsBuild.buildInputPort(buildPortDTO);
+                return portEntity.getId();
+            // 创建output_port(应用)
+            case 1:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_APP_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX;
+                buildPortDTO.componentY = componentY + NifiConstants.PortConstants.OUTPUT_PORT_Y;
+                portEntity = componentsBuild.buildOutputPort(buildPortDTO);
+                return portEntity.getId();
+            // 创建input_port(任务)
+            case 2:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX / NifiConstants.AttrConstants.POSITION_X;
+                buildPortDTO.componentY = componentY / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.INPUT_PORT_Y;
+                portEntity = componentsBuild.buildInputPort(buildPortDTO);
+                return portEntity.getId();
+            // 创建output_port(任务)
+            case 3:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX / NifiConstants.AttrConstants.POSITION_X;
+                buildPortDTO.componentY = componentY / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.OUTPUT_PORT_Y;
+                portEntity = componentsBuild.buildOutputPort(buildPortDTO);
+                return portEntity.getId();
+            // 创建input_port(组)
+            case 4:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX;
+                buildPortDTO.componentY = componentY + NifiConstants.PortConstants.INPUT_PORT_Y;
+                portEntity = componentsBuild.buildInputPort(buildPortDTO);
+                return portEntity.getId();
+            // 创建output_port(组)
+            case 5:
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
+                buildPortDTO.componentId = componentId;
+                buildPortDTO.componentX = componentX;
+                buildPortDTO.componentY = componentY + NifiConstants.PortConstants.OUTPUT_PORT_Y;
+                portEntity = componentsBuild.buildOutputPort(buildPortDTO);
+                return portEntity.getId();
+            default:
+                break;
+        }
+        return null;
+    }
+
+    /**
+     * 创建input_port/output_port connections
+     * @param fatherComponentId 当前组件父id
+     * @param destinationGroupId destinationGroupId
+     * @param destinationId destinationId
+     * @param destinationTypeEnum destinationTypeEnum
+     * @param sourceGroupId sourceGroupId
+     * @param sourceId sourceId
+     * @param sourceTypeEnum sourceTypeEnum
+     * @param level level
+     * @param typeEnum typeEnum
+     * @return connection id
+     */
+    private String buildPortConnection(String fatherComponentId, String destinationGroupId, String destinationId, ConnectableDTO.TypeEnum destinationTypeEnum,
+                                       String sourceGroupId, String sourceId, ConnectableDTO.TypeEnum sourceTypeEnum, int level, PortComponentEnum typeEnum) {
+        BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
+        NifiConnectDTO destination = new NifiConnectDTO();
+        NifiConnectDTO source = new NifiConnectDTO();
+        ConnectionEntity connectionEntity;
+        switch (typeEnum.getValue()) {
+            // 创建input_port连接(应用)
+            case 6:
+                // 创建input_port连接(任务)
+            case 8:
+                // 创建input_port连接(组)
+            case 10:
+                buildConnectDTO.fatherComponentId = fatherComponentId;
+                destination.groupId = destinationGroupId;
+                destination.id = destinationId;
+                destination.typeEnum = destinationTypeEnum;
+                source.groupId = sourceGroupId;
+                source.id = sourceId;
+                source.typeEnum = sourceTypeEnum;
+                buildConnectDTO.destination = destination;
+                buildConnectDTO.source = source;
+                connectionEntity = componentsBuild.buildInputPortConnections(buildConnectDTO);
+                return connectionEntity.getId();
+            // 创建output_port连接(应用)
+            case 7:
+                // 创建output_port连接(任务)
+            case 9:
+                // 创建output_port连接(组)
+            case 11:
+                buildConnectDTO.fatherComponentId = fatherComponentId;
+                destination.groupId = destinationGroupId;
+                destination.id = destinationId;
+                destination.typeEnum = destinationTypeEnum;
+                source.groupId = sourceGroupId;
+                source.id = sourceId;
+                source.typeEnum = sourceTypeEnum;
+                buildConnectDTO.level = level;
+                buildConnectDTO.destination = destination;
+                buildConnectDTO.source = source;
+                connectionEntity = componentsBuild.buildOutPortPortConnections(buildConnectDTO);
+                return connectionEntity.getId();
+            default:
+                break;
+        }
+        return null;
     }
 
 }
