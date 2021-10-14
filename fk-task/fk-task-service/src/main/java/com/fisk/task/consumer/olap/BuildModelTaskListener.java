@@ -91,6 +91,8 @@ public class BuildModelTaskListener {
                 buildNifiFlowDTO.type= OlapTableEnum.KPI;
                 buildNifiFlowDTO.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
                 buildNifiFlowDTO.synchronousTypeEnum= SynchronousTypeEnum.PGTODORIS;
+                buildNifiFlowDTO.tableName=olapPO.tableName;
+                buildNifiFlowDTO.selectSql=olapPO.selectDataSql;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 log.info("nifi流程配置结束");
             }

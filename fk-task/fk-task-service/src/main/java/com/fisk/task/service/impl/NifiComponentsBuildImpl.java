@@ -1084,7 +1084,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
             }
             //删除应用
-            if (nifiRemoveDTOList.get(0).delApp) {
+            if (nifiRemoveDTOList.size()!=0&&nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
                 for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(2, 4)) {
                     if (controllerServicesId != null) {

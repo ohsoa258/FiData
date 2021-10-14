@@ -28,4 +28,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     * 数据来源类别
     * */
     public DataClassifyEnum dataClassifyEnum;
+
+    /*
+    * selectsql(只有toDoris用得到)
+    * */
+    public String selectSql;
 }

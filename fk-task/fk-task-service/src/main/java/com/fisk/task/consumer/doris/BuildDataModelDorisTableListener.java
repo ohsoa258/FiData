@@ -159,8 +159,13 @@ public class BuildDataModelDorisTableListener
 
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
         if(appNifiSettingPO!=null){
+            try {
+                data1=NifiHelper.getProcessGroupsApi().getProcessGroup(appNifiSettingPO.appComponentId);
+            } catch (ApiException e) {
+                log.error("组查询失败"+e);
+            }
             data.setId(appNifiSettingPO.targetDbPoolComponentId);
-            data1.setId(appNifiSettingPO.appComponentId);
+
         }else{
             buildDbControllerServiceDTO.driverLocation= NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
             buildDbControllerServiceDTO.conUrl=pgsqlDatamodelUrl;

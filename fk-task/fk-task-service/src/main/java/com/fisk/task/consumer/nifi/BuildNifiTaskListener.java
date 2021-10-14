@@ -14,8 +14,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
-import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.daconfig.DataSourceConfig;
+import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -122,7 +121,7 @@ public class BuildNifiTaskListener {
     public void msg(String data, Channel channel, Message message) {
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
         //获取数据接入配置项
-        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum,dto.type,dto.dataClassifyEnum);
+        DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum,dto.type,dto.dataClassifyEnum,dto.tableName,dto.selectSql);
         if (configDTO == null) {
             log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
             return;
@@ -194,40 +193,80 @@ public class BuildNifiTaskListener {
      * @param appId 配置的id
      * @return 数据接入配置
      */
-    private DataAccessConfigDTO getConfigData(long id, long appId, SynchronousTypeEnum synchronousTypeEnum, OlapTableEnum type, DataClassifyEnum dataClassifyEnum) {
-        ResultEntity<DataAccessConfigDTO> res = client.dataAccessConfig(id, appId);
-        if (res.code != ResultEnum.SUCCESS.getCode()) {
-            return null;
+    private DataAccessConfigDTO getConfigData(long id, long appId, SynchronousTypeEnum synchronousTypeEnum, OlapTableEnum type, DataClassifyEnum dataClassifyEnum,String tableName,String selectSql) {
+        DataAccessConfigDTO data = new DataAccessConfigDTO();
+        GroupConfig groupConfig = new GroupConfig();
+        DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
+        DataSourceConfig sourceDsConfig = new DataSourceConfig();
+        DataSourceConfig cfgDsConfig = new DataSourceConfig();
+        TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
+        ProcessorConfig processorConfig = new ProcessorConfig();
+        ResultEntity<DataAccessConfigDTO> res = new ResultEntity<>();
+        if (synchronousTypeEnum == SynchronousTypeEnum.TOPGODS) {
+            res = client.dataAccessConfig(id, appId);
+            if ( res.code != ResultEnum.SUCCESS.getCode()) {
+                return null;
+            }
+            if (res.data != null) {
+                data = res.data;
+            }
         }
-        DataAccessConfigDTO data = res.data;
         //拿出来
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id",appId).eq("del_flag", 1).eq("type",dataClassifyEnum.getValue()).one();
         NifiConfigPO nifiConfigPO = nifiConfigService.query().one();
         TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
-        if(appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
+        if(res.data!=null&&appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
             data.groupConfig.newApp=false;
-        }else{
+        }else if(res.data!=null&&appNifiSettingPO==null){
             data.groupConfig.newApp=true;
         }
+        //他喵的,恶心,土匪都不如
         if (tableNifiSettingPO != null) {
-            data.groupConfig.componentId = tableNifiSettingPO.tableComponentId;
-            data.taskGroupConfig.componentId = tableNifiSettingPO.tableComponentId;
-            data.targetDsConfig.targetTableName = tableNifiSettingPO.tableName;
-            data.processorConfig.sourceExecSqlQuery = tableNifiSettingPO.selectSql;
-            data.processorConfig.targetTableName = tableNifiSettingPO.tableName;
+            if(data.groupConfig!=null){
+                data.groupConfig.componentId = tableNifiSettingPO.tableComponentId;
+                data.taskGroupConfig.componentId = tableNifiSettingPO.tableComponentId;
+                data.targetDsConfig.targetTableName = tableNifiSettingPO.tableName;
+                data.processorConfig.sourceExecSqlQuery = tableNifiSettingPO.selectSql;
+                data.processorConfig.targetTableName = tableNifiSettingPO.tableName;
+            }else{
+                //赋值对象
+                groupConfig.componentId=tableNifiSettingPO.tableComponentId;
+                taskGroupConfig.componentId=tableNifiSettingPO.tableComponentId;
+                targetDbPoolConfig.componentId=tableNifiSettingPO.tableName;
+                processorConfig.sourceExecSqlQuery=tableNifiSettingPO.selectSql;
+                processorConfig.targetTableName=tableNifiSettingPO.tableName;
+                data.groupConfig=groupConfig;
+                data.taskGroupConfig=taskGroupConfig;
+                data.targetDsConfig=targetDbPoolConfig;
+                data.processorConfig=processorConfig;
+            }
+
         }
         if (appNifiSettingPO != null) {
-            data.sourceDsConfig.componentId = appNifiSettingPO.sourceDbPoolComponentId;
-            data.targetDsConfig.componentId = appNifiSettingPO.targetDbPoolComponentId;
+            if(data.sourceDsConfig!=null){
+                data.sourceDsConfig.componentId = appNifiSettingPO.sourceDbPoolComponentId;
+                data.targetDsConfig.componentId = appNifiSettingPO.targetDbPoolComponentId;
+            }else{
+                //赋值对象
+                sourceDsConfig.componentId=appNifiSettingPO.sourceDbPoolComponentId;
+                targetDbPoolConfig.componentId=appNifiSettingPO.targetDbPoolComponentId;
+                data.sourceDsConfig=sourceDsConfig;
+                data.targetDsConfig=targetDbPoolConfig;
+            }
         }
         if (nifiConfigPO != null) {
-            data.cfgDsConfig.componentId = nifiConfigPO.componentId;
+            if(data.cfgDsConfig!=null){
+                data.cfgDsConfig.componentId = nifiConfigPO.componentId;
+            }else{
+                //赋值对象
+                cfgDsConfig.componentId=nifiConfigPO.componentId;
+                data.cfgDsConfig=cfgDsConfig;
+            }
+
         }
 
 
         //target doris
-        DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
-        DataSourceConfig sourceDsConfig = new DataSourceConfig();
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {//各种数据源,首先入pg_ods
             targetDbPoolConfig.type = DriverTypeEnum.POSTGRESQL;
             targetDbPoolConfig.user = pgsqlDatainputUsername;
@@ -237,6 +276,18 @@ public class BuildNifiTaskListener {
             targetDbPoolConfig.tableFieldsList = res.data.targetDsConfig.tableFieldsList;
             sourceDsConfig=res.data.sourceDsConfig;
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {//pg_dw----doris_olap
+            if(appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
+                groupConfig.newApp=false;
+            }else{
+                groupConfig.newApp=true;
+            }
+            groupConfig.appName=tableName;
+            groupConfig.appDetails=tableName;
+            groupConfig.componentId=appNifiSettingPO.appComponentId;
+            cfgDsConfig.componentId=nifiConfigPO.componentId;
+            taskGroupConfig.appName=tableName;
+            processorConfig.targetTableName=tableName;
+            processorConfig.sourceExecSqlQuery=selectSql;
             sourceDsConfig.type=DriverTypeEnum.POSTGRESQL;
             sourceDsConfig.jdbcStr=pgsqlDatamodelUrl;
             sourceDsConfig.user=pgsqlDatamodelUsername;
@@ -245,17 +296,21 @@ public class BuildNifiTaskListener {
             targetDbPoolConfig.user = dorisUser;
             targetDbPoolConfig.password = dorisPwd;
             targetDbPoolConfig.jdbcStr = dorisUrl;
-            targetDbPoolConfig.targetTableName = null;
+            targetDbPoolConfig.targetTableName = tableName.toLowerCase();
             targetDbPoolConfig.tableFieldsList = null;
+            data.groupConfig=groupConfig;
+            data.cfgDsConfig=cfgDsConfig;
+            data.taskGroupConfig=taskGroupConfig;
+            data.processorConfig=processorConfig;
         }
 
-        if (!res.data.groupConfig.newApp && res.data.targetDsConfig != null) {
+        if (!data.groupConfig.newApp && data.targetDsConfig != null) {
             targetDbPoolConfig.componentId = appNifiSettingPO.targetDbPoolComponentId;
             sourceDsConfig.componentId=appNifiSettingPO.sourceDbPoolComponentId;
         }
-        res.data.targetDsConfig = targetDbPoolConfig;
-        res.data.sourceDsConfig=sourceDsConfig;
-        return res.data;
+        data.targetDsConfig = targetDbPoolConfig;
+        data.sourceDsConfig=sourceDsConfig;
+        return data;
     }
 
     /**
@@ -858,7 +913,7 @@ public class BuildNifiTaskListener {
         String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
         String ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
         String syncMode = config.cfgDsConfig.syncMode == 1 ? "full_volume" : "timestamp_incremental";
-        System.out.println("同步类型为:" + syncMode + config.cfgDsConfig.syncMode);
+        log.info("同步类型为:" + syncMode + config.cfgDsConfig.syncMode);
         executsql = "select public.data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "','${" + NifiConstants.AttrConstants.LOG_CODE + "}'" + ")";
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
