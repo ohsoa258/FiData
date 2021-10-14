@@ -207,12 +207,12 @@ public class BuildDataModelDorisTableListener
             assert processGroupData1 != null;
             appParentGroupId = processGroupData1.getComponent().getParentGroupId();
 
-            appInputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
-                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_INPUT_PORT_COMPONENT);
+//            appInputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
+//                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_INPUT_PORT_COMPONENT);
 
             // TODO: 创建output组件功能(第一层应用)
-            appOutputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
-                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_OUTPUT_PORT_COMPONENT);
+//            appOutputPortId = buildPortComponent(processGroupData1.getComponent().getName(), appParentGroupId, processGroupData1.getPosition().getX(),
+//                    processGroupData1.getPosition().getY(), PortComponentEnum.APP_OUTPUT_PORT_COMPONENT);
 
         }
 
@@ -351,16 +351,16 @@ public class BuildDataModelDorisTableListener
                 2, PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
 
         // TODO 创建input_port connection(应用)
-        String appInputPortConnectionId = buildPortConnection(appGroupId,
-                data1.getId(), tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                appGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
+//        String appInputPortConnectionId = buildPortConnection(appGroupId,
+//                data1.getId(), tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+//                appGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+//                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
 
         // TODO 创建output connection(应用)
-        String appOutputPortConnectionId = buildPortConnection(appGroupId,
-                appGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                data1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
+//        String appOutputPortConnectionId = buildPortConnection(appGroupId,
+//                appGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+//                data1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+//                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
 
         return processorEntities;
