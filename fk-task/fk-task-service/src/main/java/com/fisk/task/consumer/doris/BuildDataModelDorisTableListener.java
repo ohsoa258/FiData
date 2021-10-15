@@ -624,7 +624,7 @@ public class BuildDataModelDorisTableListener
                 return portEntity.getId();
             // 创建input_port(任务)
             case 2:
-                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX + new Date().getTime();
                 buildPortDTO.componentId = componentId;
                 buildPortDTO.componentX = componentX / NifiConstants.AttrConstants.POSITION_X;
                 buildPortDTO.componentY = componentY / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.INPUT_PORT_Y;
@@ -632,7 +632,7 @@ public class BuildDataModelDorisTableListener
                 return portEntity.getId();
             // 创建output_port(任务)
             case 3:
-                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX;
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_TABLE_SUFFIX + new Date().getTime();
                 buildPortDTO.componentId = componentId;
                 buildPortDTO.componentX = componentX / NifiConstants.AttrConstants.POSITION_X;
                 buildPortDTO.componentY = componentY / NifiConstants.AttrConstants.POSITION_X + NifiConstants.PortConstants.OUTPUT_PORT_Y;
@@ -640,7 +640,7 @@ public class BuildDataModelDorisTableListener
                 return portEntity.getId();
             // 创建input_port(组)
             case 4:
-                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX + new Date().getTime();
                 buildPortDTO.componentId = componentId;
                 buildPortDTO.componentX = componentX;
                 buildPortDTO.componentY = componentY + NifiConstants.PortConstants.INPUT_PORT_Y;
@@ -648,7 +648,7 @@ public class BuildDataModelDorisTableListener
                 return portEntity.getId();
             // 创建output_port(组)
             case 5:
-                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX;
+                buildPortDTO.portName = portName + NifiConstants.PortConstants.PORT_NAME_FIELD_SUFFIX + new Date().getTime();
                 buildPortDTO.componentId = componentId;
                 buildPortDTO.componentX = componentX;
                 buildPortDTO.componentY = componentY + NifiConstants.PortConstants.OUTPUT_PORT_Y;
