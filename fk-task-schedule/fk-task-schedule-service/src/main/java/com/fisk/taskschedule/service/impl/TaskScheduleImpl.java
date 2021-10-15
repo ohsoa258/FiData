@@ -46,9 +46,12 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
         if ("TIMER".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "Timer driven";
+            dto.syncMode = "Timer driven";
             model.expression += " sec";
+            dto.expression += " sec";
         } else if ("CRON".equalsIgnoreCase(model.syncMode)){
             model.syncMode = "CRON driven";
+            dto.syncMode = "CRON driven";
         }
 
         boolean save = this.save(model);

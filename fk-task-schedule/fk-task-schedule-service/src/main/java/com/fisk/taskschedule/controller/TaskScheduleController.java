@@ -57,7 +57,7 @@ public class TaskScheduleController {
             taskCronDTO.dto.schedulerComponentId = tableNifiSetting.data.queryIncrementProcessorId;
             taskCronDTO.dto.tableComponentId = tableNifiSetting.data.tableComponentId;
             //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
-            publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");
+            publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression);
         }
          return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
