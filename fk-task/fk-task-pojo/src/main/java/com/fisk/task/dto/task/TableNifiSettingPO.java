@@ -34,4 +34,8 @@ public class TableNifiSettingPO extends BasePO {
     public String selectSql;
     public String tableName;
     public int type;
+    public String processorInputPortConnectId;
+    public String processorOutputPortConnectId;
+    public String tableInputPortConnectId;
+    public String tableOutputPortConnectId;
 }

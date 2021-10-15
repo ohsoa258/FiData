@@ -16,4 +16,6 @@ public class AppNifiSettingPO extends BasePO {
   public int type;
   public String inputPortId;
   public String outputPortId;
+  public String inputPortConnectId;
+  public String outputPortConnectId;
 }

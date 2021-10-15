@@ -14,6 +14,8 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
@@ -154,7 +156,19 @@ public class BuildNifiTaskListener {
         appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
         appNifiSettingPO.targetDbPoolComponentId = dbPool.get(1).getId();
 
-        //4. 创建任务组
+        //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
+        DataModelVO dataModelVO = new DataModelVO();
+        dataModelVO.dataClassifyEnum=dto.dataClassifyEnum;
+        dataModelVO.delBusiness=false;
+        dataModelVO.businessId=String.valueOf(dto.appId);
+        dataModelVO.userId=dto.userId;
+        DataModelTableVO dataModelTableVO = new DataModelTableVO();
+        dataModelTableVO.type=dto.type;
+        List<Long> ids = new ArrayList<>();
+        ids.add(dto.id);
+        dataModelTableVO.ids=ids;
+        dataModelVO.indicatorIdList=dataModelTableVO;
+        componentsBuild.deleteNifiFlow(dataModelVO);
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
         // 创建input_port(任务)   (后期入库)
@@ -214,14 +228,14 @@ public class BuildNifiTaskListener {
         //拿出来
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id",appId).eq("del_flag", 1).eq("type",dataClassifyEnum.getValue()).one();
         NifiConfigPO nifiConfigPO = nifiConfigService.query().one();
-        TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
+        //TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
         if(res.data!=null&&appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
             data.groupConfig.newApp=false;
         }else if(res.data!=null&&appNifiSettingPO==null){
             data.groupConfig.newApp=true;
         }
 
-        if (tableNifiSettingPO != null) {
+        /*if (tableNifiSettingPO != null) {
             if(data.groupConfig!=null){
                 data.groupConfig.componentId = tableNifiSettingPO.tableComponentId;
                 data.taskGroupConfig.componentId = tableNifiSettingPO.tableComponentId;
@@ -241,7 +255,7 @@ public class BuildNifiTaskListener {
                 data.processorConfig=processorConfig;
             }
 
-        }
+        }*/
         if (appNifiSettingPO != null) {
             if(data.sourceDsConfig!=null){
                 data.sourceDsConfig.componentId = appNifiSettingPO.sourceDbPoolComponentId;
@@ -278,12 +292,12 @@ public class BuildNifiTaskListener {
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {//pg_dw----doris_olap
             if(appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
                 groupConfig.newApp=false;
+                groupConfig.componentId=appNifiSettingPO.appComponentId;
             }else{
                 groupConfig.newApp=true;
             }
             groupConfig.appName=tableName;
             groupConfig.appDetails=tableName;
-            groupConfig.componentId=appNifiSettingPO.appComponentId;
             cfgDsConfig.componentId=nifiConfigPO.componentId;
             taskGroupConfig.appName=tableName;
             processorConfig.targetTableName=tableName;
@@ -683,7 +697,14 @@ public class BuildNifiTaskListener {
 //                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
-
+        tableNifiSettingPO.processorInputPortConnectId=componentInputPortConnectionId;
+        tableNifiSettingPO.processorOutputPortConnectId=componentOutputPortConnectionId;
+        tableNifiSettingPO.tableInputPortConnectId=taskInputPortConnectionId;
+        tableNifiSettingPO.tableOutputPortConnectId=taskOutputPortConnectionId;
+        tableNifiSettingPO.tableInputPortId=tableInputPortId;
+        tableNifiSettingPO.tableOutputPortId=tableOutputPortId;
+        tableNifiSettingPO.processorInputPortId=inputPortId;
+        tableNifiSettingPO.processorOutputPortId=outputPortId;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
         res.add(queryField);

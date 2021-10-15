@@ -46,5 +46,13 @@ public class NifiRemoveDTO {
      * */
     public List<String> outputPortIds;
 
+    /*
+    * inputportConnectsid
+    * */
+    public List<String> inputportConnectIds;
 
+    /*
+    * outputportConnectsid
+    * */
+    public List<String> outputportConnectIds;
 }

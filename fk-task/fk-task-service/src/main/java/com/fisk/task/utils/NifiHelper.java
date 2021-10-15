@@ -68,6 +68,10 @@ public class NifiHelper {
         return new InputPortsApi(getApiClient());
     }
 
+    public static ConnectionsApi getConnectionsApi(){
+        return new ConnectionsApi(getApiClient());
+    }
+
     /**
      * pid如果为null，返回默认值
      *

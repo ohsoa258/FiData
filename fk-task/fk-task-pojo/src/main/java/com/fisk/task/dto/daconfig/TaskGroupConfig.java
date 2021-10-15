@@ -16,4 +16,9 @@ public class TaskGroupConfig {
      * 组件id
      */
     public String componentId;
+
+    /*
+    * 是否是新的任务组
+    * */
+    public Boolean isNewTask;
 }

@@ -258,16 +258,16 @@ public class BuildDataModelDorisTableListener
         }
 
         //创建组件,启动组件
-        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), modelMetaDataDTO.sqlName,data1);
+        TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
+        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), modelMetaDataDTO.sqlName,data1,tableNifiSetting);
 
         //回写
-        savaNifiAllSetting(data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum);
+        savaNifiAllSetting(data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
 
     }
 
-    public void savaNifiAllSetting(ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelMetaDataDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
+    public void savaNifiAllSetting(ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelMetaDataDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum,TableNifiSettingPO tableNifiSettingPO){
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
-        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
         if(appNifiSettingPO1!=null){
             appNifiSettingPO=appNifiSettingPO1;
@@ -295,7 +295,7 @@ public class BuildDataModelDorisTableListener
     /*
     * 创建组件
     * */
-    public List<ProcessorEntity> createComponents(String groupId,String componentId,String executsql,ProcessGroupEntity data1){
+    public List<ProcessorEntity> createComponents(String groupId,String componentId,String executsql,ProcessGroupEntity data1,TableNifiSettingPO tableNifiSetting){
         List<ProcessorEntity> processors=new ArrayList<>();
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
@@ -362,7 +362,14 @@ public class BuildDataModelDorisTableListener
 //                data1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
-
+        tableNifiSetting.processorInputPortConnectId=componentInputPortConnectionId;
+        tableNifiSetting.processorOutputPortConnectId=componentOutputPortConnectionId;
+        tableNifiSetting.tableInputPortConnectId=taskInputPortConnectionId;
+        tableNifiSetting.tableOutputPortConnectId=taskOutputPortConnectionId;
+        tableNifiSetting.tableInputPortId=tableInputPortId;
+        tableNifiSetting.tableOutputPortId=tableOutputPortId;
+        tableNifiSetting.processorInputPortId=inputPortId;
+        tableNifiSetting.processorOutputPortId=outputPortId;
         return processorEntities;
     }
 
