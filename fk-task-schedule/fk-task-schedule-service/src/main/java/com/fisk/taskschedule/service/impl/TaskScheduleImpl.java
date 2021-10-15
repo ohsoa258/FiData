@@ -44,6 +44,13 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
         }
 
+        if ("TIMER".equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = "Timer driven";
+            model.expression += " sec";
+        } else if ("CRON".equalsIgnoreCase(model.syncMode)){
+            model.syncMode = "CRON driven";
+        }
+
         boolean save = this.save(model);
         String cronNextTime = "";
         if ("CRON".equalsIgnoreCase(model.syncMode)) {
