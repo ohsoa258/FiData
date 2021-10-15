@@ -89,7 +89,7 @@ public class AtomicIndicatorsImpl
         }
         int flat=mapper.deleteByIdWithFill(po);
 
-        //删除指标组合对象
+        /*//删除指标组合对象
         DataIndicatorVO vo=new DataIndicatorVO();
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
         vo.businessId=po.businessId;
@@ -114,7 +114,7 @@ public class AtomicIndicatorsImpl
         if (list.size()==0 && factAttributePOList.size()==0)
         {
             vo.delIndicatorTable=true;
-        }
+        }*/
 
         return flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }

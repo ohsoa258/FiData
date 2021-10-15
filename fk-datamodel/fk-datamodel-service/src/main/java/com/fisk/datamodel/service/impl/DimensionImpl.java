@@ -163,17 +163,21 @@ public class DimensionImpl implements IDimension {
             return ResultEnum.TABLE_ASSOCIATED;
         }
 
-        //删除组合对象
-        DataModelVO vo=new DataModelVO();
-        vo.businessId= String.valueOf(model.businessId);
-        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-        vo.delBusiness=false;
-        DataModelTableVO tableVO=new DataModelTableVO();
-        tableVO.type= OlapTableEnum.DIMENSION;
-        List<Long> ids=new ArrayList<>();
-        ids.add(Long.valueOf(id));
-        tableVO.ids=ids;
-        vo.dimensionIdList=tableVO;
+        //判断是否发布
+        if (model.isPublish!=PublicStatusEnum.UN_PUBLIC.getValue())
+        {
+            //删除组合对象
+            DataModelVO vo=new DataModelVO();
+            vo.businessId= String.valueOf(model.businessId);
+            vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+            vo.delBusiness=false;
+            DataModelTableVO tableVO=new DataModelTableVO();
+            tableVO.type= OlapTableEnum.DIMENSION;
+            List<Long> ids=new ArrayList<>();
+            ids.add(Long.valueOf(id));
+            tableVO.ids=ids;
+            vo.dimensionIdList=tableVO;
+        }
 
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
