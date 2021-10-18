@@ -20,6 +20,8 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
@@ -156,6 +158,19 @@ public class BuildDataModelDorisTableListener
         //任务组
         ProcessGroupEntity data2=new ProcessGroupEntity();
 
+        //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
+        DataModelVO dataModelVO = new DataModelVO();
+        dataModelVO.dataClassifyEnum=dataClassifyEnum;
+        dataModelVO.delBusiness=false;
+        dataModelVO.businessId=String.valueOf(modelMetaDataDTO.appId);
+        DataModelTableVO dataModelTableVO = new DataModelTableVO();
+        dataModelTableVO.type=olapTableEnum;
+        List<Long> ids = new ArrayList<>();
+        ids.add(modelMetaDataDTO.id);
+        dataModelTableVO.ids=ids;
+        dataModelVO.indicatorIdList=dataModelTableVO;
+        componentsBuild.deleteNifiFlow(dataModelVO);
+
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
         if(appNifiSettingPO!=null){
             try {
@@ -216,10 +231,10 @@ public class BuildDataModelDorisTableListener
 
         }
 
-        TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
+        /*TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
         if(tableNifiSettingPO!=null){
            data2.setId(tableNifiSettingPO.tableComponentId);
-        }else{
+        }else{*/
             //创建任务组
             BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
             buildProcessGroupDTO.name = modelMetaDataDTO.tableName;
@@ -255,7 +270,7 @@ public class BuildDataModelDorisTableListener
             tableOutputPortId = buildPortComponent(processGroupData2.getComponent().getName(), appParentGroupId,
                     processGroupData2.getPosition().getX(), processGroupData2.getPosition().getY(), PortComponentEnum.TASK_OUTPUT_PORT_COMPONENT);
 
-        }
+        //}
 
         //创建组件,启动组件
         TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
@@ -278,10 +293,11 @@ public class BuildDataModelDorisTableListener
         //做判断,是否新增
         appNifiSettingPO.appComponentId=processGroupEntity1.getId();
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
-        TableNifiSettingPO tableNifiSettingPO1 = tableNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("table_access_id", modelMetaDataDTO.id).eq("type", olapTableEnum.getValue()).one();
-        if(tableNifiSettingPO1!=null){
-            tableNifiSettingPO=tableNifiSettingPO1;
-        }
+        Map<String, Object>  queryCondition= new HashMap<>();
+        queryCondition.put("app_id",modelMetaDataDTO.appId);
+        queryCondition.put("table_access_id",modelMetaDataDTO.id);
+        queryCondition.put("type",olapTableEnum.getValue());
+        tableNifiSettingService.removeByMap(queryCondition);
         tableNifiSettingPO.tableAccessId= Math.toIntExact(modelMetaDataDTO.id);
         tableNifiSettingPO.tableName=modelMetaDataDTO.tableName;
         tableNifiSettingPO.appId=modelMetaDataDTO.appId;

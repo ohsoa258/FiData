@@ -260,12 +260,15 @@ public class BuildNifiTaskListener {
             if(data.sourceDsConfig!=null){
                 data.sourceDsConfig.componentId = appNifiSettingPO.sourceDbPoolComponentId;
                 data.targetDsConfig.componentId = appNifiSettingPO.targetDbPoolComponentId;
+                data.groupConfig.componentId=appNifiSettingPO.appComponentId;
             }else{
                 //赋值对象
                 sourceDsConfig.componentId=appNifiSettingPO.sourceDbPoolComponentId;
                 targetDbPoolConfig.componentId=appNifiSettingPO.targetDbPoolComponentId;
+                groupConfig.componentId=appNifiSettingPO.appComponentId;
                 data.sourceDsConfig=sourceDsConfig;
                 data.targetDsConfig=targetDbPoolConfig;
+                data.groupConfig=groupConfig;
             }
         }
         if (nifiConfigPO != null) {
