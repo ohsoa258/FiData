@@ -1071,6 +1071,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 }
                 //暂停13个组件
                 this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
+                for (ProcessorEntity processorEntity:processorEntities) {
+                    //terminateProcessorCall
+                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
+                }
                 //清空队列
                 this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
                 //禁用2个控制器服务
