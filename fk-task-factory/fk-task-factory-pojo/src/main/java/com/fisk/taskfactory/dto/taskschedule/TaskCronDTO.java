@@ -1,4 +1,4 @@
-package com.fisk.taskfactory.dto;
+package com.fisk.taskfactory.dto.taskschedule;
 
 import com.fisk.common.response.ResultEnum;
 import com.fisk.taskfactory.dto.dataaccess.DataAccessIdDTO;

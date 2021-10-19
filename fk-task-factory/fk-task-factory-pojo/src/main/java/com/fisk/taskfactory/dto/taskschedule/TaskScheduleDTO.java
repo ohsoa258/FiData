@@ -1,4 +1,4 @@
-package com.fisk.taskfactory.dto;
+package com.fisk.taskfactory.dto.taskschedule;
 
 import lombok.Data;
 

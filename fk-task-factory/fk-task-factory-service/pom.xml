@@ -59,7 +59,7 @@
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-task-schedule-pojo</artifactId>
+            <artifactId>fk-task-factory-pojo</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 

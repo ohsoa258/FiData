@@ -24,6 +24,7 @@ import java.util.List;
 public class SwaggerConfig {
 
     public static final String TAG_1 = "task-schedule-controller";
+    public static final String TAG_2 = "nifi-custom-workflow-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -31,6 +32,7 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .tags(new Tag(TAG_1,"调度中心"))
+                .tags(new Tag(TAG_2,"NIFI数据管道管理"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

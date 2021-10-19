@@ -1,7 +1,7 @@
 package com.fisk.taskfactory.map;
 
-import com.fisk.taskfactory.dto.taskschedule.TaskScheduleDTO;
-import com.fisk.taskfactory.entity.TaskSchedulePO;
+import com.fisk.taskfactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.taskfactory.entity.NifiCustomWorkflowPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -10,21 +10,21 @@ import org.mapstruct.factory.Mappers;
  * @author Lock
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface TaskScheduleMap {
+public interface NifiCustomWorkflowMap {
 
-    TaskScheduleMap INSTANCES = Mappers.getMapper(TaskScheduleMap.class);
+    NifiCustomWorkflowMap INSTANCES = Mappers.getMapper(NifiCustomWorkflowMap.class);
 
     /**
      * dto => po
      * @param dto source
      * @return target
      */
-    TaskSchedulePO dtoToPo(TaskScheduleDTO dto);
+    NifiCustomWorkflowPO dtoToPo(NifiCustomWorkflowDTO dto);
 
     /**
      * po => dto
      * @param po source
      * @return target
      */
-    TaskScheduleDTO poToDto(TaskSchedulePO po);
+    NifiCustomWorkflowDTO poToDto(NifiCustomWorkflowPO po);
 }
