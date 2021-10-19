@@ -10,7 +10,7 @@ import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
+import com.fisk.taskfactory.dto.dataaccess.DataAccessIdDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
