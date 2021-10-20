@@ -46,19 +46,23 @@ public class TaskScheduleController {
         log.info("方法的执行结果为:{}", result);
         // TODO 提供给task模块
         TaskCronDTO taskCronDTO = result.data;
-        DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
-        if(Objects.equals(dataAccessIdDTO.olapTableEnum, OlapTableEnum.KPI)){
-            ResultEntity<Object> objectResultEntity = publishTaskClient.selectByName(dataAccessIdDTO.factTableName);
-            Long id = JSON.parseObject(JSON.toJSONString(objectResultEntity.data), Long.class);
-            dataAccessIdDTO.tableId=id;
+
+        if (taskCronDTO.dto != null) {
+            DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
+            if(Objects.equals(dataAccessIdDTO.olapTableEnum, OlapTableEnum.KPI)){
+                ResultEntity<Object> objectResultEntity = publishTaskClient.selectByName(dataAccessIdDTO.factTableName);
+                Long id = JSON.parseObject(JSON.toJSONString(objectResultEntity.data), Long.class);
+                dataAccessIdDTO.tableId=id;
+            }
+            ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
+            if (tableNifiSetting.code == 0) {
+                taskCronDTO.dto.schedulerComponentId = tableNifiSetting.data.queryIncrementProcessorId;
+                taskCronDTO.dto.tableComponentId = tableNifiSetting.data.tableComponentId;
+                //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
+                publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression);
+            }
         }
-        ResultEntity<TableNifiSettingPO> tableNifiSetting = publishTaskClient.getTableNifiSetting(dataAccessIdDTO);
-        if (tableNifiSetting.code == 0) {
-            taskCronDTO.dto.schedulerComponentId = tableNifiSetting.data.queryIncrementProcessorId;
-            taskCronDTO.dto.tableComponentId = tableNifiSetting.data.tableComponentId;
-            //publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression+" sec");"TIMER_DRIVEN"
-            publishTaskClient.modifyScheduling(taskCronDTO.dto.tableComponentId,taskCronDTO.dto.schedulerComponentId,taskCronDTO.dto.syncMode,taskCronDTO.dto.expression);
-        }
+
          return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 

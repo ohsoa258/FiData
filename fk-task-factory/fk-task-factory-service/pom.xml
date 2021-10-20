@@ -115,7 +115,7 @@
     </dependencies>
 
     <build>
-        <finalName>task-schedule</finalName>
+        <finalName>task-factory</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

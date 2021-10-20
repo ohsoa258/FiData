@@ -48,7 +48,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             dto.syncMode = "Timer driven";
             model.expression += " sec";
             dto.expression += " sec";
-        } else if ("CRON".equalsIgnoreCase(model.syncMode)){
+        } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "CRON driven";
             dto.syncMode = "CRON driven";
         }
@@ -216,6 +216,12 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         TaskSchedulePO model = mapper.getTaskSchedule(dto.jobId, dto.flag);
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        // TIMER_DRIVEN值去除" sec"
+        if (model.syncMode.contains("T") && model.expression.contains("sec")) {
+            for (int i = 0; i < 4; i++) {
+                model.expression = model.expression.substring(0, model.expression.length() - 1);
+            }
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, TaskScheduleMap.INSTANCES.poToDto(model));
