@@ -115,8 +115,8 @@ spring:
           predicates:
             - Path=/dataservice/**
 
-        - id: task-factory # 数据源接入服务
-          uri: lb://task-factory
+        - id: data-factory # 数据源接入服务
+          uri: lb://data-factory
           predicates:
             - Path=/taskschedule/**
 

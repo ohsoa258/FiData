@@ -1,23 +1,16 @@
 package com.fisk.task.controller;
 
-import com.davis.client.ApiException;
-import com.davis.client.model.ProcessorEntity;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
-import com.fisk.task.dto.nifi.NifiRemoveDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.task.service.IBuildTaskService;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
-import com.fisk.taskschedule.dto.dataaccess.DataAccessIdDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @RestController
 @RequestMapping("/nifi")
