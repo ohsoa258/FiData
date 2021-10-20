@@ -2,11 +2,8 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.businessprocess.BusinessAreaContentDTO;
+import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.QueryDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
@@ -58,11 +55,11 @@ public interface IBusinessProcess {
     List<BusinessProcessDropDTO> getBusinessProcessDropList();
 
     /**
-     * 根据业务过程id,发布事实表相关信息
-     * @param id
+     * 根据业务过程id集合,发布事实表相关信息
+     * @param dto
      * @return
      */
-    ResultEnum businessProcessPublish(int id);
+    ResultEnum businessProcessPublish(BusinessProcessPublishDTO dto);
 
     /**
      * 业务过程发布
@@ -84,5 +81,12 @@ public interface IBusinessProcess {
      * @return
      */
     BusinessAreaContentDTO getBusinessId(int factId);
+
+    /**
+     * 根据业务域id,获取业务过程列表
+     * @param businessAreaId
+     * @return
+     */
+    List<BusinessProcessListDTO> getBusinessProcessList(int businessAreaId);
 
 }

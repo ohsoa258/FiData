@@ -72,8 +72,9 @@ public interface DataModelClient {
     ResultEntity<Object> factSyncModePush(@PathVariable("id") int id);
 
     /**
-     *更改维度发布状态
+     * 更改维度发布状态
      * @param id
+     * @param isSuccess
      * @return
      */
     @GetMapping("/dimension/editPublishStatus")
@@ -124,5 +125,13 @@ public interface DataModelClient {
     @GetMapping("/businessProcess/getBusinessId/{id}")
     ResultEntity<Object> getBusinessId(@PathVariable("id")int id);
 
+    /**
+     * 更改业务域发布状态
+     * @param id
+     * @param isSuccess
+     * @return
+     */
+    @GetMapping("/business/editBusinessAreaPublishStatus")
+    ResultEntity<Object> editBusinessAreaPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
 }

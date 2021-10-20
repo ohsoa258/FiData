@@ -11,6 +11,10 @@ public class
 
 DimensionDTO {
     public int id;
+    /**
+     * 维度文件夹id
+     */
+    public int dimensionFolderId;
     public int businessId;
     /**
      * 应用id

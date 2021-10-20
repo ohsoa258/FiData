@@ -15,6 +15,10 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 public class DimensionPO extends BasePO {
 
     /**
+     * 维度文件夹id
+     */
+    public int dimensionFolderId;
+    /**
      * 业务域id
      */
     public int businessId;

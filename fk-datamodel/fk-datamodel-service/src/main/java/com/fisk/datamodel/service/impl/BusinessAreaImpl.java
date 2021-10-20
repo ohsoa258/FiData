@@ -32,20 +32,24 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
  * @author Lock
  */
 @Service
+@Slf4j
 public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAreaPO> implements IBusinessArea {
 
     @Resource
@@ -230,6 +234,22 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,data);
+    }
+
+    @Override
+    public void updatePublishStatus(int id,int isSuccess)
+    {
+        BusinessAreaPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            log.info(id+":业务域数据不存在");
+            return;
+        }
+        po.setIsPublish(isSuccess);
+        //发布时间
+        po.setPublishTime(LocalDateTime.now());
+        int flat=mapper.updateById(po);
+        log.info(po.getBusinessName()+"发布状态:"+flat);
     }
 
 }
