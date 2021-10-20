@@ -118,7 +118,7 @@ spring:
         - id: task-factory # 数据源接入服务
           uri: lb://task-factory
           predicates:
-            - Path=/taskfactory/**
+            - Path=/taskschedule/**
 
         - id: datagovern-service # 数据治理
           uri: lb://datagovern-service
