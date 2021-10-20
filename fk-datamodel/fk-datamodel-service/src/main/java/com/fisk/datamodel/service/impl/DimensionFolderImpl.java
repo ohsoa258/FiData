@@ -23,6 +23,7 @@ import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionFolderMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionFolder;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -50,6 +51,8 @@ public class DimensionFolderImpl
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     UserHelper userHelper;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto)
@@ -194,8 +197,8 @@ public class DimensionFolderImpl
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
             }
-            /*//发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);*/
+            //发送消息
+            publishTaskClient.publishBuildAtlasDorisTableTask(list);
         }
         catch (Exception ex){
             log.error(ex.getMessage());

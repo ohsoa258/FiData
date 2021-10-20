@@ -155,9 +155,8 @@ public class BusinessProcessImpl implements IBusinessProcess {
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
             }
-            /*
             //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);*/
+            publishTaskClient.publishBuildAtlasDorisTableTask(list);
         }
         catch (Exception ex){
             log.error(ex.getMessage());

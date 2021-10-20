@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 /**
  * 发送任务
  *
@@ -62,7 +64,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/atlasDorisTable")
-    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO atlasEntityQueryDTO);
+    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody List<DimensionAttributeAddDTO> atlasEntityQueryDTO);
 
 
     /**

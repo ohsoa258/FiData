@@ -220,7 +220,7 @@ public class DimensionImpl implements IDimension {
             pushDto.createType= CreateTypeEnum.CREATE_DIMENSION.getValue();
             pushDto.userId=userHelper.getLoginUserInfo().id;
             //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
+            //publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
         }
         catch (Exception ex){
             log.error(ex.getMessage());
