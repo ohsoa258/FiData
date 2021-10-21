@@ -754,7 +754,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-        vo.appComponentId = registrationPO.componentId;
+//        vo.appComponentId = registrationPO.componentId;
         vo.appAtlasId = registrationPO.atlasInstanceId;
 
         List<TableListVO> voList = new ArrayList<>();
@@ -906,7 +906,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .one();
 
         dto.tableId = modelAccess.atlasTableId;
-        dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
+//        dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
 
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
         atlasDTO.dbId = modelDataSource.getAtlasDbId();
@@ -1060,7 +1060,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppName(modelReg.getAppName());
         groupConfig.setAppDetails(modelReg.getAppDes());
         // 回写应用注册组件id
-        groupConfig.setComponentId(modelReg.componentId);
+//        groupConfig.setComponentId(modelReg.componentId);
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
@@ -1077,9 +1077,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
-        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
+//        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
         // 4.目标源jdbc连接
-        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
+//        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
         if (modelSync == null) {
@@ -1097,13 +1097,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         // TODO: 将app组配置中的setNewApp加上
-        if (modelReg.componentId == null && modelAccess.componentId == null) {
-            groupConfig.setNewApp(true);
-        } else {
-            groupConfig.setNewApp(false);
-        }
+//        if (modelReg.componentId == null && modelAccess.componentId == null) {
+//            groupConfig.setNewApp(true);
+//        } else {
+//            groupConfig.setNewApp(false);
+//        }
         // TODO 回写物理表组件id
-        taskGroupConfig.setComponentId(modelAccess.componentId);
+//        taskGroupConfig.setComponentId(modelAccess.componentId);
 
 //        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("app_id", appid).eq("table_id", id).one();
 //        if (modelNifi == null) {
@@ -1223,9 +1223,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         AppRegistrationPO appRegistrationPO = appRegistrationImpl.query().eq("id", dto.appId).eq("del_flag", 1).one();
         TableAccessPO tableAccessPO = this.query().eq("id", dto.tableId).eq("del_flag", 1).one();
-        componentIdDTO.appComponentId = appRegistrationPO.componentId;
-        componentIdDTO.tableComponentId = tableAccessPO.componentId;
-        componentIdDTO.schedulerComponentId = tableAccessPO.schedulerComponentId;
+//        componentIdDTO.appComponentId = appRegistrationPO.componentId;
+//        componentIdDTO.tableComponentId = tableAccessPO.componentId;
+//        componentIdDTO.schedulerComponentId = tableAccessPO.schedulerComponentId;
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,componentIdDTO);
     }
@@ -1243,9 +1243,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        modelReg.targetDbPoolComponentId = dto.targetDbPoolComponentId;
-        modelReg.sourceDbPoolComponentId = dto.sourceDbPoolComponentId;
-
+//        modelReg.targetDbPoolComponentId = dto.targetDbPoolComponentId;
+//        modelReg.sourceDbPoolComponentId = dto.sourceDbPoolComponentId;
+/*
         boolean updateReg = true;
         if (modelReg.componentId == null) {
             modelReg.componentId = dto.appGroupId;
@@ -1254,16 +1254,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         if (!updateReg) {
             return ResultEnum.SAVE_DATA_ERROR;
-        }
+        }*/
 
         TableAccessPO modelAccess = this.query()
                 .eq("id", dto.tableId)
                 .eq("app_id", dto.appId)
                 .eq("del_flag", 1)
                 .one();
-        modelAccess.componentId = dto.tableGroupId;
+//        modelAccess.componentId = dto.tableGroupId;
         // 调度组件id
-        modelAccess.schedulerComponentId = dto.schedulerComponentId;
+//        modelAccess.schedulerComponentId = dto.schedulerComponentId;
         boolean updateAccess = this.updateById(modelAccess);
         if (!updateAccess) {
             return ResultEnum.SAVE_DATA_ERROR;

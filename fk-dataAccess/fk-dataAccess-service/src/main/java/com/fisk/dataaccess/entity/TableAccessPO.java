@@ -26,17 +26,17 @@ public class TableAccessPO extends BasePO {
     /**
      * 组件id
      */
-    public String componentId;
+//    public String componentId;
 
     /**
      * 调度组件id
      */
-    public String schedulerComponentId;
+//    public String schedulerComponentId;
 
     /**
      * nifi sql
      */
-    public String dorisSelectSqlStr;
+//    public String dorisSelectSqlStr;
 
     /**
      *  物理表名
