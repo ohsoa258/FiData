@@ -3,6 +3,8 @@ package com.fisk.chartvisual.map;
 import com.fisk.chartvisual.dto.DataSourceConDTO;
 import com.fisk.chartvisual.dto.DataSourceConEditDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.entity.HierarchyPO;
+import com.fisk.chartvisual.vo.HierarchyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -37,4 +39,6 @@ public interface DataSourceConMap {
             @Mapping(source = "conType.value", target = "conType")
     })
     void editDtoToPo(DataSourceConEditDTO dto, @MappingTarget DataSourceConPO po);
+
+
 }

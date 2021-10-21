@@ -16,15 +16,16 @@
         con_ip,
         con_port,
         con_type,
+        con_cube,
         con_dbname,
         con_account,
         con_password,
         create_time
         from tb_datasource_con
         where del_flag = 1
-        <if test="query.userId != null">
-            and create_user = #{query.userId}
-        </if>
+<!--        <if test="query.userId != null">-->
+<!--            and create_user = #{query.userId}-->
+<!--        </if>-->
         <if test="query.name != null and query.name != '' ">
             and name like concat('%', #{query.name}, '%')
         </if>
@@ -43,6 +44,7 @@
                con_type,
                con_dbname,
                con_account,
+               con_cube,
                con_password,
                create_time
         from tb_datasource_con

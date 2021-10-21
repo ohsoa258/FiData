@@ -7,6 +7,7 @@ import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author gy
@@ -22,6 +23,9 @@ public interface DraftChartMap {
      * @param dto source
      * @return target
      */
+    @Mappings({
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
+    })
     DraftChartPO dtoToPo(ChartPropertyDTO dto);
 
     /**
@@ -29,6 +33,9 @@ public interface DraftChartMap {
      * @param po source
      * @return target vo
      */
+    @Mappings({
+            @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString")
+    })
     ChartPropertyVO poToVo(DraftChartPO po);
 
     /**
@@ -38,7 +45,35 @@ public interface DraftChartMap {
      * @param po target
      */
     @Mappings({
-            @Mapping(target = "id", ignore = true)
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
     })
     void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
+
+    /**
+     * 字节转base64
+     * @param image
+     * @return
+     */
+    @Named("byteConvertString")
+    default String byteConvertStringFun(byte[] image){
+        if (image==null){
+            return  "";
+        }
+        return DatatypeConverter.printBase64Binary(image);
+
+    }
+
+    /**
+     * base64 转字节
+     * @param image
+     * @return
+     */
+    @Named("stringConvertByte")
+    default  byte[] stringConvertByteFun(String image){
+        if (image==null){
+            return  null;
+        }
+        return DatatypeConverter.parseBase64Binary(image);
+    }
 }

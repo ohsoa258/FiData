@@ -4,16 +4,23 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.enums.DimensionTypeEnum;
 import com.fisk.chartvisual.map.DataSourceConMap;
+import com.fisk.chartvisual.map.SSASMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
+import com.fisk.chartvisual.util.dbhelper.CubeHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
+import com.fisk.chartvisual.util.dbhelper.TabularHelper;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.chartvisual.vo.DimensionVO;
+import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
@@ -30,6 +37,9 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.constants.SSASConstant.Measures_Name;
+import static com.fisk.common.constants.SSASConstant.Measures_UniqueName;
+
 /**
  * 数据源管理实现类
  *
@@ -45,7 +55,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     IDataService useDataBase;
     @Resource
     UserHelper userHelper;
-
+    @Resource
+    CubeHelper cubeHelper;
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
@@ -102,9 +113,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
     public ResultEnum testConnection(TestConnectionDTO dto) {
-        return useDataBase.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
-                ?
-                ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        if (dto.conType == DataSourceTypeEnum.TABULAR || dto.conType == DataSourceTypeEnum.CUBE) {
+            CubeHelper cubeHelper=new CubeHelper();
+            return cubeHelper.connection(dto.conStr, dto.conAccount, dto.conPassword)
+                    ?
+                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        } else {
+            return useDataBase.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
+                    ?
+                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
+        }
     }
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
@@ -141,5 +159,44 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, res);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
+    }
+
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
+    @Override
+    public ResultEntity<List<DimensionVO>> SSASDataStructure(int id) {
+        //获取连接信息
+        List<DimensionVO> dimensionVOList = new ArrayList<>();
+        DataSourceConVO model = mapper.getDataSourceConByUserId(id);
+        if (model == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        } else {
+            cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+            try {
+                CubePO modelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
+                //度量
+                DimensionVO dimensionVO_Mea = new DimensionVO();
+                dimensionVO_Mea.name = Measures_Name;
+                dimensionVO_Mea.uniqueName = Measures_UniqueName;
+                dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
+                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(modelStructure.measures);
+                dimensionVOList.add(dimensionVO_Mea);
+                //维度
+                modelStructure.dimensions.forEach(d -> {
+                    DimensionVO dimensionVO_Dim = new DimensionVO();
+                    dimensionVO_Dim.name = d.name;
+                    dimensionVO_Dim.uniqueName = d.uniqueName;
+                    dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;
+                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
+                    dimensionVOList.add(dimensionVO_Dim);
+                });
+
+            } catch (Exception e) {
+                log.error("获取SSAS数据结构出错，错误信息:",e);
+                return ResultEntityBuild.build(ResultEnum.ERROR);
+            }finally {
+                cubeHelper.closeConnection();
+            }
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dimensionVOList);
     }
 }

@@ -2,13 +2,14 @@ package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
+import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
-import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
-import com.fisk.chartvisual.util.dbhelper.DbHelper;
-import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
+import com.fisk.chartvisual.util.dbhelper.*;
+import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
@@ -37,6 +38,8 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     private DataSourceConMapper mapper;
     @Resource
     RedisUtil redis;
+    @Resource
+    CubeHelper cubeHelper;
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_CONNECTION)
     @Override
@@ -77,6 +80,21 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
         return DbHelper.execQueryResultMaps(command.buildQuerySlicer(query), model);
     }
 
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
+    @Override
+    public DataServiceResult querySsas(ChartQueryObjectSsas query) {
+        DataSourceConVO model = getDataSourceCon(query.id);
+        cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+        return  cubeHelper.getData(query,model.conCube);
+    }
+
+    @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
+    @Override
+    public List<String> querySsasSlicer(SlicerQuerySsasObject query) {
+        DataSourceConVO model = getDataSourceCon(query.id);
+        cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+        return  cubeHelper.getMembers(model.conCube,query.hierarchyName);
+    }
 
     private DataSourceConVO getDataSourceCon(int id) {
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);

@@ -1,7 +1,9 @@
 package com.fisk.chartvisual.service;
 
 import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
 import com.fisk.chartvisual.dto.SlicerQueryObject;
+import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 
@@ -45,4 +47,18 @@ public interface IDataService {
      * @return 查询结果
      */
     List<Map<String, Object>> querySlicer(SlicerQueryObject query);
+
+    /**
+     * 根据维度度量，查询数据 SSAS
+     * @param query 表/字段信息
+     * @return 查询结果
+     */
+    DataServiceResult querySsas(ChartQueryObjectSsas query);
+
+    /**
+     * 获取切片器数据
+     * @param query
+     * @return 集合
+     */
+    List<String> querySsasSlicer(SlicerQuerySsasObject query);
 }

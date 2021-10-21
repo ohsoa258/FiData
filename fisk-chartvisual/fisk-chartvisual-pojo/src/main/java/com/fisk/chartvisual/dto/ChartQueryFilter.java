@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import com.fisk.chartvisual.enums.SsasChartFilterTypeEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -11,4 +12,6 @@ import java.util.List;
 public class ChartQueryFilter {
     public String columnName;
     public List<String> value;
+    public SsasChartFilterTypeEnum ssasChartFilterType;
+
 }

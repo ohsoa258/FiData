@@ -18,8 +18,11 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     MYSQL(0, "MYSQL", "com.mysql.jdbc.Driver"),
 
-    SQLSERVER(1, "SQLSERVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    SQLSERVER(1, "SQLSERVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver"),
 
+    CUBE(2,"CUBE","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+
+    TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;

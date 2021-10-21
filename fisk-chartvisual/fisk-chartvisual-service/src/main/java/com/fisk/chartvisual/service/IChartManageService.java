@@ -9,6 +9,9 @@ import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 图表管理
@@ -66,4 +69,6 @@ public interface IChartManageService {
      * @return 数据
      */
     Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryDTO query);
+
+
 }

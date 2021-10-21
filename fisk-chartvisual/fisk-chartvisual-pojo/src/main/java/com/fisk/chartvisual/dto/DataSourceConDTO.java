@@ -36,4 +36,7 @@ public class DataSourceConDTO {
 
     @Length(min = 0, max = 50, message = "长度最多50")
     public String conDbname;
+
+    @Length(min = 0, max = 50, message = "长度最多50")
+    public String conCube;
 }

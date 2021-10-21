@@ -9,6 +9,7 @@ import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.chartvisual.vo.DimensionVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 
@@ -63,4 +64,11 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @return 数据源下的数据域
      */
     ResultEntity<List<DataDomainVO>> listDataDomain(int id);
+
+    /**
+     *获取Tabular或Cube下的数据结构
+     * @param id 数据源连接地址
+     * @return Tabular或Cube下的数据结构
+     */
+    ResultEntity<List<DimensionVO>> SSASDataStructure(int id);
 }
