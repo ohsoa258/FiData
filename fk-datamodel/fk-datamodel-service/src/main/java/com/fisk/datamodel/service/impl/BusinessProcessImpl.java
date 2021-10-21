@@ -226,7 +226,9 @@ public class BusinessProcessImpl
     {
         BusinessAreaPO po=businessAreaMapper.selectById(businessAreaId);
         if (po==null)
-        {}
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         List<BusinessProcessListDTO> dtoList=new ArrayList<>();
         QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.orderByDesc("create_time").lambda()
