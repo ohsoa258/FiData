@@ -9,14 +9,20 @@ import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
+import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.map.FactMap;
+import com.fisk.datamodel.mapper.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFact;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,6 +40,8 @@ public class FactImpl implements IFact {
     FactMapper mapper;
     @Resource
     FactAttributeMapper attributeMapper;
+    @Resource
+    BusinessProcessMapper businessProcessMapper;
 
     @Override
     public ResultEnum addFact(FactDTO dto)
@@ -58,6 +66,25 @@ public class FactImpl implements IFact {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        //查询业务域
+        BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
+        if (businessProcessPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        //删除组合对象
+        DataModelVO vo=new DataModelVO();
+        vo.businessId= String.valueOf(businessProcessPO.businessId);
+        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+        vo.delBusiness=false;
+        DataModelTableVO tableVO=new DataModelTableVO();
+        tableVO.type= OlapTableEnum.FACT;
+        List<Long> ids=new ArrayList<>();
+        ids.add(Long.valueOf(id));
+        tableVO.ids=ids;
+        vo.factIdList=tableVO;
+
         return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

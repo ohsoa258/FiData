@@ -3,6 +3,9 @@ package com.fisk.task.service;
 import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
+import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.vo.ProcessGroupsVO;
@@ -218,5 +221,87 @@ public interface INifiComponentsBuild {
     BusinessResult<ControllerServiceEntity> buildAvroReaderService(BaseProcessorDTO data);
 
     BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BaseProcessorDTO data);
+
+    /*
+     * 更新组件配置
+     * */
+    List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities);
+    /*
+     * 停止组件
+     * */
+     List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities);
+
+     /*
+     * 修改组件调度
+     * */
+     ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod);
+
+    /*
+     * 清空nifi组件队列
+     * */
+     ResultEnum emptyNifiConnectionQueue(String groupId);
+
+
+    /*
+     * 修改控制器服务状态
+     * */
+     ResultEnum controllerServicesRunStatus(String controllerServicesId);
+
+
+    /*
+     * 删除nifi流程
+     * */
+     ResultEnum deleteNifiFlow(DataModelVO dataModelVO);
+
+    /**
+     * 创建input port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    PortEntity buildInputPort(BuildPortDTO buildPortDTO);
+
+    /**
+     * 创建output port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    PortEntity buildOutputPort(BuildPortDTO buildPortDTO);
+
+    /**
+     * 创建input_port连接
+     * @param buildConnectDTO buildConnectDTO
+     * @return 执行结果
+     */
+    ConnectionEntity buildInputPortConnections(BuildConnectDTO buildConnectDTO);
+
+    /**
+     * 创建output_port连接
+     *
+     * @param buildConnectDTO buildConnectDTO
+     * @return 返回值
+     */
+    ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO);
+
+    /*
+    * 删除input组件
+    * */
+    ResultEnum deleteNifiInputProcessor(List<PortEntity> portEntities);
+
+    /*
+    * 删除output组件
+    * */
+    ResultEnum deleteNifiOutputProcessor(List<PortEntity> portEntities);
+
+    /*
+    * 修改output 组件状态
+    * */
+    ResultEnum updateOutputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
+
+    /**
+     *修改input组件状态
+     */
+    ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
 
 }

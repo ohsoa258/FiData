@@ -1,6 +1,7 @@
 package com.fisk.task.dto.atlas;
 
 import com.fisk.task.dto.MQBaseDTO;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.Data;
 
@@ -17,7 +18,7 @@ public class AtlasEntityDbTableColumnDTO extends MQBaseDTO {
     /**
      * 数据库类型
      */
-    public String dbType;
+    public DbTypeEnum dbType;
     public String tableName;
     /**
      * 应用简称

@@ -2,7 +2,7 @@ package com.fisk.common.constants;
 
 /**
  * @author Lock
- * 过滤器获取表字段sql
+ * 筛选器获取表字段sql
  */
 public class FilterSqlConstants {
 
@@ -11,7 +11,7 @@ public class FilterSqlConstants {
      */
     public static final String BUSINESS_AREA_SQL = " where Field not in ('id','del_flag','create_user','update_user')";
     /**
-     *  应用注册
+     * 应用注册
      */
     public static final String APP_REGISTRATION_SQL = " where Field in ('app_name','app_des','app_type','app_principal','create_time')";
     /**
@@ -22,8 +22,10 @@ public class FilterSqlConstants {
      * 同步方式
      */
     public static final String TABLE_SYNCMODE_SQL = " where Field in ('sync_field')";
-
-
+    /**
+     * 调度中心-管道服务
+     */
+    public static final String CUSTOM_WORKFLOW_SQL = " where Field in ('workflow_name','status','create_time','create_user','update_time','update_user')";
 
 
 }

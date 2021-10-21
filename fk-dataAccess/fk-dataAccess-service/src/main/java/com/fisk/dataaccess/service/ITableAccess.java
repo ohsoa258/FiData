@@ -6,10 +6,12 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -96,6 +98,14 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 返回值
      */
     List<TablePyhNameDTO> getTableFields(String appName);
+
+    /**
+     * 根据应用名称,获取远程数据库的表及表对应的字段
+     *
+     * @param appId 应用ID
+     * @return 返回值
+     */
+    List<TablePyhNameDTO> getTableFieldsByAppId(long appId);
 
     /**
      * atlas
@@ -189,5 +199,14 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 表名及查询语句
      */
     BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
+
+    ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto);
+
+    /**
+     * 根据id获取接入表所有字段id
+     * @param id
+     * @return
+     */
+    List<FieldNameDTO> getTableFieldId(int id);
 
 }

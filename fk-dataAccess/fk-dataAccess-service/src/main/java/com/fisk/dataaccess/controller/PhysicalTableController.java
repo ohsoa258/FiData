@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -10,13 +11,19 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -78,6 +86,13 @@ public class PhysicalTableController {
     public ResultEntity<List<TablePyhNameDTO>> queryNonRealTimeTable(@PathVariable("appName") String appName) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFields(appName));
+    }
+
+    @GetMapping("/getTableNameAndFieldsByAppId")
+    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    public ResultEntity<Object> queryNonRealTimeTableByAppId(@RequestParam("appId") long appId) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldsByAppId(appId));
     }
 
     @GetMapping("/getTableNameByAppId")
@@ -196,8 +211,40 @@ public class PhysicalTableController {
     @ApiOperation(value = "删除物理表")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
         ResultEntity<NifiVO> result = service.deleteData(id);
+
         log.info("方法返回值,{}", result.data);
-        // TODO: 删除nifi流程
+        // TODO 删除Atlas和nifi流程
+        NifiVO nifiVO = result.data;
+
+        PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+        pgsqlDelTableDTO.userId = nifiVO.userId;
+        pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
+        pgsqlDelTableDTO.delApp = false;
+        if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
+            List<TableListDTO> collect = nifiVO.tableList.stream().map(e -> {
+                TableListDTO dto = new TableListDTO();
+                dto.tableAtlasId = e.tableAtlasId;
+                dto.tableName = e.nifiSettingTableName;
+                dto.userId = nifiVO.userId;
+                return dto;
+            }).collect(Collectors.toList());
+
+            pgsqlDelTableDTO.tableList = collect;
+        }
+
+        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+        DataModelVO dataModelVO = new DataModelVO();
+        dataModelVO.delBusiness=false;
+        DataModelTableVO dataModelTableVO = new DataModelTableVO();
+        dataModelTableVO.ids=nifiVO.tableIdList;
+        dataModelTableVO.type= OlapTableEnum.PHYSICS;
+        dataModelVO.physicsIdList=dataModelTableVO;
+        dataModelVO.businessId=nifiVO.appId;
+        dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
+        dataModelVO.userId=nifiVO.userId;
+        publishTaskClient.deleteNifiFlow(dataModelVO);
+        log.info("task删除应用{}", task);
+        System.out.println(task);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }
@@ -285,6 +332,12 @@ public class PhysicalTableController {
     @GetMapping("/createPgToDorisConfig")
     public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createPgToDorisConfig(tableName,selectSql));
+    }
+
+    @GetMapping("/getTableFieldId/{id}")
+    @ApiOperation("根据接入表id获取所有字段id")
+    public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldId(id));
     }
 
 }

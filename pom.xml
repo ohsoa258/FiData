@@ -18,7 +18,8 @@
         <module>fk-task</module>
         <module>fk-datamodel</module>
         <module>fisk-dataservice</module>
-        <module>fk-task-schedule</module>
+        <module>fk-data-factory</module>
+        <module>fisk-datagovern</module>
     </modules>
 
 

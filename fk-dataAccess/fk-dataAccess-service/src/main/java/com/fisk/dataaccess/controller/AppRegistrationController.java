@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
@@ -12,10 +13,16 @@ import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
-import com.fisk.dataaccess.vo.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -130,10 +138,39 @@ public class AppRegistrationController {
 
         ResultEntity<NifiVO> result = service.deleteAppRegistration(id);
 
-        log.info("方法返回值,{}", result.data);
-
         // TODO 删除Atlas和nifi流程
+        log.info("方法返回值,{}", result.data);
+        NifiVO nifiVO = result.data;
 
+        PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+        pgsqlDelTableDTO.userId = nifiVO.userId;
+        pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
+        pgsqlDelTableDTO.delApp = true;
+        if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
+            List<TableListDTO> collect = nifiVO.tableList.stream().map(e -> {
+                TableListDTO dto = new TableListDTO();
+                dto.tableAtlasId = e.tableAtlasId;
+                dto.tableName = e.nifiSettingTableName;
+                dto.userId = nifiVO.userId;
+                return dto;
+            }).collect(Collectors.toList());
+
+            pgsqlDelTableDTO.tableList = collect;
+        }
+
+        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+        DataModelVO dataModelVO = new DataModelVO();
+        dataModelVO.delBusiness=true;
+        DataModelTableVO dataModelTableVO = new DataModelTableVO();
+        dataModelTableVO.ids=nifiVO.tableIdList;
+        dataModelTableVO.type= OlapTableEnum.PHYSICS;
+        dataModelVO.physicsIdList=dataModelTableVO;
+        dataModelVO.businessId=nifiVO.appId;
+        dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
+        dataModelVO.userId=nifiVO.userId;
+        publishTaskClient.deleteNifiFlow(dataModelVO);
+        log.info("task删除应用{}", task);
+        System.out.println(task);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
@@ -156,13 +193,13 @@ public class AppRegistrationController {
     }
 
     @PostMapping("/pageFilter")
-    @ApiOperation(value = "过滤器")
+    @ApiOperation(value = "筛选器")
     public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
 
     @GetMapping("/getColumn")
-    @ApiOperation(value = "过滤器字段")
+    @ApiOperation(value = "筛选器字段")
     public ResultEntity<Object> getColumn() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }

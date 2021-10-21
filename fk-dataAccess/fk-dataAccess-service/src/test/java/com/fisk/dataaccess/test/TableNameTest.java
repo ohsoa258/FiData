@@ -5,7 +5,7 @@ import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.entity.TableSyncmodePO;
 import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
-import com.fisk.dataaccess.vo.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;

@@ -6,8 +6,14 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ModelAttributeMetaDataDTO {
+public class
 
+ModelAttributeMetaDataDTO {
+
+    /**
+     * 字段id
+     */
+    public String fieldId;
     /**
      * 维度字段名称
      */
@@ -47,5 +53,10 @@ public class ModelAttributeMetaDataDTO {
      * 字段来源id
      */
     public int sourceFieldId;
+
+    /**
+     * 关联来源表字段id
+     */
+    public int associationSourceFieldId;
 
 }

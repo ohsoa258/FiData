@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class ConfigureDTO {
 
+    public Integer id;
     public String apiName;
     public String apiRoute;
     public String tableName;

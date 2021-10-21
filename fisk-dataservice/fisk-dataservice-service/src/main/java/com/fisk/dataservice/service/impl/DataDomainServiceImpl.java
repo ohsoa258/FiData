@@ -66,6 +66,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // 根据 TableNameKey 进行去重
             ArrayList<TableDataDTO> tableKey = existTableData.stream()
+                    .filter(e -> StringUtils.isNotBlank(e.getTableNameKey()))
                     .collect(collectingAndThen(toCollection(() -> new TreeSet<>(Comparator.comparing(U -> U.getTableNameKey()))), ArrayList::new));
 
             String queryKey = tableKey.stream()
@@ -123,7 +124,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                 return this.noDimension(noTableData, apiConfigureFieldList, str);
             }
             System.err.println(executeSql(str.toString(), apiConfigureFieldList).data);
-            return executeSql(str.toString(), apiConfigureFieldList).data;
+            return executeSql(str.toString(), apiConfigureFieldList);
         }catch (Exception e){
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }
@@ -269,7 +270,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             System.err.println("---------------------------------- \n"+wholeStr);
             log.info("****************************SQL******************************"+wholeStr);
 
-            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation).data;
+            return executeSql(wholeStr.toString(), apiConfigureFieldList,aggregation);
         }catch (Exception e){
             return ResultEntityBuild.build(ResultEnum.SQL_ERROR);
         }

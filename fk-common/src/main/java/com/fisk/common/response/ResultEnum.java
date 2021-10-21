@@ -78,7 +78,10 @@ public enum ResultEnum {
     TASK_PUBLISH_ERROR(6001, "任务发布失败"),
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002, "Nifi组件创建失败"),
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
-
+    TASK_NIFI_DISPATCH_ERROR(6004,"调度失败"),
+    TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005,"清空队列失败"),
+    TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
+    TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     /**
      * 数据域接入模块
      *
@@ -96,6 +99,10 @@ public enum ResultEnum {
      */
     DARAMODEL_INPUT_REPEAT(8001, "输入数据存在重复值"),
     PUBLISH_FAILURE(8002, "发布失败"),
+    FIELDS_ASSOCIATED(8003,"选中字段存在关联"),
+    TABLE_ASSOCIATED(8004,"表中字段存在关联"),
+
+
 
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式");
 

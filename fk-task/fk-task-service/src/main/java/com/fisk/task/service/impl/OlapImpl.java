@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,11 +39,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
             e.tableName=e.tableName.toLowerCase();
-            List<String> fields=e.dto.stream().map(d->"`"+d.fieldEnName.toLowerCase()+"`").collect(Collectors.toList());
-            fields.add("`"+e.tableName+"_pk`");
+            List<String> fileds=e.dto.stream().map(d->" "+d.fieldEnName.toLowerCase()+" ").collect(Collectors.toList());
+            fileds.add(" "+e.tableName+"_pk ,fk_doris_increment_code,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            po.selectDataSql="SELECT "+fields.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
+            po.selectDataSql="SELECT "+fileds.stream().collect(Collectors.joining(","))+" FROM "+e.tableName+"";
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
@@ -82,7 +80,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
         String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType + " comment " + "'" + l.fieldCnName + "' ,"));
+        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType +"("+l.fieldLength+ ") comment " + "'" + l.fieldCnName + "' ,"));
         sqlFiledBuild.append("fk_doris_increment_code VARCHAR(50) comment '数据批量插入标识' )");
         String sqlFiled = sqlFiledBuild.toString();
         String sqlUnique = sqlUniqueBuild;
@@ -142,18 +140,19 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String tableName=dto.factTable;
         String keyName=tableName+"_pk";
         aggregationFunSql.append(keyName+" , ");
+        groupSql.append(keyName+" ,");
         dto.list.forEach(e->{
             if(e.attributeType==0){
                 aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
-                aggregationFunSql.append("(\"");
-                aggregationFunSql.append(e.aggregatedField);
-                aggregationFunSql.append("\") ,0)AS ");
+                aggregationFunSql.append("(");
+                aggregationFunSql.append(e.aggregatedField.toLowerCase());
+                aggregationFunSql.append(") ,0)AS ");
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");
             }else {
-                groupSql.append("\""+e.dimensionTableName+"_key\" , ");
-                aggregationFunSql.append("COALESCE(\""+e.dimensionTableName+"_key\",'') AS \""+e.dimensionTableName.toLowerCase()+"\" , ");
+                groupSql.append(""+e.dimensionTableName+"_pk , ");
+                aggregationFunSql.append("COALESCE("+e.dimensionTableName+"_pk,'') AS "+e.dimensionTableName.toLowerCase()+" , ");
             }
         });
         if (aggregationFunSql.length()>0){
@@ -174,4 +173,18 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         }
         return sql.toString();
     }
+
+    @Override
+    public OlapPO selectByName(String name) {
+        OlapPO olapPO = this.query().eq("table_name", name).eq("del_flag",1).one();
+        return olapPO;
+    }
+
+    //查该业务域下所有的Doris里的表
+    @Override
+    public List<OlapPO> selectOlapByBusinessAreaId(String BusinessAreaId){
+        List<OlapPO> list = this.query().eq("business_area_id", BusinessAreaId).eq("del_flag", 1).list();
+        return list;
+    }
+
 }

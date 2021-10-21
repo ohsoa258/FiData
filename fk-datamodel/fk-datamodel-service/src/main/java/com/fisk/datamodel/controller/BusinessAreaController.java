@@ -92,4 +92,10 @@ public class BusinessAreaController {
         return service.businessAreaPublic(id);
     }
 
+    @ApiOperation("修改业务域发布状态")
+    @PutMapping("/editBusinessAreaPublishStatus")
+    public void editBusinessAreaPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
+        service.updatePublishStatus(id,isSuccess);
+    }
+
 }

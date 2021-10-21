@@ -1,5 +1,6 @@
 package com.fisk.task.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
@@ -12,19 +13,33 @@ import com.fisk.common.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.AppNifiSettingPO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,6 +52,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     @Resource
     RestTemplate httpClient;
+    @Resource
+    TableNifiSettingServiceImpl tableNifiSettingService;
+    @Resource
+    AppNifiSettingServiceImpl appNifiSettingService;
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -481,8 +500,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     @Override
     public BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
         List<String> autoRes = new ArrayList<>();
+        if (buildCallDbProcedureProcessorDTO.haveNextOne == false) {
+            autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        }
         autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
-        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
         Map<String, String> map = new HashMap<>(2);
         map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
         map.put("SQL select query",buildCallDbProcedureProcessorDTO.executsql);
@@ -675,10 +696,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         Map<String, String> map = new HashMap<>(2);
         map.put("Destination", "flowfile-attribute");
-        map.put(NifiConstants.AttrConstants.INCREMENT_START, "$." + NifiConstants.AttrConstants.INCREMENT_START);
-        map.put(NifiConstants.AttrConstants.INCREMENT_END, "$." + NifiConstants.AttrConstants.INCREMENT_END);
-        map.put(NifiConstants.AttrConstants.LOG_CODE, "$." + NifiConstants.AttrConstants.LOG_CODE);
-
+        //自定义常量
+        for (String selfDefinedParameter:data.selfDefinedParameter) {
+            map.put(selfDefinedParameter,"$."+selfDefinedParameter);
+        }
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -774,7 +795,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
         for (ProcessorEntity item : entities) {
-            try {//启动组件判断顺序有点假
+            try {
                 ProcessorEntity entity = apiClient.getProcessor(item.getId());
                 if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
                     continue;
@@ -788,6 +809,74 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
 
                 String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    ProcessorEntity newEntity = getProcessor(item.getId());
+                    if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                        res.add(newEntity);
+                    }
+                }
+            } catch (ApiException e) {
+                log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities) {
+        List<ProcessorEntity> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+
+        for (ProcessorEntity item : entities) {
+            try {
+                ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.STOPPED) {
+                    continue;
+                }
+
+                ProcessorRunStatusEntity dto = new ProcessorRunStatusEntity();
+                dto.state = ProcessorDTO.StateEnum.STOPPED.toString();
+                dto.disconnectedNodeAcknowledged = true;
+                dto.revision = entity.getRevision();
+
+                HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
+
+                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
+                if (response.getStatusCode() == HttpStatus.OK) {
+                    ProcessorEntity newEntity = getProcessor(item.getId());
+                    if (newEntity != null && newEntity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                        res.add(newEntity);
+                    }
+                }
+            } catch (ApiException e) {
+                log.error("【" + item.getId() + "】【" + item.getComponent().getType() + "】运行组件失败，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities) {
+        List<ProcessorEntity> res = new ArrayList<>();
+        ProcessorsApi apiClient = NifiHelper.getProcessorsApi();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        for (ProcessorEntity item : entities) {
+            try {
+                ProcessorEntity entity = apiClient.getProcessor(item.getId());
+                entity.getComponent().getConfig().setSchedulingPeriod(item.getComponent().getConfig().getSchedulingPeriod());
+                entity.getComponent().getConfig().setSchedulingStrategy(item.getComponent().getConfig().getSchedulingStrategy());
+                if (entity.getComponent().getState() == ProcessorDTO.StateEnum.RUNNING) {
+                    continue;
+                }
+                HttpEntity<ProcessorEntity> request = new HttpEntity<>(entity, headers);
+
+                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PUTPROCESS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
                     ProcessorEntity newEntity = getProcessor(item.getId());
@@ -831,6 +920,539 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             log.error("【" + dto.getType() + "】组件创建失败，【" + e.getResponseBody() + "】: ", e);
             return BusinessResult.of(false, "【" + dto.getType() + "】组件创建失败" + e.getMessage(), null);
         }
+    }
+
+    /*
+    * 修改任务组调度
+    * groupId             任务组id
+    * ProcessorId         组件id
+    * schedulingStrategy  调度方式
+    * schedulingPeriod    调度频率
+    * */
+    @Override
+    public ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod){
+        try {
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessorId);
+            List<ProcessorEntity> processorEntities = new ArrayList<>();
+            processorEntities.add(processor);
+            //先停止组件
+            this.stopProcessor(groupId,processorEntities);
+            //修改调度
+            processor.getComponent().getConfig().setSchedulingStrategy(schedulingStrategy);
+            processor.getComponent().getConfig().setSchedulingPeriod(schedulingPeriod);
+            this.updateProcessorConfig(groupId,processorEntities);
+            //启动组件
+            this.enabledProcessor(groupId, processorEntities);
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("调度修改失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        }
+    }
+
+    /*
+    * emptyNifiConnectionQueue  清空nifi连接队列
+    * groupId                   任务组id
+    * */
+    @Override
+    public ResultEnum emptyNifiConnectionQueue(String groupId) {
+            String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
+            ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.POST, null, String.class);
+            return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * 删除Input
+    * */
+    @Override
+    public ResultEnum deleteNifiInputProcessor(List<PortEntity> portEntities) {
+        for (PortEntity portEntity:portEntities) {
+            try {
+                NifiHelper.getInputPortsApi().removeInputPort(portEntity.getId(),String.valueOf(portEntity.getRevision().getVersion()+1),null,null);
+            } catch (ApiException e) {
+                log.error("id="+portEntity.getId()+"，，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * 删除Output
+    * */
+    @Override
+    public ResultEnum deleteNifiOutputProcessor(List<PortEntity> portEntities) {
+        for (PortEntity portEntity:portEntities) {
+            try {
+                NifiHelper.getOutputPortsApi().removeOutputPort(portEntity.getId(),String.valueOf(portEntity.getRevision().getVersion()+1),null,null);
+            } catch (ApiException e) {
+                log.error("id="+portEntity.getId()+"，，【" + e.getResponseBody() + "】: ", e);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * 暂停OutputStatus
+    * */
+    @Override
+    public ResultEnum updateOutputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity) {
+        for (PortEntity portEntity:portEntities) {
+            portRunStatusEntity.setState(PortRunStatusEntity.StateEnum.STOPPED);
+            portRunStatusEntity.setRevision(portEntity.getRevision());
+            portRunStatusEntity.setDisconnectedNodeAcknowledged(true);
+            try {
+                NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(),portRunStatusEntity);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    *暂停InputStatus
+    * */
+    @Override
+    public ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity) {
+        for (PortEntity portEntity : portEntities) {
+            portRunStatusEntity.setRevision(portEntity.getRevision());
+            portRunStatusEntity.setDisconnectedNodeAcknowledged(true);
+            try {
+                NifiHelper.getInputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /*
+    * controllerServicesRunStatus   禁用控制器服务
+    * */
+    @Override
+    public ResultEnum controllerServicesRunStatus(String controllerServicesId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+            ControllerServiceRunStatusEntity controllerServiceRunStatusEntity = new ControllerServiceRunStatusEntity();
+            ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
+            controllerServiceRunStatusEntity.setRevision(controllerService.getRevision());
+            controllerServiceRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            controllerServiceRunStatusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);
+            HttpEntity<ControllerServiceRunStatusEntity> request = new HttpEntity<>(controllerServiceRunStatusEntity, headers);
+            String url1 = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CONTROLLER_SERVICES_RUN_STATUS.replace("{id}", controllerServicesId);
+            ResponseEntity<String> response1 = httpClient.exchange(url1, HttpMethod.PUT, request, String.class);
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("禁用控制器服务失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        }
+    }
+
+    /*
+    * deleteNifiFlow       删除nifi流程
+    * nifiRemoveDTOList
+    * */
+    @Override
+    public ResultEnum deleteNifiFlow(DataModelVO dataModelVO) {
+        try {
+            List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO);
+
+            for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
+                List<ProcessorEntity> processorEntities = new ArrayList<>();
+                List<PortEntity> inputPortEntities = new ArrayList<>();
+                List<PortEntity> outputPortEntities = new ArrayList<>();
+                for (String ProcessId : nifiRemoveDTO.ProcessIds) {
+                    if(ProcessId!=null){
+                        ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
+                        processorEntities.add(processor);
+                    }
+                }
+                //暂停13个组件
+                this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
+                for (ProcessorEntity processorEntity:processorEntities) {
+                    //terminateProcessorCall
+                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
+                }
+                //清空队列
+                this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
+                //禁用2个控制器服务
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 2)) {
+                    if (controllerServicesId != null) {
+                        this.controllerServicesRunStatus(controllerServicesId);
+                    }
+                }
+                //暂停,删除input和output,删除任务组
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
+                //操作input与output组件
+                operatePorts(nifiRemoveDTO, inputPortEntities, outputPortEntities);
+                //删除13个组件
+                for (ProcessorEntity processorEntity:processorEntities) {
+                    //因为版本变了,所以要再查一遍
+                    ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
+                    NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(),String.valueOf(processor.getRevision().getVersion()),null,null);
+                }
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+                tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
+            }
+            //删除应用
+            if (nifiRemoveDTOList.size()!=0&&nifiRemoveDTOList.get(0).delApp) {
+                //禁用2个控制器服务
+                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(2, 4)) {
+                    if (controllerServicesId != null) {
+                        this.controllerServicesRunStatus(controllerServicesId);
+                    }
+                }
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+                appNifiSettingService.removeById(dataModelVO.businessId);
+            }
+            return ResultEnum.SUCCESS;
+        } catch (ApiException e) {
+            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e);
+            return ResultEnum.TASK_NIFI_DELETE_FLOW;
+        }
+    }
+    /*
+    * 删除inputoutput组件
+    * */
+    private void operatePorts(NifiRemoveDTO nifiRemoveDTO,List<PortEntity> inputPortEntities,List<PortEntity> outputPortEntities) {
+        try {
+            //1.删除连接线
+            for (String inputportConnectId:nifiRemoveDTO.inputportConnectIds) {
+                ConnectionEntity connection = NifiHelper.getConnectionsApi().getConnection(inputportConnectId);
+                NifiHelper.getConnectionsApi().deleteConnection(connection.getId(),String.valueOf(connection.getRevision().getVersion()),null,null);
+            }
+            for (String outputportConnectId:nifiRemoveDTO.outputportConnectIds) {
+                ConnectionEntity connection = NifiHelper.getConnectionsApi().getConnection(outputportConnectId);
+                NifiHelper.getConnectionsApi().deleteConnection(connection.getId(),String.valueOf(connection.getRevision().getVersion()),null,null);
+            }
+
+            PortRunStatusEntity portRunStatusEntity = new PortRunStatusEntity();
+            portRunStatusEntity.setState(PortRunStatusEntity.StateEnum.STOPPED);
+            for (String id : nifiRemoveDTO.inputPortIds) {
+                PortEntity inputPort = NifiHelper.getInputPortsApi().getInputPort(id);
+                inputPortEntities.add(inputPort);
+            }
+            for (String id : nifiRemoveDTO.outputPortIds) {
+                PortEntity outputPort = NifiHelper.getOutputPortsApi().getOutputPort(id);
+                outputPortEntities.add(outputPort);
+            }
+            this.updateInputStatus(inputPortEntities, portRunStatusEntity);
+            this.updateOutputStatus(outputPortEntities, portRunStatusEntity);
+            this.deleteNifiInputProcessor(inputPortEntities);
+            this.deleteNifiOutputProcessor(outputPortEntities);
+        } catch (ApiException e) {
+            log.error("nifi--port模块删除失败，【" + e.getResponseBody() + "】: ", e);
+        }
+    }
+
+    private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO) {
+        List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("del_flag", 1).eq("type", dataModelVO.dataClassifyEnum.getValue()).one();
+        //维度表
+        List<NifiRemoveDTO> nifiRemoveList1 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.dimensionIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList1);
+        //事实表
+        List<NifiRemoveDTO> nifiRemoveList2 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.factIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList2);
+        //物理表
+        List<NifiRemoveDTO> nifiRemoveList3 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList3);
+        //指标表
+        List<NifiRemoveDTO> nifiRemoveList4 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.indicatorIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        nifiRemoveDTOS.addAll(nifiRemoveList4);
+        return nifiRemoveDTOS;
+    }
+
+    private List<NifiRemoveDTO> createNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO,Boolean delApp){
+        List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
+        NifiRemoveDTO nifiRemoveDTO = new NifiRemoveDTO();
+        if (dataModelTableVO != null && dataModelTableVO.ids != null) {
+            for (Long tableId : dataModelTableVO.ids) {
+                List<String> ProcessIds = new ArrayList<>();
+                List<String> controllerServicesIds = new ArrayList<>();
+                List<String> inputPortIds = new ArrayList<>();
+                List<String> outputPortIds = new ArrayList<>();
+                List<String> inputportConnectIds = new ArrayList<>();
+                List<String> outputportConnectIds = new ArrayList<>();
+                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
+                if(tableNifiSettingPO==null){
+                    continue;
+                }
+                nifiRemoveDTO.delApp = delApp;
+                controllerServicesIds.add(tableNifiSettingPO.avroRecordSetWriterId);
+                controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
+                controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
+                controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
+                //连接通道id
+                inputPortIds.add(tableNifiSettingPO.tableInputPortId);
+                inputPortIds.add(tableNifiSettingPO.processorInputPortId);
+                outputPortIds.add(tableNifiSettingPO.processorOutputPortId);
+                outputPortIds.add(tableNifiSettingPO.tableOutputPortId);
+                //通道连接线
+                inputportConnectIds.add(tableNifiSettingPO.tableInputPortConnectId);
+                inputportConnectIds.add(tableNifiSettingPO.processorInputPortConnectId);
+                outputportConnectIds.add(tableNifiSettingPO.processorOutputPortConnectId);
+                outputportConnectIds.add(tableNifiSettingPO.tableOutputPortConnectId);
+                //组件
+                ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
+                ProcessIds.add(tableNifiSettingPO.putLogToConfigDbProcessorId);
+                ProcessIds.add(tableNifiSettingPO.executeTargetDeleteProcessorId);
+                ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
+                ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
+                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
+                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
+                ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
+                ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
+                nifiRemoveDTO.appId=appNifiSettingPO.appComponentId;
+                nifiRemoveDTO.ProcessIds = ProcessIds;
+                nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
+                nifiRemoveDTO.inputPortIds=inputPortIds;
+                nifiRemoveDTO.outputPortIds=outputPortIds;
+                nifiRemoveDTO.groupId = tableNifiSettingPO.tableComponentId;
+                nifiRemoveDTO.tableId=tableId;
+                nifiRemoveDTO.olapTableEnum=dataModelTableVO.type;
+                nifiRemoveDTO.inputportConnectIds=inputportConnectIds;
+                nifiRemoveDTO.outputportConnectIds=outputportConnectIds;
+                nifiRemoveDTOS.add(nifiRemoveDTO);
+            }
+        }
+        return nifiRemoveDTOS;
+    }
+
+
+    /**
+     * 创建input port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    @Override
+    public PortEntity buildInputPort(BuildPortDTO buildPortDTO) {
+
+        PortEntity body = new PortEntity();
+
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.setClientId(buildPortDTO.clientId);
+        revisionDTO.setVersion(0L);
+
+        PortDTO component = new PortDTO();
+        component.setName(buildPortDTO.portName + NifiConstants.PortConstants.INPUT_PORT_NAME);
+        // 是否允许远程访问
+        component.setAllowRemoteAccess(false);
+
+        // 坐标
+        PositionDTO positionDTO = new PositionDTO();
+        positionDTO.setX(buildPortDTO.componentX);
+        positionDTO.setY(buildPortDTO.componentY);
+
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setRevision(revisionDTO);
+        component.setPosition(positionDTO);
+        body.setComponent(component);
+
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        return sendHttpRequest(body, uri);
+    }
+
+    /**
+     * 创建output port组件
+     *
+     * @param buildPortDTO buildPortDTO
+     * @return 返回值
+     */
+    @Override
+    public PortEntity buildOutputPort(BuildPortDTO buildPortDTO) {
+
+        PortEntity body = new PortEntity();
+
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.setClientId(buildPortDTO.clientId);
+        revisionDTO.setVersion(0L);
+
+        PortDTO component = new PortDTO();
+        component.setName(buildPortDTO.portName + NifiConstants.PortConstants.OUTPUT_PORT_NAME);
+        // 是否允许远程访问
+        component.setAllowRemoteAccess(false);
+
+        // 坐标
+        PositionDTO positionDTO = new PositionDTO();
+        positionDTO.setX(buildPortDTO.componentX);
+        positionDTO.setY(buildPortDTO.componentY);
+
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setRevision(revisionDTO);
+        component.setPosition(positionDTO);
+        body.setComponent(component);
+
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        return sendHttpRequest(body, uri);
+    }
+
+    /**
+     * 创建input_port连接
+     * @param buildConnectDTO buildConnectDTO
+     * @return 执行结果
+     */
+    @Override
+    public ConnectionEntity buildInputPortConnections(BuildConnectDTO buildConnectDTO) {
+
+        ConnectionEntity body = new ConnectionEntity();
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.version(0L);
+
+        ConnectionDTO component = new ConnectionDTO();
+        ConnectableDTO destination = new ConnectableDTO();
+        // 当前组件在哪个组下的组件id
+        destination.setGroupId(buildConnectDTO.destination.groupId);
+        // input_port连接的组件 id(目标组件id)
+        destination.setId(buildConnectDTO.destination.id);
+        // 目标组件类型
+        destination.type(buildConnectDTO.destination.typeEnum);
+
+        ConnectableDTO source = new ConnectableDTO();
+        // 当前组件在哪个组下的组件id
+        source.setGroupId(buildConnectDTO.source.groupId);
+        // input_port的组件id(源组件id)
+        source.setId(buildConnectDTO.source.id);
+        // 源组件类型
+        source.setType(buildConnectDTO.source.typeEnum);
+
+        component.setDestination(destination);
+        component.setSource(source);
+        // 构造的参数
+        body.setRevision(revisionDTO);
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setComponent(component);
+        body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
+
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+                .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
+
+        // 发送请求
+        return sendHttpRequest(body, uri);
+    }
+
+    /**
+     * 创建output_port连接
+     *
+     * @param buildConnectDTO buildConnectDTO
+     * @return 返回值
+     */
+    @Override
+    public ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO) {
+
+        ConnectionEntity body = new ConnectionEntity();
+        RevisionDTO revisionDTO = new RevisionDTO();
+        revisionDTO.version(0L);
+
+        ConnectionDTO component = new ConnectionDTO();
+        ConnectableDTO destination = new ConnectableDTO();
+        // 当前组件在哪个组下的组件id
+        destination.setGroupId(buildConnectDTO.destination.groupId);
+        // 目标组件id
+        destination.setId(buildConnectDTO.destination.id);
+        // 目标组件类型
+        destination.type(buildConnectDTO.destination.typeEnum);
+
+        ConnectableDTO source = new ConnectableDTO();
+        // 当前组件在哪个组下的组件id
+        source.setGroupId(buildConnectDTO.source.groupId);
+        // 源组件 id
+        source.setId(buildConnectDTO.source.id);
+        // 源组件类型
+        source.setType(buildConnectDTO.source.typeEnum);
+
+        // 第二层output_port连线没有这个参数
+        if (buildConnectDTO.level == 3) {
+            List<String> selectedRelationships = new ArrayList<>();
+            selectedRelationships.add("success");
+            component.setSelectedRelationships(selectedRelationships);
+        }
+
+        component.setDestination(destination);
+        component.setSource(source);
+        // 构造的参数
+        body.setRevision(revisionDTO);
+        body.setDisconnectedNodeAcknowledged(false);
+        body.setComponent(component);
+
+        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+                .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
+
+        return sendHttpRequest(body, uri);
+    }
+
+    /**
+     * 创建port组件连接请求
+     *
+     * @param body body
+     * @param uri  uri
+     * @return 返回值
+     */
+    private ConnectionEntity sendHttpRequest(ConnectionEntity body, String uri) {
+        String json = JSON.toJSONString(body);
+
+        HttpClient client = new DefaultHttpClient();
+        // post请求
+        HttpPost request = new HttpPost(uri);
+
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+        ConnectionEntity connectionEntity = new ConnectionEntity();
+        try {
+            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+            HttpResponse resp = client.execute(request);
+            org.apache.http.HttpEntity entity = resp.getEntity();
+            System.out.println(entity.toString());
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
+
+            connectionEntity = JSON.parseObject(result, ConnectionEntity.class);
+            log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
+        } catch (Exception e) {
+            log.error("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
+        }
+
+        return connectionEntity;
+    }
+
+    /**
+     * 创建port组件请求
+     *
+     * @param body body
+     * @param uri  uri
+     * @return 返回值
+     */
+    private PortEntity sendHttpRequest(PortEntity body, String uri) {
+        String json = JSON.toJSONString(body);
+
+        HttpClient client = new DefaultHttpClient();
+        // post请求
+        HttpPost request = new HttpPost(uri);
+
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+        PortEntity portEntity = new PortEntity();
+        try {
+            request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+            HttpResponse resp = client.execute(request);
+            org.apache.http.HttpEntity entity = resp.getEntity();
+            System.out.println(entity.toString());
+            //解析返回数据
+            String result = EntityUtils.toString(entity, "UTF-8");
+
+            portEntity = JSON.parseObject(result, PortEntity.class);
+            log.info("执行sendHttpRequest方法成功,【返回信息为：】,{}", result);
+        } catch (Exception e) {
+            log.error("执行sendHttpRequest方法失败,【失败原因为：】,{}", e.getMessage());
+        }
+
+        return portEntity;
     }
 
 }

@@ -45,12 +45,7 @@ public class DimensionAttributeController {
     @PostMapping("/deleteAttribute")
     public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids)
     {
-        ResultEntity<Integer> result=service.deleteDimensionAttribute(ids);
-        if (result.code==ResultEnum.SUCCESS.getCode())
-        {
-            //发送消息
-        }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+        return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
     }
 
     @ApiOperation("获取维度字段表列表")
@@ -82,5 +77,11 @@ public class DimensionAttributeController {
     public ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaDataList(businessAreaId));
     }*/
+
+    @ApiOperation("根据维度id获取维度字段所有来源id")
+    @GetMapping("/getDimensionAttributeSourceId/{id}")
+    public ResultEntity<Object> getDimensionAttributeSourceId(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeSourceId(id));
+    }
 
 }

@@ -19,6 +19,11 @@ public class ModelMetaDataDTO {
      * 维度表table名称
      */
     public String tableName;
+
+    /**
+     * 数据接入app_id、数据建模business_id
+     */
+    public int appId;
     /**
      * 维度表table简称前缀名称
      */

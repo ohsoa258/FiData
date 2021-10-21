@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.ConfigureDTO;
+import com.fisk.dataservice.dto.UserApiDTO;
 import com.fisk.dataservice.dto.UserConfigureDTO;
 import com.fisk.dataservice.dto.UserDTO;
 import com.fisk.dataservice.map.ConfigureUserMap;
@@ -70,17 +71,16 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
 
         QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(MiddleConfigurePO::getUserId,dto.id);
+                .eq(MiddleConfigurePO::getUserId, dto.id);
         middleMapper.delete(queryWrapper);
 
-        // 用户存在，添加Api服务
-        List<Integer> apiIds = new ArrayList<>();
-        List<String> apiName = dto.getApiName();
-        for (String name : apiName) {
-            apiIds.add(obtainId(name));
+        // 判断添加的api服务不为空
+        if (CollectionUtils.isEmpty(dto.apiIds)){
+            return null;
         }
 
-        for (Integer apiId : apiIds) {
+        // 用户存在，添加Api服务
+        for (Integer apiId : dto.apiIds) {
             MiddleConfigurePO middleConfigure = new MiddleConfigurePO();
             middleConfigure.setUserId(Integer.parseInt(String.valueOf(dto.id)));
             middleConfigure.setConfigureId(apiId);
@@ -158,13 +158,12 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        // 获取Api对应的Id
-        List<Integer> configureIds = new ArrayList<>();
-        for (String apiName : dto.getApiName()) {
-            configureIds.add(obtainId(apiName));
+        // 判断添加的api服务不为空
+        if (CollectionUtils.isEmpty(dto.apiIds)){
+            return null;
         }
 
-        for (Integer configureId : configureIds) {
+        for (Integer configureId : dto.apiIds) {
             QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda()
                     .eq(MiddleConfigurePO::getUserId, dto.id)
@@ -188,7 +187,7 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     }
 
     @Override
-    public Page<ConfigureDTO> configureByUserId(Integer id,Integer currentPage, Integer pageSize) {
+    public Page<ConfigureDTO> configureByUserId(Integer id, Integer currentPage, Integer pageSize) {
         if (id == null) {
             return null;
         }
@@ -200,12 +199,17 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
                 .select(MiddleConfigurePO::getId, MiddleConfigurePO::getUserId, MiddleConfigurePO::getConfigureId);
         List<MiddleConfigurePO> userConfigureList = middleMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(userConfigureList)) {
-            return null;
+            List<ConfigureDTO> dtoList = ConfigureUserMap.INSTANCES.poToDto(apiConfigureMapper.selectList(null))
+                    .stream().map(e -> {
+                        e.setCheck(0);
+                        return e;
+                    }).collect(toList());
+            return this.paginating(dtoList,currentPage, pageSize);
         }
 
         // 获取api服务Id集合
         List<Integer> userApiConfigureIdList = userConfigureList.stream().map(e -> e.getConfigureId()).collect(toList());
-        if (CollectionUtils.isEmpty(userApiConfigureIdList)){
+        if (CollectionUtils.isEmpty(userApiConfigureIdList)) {
             return null;
         }
 
@@ -216,6 +220,30 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         List<ApiConfigurePO> configureList = apiConfigureMapper.selectList(query);
 
         return this.mergeList(userConfigureList, configureList, currentPage, pageSize);
+    }
+
+    @Override
+    public List<UserApiDTO> configureByUserId(Integer id) {
+        if (id == null) {
+            return null;
+        }
+
+        QueryWrapper<MiddleConfigurePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(MiddleConfigurePO::getUserId, id)
+                .select(MiddleConfigurePO::getUserId, MiddleConfigurePO::getConfigureId);
+        List<MiddleConfigurePO> configureList = middleMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(configureList)) {
+            return null;
+        }
+
+        return configureList.stream()
+                .map(e -> {
+                    UserApiDTO dto = new UserApiDTO();
+                    dto.setUserId(e.getUserId());
+                    dto.setConfigureId(e.getConfigureId());
+                    return dto;
+                }).collect(toList());
     }
 
     /**
@@ -246,24 +274,25 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         dtoList.addAll(userConfigureApiList);
         dtoList.addAll(apiConfigureList);
 
-        return paginating(dtoList,currentPage,pageSize);
+        return paginating(dtoList, currentPage, pageSize);
     }
 
     /**
      * 分页
+     *
      * @param dtoList
      * @param currentPage
      * @param pageSize
      * @return
      */
     public Page<ConfigureDTO> paginating(List<ConfigureDTO> dtoList,
-                                    Integer currentPage,
-                                    Integer pageSize){
+                                         Integer currentPage,
+                                         Integer pageSize) {
         // 总条数
         int total = dtoList.size();
 
         Page<ConfigureDTO> configureDTOPage = new Page<>();
-        configureDTOPage.setRecords(startPage(dtoList,currentPage,pageSize));
+        configureDTOPage.setRecords(startPage(dtoList, currentPage, pageSize));
         configureDTOPage.setCurrent(currentPage);
         configureDTOPage.setSize(pageSize);
         configureDTOPage.setTotal(total);
@@ -279,7 +308,8 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
     public List<ApiConfigurePO> queryApi(List<Integer> ConfigureIdList) {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .in(ApiConfigurePO::getId, ConfigureIdList);
+                .in(ApiConfigurePO::getId, ConfigureIdList)
+                .orderByDesc(ApiConfigurePO::getCreateTime);
         return apiConfigureMapper.selectList(queryWrapper);
     }
 

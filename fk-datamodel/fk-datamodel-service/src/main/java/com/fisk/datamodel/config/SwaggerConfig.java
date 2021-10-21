@@ -38,6 +38,7 @@ public class SwaggerConfig {
     public static final String TAG_4 = "data-domain-controller";
     public static final String FACT_SYNC_MODE="factsyncmode--controller";
     public static final String META_DATA_KINSHIP="metadataKinship-controller";
+    public static final String DIMENSION_FOLDER="dimension-folder-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -64,6 +65,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_4,"数据源"))
                 .tags(new Tag(FACT_SYNC_MODE,"事实表同步方式"))
                 .tags(new Tag(META_DATA_KINSHIP,"元数据血缘关系"))
+                .tags(new Tag(DIMENSION_FOLDER,"维度文件夹"))
                 .securityContexts(securityContexts());
     }
 

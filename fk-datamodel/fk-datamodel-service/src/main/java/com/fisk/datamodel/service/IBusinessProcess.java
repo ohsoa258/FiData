@@ -2,11 +2,8 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.QueryDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessPushListDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
@@ -46,10 +43,10 @@ public interface IBusinessProcess {
 
     /**
      * 删除业务过程数据
-     * @param id
+     * @param ids
      * @return
      */
-    ResultEnum deleteBusinessProcess(int id);
+    ResultEnum deleteBusinessProcess(List<Integer> ids);
 
     /**
      * 获取业务过程下拉列表
@@ -58,11 +55,11 @@ public interface IBusinessProcess {
     List<BusinessProcessDropDTO> getBusinessProcessDropList();
 
     /**
-     * 根据业务过程id,发布事实表相关信息
-     * @param id
+     * 根据业务过程id集合,发布事实表相关信息
+     * @param dto
      * @return
      */
-    ResultEnum businessProcessPublish(int id);
+    ResultEnum businessProcessPublish(BusinessProcessPublishDTO dto);
 
     /**
      * 业务过程发布
@@ -77,5 +74,19 @@ public interface IBusinessProcess {
      * @param isSuccess
      */
     void updatePublishStatus(int id,int isSuccess);
+
+    /**
+     * 根据业务过程id,获取业务域id
+     * @param factId
+     * @return
+     */
+    BusinessAreaContentDTO getBusinessId(int factId);
+
+    /**
+     * 根据业务域id,获取业务过程列表
+     * @param businessAreaId
+     * @return
+     */
+    List<BusinessProcessListDTO> getBusinessProcessList(int businessAreaId);
 
 }

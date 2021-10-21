@@ -1,16 +1,21 @@
 package com.fisk.task.controller;
 
 import com.davis.client.ApiException;
-import com.davis.client.model.*;
+import com.davis.client.model.ProcessorEntity;
+import com.davis.client.model.ProcessorStatusDTO;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.service.IBuildTaskService;
+import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.WsSessionManager;
 import com.fisk.task.utils.YamlReader;
@@ -23,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -40,6 +44,8 @@ public class TestController {
     IBuildTaskService service;
     @Resource
     DataAccessClient dc;
+    @Resource
+    INifiComponentsBuild iNifiComponentsBuild;
 
     @GetMapping
     public void sendMsg(String msg) {
@@ -115,9 +121,9 @@ public class TestController {
     @PostMapping("/testDorisBuildtable")
     public void publishBuildDorisTableTask() {
         DimensionAttributeAddDTO tab = new DimensionAttributeAddDTO();
-        tab.dimensionId=23;
-        //tab.dimensionId=144;
-        tab.createType=1;
+//        tab.dimensionId=23;
+        tab.dimensionId=165;
+        tab.createType=0;
         tab.userId = 60L;
         service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(), MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME, MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, tab);
     }
@@ -142,9 +148,19 @@ public class TestController {
 
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor("ee11b478-017b-1000-20d7-4292a5b109c4");
             ProcessorStatusDTO status = processor.getStatus();
-            status.setRunStatus("Stopped");
-            processor.setStatus(status);
-            ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().updateProcessor("ee11b478-017b-1000-20d7-4292a5b109c4", processor);
+            List<ProcessorEntity> processorEntities = new ArrayList<>();
+            List<ProcessorEntity> processorEntities1 = new ArrayList<>();
+            processorEntities.add(processor);
+            //先停止组件
+            iNifiComponentsBuild.stopProcessor("",processorEntities);
+            //修改调度
+            processor.getComponent().getConfig().setSchedulingStrategy("");
+            processor.getComponent().getConfig().setSchedulingPeriod("");
+            processorEntities1.add(processor);
+            iNifiComponentsBuild.updateProcessorConfig("",processorEntities1);
+            //启动组件
+            iNifiComponentsBuild.enabledProcessor("",processorEntities1);
+
            /* ProcessorStatusDTO processorStatusDTO = new ProcessorStatusDTO();
             processor.setStatus(processorStatusDTO);
             ProcessorDTO component = processor.getComponent();
@@ -156,4 +172,19 @@ public class TestController {
             e.printStackTrace();
         }
     }
+
+    @PostMapping("/testNifiFlow")
+    public void publishBuildNifiFlowTask() {
+        BuildNifiFlowDTO data=new BuildNifiFlowDTO();
+        data.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
+        data.userId=60L;
+        data.id=2036L;
+        data.appId=691L;
+        data.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+         service.publishTask("创建表:"+data.tableName+"的数据流任务",
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_NIFI_FLOW,
+                data);
+    }
+
 }

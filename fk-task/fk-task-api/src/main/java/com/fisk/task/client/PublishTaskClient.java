@@ -1,13 +1,20 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * 发送任务
@@ -57,7 +64,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/atlasDorisTable")
-    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO atlasEntityQueryDTO);
+    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody List<DimensionAttributeAddDTO> atlasEntityQueryDTO);
 
 
     /**
@@ -68,4 +75,34 @@ public interface PublishTaskClient {
     @PostMapping("/olapTask/CreateModel")
     ResultEntity<Object> publishOlapCreateModel(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto);
 
+    @PostMapping("/olapTask/selectByName")
+    ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName);
+
+    /**
+     * pgsql 删除表
+     *
+     * @param delTable
+     * @return
+     */
+    @PostMapping("/publishTask/deletePgsqlTable")
+    public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable);
+
+    /*
+    * 修改调度
+    *
+    * */
+    @PostMapping("/nifi/modifyScheduling")
+    public ResultEntity<Object> modifyScheduling(@RequestParam("groupId")String groupId, @RequestParam("ProcessorId")String ProcessorId,@RequestParam("schedulingStrategy") String schedulingStrategy,@RequestParam("schedulingPeriod") String schedulingPeriod);
+
+    /*
+    * 删除nifi流程
+    * */
+    @PostMapping("/nifi/deleteNifiFlow")
+    public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO);
+
+    /*
+    * getTableNifiSetting
+    * */
+    @PostMapping("/nifi/getTableNifiSetting")
+    public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto);
 }

@@ -1,6 +1,7 @@
 package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cronutils.descriptor.CronDescriptor;
 import com.cronutils.model.Cron;
 import com.cronutils.model.definition.CronDefinition;
@@ -16,12 +17,15 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
-import com.fisk.task.enums.AtlasProcessEnum;
-import com.fisk.task.enums.OdsDataSyncTypeEnum;
+import com.fisk.task.entity.TaskPgTableStructurePO;
+import com.fisk.task.enums.*;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
+import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IAtlasBuildInstance;
+import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.rabbitmq.client.Channel;
 import fk.atlas.api.model.EntityProcess;
 import fk.atlas.api.model.EntityRdbmsColumn;
@@ -35,6 +39,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -49,7 +54,8 @@ import static com.cronutils.model.CronType.QUARTZ;
 @Component
 @RabbitListener(queues = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW)
 @Slf4j
-public class BuildAtlasTableAndColumnTaskListener {
+public class BuildAtlasTableAndColumnTaskListener
+        extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO>{
     @Resource
     IAtlasBuildInstance atlas;
     @Resource
@@ -58,6 +64,8 @@ public class BuildAtlasTableAndColumnTaskListener {
     PublishTaskController pc;
     @Resource
     private TBETLIncrementalMapper incrementalMapper;
+    @Resource
+    private TableNifiSettingServiceImpl tableNifiSettingService;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
@@ -127,12 +135,7 @@ public class BuildAtlasTableAndColumnTaskListener {
         List<AtlasEntityColumnDTO> l_acd = new ArrayList<>();
         StringBuilder sqlStr = new StringBuilder();
         ae.columns.forEach((c) -> {
-            if(c.dataType=="INT"){
-                sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
-            }
-            else{
-                sqlStr.insert(0,"CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
-            }
+            sqlStr.append("CASE WHEN "+c.columnName.toLowerCase() + " IS NULL THEN "+(c.dataType=="INT"?0:"NULL")+" ELSE "+c.columnName.toLowerCase()+" END "+c.columnName.toLowerCase()+" ,");
             AtlasEntityColumnDTO acd = new AtlasEntityColumnDTO();
             acd.columnName = c.columnName;
             EntityRdbmsColumn.attributes_field_rdbms_column attributes_field_rdbms_column = new EntityRdbmsColumn.attributes_field_rdbms_column();
@@ -149,8 +152,10 @@ public class BuildAtlasTableAndColumnTaskListener {
             BusinessResult resCol = atlas.atlasBuildTableColumn(entity_rdbms_column);
             acd.guid = resCol.data.toString();
             acd.columnId=c.columnId;
+            acd.dataType=c.dataType;
             l_acd.add(acd);
         });
+        sqlStr.insert(0,(ae.dbType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+ae.appAbbreviation+ae.tableName+"_pk , ");
         log.info("atlas创建字段 完成");
         String nifiSelectSql = sqlStr.toString();
         log.info(nifiSelectSql);
@@ -209,6 +214,14 @@ public class BuildAtlasTableAndColumnTaskListener {
         ResultEntity<Object> writeBackRes=dc.addAtlasTableIdAndDorisSql(awbd);
         log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
         //endregion
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        tableNifiSettingPO.appId=Integer.valueOf(awbd.appId);
+        tableNifiSettingPO.tableName=awbd.tableName;
+        tableNifiSettingPO.tableAccessId=Integer.valueOf(awbd.tableId);
+        tableNifiSettingService.save(tableNifiSettingPO);
+
+        //向task库中添加数据接入表结构数据
+        saveTableStructure(awbd);
 
         //incremental insert
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -268,8 +281,12 @@ public class BuildAtlasTableAndColumnTaskListener {
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
         bfd.id=Long.parseLong(ae.tableId);
-        bfd.tableName=ae.tableName;
         bfd.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
+        bfd.tableName=ae.tableName;
+        //类型为物理表
+        bfd.type= OlapTableEnum.PHYSICS;
+        //来源为数据接入
+        bfd.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
@@ -315,4 +332,37 @@ public class BuildAtlasTableAndColumnTaskListener {
         // 这个是重点，一行代码搞定
         return TriggerUtils.computeFireTimes(cronTriggerImpl, null, numTimes);
     }
+
+    /**
+     * 向task库中添加数据接入表结构数据
+     * @param dto
+     */
+    public void saveTableStructure(AtlasWriteBackDataDTO dto)
+    {
+        try {
+            List<TaskPgTableStructurePO> poList=new ArrayList<>();
+            //获取时间戳版本号
+            DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+            Calendar calendar = Calendar.getInstance();
+            String version = df.format(calendar.getTime());
+            for (AtlasEntityColumnDTO item: dto.columnsKeys)
+            {
+                TaskPgTableStructurePO po=new TaskPgTableStructurePO();
+                po.version=version;
+                po.appId=dto.appId;
+                po.tableName=dto.tableName;
+                po.tableId=dto.tableId;
+                po.fieldName=item.columnName;
+                po.fieldId=String.valueOf(item.columnId);
+                po.fieldType=item.dataType;
+                poList.add(po);
+            }
+            this.saveBatch(poList);
+        }
+        catch (Exception ex)
+        {
+            log.error("saveTableStructure:"+ex);
+        }
+    }
+
 }

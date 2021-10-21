@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishDTO;
 import com.fisk.datamodel.service.IBusinessProcess;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -51,9 +53,9 @@ public class BusinessProcessController {
     }
 
     @ApiOperation("删除业务过程")
-    @DeleteMapping("/deleteBusinessProcess/{id}")
-    public ResultEntity<Object> deleteBusinessProcess(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(service.deleteBusinessProcess(id));
+    @DeleteMapping("/deleteBusinessProcess")
+    public ResultEntity<Object> deleteBusinessProcess(@Validated @RequestBody List<Integer> dto) {
+        return ResultEntityBuild.build(service.deleteBusinessProcess(dto));
     }
 
     @ApiOperation("获取业务域下拉列表")
@@ -62,10 +64,10 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessDropList());
     }
 
-    @ApiOperation("根据业务过程id发布")
-    @GetMapping("/publicBusinessProcess/{id}")
-    public ResultEntity<Object> publicBusinessProcess(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPublish(id));
+    @ApiOperation("根据业务过程id集合,发布相关事实表")
+    @PostMapping("/publicBusinessProcess")
+    public ResultEntity<Object> publicBusinessProcess(@Validated @RequestBody BusinessProcessPublishDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPublish(dto));
     }
 
     @ApiOperation("根据业务过程id,获取业务过程下相关事实")
@@ -78,6 +80,18 @@ public class BusinessProcessController {
     @PutMapping("/editBusinessProcessPublishStatus")
     public void editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
         service.updatePublishStatus(id,isSuccess);
+    }
+
+    @ApiOperation("根据业务过程id获取业务域id")
+    @GetMapping("/getBusinessId/{id}")
+    public ResultEntity<Object> getBusinessId(@PathVariable("id")int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessId(id));
+    }
+
+    @ApiOperation("根据业务域id,获取业务过程列表")
+    @GetMapping("/getBusinessProcessList/{businessAreaId}")
+    public ResultEntity<Object> getBusinessProcessList(@PathVariable("businessAreaId") int businessAreaId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessList(businessAreaId));
     }
 
 

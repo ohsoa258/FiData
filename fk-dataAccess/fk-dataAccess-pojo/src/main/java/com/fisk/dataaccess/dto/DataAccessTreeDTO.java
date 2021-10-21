@@ -21,18 +21,18 @@ public class DataAccessTreeDTO {
      * 应用名称
      */
     public String appName;
-    /**
+/*    *//**
      * 同步方式
-     */
+     *//*
     public String syncMode;
-    /**
+    *//**
      * 表达式
-     */
+     *//*
     public String expression;
-    /**
+    *//**
      * 日志
-     */
-    public String msg;
+     *//*
+    public String msg;*/
     /**
      * 应用注册下的物理表
      */
@@ -42,4 +42,9 @@ public class DataAccessTreeDTO {
      * 1: 数据接入; 2:数据建模
      */
     public int flag;
+
+    /**
+     * 0:实时  1:非实时
+     */
+    public int appType;
 }

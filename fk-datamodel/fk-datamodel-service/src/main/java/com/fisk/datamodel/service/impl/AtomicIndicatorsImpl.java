@@ -11,6 +11,9 @@ import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IAtomicIndicators;
+import com.fisk.datamodel.vo.DataIndicatorVO;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -84,7 +87,36 @@ public class AtomicIndicatorsImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        int flat=mapper.deleteByIdWithFill(po);
+
+        /*//删除指标组合对象
+        DataIndicatorVO vo=new DataIndicatorVO();
+        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+        vo.businessId=po.businessId;
+        vo.IndicatorName=po.indicatorsName;
+        vo.type= OlapTableEnum.KPI;
+
+        //获取指标表名称
+        FactPO factPO=factMapper.selectById(po.factId);
+        vo.IndicatorTable=factPO==null?"":factPO.factTableEnName;
+
+        //判断该指标表是否为最后一个字段
+        QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(IndicatorsPO::getFactId,po.factId);
+        List<IndicatorsPO> list=mapper.selectList(queryWrapper);
+
+        //查询事实表是否关联维度
+        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
+        queryWrapper1.lambda().eq(FactAttributePO::getFactId,po.factId)
+                .eq(FactAttributePO::getAttributeType,FactAttributeEnum.ASSOCIATED_DIMENSION);
+        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
+
+        if (list.size()==0 && factAttributePOList.size()==0)
+        {
+            vo.delIndicatorTable=true;
+        }*/
+
+        return flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -112,7 +144,8 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
-        po.factAttributeId=dto.factAttributeId;//聚合字段id
+        //聚合字段id
+        po.factAttributeId=dto.factAttributeId;
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -163,6 +196,7 @@ public class AtomicIndicatorsImpl
             for (FactPO factPO:factPOList)
             {
                 AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
+                data.factId=factPO.id;
                 data.factTable=factPO.factTableEnName;
                 List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
                 if (atomicIndicator!=null)
@@ -171,7 +205,6 @@ public class AtomicIndicatorsImpl
                     list.add(data);
                 }
             }
-
         }
         return list;
     }

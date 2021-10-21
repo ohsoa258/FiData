@@ -45,10 +45,10 @@ public class BuildDataInputPgTableListener {
         String stg_table = "stg_"+dto.appAbbreviation + "_" + dto.tableName;
         String ods_table = "ods_"+dto.appAbbreviation + "_" + dto.tableName;
         StringBuilder sql = new StringBuilder();
-        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( "+dto.appAbbreviation+dto.tableName+"_pk,");
+        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( "+dto.appAbbreviation+"_"+dto.tableName+"_pk,");
         StringBuilder comsql=new StringBuilder();
         sql.append("CREATE TABLE public.tableName");
-        sql.append(" ( "+dto.appAbbreviation+dto.tableName+"_pk varchar(32) NOT NULL DEFAULT sys_guid(),");
+        sql.append(" ( "+dto.appAbbreviation+"_"+dto.tableName+"_pk varchar(50) NOT NULL DEFAULT sys_guid(),");
         dto.columns.forEach((l) -> {
             if (l.isKey.equals("1")) {
                 pksql.append(l.columnName+",");

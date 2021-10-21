@@ -9,6 +9,7 @@ import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.task.FkTaskApplication;
+import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.INifiFlowBuild;
@@ -24,7 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.ArrayList;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = FkTaskApplication.class)
 @RunWith(SpringRunner.class)

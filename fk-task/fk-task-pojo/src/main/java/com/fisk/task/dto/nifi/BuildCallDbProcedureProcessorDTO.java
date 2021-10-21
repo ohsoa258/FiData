@@ -8,4 +8,8 @@ import lombok.EqualsAndHashCode;
 public class BuildCallDbProcedureProcessorDTO extends BaseProcessorDTO {
  public String dbConnectionId;
  public String executsql;
+ /*
+  * 是否有下一个组件
+  * */
+ public Boolean haveNextOne;
 }

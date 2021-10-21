@@ -3,6 +3,7 @@ package com.fisk.datamodel.map;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.DataAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
@@ -53,5 +54,12 @@ public interface DimensionMap {
      * @return
      */
     Page<DimensionDTO> pagePoToDto(IPage<DimensionPO> po);
+
+    /**
+     * 维度表PO==>维度DTO
+     * @param po
+     * @return
+     */
+    List<DimensionListDTO> listPoToListsDto(List<DimensionPO> po);
 
 }

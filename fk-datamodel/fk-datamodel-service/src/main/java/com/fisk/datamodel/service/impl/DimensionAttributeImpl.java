@@ -1,33 +1,33 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
-import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
-import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
-import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +45,8 @@ public class DimensionAttributeImpl
     DimensionAttributeMapper attributeMapper;
     @Resource
     DataAccessClient client;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -60,6 +62,10 @@ public class DimensionAttributeImpl
         {
             DimensionMetaDTO model=new DimensionMetaDTO();
             model.tableName=po.dimensionTabName;
+            if (po.share)
+            {
+                model.tableName=model.tableName+"(共享)";
+            }
             model.associateDimensionId=po.id;
             List<DimensionAttributePO> filter=list2.stream().filter(e->e.getDimensionId()==po.id && e.getAttributeType() ==DimensionAttributeEnum.BUSINESS_KEY.getValue()).collect(Collectors.toList());
             List<DimensionAttributeAssociationDTO> associationList=new ArrayList<>();
@@ -88,6 +94,8 @@ public class DimensionAttributeImpl
         {
             DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
                     .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
+                    .eq(DimensionAttributePO::getAttributeType,item.attributeType)
+                    .eq(DimensionAttributePO::getTableSourceFieldId,item.tableSourceFieldId)
             );
             if (po !=null)
             {
@@ -115,11 +123,30 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ResultEntity<Integer> deleteDimensionAttribute(List<Integer> ids)
+    public ResultEnum deleteDimensionAttribute(List<Integer> ids)
     {
+        //判断字段是否与其他表有关联
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.in("associate_dimension_field_id",ids)
+                .lambda().eq(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        if (list.size()>0)
+        {
+            return ResultEnum.FIELDS_ASSOCIATED;
+        }
+
+        //判断字段是否与事实表有关联
+        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
+        queryWrapper1.in("associate_dimension_field_id",ids)
+                .lambda().eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION);
+        List<FactAttributePO> poList=factAttributeMapper.selectList(queryWrapper1);
+        if (poList.size()>0)
+        {
+            return ResultEnum.FIELDS_ASSOCIATED;
+        }
+
         DimensionAttributePO po=attributeMapper.selectById(ids.get(0));
-        int flat=attributeMapper.deleteBatchIds(ids);
-        return ResultEntityBuild.build(flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR,po.dimensionId);
+        return attributeMapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -176,7 +203,6 @@ public class DimensionAttributeImpl
         return list;
     }
 
-
     @Override
     public ModelMetaDataDTO getDimensionMetaData(int id)
     {
@@ -188,6 +214,7 @@ public class DimensionAttributeImpl
         }
         data.tableName =po.dimensionTabName;
         data.id=po.id;
+        data.appId=po.businessId;
         //获取注册表相关数据
         ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
@@ -215,6 +242,7 @@ public class DimensionAttributeImpl
             dto.fieldEnName = item.dimensionFieldEnName;
             dto.fieldLength = item.dimensionFieldLength;
             dto.fieldType = item.dimensionFieldType;
+            dto.fieldId= String.valueOf(item.id);
             //判断是否为关联维度
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
@@ -229,16 +257,22 @@ public class DimensionAttributeImpl
                 {
                     break;
                 }
-                dto.associationTable=dimensionPO.dimensionTabName; //维度关联表名称
-                dto.associationField=attributePO.dimensionFieldEnName; //维度关联字段名称
+                //维度关联表名称
+                dto.associationTable=dimensionPO.dimensionTabName;
+                //维度关联字段名称
+                dto.associationField=attributePO.dimensionFieldEnName;
+                //关联字段来源
+                dto.sourceFieldId=attributePO.tableSourceFieldId;
                 //获取关联维度与本表关联字段名称
                 DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateId);
                 if (dimensionAttributePO==null)
                 {
                     break;
                 }
-                dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName; //关联维度与本表字段关联名称
-                dto.sourceFieldId=dimensionAttributePO.tableSourceFieldId; //本表字段来源
+                //关联维度与本表字段关联名称
+                dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName;
+                //关联维度与本表字段关联来源id
+                dto.associationSourceFieldId=dimensionAttributePO.tableSourceFieldId;
             }
             dtoList.add(dto);
         }
@@ -270,6 +304,37 @@ public class DimensionAttributeImpl
             data.add(dto);
         }
         return data;
+    }
+
+    @Override
+    public List<FieldNameDTO> getDimensionAttributeSourceId(int id)
+    {
+        //查询维度表
+        DimensionPO dimensionPO=mapper.selectById(id);
+        if (dimensionPO==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "维度表不存在");
+        }
+        ResultEntity<Object> data = client.getTableFieldId(dimensionPO.tableSourceId);
+        if (ResultEnum.SUCCESS.equals(data.code))
+        {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, "获取数据接入表数据失败");
+        }
+        List<FieldNameDTO> list=JSON.parseArray(JSON.toJSONString(data.data), FieldNameDTO.class);
+        System.out.println(list);
+        if (list ==null || list.size()==0)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据接入表数据为空");
+        }
+        //获取维度表存在字段来源id
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("table_source_field_id").lambda()
+                .eq(DimensionAttributePO::getDimensionId,id)
+                .ne(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        List<Integer> ids=(List)attributeMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
+        //过滤已添加来源表id
+        list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
+        return list;
     }
 
 }

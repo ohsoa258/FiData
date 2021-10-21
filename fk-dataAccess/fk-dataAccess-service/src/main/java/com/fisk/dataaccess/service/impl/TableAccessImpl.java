@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -17,6 +18,8 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.map.TableAccessMap;
@@ -26,15 +29,17 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.utils.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
-import com.fisk.dataaccess.vo.NifiVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +106,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private EtlIncrementalMapper etlIncrementalMapper;
+    @Value("${pgsql-datamodel.url}")
+    public String pgsqlDatamodelUrl;
+    @Value("${pgsql-datamodel.username}")
+    public String pgsqlDatamodelUsername;
+    @Value("${pgsql-datamodel.password}")
+    public String pgsqlDatamodelPassword;
 
     /**
      * 添加物理表(实时)
@@ -676,6 +687,34 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+    @Override
+    public List<TablePyhNameDTO> getTableFieldsByAppId(long appId) {
+
+        // 2.根据app_id查询关联表tb_app_datasource的connect_str  connect_account  connect_pwd
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appId).one();
+        String url = modelDataSource.getConnectStr();
+        String user = modelDataSource.getConnectAccount();
+        String pwd = modelDataSource.getConnectPwd();
+        String dbName = modelDataSource.dbName;
+
+        // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        switch (modelDataSource.driveType) {
+            case "mysql":
+                // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
+                MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+                break;
+            case "sqlserver":
+                list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
+                break;
+            default:
+                break;
+        }
+
+        return list;
+    }
+
 
     /**
      * 删除数据
@@ -685,6 +724,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     public ResultEntity<NifiVO> deleteData(long id) {
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
 
         // 1.删除tb_table_access数据
         TableAccessPO modelAccess = this.getById(id);
@@ -710,11 +751,30 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("id", modelAccess.appId).eq("del_flag", 1).one();
+
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
+        vo.userId = userInfo.id;
+        vo.appComponentId = registrationPO.componentId;
+        vo.appAtlasId = registrationPO.atlasInstanceId;
+
+        List<TableListVO> voList = new ArrayList<>();
+        TableListVO tableListVO = new TableListVO();
+        tableListVO.userId = userInfo.id;
+        tableListVO.tableAtlasId = modelAccess.atlasTableId;
+        NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", modelAccess.id).eq("app_id", modelAccess.appId).one();
+
+        tableListVO.nifiSettingTableName = nifiSettingPO.tableName;
+        voList.add(tableListVO);
+
+        vo.tableList = voList;
+
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
         vo.tableIdList = tableIdList;
+
+
         log.info("删除的物理表信息,{}",vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,vo);
@@ -741,9 +801,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
 
-        // TODO:驱动类型
+        // TODO:驱动类型(改为枚举类型)
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-            dto.dbType = modelDataSource.driveType;
+//            dto.dbType = modelDataSource.driveType;
+
+            switch (modelDataSource.driveType) {
+                case "sqlserver":
+                    dto.dbType = DbTypeEnum.sqlserver;
+                    break;
+                case "mysql":
+                    dto.dbType = DbTypeEnum.mysql;
+                    break;
+                case "postgresql":
+                    dto.dbType = DbTypeEnum.postgresql;
+                    break;
+                case "oracle":
+                    dto.dbType = DbTypeEnum.oracle;
+                    break;
+                default:
+                    break;
+            }
         }
 
         // TODO 新增cron表达式
@@ -840,7 +917,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO:驱动类型
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-            atlasDTO.dbType = modelDataSource.driveType;
+//            atlasDTO.dbType = modelDataSource.driveType;
+            switch (modelDataSource.driveType) {
+                case "sqlserver":
+                    atlasDTO.dbType = DbTypeEnum.sqlserver;
+                    break;
+                case "mysql":
+                    atlasDTO.dbType = DbTypeEnum.mysql;
+                    break;
+                case "postgresql":
+                    atlasDTO.dbType = DbTypeEnum.postgresql;
+                    break;
+                case "oracle":
+                    atlasDTO.dbType = DbTypeEnum.oracle;
+                    break;
+                default:
+                    break;
+            }
         }
 
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
@@ -1093,13 +1186,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         appRegistrationPO.delFlag = 1;
         appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
         appDataSourcePO.appId = appRegistrationPO.id;//后面加上AppRegistrationPO.id
+        //ConnectStr   driveType   ConnectAccount   ConnectPwd
         appDataSourcePO.driveType = "postgresql";
-        appDataSourcePO.dbName = "dmp_dw";
-        appDataSourcePO.host = "192.168.1.250";//这个可以写道配置文件里pg 连接信息：
-        appDataSourcePO.connectAccount = "postgres";
-        appDataSourcePO.connectPwd = "Password01!";
-        appDataSourcePO.port = "5432";
-        appDataSourcePO.connectStr = "jdbc:postgresql://192.168.1.250:5432/dmp_dw";
+        appDataSourcePO.connectAccount = pgsqlDatamodelUsername;
+        appDataSourcePO.connectPwd = pgsqlDatamodelPassword;
+        appDataSourcePO.connectStr = pgsqlDatamodelUrl;
         appDataSourceImpl.save(appDataSourcePO);
         tableAccessPO.appId = appRegistrationPO.id;//后续补上AppRegistrationPO.id
         tableAccessPO.isRealtime = 1;
@@ -1122,6 +1213,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         buildNifiFlowDTO.id = tableAccessPO.id;
         buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
         return buildNifiFlowDTO;
+    }
+
+    @Override
+    public ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto) {
+
+        ComponentIdDTO componentIdDTO = new ComponentIdDTO();
+
+        AppRegistrationPO appRegistrationPO = appRegistrationImpl.query().eq("id", dto.appId).eq("del_flag", 1).one();
+        TableAccessPO tableAccessPO = this.query().eq("id", dto.tableId).eq("del_flag", 1).one();
+        componentIdDTO.appComponentId = appRegistrationPO.componentId;
+        componentIdDTO.tableComponentId = tableAccessPO.componentId;
+        componentIdDTO.schedulerComponentId = tableAccessPO.schedulerComponentId;
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,componentIdDTO);
     }
 
 
@@ -1156,6 +1261,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .eq("del_flag", 1)
                 .one();
         modelAccess.componentId = dto.tableGroupId;
+        // 调度组件id
+        modelAccess.schedulerComponentId = dto.schedulerComponentId;
         boolean updateAccess = this.updateById(modelAccess);
         if (!updateAccess) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -1232,6 +1339,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             e.setList(baseMapper.listTableNameTree(e.id).stream().map(f -> {
                 f.flag = 1;
                 f.setPid(e.id);
+                f.appType = e.appType;
                 return f;
             }).collect(Collectors.toList()));
             e.flag = 1;
@@ -1282,6 +1390,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return dto;
         }
         return dto = TableAccessMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public List<FieldNameDTO> getTableFieldId(int id)
+    {
+        QueryWrapper<TableFieldsPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(TableFieldsPO::getTableAccessId,id);
+        List<FieldNameDTO> list= fieldsMapper.listTableName(id);
+        //List<Integer> list=(List)fieldsMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
+        return list;
     }
 
 }

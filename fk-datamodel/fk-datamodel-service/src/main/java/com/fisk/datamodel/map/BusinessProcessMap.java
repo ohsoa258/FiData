@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDropDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessListDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -38,5 +39,12 @@ public interface BusinessProcessMap {
      * @return
      */
     List<BusinessProcessDropDTO> poToDropPo(List<BusinessProcessPO> po);
+
+    /**
+     * poList==>DtoList
+     * @param po
+     * @return
+     */
+    List<BusinessProcessListDTO> poListToDtoList(List<BusinessProcessPO> po);
 
 }

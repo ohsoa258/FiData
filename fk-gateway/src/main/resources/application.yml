@@ -43,7 +43,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins: "*" # 允许哪些网站的跨域请求,下面的是例子
-#              - "http://www.fisksoft.com"
+            #              - "http://www.fisksoft.com"
             allowedMethods: # 允许的跨域ajax的请求方式
               - "GET"
               - "POST"
@@ -56,69 +56,74 @@ spring:
 
       # ============限流令牌桶=================
       default-filters: # 默认过滤项,作用于所有的路由规则
-      - StripPrefix=1 # 去除路由前缀
-      # ============Hystrix=================
-      - name: Hystrix # 指定过滤工厂名称（可以是任意过滤工厂类型）
-        args: # 指定过滤的参数
-          name: fallbackcmd  # hystrix的指令名
-          fallbackUri: forward:/hystrix/fallback # 失败后的跳转路径
-      # ============限流令牌桶=================
-      - name: RequestRateLimiter #请求数限流 名称固定,不能随便写
-        args:
-          key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式
-          # 每一个IP地址，每秒钟最多发起2次请求
-          # 每秒钟超过2次请求，则返回429的异常状态码
-          redis-rate-limiter.replenishRate: 30 # 生成令牌的速率
-          redis-rate-limiter.burstCapacity: 30 # 桶的容量
+        - StripPrefix=1 # 去除路由前缀
+        # ============Hystrix=================
+        - name: Hystrix # 指定过滤工厂名称（可以是任意过滤工厂类型）
+          args: # 指定过滤的参数
+            name: fallbackcmd  # hystrix的指令名
+            fallbackUri: forward:/hystrix/fallback # 失败后的跳转路径
+        # ============限流令牌桶=================
+        - name: RequestRateLimiter #请求数限流 名称固定,不能随便写
+          args:
+            key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式
+            # 每一个IP地址，每秒钟最多发起2次请求
+            # 每秒钟超过2次请求，则返回429的异常状态码
+            redis-rate-limiter.replenishRate: 30 # 生成令牌的速率
+            redis-rate-limiter.burstCapacity: 30 # 桶的容量
 
       # 添加网关路由
       routes:
 
-      - id: auth-service # 授权服务
-        uri: lb://auth-service # 路由的目标微服务地址,lb:代表负载均衡,auth-service:代表服务id
-        predicates: # 断言  判断 前端浏览器发送url和当前path是否匹配
-          - Path=/auth/** # 按照路径匹配的规则
+        - id: auth-service # 授权服务
+          uri: lb://auth-service # 路由的目标微服务地址,lb:代表负载均衡,auth-service:代表服务id
+          predicates: # 断言  判断 前端浏览器发送url和当前path是否匹配
+            - Path=/auth/** # 按照路径匹配的规则
 
 
-      - id: user-service # 用户服务
-        uri: lb://user-service
-        predicates:
-          - Path=/user/**
+        - id: user-service # 用户服务
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
 
-      - id: chartvisual-service # 可视化服务
-        uri: lb://chartvisual-service
-        predicates:
-          - Path=/chartvisual/**
+        - id: chartvisual-service # 可视化服务
+          uri: lb://chartvisual-service
+          predicates:
+            - Path=/chartvisual/**
 
-      - id: dataAccess-service # 数据接入服务
-        uri: lb://dataAccess-service
-        predicates:
-          - Path=/dataAccess/**
+        - id: dataAccess-service # 数据接入服务
+          uri: lb://dataAccess-service
+          predicates:
+            - Path=/dataAccess/**
 
-      - id: task-center # 后台服务
-        uri: lb://task-center
-        predicates:
-          - Path=/task/**
+        - id: task-center # 后台服务
+          uri: lb://task-center
+          predicates:
+            - Path=/task/**
 
-      - id: task-center-websocket # websocket
-        uri: lb:ws://task-center
-        predicates:
-          - Path=/task/**
+        - id: task-center-websocket # websocket
+          uri: lb:ws://task-center
+          predicates:
+            - Path=/task/**
 
-      - id: datamodel-service # 数据建模服务
-        uri: lb://datamodel-service
-        predicates:
-          - Path=/datamodel/**
+        - id: datamodel-service # 数据建模服务
+          uri: lb://datamodel-service
+          predicates:
+            - Path=/datamodel/**
 
-      - id: dataservice-service # 数据源接入服务
-        uri: lb://dataservice-service
-        predicates:
-        - Path=/dataservice/**
+        - id: dataservice-service # 数据源接入服务
+          uri: lb://dataservice-service
+          predicates:
+            - Path=/dataservice/**
 
-      - id: task-schedule # 数据源接入服务
-        uri: lb://task-schedule
-        predicates:
-          - Path=/taskschedule/**
+        - id: data-factory # 数据源接入服务
+          uri: lb://data-factory
+          predicates:
+            - Path=/taskschedule/**
+
+        - id: datagovern-service # 数据治理
+          uri: lb://datagovern-service
+          predicates:
+            - Path=/datagovern/**
 
 
   redis:
