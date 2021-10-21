@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishDTO;
@@ -187,6 +188,7 @@ public class DimensionFolderImpl
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
             }
             List<DimensionAttributeAddDTO> list=new ArrayList<>();
+            DimensionAttributeAddListDTO dimensionAttributeAddListDTO = new DimensionAttributeAddListDTO();
             for (DimensionPO item:dimensionPOList)
             {
                 DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
@@ -197,8 +199,9 @@ public class DimensionFolderImpl
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
             }
+            dimensionAttributeAddListDTO.dimensionAttributeAddDTOS=list;
             //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(list);
+            publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
         }
         catch (Exception ex){
             log.error(ex.getMessage());

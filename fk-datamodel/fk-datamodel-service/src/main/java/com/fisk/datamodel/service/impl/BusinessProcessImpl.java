@@ -12,6 +12,7 @@ import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.fact.FactDataDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
@@ -143,6 +144,7 @@ public class BusinessProcessImpl
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"事实表为空");
             }
             List<DimensionAttributeAddDTO> list=new ArrayList<>();
+            DimensionAttributeAddListDTO dimensionAttributeAddListDTO = new DimensionAttributeAddListDTO();
             for (FactPO item:factPOList)
             {
                 DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
@@ -153,8 +155,9 @@ public class BusinessProcessImpl
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
             }
+            dimensionAttributeAddListDTO.dimensionAttributeAddDTOS=list;
             //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(list);
+            publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
         }
         catch (Exception ex){
             log.error(ex.getMessage());
