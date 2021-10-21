@@ -80,8 +80,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private AppNifiFlowImpl nifiFlowImpl;
     @Resource
     private UserHelper userHelper;
-    @Resource
-    private NifiSettingImpl nifiSettingImpl;
+//    @Resource
+//    private NifiSettingImpl nifiSettingImpl;
     @Resource
     private TableBusinessImpl businessImpl;
     @Resource
@@ -100,8 +100,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
-    @Resource
-    private NifiSettingImpl getNifiSettingImpl;
     @Resource
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
@@ -763,9 +761,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableListVO tableListVO = new TableListVO();
         tableListVO.userId = userInfo.id;
         tableListVO.tableAtlasId = modelAccess.atlasTableId;
-        NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", modelAccess.id).eq("app_id", modelAccess.appId).one();
+//        NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", modelAccess.id).eq("app_id", modelAccess.appId).one();
 
-        tableListVO.nifiSettingTableName = nifiSettingPO.tableName;
+//        tableListVO.nifiSettingTableName = nifiSettingPO.tableName;
         voList.add(tableListVO);
 
         vo.tableList = voList;
@@ -996,6 +994,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         List<AtlasEntityColumnDTO> list = dto.columnsKeys;
 
+        boolean updateField = true;
         for (AtlasEntityColumnDTO columnDTO : list) {
 
             // 根据本表id查询tb_table_fields
@@ -1009,12 +1008,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 回写的字段GUID
             modelFields.atlasFieldId = columnDTO.getGuid();
             // 更新tb_table_fields表数据
-            boolean updateField = this.tableFieldsImpl.updateById(modelFields);
+            updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
         }
-
+/*
         // nifi配置表: tb_nifi_setting
         NifiSettingPO po = new NifiSettingPO();
         po.tableId = tableId;
@@ -1024,7 +1023,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         boolean save = nifiSettingImpl.save(po);
 
-        return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+*/
+
+        return updateField ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -1104,10 +1105,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 回写物理表组件id
         taskGroupConfig.setComponentId(modelAccess.componentId);
 
-        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("app_id", appid).eq("table_id", id).one();
-        if (modelNifi == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        }
+//        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("app_id", appid).eq("table_id", id).one();
+//        if (modelNifi == null) {
+//            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+//        }
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
@@ -1126,9 +1127,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
         }
         // ods sql
-        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
+//        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
         // atlas返回的tableName
-        processorConfig.targetTableName = modelNifi.tableName;
+//        processorConfig.targetTableName = modelNifi.tableName;
         // TODO  新增: 增量配置库源jdbc连接
         cfgDsConfig.setType(DriverTypeEnum.MYSQL);
         cfgDsConfig.setJdbcStr(jdbcStr);
@@ -1144,7 +1145,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // TODO: 2021/9/4 nifi流程需要物理表字段
 //        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
-        NifiSettingPO settingPO = nifiSettingImpl.query().eq("table_id", id).eq("app_id", appid).one();
+//        NifiSettingPO settingPO = nifiSettingImpl.query().eq("table_id", id).eq("app_id", appid).one();
         List<TableFieldsPO> list = this.tableFieldsImpl.query()
                 .eq("table_access_id", id)
                 .eq("del_flag", 1)
@@ -1152,7 +1153,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsDTO> tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(list);
 
         if (list != null && !list.isEmpty()) {
-            targetDsConfig.targetTableName = settingPO.tableName;
+//            targetDsConfig.targetTableName = settingPO.tableName;
             targetDsConfig.tableFieldsList = tableFieldsDTOS;
         }
 
@@ -1179,7 +1180,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AppDataSourcePO appDataSourcePO = new AppDataSourcePO();
         TableAccessPO tableAccessPO = new TableAccessPO();
         TableSyncmodePO tableSyncmodePO = new TableSyncmodePO();
-        NifiSettingPO nifiSettingPO = new NifiSettingPO();
+//        NifiSettingPO nifiSettingPO = new NifiSettingPO();
         appRegistrationPO.appName = "postgerToDoris";
         appRegistrationPO.appDes = "postgerToDoris";
         appRegistrationPO.appType = 1;
@@ -1200,13 +1201,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableSyncmodePO.syncMode = 1;
         tableSyncmodePO.id = tableAccessPO.id;//tableAccess.id
         tableSyncmodeImpl.save(tableSyncmodePO);
-        nifiSettingPO.tableId = tableAccessPO.id;//tableAccess.id
-        nifiSettingPO.appId = appRegistrationPO.id;
-        nifiSettingPO.selectSql = selectSql;
-        nifiSettingPO.tableName = tableName;
-        nifiSettingImpl.save(nifiSettingPO);
+//        nifiSettingPO.tableId = tableAccessPO.id;//tableAccess.id
+//        nifiSettingPO.appId = appRegistrationPO.id;
+//        nifiSettingPO.selectSql = selectSql;
+//        nifiSettingPO.tableName = tableName;
+//        nifiSettingImpl.save(nifiSettingPO);
         EtlIncrementalPO etlIncrementalPO = new EtlIncrementalPO();
-        etlIncrementalPO.objectName = nifiSettingPO.tableName;
+//        etlIncrementalPO.objectName = nifiSettingPO.tableName;
         etlIncrementalPO.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
         etlIncrementalMapper.insert(etlIncrementalPO);
         buildNifiFlowDTO.appId = appRegistrationPO.id;

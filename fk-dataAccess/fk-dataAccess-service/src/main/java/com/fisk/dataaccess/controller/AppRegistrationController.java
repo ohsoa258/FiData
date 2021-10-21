@@ -150,7 +150,7 @@ public class AppRegistrationController {
             List<TableListDTO> collect = nifiVO.tableList.stream().map(e -> {
                 TableListDTO dto = new TableListDTO();
                 dto.tableAtlasId = e.tableAtlasId;
-                dto.tableName = e.nifiSettingTableName;
+//                dto.tableName = e.nifiSettingTableName;
                 dto.userId = nifiVO.userId;
                 return dto;
             }).collect(Collectors.toList());

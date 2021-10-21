@@ -2,7 +2,6 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,7 +10,7 @@ import java.io.Serializable;
  * @author Lock
  */
 @Data
-@TableName("tb_nifi_setting")
+//@TableName("tb_nifi_setting")
 public class NifiSettingPO implements Serializable {
     /**
      * 应用注册id
