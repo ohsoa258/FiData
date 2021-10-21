@@ -43,10 +43,10 @@ public interface IBusinessProcess {
 
     /**
      * 删除业务过程数据
-     * @param id
+     * @param ids
      * @return
      */
-    ResultEnum deleteBusinessProcess(int id);
+    ResultEnum deleteBusinessProcess(List<Integer> ids);
 
     /**
      * 获取业务过程下拉列表

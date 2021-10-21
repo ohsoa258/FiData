@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -37,7 +38,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class BusinessProcessImpl implements IBusinessProcess {
+public class BusinessProcessImpl
+        extends ServiceImpl<BusinessProcessMapper,BusinessProcessPO>
+        implements IBusinessProcess {
 
     @Resource
     BusinessProcessMapper mapper;
@@ -111,14 +114,9 @@ public class BusinessProcessImpl implements IBusinessProcess {
     }
 
     @Override
-    public ResultEnum deleteBusinessProcess(int id)
+    public ResultEnum deleteBusinessProcess(List<Integer> ids)
     {
-        BusinessProcessPO model=mapper.selectById(id);
-        if (model==null)
-        {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return this.removeByIds(ids)?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -137,19 +135,19 @@ public class BusinessProcessImpl implements IBusinessProcess {
             {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
+            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.in("business_process_id",dto.businessProcessIds);
-            List<BusinessProcessPO> businessProcessPOS=mapper.selectList(queryWrapper);
-            if (businessProcessPOS==null || businessProcessPOS.size()==0)
+            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
+            if (factPOList==null || factPOList.size()==0)
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"事实表为空");
             }
             List<DimensionAttributeAddDTO> list=new ArrayList<>();
-            for (BusinessProcessPO item:businessProcessPOS)
+            for (FactPO item:factPOList)
             {
                 DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
                 pushDto.dimensionId=Integer.parseInt(String.valueOf(item.id));;
-                pushDto.dimensionName=item.businessProcessEnName;
+                pushDto.dimensionName=item.factTableEnName;
                 pushDto.businessAreaName=businessAreaPO.getBusinessName();
                 pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
                 pushDto.userId=userHelper.getLoginUserInfo().id;

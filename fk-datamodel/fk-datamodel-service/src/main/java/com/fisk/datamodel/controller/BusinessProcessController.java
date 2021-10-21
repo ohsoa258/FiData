@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -52,9 +53,9 @@ public class BusinessProcessController {
     }
 
     @ApiOperation("删除业务过程")
-    @DeleteMapping("/deleteBusinessProcess/{id}")
-    public ResultEntity<Object> deleteBusinessProcess(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(service.deleteBusinessProcess(id));
+    @DeleteMapping("/deleteBusinessProcess")
+    public ResultEntity<Object> deleteBusinessProcess(@Validated @RequestBody List<Integer> dto) {
+        return ResultEntityBuild.build(service.deleteBusinessProcess(dto));
     }
 
     @ApiOperation("获取业务域下拉列表")
