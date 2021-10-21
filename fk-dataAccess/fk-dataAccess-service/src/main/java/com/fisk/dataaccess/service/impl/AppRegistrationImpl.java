@@ -76,8 +76,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsMapper tableFieldsMapper;
     @Resource
     private TableFieldsImpl tableFieldsImpl;
-    @Resource
-    private NifiSettingImpl nifiSettingImpl;
+//    @Resource
+//    private NifiSettingImpl nifiSettingImpl;
 
     /**
      * 添加应用
@@ -285,10 +285,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO tableAccessPO = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-                NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", tableAccessPO.id).eq("app_id", id).one();
+//                NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", tableAccessPO.id).eq("app_id", id).one();
                 tableVO.tableAtlasId = tableAccessPO.atlasTableId;
-                tableVO.nifiSettingTableName = nifiSettingPO.tableName;
-                tableVO.tableComponentId = tableAccessPO.componentId;
+//                tableVO.nifiSettingTableName = nifiSettingPO.tableName;
+//                tableVO.tableComponentId = tableAccessPO.componentId;
                 tableList.add(tableVO);
             }
 
@@ -311,7 +311,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
          */
         vo.userId = userInfo.id;
         vo.appId = String.valueOf(model.id);
-        vo.appComponentId = model.componentId;
+//        vo.appComponentId = model.componentId;
         vo.tableIdList = tableIdList;
         // atlas应用id
         vo.appAtlasId = atlasInstanceId;

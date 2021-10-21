@@ -3,6 +3,7 @@ package com.fisk.task.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
@@ -64,7 +65,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/publishTask/atlasDorisTable")
-    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody List<DimensionAttributeAddDTO> atlasEntityQueryDTO);
+    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddListDTO atlasEntityQueryDTO);
 
 
     /**

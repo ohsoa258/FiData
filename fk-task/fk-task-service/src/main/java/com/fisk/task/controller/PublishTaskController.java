@@ -4,6 +4,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -144,15 +145,15 @@ public class PublishTaskController {
 
     /**
      * doris创建表BUILD_DORIS_TABLE
-     * @param dimensionAttributeAddDTO
+     * @param dimensionAttributeAddDTOS
      * @return
      */
     @PostMapping("/atlasDorisTable")
-    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddDTO dimensionAttributeAddDTO){
-        return service.publishTask("创建表:"+dimensionAttributeAddDTO.dimensionName,
+    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddListDTO dimensionAttributeAddDTOS){
+        return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
-                dimensionAttributeAddDTO);
+                dimensionAttributeAddDTOS);
     }
 
 }

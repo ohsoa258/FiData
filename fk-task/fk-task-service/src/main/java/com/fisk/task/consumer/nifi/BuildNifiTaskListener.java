@@ -289,8 +289,10 @@ public class BuildNifiTaskListener {
             targetDbPoolConfig.user = pgsqlDatainputUsername;
             targetDbPoolConfig.password = pgsqlDatainputPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
-            targetDbPoolConfig.targetTableName = res.data.targetDsConfig.targetTableName;
-            targetDbPoolConfig.tableFieldsList = res.data.targetDsConfig.tableFieldsList;
+            TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
+            if(tableNifiSettingPO!=null){
+                targetDbPoolConfig.targetTableName = tableNifiSettingPO.tableName;
+            }
             sourceDsConfig=res.data.sourceDsConfig;
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {//pg_dw----doris_olap
             if(appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){

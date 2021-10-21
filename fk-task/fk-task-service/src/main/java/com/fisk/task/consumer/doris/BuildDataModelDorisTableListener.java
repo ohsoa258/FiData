@@ -18,6 +18,7 @@ import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
@@ -105,47 +106,39 @@ public class BuildDataModelDorisTableListener
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        DimensionAttributeAddDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddDTO.class);
-        ResultEntity<Object> dimensionAttributeList =new ResultEntity<>();
-        boolean pgdbTable=false;
-        if(inpData.createType==0){
-            dimensionAttributeList=dc.getDimensionEntity(inpData.dimensionId);
-            ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
-
-            //向task库中添加维度数据结构
-            List<ModelMetaDataDTO> list=new ArrayList<>();
-            list.add(modelMetaDataDTO);
-            saveTableStructure(list);
-
-             pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
-            log.info("pg数据库创表结果为" + pgdbTable);
-            String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
-            PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
-            //nifi组件配置pg-ods2pg-dw,调用存储过程
-            createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.DIMENSION);
-            //根据业务域名称创建组,加数据库连接池
-            //根据表名创建任务组
-            //创建组件
-        }else {
-            dimensionAttributeList=dc.getBusinessProcessFact(inpData.dimensionId);
-            List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
-
-            //向task库中添加业务下所有事实表数据结构
-            saveTableStructure(modelMetaDataDTOS);
-
-            for (ModelMetaDataDTO modelMetaDataDTO:modelMetaDataDTOS) {
-             pgdbTable = createPgdbTable(modelMetaDataDTO,inpData.businessAreaName);
-             log.info(modelMetaDataDTO.tableName+"pg数据库创表结果为" + pgdbTable);
-             String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
-             PostgreHelper.postgreExecuteSql(storedProcedure,BusinessTypeEnum.DATAMODEL);
-                //nifi组件配置pg-ods2pg-dw,调用存储过程
-                createNiFiFlow(modelMetaDataDTO,inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.FACT);
-                //根据业务域名称创建组,加数据库连接池
-                //根据表名创建任务组
-                //创建组件
+        DimensionAttributeAddListDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddListDTO.class);
+        List<DimensionAttributeAddDTO> dimensionAttributeAddDTOS = inpData.dimensionAttributeAddDTOS;
+        ResultEntity<Object> dimensionAttributeList = new ResultEntity<>();
+        boolean pgdbTable = false;
+        for (DimensionAttributeAddDTO dimensionAttributeAddDTO : dimensionAttributeAddDTOS) {
+            if (dimensionAttributeAddDTO.createType == 0) {
+                dimensionAttributeList = dc.getDimensionEntity(dimensionAttributeAddDTO.dimensionId);
+                ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+                //向task库中添加维度数据结构
+                List<ModelMetaDataDTO> list = new ArrayList<>();
+                list.add(modelMetaDataDTO);
+                saveTableStructure(list);
+                pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
+                log.info("pg数据库创表结果为" + pgdbTable);
+                String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
+                PostgreHelper.postgreExecuteSql(storedProcedure, BusinessTypeEnum.DATAMODEL);
+                //nifi组件配置pg-ods2pg-dw,调用存储过程,根据业务域名称创建组,加数据库连接池,根据表名创建任务组,创建组件
+                createNiFiFlow(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.DIMENSION);
+            } else {
+                dimensionAttributeList = dc.getBusinessProcessFact(dimensionAttributeAddDTO.dimensionId);
+                List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
+                //向task库中添加业务下所有事实表数据结构
+                saveTableStructure(modelMetaDataDTOS);
+                for (ModelMetaDataDTO modelMetaDataDTO : modelMetaDataDTOS) {
+                    pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
+                    log.info(modelMetaDataDTO.tableName + "pg数据库创表结果为" + pgdbTable);
+                    String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
+                    PostgreHelper.postgreExecuteSql(storedProcedure, BusinessTypeEnum.DATAMODEL);
+                    //nifi组件配置pg-ods2pg-dw,调用存储过程,根据业务域名称创建组,加数据库连接池,根据表名创建任务组,创建组件
+                    createNiFiFlow(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.FACT);
+                }
             }
         }
-
 
     }
 

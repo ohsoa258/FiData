@@ -21,17 +21,17 @@ public class AppRegistrationPO extends BasePO {
     /**
      * 组件id
      */
-    public String componentId;
+//    public String componentId;
 
     /**
      * targetDbPoolComponentId
      */
-    public String targetDbPoolComponentId;
+//    public String targetDbPoolComponentId;
 
     /**
      * sourceDbPoolComponentId
      */
-    public String sourceDbPoolComponentId;
+//    public String sourceDbPoolComponentId;
 
     /**
      * 应用名称
