@@ -6,7 +6,8 @@ public enum DataClassifyEnum  implements BaseEnum {
     /**
      * 数据接入,数据建模Datamodeling  DataAccess
      */
-    DATAMODELING(0,"数据建模"),
+    DATAMODELING(0,"数据建模--维度事实"),
+    DATAMODELKPL(2,"数据建模--指标"),
     DATAACCESS(1,"数据接入");
 
     private final String name;

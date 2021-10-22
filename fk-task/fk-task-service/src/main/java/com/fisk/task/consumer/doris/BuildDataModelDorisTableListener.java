@@ -164,7 +164,7 @@ public class BuildDataModelDorisTableListener
         dataModelVO.indicatorIdList=dataModelTableVO;
         componentsBuild.deleteNifiFlow(dataModelVO);
 
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
         if(appNifiSettingPO!=null){
             try {
                 data1=NifiHelper.getProcessGroupsApi().getProcessGroup(appNifiSettingPO.appComponentId);
@@ -276,7 +276,7 @@ public class BuildDataModelDorisTableListener
 
     public void savaNifiAllSetting(ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelMetaDataDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum,TableNifiSettingPO tableNifiSettingPO){
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
-        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).one();
+        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
         if(appNifiSettingPO1!=null){
             appNifiSettingPO=appNifiSettingPO1;
         }
@@ -423,6 +423,8 @@ public class BuildDataModelDorisTableListener
         sql.append(sqlFileds);
         stg_sql = sql.toString().replace("tableName", tableName);
         //2.连接jdbc执行sql
+        String deleteSql="TRUNCATE table " + tableName;
+        iPostgreBuild.postgreBuildTable(deleteSql, BusinessTypeEnum.DATAMODEL);
         BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
         log.info("【PGSTG】" + stg_sql);
         TaskDwDimPO taskDwDimPO = new TaskDwDimPO();

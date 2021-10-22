@@ -1150,7 +1150,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("del_flag", 1).eq("type", dataModelVO.dataClassifyEnum.getValue()).one();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("type", dataModelVO.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
         //维度表
         List<NifiRemoveDTO> nifiRemoveList1 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.dimensionIdList, appNifiSettingPO, dataModelVO.delBusiness);
         nifiRemoveDTOS.addAll(nifiRemoveList1);
