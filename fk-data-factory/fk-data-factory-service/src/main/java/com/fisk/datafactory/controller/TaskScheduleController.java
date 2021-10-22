@@ -74,14 +74,16 @@ public class TaskScheduleController {
         log.info("方法的执行结果为:{}", result);
         // TODO 提供给task模块
         TaskCronDTO taskCronDTO = result.data;
-        DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
-        DataAccessIdsDTO accessIdsDTO = new DataAccessIdsDTO();
-        accessIdsDTO.appId = taskCronDTO.dto.appId;
-        accessIdsDTO.tableId = taskCronDTO.dto.tableId;
-        ResultEntity<Object> clientComponentId = client.getComponentId(accessIdsDTO);
-        ComponentIdDTO data = (ComponentIdDTO) clientComponentId.data;
-        taskCronDTO.dto.appComponentId = data.appComponentId;
-        taskCronDTO.dto.tableComponentId = data.tableComponentId;
+        if (taskCronDTO.dto != null) {
+            DataAccessIdDTO dataAccessIdDTO = taskCronDTO.dto;
+            DataAccessIdsDTO accessIdsDTO = new DataAccessIdsDTO();
+            accessIdsDTO.appId = taskCronDTO.dto.appId;
+            accessIdsDTO.tableId = taskCronDTO.dto.tableId;
+            ResultEntity<Object> clientComponentId = client.getComponentId(accessIdsDTO);
+            ComponentIdDTO data = (ComponentIdDTO) clientComponentId.data;
+            taskCronDTO.dto.appComponentId = data.appComponentId;
+            taskCronDTO.dto.tableComponentId = data.tableComponentId;
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
