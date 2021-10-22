@@ -129,7 +129,7 @@ public class BuildNifiTaskListener {
             return;
         }
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
-        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", dto.appId).one();
+        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", dto.appId).eq("type",dto.dataClassifyEnum.getValue()).eq("del_flag",1).one();
         if (appNifiSettingPO1 != null) {
             appNifiSettingPO = appNifiSettingPO1;
         }
@@ -226,7 +226,7 @@ public class BuildNifiTaskListener {
             }
         }
         //拿出来
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id",appId).eq("del_flag", 1).eq("type",dataClassifyEnum.getValue()).one();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id",appId).eq("type",dataClassifyEnum.getValue()).eq("del_flag", 1).one();
         NifiConfigPO nifiConfigPO = nifiConfigService.query().one();
         //TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
         if(res.data!=null&&appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
