@@ -423,7 +423,7 @@ public class BuildDataModelDorisTableListener
         sql.append(sqlFileds);
         stg_sql = sql.toString().replace("tableName", tableName);
         //2.连接jdbc执行sql
-        String deleteSql="TRUNCATE table " + tableName;
+        String deleteSql="DROP TABLE IF EXISTS " + tableName;
         iPostgreBuild.postgreBuildTable(deleteSql, BusinessTypeEnum.DATAMODEL);
         BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
         log.info("【PGSTG】" + stg_sql);

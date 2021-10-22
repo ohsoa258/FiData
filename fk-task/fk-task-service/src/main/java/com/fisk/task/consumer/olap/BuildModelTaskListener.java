@@ -79,7 +79,7 @@ public class BuildModelTaskListener {
             List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
             for (OlapPO olapPO:olapPOS) {
                 log.info("Doris建表开始:"+olapPO.tableName);
-                doris.dorisBuildTable("TRUNCATE table " + olapPO.tableName);
+                doris.dorisBuildTable("DROP TABLE IF EXISTS " + olapPO.tableName);
                 doris.dorisBuildTable(olapPO.createTableSql);
                 log.info("Doris建表结束,开始创建nifi配置");
                 ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig(olapPO.tableName, olapPO.selectDataSql);
