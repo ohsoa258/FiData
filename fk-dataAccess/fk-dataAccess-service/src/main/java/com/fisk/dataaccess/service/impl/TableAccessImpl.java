@@ -1138,10 +1138,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         /**
          * 查询tb_nifi_config表,查询value是否未空,
          */
-        String nifiKey = nifiConfigMapper.getNifiKey();
-        if (StringUtils.isNotEmpty(nifiKey)) {
-            cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
-        }
+
 
         // TODO: 2021/9/4 nifi流程需要物理表字段
 //        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
