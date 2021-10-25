@@ -219,6 +219,7 @@ public class BuildAtlasTableAndColumnTaskListener
         tableNifiSettingPO.tableName=awbd.tableName;
         tableNifiSettingPO.tableAccessId=Integer.valueOf(awbd.tableId);
         tableNifiSettingPO.selectSql=awbd.dorisSelectSqlStr;
+        tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
         tableNifiSettingService.save(tableNifiSettingPO);
 
         //向task库中添加数据接入表结构数据
