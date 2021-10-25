@@ -222,6 +222,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             for (int i = 0; i < 4; i++) {
                 model.expression = model.expression.substring(0, model.expression.length() - 1);
             }
+            model.syncMode = "TIMER";
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, TaskScheduleMap.INSTANCES.poToDto(model));
