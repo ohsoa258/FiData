@@ -168,7 +168,7 @@ public class BuildNifiTaskListener {
         ids.add(dto.id);
         dataModelTableVO.ids=ids;
         dataModelVO.indicatorIdList=dataModelTableVO;
-        //componentsBuild.deleteNifiFlow(dataModelVO);
+        componentsBuild.deleteNifiFlow(dataModelVO);
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
         // 创建input_port(任务)   (后期入库)

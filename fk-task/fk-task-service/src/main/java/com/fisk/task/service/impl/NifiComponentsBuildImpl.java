@@ -23,6 +23,7 @@ import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
@@ -1094,7 +1095,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                     NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(),String.valueOf(processor.getRevision().getVersion()),null,null);
                 }
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
+                if(!Objects.equals(OlapTableEnum.PHYSICS,nifiRemoveDTO.olapTableEnum)){
+                    tableNifiSettingService.removeById(nifiRemoveDTO.tableId);
+                }
             }
             //删除应用
             if (nifiRemoveDTOList.size()!=0&&nifiRemoveDTOList.get(0).delApp) {
