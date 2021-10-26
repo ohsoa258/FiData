@@ -200,6 +200,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
+                        dataAccessIdDTO.olapTableEnum = OlapTableEnum.PHYSICS;
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
