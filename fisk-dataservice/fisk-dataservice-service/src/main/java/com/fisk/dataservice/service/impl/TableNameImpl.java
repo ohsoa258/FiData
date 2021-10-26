@@ -69,7 +69,6 @@ public class TableNameImpl implements ITableName {
                 tableDataDTO.dimension = isDimension;
                 tableDataDTO.tableField = factAttribute.getFactFieldEnName();
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableDataDTO);
-            case SLICER:
             case WHERE:
             case COLUMN:
                 DimensionAttributePO po = dimensionAttributeMapper.selectById(id);
