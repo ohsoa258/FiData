@@ -1,13 +1,20 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataservice.dto.SlicerDTO;
 import com.fisk.dataservice.dto.InputParameterDTO;
 import com.fisk.dataservice.dto.OutParameterDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
+import com.fisk.dataservice.entity.DimensionAttributePO;
+import com.fisk.dataservice.entity.DimensionPO;
+import com.fisk.dataservice.entity.FactPO;
+import com.fisk.dataservice.entity.IndicatorsPO;
+import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.DataDomainService;
 import com.fisk.dataservice.service.ITableName;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +23,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
@@ -34,6 +40,18 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @Resource
     private ITableName iTableName;
+    @Resource
+    private IndicatorsMapper indicatorsMapper;
+    @Resource
+    private FactMapper factMapper;
+    @Resource
+    private DataDomainMapper domainMapper;
+    @Resource
+    private DimensionAttributeMapper attributeMapper;
+    @Resource
+    private DimensionMapper dimensionMapper;
+    @Resource
+    private DataDomainService domainService;
 
     @Override
     public Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
@@ -62,6 +80,12 @@ public class DataDomainServiceImpl implements DataDomainService {
             String queryField = existTableData.stream()
                     .filter(e -> e.getType() == COLUMN)
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
+                    .collect(joining(","));
+
+            String slicerField = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == SLICER)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().getTableName()
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                     .collect(joining(","));
 
             // 根据 TableNameKey 进行去重
@@ -300,5 +324,66 @@ public class DataDomainServiceImpl implements DataDomainService {
         arr[0] = "`";
         arr[1] = "`";
         return arr;
+    }
+
+    @DS("datamodel")
+    @Override
+    public Object getSlicer(List<SlicerDTO> dto) {
+        List<Object> dtoList = new ArrayList<>();
+
+        // 非维度
+        List<Object> objectList1 = dto.stream()
+                .filter(e -> e.getIsDimension() == 0)
+                .map(e -> this.queryNoDimension(e.getFiledId(), e.getFiledName()))
+                .collect(toList());
+
+        // 维度
+        List<Object> objectList = dto.stream()
+                .filter(e -> e.getIsDimension() == 1)
+                .map(e -> this.queryDimension(e.getFiledId(), e.getFiledName()))
+                .collect(toList());
+
+        dtoList.addAll(objectList1);
+        dtoList.addAll(objectList);
+        return dtoList;
+    }
+
+    /**
+     * 查询非维度数据
+     * @param fieldId
+     * @param filedName
+     * @return
+     */
+    public Object queryNoDimension(Integer fieldId,String filedName){
+        IndicatorsPO indicators = indicatorsMapper.selectById(fieldId);
+        if (indicators == null) {
+            return null;
+        }
+
+        FactPO fact = factMapper.selectById(indicators.getFactId());
+        return domainService.executeToSql(filedName,fact.getFactTableEnName());
+    }
+
+    @DS("master")
+    @Override
+    public Object executeToSql(String filedName,String tableName){
+        Set<Object> collect = domainMapper.queryData(filedName, tableName).stream().collect(toSet());
+        return collect;
+    }
+
+    /**
+     * 查询维度数据
+     * @param fieldId
+     * @param filedName
+     * @return
+     */
+    public Object queryDimension(Integer fieldId,String filedName){
+        DimensionAttributePO po = attributeMapper.selectById(fieldId);
+        if (po == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DimensionPO dimension = dimensionMapper.selectById(po.getDimensionId());
+        return domainService.executeToSql(filedName,dimension.getDimensionTabName());
     }
 }

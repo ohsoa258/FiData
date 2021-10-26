@@ -45,12 +45,12 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
         if ("TIMER".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "Timer driven";
-            dto.syncMode = "Timer driven";
+            dto.syncMode = "TIMER_DRIVEN";
             model.expression += " sec";
             dto.expression += " sec";
         } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "CRON driven";
-            dto.syncMode = "CRON driven";
+            dto.syncMode = "CRON_DRIVEN";
         }
 
         boolean save = this.save(model);
@@ -153,6 +153,16 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
         TaskSchedulePO model = TaskScheduleMap.INSTANCES.dtoToPo(dto);
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
+        }
+
+        if ("TIMER".equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = "Timer driven";
+            dto.syncMode = "TIMER_DRIVEN";
+            model.expression += " sec";
+            dto.expression += " sec";
+        } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = "CRON driven";
+            dto.syncMode = "CRON_DRIVEN";
         }
 
         TaskSchedulePO taskSchedule = mapper.getTaskSchedule(dto.jobId, dto.flag);

@@ -292,6 +292,8 @@ public class BuildNifiTaskListener {
             TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
             if(tableNifiSettingPO!=null){
                 targetDbPoolConfig.targetTableName = tableNifiSettingPO.tableName;
+                processorConfig.targetTableName=tableNifiSettingPO.tableName;
+                processorConfig.sourceExecSqlQuery=tableNifiSettingPO.selectSql;
             }
             sourceDsConfig=res.data.sourceDsConfig;
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {//pg_dw----doris_olap
@@ -329,6 +331,7 @@ public class BuildNifiTaskListener {
         }
         data.targetDsConfig = targetDbPoolConfig;
         data.sourceDsConfig=sourceDsConfig;
+        data.processorConfig=processorConfig;
         return data;
     }
 
