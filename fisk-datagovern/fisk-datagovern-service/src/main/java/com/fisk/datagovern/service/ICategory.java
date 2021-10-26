@@ -2,6 +2,9 @@ package com.fisk.datagovern.service;
 
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovern.dto.category.CategoryDTO;
+import com.fisk.datagovern.dto.category.CategoryDataDTO;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -35,5 +38,11 @@ public interface ICategory {
      * @return
      */
     CategoryDTO getCategoryDetail(int id);
+
+    /**
+     * 获取类目列表
+     * @return
+     */
+    List<CategoryDataDTO> getCategoryList();
 
 }

@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovern.config.SwaggerConfig;
 import com.fisk.datagovern.dto.category.CategoryDTO;
 import com.fisk.datagovern.dto.label.LabelDTO;
+import com.fisk.datagovern.dto.label.LabelQueryDTO;
 import com.fisk.datagovern.service.ILabel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,6 +49,12 @@ public class LabelController {
     @PutMapping("/updateLabel")
     public ResultEntity<Object> updateLabel(@Validated @RequestBody LabelDTO dto) {
         return ResultEntityBuild.build(service.updateLabel(dto));
+    }
+
+    @ApiOperation("根据选中类目id获取标签列表")
+    @PostMapping("/getLabelPageList")
+    public ResultEntity<Object> getLabelPageList(@RequestBody LabelQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getLabelPageList(dto));
     }
 
 

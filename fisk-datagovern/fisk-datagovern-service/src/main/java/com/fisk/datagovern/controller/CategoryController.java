@@ -50,6 +50,12 @@ public class CategoryController {
         return ResultEntityBuild.build(service.updateCategory(dto));
     }
 
+    @ApiOperation("获取类目列表")
+    @GetMapping("/getCategoryList")
+    public ResultEntity<Object> getCategoryList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCategoryList());
+    }
+
 
 
 }
