@@ -16,7 +16,9 @@ public enum DataDoFieldTypeEnum implements BaseEnum {
 
     VALUE(1,"值"),
 
-    WHERE(2,"筛选器");
+    WHERE(2,"筛选器"),
+
+    SLICER(3,"切片器"),;
 
     DataDoFieldTypeEnum(int value, String name) {
         this.name = name;
