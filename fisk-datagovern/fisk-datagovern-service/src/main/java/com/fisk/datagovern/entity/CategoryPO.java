@@ -13,6 +13,14 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class CategoryPO extends BasePO {
     /**
+     * 类目code
+     */
+    public String categoryCode;
+    /**
+     * 父级类目code
+     */
+    public String categoryParentCode;
+    /**
      * 类目中文名称
      */
     public String categoryCnName;
