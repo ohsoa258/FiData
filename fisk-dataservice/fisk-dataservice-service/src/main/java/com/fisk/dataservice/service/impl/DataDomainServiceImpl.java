@@ -82,28 +82,6 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining(","));
 
-            // 维度的切片器数据
-            String slicerDimenField = apiConfigureFieldList.stream()
-                    .filter(e -> e.getFieldType() == SLICER && e.dimension == 1)
-                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
-                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
-                    .collect(joining(","));
-
-            // 非维度的切片器数据
-            String slicerNoDimenField = apiConfigureFieldList.stream()
-                    .filter(e -> e.getFieldType() == SLICER && e.dimension == 0)
-                    .map(e -> iTableName.getTableName(e.getFieldId(), VALUE, e.getFieldName(), e.dimension).getData().getTableName()
-                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
-                    .collect(joining(","));
-
-            StringBuilder slicerField = new StringBuilder();
-            if (StringUtils.isNotBlank(slicerDimenField)){
-                slicerField.append(slicerDimenField);
-            }
-            if (StringUtils.isNotBlank(slicerNoDimenField)){
-                slicerField.append(slicerNoDimenField);
-            }
-
             // 根据 TableNameKey 进行去重
             ArrayList<TableDataDTO> tableKey = existTableData.stream()
                     .filter(e -> StringUtils.isNotBlank(e.getTableNameKey()))
@@ -123,11 +101,6 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // 追加表名_key
             str.append(queryKey);
-
-            // 追加切片器数据
-            if (StringUtils.isNotBlank(slicerField)){
-                str.append(slicerField);
-            }
 
             // 从表去重表名
             ArrayList<TableDataDTO> joinTableDataList = existTableData.stream()
@@ -232,7 +205,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getFactName() + ") AS " + NO_DIMENSION_ALIAS_NAME + numll.incrementAndGet()
                             + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
                             + "=" + NO_DIMENSION_ALIAS_NAME + numll + "." + e.getDimensionName() + "_key ")
-                    .collect(joining(" "));  
+                    .collect(joining(" "));
 
             String collect5 = relationShip.stream()
                     .filter(e -> e.getWhether() == 0)
@@ -251,7 +224,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             String leftJoin = leftJoinList.stream()
                     .map(e -> "LEFT JOIN (SELECT * FROM " + e.getTableName() + ") AS " + NO_DIMENSION_ALIAS_NAME + num.incrementAndGet()
                             + " ON " + "1 = 1 "
-                        )
+                    )
                     .collect(joining(" "));
 
             String collect1 = noTableData.stream()
@@ -349,24 +322,16 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @DS("datamodel")
     @Override
-    public Object getSlicer(List<SlicerDTO> dto) {
-        List<Object> dtoList = new ArrayList<>();
-
+    public Object getSlicer(SlicerDTO dto) {
         // 非维度
-        List<Object> objectList1 = dto.stream()
-                .filter(e -> e.getIsDimension() == 0)
-                .map(e -> this.queryNoDimension(e.getFiledId(), e.getFiledName()))
-                .collect(toList());
+        if (dto.getIsDimension() == 0){
+            return this.queryNoDimension(dto.getFiledId(), dto.getFiledName());
+        }else if (dto.getIsDimension() == 1){
+            // 维度
+            return this.queryDimension(dto.getFiledId(), dto.getFiledName());
+        }
 
-        // 维度
-        List<Object> objectList = dto.stream()
-                .filter(e -> e.getIsDimension() == 1)
-                .map(e -> this.queryDimension(e.getFiledId(), e.getFiledName()))
-                .collect(toList());
-
-        dtoList.addAll(objectList1);
-        dtoList.addAll(objectList);
-        return dtoList;
+        return null;
     }
 
     /**

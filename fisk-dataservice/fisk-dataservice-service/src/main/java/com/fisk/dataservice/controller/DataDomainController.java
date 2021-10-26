@@ -34,7 +34,7 @@ public class DataDomainController {
 
     @ApiOperation("获取切片器数据")
     @PostMapping("/getSLICER")
-    public ResultEntity<Object> getSlicer(@RequestBody List<SlicerDTO> dto) {
+    public ResultEntity<Object> getSlicer(@RequestBody SlicerDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getSlicer(dto));
     }
 }

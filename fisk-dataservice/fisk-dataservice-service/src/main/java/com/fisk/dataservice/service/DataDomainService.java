@@ -18,7 +18,7 @@ public interface DataDomainService {
      * @param dto
      * @return
      */
-    Object getSlicer(List<SlicerDTO> dto);
+    Object getSlicer(SlicerDTO dto);
 
     /**
      * 执行SQL
