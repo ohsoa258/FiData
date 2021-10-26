@@ -33,6 +33,8 @@ public class LabelImpl implements ILabel {
     LabelMapper mapper;
     @Resource
     CategoryImpl category;
+    @Resource
+    CategoryMapper categoryMapper;
 
     @Override
     public ResultEnum addLabel(LabelDTO dto)
@@ -87,16 +89,17 @@ public class LabelImpl implements ILabel {
         }
         LabelDTO dto = LabelMap.INSTANCES.poToDto(po);
         dto.moduleIds = Arrays.asList(dto.applicationModule.split(","));
+        CategoryPO categoryPO=categoryMapper.selectById(po.categoryId);
+        dto.categoryName=categoryPO==null?"":categoryPO.categoryCnName;
         return dto;
     }
 
     @Override
     public Page<LabelDataDTO> getLabelPageList(LabelQueryDTO dto)
     {
-        //Page<LabelDataDTO> page=new Page<>();
         String categoryIds="";
         List<Integer> ids=category.getCategoryIds(dto.categoryId);
-        if (ids !=null || ids.size()!=0)
+        if (ids !=null && ids.size()!=0)
         {
             categoryIds="'";
             categoryIds+= StringUtils.join(ids, ",")+"'";

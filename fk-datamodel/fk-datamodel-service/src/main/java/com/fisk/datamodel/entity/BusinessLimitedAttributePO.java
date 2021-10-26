@@ -3,6 +3,7 @@ package com.fisk.datamodel.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,10 +12,9 @@ import java.util.Date;
  * @author cfk
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("tb_business_limited_attribute")
-public class BusinessLimitedAttributePO {
-    @TableId(type = IdType.AUTO)
-    public int id;
+public class BusinessLimitedAttributePO extends BasePO {
     /**
      * 业务限定id
      */
@@ -31,26 +31,6 @@ public class BusinessLimitedAttributePO {
      *计算值
      */
     public String calculationValue;
-    /**
-     *创建时间
-     */
-    public Date createTime;
-    /**
-     *创建人
-     */
-    public String createUser;
-    /**
-     *修改时间
-     */
-    public String updateTime;
-    /**
-     *更新人
-     */
-    public String updateUser;
-    /**
-     *是否删除
-     */
-    public int delFlag;
 
 
 

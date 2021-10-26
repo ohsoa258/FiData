@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.ServiceRegistryDTO;
+import com.fisk.system.dto.ServiceRegistryDataDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
 import com.fisk.system.map.ServiceRegistryMap;
 import com.fisk.system.mapper.ServiceRegistryMapper;
@@ -27,11 +28,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
     @Resource
     ServiceRegistryMapper mapper;
 
-    /**
-     * 获取服务注册树形结构
-     *
-     * @return 返回值
-     */
     @Override
     public List<ServiceRegistryDTO> listServiceRegistry() {
         try {
@@ -66,11 +62,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         }
     }
 
-    /**
-     * 添加服务注册
-     *
-     * @return 返回值
-     */
     @Override
     public ResultEnum addServiceRegistry(ServiceRegistryDTO dto) {
 
@@ -89,11 +80,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 删除服务注册
-     *
-     * @return 返回值
-     */
     @Override
     public  ResultEnum delServiceRegistry(int id) {
         ServiceRegistryPO model = mapper.selectById(id);
@@ -103,12 +89,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * 根据id查询数据,用于数据回显
-     *
-     * @param id 请求参数
-     * @return 返回值
-     */
     @Override
     public ServiceRegistryDTO getDataDetail(int id) {
         ServiceRegistryDTO po = ServiceRegistryMap.INSTANCES.poToDto(mapper.selectById(id));
@@ -117,7 +97,6 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         }
         return po;
     }
-
 
     @Override
     public ResultEnum updateServiceRegistry(ServiceRegistryDTO dto) {
@@ -137,4 +116,16 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
         ServiceRegistryPO po = ServiceRegistryMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Override
+    public List<ServiceRegistryDataDTO> getServiceRegistryList()
+    {
+        List<ServiceRegistryDataDTO> dto=new ArrayList<>();
+        QueryWrapper<ServiceRegistryPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(ServiceRegistryPO::getParentServeCode,"1");
+        List<ServiceRegistryPO> list=mapper.selectList(queryWrapper);
+        dto=ServiceRegistryMap.INSTANCES.poListToDtoList(list);
+        return dto;
+    }
+
 }
