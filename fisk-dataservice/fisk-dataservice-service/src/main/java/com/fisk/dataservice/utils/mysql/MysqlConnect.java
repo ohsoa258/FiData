@@ -112,7 +112,9 @@ public class MysqlConnect {
         for (String s : aggregation.split(",")) {
             try {
                 List<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
-                        .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE || e.getFieldType() == DataDoFieldTypeEnum.SLICER)
+                        .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE
+                                || e.getFieldType() == DataDoFieldTypeEnum.SLICER
+                                || e.getFieldType() == DataDoFieldTypeEnum.APPOINT_SLICER)
                         .collect(Collectors.toList());
 
                 for (DataDoFieldDTO dto : aggregationList) {

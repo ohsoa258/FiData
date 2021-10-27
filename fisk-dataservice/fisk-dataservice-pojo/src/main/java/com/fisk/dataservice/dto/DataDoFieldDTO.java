@@ -24,4 +24,7 @@ public class DataDoFieldDTO {
     private String startTime;
     // 结束时间
     private String endTime;
+
+    // 指定时间
+    private String[] specifiedTime;
 }

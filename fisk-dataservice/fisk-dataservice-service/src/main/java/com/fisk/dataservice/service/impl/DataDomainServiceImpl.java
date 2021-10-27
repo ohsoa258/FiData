@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -61,7 +62,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // 非维度数据
             List<TableDataDTO> noTableData = apiConfigureFieldList.stream()
-                    .filter(e -> e.getDimension() == 0 && (e.getFieldType() == VALUE || e.getFieldType() == SLICER))
+                    .filter(e -> e.getDimension() == 0 && (e.getFieldType() == VALUE || e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
                     .map(e -> iTableName.getTableName(e.getFieldId(), VALUE, e.getFieldName(), e.dimension).getData())
                     .collect(toList());
 
@@ -72,30 +73,31 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .collect(toList());
 
             List<TableDataDTO> slicerDimenList = apiConfigureFieldList.stream()
-                    .filter(e -> e.getDimension() == 1 && e.getFieldType() == SLICER)
+                    .filter(e -> e.getDimension() == 1 && (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
                     .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData())
                     .collect(toList());
 
             List<TableDataDTO> slicerNoDimenList = apiConfigureFieldList.stream()
-                    .filter(e -> e.getDimension() == 0 && e.getFieldType() == SLICER)
+                    .filter(e -> e.getDimension() == 0 && (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
                     .map(e -> iTableName.getTableName(e.getFieldId(), VALUE, e.getFieldName(), e.dimension).getData())
                     .collect(toList());
 
+            // DimeTableData,slicerDimenList,slicerNoDimenList 合并成一个新的集合
             List<TableDataDTO> existTableData = Stream.of(DimeTableData, slicerDimenList,slicerNoDimenList).flatMap(Collection::stream).distinct().collect(toList());
 
             // 维度
             StringBuilder str = new StringBuilder();
-            str.append("SELECT ");
+            str.append("SELECT DISTINCT ");
 
             // select
             String queryField = existTableData.stream()
-                    .filter(e -> e.getType() == COLUMN || e.getType() == SLICER)
+                    .filter(e -> e.getType() == COLUMN || e.getType() == SLICER || e.getType() == APPOINT_SLICER)
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining(","));
 
             // 维度的切片器数据
             String slicerDimenField = apiConfigureFieldList.stream()
-                    .filter(e -> e.getFieldType() == SLICER && e.dimension == 1)
+                    .filter(e -> (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER) && e.dimension == 1)
                     .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
                             + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                     .collect(joining(","));
@@ -161,15 +163,24 @@ public class DataDomainServiceImpl implements DataDomainService {
                             + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime())
                     .collect(joining(" AND "));
 
+            String serifedTime = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == APPOINT_SLICER && e.dimension == 1)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1]
+                            + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")")
+                    .collect(joining(" AND "));
+
             StringBuilder whereSlicerField = new StringBuilder();
             if (StringUtils.isNotBlank(whereField)){
                 whereSlicerField.append(whereField);
             }
-            if (StringUtils.isNotBlank(whereField) && StringUtils.isNotBlank(slicerDateField)){
+            if (StringUtils.isNotBlank(whereField) && (StringUtils.isNotBlank(slicerDateField) || StringUtils.isNotBlank(serifedTime))){
                 whereSlicerField.append(" AND ");
             }
             if (StringUtils.isNotBlank(slicerDateField)){
                 whereSlicerField.append(slicerDateField);
+            }else if (StringUtils.isNotBlank(serifedTime)){
+                whereSlicerField.append(serifedTime);
             }
 
             // WHERE
@@ -303,6 +314,19 @@ public class DataDomainServiceImpl implements DataDomainService {
                         return null;
                     }).collect(joining(" AND "));
 
+            // C1.`CalendarYear` IN ( "2021", "2022" )
+            AtomicInteger count1 = new AtomicInteger();
+            String serifedTime = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == APPOINT_SLICER && e.getDimension() == 0)
+                    .map(e -> {
+                        for (TableDataDTO noTableDatum : noTableData) {
+                            return NO_DIMENSION_ALIAS_NAME + count1.incrementAndGet() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1]
+                                    + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")";
+                        }
+
+                        return null;
+                    }).collect(joining(" AND "));
+
             // WHERE
             wholeStr.append("WHERE ");
             String collect2 = noTableData.stream()
@@ -312,8 +336,10 @@ public class DataDomainServiceImpl implements DataDomainService {
             StringBuilder whereSlicerStr = new StringBuilder();
             if (StringUtils.isNotBlank(slicerNoDateField)){
                 whereSlicerStr.append(slicerNoDateField);
+            }else if (StringUtils.isNotBlank(serifedTime)){
+                whereSlicerStr.append(serifedTime);
             }
-            if (StringUtils.isNotBlank(slicerNoDateField) && StringUtils.isNotBlank(collect2)){
+            if ((StringUtils.isNotBlank(slicerNoDateField) || StringUtils.isNotBlank(serifedTime)) && StringUtils.isNotBlank(collect2)){
                 whereSlicerStr.append(" AND ");
             }
             if (StringUtils.isNotBlank(collect2)){
