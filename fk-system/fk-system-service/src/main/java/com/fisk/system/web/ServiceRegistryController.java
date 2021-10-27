@@ -79,4 +79,11 @@ public class ServiceRegistryController {
         return ResultEntityBuild.build(service.updateServiceRegistry(dto));
     }
 
+    @GetMapping("/getServiceRegistryList")
+    @ApiOperation(value = "获取服务名称列表")
+    public ResultEntity<Object> getServiceRegistryList()
+    {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getServiceRegistryList());
+    }
+
 }

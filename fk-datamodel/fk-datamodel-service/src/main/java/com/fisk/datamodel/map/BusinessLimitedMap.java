@@ -1,6 +1,7 @@
 package com.fisk.datamodel.map;
 
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
+import com.fisk.datamodel.dto.businessLimited.BusinessLimitedUpdateDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

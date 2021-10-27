@@ -5,9 +5,9 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedAddDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
+import com.fisk.datamodel.dto.businessLimited.*;
+import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
+import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.service.IBusinessLimited;
 import com.fisk.datamodel.service.IBusinessLimitedAttribute;
@@ -33,34 +33,46 @@ public class BusinessLimitedController {
     @Resource
     public IBusinessLimitedAttribute iBusinessLimitedAttribute;
 
-    @ApiOperation("更新业务限定")
-    @PutMapping("/updateBusinessLimitedAttribute")
-    public ResultEntity<Object> updateBusinessLimitedAttribute(@Validated @RequestBody BusinessLimitedAddDTO businessLimitedAddDto) {
-        return ResultEntityBuild.build(iBusinessLimitedAttribute.updateBusinessLimitedAttribute(businessLimitedAddDto));
-    }
-
-    @PostMapping("/getBusinessLimitedDTOPage")
-    @ApiOperation(value = "获取业务限定数据列表")
-    public ResultEntity<Page<BusinessLimitedDTO>> getBusinessLimitedDtoPage(@RequestBody BusinessLimitedQueryDTO businessLimitedQueryDto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedDtoPage(businessLimitedQueryDto));
-
-    }
-
-    @GetMapping("/getBusinessLimitedAttribute/{id}")
-    @ApiOperation(value = "获取业务限定详情")
-    public ResultEntity<BusinessLimitedAddDTO> getBusinessLimitedAttribute(@PathVariable("id") String id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimitedAttribute.getBusinessLimitedAttribute(id));
-    }
-
     @DeleteMapping("/deleteBusinessLimitedById/{id}")
     @ApiOperation(value = "删除业务限定记录")
     public ResultEntity<Object> deleteBusinessLimitedById(@PathVariable("id") String id) {
         return ResultEntityBuild.build(iBusinessLimited.deleteBusinessLimitedById(id));
     }
+
     @GetMapping("/getBusinessLimitedList/{factId}")
     @ApiOperation(value = "获取业务限定下拉数据")
     public ResultEntity<List<BusinessLimitedPO>> getBusinessLimitedList(@PathVariable("factId") String factId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedList(factId));
+    }
+
+    @GetMapping("/getBusinessLimitedAndAttributeList/{businessLimitedId}")
+    @ApiOperation(value = "根获取据业务限定id获取业务限定字段列表以及业务限定详情")
+    public ResultEntity<BusinessLimitedDataDTO> getBusinessLimitedAndAttributeList(@PathVariable("businessLimitedId") int businessLimitedId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedAndAttributeList(businessLimitedId));
+    }
+
+    @ApiOperation("更新业务限定")
+    @PutMapping("/businessLimitedUpdate")
+    public ResultEntity<Object> businessLimitedUpdate(@Validated @RequestBody BusinessLimitedUpdateDTO dto) {
+        return ResultEntityBuild.build(iBusinessLimited.BusinessLimitedUpdate(dto));
+    }
+
+    @ApiOperation("更新业务限定字段")
+    @PutMapping("/businessLimitedAttributeUpdate")
+    public ResultEntity<Object> businessLimitedAttributeUpdate(@Validated @RequestBody BusinessLimitedAttributeDataDTO dto) {
+        return ResultEntityBuild.build(iBusinessLimitedAttribute.updateBusinessLimitedAttribute(dto));
+    }
+
+    @DeleteMapping("/deleteBusinessLimitedAttribute/{id}")
+    @ApiOperation(value = "删除业务限定字段")
+    public ResultEntity<Object> delBusinessLimitedAttribute(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(iBusinessLimitedAttribute.delBusinessLimitedAttribute(id));
+    }
+
+    @ApiOperation("添加业务限定字段")
+    @PostMapping("/addBusinessLimitedAttribute")
+    public ResultEntity<Object> addBusinessLimitedAttribute(@Validated @RequestBody BusinessLimitedAttributeDataDTO dto) {
+        return ResultEntityBuild.build(iBusinessLimitedAttribute.addBusinessLimitedAttribute(dto));
     }
 
 }

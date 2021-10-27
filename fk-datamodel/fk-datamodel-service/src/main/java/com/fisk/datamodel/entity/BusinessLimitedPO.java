@@ -1,6 +1,7 @@
 package com.fisk.datamodel.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.entity.BasePO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,8 +15,8 @@ import java.util.Date;
 @TableName("tb_business_limited")
 @NoArgsConstructor
 @AllArgsConstructor
-public class BusinessLimitedPO {
-    public int id;
+@EqualsAndHashCode(callSuper = true)
+public class BusinessLimitedPO extends BasePO {
     /**
      *业务限定名称
      */
@@ -24,26 +25,6 @@ public class BusinessLimitedPO {
      *业务限定描述
      */
     public String limitedDes;
-    /**
-     *创建时间
-     */
-    public Date createTime;
-    /**
-     *创建人
-     */
-    public String createUser;
-    /**
-     *修改时间
-     */
-    public Date updateTime;
-    /**
-     *修改人
-     */
-    public String updateUser;
-    /**
-     *是否删除
-     */
-    public int delFlag;
     /**
      *事实表id
      */

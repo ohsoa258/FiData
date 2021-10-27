@@ -2,11 +2,17 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
+import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDataDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
+import com.fisk.datamodel.dto.businessLimited.BusinessLimitedUpdateDTO;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
+import com.fisk.datamodel.map.BusinessLimitedAttributeMap;
+import com.fisk.datamodel.map.BusinessLimitedMap;
+import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.mapper.BusinessLimitedAttributeMapper;
 import com.fisk.datamodel.mapper.BusinessLimitedMapper;
 import com.fisk.datamodel.service.IBusinessLimited;
@@ -45,6 +51,43 @@ public class BusinessLimitedImpl implements IBusinessLimited {
         queryWrapper.lambda().eq(BusinessLimitedPO::getFactId,factId);
         List<BusinessLimitedPO> businessLimitedPos = businessLimitedMapper.selectList(queryWrapper);
         return businessLimitedPos;
+    }
+
+    @Override
+    public BusinessLimitedDataDTO getBusinessLimitedAndAttributeList(int businessLimitedId)
+    {
+        BusinessLimitedPO po=businessLimitedMapper.selectById(businessLimitedId);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        BusinessLimitedDataDTO dto=new BusinessLimitedDataDTO();
+        dto.id=po.id;
+        dto.limitedName=po.limitedName;
+        dto.limitedDes=po.limitedDes;
+        //获取业务限定字段列表
+        QueryWrapper<BusinessLimitedAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,businessLimitedId);
+        List<BusinessLimitedAttributePO> list=businessLimitedAttributeMapper.selectList(queryWrapper);
+        if (list==null || list.size()==0)
+        {
+            return  dto;
+        }
+        dto.dto= BusinessLimitedAttributeMap.INSTANCES.poListToDto(list);
+        return dto;
+    }
+
+    @Override
+    public ResultEnum BusinessLimitedUpdate(BusinessLimitedUpdateDTO dto)
+    {
+        BusinessLimitedPO po=businessLimitedMapper.selectById(dto.id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        po.limitedDes=dto.limitedDes;
+        po.limitedName=dto.limitedName;
+        return businessLimitedMapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
 
