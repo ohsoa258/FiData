@@ -112,11 +112,14 @@ public class MysqlConnect {
         for (String s : aggregation.split(",")) {
             try {
                 List<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
-                        .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE).collect(Collectors.toList());
+                        .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE || e.getFieldType() == DataDoFieldTypeEnum.SLICER)
+                        .collect(Collectors.toList());
 
                 for (DataDoFieldDTO dto : aggregationList) {
-                    str.append("\"" + dto.getFieldName() + "\"" + ":" + "\"" + rs.getString(s)+ "\"" + "}");
+                    str.append("\"" + dto.getFieldName() + "\"" + ":" + "\"" + rs.getString(s)+ "\"" + ",");
                 }
+                str.deleteCharAt(str.length() -1);
+                str.append("}");
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
