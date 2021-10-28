@@ -122,13 +122,15 @@ public class DataDomainServiceImpl implements DataDomainService {
             // 追加表名_key
             str.append(queryKey);
 
-            if (StringUtils.isNotBlank(queryKey) && StringUtils.isNotBlank(slicerDimenField)){
-                str.append(",");
-            }
+            if (!queryField.equals(slicerDimenField)){
+                if (StringUtils.isNotBlank(queryKey) && StringUtils.isNotBlank(slicerDimenField)){
+                    str.append(",");
+                }
 
-            // 追加切片器数据
-            if (StringUtils.isNotBlank(slicerDimenField)){
-                str.append(slicerDimenField);
+                // 追加切片器数据
+                if (StringUtils.isNotBlank(slicerDimenField)){
+                    str.append(slicerDimenField);
+                }
             }
 
             // 从表去重表名
@@ -221,10 +223,10 @@ public class DataDomainServiceImpl implements DataDomainService {
             String[] escapeStr = getEscapeStr();
 
             // 所有维度的data
-            List<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
+            Set<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
                     .filter(e -> e.getDimension() == 1)
                     .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData())
-                    .collect(toList());
+                    .collect(toSet());
 
             String existTableField = tableDataList.stream()
                     .filter(e -> e.getType() != VALUE)

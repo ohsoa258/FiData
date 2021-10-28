@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.dataservice.doris.DorisDataSource.*;
@@ -53,7 +53,11 @@ public class MysqlConnect {
             str.append("[");
             while (rs.next()){
                 str.append("{");
-                collect = apiConfigureFieldList.stream()
+                // 根据FieldName去重
+                List<DataDoFieldDTO> fieldList = apiConfigureFieldList.stream().collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(DataDoFieldDTO::getFieldName))), ArrayList::new));
+
+                collect = fieldList.stream()
                         .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.COLUMN)
                         .map(e -> {
                             try {
@@ -65,7 +69,7 @@ public class MysqlConnect {
                         }).collect(joining(","));
 
                 str.append(collect);
-                addToAggregation(aggregation,collect,str,rs,apiConfigureFieldList);
+                addToAggregation(aggregation,collect,str,rs,fieldList);
                 // 不是最后一条数据库数据
                 str.append(",");
             }
@@ -111,11 +115,11 @@ public class MysqlConnect {
 
         for (String s : aggregation.split(",")) {
             try {
-                List<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
+                Set<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
                         .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE
                                 || e.getFieldType() == DataDoFieldTypeEnum.SLICER
                                 || e.getFieldType() == DataDoFieldTypeEnum.APPOINT_SLICER)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
 
                 for (DataDoFieldDTO dto : aggregationList) {
                     str.append("\"" + dto.getFieldName() + "\"" + ":" + "\"" + rs.getString(s)+ "\"" + ",");
