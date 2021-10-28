@@ -1,18 +1,14 @@
-package com.fisk.datafactory.entity;
+package com.fisk.datafactory.dto.customworkflowdetail;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
 import lombok.Data;
 
 /**
  * @author Lock
  */
 @Data
-@TableName("tb_nifi_custom_workflow_detail")
-public class NifiCustomWorkflowDetailPO extends BasePO {
-    /**
-     * 父组件
-     */
+public class NifiCustomWorkflowDetailDTO {
+
+    public long id;
     public long pid;
     public String workflowId;
     public int componentsId;

@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -11,17 +12,23 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
+import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowMapper;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author wangyan and Lock
@@ -32,6 +39,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Resource
     NifiCustomWorkflowMapper mapper;
+    @Resource
+    NifiCustomWorkflowDetailImpl customWorkflowDetailImpl;
+    @Resource
+    NifiCustomWorkflowDetailMapper detailMapper;
     @Resource
     private GenerateCondition generateCondition;
     @Resource
@@ -54,14 +65,22 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     }
 
     @Override
-    public NifiCustomWorkflowDTO getData(long id) {
+    public NifiCustomWorkflowDetailVO getData(long id) {
 
         // 查询
         NifiCustomWorkflowPO po = this.query().eq("id", id).one();
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        return NifiCustomWorkflowMap.INSTANCES.poToDto(po);
+
+        NifiCustomWorkflowDetailVO vo = new NifiCustomWorkflowDetailVO();
+
+        vo.dto = NifiCustomWorkflowMap.INSTANCES.poToDto(po);
+        List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query().eq("workflow_id", po.workflowId).list();
+        if (CollectionUtils.isNotEmpty(list)) {
+            vo.list = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list);
+        }
+        return vo;
     }
 
     @Override
@@ -78,6 +97,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
+    @Transactional
     @Override
     public ResultEnum deleteData(long id) {
 
@@ -87,14 +107,28 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             return ResultEnum.DATA_NOTEXISTS;
         }
         // 执行删除
-        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int i = mapper.deleteByIdWithFill(model);
+        if (i <= 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query().eq("workflow_id", model.workflowId).list();
+        try {
+            if (CollectionUtils.isNotEmpty(list)) {
+                List<Integer> collect = list.stream().map(e -> detailMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public List<FilterFieldDTO> getColumn() {
 
         return getMetadata.getMetadataList(
-                "dmp_taskfactory_db",
+                "dmp_datafactory_db",
                 "tb_nifi_custom_workflow",
                 "",
                 FilterSqlConstants.CUSTOM_WORKFLOW_SQL);
