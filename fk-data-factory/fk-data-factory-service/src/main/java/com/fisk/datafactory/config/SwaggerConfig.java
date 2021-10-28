@@ -25,14 +25,18 @@ public class SwaggerConfig {
 
     public static final String TAG_1 = "task-schedule-controller";
     public static final String TAG_2 = "nifi-custom-workflow-controller";
+    public static final String TAG_3 = "nifi-component-controller";
+    public static final String TAG_4 = "nifi-custom-workflow-detail-controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataFactoryApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1,"调度中心"))
-                .tags(new Tag(TAG_2,"NIFI数据管道管理"))
+                .tags(new Tag(TAG_1, "调度中心"))
+                .tags(new Tag(TAG_2, "NIFI数据管道"))
+                .tags(new Tag(TAG_3, "可视化视图-组件列表"))
+                .tags(new Tag(TAG_4, "NIFI数据管道详情"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

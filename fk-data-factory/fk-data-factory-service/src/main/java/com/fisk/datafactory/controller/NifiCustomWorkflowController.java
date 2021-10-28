@@ -8,6 +8,7 @@ import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class NifiCustomWorkflowController {
 
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显数据")
-    public ResultEntity<NifiCustomWorkflowDTO> getData(@PathVariable("id") long id) {
+    public ResultEntity<NifiCustomWorkflowDetailVO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
@@ -54,8 +55,8 @@ public class NifiCustomWorkflowController {
 
     @GetMapping("/getColumn")
     @ApiOperation(value = "获取管道过滤器表字段")
-    public ResultEntity<Object> getBusinessColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getColumn());
+    public ResultEntity<Object> getBusinessColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
     }
 
     @PostMapping("/pageFilter")

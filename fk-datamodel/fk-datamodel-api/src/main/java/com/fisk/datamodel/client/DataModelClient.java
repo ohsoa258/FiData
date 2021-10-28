@@ -25,7 +25,7 @@ public interface DataModelClient {
      * @param id
      * @return 执行结果
      */
-    @GetMapping("/ServiceRegistry/getDimensionEntity")
+    @GetMapping("/attribute/getDimensionEntity")
     ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id);
 
     /**

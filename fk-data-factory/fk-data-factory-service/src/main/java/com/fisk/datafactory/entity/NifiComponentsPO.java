@@ -17,4 +17,5 @@ public class NifiComponentsPO implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     public long id;
     public String name;
+    public String type;
 }

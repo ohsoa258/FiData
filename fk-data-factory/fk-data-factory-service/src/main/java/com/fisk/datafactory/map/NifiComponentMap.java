@@ -1,7 +1,7 @@
 package com.fisk.datafactory.map;
 
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.entity.NifiComponentsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -12,23 +12,25 @@ import java.util.List;
  * @author Lock
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface NifiCustomWorkflowMap {
+public interface NifiComponentMap {
 
-    NifiCustomWorkflowMap INSTANCES = Mappers.getMapper(NifiCustomWorkflowMap.class);
+    NifiComponentMap INSTANCES = Mappers.getMapper(NifiComponentMap.class);
 
     /**
      * dto => po
+     *
      * @param dto source
      * @return target
      */
-    NifiCustomWorkflowPO dtoToPo(NifiCustomWorkflowDTO dto);
+    NifiComponentsPO dtoToPo(NifiComponentsDTO dto);
 
     /**
      * po => dto
+     *
      * @param po source
      * @return target
      */
-    NifiCustomWorkflowDTO poToDto(NifiCustomWorkflowPO po);
+    NifiComponentsDTO poToDto(NifiComponentsPO po);
 
     /**
      * list集合 dto -> po
@@ -36,7 +38,7 @@ public interface NifiCustomWorkflowMap {
      * @param list list
      * @return target
      */
-    List<NifiCustomWorkflowPO> listDtoToPo(List<NifiCustomWorkflowDTO> list);
+    List<NifiComponentsPO> listDtoToPo(List<NifiComponentsDTO> list);
 
     /**
      * list集合 po -> dto
@@ -44,5 +46,5 @@ public interface NifiCustomWorkflowMap {
      * @param list list
      * @return target
      */
-    List<NifiCustomWorkflowDTO> listPoToDto(List<NifiCustomWorkflowPO> list);
+    List<NifiComponentsDTO> listPoToDto(List<NifiComponentsPO> list);
 }
