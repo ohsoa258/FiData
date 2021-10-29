@@ -150,6 +150,6 @@ public interface DataAccessClient {
     @GetMapping("/physicalTable/getTableFieldId/{id}")
     public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id);
 
-    @GetMapping("/dataAccessTree/getTableIds")
+    @GetMapping("/dataAccessTree/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId();
 }

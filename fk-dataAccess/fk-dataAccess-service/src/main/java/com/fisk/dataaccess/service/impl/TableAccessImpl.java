@@ -1415,8 +1415,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<ChannelDataDTO> getTableId() {
-        return baseMapper.listTableIdAndName();
+    public ResultEntity<List<ChannelDataDTO>> getTableId() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, baseMapper.listTableIdAndName());
     }
 
     @Override

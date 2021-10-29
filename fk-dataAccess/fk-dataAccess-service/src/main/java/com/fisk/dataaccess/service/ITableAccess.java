@@ -221,7 +221,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      *
      * @return list
      */
-    List<ChannelDataDTO> getTableId();
+    ResultEntity<List<ChannelDataDTO>> getTableId();
 
     List<TableIdAndNameVO> getTableIds();
 }

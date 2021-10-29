@@ -41,7 +41,7 @@ public class DataAccessController {
 
     @GetMapping("/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableId());
+        return service.getTableId();
     }
 
     @GetMapping("/getTableIds")

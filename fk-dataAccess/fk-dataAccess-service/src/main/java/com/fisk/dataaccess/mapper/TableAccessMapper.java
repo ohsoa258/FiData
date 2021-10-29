@@ -136,7 +136,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return list
      */
-    @Select("SELECT id,table_name FROM tb_table_access ORDER BY id DESC;")
+    @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
     List<ChannelDataDTO> listTableIdAndName();
 
     @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
