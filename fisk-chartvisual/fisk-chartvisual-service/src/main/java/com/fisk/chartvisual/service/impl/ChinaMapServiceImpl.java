@@ -8,6 +8,7 @@ import com.fisk.chartvisual.service.ChinaMapService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,6 +23,13 @@ public class ChinaMapServiceImpl implements ChinaMapService {
 
     @Override
     public List<ChinaMapDTO> getAll() {
-        return ChinaMap.INSTANCES.poToDto(provincialMapper.selectList(null));
+        List<ProvincialPO> provincialList = provincialMapper.selectList(null);
+
+        List<ChinaMapDTO> dtoList = new ArrayList<>();
+        for (ProvincialPO provincialPO : provincialList) {
+            dtoList.add(ChinaMap.INSTANCES.poToDto(provincialPO));
+        }
+
+        return dtoList;
     }
 }

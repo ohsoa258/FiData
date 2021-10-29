@@ -10,5 +10,5 @@ import lombok.Data;
 public class ChinaMapDTO {
 
     public Integer id;
-    public String provincialName;
+    public String name;
 }
