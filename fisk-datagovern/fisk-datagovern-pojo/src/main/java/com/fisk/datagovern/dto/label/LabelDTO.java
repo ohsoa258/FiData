@@ -12,6 +12,7 @@ public class LabelDTO {
     public int id;
     public String labelCnName;
     public int categoryId;
+    public String categoryName;
     public String labelEnName;
     public String labelDes;
     /**

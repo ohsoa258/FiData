@@ -8,6 +8,7 @@ import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @param id id
      * @return dto
      */
-    NifiCustomWorkflowDTO getData(long id);
+    NifiCustomWorkflowDetailVO getData(long id);
 
     /**
      * 修改

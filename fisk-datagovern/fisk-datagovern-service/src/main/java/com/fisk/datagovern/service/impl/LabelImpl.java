@@ -1,10 +1,18 @@
 package com.fisk.datagovern.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datagovern.dto.category.CategoryDataDTO;
 import com.fisk.datagovern.dto.label.LabelDTO;
+import com.fisk.datagovern.dto.label.LabelDataDTO;
+import com.fisk.datagovern.dto.label.LabelQueryDTO;
+import com.fisk.datagovern.entity.CategoryPO;
 import com.fisk.datagovern.entity.LabelPO;
+import com.fisk.datagovern.map.CategoryMap;
 import com.fisk.datagovern.map.LabelMap;
+import com.fisk.datagovern.mapper.CategoryMapper;
 import com.fisk.datagovern.mapper.LabelMapper;
 import com.fisk.datagovern.service.ILabel;
 import com.google.common.base.Joiner;
@@ -12,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -22,6 +31,10 @@ public class LabelImpl implements ILabel {
 
     @Resource
     LabelMapper mapper;
+    @Resource
+    CategoryImpl category;
+    @Resource
+    CategoryMapper categoryMapper;
 
     @Override
     public ResultEnum addLabel(LabelDTO dto)
@@ -76,7 +89,22 @@ public class LabelImpl implements ILabel {
         }
         LabelDTO dto = LabelMap.INSTANCES.poToDto(po);
         dto.moduleIds = Arrays.asList(dto.applicationModule.split(","));
+        CategoryPO categoryPO=categoryMapper.selectById(po.categoryId);
+        dto.categoryName=categoryPO==null?"":categoryPO.categoryCnName;
         return dto;
+    }
+
+    @Override
+    public Page<LabelDataDTO> getLabelPageList(LabelQueryDTO dto)
+    {
+        String categoryIds="";
+        List<Integer> ids=category.getCategoryIds(dto.categoryId);
+        if (ids !=null && ids.size()!=0)
+        {
+            categoryIds="'";
+            categoryIds+= StringUtils.join(ids, ",")+"'";
+        }
+        return mapper.queryPageList(dto.dto,categoryIds);
     }
 
 }

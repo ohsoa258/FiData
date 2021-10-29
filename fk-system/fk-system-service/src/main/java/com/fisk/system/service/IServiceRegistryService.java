@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.ServiceRegistryDTO;
+import com.fisk.system.dto.ServiceRegistryDataDTO;
 import com.fisk.system.entity.ServiceRegistryPO;
 
 import java.util.List;
@@ -49,4 +50,11 @@ public interface IServiceRegistryService {
      * @return 返回值
      */
     ResultEnum updateServiceRegistry(ServiceRegistryDTO dto);
+
+    /**
+     * 获取菜单中文名称列表
+     * @return
+     */
+    List<ServiceRegistryDataDTO> getServiceRegistryList();
+
 }

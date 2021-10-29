@@ -2,23 +2,33 @@ package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedAddDTO;
+import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
 
 /**
  * @author cfk
  */
 public interface IBusinessLimitedAttribute {
+
     /**
-     * 更新限定条件
-     * @param businessLimitedAddDto
+     * 更新业务限定字段
+     * @param dto
      * @return
      */
-    ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAddDTO businessLimitedAddDto);
+    ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAttributeDataDTO dto);
+
     /**
-     * 获取限定条件详情
-     * @param businessLimitedId
+     * 删除业务限定字段
+     * @param id
      * @return
      */
-    BusinessLimitedAddDTO getBusinessLimitedAttribute(String businessLimitedId);
+    ResultEnum delBusinessLimitedAttribute(int id);
+
+    /**
+     * 添加业务限定字段
+     * @param dto
+     * @return
+     */
+    ResultEnum addBusinessLimitedAttribute(BusinessLimitedAttributeDataDTO dto);
 
 
 }

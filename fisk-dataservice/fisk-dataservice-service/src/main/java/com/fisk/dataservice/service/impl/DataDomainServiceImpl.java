@@ -1,13 +1,19 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.dto.InputParameterDTO;
-import com.fisk.dataservice.dto.OutParameterDTO;
+import com.fisk.dataservice.dto.SlicerDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.DataDoFieldDTO;
+import com.fisk.dataservice.entity.DimensionAttributePO;
+import com.fisk.dataservice.entity.DimensionPO;
+import com.fisk.dataservice.entity.FactPO;
+import com.fisk.dataservice.entity.IndicatorsPO;
+import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.DataDomainService;
 import com.fisk.dataservice.service.ITableName;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.fisk.common.constants.AliasConstants.*;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
@@ -34,6 +40,18 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     @Resource
     private ITableName iTableName;
+    @Resource
+    private IndicatorsMapper indicatorsMapper;
+    @Resource
+    private FactMapper factMapper;
+    @Resource
+    private DataDomainMapper domainMapper;
+    @Resource
+    private DimensionAttributeMapper attributeMapper;
+    @Resource
+    private DimensionMapper dimensionMapper;
+    @Resource
+    private DataDomainService domainService;
 
     @Override
     public Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize) {
@@ -44,24 +62,44 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // 非维度数据
             List<TableDataDTO> noTableData = apiConfigureFieldList.stream()
-                    .filter(e -> e.getDimension() == 0)
-                    .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
+                    .filter(e -> e.getDimension() == 0 && (e.getFieldType() == VALUE || e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
+                    .map(e -> iTableName.getTableName(e.getFieldId(), VALUE, e.getFieldName(), e.dimension).getData())
                     .collect(toList());
 
             // 所有维度的data
-            List<TableDataDTO> existTableData = apiConfigureFieldList.stream()
-                    .filter(e -> e.getDimension() == 1)
+            List<TableDataDTO> DimeTableData = apiConfigureFieldList.stream()
+                    .filter(e -> e.getDimension() == 1 && (e.getFieldType() == WHERE || e.getFieldType() == COLUMN))
                     .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
                     .collect(toList());
 
+            List<TableDataDTO> slicerDimenList = apiConfigureFieldList.stream()
+                    .filter(e -> e.getDimension() == 1 && (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData())
+                    .collect(toList());
+
+            List<TableDataDTO> slicerNoDimenList = apiConfigureFieldList.stream()
+                    .filter(e -> e.getDimension() == 0 && (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER))
+                    .map(e -> iTableName.getTableName(e.getFieldId(), VALUE, e.getFieldName(), e.dimension).getData())
+                    .collect(toList());
+
+            // DimeTableData,slicerDimenList,slicerNoDimenList 合并成一个新的集合
+            List<TableDataDTO> existTableData = Stream.of(DimeTableData, slicerDimenList,slicerNoDimenList).flatMap(Collection::stream).distinct().collect(toList());
+
             // 维度
             StringBuilder str = new StringBuilder();
-            str.append("SELECT ");
+            str.append("SELECT DISTINCT ");
 
             // select
             String queryField = existTableData.stream()
-                    .filter(e -> e.getType() == COLUMN)
+                    .filter(e -> e.getType() == COLUMN || e.getType() == SLICER || e.getType() == APPOINT_SLICER)
                     .map(e -> e.getTableName() + "." + escapeStr[0] + e.getTableField() + escapeStr[1])
+                    .collect(joining(","));
+
+            // 维度的切片器数据
+            String slicerDimenField = apiConfigureFieldList.stream()
+                    .filter(e -> (e.getFieldType() == SLICER || e.getFieldType() == APPOINT_SLICER) && e.dimension == 1)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                     .collect(joining(","));
 
             // 根据 TableNameKey 进行去重
@@ -83,6 +121,17 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             // 追加表名_key
             str.append(queryKey);
+
+            if (!queryField.equals(slicerDimenField)){
+                if (StringUtils.isNotBlank(queryKey) && StringUtils.isNotBlank(slicerDimenField)){
+                    str.append(",");
+                }
+
+                // 追加切片器数据
+                if (StringUtils.isNotBlank(slicerDimenField)){
+                    str.append(slicerDimenField);
+                }
+            }
 
             // 从表去重表名
             ArrayList<TableDataDTO> joinTableDataList = existTableData.stream()
@@ -107,11 +156,38 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
                     .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData().getTableName()
                             + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + e.getWhere() + "'" + e.getWhereValue() + "'")
-                    .collect(joining());
+                    .collect(joining(" AND "));
+
+            // 时间范围 : B.time BETWEEN '2021-10-19' AND '2021-10-22'
+            String slicerDateField = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == SLICER && e.dimension == 1)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime())
+                    .collect(joining(" AND "));
+
+            String serifedTime = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == APPOINT_SLICER && e.dimension == 1)
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData().getTableName()
+                            + "." + escapeStr[0] + e.getFieldName() + escapeStr[1]
+                            + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")")
+                    .collect(joining(" AND "));
+
+            StringBuilder whereSlicerField = new StringBuilder();
+            if (StringUtils.isNotBlank(whereField)){
+                whereSlicerField.append(whereField);
+            }
+            if (StringUtils.isNotBlank(whereField) && (StringUtils.isNotBlank(slicerDateField) || StringUtils.isNotBlank(serifedTime))){
+                whereSlicerField.append(" AND ");
+            }
+            if (StringUtils.isNotBlank(slicerDateField)){
+                whereSlicerField.append(slicerDateField);
+            }else if (StringUtils.isNotBlank(serifedTime)){
+                whereSlicerField.append(serifedTime);
+            }
 
             // WHERE
-            if (StringUtils.isNotBlank(whereField)){
-                str.append(" WHERE "+whereField);
+            if (StringUtils.isNotBlank(whereSlicerField)){
+                str.append(" WHERE "+whereSlicerField);
             }
 
             // 只有维度的的情况
@@ -147,13 +223,13 @@ public class DataDomainServiceImpl implements DataDomainService {
             String[] escapeStr = getEscapeStr();
 
             // 所有维度的data
-            List<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
+            Set<TableDataDTO> tableDataList = apiConfigureFieldList.stream()
                     .filter(e -> e.getDimension() == 1)
-                    .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
-                    .collect(toList());
+                    .map(e -> iTableName.getTableName(e.getFieldId(), WHERE, e.getFieldName(), e.dimension).getData())
+                    .collect(toSet());
 
             String existTableField = tableDataList.stream()
-                    .filter(e -> e.getType() == COLUMN)
+                    .filter(e -> e.getType() != VALUE)
                     .map(e -> escapeStr[0] + e.getTableField() + escapeStr[1])
                     .collect(joining("," + DIMENSION_ALL_ALIAS_NAME + "."));
 
@@ -164,38 +240,6 @@ public class DataDomainServiceImpl implements DataDomainService {
                         e.setDimensionName(iTableName.getDimensionName(e.getRelationId()).data);
                         return e;
                     }).collect(toList());
-
-            List<Integer> columnFieldIds = apiConfigureFieldList.stream()
-                    .filter(e -> e.getFieldType() != VALUE)
-                    .map(e -> e.getFieldId())
-                    .collect(toList());
-
-            List<Integer> valueFieldIds = apiConfigureFieldList.stream()
-                    .filter(e -> e.getFieldType() == VALUE)
-                    .map(e -> e.getFieldId())
-                    .collect(toList());
-
-            InputParameterDTO inputParameterDTO = new InputParameterDTO();
-            inputParameterDTO.setIds(columnFieldIds);
-            inputParameterDTO.setIndicatorsIds(valueFieldIds);
-
-            List<OutParameterDTO> relationShip = iTableName.getRelationShip(inputParameterDTO);
-
-            AtomicInteger numll = new AtomicInteger();
-            String collect = relationShip.stream()
-                    .filter(e -> e.getWhether() == 1)
-                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getFactName() + ") AS " + NO_DIMENSION_ALIAS_NAME + numll.incrementAndGet()
-                            + " ON " + DIMENSION_ALL_ALIAS_NAME + "." + e.getDimensionName() + "_key"
-                            + "=" + NO_DIMENSION_ALIAS_NAME + numll + "." + e.getDimensionName() + "_key ")
-                    .collect(joining(" "));  
-
-            String collect5 = relationShip.stream()
-                    .filter(e -> e.getWhether() == 0)
-                    .map(e -> "LEFT JOIN (SELECT * FROM " + e.getFactName() + ") AS " + NO_DIMENSION_ALIAS_NAME + numll.incrementAndGet()
-                            + " ON " + "1 = 1 ")
-                    .collect(joining(" "));
-            System.out.println(collect);
-            System.out.println(collect5);
 
             // LEFT JOIN 去重表名
             ArrayList<TableDataDTO> leftJoinList = collect3.stream()
@@ -232,6 +276,12 @@ public class DataDomainServiceImpl implements DataDomainService {
                             + "(" + e.getAlias() + "." + escapeStr[0] + e.getTableField() + escapeStr[1] + ")")
                     .collect(joining(","));
 
+            // 切片器数据
+            String slicerStr = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == SLICER)
+                    .map(e -> DIMENSION_ALL_ALIAS_NAME + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
+                    .collect(joining(","));
+
             // SELECT字段
             wholeStr.append("SELECT ");
             this.queryField(collect4,existTableField,wholeStr);
@@ -254,12 +304,50 @@ public class DataDomainServiceImpl implements DataDomainService {
                 wholeStr.append(leftJoin);
             }
 
+            // C1.`SalesAmount` BETWEEN 2021 AND 2022
+            AtomicInteger count = new AtomicInteger();
+            String slicerNoDateField = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == SLICER && e.getDimension() == 0)
+                    .map(e -> {
+                        for (TableDataDTO noTableDatum : noTableData) {
+                            return NO_DIMENSION_ALIAS_NAME + count.incrementAndGet() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime();
+                        }
+
+                        return null;
+                    }).collect(joining(" AND "));
+
+            // C1.`CalendarYear` IN ( "2021", "2022" )
+            AtomicInteger count1 = new AtomicInteger();
+            String serifedTime = apiConfigureFieldList.stream()
+                    .filter(e -> e.getFieldType() == APPOINT_SLICER && e.getDimension() == 0)
+                    .map(e -> {
+                        for (TableDataDTO noTableDatum : noTableData) {
+                            return NO_DIMENSION_ALIAS_NAME + count1.incrementAndGet() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1]
+                                    + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")";
+                        }
+
+                        return null;
+                    }).collect(joining(" AND "));
+
             // WHERE
             wholeStr.append("WHERE ");
             String collect2 = noTableData.stream()
                     .map(e -> e.alias + "." + e.tableField + " IS NOT NULL")
                     .collect(joining(" AND "));
-            wholeStr.append(collect2);
+
+            StringBuilder whereSlicerStr = new StringBuilder();
+            if (StringUtils.isNotBlank(slicerNoDateField)){
+                whereSlicerStr.append(slicerNoDateField);
+            }else if (StringUtils.isNotBlank(serifedTime)){
+                whereSlicerStr.append(serifedTime);
+            }
+            if ((StringUtils.isNotBlank(slicerNoDateField) || StringUtils.isNotBlank(serifedTime)) && StringUtils.isNotBlank(collect2)){
+                whereSlicerStr.append(" AND ");
+            }
+            if (StringUtils.isNotBlank(collect2)){
+                whereSlicerStr.append(collect2);
+            }
+            wholeStr.append(whereSlicerStr);
 
             // GROUP BY
             if (StringUtils.isNotBlank(aggregation)){
@@ -300,5 +388,58 @@ public class DataDomainServiceImpl implements DataDomainService {
         arr[0] = "`";
         arr[1] = "`";
         return arr;
+    }
+
+    @DS("datamodel")
+    @Override
+    public Object getSlicer(SlicerDTO dto) {
+        // 非维度
+        if (dto.getIsDimension() == 0){
+            return this.queryNoDimension(dto.getFiledId(), dto.getFiledName());
+        }else if (dto.getIsDimension() == 1){
+            // 维度
+            return this.queryDimension(dto.getFiledId(), dto.getFiledName());
+        }
+
+        return null;
+    }
+
+    /**
+     * 查询非维度数据
+     * @param fieldId
+     * @param filedName
+     * @return
+     */
+    public Object queryNoDimension(Integer fieldId,String filedName){
+        IndicatorsPO indicators = indicatorsMapper.selectById(fieldId);
+        if (indicators == null) {
+            return null;
+        }
+
+        FactPO fact = factMapper.selectById(indicators.getFactId());
+        return domainService.executeToSql(filedName,fact.getFactTableEnName());
+    }
+
+    @DS("master")
+    @Override
+    public Object executeToSql(String filedName,String tableName){
+        Set<Object> collect = domainMapper.queryData(filedName, tableName).stream().collect(toSet());
+        return collect;
+    }
+
+    /**
+     * 查询维度数据
+     * @param fieldId
+     * @param filedName
+     * @return
+     */
+    public Object queryDimension(Integer fieldId,String filedName){
+        DimensionAttributePO po = attributeMapper.selectById(fieldId);
+        if (po == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DimensionPO dimension = dimensionMapper.selectById(po.getDimensionId());
+        return domainService.executeToSql(filedName,dimension.getDimensionTabName());
     }
 }

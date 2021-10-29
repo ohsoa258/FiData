@@ -1,12 +1,14 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedAddDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeAddDTO;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDTO;
+import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
@@ -34,90 +36,58 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     public BusinessLimitedAttributeMapper businessLimitedAttributeMapper;
     @Resource
     public FactAttributeMapper factAttributeMapper;
-    @Resource
-    public UserHelper userHelper;
 
     @Override
-    public ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAddDTO businessLimitedAddDTO) {
-        String id = userHelper.getLoginUserInfo().id.toString();
-        if (businessLimitedAddDTO.id != 0) {
-            BusinessLimitedDTO businessLimitedDto = new BusinessLimitedDTO();
-            businessLimitedAddDTO.updateTime=new Date();
-            businessLimitedAddDTO.updateUser=id;
-            businessLimitedAddDTO.delFlag=1;
-            businessLimitedDto=businessLimitedAddDTO;
-            businessLimitedMapper.updateById(BusinessLimitedMap.INSTANCES.dtoTopo(businessLimitedDto));
-        } else {
-            businessLimitedAddDTO.createTime=new Date();
-            businessLimitedAddDTO.createUser=id;
-            businessLimitedMapper.insertBusinessLimited(businessLimitedAddDTO);
+    public ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAttributeDataDTO dto)
+    {
+        BusinessLimitedAttributePO po=businessLimitedAttributeMapper.selectById(dto.id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,businessLimitedAddDTO.id);
-        businessLimitedAttributeMapper.delete(queryWrapper);
-        BusinessLimitedAttributeDTO businessLimitedAttributeDto = new BusinessLimitedAttributeDTO();
-        List<BusinessLimitedAttributeAddDTO> businessLimitedAttributeAddDTOList = businessLimitedAddDTO.businessLimitedAttributeAddDTOList;
-        for (BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto : businessLimitedAttributeAddDTOList) {
-            /*//状态:0原有,1新增,2修改,3删除
-            if (businessLimitedAttributeAddDTO.funcType == 0) {
-                //原有的不变
-            } else if (businessLimitedAttributeAddDTO.funcType == 1) {
-                businessLimitedAttributeMapper.insert(BusinessLimitedAttributeMap.INSTANCES.dtoTopo(businessLimitedAttributeAddDTO));
-            } else if (businessLimitedAttributeAddDTO.funcType == 2) {
-                businessLimitedAttributeMapper.updateById(BusinessLimitedAttributeMap.INSTANCES.dtoTopo(businessLimitedAttributeAddDTO));
-            } else if (businessLimitedAttributeAddDTO.funcType == 3) {
-                businessLimitedAttributeMapper.deleteByIdWithFill(BusinessLimitedAttributeMap.INSTANCES.dtoTopo(businessLimitedAttributeAddDTO));
-            }*/
-
-            businessLimitedAttributeAddDto.businessLimitedId=businessLimitedAddDTO.id;
-            businessLimitedAttributeAddDto.createTime=new Date();
-            businessLimitedAttributeAddDto.createUser=id;
-            businessLimitedAttributeDto=businessLimitedAttributeAddDto;
-            businessLimitedAttributeMapper.insert(BusinessLimitedAttributeMap.INSTANCES.dtoTopo(businessLimitedAttributeDto));
+        //判断是否重复
+        QueryWrapper<BusinessLimitedAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
+                .eq(BusinessLimitedAttributePO::getCalculationValue,dto.calculationValue)
+                .eq(BusinessLimitedAttributePO::getFactAttributeId,dto.factAttributeId);
+        BusinessLimitedAttributePO attributePO=businessLimitedAttributeMapper.selectOne(queryWrapper);
+        if (attributePO !=null && attributePO.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
         }
-        return ResultEnum.SUCCESS;
+        po.calculationLogic=dto.calculationLogic;
+        po.calculationValue=dto.calculationValue;
+        po.factAttributeId=dto.factAttributeId;
+        return businessLimitedAttributeMapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public BusinessLimitedAddDTO getBusinessLimitedAttribute(String businessLimitedId) {
-        BusinessLimitedPO businessLimitedPo = businessLimitedMapper.selectById(businessLimitedId);
-        BusinessLimitedDTO businessLimitedDto = BusinessLimitedMap.INSTANCES.poToDto(businessLimitedPo);
-        BusinessLimitedAddDTO businessLimitedAddDto = new BusinessLimitedAddDTO();
-        BusinessLimitedDtoToBusinessLimitedAddDto(businessLimitedDto, businessLimitedAddDto);
-        QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId, businessLimitedId);
-        List<BusinessLimitedAttributePO> businessLimitedAttributePos = businessLimitedAttributeMapper.selectList(queryWrapper);
-        ArrayList<BusinessLimitedAttributeAddDTO> businessLimitedAttributeDtos = new ArrayList<>();
-        for (BusinessLimitedAttributePO businessLimitedAttributePo : businessLimitedAttributePos) {
-            BusinessLimitedAttributeDTO businessLimitedAttributeDTO = BusinessLimitedAttributeMap.INSTANCES.poTodto(businessLimitedAttributePo);
-            businessLimitedAttributeDtos.add(BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(businessLimitedAttributeDTO));
+    public ResultEnum delBusinessLimitedAttribute(int id)
+    {
+        BusinessLimitedAttributePO po=businessLimitedAttributeMapper.selectById(id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        businessLimitedAddDto.businessLimitedAttributeAddDTOList=businessLimitedAttributeDtos;
-        return businessLimitedAddDto;
+        return businessLimitedAttributeMapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
-    private void BusinessLimitedDtoToBusinessLimitedAddDto(BusinessLimitedDTO businessLimitedDto, BusinessLimitedAddDTO businessLimitedAddDto) {
-        businessLimitedAddDto.id = businessLimitedDto.id;
-        businessLimitedAddDto.limitedDes = businessLimitedDto.limitedDes;
-        businessLimitedAddDto.limitedName = businessLimitedDto.limitedName;
-        businessLimitedAddDto.createTime = businessLimitedDto.createTime;
-        businessLimitedAddDto.createUser = businessLimitedDto.createUser;
-        businessLimitedAddDto.updateTime = businessLimitedDto.updateTime;
-        businessLimitedAddDto.updateUser = businessLimitedDto.updateUser;
-        businessLimitedAddDto.factId = businessLimitedDto.factId;
+    @Override
+    public ResultEnum addBusinessLimitedAttribute(BusinessLimitedAttributeDataDTO dto)
+    {
+        //判断是否重复
+        QueryWrapper<BusinessLimitedAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
+                .eq(BusinessLimitedAttributePO::getCalculationValue,dto.calculationValue)
+                .eq(BusinessLimitedAttributePO::getFactAttributeId,dto.factAttributeId);
+        BusinessLimitedAttributePO po=businessLimitedAttributeMapper.selectOne(queryWrapper);
+        if (po !=null)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
+        return businessLimitedAttributeMapper.insert(BusinessLimitedAttributeMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
-    private BusinessLimitedAttributeAddDTO BusinessLimitedAttributeDtoToBusinessLimitedAttributeAddDto(BusinessLimitedAttributeDTO businessLimitedAttributeDto) {
-        BusinessLimitedAttributeAddDTO businessLimitedAttributeAddDto = new BusinessLimitedAttributeAddDTO();
-        businessLimitedAttributeAddDto.id = businessLimitedAttributeDto.id;
-        businessLimitedAttributeAddDto.businessLimitedId = businessLimitedAttributeDto.businessLimitedId;
-        businessLimitedAttributeAddDto.factAttributeId = businessLimitedAttributeDto.factAttributeId;
-        businessLimitedAttributeAddDto.calculationLogic = businessLimitedAttributeDto.calculationLogic;
-        businessLimitedAttributeAddDto.calculationValue = businessLimitedAttributeDto.calculationValue;
-        businessLimitedAttributeAddDto.createTime = businessLimitedAttributeDto.createTime;
-        businessLimitedAttributeAddDto.createUser = businessLimitedAttributeDto.createUser;
-        businessLimitedAttributeAddDto.updateTime = businessLimitedAttributeDto.updateTime;
-        businessLimitedAttributeAddDto.updateUser = businessLimitedAttributeDto.updateUser;
-        return businessLimitedAttributeAddDto;
-    }
+
+
 }

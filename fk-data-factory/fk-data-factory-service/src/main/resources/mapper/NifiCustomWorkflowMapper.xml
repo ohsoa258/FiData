@@ -7,6 +7,10 @@
         id,
         workflow_id,
         workflow_name,
+        pr,
+        `desc`,
+        list_node,
+        list_edge,
         `status`,
         create_time,
         update_time

@@ -45,12 +45,12 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
         if ("TIMER".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "Timer driven";
-            dto.syncMode = "Timer driven";
+            dto.syncMode = "TIMER_DRIVEN";
             model.expression += " sec";
             dto.expression += " sec";
         } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
             model.syncMode = "CRON driven";
-            dto.syncMode = "CRON driven";
+            dto.syncMode = "CRON_DRIVEN";
         }
 
         boolean save = this.save(model);
@@ -155,6 +155,16 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
         }
 
+        if ("TIMER".equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = "Timer driven";
+            dto.syncMode = "TIMER_DRIVEN";
+            model.expression += " sec";
+            dto.expression += " sec";
+        } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = "CRON driven";
+            dto.syncMode = "CRON_DRIVEN";
+        }
+
         TaskSchedulePO taskSchedule = mapper.getTaskSchedule(dto.jobId, dto.flag);
 
         model.id = taskSchedule.id;
@@ -190,6 +200,7 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.tableId = dto.jobId;
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
+                        dataAccessIdDTO.olapTableEnum = OlapTableEnum.PHYSICS;
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;

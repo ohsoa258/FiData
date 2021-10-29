@@ -80,7 +80,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private AppNifiFlowImpl nifiFlowImpl;
     @Resource
     private UserHelper userHelper;
-//    @Resource
+    //    @Resource
 //    private NifiSettingImpl nifiSettingImpl;
     @Resource
     private TableBusinessImpl businessImpl;
@@ -517,6 +517,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         }
 
+        List<TableFieldsPO> originalData = tableFieldsImpl.query().eq("table_access_id", list.get(0).tableAccessId).list();
+        List<TableFieldsPO> webData = TableFieldsMap.INSTANCES.listDtoToPo(list);
+        List<TableFieldsPO> collect = originalData.stream().filter(item -> !webData.contains(item)).collect(Collectors.toList());
+
+        try {
+            collect.stream().map(e -> {
+                return fieldsMapper.deleteByIdWithFill(e);
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
         if (!updateField) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
@@ -773,9 +785,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         vo.tableIdList = tableIdList;
 
 
-        log.info("删除的物理表信息,{}",vo);
+        log.info("删除的物理表信息,{}", vo);
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,vo);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
 
     }
 
@@ -1138,10 +1150,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         /**
          * 查询tb_nifi_config表,查询value是否未空,
          */
-        String nifiKey = nifiConfigMapper.getNifiKey();
-        if (StringUtils.isNotEmpty(nifiKey)) {
-            cfgDsConfig.componentId = nifiConfigMapper.getNifiValue();
-        }
+
 
         // TODO: 2021/9/4 nifi流程需要物理表字段
 //        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
@@ -1227,7 +1236,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //        componentIdDTO.tableComponentId = tableAccessPO.componentId;
 //        componentIdDTO.schedulerComponentId = tableAccessPO.schedulerComponentId;
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,componentIdDTO);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
 
@@ -1394,11 +1403,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<FieldNameDTO> getTableFieldId(int id)
-    {
-        QueryWrapper<TableFieldsPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("id").lambda().eq(TableFieldsPO::getTableAccessId,id);
-        List<FieldNameDTO> list= fieldsMapper.listTableName(id);
+    public List<FieldNameDTO> getTableFieldId(int id) {
+        QueryWrapper<TableFieldsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(TableFieldsPO::getTableAccessId, id);
+        List<FieldNameDTO> list = fieldsMapper.listTableName(id);
         //List<Integer> list=(List)fieldsMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         return list;
     }

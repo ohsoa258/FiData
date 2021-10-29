@@ -29,4 +29,11 @@ public interface UserClient {
             @RequestParam("username") String username,
             @RequestParam("password") String password);
 
+    /**
+     * 获取数据服务中文名称列表
+     * @return
+     */
+    @GetMapping("/attribute/getServiceRegistryList")
+    ResultEntity<Object> getServiceRegistryList();
+
 }

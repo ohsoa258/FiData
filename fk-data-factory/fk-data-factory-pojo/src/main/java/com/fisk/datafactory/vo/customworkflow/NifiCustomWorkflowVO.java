@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 /**
  * @author Lock
  *
- * 应用注册分页对象
+ * 管道分页对象
  */
 @Data
 public class NifiCustomWorkflowVO {
@@ -18,6 +18,22 @@ public class NifiCustomWorkflowVO {
      * 管道名称
      */
     public String workflowName;
+    /**
+     * 负责人
+     */
+    public String pr;
+    /**
+     * 描述
+     */
+    public String desc;
+    /**
+     * 组件节点
+     */
+    public String listNode;
+    /**
+     * 组件、连线
+     */
+    public String listEdge;
     /**
      * 是否发布
      */
