@@ -34,7 +34,11 @@ public class IndicatorsPO extends BasePO {
      */
     public String calculationLogic;
     /**
-     * 原子指标名称
+     * 指标中文名称
+     */
+    public String indicatorsCnName;
+    /**
+     * 指标英文名称
      */
     public String indicatorsName;
     /**

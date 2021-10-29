@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.*;
@@ -89,40 +90,18 @@ public class AtomicIndicatorsImpl
         }
         int flat=mapper.deleteByIdWithFill(po);
 
-        /*//删除指标组合对象
-        DataIndicatorVO vo=new DataIndicatorVO();
-        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-        vo.businessId=po.businessId;
-        vo.IndicatorName=po.indicatorsName;
-        vo.type= OlapTableEnum.KPI;
-
-        //获取指标表名称
-        FactPO factPO=factMapper.selectById(po.factId);
-        vo.IndicatorTable=factPO==null?"":factPO.factTableEnName;
-
-        //判断该指标表是否为最后一个字段
-        QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(IndicatorsPO::getFactId,po.factId);
-        List<IndicatorsPO> list=mapper.selectList(queryWrapper);
-
-        //查询事实表是否关联维度
-        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.lambda().eq(FactAttributePO::getFactId,po.factId)
-                .eq(FactAttributePO::getAttributeType,FactAttributeEnum.ASSOCIATED_DIMENSION);
-        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
-
-        if (list.size()==0 && factAttributePOList.size()==0)
-        {
-            vo.delIndicatorTable=true;
-        }*/
-
         return flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public AtomicIndicatorsDetailDTO getAtomicIndicatorDetails(int id)
     {
-        return mapper.atomicIndicatorsDetailDTO(id);
+        IndicatorsPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return AtomicIndicatorsMap.INSTANCES.poToDto(po);
     }
 
     @Override
@@ -144,8 +123,10 @@ public class AtomicIndicatorsImpl
         po.indicatorsName=dto.indicatorsName;
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
-        //聚合字段id
+        po.indicatorsCnName=dto.indicatorsCnName;
         po.factAttributeId=dto.factAttributeId;
+        //聚合字段id
+        //po.factAttributeId=dto.factAttributeId;
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

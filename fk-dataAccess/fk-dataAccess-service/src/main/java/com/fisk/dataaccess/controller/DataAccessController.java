@@ -7,11 +7,13 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -38,7 +40,7 @@ public class DataAccessController {
     }
 
     @GetMapping("/getTableId")
-    public ResultEntity<Object> getTableId() {
+    public ResultEntity<List<ChannelDataDTO>> getTableId() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableId());
     }
 

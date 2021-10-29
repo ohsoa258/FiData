@@ -5,6 +5,7 @@ import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -12,6 +13,8 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -148,5 +151,5 @@ public interface DataAccessClient {
     public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id);
 
     @GetMapping("/dataAccessTree/getTableIds")
-    public ResultEntity<Object> getTableId();
+    public ResultEntity<List<ChannelDataDTO>> getTableId();
 }
