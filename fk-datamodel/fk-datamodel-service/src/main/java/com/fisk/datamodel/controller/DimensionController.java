@@ -25,22 +25,10 @@ public class DimensionController {
     @Resource
     IDimension service;
 
-    @ApiOperation("获取维度列表")
+    /*@ApiOperation("获取维度列表")
     @PostMapping("/getDimensionList")
     public ResultEntity<Object> getDimensionList(@RequestBody QueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList(dto));
-    }
-
-    /*@ApiOperation("获取数据域以及数据域下的维度表")
-    @GetMapping("/getDataDimension")
-    public ResultEntity<Object> getDataDimension() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList());
-    }*/
-
-    /*@ApiOperation("添加维度获取数据域相关数据")
-    @GetMapping("/getDimensionAssociation/{id}")
-    public ResultEntity<Object> getDimensionAssociation(@PathVariable("id")int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRegionDetail(id));
     }*/
 
     @ApiOperation("添加维度")
@@ -67,7 +55,7 @@ public class DimensionController {
         return ResultEntityBuild.build(service.updateDimension(dto));
     }
 
-    @ApiOperation("根据维度id发布")
+    /*@ApiOperation("根据维度id发布")
     @GetMapping("/publicDimension/{id}")
     public ResultEntity<Object> publicDimension(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dimensionPublish(id));
@@ -77,6 +65,6 @@ public class DimensionController {
     @PutMapping("/editPublishStatus")
     public void editPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
         service.updatePublishStatus(id,isSuccess);
-    }
+    }*/
 
 }

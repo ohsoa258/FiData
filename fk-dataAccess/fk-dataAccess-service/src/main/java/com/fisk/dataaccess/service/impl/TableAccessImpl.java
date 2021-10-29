@@ -18,6 +18,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.*;
@@ -31,8 +32,10 @@ import com.fisk.dataaccess.utils.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
+import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -1409,6 +1412,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<FieldNameDTO> list = fieldsMapper.listTableName(id);
         //List<Integer> list=(List)fieldsMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         return list;
+    }
+
+    @Override
+    public ResultEntity<List<ChannelDataDTO>> getTableId() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, baseMapper.listTableIdAndName());
+    }
+
+    @Override
+    public List<TableIdAndNameVO> getTableIds() {
+        List<TableIdAndNameDTO> list = baseMapper.listTableIdAndNames();
+
+        return TableAccessMap.INSTANCES.tableDtosToPos(list);
     }
 
 }

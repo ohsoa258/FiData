@@ -13,6 +13,7 @@ public class AtomicIndicatorsDTO {
     public int factAttributeId;
     public int indicatorsType;
     public String calculationLogic;
+    public String indicatorsCnName;
     public String indicatorsName;
     public String indicatorsDes;
 }

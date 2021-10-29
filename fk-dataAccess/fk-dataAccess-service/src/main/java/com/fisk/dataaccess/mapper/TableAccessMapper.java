@@ -2,12 +2,14 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.dataaccess.dto.TableNameDTO;
 import com.fisk.dataaccess.dto.TableAccessPageDTO;
+import com.fisk.dataaccess.dto.TableNameDTO;
 import com.fisk.dataaccess.dto.TableNameTreeDTO;
+import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -105,26 +107,38 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
 
     /**
      * 根据应用id获取物理表
+     *
      * @param id app_id
      * @return 物理表
      */
     @Select("SELECT id,table_name FROM tb_table_access WHERE app_id = #{app_id} and del_flag = 1;")
-    List<TableNameDTO> listTableNameByAppId(@Param("app_id")long id);
-
+    List<TableNameDTO> listTableNameByAppId(@Param("app_id") long id);
 
 
     /**
      * 物理表tree
+     *
      * @param appId appId
      * @return tree
      */
     @Select("SELECT id,table_name FROM tb_table_access WHERE app_id = #{app_id} and del_flag = 1;")
-    List<TableNameTreeDTO> listTableNameTree(@Param("app_id")long appId);
+    List<TableNameTreeDTO> listTableNameTree(@Param("app_id") long appId);
 
     /**
      * insertTableAccessPO
      *
      * @return
      */
-    int insertTableAccessPO(@Param("tableAccessPO")TableAccessPO tableAccessPO);
+    int insertTableAccessPO(@Param("tableAccessPO") TableAccessPO tableAccessPO);
+
+    /**
+     * 获取所有物理表id
+     *
+     * @return list
+     */
+    @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
+    List<ChannelDataDTO> listTableIdAndName();
+
+    @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
+    List<TableIdAndNameDTO> listTableIdAndNames();
 }

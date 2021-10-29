@@ -82,7 +82,11 @@
             <artifactId>fk-dataAccess-api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-data-factory-pojo</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
         <!-- elk -->
         <dependency>
             <groupId>net.logstash.logback</groupId>

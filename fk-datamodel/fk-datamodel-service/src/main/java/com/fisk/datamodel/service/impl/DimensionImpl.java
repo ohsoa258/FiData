@@ -6,26 +6,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
-import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
-import com.fisk.datamodel.map.DimensionAttributeMap;
+import com.fisk.datamodel.map.DimensionFolderMap;
 import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
-import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +28,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -46,13 +38,7 @@ import java.util.stream.Collectors;
 public class DimensionImpl implements IDimension {
 
     @Resource
-    DataAreaMapper dataAreaMapper;
-    @Resource
     DimensionMapper mapper;
-    @Resource
-    ProjectInfoMapper projectInfoMapper;
-    @Resource
-    PublishTaskClient publishTaskClient;
     @Resource
     UserHelper userHelper;
     @Resource
@@ -63,59 +49,20 @@ public class DimensionImpl implements IDimension {
     FactAttributeMapper factAttributeMapper;
 
     @Override
-    public List<DimensionSourceDTO> getDimensionList()
+    public ResultEnum addDimension(DimensionDTO dto)
     {
-        List<DimensionSourceDTO> list=new ArrayList<>();
-        //获取项目下所有业务域
-        QueryWrapper<ProjectInfoPO> projectInfo=new QueryWrapper<>();
-        projectInfo.select("businessid");
-        List<Object> ids=projectInfoMapper.selectObjs(projectInfo).stream().distinct().collect(Collectors.toList());
-        if (ids ==null || ids.size()==0)
-        {
-            return list;
-        }
-        //获取数据源
-        QueryWrapper<DataAreaPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("business_id",ids.toArray());
-        List<DataAreaPO> dataArea=dataAreaMapper.selectList(queryWrapper).stream().sorted(Comparator.comparing(DataAreaPO::getCreateTime)).collect(Collectors.toList());
-        //降序
-        Collections.reverse(dataArea);
-        //获取维度表
-        QueryWrapper<DimensionPO> dimensionList=new QueryWrapper<>();
-        List<DimensionPO> dimensionPo=mapper.selectList(dimensionList).stream().sorted(Comparator.comparing(DimensionPO::getCreateTime)).collect(Collectors.toList());
-        //降序
-        Collections.reverse(dimensionPo);
-        for (DataAreaPO item:dataArea)
-        {
-            DimensionSourceDTO dto=new DimensionSourceDTO();
-            dto.id=item.id;
-            dto.dimensionCnName=item.dataName;
-            list.add(dto);
-        }
-        return list;
-    }
-
-    @Override
-    public ResultEnum addDimension(DimensionDTO dto){
 
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
-                            .eq(DimensionPO::getDimensionEnName,dto.dimensionEnName)
-                            .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
+                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
         {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.BUSINESS_AREA_EXIST;
         }
         dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
         DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
-    }
-
-    @Override
-    public DimensionAssociationDTO getDimension(int id)
-    {
-        return mapper.getDimension(id);
     }
 
     @Override
@@ -127,12 +74,11 @@ public class DimensionImpl implements IDimension {
         }
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
-                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName)
-                .eq(DimensionPO::getDimensionEnName,dto.dimensionEnName);
+                .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=model.id)
         {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.BUSINESS_AREA_EXIST;
         }
         model= DimensionMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
@@ -145,7 +91,6 @@ public class DimensionImpl implements IDimension {
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
         //判断维度表是否存在关联
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.in("associate_dimension_id",id)
@@ -155,7 +100,6 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.TABLE_ASSOCIATED;
         }
-
         //判断维度表是否与事实表有关联
         QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
         queryWrapper1.in("associate_dimension_id",id)
@@ -184,6 +128,19 @@ public class DimensionImpl implements IDimension {
 
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Override
+    public DimensionDTO getDimension(int id)
+    {
+        DimensionPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return DimensionMap.INSTANCES.poToDto(po);
+    }
+
+
 
     @Override
     public IPage<DimensionDTO> getDimensionList(QueryDTO dto)
@@ -243,6 +200,5 @@ public class DimensionImpl implements IDimension {
         String msg=flat>0?"发布成功":"发布失败";
         log.info(po.dimensionTabName+":"+msg);
     }
-
 
 }

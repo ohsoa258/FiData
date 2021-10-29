@@ -2,9 +2,10 @@ package com.fisk.dataaccess.map;
 
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
-import org.mapstruct.Mapper;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -57,5 +58,16 @@ public interface TableAccessMap {
      */
     List<TableAccessPO> listDtoToPo(List<TableAccessDTO> list);
 
+    /**
+     * list集合 dto -> po
+     *
+     * @param dto source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "tableName",target = "name")
+    })
+    TableIdAndNameVO tableDtoToPo(TableIdAndNameDTO dto);
 
+    List<TableIdAndNameVO> tableDtosToPos(List<TableIdAndNameDTO> list);
 }

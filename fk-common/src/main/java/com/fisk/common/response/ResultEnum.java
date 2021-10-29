@@ -101,7 +101,7 @@ public enum ResultEnum {
     PUBLISH_FAILURE(8002, "发布失败"),
     FIELDS_ASSOCIATED(8003,"选中字段存在关联"),
     TABLE_ASSOCIATED(8004,"表中字段存在关联"),
-
+    BUSINESS_AREA_EXIST(8005,"该业务域下,已存在该维度表"),
 
 
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式");

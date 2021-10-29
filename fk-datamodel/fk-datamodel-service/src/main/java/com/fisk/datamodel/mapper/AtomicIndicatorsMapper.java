@@ -17,13 +17,6 @@ import org.apache.ibatis.annotations.Param;
 public interface AtomicIndicatorsMapper extends FKBaseMapper<IndicatorsPO> {
 
     /**
-     * 获取原子指标详情
-     * @param id
-     * @return
-     */
-    AtomicIndicatorsDetailDTO atomicIndicatorsDetailDTO(@Param("id") int id);
-
-    /**
      * 分页获取原子指标列表
      * @param page
      * @param query

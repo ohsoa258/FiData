@@ -1,10 +1,14 @@
 package com.fisk.datamodel.mapper;
 
 import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.datamodel.dto.dimension.DimensionTabDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.entity.DimensionPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -24,4 +28,11 @@ public interface DimensionMapper extends FKBaseMapper<DimensionPO> {
      * @return
      */
     DimensionAssociationDTO getDimension(@Param("id") int id);
+
+    /**
+     * 获取维度id集合
+     * @return
+     */
+    @Select("SELECT id,dimension_cn_name FROM tb_dimension where del_flag=1 ORDER BY id DESC;")
+    List<DimensionTabDTO> getDimensionTabList();
 }

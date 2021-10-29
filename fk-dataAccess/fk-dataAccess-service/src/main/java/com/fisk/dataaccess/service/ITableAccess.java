@@ -11,7 +11,9 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
+import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -119,7 +121,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
     /**
      * 提供给nifi的数据
      *
-     * @param id 物理表id
+     * @param id    物理表id
      * @param appid 应用注册id
      * @return DataAccessConfigDTO
      */
@@ -129,10 +131,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * 根据appid和物理表id,查询atlasInstanceId和atlasDbId
      *
      * @param appid 应用注册id
-     * @param id 物理表id
+     * @param id    物理表id
      * @return AtlasWriteBackDataDTO
      */
-    ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid,long id);
+    ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid, long id);
 
     /**
      * atlas物理表回写
@@ -174,6 +176,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 应用注册tree
+     *
      * @return tree
      */
     List<DataAccessTreeDTO> getTree();
@@ -182,6 +185,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 添加维度时需要的应用下的物理表
+     *
      * @param id 应用id
      * @return TableNameAndFieldDTO
      */
@@ -189,13 +193,15 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据表id获取表详情
+     *
      * @param id
      * @return
      */
     TableAccessDTO getTableAccess(int id);
 
     /**
-     *nifiSettingPO
+     * nifiSettingPO
+     *
      * @return 表名及查询语句
      */
     BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
@@ -204,9 +210,18 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据id获取接入表所有字段id
+     *
      * @param id
      * @return
      */
     List<FieldNameDTO> getTableFieldId(int id);
 
+    /**
+     * 获取所有物理表id
+     *
+     * @return list
+     */
+    ResultEntity<List<ChannelDataDTO>> getTableId();
+
+    List<TableIdAndNameVO> getTableIds();
 }

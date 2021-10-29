@@ -16,12 +16,6 @@ import java.util.List;
 public interface IDimension {
 
     /**
-     * 获取维度相关数据域列表以及数据域下维度表
-     * @return
-     */
-    List<DimensionSourceDTO> getDimensionList();
-
-    /**
      * 添加维度表
      * @param dto
      * @return
@@ -33,7 +27,7 @@ public interface IDimension {
      * @param id
      * @return
      */
-    DimensionAssociationDTO getDimension(int id);
+    DimensionDTO getDimension(int id);
 
     /**
      * 修改维度表

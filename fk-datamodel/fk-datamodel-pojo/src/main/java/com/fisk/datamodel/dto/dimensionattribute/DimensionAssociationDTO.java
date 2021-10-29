@@ -11,5 +11,5 @@ public class DimensionAssociationDTO extends DimensionDTO {
     /**
      * 业务域名称
      */
-    public String businessName;
+    //public String businessName;
 }
