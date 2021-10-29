@@ -17,6 +17,14 @@ public class DimensionAttributePO extends BasePO {
      */
     public int dimensionId;
     /**
+     * 应用id
+     */
+    public int appId;
+    /**
+     * 来源表id
+     */
+    public int tableSourceId;
+    /**
      *表来源字段id
      */
     public int tableSourceFieldId;
