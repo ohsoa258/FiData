@@ -10,4 +10,5 @@ public class NifiComponentsDTO {
     public long id;
     public String name;
     public String type;
+    public boolean flag;
 }
