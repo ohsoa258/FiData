@@ -1,8 +1,6 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
@@ -149,4 +147,6 @@ public interface DataAccessClient {
     @GetMapping("/physicalTable/getTableFieldId/{id}")
     public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id);
 
+    @GetMapping("/dataAccessTree/getTableIds")
+    public ResultEntity<Object> getTableId();
 }

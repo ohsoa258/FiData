@@ -37,5 +37,13 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
+    @GetMapping("/getTableId")
+    public ResultEntity<Object> getTableId() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableId());
+    }
 
+    @GetMapping("/getTableIds")
+    public ResultEntity<Object> getTableIds() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds());
+    }
 }
