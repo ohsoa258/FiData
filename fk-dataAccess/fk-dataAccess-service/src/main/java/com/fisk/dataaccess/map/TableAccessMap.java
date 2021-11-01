@@ -3,6 +3,7 @@ package com.fisk.dataaccess.map;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
+import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import org.mapstruct.*;
@@ -70,4 +71,12 @@ public interface TableAccessMap {
     TableIdAndNameVO tableDtoToPo(TableIdAndNameDTO dto);
 
     List<TableIdAndNameVO> tableDtosToPos(List<TableIdAndNameDTO> list);
+
+    /**
+     * poList==>DtoList
+     * @param list
+     * @return
+     */
+    List<TableAccessDataDTO> poListToDtoList(List<TableAccessPO> list);
+
 }

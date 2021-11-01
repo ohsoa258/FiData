@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.map;
 
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -47,6 +48,13 @@ public interface AppRegistrationMap {
      * @return target
      */
     List<AppRegistrationPO> listDtoToPo(List<AppRegistrationDTO> list);
+
+    /**
+     * listPo==>DtoList
+     * @param list
+     * @return
+     */
+    List<AppRegistrationDataDTO> listPoToDtoList(List<AppRegistrationPO> list);
 
 
 }

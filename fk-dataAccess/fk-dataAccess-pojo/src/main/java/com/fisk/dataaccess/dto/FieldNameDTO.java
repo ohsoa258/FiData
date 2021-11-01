@@ -12,4 +12,5 @@ public class FieldNameDTO {
     public String fieldType;
     public String fieldLength;
     public String fieldDes;
+    public int tableAccessId;
 }

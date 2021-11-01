@@ -1,6 +1,8 @@
 package com.fisk.dataaccess.map;
 
+import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.datamodel.TableFieldDataDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -47,6 +49,20 @@ public interface TableFieldsMap {
      * @return target
      */
     List<TableFieldsPO> listDtoToPo(List<TableFieldsDTO> list);
+
+    /**
+     * poList==>DtoList
+     * @param list
+     * @return
+     */
+    List<TableFieldDataDTO> poListToDtoList(List<TableFieldsPO> list);
+
+    /**
+     * poList==>Dto
+     * @param list
+     * @return
+     */
+    List<FieldNameDTO> poListToDto(List<TableFieldsPO> list);
 
 
 }

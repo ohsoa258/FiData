@@ -7,6 +7,7 @@ import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
@@ -19,10 +20,14 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
+import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
+import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
@@ -51,6 +56,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1343,6 +1349,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+    /**
+     * 封装物理表及字段
+     *
+     * @param list         list
+     * @param tableNameDTO tableNameDTO
+     */
+    private void getTableFieldsById(List<TableNameDTO> list, TableNameDTO tableNameDTO) {
+        TableNameDTO dto = new TableNameDTO();
+        List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
+        dto.id = tableNameDTO.id;
+        dto.tableName = tableNameDTO.tableName;
+        dto.field = listFieldName;
+        list.add(dto);
+    }
+
     @Override
     public List<DataAccessTreeDTO> getTree() {
 
@@ -1380,21 +1401,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
-    /**
-     * 封装物理表及字段
-     *
-     * @param list         list
-     * @param tableNameDTO tableNameDTO
-     */
-    private void getTableFieldsById(List<TableNameDTO> list, TableNameDTO tableNameDTO) {
-        TableNameDTO dto = new TableNameDTO();
-        List<FieldNameDTO> listFieldName = fieldsMapper.listTableName(tableNameDTO.id);
-        dto.id = tableNameDTO.id;
-        dto.tableName = tableNameDTO.tableName;
-        dto.field = listFieldName;
-        list.add(dto);
-    }
-
     @Override
     public TableAccessDTO getTableAccess(int id) {
         TableAccessDTO dto = new TableAccessDTO();
@@ -1425,5 +1431,81 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return TableAccessMap.INSTANCES.tableDtosToPos(list);
     }
+
+    @Override
+    public List<AppRegistrationDataDTO> getDataAppRegistrationMeta() {
+
+        List<AppRegistrationDataDTO> list = new ArrayList<>();
+
+        //获取所有应用注册列表
+        QueryWrapper<AppRegistrationPO> queryWrapper=new QueryWrapper<>();
+        List<AppRegistrationPO> appRegistrationPOList=registrationMapper.selectList(queryWrapper);
+        if (appRegistrationPOList==null || appRegistrationPOList.size()==0)
+        {
+            return list;
+        }
+        list= AppRegistrationMap.INSTANCES.listPoToDtoList(appRegistrationPOList);
+        //获取所有表配置数据
+        QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper=new QueryWrapper<>();
+        List<TableAccessPO> tableAccessPOList=accessMapper.selectList(tableAccessPOQueryWrapper);
+        if (tableAccessPOList==null || tableAccessPOList.size()==0)
+        {
+            return list;
+        }
+        //获取表中所有字段配置数据
+        QueryWrapper<TableFieldsPO> tableFieldsPOQueryWrapper=new QueryWrapper<>();
+        List<TableFieldsPO> tableFieldsPOList=fieldsMapper.selectList(tableFieldsPOQueryWrapper
+        );
+        for (AppRegistrationDataDTO item:list)
+        {
+            item.tableDtoList=TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
+                    .filter(e->e.appId==item.id).collect(Collectors.toList()));
+            if ((item.tableDtoList==null || item.tableDtoList.size()==0) ||
+                    (tableFieldsPOList==null || tableFieldsPOList.size()==0))
+            {
+                continue;
+            }
+            item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
+            for (TableAccessDataDTO tableAccessDataDTO:item.tableDtoList)
+            {
+                tableAccessDataDTO.fieldDtoList=TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsPOList.stream()
+                        .filter(e->e.tableAccessId==tableAccessDataDTO.id).collect(Collectors.toList()));
+                if (tableAccessDataDTO.fieldDtoList==null || tableAccessDataDTO.fieldDtoList.size()==0)
+                {
+                    continue;
+                }
+                tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2).collect(Collectors.toList());
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<FieldNameDTO> getTableFieldByQuery(String query)
+    {
+        List<FieldNameDTO> list = new ArrayList<>();
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(jdbcStr, user, password);
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery(query);
+            while(rs.next()){
+                FieldNameDTO dto=new FieldNameDTO();
+                dto.id = rs.getInt("id");
+                dto.fieldName=rs.getString("field_name");
+                dto.fieldType=rs.getString("field_type");
+                dto.fieldLength=rs.getString("field_length");
+                dto.fieldDes=rs.getString("field_des");
+                dto.tableAccessId=rs.getInt("table_access_id");
+                list.add(dto);
+            }
+            rs.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return list;
+    }
+
+
 
 }

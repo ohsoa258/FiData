@@ -250,5 +250,17 @@ public class AppRegistrationController {
         return service.getRepeatAppAbbreviation(appAbbreviation);
     }
 
+    @ApiOperation(value = "获取所有应用以及表、字段数据")
+    @GetMapping("/getDataAppRegistrationMeta")
+    public ResultEntity<Object> getDataAppRegistrationMeta() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAppRegistrationMeta());
+    }
+
+    @ApiOperation(value = "根据sql语句,获取字段列表")
+    @PostMapping("/getTableAccessQueryList")
+    public ResultEntity<Object> getTableAccessQueryList(String query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getTableFieldByQuery(query));
+    }
+
 
 }
