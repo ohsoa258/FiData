@@ -237,7 +237,7 @@ public class DerivedIndicatorsImpl
             return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
         //聚合字段拼接
-        po.aggregatedFields=String.join(",", dto.attributeId.stream().map(String::valueOf).collect(Collectors.toList()));
+        //po.aggregatedFields=String.join(",", dto.attributeId.stream().map(String::valueOf).collect(Collectors.toList()));
         //保存派生指标数据
         int flat=mapper.updateById(po);
         if (flat==0)

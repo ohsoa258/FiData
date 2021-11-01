@@ -62,8 +62,8 @@ public class IndicatorsPO extends BasePO {
      */
     public String indicatorsFormula;
     /**
-     * 聚合字段id集合
+     * 业务限定id
      */
-    public String aggregatedFields;
+    public int businessLimitedId;
 
 }

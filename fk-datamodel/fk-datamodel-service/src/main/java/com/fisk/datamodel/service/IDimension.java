@@ -5,6 +5,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 
@@ -63,5 +64,12 @@ public interface IDimension {
      * @param isSuccess
      */
     void updatePublishStatus(int id,int isSuccess);
+
+    /**
+     * 更新维度脚本数据
+     * @param dto
+     * @return
+     */
+    ResultEnum updateDimensionSql(DimensionSqlDTO dto);
 
 }

@@ -16,4 +16,5 @@ public class AtomicIndicatorsDTO {
     public String indicatorsCnName;
     public String indicatorsName;
     public String indicatorsDes;
+    public int businessLimitedId;
 }
