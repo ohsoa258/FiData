@@ -6,6 +6,7 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
@@ -224,4 +225,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEntity<List<ChannelDataDTO>> getTableId();
 
     List<TableIdAndNameVO> getTableIds();
+
+    /**
+     * 获取所有应用下表以及字段数据
+     * @return
+     */
+    List<AppRegistrationDataDTO> getDataAppRegistrationMeta();
+
+    List<FieldNameDTO> getTableFieldByQuery(String query);
+
 }
