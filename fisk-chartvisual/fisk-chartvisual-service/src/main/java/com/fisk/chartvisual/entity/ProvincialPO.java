@@ -13,4 +13,5 @@ import lombok.Data;
 public class ProvincialPO extends BasePO {
 
     private String provincialName;
+    private String salesAmount;
 }

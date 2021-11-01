@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
@@ -14,6 +15,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.fisk.chartvisual.enums.SsasChartFilterTypeEnum.*;
+import static java.util.stream.Collectors.joining;
 
 /**
  * @author gy
@@ -226,7 +230,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
      */
     protected String queryFilter(List<ChartQueryFilter> filter, String[] escapeStr) {
         StringBuilder str = new StringBuilder();
-        filter.forEach(e -> {
+        filter.stream().filter(e -> e.getSsasChartFilterType() == FILTER).forEach(e -> {
             str.append("AND ");
             String name = getColumn(e.columnName, escapeStr);
             if (e.value.size() > 0) {
@@ -236,6 +240,44 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
                 str.append(name).append(" = '").append(e.value).append("' ");
             }
         });
+
+        // 时间区间
+        String slicerDateField = filter.stream()
+                .filter(e -> e.getSsasChartFilterType() == SLICER)
+                .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime())
+                .collect(joining(" AND "));
+
+        // 指定时间
+        String serifedTime = filter.stream()
+                .filter(e -> e.getSsasChartFilterType() == APPOINT_SLICER)
+                .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1]
+                        + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")")
+                .collect(joining(" AND "));
+
+        StringBuilder strTime = new StringBuilder();
+        if (StringUtils.isNotBlank(slicerDateField)){
+            strTime.append(slicerDateField);
+        }
+        if (StringUtils.isNotBlank(serifedTime)){
+            strTime.append(serifedTime);
+        }
+
+        if (StringUtils.isNotBlank(str.toString()) && StringUtils.isNotBlank(strTime.toString())){
+            this.additional(str,strTime);
+        }else if (StringUtils.isNotBlank(strTime)){
+            this.additional(str,strTime);
+        }
+
         return str.toString();
+    }
+
+    /**
+     * 追加where条件
+     * @param str
+     * @param strTime
+     */
+    public void additional(StringBuilder str,StringBuilder strTime){
+        str.append(" AND ");
+        str.append(strTime);
     }
 }

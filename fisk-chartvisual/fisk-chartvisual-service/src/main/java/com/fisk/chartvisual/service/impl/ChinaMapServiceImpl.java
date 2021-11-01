@@ -35,16 +35,16 @@ public class ChinaMapServiceImpl implements ChinaMapService {
             dto.setId((int)e.getId());
             dto.setName(e.getProvincialName());
 
-            QueryWrapper<ProvincialAmountPO> query = new QueryWrapper<>();
-            query.lambda()
-                    .eq(ProvincialAmountPO::getProvincialId,(int)e.getId())
-                    .select(ProvincialAmountPO::getSalesAmount);
-            ProvincialAmountPO amount = amountMapper.selectOne(query);
+//            QueryWrapper<ProvincialAmountPO> query = new QueryWrapper<>();
+//            query.lambda()
+//                    .eq(ProvincialAmountPO::getProvincialId,(int)e.getId())
+//                    .select(ProvincialAmountPO::getSalesAmount);
+//            ProvincialAmountPO amount = amountMapper.selectOne(query);
 
-            if (amount == null) {
+            if (e.getSalesAmount() == null) {
                 dto.setValue("0");
             }else {
-                dto.setValue(amount.getSalesAmount());
+                dto.setValue(e.getSalesAmount());
             }
 
             return dto;
