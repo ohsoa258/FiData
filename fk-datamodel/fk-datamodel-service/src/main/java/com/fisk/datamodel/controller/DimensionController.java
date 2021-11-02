@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.service.IDimension;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,12 @@ public class DimensionController {
     @PutMapping("/editDimension")
     public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) {
         return ResultEntityBuild.build(service.updateDimension(dto));
+    }
+
+    @ApiOperation("修改维度sql脚本")
+    @PutMapping("/editDimensionSql")
+    public ResultEntity<Object> editDimensionSql(@Validated @RequestBody DimensionSqlDTO dto) {
+        return ResultEntityBuild.build(service.updateDimensionSql(dto));
     }
 
     /*@ApiOperation("根据维度id发布")

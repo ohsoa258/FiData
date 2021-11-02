@@ -8,6 +8,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.entity.*;
@@ -138,6 +139,17 @@ public class DimensionImpl implements IDimension {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return DimensionMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public ResultEnum updateDimensionSql(DimensionSqlDTO dto)
+    {
+        DimensionPO model=mapper.selectById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        model.sqlScript=dto.sqlScript;
+        return mapper.updateById(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
 

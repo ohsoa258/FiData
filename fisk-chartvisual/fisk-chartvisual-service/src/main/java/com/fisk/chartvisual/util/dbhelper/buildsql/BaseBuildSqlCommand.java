@@ -244,7 +244,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         // 时间区间
         String slicerDateField = filter.stream()
                 .filter(e -> e.getSsasChartFilterType() == SLICER)
-                .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime())
+                .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1] + " BETWEEN " + e.getStartTime() + " AND " + e.getEndTime() +" ")
                 .collect(joining(" AND "));
 
         // 指定时间
@@ -268,6 +268,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
             this.additional(str,strTime);
         }
 
+        System.out.println(str);
         return str.toString();
     }
 
