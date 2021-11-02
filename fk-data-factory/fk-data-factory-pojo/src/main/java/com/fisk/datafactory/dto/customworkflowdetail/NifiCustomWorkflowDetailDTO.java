@@ -28,7 +28,7 @@ public class NifiCustomWorkflowDetailDTO {
     public Double componentX;
     public Double componentY;
     /**
-     * 元数据对象
+     *  元数据对象
      */
     public String metadataObj;
     public Integer schedule;
