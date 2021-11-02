@@ -15,4 +15,5 @@ public class BaseChartProperty extends BasePO {
     public String content;
     public String details;
     public byte[] image;
+    public byte[] backgroundImage;
 }

@@ -20,5 +20,6 @@ public class ChartPropertyVO {
     public LocalDateTime createTime;
     public ChartQueryTypeEnum chartType;
     public String image;
+    public String backgroundImage;
 
 }
