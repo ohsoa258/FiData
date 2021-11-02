@@ -9,9 +9,9 @@ import lombok.Data;
 public class NifiCustomWorkflowDetailDTO {
 
     public long id;
-    public long pid;
+    public Long pid;
     public String workflowId;
-    public int componentsId;
+    public Integer componentsId;
     public String tableId;
     /**
      * 常规: 名称
@@ -31,8 +31,9 @@ public class NifiCustomWorkflowDetailDTO {
      * 元数据对象
      */
     public String metadataObj;
-    public int schedule;
+    public Integer schedule;
     public String script;
     public String inport;
     public String outport;
+    public Boolean flag;
 }

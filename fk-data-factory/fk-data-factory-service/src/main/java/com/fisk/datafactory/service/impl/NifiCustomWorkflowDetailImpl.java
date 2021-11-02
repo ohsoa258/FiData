@@ -5,9 +5,11 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.entity.NifiComponentsPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
+import com.fisk.datafactory.service.INifiComponent;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -29,6 +31,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     INifiCustomWorkflow workflowService;
     @Resource
     NifiCustomWorkflowDetailMapper mapper;
+    @Resource
+    INifiComponent componentService;
 
     @Override
     public NifiCustomWorkflowDetailDTO addData(NifiCustomWorkflowDetailDTO dto) {
@@ -76,6 +80,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
+        dto.list.stream().peek(e -> {
+            NifiCustomWorkflowDetailPO po = this.getById(e.id);
+            if (po != null) {
+                e.flag = componentService.getById(po.componentsId).flag;
+            }
+        });
         List<NifiCustomWorkflowDetailPO> list = NifiCustomWorkflowDetailMap.INSTANCES.listDtoToPo(dto.list);
 
         // 批量保存tb_nifi_custom_wokflow_detail
@@ -100,6 +110,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        if (model.componentsId != 0) {
+            NifiComponentsPO componentsPo = componentService.getById(model.componentsId);
+            dto.flag = componentsPo.flag;
+        }
+
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
         // 执行修改
