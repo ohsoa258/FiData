@@ -13,7 +13,7 @@ public class NifiCustomWorkflowDetailPO extends BasePO {
     /**
      * 父组件
      */
-    public Long pid;
+    public long pid;
     public String workflowId;
     public Integer componentsId;
     public String tableId;

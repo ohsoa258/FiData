@@ -5,7 +5,6 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.entity.NifiComponentsPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
@@ -79,13 +78,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         } catch (Exception e) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-
+/*
         dto.list.stream().peek(e -> {
             NifiCustomWorkflowDetailPO po = this.getById(e.id);
             if (po != null) {
                 e.flag = componentService.getById(po.componentsId).flag;
             }
         });
+        */
         List<NifiCustomWorkflowDetailPO> list = NifiCustomWorkflowDetailMap.INSTANCES.listDtoToPo(dto.list);
 
         // 批量保存tb_nifi_custom_wokflow_detail
@@ -110,11 +110,13 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+/*
 
         if (model.componentsId != 0) {
             NifiComponentsPO componentsPo = componentService.getById(model.componentsId);
             dto.flag = componentsPo.flag;
         }
+*/
 
         // dto -> po
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
