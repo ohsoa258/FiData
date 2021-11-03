@@ -1605,30 +1605,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         try {
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
+            //获取总条数
+            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            ResultSet rsGetTotal = stmt.executeQuery(query.querySql);
+            rsGetTotal.last();
+            int rowCount = rsGetTotal.getRow(); //获得ResultSet的总行数
+            rsGetTotal.close();
+            //分页获取数据
             Statement st = conn.createStatement();
+            query.querySql=query.querySql+" limit "+query.pageSize +" offset " +query.pageSize*query.pageIndex;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array.dataArray=resultSetToJsonArry(rs);
-            //获取列名以及字段类型、长度集合
-            ResultSetMetaData metaData = rs.getMetaData();
-            // 获取列数
-            int columnCount = metaData.getColumnCount();
-            List<FieldNameDTO> fieldNameDTOList=new ArrayList<>();
-            if (columnCount>0)
-            {
-                while (rs.next())
-                {
-                    for (int i = 1; i <= columnCount; i++)
-                    {
-                        FieldNameDTO dto=new FieldNameDTO();
-                        dto.fieldName=metaData.getColumnTypeName(i);
-                        dto.fieldType=metaData.getColumnTypeName(i);
-                        dto.fieldLength=String.valueOf(metaData.getColumnDisplaySize(i));
-                        fieldNameDTOList.add(dto);
-                    }
-                }
-                array.fieldNameDTOList=fieldNameDTOList;
-            }
+            array=resultSetToJsonArray(rs);
+            array.pageIndex=query.pageIndex;
+            array.pageSize=query.pageSize;
+            array.total=rowCount;
             rs.close();
         } catch (ClassNotFoundException | SQLException e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -1636,25 +1627,36 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    public static JSONArray resultSetToJsonArry(ResultSet rs) throws SQLException, JSONException
+    public static OdsResultDTO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException
     {
+        OdsResultDTO data = new OdsResultDTO();
         // json数组
         JSONArray array = new JSONArray();
         // 获取列数
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList=new ArrayList<>();
         // 遍历ResultSet中的每条数据
         while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
+                //获取sql查询数据集合
                 String columnName =metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
+                //获取列名
+                FieldNameDTO dto=new FieldNameDTO();
+                dto.fieldName=metaData.getColumnLabel(i);
+                dto.fieldType=metaData.getColumnTypeName(i);
+                dto.fieldLength=String.valueOf(metaData.getColumnDisplaySize(i));
+                fieldNameDTOList.add(dto);
             }
             array.add(jsonObj);
         }
-        return array;
+        data.fieldNameDTOList=fieldNameDTOList.stream().distinct().collect(Collectors.toList());
+        data.dataArray=array;
+        return data;
     }
 
 

@@ -9,7 +9,6 @@ import lombok.Data;
 public class OdsQueryDTO {
     public int pageIndex;
     public int pageSize;
-    public int total;
     /**
      * 查询SQL语句
      */
