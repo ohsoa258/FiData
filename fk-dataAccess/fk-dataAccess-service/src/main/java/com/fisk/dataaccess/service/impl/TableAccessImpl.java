@@ -126,6 +126,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
 
+    @Value("${pgsql-ods.url}")
+    public String pgsqlOdsUrl;
+    @Value("${pgsql-ods.username}")
+    public String pgsqlOdsUsername;
+    @Value("${pgsql-ods.password}")
+    public String pgsqlOdsPassword;
+
     /**
      * 添加物理表(实时)
      *
@@ -1604,7 +1611,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         OdsResultDTO array = new OdsResultDTO();
         try {
             Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
+            Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
             Statement st = conn.createStatement();
             //获取总条数
             String getTotalSql="select count(*) as total from("+query.querySql+") as tab";
