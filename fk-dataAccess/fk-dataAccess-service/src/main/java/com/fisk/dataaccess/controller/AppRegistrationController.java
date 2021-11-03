@@ -9,6 +9,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -258,7 +259,7 @@ public class AppRegistrationController {
 
     @ApiOperation(value = "根据sql语句,获取字段列表")
     @PostMapping("/getTableAccessQueryList")
-    public ResultEntity<Object> getTableAccessQueryList(String query) {
+    public ResultEntity<Object> getTableAccessQueryList(OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getTableFieldByQuery(query));
     }
 

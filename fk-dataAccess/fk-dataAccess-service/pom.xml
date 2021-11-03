@@ -97,6 +97,12 @@
             <artifactId>mssql-jdbc</artifactId>
             <version>6.4.0.jre7</version>
         </dependency>
+        <!-- pg驱动 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
+        </dependency>
 
         <dependency>
             <groupId>com.fisk</groupId>

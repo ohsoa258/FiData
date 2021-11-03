@@ -1,5 +1,8 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,6 +25,9 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -733,7 +739,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return list;
     }
-
 
     /**
      * 删除数据
@@ -1460,6 +1465,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         {
             item.tableDtoList=TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
                     .filter(e->e.appId==item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e->e.tableName="ods_"+e.tableName+"_"+item.appAbbreviation).collect(Collectors.toList());
             if ((item.tableDtoList==null || item.tableDtoList.size()==0) ||
                     (tableFieldsPOList==null || tableFieldsPOList.size()==0))
             {
@@ -1592,6 +1598,64 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return flag;
     }
 
+    @Override
+    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query)
+    {
+        OdsResultDTO array = new OdsResultDTO();
+        try {
+            Class.forName("org.postgresql.Driver");
+            Connection conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery(query.querySql);
+            //获取数据集
+            array.dataArray=resultSetToJsonArry(rs);
+            //获取列名以及字段类型、长度集合
+            ResultSetMetaData metaData = rs.getMetaData();
+            // 获取列数
+            int columnCount = metaData.getColumnCount();
+            List<FieldNameDTO> fieldNameDTOList=new ArrayList<>();
+            if (columnCount>0)
+            {
+                while (rs.next())
+                {
+                    for (int i = 1; i <= columnCount; i++)
+                    {
+                        FieldNameDTO dto=new FieldNameDTO();
+                        dto.fieldName=metaData.getColumnTypeName(i);
+                        dto.fieldType=metaData.getColumnTypeName(i);
+                        dto.fieldLength=String.valueOf(metaData.getColumnDisplaySize(i));
+                        fieldNameDTOList.add(dto);
+                    }
+                }
+                array.fieldNameDTOList=fieldNameDTOList;
+            }
+            rs.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return array;
+    }
+
+    public static JSONArray resultSetToJsonArry(ResultSet rs) throws SQLException, JSONException
+    {
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        // 遍历ResultSet中的每条数据
+        while (rs.next()) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName =metaData.getColumnLabel(i);
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+            }
+            array.add(jsonObj);
+        }
+        return array;
+    }
 
 
 }

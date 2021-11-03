@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
@@ -7,6 +8,8 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -270,4 +273,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 返回值
      */
     List<TbTableAccessDTO> getTableAccessListData(long appId);
+
+    /**
+     * 根据SQL,获取结果集
+     * @param query
+     * @return
+     */
+    OdsResultDTO getTableFieldByQuery(OdsQueryDTO query);
+
 }
