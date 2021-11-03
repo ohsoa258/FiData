@@ -9,7 +9,7 @@ import lombok.Data;
 public class NifiCustomWorkflowDetailDTO {
 
     public long id;
-    public long pid;
+    public Long pid;
     public String workflowId;
     public Integer componentsId;
     public String tableId;
