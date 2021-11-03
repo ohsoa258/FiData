@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.v3;
 
+import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -16,7 +17,11 @@ public class DataSourceDTO {
      */
     public String driveType;
     /**
-     * 数据库列表
+     * 数据库名
      */
-    public List<DatabaseDTO> dbList;
+    public String databaseName;
+    /**
+     * 表
+     */
+    public List<TablePyhNameDTO> list;
 }
