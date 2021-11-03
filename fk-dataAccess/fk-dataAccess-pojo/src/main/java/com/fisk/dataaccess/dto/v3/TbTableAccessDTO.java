@@ -1,17 +1,13 @@
-package com.fisk.dataaccess.entity;
+package com.fisk.dataaccess.dto.v3;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * @author Lock
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("tb_table_access")
-public class TableAccessPO extends BasePO {
+public class TbTableAccessDTO {
+    public long id;
 
     /**
      * tb_app_registration表id
@@ -19,10 +15,9 @@ public class TableAccessPO extends BasePO {
     public long appId;
 
     /**
-     * 添加数据时atlas生成
+     * 应用名称
      */
-    public String atlasTableId;
-
+    public String appName;
     /**
      * 物理表名
      */
@@ -42,6 +37,7 @@ public class TableAccessPO extends BasePO {
      * 0是实时物理表，1是非实时物理表
      */
     public int isRealtime;
+
     /**
      * 0: 未发布  1: 发布成功  2: 发布失败
      */
