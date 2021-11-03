@@ -27,11 +27,11 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerConUtils sqlServerConUtils = new SqlServerConUtils();
         AppDataSourcePO po = this.query().eq("app_id", appId).one();
-        dataSource.databaseName = po.dbName;
+        dataSource.appName = po.dbName;
         if ("mysql".equalsIgnoreCase(dataSource.driveType)) {
-            dataSource.list = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd);
+            dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd);
         } else if ("sqlserver".equalsIgnoreCase(dataSource.driveType)) {
-            dataSource.list = sqlServerConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+            dataSource.tableDtoList = sqlServerConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
         }
 
         return dataSource;

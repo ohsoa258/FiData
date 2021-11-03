@@ -19,9 +19,9 @@ public class DataSourceDTO {
     /**
      * 数据库名
      */
-    public String databaseName;
+    public String appName;
     /**
      * 表
      */
-    public List<TablePyhNameDTO> list;
+    public List<TablePyhNameDTO> tableDtoList;
 }
