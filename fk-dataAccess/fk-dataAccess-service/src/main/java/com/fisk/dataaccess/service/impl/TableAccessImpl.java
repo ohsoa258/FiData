@@ -1605,14 +1605,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         try {
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlDatamodelUrl, pgsqlDatamodelUsername, pgsqlDatamodelPassword);
-            //获取总条数
-            Statement stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
-            ResultSet rsGetTotal = stmt.executeQuery(query.querySql);
-            rsGetTotal.last();
-            int rowCount = rsGetTotal.getRow(); //获得ResultSet的总行数
-            rsGetTotal.close();
-            //分页获取数据
             Statement st = conn.createStatement();
+            //获取总条数
+            String getTotalSql="select count(*) as total from("+query.querySql+") as tab";
+            ResultSet rSet = st.executeQuery(getTotalSql);
+            int rowCount = 0;
+            if(rSet.next()) {
+                rowCount=rSet.getInt("total");
+            }
+            rSet.close();
+            //分页获取数据
             query.querySql=query.querySql+" limit "+query.pageSize +" offset " +query.pageSize*query.pageIndex;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
