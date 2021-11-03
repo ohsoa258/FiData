@@ -13,6 +13,7 @@ public class AppRegistrationDataDTO {
 
     public long id;
     public String appName;
+    public String appAbbreviation;
     public List<TableAccessDataDTO> tableDtoList;
 
 }

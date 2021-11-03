@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
@@ -7,8 +8,11 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
@@ -232,6 +236,49 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<AppRegistrationDataDTO> getDataAppRegistrationMeta();
 
+    List<FieldNameDTO> getTableFieldByQuery(String query);
+    /**
+     * 物理表单表添加
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum addTableAccessData(TbTableAccessDTO dto);
 
+    /**
+     * 物理表单表回显
+     * @param id id
+     * @return dto
+     */
+    TbTableAccessDTO getTableAccessData(long id);
+
+    /**
+     * 物理表单表修改
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum updateTableAccessData(TbTableAccessDTO dto);
+
+    /**
+     * 物理表单表删除
+     * @param id id
+     * @return 执行结果
+     */
+    ResultEnum deleteTableAccessData(long id);
+
+    /**
+     * 根据appId获取物理表列表
+     *
+     * @param appId appId
+     * @return 返回值
+     */
+    List<TbTableAccessDTO> getTableAccessListData(long appId);
+
+    /**
+     * 根据SQL,获取结果集
+     * @param query
+     * @return
+     */
+    OdsResultDTO getTableFieldByQuery(OdsQueryDTO query);
 
 }

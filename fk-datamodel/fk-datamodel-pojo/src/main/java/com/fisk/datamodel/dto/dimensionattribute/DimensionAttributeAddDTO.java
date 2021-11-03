@@ -12,6 +12,10 @@ import java.util.List;
 @Data
 public class DimensionAttributeAddDTO extends MQBaseDTO {
     public int dimensionId;
+    /**
+     * 是否发布
+     */
+    public boolean isPublish;
     public String dimensionName;
     /**
      * 业务域名称
