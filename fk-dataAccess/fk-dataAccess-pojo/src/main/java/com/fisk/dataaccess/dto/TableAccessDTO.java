@@ -53,6 +53,11 @@ public class TableAccessDTO extends BaseDTO {
     public int isRealtime;
 
     /**
+     * 0: 未发布  1: 发布成功  2: 发布失败
+     */
+    public Integer publish;
+
+    /**
      * 表字段对象
      */
     public List<TableFieldsDTO> list;
