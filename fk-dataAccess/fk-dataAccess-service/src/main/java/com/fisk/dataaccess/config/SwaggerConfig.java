@@ -29,6 +29,7 @@ public class SwaggerConfig {
     public static final String TAG_4 = "data-review-controller";
     public static final String TAG_5 = "table-fields-controller";
     public static final String TAG_6 = "table-access-controller";
+    public static final String TAG_7 = "datasource-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -41,6 +42,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_4,"数据查看"))
                 .tags(new Tag(TAG_5,"表字段"))
                 .tags(new Tag(TAG_6,"物理表单表CRUD"))
+                .tags(new Tag(TAG_7,"数据源"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

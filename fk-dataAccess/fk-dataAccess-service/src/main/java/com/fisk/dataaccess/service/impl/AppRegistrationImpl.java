@@ -17,7 +17,10 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.entity.AppDriveTypePO;
+import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
@@ -291,7 +294,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //                tableVO.tableComponentId = tableAccessPO.componentId;
                 tableList.add(tableVO);
             }
-
 
 
             // 删除应用下面的所有表及表结构
@@ -589,7 +591,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public List<AppRegistrationPO> getByAppName(String appName){
+    public List<AppRegistrationPO> getByAppName(String appName) {
         List<AppRegistrationPO> byAppName = mapper.getByAppName(appName);
         return byAppName;
     }

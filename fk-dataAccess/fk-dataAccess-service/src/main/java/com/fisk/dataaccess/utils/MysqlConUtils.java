@@ -55,7 +55,7 @@ public class MysqlConUtils {
     }
 
     /**
-     * 获取非实时 表及表字段
+     * 获取表及表字段
      * @param url url
      * @param user user
      * @param password password
