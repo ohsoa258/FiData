@@ -17,11 +17,15 @@ public class FactDTO {
     /**
      * 应用id
      */
-    public int appId;
+    //public int appId;
     /**
      * 来源表id
      */
-    public int tableSourceId;
+    //public int tableSourceId;
+    /**
+     * 事实表名称
+     */
+    public String factTabName;
     /**
      * 事实表中文名称
      */
