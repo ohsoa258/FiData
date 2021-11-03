@@ -27,7 +27,6 @@ import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
-import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -1668,5 +1667,85 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return data;
     }
 
+    @Override
+    public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
+        String mysqlDriver = "mysql";
+        String sqlserverDriver = "sqlserver";
+        AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
 
+        OdsResultDTO array = new OdsResultDTO();
+        try {
+            Statement st = null;
+            if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
+                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement();
+                //分页获取数据
+                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + query.pageSize * query.pageIndex;
+            } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
+                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement();
+
+                String fieldName = getFieldName(conn, po.dbName);
+                //分页获取数据
+                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by id ASC) " +
+                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
+            }
+            //获取总条数
+            String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
+            ResultSet rSet = st.executeQuery(getTotalSql);
+            int rowCount = 0;
+            if (rSet.next()) {
+                rowCount = rSet.getInt("total");
+            }
+            rSet.close();
+
+            ResultSet rs = st.executeQuery(query.querySql);
+            //获取数据集
+            array = resultSetToJsonArray(rs);
+            array.pageIndex = query.pageIndex;
+            array.pageSize = query.pageSize;
+            array.total = rowCount;
+            rs.close();
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return array;
+    }
+
+    /**
+     * 连接数据库
+     * @param driver driver
+     * @param url url
+     * @param username username
+     * @param password password
+     * @return statement
+     */
+    private Connection getStatement(String driver, String url, String username, String password) {
+        Connection conn;
+        try {
+            Class.forName(driver);
+            conn = DriverManager.getConnection(url, username, password);
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return conn;
+    }
+
+    private String getFieldName(Connection conn,String tableName) {
+        String fieldName = "";
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            while (resultSet.next()) {
+                fieldName = resultSet.getString("COLUMN_NAME");
+                return fieldName;
+            }
+
+        } catch (Exception e) {
+            log.error("【getColumnsName】获取表字段报错, ex", e);
+            return null;
+        }
+
+        return fieldName;
+    }
 }

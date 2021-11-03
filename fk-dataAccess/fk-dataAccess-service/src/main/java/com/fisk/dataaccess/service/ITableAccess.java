@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service;
 
-import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
@@ -281,4 +280,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     OdsResultDTO getTableFieldByQuery(OdsQueryDTO query);
 
+    /**
+     * 根据SQL,获取结果集
+     * @param query query
+     * @return 结果集
+     */
+    OdsResultDTO getDataAccessQueryList(OdsQueryDTO query);
 }
