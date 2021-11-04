@@ -2,10 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDataDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedUpdateDTO;
+import com.fisk.datamodel.dto.businessLimited.*;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 
 import java.util.List;
@@ -45,4 +42,11 @@ public interface IBusinessLimited {
       * @return
       */
      ResultEnum BusinessLimitedUpdate(BusinessLimitedUpdateDTO dto);
+
+     /**
+      * 添加业务限定
+      * @param dto
+      * @return
+      */
+     ResultEnum BusinessLimitedAdd(BusinessLimitedDataAddDTO dto);
 }

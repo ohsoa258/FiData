@@ -97,7 +97,6 @@ public class DimensionAttributeImpl
             DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
                     .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
                     .eq(DimensionAttributePO::getAttributeType,item.attributeType)
-                    .eq(DimensionAttributePO::getTableSourceFieldId,item.tableSourceFieldId)
             );
             if (po !=null)
             {

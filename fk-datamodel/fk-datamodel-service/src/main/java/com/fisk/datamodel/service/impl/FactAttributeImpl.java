@@ -65,16 +65,16 @@ public class FactAttributeImpl
     public ResultEnum addFactAttribute(int factId, List<FactAttributeDTO> dto) {
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
-        //boolean isExit = false;
+        boolean isExit = false;
         List<FactAttributePO> list = new ArrayList<>();
         for (FactAttributeDTO item : dto) {
-            /*FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
+            FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
                     .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
                     .eq(FactAttributePO::getAttributeType,item.attributeType));
             if (po != null) {
                 isExit = true;
                 break;
-            }*/
+            }
             FactAttributePO data = FactAttributeMap.INSTANCES.dtoToPo(item);
             data.factId = factId;
             if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
@@ -87,9 +87,9 @@ public class FactAttributeImpl
             }
             list.add(data);
         }
-        /*if (isExit) {
+        if (isExit) {
             return ResultEnum.DATA_EXISTS;
-        }*/
+        }
         return this.saveBatch(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
