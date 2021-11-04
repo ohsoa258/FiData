@@ -259,13 +259,13 @@ public class AppRegistrationController {
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")
     @PostMapping("/getTableAccessQueryList")
-    public ResultEntity<Object> getTableAccessQueryList(OdsQueryDTO query) {
+    public ResultEntity<Object> getTableAccessQueryList(@RequestBody OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getTableFieldByQuery(query));
     }
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据接入)")
     @PostMapping("/getDataAccessQueryList")
-    public ResultEntity<Object> getDataAccessQueryList(OdsQueryDTO query) {
+    public ResultEntity<Object> getDataAccessQueryList(@RequestBody OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAccessQueryList(query));
     }
 
