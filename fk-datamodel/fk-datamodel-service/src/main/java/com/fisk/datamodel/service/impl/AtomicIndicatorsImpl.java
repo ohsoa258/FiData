@@ -125,6 +125,9 @@ public class AtomicIndicatorsImpl
         po.calculationLogic=dto.calculationLogic;
         po.indicatorsCnName=dto.indicatorsCnName;
         po.factAttributeId=dto.factAttributeId;
+        po.atomicId=dto.atomicId;
+        po.businessLimitedId=dto.businessLimitedId;
+        po.timePeriod=dto.timePeriod;
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -176,7 +179,7 @@ public class AtomicIndicatorsImpl
             {
                 AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
                 data.factId=factPO.id;
-                data.factTable=factPO.factTableEnName;
+                data.factTable=factPO.factTabName;
                 List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
                 if (atomicIndicator!=null)
                 {

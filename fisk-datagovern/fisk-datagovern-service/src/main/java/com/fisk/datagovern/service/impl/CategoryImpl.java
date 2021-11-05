@@ -8,6 +8,7 @@ import com.fisk.datagovern.entity.CategoryPO;
 import com.fisk.datagovern.map.CategoryMap;
 import com.fisk.datagovern.mapper.CategoryMapper;
 import com.fisk.datagovern.service.ICategory;
+import org.apache.commons.lang3.StringUtils;
 import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.stereotype.Service;
 
@@ -86,6 +87,10 @@ public class CategoryImpl implements ICategory {
     {
         List<CategoryDataDTO> dataList=new ArrayList<>();
         QueryWrapper<CategoryPO> queryWrapper=new QueryWrapper<>();
+        /*if (StringUtils.isNotEmpty(queryName))
+        {
+            queryWrapper.lambda().like(CategoryPO::getCategoryCnName,queryName);
+        }*/
         List<CategoryPO> list=mapper.selectList(queryWrapper);
         if (list==null || list.size()==0)
         {
@@ -94,17 +99,20 @@ public class CategoryImpl implements ICategory {
         //获取父节点
         List<CategoryPO> parentList=list.stream()
                 .filter(e->"1".equals(e.getCategoryParentCode())).collect(Collectors.toList());
-        if (parentList==null || parentList.size()==0)
+        if (parentList!=null && parentList.size()>0)
         {
-            return dataList;
+            dataList=CategoryMap.INSTANCES.dataListPoToDto(parentList);
         }
-        dataList=CategoryMap.INSTANCES.dataListPoToDto(parentList);
         //获取子节点
         List<CategoryPO> childrenList=list.stream()
                 .filter(e->!"1".equals(e.getCategoryParentCode())).collect(Collectors.toList());
         if (childrenList==null || childrenList.size()==0)
         {
             return dataList;
+        }
+        if (dataList ==null || dataList.size()==0)
+        {
+            dataList=CategoryMap.INSTANCES.dataListPoToDto(childrenList);
         }
         for (CategoryDataDTO item :dataList)
         {

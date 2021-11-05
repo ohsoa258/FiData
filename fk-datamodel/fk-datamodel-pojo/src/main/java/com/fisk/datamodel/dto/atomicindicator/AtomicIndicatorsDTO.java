@@ -17,4 +17,6 @@ public class AtomicIndicatorsDTO {
     public String indicatorsName;
     public String indicatorsDes;
     public int businessLimitedId;
+    public int atomicId;
+    public String timePeriod;
 }

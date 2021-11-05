@@ -58,7 +58,7 @@ public class SwaggerConfig {
                 .tags(new Tag(BUSINESS_PROCESS,"业务过程"))
                 .tags(new Tag(BUSINESS_AREA,"业务域"))
                 .tags(new Tag(DATASOURCE_AREA,"计算数据源"))
-                .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–原子指标"))
+                .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–指标"))
                 .tags(new Tag(DATA_AREA,"数据域"))
                 .tags(new Tag(PROJECT_INFO,"项目信息"))
                 .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))

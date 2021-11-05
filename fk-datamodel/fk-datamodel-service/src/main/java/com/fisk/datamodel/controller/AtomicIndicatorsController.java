@@ -30,44 +30,44 @@ public class AtomicIndicatorsController {
     @Resource
     IAtomicIndicators service;
 
-    @ApiOperation("添加原子指标")
+    @ApiOperation("添加指标")
     @PostMapping("/addAtomicIndicators")
     public ResultEntity<Object> addAtomicIndicators(@Validated @RequestBody List<AtomicIndicatorsDTO> dto) {
         return ResultEntityBuild.build(service.addAtomicIndicators(dto));
     }
 
-    @ApiOperation("删除原子指标")
+    @ApiOperation("删除指标")
     @DeleteMapping("/deleteAtomicIndicators/{id}")
     public ResultEntity<Object> deleteAtomicIndicators(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteAtomicIndicators(id));
     }
 
-    @ApiOperation("根据id获取原子指标详情")
+    @ApiOperation("根据id获取指标详情")
     @GetMapping("/getAtomicIndicatorsDetails/{id}")
     public ResultEntity<Object> getAtomicIndicatorsDetails(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAtomicIndicatorDetails(id));
     }
 
-    @ApiOperation("修改原子指标")
+    @ApiOperation("修改指标")
     @PutMapping("/editAtomicIndicators")
     public ResultEntity<Object> editAtomicIndicators(@Validated @RequestBody AtomicIndicatorsDTO dto) {
         return ResultEntityBuild.build(service.updateAtomicIndicatorDetails(dto));
     }
 
     @PostMapping("/getAtomicIndicatorsList")
-    @ApiOperation(value = "获取原子指标数据列表")
+    @ApiOperation(value = "获取指标数据列表")
     public ResultEntity<Page<AtomicIndicatorsResultDTO>> getAtomicIndicatorsList(@RequestBody AtomicIndicatorsQueryDTO query){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAtomicIndicatorList(query));
     }
 
-    @ApiOperation("根据原子指标下拉列表")
+    @ApiOperation("根据指标下拉列表")
     @GetMapping("/getAtomicIndicatorsDropList")
     public ResultEntity<Object> getAtomicIndicatorsDropList(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorDropList(id));
     }
 
     @GetMapping("/getAtomicIndicators")
-    @ApiOperation("获取事实表原子指标(用于Doris创建表)")
+    @ApiOperation("获取事实表指标(用于Doris创建表)")
     public ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorPush(id));
     }
