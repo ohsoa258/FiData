@@ -20,7 +20,7 @@ public class TableBusinessPO extends BaseEntity {
     /**
      * tb_table_access(id)
      */
-    public long accessId;
+    public Long accessId;
 
     /**
      * 业务时间字段
@@ -34,11 +34,11 @@ public class TableBusinessPO extends BaseEntity {
      * 4:  取上一年数据,覆盖上一年
      * 5:  取当年数据,覆盖当年
      */
-    public long businessFlag;
+    public Long businessFlag;
 
     /**
      * 当月具体多少号
      */
-    public long businessDay;
+    public Long businessDay;
 
 }

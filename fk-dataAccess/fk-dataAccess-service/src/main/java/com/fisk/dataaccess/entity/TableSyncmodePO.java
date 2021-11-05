@@ -24,7 +24,7 @@ public class TableSyncmodePO extends BaseEntity {
     /**
      * 1：全量、2：时间戳增量、3：业务时间覆盖、4：自定义覆盖；
      */
-    public int syncMode;
+    public Integer syncMode;
 
     /**
      * 时间戳字段

@@ -752,6 +752,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param id id
      * @return 执行结果
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<NifiVO> deleteData(long id) {
 
@@ -770,14 +771,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 2.删除tb_table_fields数据
         List<TableFieldsPO> list = tableFieldsImpl.query()
                 .eq("table_access_id", id)
-                .eq("del_flag", 1)
                 .list();
 
         // 判断是否存在表字段
         if (list == null || list.isEmpty()) {
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
-        if (!tableFieldsImpl.updateBatchById(list)) {
+        try {
+            list.forEach(e -> fieldsMapper.deleteByIdWithFill(e));
+        } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 

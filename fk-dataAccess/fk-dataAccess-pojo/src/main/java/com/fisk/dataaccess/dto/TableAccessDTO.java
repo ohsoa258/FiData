@@ -56,6 +56,10 @@ public class TableAccessDTO extends BaseDTO {
      * 0: 未发布  1: 发布成功  2: 发布失败
      */
     public Integer publish;
+    /**
+     * SQL脚本
+     */
+    public String sqlScript;
 
     /**
      * 表字段对象

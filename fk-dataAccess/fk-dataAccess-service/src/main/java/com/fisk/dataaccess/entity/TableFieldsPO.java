@@ -15,7 +15,7 @@ public class TableFieldsPO extends BasePO {
     /**
      * table_access（id）
      */
-    public long tableAccessId;
+    public Long tableAccessId;
 
     /**
      * 添加数据时后台生成
@@ -40,12 +40,12 @@ public class TableFieldsPO extends BasePO {
     /**
      * 字段长度
      */
-    public long fieldLength;
+    public Long fieldLength;
 
     /**
      * 1是主键，0非主键
      */
-    public int isPrimarykey;
+    public Integer isPrimarykey;
 
     /**
      * 1是业务时间，0非业务时间
@@ -55,7 +55,7 @@ public class TableFieldsPO extends BasePO {
     /**
      * 1：实时物理表的字段，0：非实时物理表的字段
      */
-    public long isRealtime;
+    public Integer isRealtime;
 
     /**
      * 1是时间戳，0非时间戳

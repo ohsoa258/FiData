@@ -1,21 +1,29 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
+import com.fisk.dataaccess.entity.TableBusinessPO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
+import com.fisk.dataaccess.entity.TableSyncmodePO;
+import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
-import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -28,6 +36,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private ITableAccess iTableAccess;
     @Resource
     private IAppRegistration iAppRegistration;
+    @Resource
+    private TableBusinessImpl businessImpl;
+    @Resource
+    private TableSyncmodeImpl syncmodeImpl;
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
 
@@ -52,6 +64,103 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         tableFieldsDTO.fieldType=tableFieldsPO.fieldType;
         tableFieldsDTO.originalTableName=data.tableName;
         return tableFieldsDTO;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addData(TableAccessNonDTO dto) {
+
+        List<TableFieldsDTO> listDto = dto.list;
+        TableSyncmodeDTO syncmodeDto = dto.tableSyncmodeDTO;
+        TableBusinessDTO businessDto = dto.businessDTO;
+        if (CollectionUtils.isEmpty(listDto) || syncmodeDto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        // list: dto -> po
+        List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(listDto);
+
+        boolean success;
+        // 批量添加tb_table_fields
+        success = this.saveBatch(listPo);
+        if (!success) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        int businessMode = 3;
+        if (syncmodeDto.syncMode == businessMode && businessDto != null) {
+            success = businessImpl.save(businessDto.toEntity(TableBusinessPO.class));
+            if (!success) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+        }
+        TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
+        syncmodePo.id = listPo.get(0).tableAccessId;
+        success = syncmodeImpl.save(syncmodePo);
+        return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum updateData(TableAccessNonDTO dto) {
+
+        List<TableFieldsDTO> list = dto.list;
+        TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
+        if (CollectionUtils.isEmpty(list) || tableSyncmodeDTO == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        // 保存tb_table_fields
+        boolean success = true;
+        for (TableFieldsDTO tableFieldsDTO : list) {
+            // 0: 未操作的数据  1: 新增  2: 编辑
+            int funcType = tableFieldsDTO.getFuncType();
+            if (funcType == 2) {
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                success = this.updateById(modelField);
+            } else if (funcType == 1) {
+                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                success = this.save(modelField);
+            }
+        }
+        if (!success) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
+        // 删除字段
+        List<TableFieldsPO> originalData = this.query().eq("table_access_id", list.get(0).tableAccessId).list();
+        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
+                        .eq(TableFieldsPO::getTableAccessId,list.get(0).tableAccessId)
+                .select(TableFieldsPO::getId));
+        List<TableFieldsPO> webData = TableFieldsMap.INSTANCES.listDtoToPo(list);
+        List<TableFieldsPO> webDataList = webData.stream().map(e -> e.id).collect(Collectors.toList()).stream()
+                .map(e -> {
+                    TableFieldsPO fieldsPo = new TableFieldsPO();
+                    fieldsPo.setId(e);
+                    return fieldsPo;
+                }).collect(Collectors.toList());
+//        List<TableFieldsPO> collect = originalData.stream().filter(item -> !webData.contains(item)).collect(Collectors.toList());
+        List<TableFieldsPO> collect = originalDataList.stream().filter(item -> !webDataList.contains(item)).collect(Collectors.toList());
+        System.out.println("collect = " + collect);
+        try {
+//            collect.stream().map(e -> baseMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+        } catch (Exception e) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
+        TableBusinessDTO businessDto = dto.businessDTO;
+        // 保存tb_table_business
+        int businessMode = 3;
+        if (tableSyncmodeDTO.syncMode == businessMode && businessDto != null) {
+            success = businessImpl.updateById(businessDto.toEntity(TableBusinessPO.class));
+            if (!success) {
+                return ResultEnum.UPDATE_DATA_ERROR;
+            }
+        }
+        // 保存tb_table_syncmode
+        TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
+        success = syncmodeImpl.updateById(modelSync);
+
+        return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
 }

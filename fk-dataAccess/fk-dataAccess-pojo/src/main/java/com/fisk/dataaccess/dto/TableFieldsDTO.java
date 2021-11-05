@@ -35,7 +35,7 @@ public class TableFieldsDTO extends BaseDTO {
     /**
      * table_access（id）
      */
-    public long tableAccessId;
+    public Long tableAccessId;
 
     /**
      * 字段名称
@@ -55,12 +55,12 @@ public class TableFieldsDTO extends BaseDTO {
     /**
      * 字段长度
      */
-    public long fieldLength;
+    public Long fieldLength;
 
     /**
      * 1是主键，0非主键
      */
-    public int isPrimarykey;
+    public Integer isPrimarykey;
 
     /**
      * 1是业务时间，0非业务时间
@@ -68,9 +68,9 @@ public class TableFieldsDTO extends BaseDTO {
     public int isBusinesstime;
 
     /**
-     * 1：实时物理表的字段，0：非实时物理表的字段
+     * 0是实时物理表，1是非实时物理表
      */
-    public long isRealtime;
+    public Integer isRealtime;
 
     /**
      * 1是时间戳，0非时间戳
@@ -84,11 +84,6 @@ public class TableFieldsDTO extends BaseDTO {
      * 原表名
      */
     public String originalTableName;
-
-    /**
-     * 1：实时物理表的字段，0：非实时物理表的字段
-     */
-//    public int isTimestamp;
 
     public TableFieldsDTO(BaseEntity entity) {
         super(entity);

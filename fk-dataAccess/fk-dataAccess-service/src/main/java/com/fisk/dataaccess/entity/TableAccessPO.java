@@ -16,7 +16,7 @@ public class TableAccessPO extends BasePO {
     /**
      * tb_app_registration表id
      */
-    public long appId;
+    public Long appId;
 
     /**
      * 添加数据时atlas生成
@@ -41,9 +41,14 @@ public class TableAccessPO extends BasePO {
     /**
      * 0是实时物理表，1是非实时物理表
      */
-    public int isRealtime;
+    public Integer isRealtime;
     /**
      * 0: 未发布  1: 发布成功  2: 发布失败
      */
     public Integer publish;
+
+    /**
+     * SQL脚本
+     */
+    public String sqlScript;
 }
