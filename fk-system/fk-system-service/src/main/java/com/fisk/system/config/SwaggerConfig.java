@@ -23,6 +23,7 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
+    public static final String DATAVIEW = "dataview-controller";
     public static final String PERMISSION = "permission-controller";
     public static final String ROLE_INFO = "role-info-controller";
     public static final String SERVICE_REGISTRY = "service-registry-controller";
@@ -41,6 +42,7 @@ public class SwaggerConfig {
                 .tags(new Tag(ROLE_INFO,"角色管理"))
                 .tags(new Tag(SERVICE_REGISTRY,"服务注册"))
                 .tags(new Tag(USER,"用户中心服务"))
+                .tags(new Tag(DATAVIEW,"视图过滤"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 
