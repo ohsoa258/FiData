@@ -17,13 +17,17 @@ public class FactPO extends BasePO {
      */
     public int businessProcessId;
     /**
-     * 应用id
+     * 应用id(删)
      */
     public int appId;
     /**
-     * 来源表id
+     * 来源表id(删)
      */
     public int tableSourceId;
+    /**
+     * 事实表名称
+     */
+    public String factTabName;
     /**
      * 事实表中文名称
      */

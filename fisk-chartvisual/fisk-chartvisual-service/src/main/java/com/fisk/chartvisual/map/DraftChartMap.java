@@ -24,7 +24,8 @@ public interface DraftChartMap {
      * @return target
      */
     @Mappings({
-            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
     })
     DraftChartPO dtoToPo(ChartPropertyDTO dto);
 
@@ -34,7 +35,8 @@ public interface DraftChartMap {
      * @return target vo
      */
     @Mappings({
-            @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString")
+            @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="byteConvertString")
     })
     ChartPropertyVO poToVo(DraftChartPO po);
 
@@ -46,7 +48,8 @@ public interface DraftChartMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
     })
     void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 

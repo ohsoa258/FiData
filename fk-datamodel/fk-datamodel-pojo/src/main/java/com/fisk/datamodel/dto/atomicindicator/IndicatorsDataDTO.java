@@ -20,7 +20,7 @@ public class IndicatorsDataDTO {
     /**
      * 指标类型：0原子指标、1派生指标
      */
-    public int derivedIndicatorsType;
+    public int indicatorsType;
     /**
      * 时间周期：MTD...
      */

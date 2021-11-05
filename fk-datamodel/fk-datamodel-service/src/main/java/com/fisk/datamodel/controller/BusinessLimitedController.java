@@ -51,6 +51,12 @@ public class BusinessLimitedController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iBusinessLimited.getBusinessLimitedAndAttributeList(businessLimitedId));
     }
 
+    @ApiOperation("添加业务限定")
+    @PostMapping("/BusinessLimitedAdd")
+    public ResultEntity<Object> BusinessLimitedAdd(@Validated @RequestBody BusinessLimitedDataAddDTO dto) {
+        return ResultEntityBuild.build(iBusinessLimited.BusinessLimitedAdd(dto));
+    }
+
     @ApiOperation("更新业务限定")
     @PutMapping("/businessLimitedUpdate")
     public ResultEntity<Object> businessLimitedUpdate(@Validated @RequestBody BusinessLimitedUpdateDTO dto) {

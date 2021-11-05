@@ -47,6 +47,8 @@ public class DimensionAttributeImpl
     DataAccessClient client;
     @Resource
     FactAttributeMapper factAttributeMapper;
+    @Resource
+    DimensionImpl dimensionImpl;
 
     @Override
     public List<DimensionMetaDTO> getProjectDimensionTable()
@@ -83,7 +85,7 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ResultEnum addDimensionAttribute(int dimensionId,List<DimensionAttributeDTO> dto)
+    public ResultEnum addDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
     {
         //判断列名是否重复
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
@@ -95,7 +97,6 @@ public class DimensionAttributeImpl
             DimensionAttributePO po=attributeMapper.selectOne(queryWrapper.lambda()
                     .eq(DimensionAttributePO::getDimensionFieldEnName,item.dimensionFieldEnName)
                     .eq(DimensionAttributePO::getAttributeType,item.attributeType)
-                    .eq(DimensionAttributePO::getTableSourceFieldId,item.tableSourceFieldId)
             );
             if (po !=null)
             {
@@ -119,7 +120,18 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
-        return this.saveBatch(list)?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        boolean flat=this.saveBatch(list);
+        if (!flat)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        //是否发布
+        if (isPublish)
+        {
+            return dimensionImpl.dimensionPublish(dimensionId);
+        }
+        return ResultEnum.SUCCESS;
+
     }
 
     @Override

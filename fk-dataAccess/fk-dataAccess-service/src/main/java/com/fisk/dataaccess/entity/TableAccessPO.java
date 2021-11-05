@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 public class TableAccessPO extends BasePO {
 
     /**
-     *  tb_app_registration表id
+     * tb_app_registration表id
      */
     public long appId;
 
@@ -24,38 +24,26 @@ public class TableAccessPO extends BasePO {
     public String atlasTableId;
 
     /**
-     * 组件id
-     */
-//    public String componentId;
-
-    /**
-     * 调度组件id
-     */
-//    public String schedulerComponentId;
-
-    /**
-     * nifi sql
-     */
-//    public String dorisSelectSqlStr;
-
-    /**
-     *  物理表名
+     * 物理表名
      */
     public String tableName;
 
     /**
-     *  物理表描述
+     * 物理表描述
      */
     public String tableDes;
 
     /**
-     *  如果是实时物理表，需要提供数据同步地址
+     * 如果是实时物理表，需要提供数据同步地址
      */
     public String syncSrc;
 
     /**
-     *  0是实时物理表，1是非实时物理表
+     * 0是实时物理表，1是非实时物理表
      */
     public int isRealtime;
-
+    /**
+     * 0: 未发布  1: 发布成功  2: 发布失败
+     */
+    public Integer publish;
 }

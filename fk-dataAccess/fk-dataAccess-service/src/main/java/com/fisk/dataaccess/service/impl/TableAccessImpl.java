@@ -1,5 +1,8 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,9 +25,11 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
-import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
@@ -119,6 +124,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
+
+    @Value("${pgsql-ods.url}")
+    public String pgsqlOdsUrl;
+    @Value("${pgsql-ods.username}")
+    public String pgsqlOdsUsername;
+    @Value("${pgsql-ods.password}")
+    public String pgsqlOdsPassword;
 
     /**
      * 添加物理表(实时)
@@ -733,7 +745,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return list;
     }
-
 
     /**
      * 删除数据
@@ -1460,6 +1471,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         {
             item.tableDtoList=TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
                     .filter(e->e.appId==item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e->e.tableName="ods_"+e.tableName+"_"+item.appAbbreviation).collect(Collectors.toList());
             if ((item.tableDtoList==null || item.tableDtoList.size()==0) ||
                     (tableFieldsPOList==null || tableFieldsPOList.size()==0))
             {
@@ -1506,6 +1518,234 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+    @Override
+    public ResultEnum addTableAccessData(TbTableAccessDTO dto) {
 
+        // dto -> po
+        TableAccessPO model = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+        // 参数校验
+        if (model == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
 
+        // 同一应用下表名不可重复
+        boolean flag = this.checkTableName(dto);
+        if (flag) {
+            return ResultEnum.Table_NAME_EXISTS;
+        }
+
+        return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public TbTableAccessDTO getTableAccessData(long id) {
+
+        TableAccessPO model = this.query().eq("id", id).one();
+        if (model == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        TbTableAccessDTO dto = TableAccessMap.INSTANCES.tbPoToDto(model);
+        dto.appName = appRegistrationImpl.query().eq("id", model.appId).one().appName;
+        return dto;
+    }
+
+    @Transactional
+    @Override
+    public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
+
+        TableAccessPO model = this.getById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // dto -> po
+        TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    @Transactional
+    @Override
+    public ResultEnum deleteTableAccessData(long id) {
+        // 参数校验
+        TableAccessPO model = this.getById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        return accessMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<TbTableAccessDTO> getTableAccessListData(long appId) {
+
+        List<TableAccessPO> list = this.query().eq("app_id", appId).list();
+
+        return TableAccessMap.INSTANCES.listTbPoToDto(list);
+    }
+
+    /**
+     * 判断同一应用下表名不可重复
+     *
+     * @param dto dto
+     * @return true: 重复, false: 不重复
+     */
+    private boolean checkTableName(TbTableAccessDTO dto) {
+        boolean flag = false;
+
+        List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
+        // 查询表名对应的应用注册id
+        TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.appId = dto.appId;
+        tableNameVO.tableName = dto.tableName;
+        if (appIdAndTableNameList.contains(tableNameVO)) {
+            flag = true;
+        }
+        return flag;
+    }
+
+    @Override
+    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query)
+    {
+        OdsResultDTO array = new OdsResultDTO();
+        try {
+            Class.forName("org.postgresql.Driver");
+            Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
+            Statement st = conn.createStatement();
+            //获取总条数
+            String getTotalSql="select count(*) as total from("+query.querySql+") as tab";
+            ResultSet rSet = st.executeQuery(getTotalSql);
+            int rowCount = 0;
+            if(rSet.next()) {
+                rowCount=rSet.getInt("total");
+            }
+            rSet.close();
+            //分页获取数据
+            query.querySql=query.querySql+" limit "+query.pageSize +" offset " +query.pageSize*query.pageIndex;
+            ResultSet rs = st.executeQuery(query.querySql);
+            //获取数据集
+            array=resultSetToJsonArray(rs);
+            array.pageIndex=query.pageIndex;
+            array.pageSize=query.pageSize;
+            array.total=rowCount;
+            rs.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return array;
+    }
+
+    public static OdsResultDTO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException
+    {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList=new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        while (rs.next()) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                //获取sql查询数据集合
+                String columnName =metaData.getColumnLabel(i);
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+                //获取列名
+                FieldNameDTO dto=new FieldNameDTO();
+                dto.fieldName=metaData.getColumnLabel(i);
+                dto.fieldType=metaData.getColumnTypeName(i);
+                dto.fieldLength=String.valueOf(metaData.getColumnDisplaySize(i));
+                fieldNameDTOList.add(dto);
+            }
+            array.add(jsonObj);
+        }
+        data.fieldNameDTOList=fieldNameDTOList.stream().distinct().collect(Collectors.toList());
+        data.dataArray=array;
+        return data;
+    }
+
+    @Override
+    public OdsResultDTO getDataAccessQueryList(OdsQueryDTO query) {
+        String mysqlDriver = "mysql";
+        String sqlserverDriver = "sqlserver";
+        AppDataSourcePO po = appDataSourceImpl.query().eq("app_id", query.appId).one();
+
+        OdsResultDTO array = new OdsResultDTO();
+        try {
+            Statement st = null;
+            if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
+                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement();
+                //分页获取数据
+                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + query.pageSize * query.pageIndex;
+            } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
+                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement();
+
+                String fieldName = getFieldName(conn, po.dbName);
+                //分页获取数据
+                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by id ASC) " +
+                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
+            }
+            //获取总条数
+            String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
+            ResultSet rSet = st.executeQuery(getTotalSql);
+            int rowCount = 0;
+            if (rSet.next()) {
+                rowCount = rSet.getInt("total");
+            }
+            rSet.close();
+
+            ResultSet rs = st.executeQuery(query.querySql);
+            //获取数据集
+            array = resultSetToJsonArray(rs);
+            array.pageIndex = query.pageIndex;
+            array.pageSize = query.pageSize;
+            array.total = rowCount;
+            rs.close();
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return array;
+    }
+
+    /**
+     * 连接数据库
+     * @param driver driver
+     * @param url url
+     * @param username username
+     * @param password password
+     * @return statement
+     */
+    private Connection getStatement(String driver, String url, String username, String password) {
+        Connection conn;
+        try {
+            Class.forName(driver);
+            conn = DriverManager.getConnection(url, username, password);
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        return conn;
+    }
+
+    private String getFieldName(Connection conn,String tableName) {
+        String fieldName = "";
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            while (resultSet.next()) {
+                fieldName = resultSet.getString("COLUMN_NAME");
+                return fieldName;
+            }
+
+        } catch (Exception e) {
+            log.error("【getColumnsName】获取表字段报错, ex", e);
+            return null;
+        }
+
+        return fieldName;
+    }
 }

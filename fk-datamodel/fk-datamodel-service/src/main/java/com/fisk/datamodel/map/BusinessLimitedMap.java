@@ -1,6 +1,7 @@
 package com.fisk.datamodel.map;
 
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
+import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDataAddDTO;
 import com.fisk.datamodel.dto.businessLimited.BusinessLimitedUpdateDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import org.mapstruct.Mapper;
@@ -24,4 +25,12 @@ public interface BusinessLimitedMap {
      * @return
      */
     BusinessLimitedPO dtoTopo(BusinessLimitedDTO businessLimitedDto);
+
+    /**
+     * dtoAdd==>Po
+     * @param dto
+     * @return
+     */
+    BusinessLimitedPO dtoAddToPo(BusinessLimitedDataAddDTO dto);
+
 }

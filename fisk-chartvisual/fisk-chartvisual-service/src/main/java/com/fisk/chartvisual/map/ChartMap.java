@@ -26,7 +26,8 @@ public interface ChartMap {
      * @return target
      */
     @Mappings({
-            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
     })
     ChartPO dtoToPo(ReleaseChart dto);
 
@@ -51,7 +52,8 @@ public interface ChartMap {
      * @return target vo
      */
     @Mappings({
-            @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString")
+            @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="byteConvertString")
     })
     ChartPropertyVO poToVo(ChartPO po);
 
@@ -62,7 +64,8 @@ public interface ChartMap {
      */
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte")
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
     })
     void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 
@@ -85,7 +88,7 @@ public interface ChartMap {
      * @return
      */
     @Named("stringConvertByte")
-    default  byte[] stringConvertByteFun(String image){
+    default byte[] stringConvertByteFun(String image){
         if (image==null){
             return  null;
         }

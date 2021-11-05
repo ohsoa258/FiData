@@ -38,7 +38,7 @@ public class DimensionAttributeController {
     @PostMapping("/addAttribute")
     public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
     {
-        return ResultEntityBuild.build(service.addDimensionAttribute(dto.dimensionId,dto.list));
+        return ResultEntityBuild.build(service.addDimensionAttribute(dto.dimensionId,dto.isPublish,dto.list));
     }
 
     @ApiOperation("删除维度字段")

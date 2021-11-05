@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDataDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedUpdateDTO;
+import com.fisk.datamodel.dto.businessLimited.*;
 import com.fisk.datamodel.entity.BusinessLimitedAttributePO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.map.BusinessLimitedAttributeMap;
@@ -16,6 +13,7 @@ import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.mapper.BusinessLimitedAttributeMapper;
 import com.fisk.datamodel.mapper.BusinessLimitedMapper;
 import com.fisk.datamodel.service.IBusinessLimited;
+import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,6 +42,9 @@ public class BusinessLimitedImpl implements IBusinessLimited {
         businessLimitedMapper.deleteById(businessLimitedId);
         return ResultEnum.SUCCESS;
     }
+
+    /*代码分段*/
+
 
     @Override
     public List<BusinessLimitedPO> getBusinessLimitedList(String factId) {
@@ -88,6 +89,20 @@ public class BusinessLimitedImpl implements IBusinessLimited {
         po.limitedDes=dto.limitedDes;
         po.limitedName=dto.limitedName;
         return businessLimitedMapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum BusinessLimitedAdd(BusinessLimitedDataAddDTO dto)
+    {
+        QueryWrapper<BusinessLimitedPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessLimitedPO::getLimitedName,dto.limitedName)
+                .eq(BusinessLimitedPO::getFactId,dto.id);
+        BusinessLimitedPO po=businessLimitedMapper.selectOne(queryWrapper);
+        if (po !=null)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
+        return businessLimitedMapper.insert(BusinessLimitedMap.INSTANCES.dtoAddToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.DATA_NOTEXISTS;
     }
 
 

@@ -11,7 +11,7 @@
         details,
         create_time,
         0 as chartType,
-        image
+        image,background_image
         from tb_chart
         where del_flag = 1
         <if test=" query.name != null ">
@@ -34,7 +34,7 @@
         details,
         create_time,
         1 as chartType,
-        image
+        image,background_image
         from tb_draft_chart
         where del_flag = 1
         <if test=" query.name != null ">
@@ -51,6 +51,7 @@
         </if>
     </select>
     <resultMap id="chartListRead" type="com.fisk.chartvisual.vo.ChartPropertyVO">
+        <result property="backgroundImage" column="background_image" typeHandler="com.fisk.common.mybatis.config.BlobTypeHandler"></result>
         <result property="image" column="image" typeHandler="com.fisk.common.mybatis.config.BlobTypeHandler"></result>
         <result property="fid" column="fid" ></result>
         <result property="name" column="name" ></result>
