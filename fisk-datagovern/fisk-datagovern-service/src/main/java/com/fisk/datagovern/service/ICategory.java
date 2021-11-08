@@ -41,8 +41,9 @@ public interface ICategory {
 
     /**
      * 获取类目列表
+     * @param queryName
      * @return
      */
-    List<CategoryDataDTO> getCategoryList();
+    List<CategoryDataDTO> getCategoryList(String queryName);
 
 }

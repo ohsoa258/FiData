@@ -83,40 +83,43 @@ public class CategoryImpl implements ICategory {
     }
 
     @Override
-    public List<CategoryDataDTO> getCategoryList()
+    public List<CategoryDataDTO> getCategoryList(String queryName)
     {
         List<CategoryDataDTO> dataList=new ArrayList<>();
         QueryWrapper<CategoryPO> queryWrapper=new QueryWrapper<>();
-        /*if (StringUtils.isNotEmpty(queryName))
+        queryWrapper.lambda().eq(CategoryPO::getCategoryParentCode,"1");
+        if (StringUtils.isNotEmpty(queryName))
         {
             queryWrapper.lambda().like(CategoryPO::getCategoryCnName,queryName);
-        }*/
-        List<CategoryPO> list=mapper.selectList(queryWrapper);
-        if (list==null || list.size()==0)
-        {
-            return dataList;
         }
         //获取父节点
-        List<CategoryPO> parentList=list.stream()
-                .filter(e->"1".equals(e.getCategoryParentCode())).collect(Collectors.toList());
-        if (parentList!=null && parentList.size()>0)
+        List<CategoryPO> list=mapper.selectList(queryWrapper);
+        if (list!=null && list.size()>0)
         {
-            dataList=CategoryMap.INSTANCES.dataListPoToDto(parentList);
+            dataList=CategoryMap.INSTANCES.dataListPoToDto(list);
         }
         //获取子节点
-        List<CategoryPO> childrenList=list.stream()
-                .filter(e->!"1".equals(e.getCategoryParentCode())).collect(Collectors.toList());
+        QueryWrapper<CategoryPO> categoryPOQueryWrapper=new QueryWrapper<>();
+        categoryPOQueryWrapper.lambda().ne(CategoryPO::getCategoryParentCode,"1");
+        List<CategoryPO> childrenList=mapper.selectList(categoryPOQueryWrapper);
+        List<CategoryPO> childrenAllList=mapper.selectList(categoryPOQueryWrapper);
         if (childrenList==null || childrenList.size()==0)
         {
             return dataList;
         }
+        //如果没有第一级，则找出子级中的第一级所有数据
         if (dataList ==null || dataList.size()==0)
         {
-            dataList=CategoryMap.INSTANCES.dataListPoToDto(childrenList);
+            if (StringUtils.isNotEmpty(queryName))
+            {
+                childrenList=childrenList.stream().filter(e->e.categoryCnName.contains(queryName)).collect(Collectors.toList());
+            }
+            dataList=CategoryMap.INSTANCES.dataListPoToDto(getParentCode(childrenList));
         }
+        //递归获取树形结构
         for (CategoryDataDTO item :dataList)
         {
-            item=buildChildTree(item,childrenList);
+            item=buildChildTree(item,childrenAllList);
         }
         return dataList;
     }
@@ -137,6 +140,26 @@ public class CategoryImpl implements ICategory {
          }
          pNode.childrenDto=list;
          return pNode;
+     }
+
+    /**
+     * 筛选父级CategoryPO
+     * @param listPo
+     * @return
+     */
+     public List<CategoryPO> getParentCode(List<CategoryPO> listPo)
+     {
+         List<CategoryPO> data=new ArrayList<>();
+        for (CategoryPO item:listPo)
+        {
+            List<CategoryPO> pos=listPo.stream().filter(e->item.categoryParentCode.equals(e.categoryCode)).collect(Collectors.toList());
+            if (pos !=null && pos.size()>0)
+            {
+                continue;
+            }
+            data.add(item);
+        }
+        return data;
      }
 
      public List<Integer> getCategoryIds(int categoryId)
@@ -166,5 +189,6 @@ public class CategoryImpl implements ICategory {
          }
          return ids;
      }
+
 
 }

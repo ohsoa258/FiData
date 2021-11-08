@@ -1623,7 +1623,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             rSet.close();
             //分页获取数据
-            query.querySql=query.querySql+" limit "+query.pageSize +" offset " +query.pageSize*query.pageIndex;
+            int offset=0;
+            if (query.pageIndex>1)
+            {
+                offset=query.pageSize*query.pageIndex;
+            }
+            query.querySql=query.querySql+" limit "+query.pageSize +" offset " +offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array=resultSetToJsonArray(rs);
@@ -1681,8 +1686,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
+                int offset=0;
+                if (query.pageIndex>1)
+                {
+                    offset=query.pageSize*query.pageIndex;
+                }
                 //分页获取数据
-                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + query.pageSize * query.pageIndex;
+                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();

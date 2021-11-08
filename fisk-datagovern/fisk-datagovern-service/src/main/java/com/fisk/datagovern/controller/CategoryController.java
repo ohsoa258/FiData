@@ -52,8 +52,8 @@ public class CategoryController {
 
     @ApiOperation("获取类目列表")
     @GetMapping("/getCategoryList")
-    public ResultEntity<Object> getCategoryList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCategoryList());
+    public ResultEntity<Object> getCategoryList(String queryName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCategoryList(queryName));
     }
 
 
