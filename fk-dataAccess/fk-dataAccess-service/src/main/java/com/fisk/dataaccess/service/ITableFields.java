@@ -2,11 +2,13 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
+import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
 /**
@@ -28,7 +30,7 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(TableAccessNonDTO dto);
+    ResultEntity<AtlasIdsVO> addData(TableAccessNonDTO dto);
 
     /**
      * 修改物理表字段

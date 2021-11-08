@@ -34,7 +34,7 @@ public class TableAccessController {
     @ApiOperation(value = "添加")
     public ResultEntity<Object> addTableAccessData(@RequestBody TbTableAccessDTO dto) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addTableAccessData(dto));
+        return ResultEntityBuild.build(service.addTableAccessData(dto));
     }
 
     /**
