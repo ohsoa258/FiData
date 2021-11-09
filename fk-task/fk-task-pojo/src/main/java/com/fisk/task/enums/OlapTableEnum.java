@@ -12,7 +12,18 @@ public enum OlapTableEnum implements BaseEnum {
     * 物理表,事实表physics
     * */
     FACT(2,"事实表"),
-    PHYSICS(3,"物理表");
+    PHYSICS(3,"物理表"),
+    //CustomWork管道服务
+    /**
+     * 任务状态
+     */
+    CUSTOMWORKKPI(4,"管道服务-指标表"),
+    CUSTOMWORKDIMENSION(5,"管道服务-维度表"),
+    /*
+     * 物理表,事实表physics
+     * */
+    CUSTOMWORKFACT(6,"管道服务-事实表"),
+    CUSTOMWORKPHYSICS(7,"管道服务-物理表");
 
 
     OlapTableEnum(int value, String name) {

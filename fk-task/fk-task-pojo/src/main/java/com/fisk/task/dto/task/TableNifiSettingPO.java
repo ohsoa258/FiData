@@ -12,6 +12,7 @@ public class TableNifiSettingPO extends BasePO {
     public String tableComponentId;
     public Integer appId;
     public Integer tableAccessId;
+    public String dispatchComponentId;
     public String queryIncrementProcessorId;
     public String convertDataToJsonProcessorId;
     public String setIncrementProcessorId;

@@ -33,4 +33,9 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     * selectsql(只有toDoris用得到)
     * */
     public String selectSql;
+
+    /*
+    * groupComponentId(管道,如果不为null,就子组里建立nifi流程)
+    * */
+    public String groupComponentId;
 }

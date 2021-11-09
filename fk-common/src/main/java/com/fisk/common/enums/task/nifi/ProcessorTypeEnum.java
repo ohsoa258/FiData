@@ -22,7 +22,10 @@ public enum ProcessorTypeEnum implements BaseEnum {
     PublishAMQP(8, "org.apache.nifi.amqp.processors.PublishAMQP"),
     SplitJson(9,"org.apache.nifi.processors.standard.SplitJson"),
     ExecuteSQLRecord(10,"org.apache.nifi.processors.standard.ExecuteSQLRecord"),
-    PutDatabaseRecord(11,"org.apache.nifi.processors.standard.PutDatabaseRecord");
+    PutDatabaseRecord(11,"org.apache.nifi.processors.standard.PutDatabaseRecord"),
+    NOTIFY(12,"org.apache.nifi.processors.standard.Notify"),
+    WAIT(13,"org.apache.nifi.processors.standard.Wait");
+
 
     ProcessorTypeEnum(int value, String name) {
         this.value = value;

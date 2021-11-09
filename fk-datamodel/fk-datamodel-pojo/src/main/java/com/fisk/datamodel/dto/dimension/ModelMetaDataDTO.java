@@ -43,4 +43,9 @@ public class ModelMetaDataDTO {
 
     public Map<String, String> fieldEnNameMaps;
 
+    /*
+    * 组id,仅管道用的到
+    * */
+    public String groupComponentId;
+
 }

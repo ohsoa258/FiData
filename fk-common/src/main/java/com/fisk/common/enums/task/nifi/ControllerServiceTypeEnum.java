@@ -13,7 +13,9 @@ public enum ControllerServiceTypeEnum implements BaseEnum {
      */
     DBCP_CONNECTION_POOL(0, "org.apache.nifi.dbcp.DBCPConnectionPool"),
     AVROREADER(1, "org.apache.nifi.avro.AvroReader"),
-    AVRORECORDSETWRITER(2, "org.apache.nifi.avro.AvroRecordSetWriter");
+    AVRORECORDSETWRITER(2, "org.apache.nifi.avro.AvroRecordSetWriter"),
+    REDISCONNECTIONPOOL(3,"org.apache.nifi.redis.service.RedisConnectionPoolService"),
+    REDISDISTRIBUTEMAPCACHECLIENTSERVICE(4,"org.apache.nifi.redis.service.RedisDistributedMapCacheClientService");
 
 
     ControllerServiceTypeEnum(int value, String name) {
