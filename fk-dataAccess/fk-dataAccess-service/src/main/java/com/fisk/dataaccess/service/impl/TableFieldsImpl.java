@@ -117,8 +117,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         TableAccessPO tableAccessPo = tableAccessImpl.query().eq("id", tableAccessId).one();
-        AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, 1L, tableAccessId, "");
-        getAtlasIdsVO(userInfo.id, tableAccessPo.appId, tableAccessId, tableAccessPo.tableName);
+        AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, tableAccessPo.appId, tableAccessId, tableAccessPo.tableName);
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
 
