@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.chartvisual.dto.ChartQueryFilter;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.ColumnDetails;
@@ -35,7 +36,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         List<ColumnDetails> values = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.VALUE).collect(Collectors.toList());
         List<ColumnDetails> names = query.columnDetails.stream().filter(e -> e.columnType == ColumnTypeEnum.NAME).collect(Collectors.toList());
 
-        if (values.size() == 0 || names.size() == 0) {
+        if (names.size() == 0) {
             throw new FkException(ResultEnum.VISUAL_PARAMTER_ERROR);
         }
         ColumnDetails queryColumns = names.get(names.size() - 1);
@@ -67,9 +68,11 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
             //聚合字段
-            values.forEach(e -> {
-                str.append(",").append(e.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(e.columnName, arr))).append(" as ").append(getColumn(e.columnLabel, arr));
-            });
+            if (CollectionUtils.isNotEmpty(values)){
+                values.forEach(e -> {
+                    str.append(",").append(e.aggregationType.getName().replace(SystemConstants.BUILD_SQL_REPLACE_STR, getColumn(e.columnName, arr))).append(" as ").append(getColumn(e.columnLabel, arr));
+                });
+            }
         }
         if (query.pagination != null && query.pagination.enablePage && type == DataSourceTypeEnum.SQLSERVER && !aggregation) {
             String orderColumn = "";
