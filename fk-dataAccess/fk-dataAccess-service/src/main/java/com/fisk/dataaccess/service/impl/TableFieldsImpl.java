@@ -23,6 +23,7 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -70,10 +71,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         TableAccessNonDTO data = iTableAccess.getData(tableFieldsPO.tableAccessId);
         AppRegistrationDTO data1 = iAppRegistration.getData(data.appId);
         TableFieldsDTO tableFieldsDTO = new TableFieldsDTO();
-        tableFieldsDTO.appbAbreviation=data1.appAbbreviation;
-        tableFieldsDTO.fieldName=tableFieldsPO.fieldName;
-        tableFieldsDTO.fieldType=tableFieldsPO.fieldType;
-        tableFieldsDTO.originalTableName=data.tableName;
+        tableFieldsDTO.appbAbreviation = data1.appAbbreviation;
+        tableFieldsDTO.fieldName = tableFieldsPO.fieldName;
+        tableFieldsDTO.fieldType = tableFieldsPO.fieldType;
+        tableFieldsDTO.originalTableName = data.tableName;
         return tableFieldsDTO;
     }
 
@@ -125,6 +126,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
         List<TableFieldsDTO> list = dto.list;
+
+        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
+                .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
+                .select(TableFieldsPO::getId));
+
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
         if (CollectionUtils.isEmpty(list) || tableSyncmodeDTO == null) {
             return ResultEnum.PARAMTER_NOTNULL;
@@ -140,6 +146,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 success = this.updateById(modelField);
             } else if (funcType == 1) {
                 TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+                modelField.delFlag = 1;
                 success = this.save(modelField);
             }
         }
@@ -148,22 +155,18 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 删除字段
-        List<TableFieldsPO> originalData = this.query().eq("table_access_id", list.get(0).tableAccessId).list();
-        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
-                        .eq(TableFieldsPO::getTableAccessId,list.get(0).tableAccessId)
-                .select(TableFieldsPO::getId));
         List<TableFieldsPO> webData = TableFieldsMap.INSTANCES.listDtoToPo(list);
-        List<TableFieldsPO> webDataList = webData.stream().map(e -> e.id).collect(Collectors.toList()).stream()
+        List<TableFieldsPO> webData1 = webData.stream().filter(e -> StringUtils.isNotEmpty(String.valueOf(e.id))).collect(Collectors.toList());
+        List<TableFieldsPO> webDataList = webData1.stream().map(e -> e.id).collect(Collectors.toList()).stream()
                 .map(e -> {
                     TableFieldsPO fieldsPo = new TableFieldsPO();
                     fieldsPo.setId(e);
                     return fieldsPo;
                 }).collect(Collectors.toList());
-//        List<TableFieldsPO> collect = originalData.stream().filter(item -> !webData.contains(item)).collect(Collectors.toList());
         List<TableFieldsPO> collect = originalDataList.stream().filter(item -> !webDataList.contains(item)).collect(Collectors.toList());
         System.out.println("collect = " + collect);
         try {
-//            collect.stream().map(e -> baseMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+            collect.stream().map(e -> baseMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
