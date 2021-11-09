@@ -8,6 +8,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
@@ -303,5 +304,30 @@ public interface INifiComponentsBuild {
      *修改input组件状态
      */
     ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
+    /*
+    * 创建RedisConnectionPoolService控制器服务
+    * */
+    BusinessResult<ControllerServiceEntity> createRedisConnectionPoolService(BuildRedisConnectionPoolServiceDTO controllerServiceEntity);
+
+    /*
+     * 创建RedisConnectionPoolService控制器服务
+     * */
+    BusinessResult<ControllerServiceEntity> createRedisDistributedMapCacheClientService(BuildRedisDistributedMapCacheClientServiceDTO controllerServiceEntity);
+
+    /*
+    * 创建notify组件
+    * */
+    BusinessResult<ProcessorEntity> createNotifyProcessor(BuildNotifyProcessorDTO buildNotifyProcessorDTO);
+
+    /*
+    * 创建wait组件
+    * */
+    BusinessResult<ProcessorEntity> createWaitProcessor(BuildWaitProcessorDTO buildWaitProcessorDTO);
+
+    /*
+    * 创建漏斗
+    * */
+    BusinessResult<FunnelEntity> createFunnel(FunnelDTO funnelDTO);
+
 
 }

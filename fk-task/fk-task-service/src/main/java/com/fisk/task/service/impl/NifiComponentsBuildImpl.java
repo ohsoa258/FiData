@@ -19,6 +19,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
@@ -1028,6 +1029,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         return ResultEnum.SUCCESS;
     }
 
+
     /*
     * controllerServicesRunStatus   禁用控制器服务
     * */
@@ -1456,6 +1458,184 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         }
 
         return portEntity;
+    }
+
+
+    /*
+     *创建RedisConnectionPoolService控制器服务
+     * */
+    @Override
+    public BusinessResult<ControllerServiceEntity> createRedisConnectionPoolService(BuildRedisConnectionPoolServiceDTO data) {
+
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(1);
+        map.put("Connection String", data.connectionString);
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+            //是否将控制器服务打开
+            if (data.enabled) {
+                BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+                if (model.success) {
+                    return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+                } else {
+                    return BusinessResult.of(false, model.msg, null);
+                }
+            }
+            return BusinessResult.of(true, "控制器服务创建成功", res);
+        } catch (ApiException e) {
+            log.error("创建连接池失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建连接池失败: " + e.getMessage(), null);
+        }
+    }
+
+
+    /*
+    * 创建RedisDistributedMapCacheClientService控制器服务
+    * */
+    @Override
+    public BusinessResult<ControllerServiceEntity> createRedisDistributedMapCacheClientService(BuildRedisDistributedMapCacheClientServiceDTO data) {
+
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(1);
+        map.put("redis-connection-pool", data.redisConnectionPool);
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.REDISDISTRIBUTEMAPCACHECLIENTSERVICE.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+            //是否将控制器服务打开
+            if (data.enabled) {
+                BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+                if (model.success) {
+                    return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+                } else {
+                    return BusinessResult.of(false, model.msg, null);
+                }
+            }
+            return BusinessResult.of(true, "控制器服务创建成功", res);
+        } catch (ApiException e) {
+            log.error("创建连接池失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建连接池失败: " + e.getMessage(), null);
+        }
+    }
+
+
+    /*
+     *创建漏斗
+     * */
+    @Override
+    public BusinessResult<FunnelEntity> createFunnel(FunnelDTO funnelDTO){
+        try {
+            FunnelEntity funnelEntity = new FunnelEntity();
+            RevisionDTO revision = new RevisionDTO();
+            revision.setVersion(0L);
+            funnelEntity.setRevision(revision);
+            funnelEntity.setDisconnectedNodeAcknowledged(false);
+            com.davis.client.model.FunnelDTO component = new com.davis.client.model.FunnelDTO();
+            PositionDTO position = new PositionDTO();
+            position.setX(500.00);
+            position.setY(500.00);
+            component.setPosition(position);
+            funnelEntity.setComponent(component);
+            FunnelEntity funnel = NifiHelper.getProcessGroupsApi().createFunnel(funnelDTO.groupId, funnelEntity);
+            return BusinessResult.of(true, "漏斗创建成功", funnel);
+        } catch (ApiException e) {
+            log.error("创建漏斗失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建漏斗失败: " + e.getMessage(), null);
+        }
+
+    }
+
+    /*
+     *创建notify组件
+     * */
+    @Override
+    public BusinessResult<ProcessorEntity> createNotifyProcessor(BuildNotifyProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+
+        Map<String, String> map = new HashMap<>(3);
+        map.put("distributed-cache-service", data.distributedCacheService);
+        map.put("release-signal-id", data.releaseSignalIdentifier);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.NOTIFY.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+
+
+    /*
+     *创建wait组件
+     * */
+    @Override
+    public BusinessResult<ProcessorEntity> createWaitProcessor(BuildWaitProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+
+        Map<String, String> map = new HashMap<>(3);
+        map.put("distributed-cache-service", data.distributedCacheService);
+        map.put("release-signal-id", data.releaseSignalIdentifier);
+        map.put("target-signal-count", data.targetSignalCount);
+        map.put("expiration-duration", data.expirationDuration);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(data.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.WAIT.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
     }
 
 }
