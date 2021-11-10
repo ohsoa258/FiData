@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +39,18 @@ public class NifiCustomWorkflowDetailController {
     @PutMapping("/edit")
     @ApiOperation(value = "修改管道详情")
     public ResultEntity<Object> editData(@RequestBody NifiCustomWorkflowDetailVO dto) {
+        ResultEntity<NifiCustomWorkListDTO> data = service.editData(dto);
+        NifiCustomWorkListDTO workListDTO = data.data;
+        if (workListDTO == null) {
+            return ResultEntityBuild.buildData(data.code, data.msg);
+        }
 
-        return ResultEntityBuild.build(service.editData(dto));
+        if (data.code == 0) {
+            // TODO: 调用nifi生成流程
+            log.info("nifi: ");
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }
 
     @PutMapping("/editComponent")

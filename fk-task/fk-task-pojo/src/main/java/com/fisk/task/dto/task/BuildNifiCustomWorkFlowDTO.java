@@ -11,20 +11,22 @@ public class BuildNifiCustomWorkFlowDTO {
 
     //操作类型
     public DataClassifyEnum type;
-    //appid或者业务域id(对应前面的接入或建模id)
-    public Integer appId;
+    //appid或者业务域id(对应前面的接入或建模id或任务组时,就是任务组id)
+    public Long appId;
     //物理or事实or维度or指标表表id(对应事实表,物理表,维度表,指标表id)
-    public Integer tableId;
+    public String tableId;
     //表类别
     public OlapTableEnum tableType;
-    //表名
+    //表名(为空)
     public String tableName;
-    //组id
-    public Integer groupId;
-    //组件名称
+    //组id(当前组件pid)
+    public Long groupId;
+
+    // 后四个属性只有调度任务才有
+    //组件名称(管道名称)
     public String nifiCustomWorkflowName;
-    //组件id(八类组件表里的id)
-    public Integer nifiCustomWorkflowId;
+    //组件id(八类组件表里的id  详情表id)
+    public Long nifiCustomWorkflowId;
     //调度频率
     public String scheduleExpression;
     //调度方式
