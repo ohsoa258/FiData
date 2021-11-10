@@ -15,12 +15,6 @@ import java.util.List;
 public interface IDimensionAttribute {
 
     /**
-     * 获取维度表以及字段
-     * @return 查询数据
-     */
-    List<DimensionMetaDTO> getProjectDimensionTable();
-
-    /**
      * 添加维度字段
      * @param dimensionId
      * @param dto

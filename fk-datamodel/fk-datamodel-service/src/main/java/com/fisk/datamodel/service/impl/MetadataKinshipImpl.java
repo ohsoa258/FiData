@@ -174,7 +174,12 @@ public class MetadataKinshipImpl implements IMetadataKinship {
         return null;
     }
 
-    //根据guid，获取相关名称与guid
+    /**
+     * 根据guid，获取相关名称与guid
+     * @param jsonObj
+     * @param relationId
+     * @return
+     */
     public ReturnDTO getContent(JSONObject jsonObj,String relationId){
         try {
             ReturnDTO dto=new ReturnDTO();

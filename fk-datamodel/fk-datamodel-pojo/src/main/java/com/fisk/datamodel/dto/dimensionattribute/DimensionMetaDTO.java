@@ -10,12 +10,11 @@ import java.util.List;
 @Data
 public class DimensionMetaDTO {
     /**
-     * 关联维度id
+     * 维度id
      */
-    public long associateDimensionId;
+    public long id;
     /**
      * 维度表名
      */
-    public String tableName;
-    public List<DimensionAttributeAssociationDTO> field;
+    public String dimensionTabName;
 }

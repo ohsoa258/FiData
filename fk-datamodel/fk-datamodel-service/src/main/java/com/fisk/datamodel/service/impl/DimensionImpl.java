@@ -8,9 +8,11 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
@@ -151,6 +153,17 @@ public class DimensionImpl implements IDimension {
         model.sqlScript=dto.sqlScript;
         return mapper.updateById(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Override
+    public List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto)
+    {
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId,dto.businessAreaId)
+                .ne(DimensionPO::getId,dto.dimensionId);
+        List<DimensionPO> list=mapper.selectList(queryWrapper);
+        return DimensionMap.INSTANCES.poToListNameDto(list);
+    }
+
 
 
 

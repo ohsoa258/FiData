@@ -78,13 +78,15 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
-        // 获取当前登录人信息
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-
-        // 1.dto->po
+        //判断名称是否重复
+        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
+        BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
+        if (businessAreaPO !=null)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-        po.createUser = String.valueOf(userInfo.id);
-
         boolean save = this.save(po);
 
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -107,22 +109,22 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
     @Override
     public ResultEnum updateBusinessArea(BusinessAreaDTO businessAreaDTO) {
-        // 获取当前登录人信息
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-
-        // 修改时前端传来的id
+        //根据id,判断是否存在
         long id = businessAreaDTO.getId();
         BusinessAreaPO model = this.getById(id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        //判断名称是否重复
+        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
+        BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
+        if (businessAreaPO !=null && businessAreaPO.id !=businessAreaDTO.id)
+        {
+            return ResultEnum.NAME_REPEATED;
+        }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-        po.updateUser = String.valueOf(userInfo.id);
-
-        boolean update = this.updateById(po);
-
-        return update ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Override

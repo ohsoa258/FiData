@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.service.IDimension;
 import io.swagger.annotations.*;
@@ -26,11 +27,11 @@ public class DimensionController {
     @Resource
     IDimension service;
 
-    /*@ApiOperation("获取维度列表")
-    @PostMapping("/getDimensionList")
-    public ResultEntity<Object> getDimensionList(@RequestBody QueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionList(dto));
-    }*/
+    @ApiOperation("获取关联维度列表")
+    @PostMapping("/getAssociateDimensionList")
+    public ResultEntity<Object> getAssociateDimensionList(@RequestBody DimensionQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionNameList(dto));
+    }
 
     @ApiOperation("添加维度")
     @PostMapping("/addDimension")

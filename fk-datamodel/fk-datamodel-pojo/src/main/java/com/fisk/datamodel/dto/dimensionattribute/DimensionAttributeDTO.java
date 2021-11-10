@@ -10,7 +10,7 @@ public class DimensionAttributeDTO {
     /**
      * 表字段来源id
      */
-    public int tableSourceFieldId;
+    //public int tableSourceFieldId;
     /**
      * 维度表中文字段名称
      */
@@ -46,6 +46,10 @@ public class DimensionAttributeDTO {
     /**
      * 关联维度id
      */
-    public int associateId;
+    public long associateId;
+    /**
+     * 关联维度字段名称
+     */
+    public String associateName;
 
 }

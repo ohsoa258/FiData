@@ -28,12 +28,6 @@ public class DimensionAttributeController {
     @Resource
     IDimensionAttribute service;
 
-    @ApiOperation("获取关联维度表名以及字段")
-    @GetMapping("/getDimensionMeta")
-    public ResultEntity<Object> getDimensionMeta() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getProjectDimensionTable());
-    }
-
     @ApiOperation("添加维度字段")
     @PostMapping("/addAttribute")
     public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
@@ -48,11 +42,11 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
     }
 
-    @ApiOperation("获取维度字段表列表")
+    /*@ApiOperation("获取维度字段表列表")
     @GetMapping("/getDimensionAttributeList")
     public ResultEntity<Object> getDimensionAttributeList(@Validated int dimensionId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeList(dimensionId));
-    }
+    }*/
 
     @ApiOperation("修改维度字段")
     @PutMapping("/editDimensionAttribute")
@@ -66,7 +60,7 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }
 
-    @GetMapping("/getDimensionAttributeData")
+    @GetMapping("/getDimensionAttributeData/{id}")
     @ApiOperation("根绝维度id获取维度字段详情")
     public ResultEntity<Object> getDimensionAttributeData(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeData(id));
