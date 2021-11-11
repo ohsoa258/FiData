@@ -12,6 +12,11 @@ public class NifiCustomWorkListDTO {
     public List<NifiCustomWorkDTO> nifiCustomWorkDTOS;
     //组分层,还没有定数据结构
     public Map<Map, Map> structure;
+    /**
+     * 外部父子级
+     */
+    public Map<Map, Map> externalStructure;
+
     //管道id
     public Long pipelineId;
     //管道name

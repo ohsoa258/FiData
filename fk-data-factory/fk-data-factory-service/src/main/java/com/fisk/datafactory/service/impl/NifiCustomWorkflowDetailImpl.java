@@ -11,6 +11,7 @@ import com.fisk.common.user.UserInfo;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
+import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
@@ -46,6 +47,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     INifiComponent componentService;
     @Resource
     UserHelper userHelper;
+    @Resource
+    NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
 
     @Override
     public NifiCustomWorkflowDetailDTO addData(NifiCustomWorkflowDetailDTO dto) {
@@ -126,6 +129,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         workListDTO.pipelineName = pipelineName;
         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
         workListDTO.structure = getMenuTree(list);
+        workListDTO.externalStructure = getMenuTree(list.get(0).workflowId, list);
         return workListDTO;
     }
 
@@ -309,6 +313,18 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             structure2 = null;
         }
         return structure;
+    }
+
+    private Map<Map, Map> getMenuTree(String workflowId, List<NifiCustomWorkflowDetailDTO> list) {
+
+        NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
+        List<NifiCustomWorkflowDetailDTO> collect = list.stream().filter(item -> item.pid == 0).collect(Collectors.toList());
+        Map<Map, Map> structure = new HashMap<>();
+        Map structure1 = new HashMap();
+        structure1.put(workflowPo.workflowId, workflowPo.workflowName);
+
+        Map structure2 = collect.stream().collect(Collectors.toMap(dto -> dto.id, dto -> dto.componentName, (a, b) -> b));
+        return structure.put(structure1,structure2);
     }
 
     @Override
