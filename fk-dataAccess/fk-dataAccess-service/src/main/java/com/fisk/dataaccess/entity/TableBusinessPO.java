@@ -1,8 +1,7 @@
 package com.fisk.dataaccess.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,10 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_table_business")
 @EqualsAndHashCode(callSuper = true)
-public class TableBusinessPO extends BaseEntity {
-
-    @TableId
-    public long id;
+public class TableBusinessPO extends BasePO {
 
     /**
      * tb_table_access(id)

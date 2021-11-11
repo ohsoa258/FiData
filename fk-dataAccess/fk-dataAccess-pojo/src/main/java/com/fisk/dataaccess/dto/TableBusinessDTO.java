@@ -1,23 +1,14 @@
 package com.fisk.dataaccess.dto;
 
-import com.fisk.common.dto.BaseDTO;
-import com.fisk.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Lock
  */
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class TableBusinessDTO extends BaseDTO {
+public class TableBusinessDTO {
 
     public long id;
 
@@ -44,16 +35,4 @@ public class TableBusinessDTO extends BaseDTO {
      * 当月具体多少号
      */
     public Long businessDay;
-
-    public TableBusinessDTO(BaseEntity entity) {
-        super(entity);
-    }
-
-    public static <T extends BaseEntity> List<TableBusinessDTO> convertEntityList(Collection<T> list) {
-        if (list == null) {
-            return Collections.emptyList();
-        }
-        return list.stream().map(TableBusinessDTO::new).collect(Collectors.toList());
-    }
-
 }

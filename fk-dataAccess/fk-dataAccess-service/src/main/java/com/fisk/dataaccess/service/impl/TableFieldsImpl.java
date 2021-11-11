@@ -16,6 +16,7 @@ import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.entity.TableBusinessPO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.entity.TableSyncmodePO;
+import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -101,7 +102,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
         int businessMode = 3;
         if (syncmodeDto.syncMode == businessMode && businessDto != null) {
-            success = businessImpl.save(businessDto.toEntity(TableBusinessPO.class));
+            success = businessImpl.save(TableBusinessMap.INSTANCES.dtoToPo(businessDto));
             if (!success) {
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
             }
@@ -121,6 +122,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
@@ -174,7 +176,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 保存tb_table_business
         int businessMode = 3;
         if (tableSyncmodeDTO.syncMode == businessMode && businessDto != null) {
-            success = businessImpl.updateById(businessDto.toEntity(TableBusinessPO.class));
+
+//            TableBusinessPO businessPo = businessDto.toEntity(TableBusinessPO.class);
+            TableBusinessPO businessPo = TableBusinessMap.INSTANCES.dtoToPo(businessDto);
+            success = businessImpl.saveOrUpdate(businessPo);
+
+//            success = businessImpl.updateById(businessPo);
             if (!success) {
                 return ResultEnum.UPDATE_DATA_ERROR;
             }

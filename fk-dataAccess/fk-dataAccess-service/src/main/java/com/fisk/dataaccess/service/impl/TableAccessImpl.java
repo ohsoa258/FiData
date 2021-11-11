@@ -34,6 +34,7 @@ import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
+import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
@@ -372,7 +373,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 新增tb_table_business业务时间表
         // 保存tb_table_business数据
         TableBusinessDTO businessDTO = tableAccessNonDTO.getBusinessDTO();
-        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+//        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+        TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
         modelBusiness.setAccessId(modelAccess.getId());
         boolean saveBusiness = this.businessImpl.save(modelBusiness);
         if (!saveBusiness) {
@@ -560,7 +562,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 新增tb_table_business业务时间表
         // 4.保存tb_table_business数据
         TableBusinessDTO businessDTO = dto.getBusinessDTO();
-        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+//        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
+        TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
         boolean updateBusiness = this.businessImpl.updateById(modelBusiness);
         if (!updateBusiness) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -662,7 +665,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 查询tb_table_business
         TableBusinessPO modelBusiness = this.businessMapper.getData(id);
-        TableBusinessDTO businessDTO = new TableBusinessDTO(modelBusiness);
+//        TableBusinessDTO businessDTO = new TableBusinessDTO(modelBusiness);
+        TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
         dto.setBusinessDTO(businessDTO);
 
         // 查询tb_table_syncmode
@@ -1451,41 +1455,35 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<AppRegistrationDataDTO> list = new ArrayList<>();
 
         //获取所有应用注册列表
-        QueryWrapper<AppRegistrationPO> queryWrapper=new QueryWrapper<>();
-        List<AppRegistrationPO> appRegistrationPOList=registrationMapper.selectList(queryWrapper);
-        if (appRegistrationPOList==null || appRegistrationPOList.size()==0)
-        {
+        QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
+        List<AppRegistrationPO> appRegistrationPOList = registrationMapper.selectList(queryWrapper);
+        if (appRegistrationPOList == null || appRegistrationPOList.size() == 0) {
             return list;
         }
-        list= AppRegistrationMap.INSTANCES.listPoToDtoList(appRegistrationPOList);
+        list = AppRegistrationMap.INSTANCES.listPoToDtoList(appRegistrationPOList);
         //获取所有表配置数据
-        QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper=new QueryWrapper<>();
-        List<TableAccessPO> tableAccessPOList=accessMapper.selectList(tableAccessPOQueryWrapper);
-        if (tableAccessPOList==null || tableAccessPOList.size()==0)
-        {
+        QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
+        List<TableAccessPO> tableAccessPOList = accessMapper.selectList(tableAccessPOQueryWrapper);
+        if (tableAccessPOList == null || tableAccessPOList.size() == 0) {
             return list;
         }
         //获取表中所有字段配置数据
-        QueryWrapper<TableFieldsPO> tableFieldsPOQueryWrapper=new QueryWrapper<>();
-        List<TableFieldsPO> tableFieldsPOList=fieldsMapper.selectList(tableFieldsPOQueryWrapper
+        QueryWrapper<TableFieldsPO> tableFieldsPOQueryWrapper = new QueryWrapper<>();
+        List<TableFieldsPO> tableFieldsPOList = fieldsMapper.selectList(tableFieldsPOQueryWrapper
         );
-        for (AppRegistrationDataDTO item:list)
-        {
-            item.tableDtoList=TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
-                    .filter(e->e.appId==item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e->e.tableName="ods_"+e.tableName+"_"+item.appAbbreviation).collect(Collectors.toList());
-            if ((item.tableDtoList==null || item.tableDtoList.size()==0) ||
-                    (tableFieldsPOList==null || tableFieldsPOList.size()==0))
-            {
+        for (AppRegistrationDataDTO item : list) {
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
+                    .filter(e -> e.appId == item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e -> e.tableName = "ods_" + e.tableName + "_" + item.appAbbreviation).collect(Collectors.toList());
+            if ((item.tableDtoList == null || item.tableDtoList.size() == 0) ||
+                    (tableFieldsPOList == null || tableFieldsPOList.size() == 0)) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
-            for (TableAccessDataDTO tableAccessDataDTO:item.tableDtoList)
-            {
-                tableAccessDataDTO.fieldDtoList=TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsPOList.stream()
-                        .filter(e->e.tableAccessId==tableAccessDataDTO.id).collect(Collectors.toList()));
-                if (tableAccessDataDTO.fieldDtoList==null || tableAccessDataDTO.fieldDtoList.size()==0)
-                {
+            for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsPOList.stream()
+                        .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                if (tableAccessDataDTO.fieldDtoList == null || tableAccessDataDTO.fieldDtoList.size() == 0) {
                     continue;
                 }
                 tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2).collect(Collectors.toList());
@@ -1495,22 +1493,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<FieldNameDTO> getTableFieldByQuery(String query)
-    {
+    public List<FieldNameDTO> getTableFieldByQuery(String query) {
         List<FieldNameDTO> list = new ArrayList<>();
         try {
             Class.forName("com.mysql.jdbc.Driver");
             Connection conn = DriverManager.getConnection(jdbcStr, user, password);
             Statement st = conn.createStatement();
             ResultSet rs = st.executeQuery(query);
-            while(rs.next()){
-                FieldNameDTO dto=new FieldNameDTO();
+            while (rs.next()) {
+                FieldNameDTO dto = new FieldNameDTO();
                 dto.id = rs.getInt("id");
-                dto.fieldName=rs.getString("field_name");
-                dto.fieldType=rs.getString("field_type");
-                dto.fieldLength=rs.getString("field_length");
-                dto.fieldDes=rs.getString("field_des");
-                dto.tableAccessId=rs.getInt("table_access_id");
+                dto.fieldName = rs.getString("field_name");
+                dto.fieldType = rs.getString("field_type");
+                dto.fieldLength = rs.getString("field_length");
+                dto.fieldDes = rs.getString("field_des");
+                dto.tableAccessId = rs.getInt("table_access_id");
                 list.add(dto);
             }
             rs.close();
@@ -1607,34 +1604,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query)
-    {
+    public OdsResultDTO getTableFieldByQuery(OdsQueryDTO query) {
         OdsResultDTO array = new OdsResultDTO();
         try {
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
             Statement st = conn.createStatement();
             //获取总条数
-            String getTotalSql="select count(*) as total from("+query.querySql+") as tab";
+            String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             ResultSet rSet = st.executeQuery(getTotalSql);
             int rowCount = 0;
-            if(rSet.next()) {
-                rowCount=rSet.getInt("total");
+            if (rSet.next()) {
+                rowCount = rSet.getInt("total");
             }
             rSet.close();
             //分页获取数据
-            int offset=0;
-            if (query.pageIndex>1)
-            {
-                offset=query.pageSize*query.pageIndex;
+            int offset = 0;
+            if (query.pageIndex > 1) {
+                offset = query.pageSize * query.pageIndex;
             }
-            query.querySql=query.querySql+" limit "+query.pageSize +" offset " +offset;
+            query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array=resultSetToJsonArray(rs);
-            array.pageIndex=query.pageIndex;
-            array.pageSize=query.pageSize;
-            array.total=rowCount;
+            array = resultSetToJsonArray(rs);
+            array.pageIndex = query.pageIndex;
+            array.pageSize = query.pageSize;
+            array.total = rowCount;
             rs.close();
         } catch (ClassNotFoundException | SQLException e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -1642,35 +1637,34 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    public static OdsResultDTO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException
-    {
+    public static OdsResultDTO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException {
         OdsResultDTO data = new OdsResultDTO();
         // json数组
         JSONArray array = new JSONArray();
         // 获取列数
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
-        List<FieldNameDTO> fieldNameDTOList=new ArrayList<>();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
         // 遍历ResultSet中的每条数据
         while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
                 //获取sql查询数据集合
-                String columnName =metaData.getColumnLabel(i);
+                String columnName = metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
                 //获取列名
-                FieldNameDTO dto=new FieldNameDTO();
-                dto.fieldName=metaData.getColumnLabel(i);
-                dto.fieldType=metaData.getColumnTypeName(i);
-                dto.fieldLength=String.valueOf(metaData.getColumnDisplaySize(i));
+                FieldNameDTO dto = new FieldNameDTO();
+                dto.fieldName = metaData.getColumnLabel(i);
+                dto.fieldType = metaData.getColumnTypeName(i);
+                dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
                 fieldNameDTOList.add(dto);
             }
             array.add(jsonObj);
         }
-        data.fieldNameDTOList=fieldNameDTOList.stream().distinct().collect(Collectors.toList());
-        data.dataArray=array;
+        data.fieldNameDTOList = fieldNameDTOList.stream().distinct().collect(Collectors.toList());
+        data.dataArray = array;
         return data;
     }
 
@@ -1686,10 +1680,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
-                int offset=0;
-                if (query.pageIndex>1)
-                {
-                    offset=query.pageSize*query.pageIndex;
+                int offset = 0;
+                if (query.pageIndex > 1) {
+                    offset = query.pageSize * query.pageIndex;
                 }
                 //分页获取数据
                 query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
@@ -1726,8 +1719,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     /**
      * 连接数据库
-     * @param driver driver
-     * @param url url
+     *
+     * @param driver   driver
+     * @param url      url
      * @param username username
      * @param password password
      * @return statement
@@ -1743,7 +1737,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return conn;
     }
 
-    private String getFieldName(Connection conn,String tableName) {
+    private String getFieldName(Connection conn, String tableName) {
         String fieldName = "";
         try {
             DatabaseMetaData metaData = conn.getMetaData();
