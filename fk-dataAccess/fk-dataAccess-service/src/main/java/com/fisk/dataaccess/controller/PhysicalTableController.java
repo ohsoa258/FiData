@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
@@ -151,9 +150,9 @@ public class PhysicalTableController {
             // 应用注册id
             atlasEntityQueryDTO.appId = atlasIds.appId;
             atlasEntityQueryDTO.dbId = atlasIds.dbId;
-            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-            log.info("task:" + JSON.toJSONString(task));
-            System.out.println(task);
+//            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+//            log.info("task:" + JSON.toJSONString(task));
+//            System.out.println(task);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);

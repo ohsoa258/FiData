@@ -200,7 +200,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param tableName 表名
      * @return atlasIdsVO
      */
-    private AtlasIdsVO getAtlasIdsVO(Long userId, Long appId, Long accessId, String tableName) {
+    public AtlasIdsVO getAtlasIdsVO(Long userId, Long appId, Long accessId, String tableName) {
         AtlasIdsVO atlasIdsVO = new AtlasIdsVO();
         atlasIdsVO.userId = userId;
         // 应用注册id

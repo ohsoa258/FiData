@@ -50,6 +50,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -92,11 +93,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
-    private AppNifiFlowImpl nifiFlowImpl;
-    @Resource
     private UserHelper userHelper;
-    //    @Resource
-//    private NifiSettingImpl nifiSettingImpl;
     @Resource
     private TableBusinessImpl businessImpl;
     @Resource
@@ -1560,6 +1557,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // dto -> po
         TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        AtlasIdsVO atlasIdsVO = tableFieldsImpl.getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+        // 应用注册id
+        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
+        // 物理表id
+        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+        // 调用atlas
+        ResultEntity<Object> result = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        if (result.code == 0) {
+            po.publish = 1;
+        } else {
+            po.publish = 2;
+        }
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
