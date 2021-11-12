@@ -14,6 +14,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -99,7 +100,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         //where
         if (query.queryFilters != null) {
             str.append("WHERE 1 = 1 ");
-            str.append(queryFilter(query.queryFilters, arr));
+            str.append(queryFilter(query.queryFilters, arr,type));
         }
         //group
         str.append("GROUP BY ");
@@ -162,7 +163,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
         str.append(" FROM ").append(query.tableName);
         str.append(" WHERE 1 = 1 ");
         if (query.queryFilters != null) {
-            str.append(queryFilter(query.queryFilters, arr));
+            str.append(queryFilter(query.queryFilters, arr,type));
         }
         if (StringUtils.isNotEmpty(query.likeValue)) {
             str.append("AND ").append(getColumn(query.columnName, arr)).append(" LIKE '%").append(query.likeValue).append("%'");
@@ -231,7 +232,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
      * @param escapeStr 转义字符
      * @return where
      */
-    protected String queryFilter(List<ChartQueryFilter> filter, String[] escapeStr) {
+    protected String queryFilter(List<ChartQueryFilter> filter, String[] escapeStr,DataSourceTypeEnum type) {
         StringBuilder str = new StringBuilder();
         filter.stream().filter(e -> e.getSsasChartFilterType() == FILTER).forEach(e -> {
             str.append("AND ");
@@ -251,11 +252,7 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
                 .collect(joining(" AND "));
 
         // 指定时间
-        String serifedTime = filter.stream()
-                .filter(e -> e.getSsasChartFilterType() == APPOINT_SLICER)
-                .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1]
-                        + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")")
-                .collect(joining(" AND "));
+        String serifedTime = this.serifedTime(filter, escapeStr, type);
 
         StringBuilder strTime = new StringBuilder();
         if (StringUtils.isNotBlank(slicerDateField)){
@@ -283,5 +280,31 @@ public abstract class BaseBuildSqlCommand implements IBuildSqlCommand {
     public void additional(StringBuilder str,StringBuilder strTime){
         str.append(" AND ");
         str.append(strTime);
+    }
+
+    /**
+     * 指定时间
+     * @param filter
+     * @param escapeStr
+     * @param type
+     * @return
+     */
+    public String serifedTime(List<ChartQueryFilter> filter, String[] escapeStr,DataSourceTypeEnum type){
+        switch (type){
+            case MYSQL:
+                return filter.stream()
+                        .filter(e -> e.getSsasChartFilterType() == APPOINT_SLICER)
+                        .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1]
+                                + " IN (" + JSON.toJSONString(e.getSpecifiedTime()).replace("[", " ").replace("]"," ") + ")")
+                        .collect(joining(" AND "));
+            case SQLSERVER:
+                return filter.stream()
+                        .filter(e -> e.getSsasChartFilterType() == APPOINT_SLICER)
+                        .map(e -> escapeStr[0] + e.getColumnName() + escapeStr[1]
+                                + " IN (" + JSON.toJSONString(Arrays.stream(e.getSpecifiedTime()).mapToInt(Integer::parseInt).toArray()).replace("[", " ").replace("]"," ") + ")")
+                        .collect(joining(" AND "));
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
     }
 }

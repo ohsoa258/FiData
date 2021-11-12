@@ -19,5 +19,5 @@ public class ChartQueryFilter {
     // 结束时间
     public String endTime;
     // 指定时间
-    public Integer[] specifiedTime;
+    public String[] specifiedTime;
 }
