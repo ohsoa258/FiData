@@ -149,10 +149,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
             // 每一个节点需要分别组装 inputDucts outputDucts
             NifiCustomWorkflowDetailPO po = this.query().eq("id", e.id).one();
-            if (po.inport != null) {
+            if (po.inport != null && !po.inport.equalsIgnoreCase("") && po.inport.length() > 0) {
                 dto.inputDucts = getInputDucts(po);
             }
-            if (po.outport != null) {
+            if (po.outport != null && !po.outport.equalsIgnoreCase("") && po.outport.length() > 0) {
                 dto.outputDucts = getOutputDucts(po);
             }
             dto.NifiNode = getBuildNifiCustomWorkFlowDTO(e);
