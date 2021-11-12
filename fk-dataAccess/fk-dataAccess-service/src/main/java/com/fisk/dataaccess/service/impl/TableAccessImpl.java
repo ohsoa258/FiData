@@ -1699,13 +1699,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //分页获取数据
                 query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
-                Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
+                //1.加载驱动程序
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                //2.获得数据库的连接
+                Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
 
                 String fieldName = getFieldName(conn, po.dbName);
                 //分页获取数据
-                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by id ASC) " +
-                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
+//                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by " + "id" + " ASC) " +
+//                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
             }
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";

@@ -1,9 +1,11 @@
 package com.fisk.dataaccess.test;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.dto.DbConnectionDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.entity.TableSyncmodePO;
 import com.fisk.dataaccess.mapper.TableSyncmodeMapper;
+import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.client.DataModelClient;
@@ -27,6 +29,8 @@ public class TableNameTest {
     TableSyncmodeMapper mapper;
     @Resource
     TableAccessImpl tableAccess;
+    @Resource
+    AppRegistrationImpl service;
 
     @Test
     public void test() {
@@ -55,5 +59,16 @@ public class TableNameTest {
         System.out.println(nifiVO);
     }
 
+    @Test
+    public void test04() {
+        DbConnectionDTO dto = new DbConnectionDTO();
+        dto.driveType = "mysql";
+        dto.connectAccount = "root";
+        dto.connectPwd = "root123";
+        dto.connectStr = "jdbc:mysql://192.168.11.130:3306/dmp_datainput_db";
+        dto.dbName = "dmp_datainput_db";
+        ResultEntity<Object> result = service.connectDb(dto);
+        System.out.println("result = " + result);
+    }
 
 }
