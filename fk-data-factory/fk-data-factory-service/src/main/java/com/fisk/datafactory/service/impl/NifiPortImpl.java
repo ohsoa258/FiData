@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
+import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.service.INifiPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class NifiPortImpl implements INifiPort {
                 break;
         }
 
-        nifiPortsDTO.inports = inports;
-        nifiPortsDTO.outports = outports;
+        nifiPortsDTO.inports = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(inports);
+        nifiPortsDTO.outports = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(outports);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, nifiPortsDTO);
     }

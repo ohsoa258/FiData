@@ -1,6 +1,6 @@
 package com.fisk.datafactory.dto.tasknifi;
 
-import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -10,6 +10,6 @@ import java.util.List;
  */
 @Data
 public class NifiPortsDTO {
-    public List<NifiCustomWorkflowDetailPO> inports;
-    public List<NifiCustomWorkflowDetailPO> outports;
+    public List<NifiCustomWorkflowDetailDTO> inports;
+    public List<NifiCustomWorkflowDetailDTO> outports;
 }
