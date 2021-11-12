@@ -48,6 +48,7 @@ public class NifiCustomWorkflowDetailController {
         if (data.code == 0) {
             // TODO: 调用nifi生成流程
             log.info("nifi: ");
+            System.out.println(data.data);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);

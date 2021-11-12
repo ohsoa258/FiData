@@ -292,7 +292,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      * @return map
      */
     private Map<Map, Map> getMenuTree(List<NifiCustomWorkflowDetailDTO> list) {
-        String componentType = "taskgroup";
+        String componentType = "任务组";
         List<NifiCustomWorkflowDetailDTO> collect = list.stream().filter(item -> componentType.equalsIgnoreCase(item.componentType)).collect(Collectors.toList());
         // 父
         List<NifiCustomWorkflowDetailDTO> collect1 = collect.stream().filter(item -> item.pid == 0L).collect(Collectors.toList());
@@ -318,15 +318,16 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     private Map<Map, Map> getMenuTree(String workflowId, List<NifiCustomWorkflowDetailDTO> list) {
-
+        String componentType = "任务组";
         NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
-        List<NifiCustomWorkflowDetailDTO> collect = list.stream().filter(item -> item.pid == 0).collect(Collectors.toList());
+        List<NifiCustomWorkflowDetailDTO> collect = list.stream().filter(item -> item.pid == 0 && componentType.equalsIgnoreCase(item.componentType)).collect(Collectors.toList());
         Map<Map, Map> structure = new HashMap<>();
         Map structure1 = new HashMap();
         structure1.put(workflowPo.workflowId, workflowPo.workflowName);
 
         Map structure2 = collect.stream().collect(Collectors.toMap(dto -> dto.id, dto -> dto.componentName, (a, b) -> b));
-        return structure.put(structure1, structure2);
+        structure.put(structure1, structure2);
+        return structure;
     }
 
     @Override
