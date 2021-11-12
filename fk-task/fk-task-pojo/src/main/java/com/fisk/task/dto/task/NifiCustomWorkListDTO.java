@@ -17,6 +17,8 @@ public class NifiCustomWorkListDTO {
      */
     public Map<Map, Map> externalStructure;
 
+    //管道英文id(workflowId)
+    public String nifiCustomWorkflowId;
     //管道id
     public Long pipelineId;
     //管道name

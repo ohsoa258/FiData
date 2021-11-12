@@ -104,7 +104,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        NifiCustomWorkListDTO workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowName, dto.list);
+        NifiCustomWorkListDTO workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, dto.list);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }
@@ -117,7 +117,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      * @param list         list
      * @return NifiCustomWorkListDTO
      */
-    private NifiCustomWorkListDTO getWorkListDTO(Long pipelineId, String pipelineName, List<NifiCustomWorkflowDetailDTO> list) {
+    private NifiCustomWorkListDTO getWorkListDTO(Long pipelineId, String workflowId, String pipelineName, List<NifiCustomWorkflowDetailDTO> list) {
         UserInfo userInfo = userHelper.getLoginUserInfo();
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
 
@@ -125,6 +125,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         workListDTO.userId = userInfo.id;
         // 管道
         workListDTO.pipelineId = pipelineId;
+        // workflowId
+        workListDTO.nifiCustomWorkflowId = workflowId;
         // 管道名称
         workListDTO.pipelineName = pipelineName;
         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
@@ -324,7 +326,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         structure1.put(workflowPo.workflowId, workflowPo.workflowName);
 
         Map structure2 = collect.stream().collect(Collectors.toMap(dto -> dto.id, dto -> dto.componentName, (a, b) -> b));
-        return structure.put(structure1,structure2);
+        return structure.put(structure1, structure2);
     }
 
     @Override
