@@ -593,11 +593,11 @@ public class BuildDataModelDorisTableListener
                         po.fieldType=fieldData.fieldType+"("+fieldData.fieldLength+")";
                     }
                     //是否为关联维度
-                    if (fieldData.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+                    /*if (fieldData.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
                     {
                         po.fieldName=fieldData.associationTable+"_pk";
                         po.fieldType="varchar(100)";
-                    }
+                    }*/
                     poList.add(po);
                 }
             }

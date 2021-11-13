@@ -5,16 +5,17 @@ import com.fisk.common.enums.BaseEnum;
 /**
  * @author JianWenYang
  */
-public enum DimensionAttributeEnum implements BaseEnum {
-
+public enum TableHistoryTypeEnum implements BaseEnum {
     /**
-     * 业务主键
+     * 维度表
      */
-    BUSINESS_KEY(0,"业务主键");
+    TABLE_DIMENSION(0,"维度表"),
+    /**
+     * 事实表
+     */
+    TABLE_FACT(1,"事实表");
 
-
-
-    DimensionAttributeEnum(int value, String name) {
+    TableHistoryTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
@@ -31,5 +32,4 @@ public enum DimensionAttributeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
-
 }

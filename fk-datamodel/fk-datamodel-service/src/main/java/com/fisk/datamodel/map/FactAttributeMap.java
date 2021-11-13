@@ -38,4 +38,18 @@ public interface FactAttributeMap {
      */
     List<FactAttributeDataDTO> poListToDtoList(List<FactAttributePO> po);
 
+    /**
+     * addDto==>PoList
+     * @param dto
+     * @return
+     */
+    List<FactAttributePO> addDtoToPoList(List<FactAttributeDTO> dto);
+
+    /**
+     * poLists==>DtoList
+     * @param po
+     * @return
+     */
+    List<FactAttributeDTO> poListsToDtoList(List<FactAttributePO> po);
+
 }

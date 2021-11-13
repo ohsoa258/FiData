@@ -40,5 +40,9 @@ public class FactPO extends BasePO {
      * 事实表描述
      */
     public String factTableDesc;
+    /**
+     * 事实表脚本
+     */
+    public String sqlScript;
 
 }

@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.service.IFact;
 import io.swagger.annotations.Api;
@@ -67,6 +68,12 @@ public class FactController {
     @GetMapping("/getFactScreenDropList")
     public ResultEntity<Object> getFactScreenDropList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactScreenDropList());
+    }
+
+    @ApiOperation("修改事实sql脚本")
+    @PutMapping("/editFactSql")
+    public ResultEntity<Object> editFactSql(@Validated @RequestBody DimensionSqlDTO dto) {
+        return ResultEntityBuild.build(service.updateFactSql(dto));
     }
 
 }

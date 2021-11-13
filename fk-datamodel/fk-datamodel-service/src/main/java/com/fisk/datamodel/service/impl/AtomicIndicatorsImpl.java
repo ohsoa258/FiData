@@ -201,8 +201,7 @@ public class AtomicIndicatorsImpl
         List<AtomicIndicatorPushDTO> data=new ArrayList<>();
         //获取事实表关联的维度
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,factId)
-                .eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        queryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,factId);
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
         List<Integer> ids= (List<Integer>)(List)list.stream().distinct().collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
@@ -213,7 +212,7 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item:dimensionPOList)
             {
                 AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                //dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
                 dto.dimensionTableName=item.dimensionTabName;
                 data.add(dto);
             }

@@ -7,10 +7,7 @@ import lombok.Data;
  */
 @Data
 public class DimensionAttributeDTO {
-    /**
-     * 表字段来源id
-     */
-    //public int tableSourceFieldId;
+    public long id;
     /**
      * 维度表中文字段名称
      */
@@ -32,7 +29,7 @@ public class DimensionAttributeDTO {
      */
     public String dimensionFieldEnName;
     /**
-     * 属性类型：1、业务主键,2、关联维度,3、属性
+     * 属性类型：0：维度属性
      */
     public int attributeType;
     /**
@@ -44,12 +41,8 @@ public class DimensionAttributeDTO {
      */
     public int associateDimensionFieldId;
     /**
-     * 关联维度id
+     * 是否业务主键 0:否 1:是
      */
-    public long associateId;
-    /**
-     * 关联维度字段名称
-     */
-    public String associateName;
+    public int isPrimaryKey;
 
 }

@@ -6,28 +6,27 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
-import com.fisk.task.client.PublishTaskClient;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -61,41 +60,45 @@ public class FactAttributeImpl
         return mapper.getFactAttributeList(factId);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addFactAttribute(int factId, List<FactAttributeDTO> dto) {
-        QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
-        boolean isExit = false;
-        List<FactAttributePO> list = new ArrayList<>();
-        for (FactAttributeDTO item : dto) {
-            FactAttributePO po = mapper.selectOne(queryWrapper.lambda()
-                    .eq(FactAttributePO::getFactFieldEnName, item.factFieldEnName)
-                    .eq(FactAttributePO::getAttributeType,item.attributeType));
-            if (po != null) {
-                isExit = true;
-                break;
-            }
-            FactAttributePO data = FactAttributeMap.INSTANCES.dtoToPo(item);
-            data.factId = factId;
-            if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+    public ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto) {
+        //添加事实字段
+        List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto);
+        poList.stream().map(e->e.factId=factId).collect(Collectors.toList());
+        if (!this.saveOrUpdateBatch(poList))
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        //删除维度字段属性
+        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
+                .map(FactAttributeDTO::getId)
+                .collect(Collectors.toList());
+        if (ids!=null && ids.size()>0)
+        {
+            QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.notIn("id",ids).lambda().eq(FactAttributePO::getFactId,factId);
+            List<FactAttributePO> list=mapper.selectList(queryWrapper);
+            if (list!=null && list.size()>0)
             {
-                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateDimensionFieldId);
-                if (dimensionAttributePO !=null)
+                if (!this.remove(queryWrapper))
                 {
-                    data.associateDimensionId=dimensionAttributePO.dimensionId;
+                    return ResultEnum.SAVE_DATA_ERROR;
                 }
             }
-            list.add(data);
         }
-        if (isExit) {
-            return ResultEnum.DATA_EXISTS;
+        //是否发布
+        if (isPublish)
+        {
+            ////return dimensionImpl.dimensionPublish(dimensionId);
         }
-        return this.saveBatch(list) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum deleteFactAttribute(List<Integer> ids)
     {
+
         return mapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -169,33 +172,6 @@ public class FactAttributeImpl
             dto.fieldCnName = item.factFieldCnName;
             dto.sourceFieldId=item.tableSourceFieldId;
             dto.fieldId=String.valueOf(item.id);
-            //判断是否为关联维度
-            if (item.attributeType == DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
-            {
-                //获取维度关联维度表名称,用于创建关联key
-                DimensionAttributePO attributePO=attributeMapper.selectById(item.associateDimensionFieldId);
-                if (attributePO==null)
-                {
-                    break;
-                }
-                DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.dimensionId);
-                if (dimensionPO==null)
-                {
-                    break;
-                }
-                //维度关联表名称
-                dto.associationTable=dimensionPO.dimensionTabName;
-                //维度关联字段名称
-                dto.associationField=attributePO.dimensionFieldEnName;
-                //关联字段来源
-                dto.sourceFieldId=attributePO.tableSourceFieldId;
-                //获取关联维度与本表关联字段名称
-                FactAttributePO factAttributePO=mapper.selectById(item.associateId);
-                //关联维度与本表字段关联名称
-                dto.fieldEnName=factAttributePO.factFieldEnName;
-                //关联维度与本表字段关联来源id
-                dto.associationSourceFieldId=factAttributePO.tableSourceFieldId;
-            }
             dtoList.add(dto);
         }
         data.dto=dtoList;
@@ -212,8 +188,7 @@ public class FactAttributeImpl
             return data;
         }
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,id)
-                .ne(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,id);
         List<FactAttributePO> list=mapper.selectList(queryWrapper);
         for (FactAttributePO item:list) {
             FactAttributeDropDTO dto = new FactAttributeDropDTO();
@@ -246,11 +221,27 @@ public class FactAttributeImpl
         //获取维度表存在字段来源id
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("table_source_field_id").lambda()
-                .eq(FactAttributePO::getFactId,id)
-                .ne(FactAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+                .eq(FactAttributePO::getFactId,id);
         List<Integer> ids=(List)mapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         //过滤已添加来源表id
         return list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
+    }
+
+    @Override
+    public FactAttributeDetailDTO getFactAttributeDataList(int factId)
+    {
+        FactAttributeDetailDTO data=new FactAttributeDetailDTO();
+        FactPO po=factMapper.selectById(factId);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        data.sqlScript=po.sqlScript;
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
+        List<FactAttributePO> list=mapper.selectList(queryWrapper);
+        data.attributeDTO= FactAttributeMap.INSTANCES.poListsToDtoList(list);
+        return data;
     }
 
 }

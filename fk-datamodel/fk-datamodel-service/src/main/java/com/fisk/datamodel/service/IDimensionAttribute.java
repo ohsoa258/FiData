@@ -21,7 +21,7 @@ public interface IDimensionAttribute {
      * @param isPublish
      * @return 添加结果
      */
-    ResultEnum addDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto);
+    ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto);
 
     /**
      * 批量删除维度字段
@@ -35,7 +35,7 @@ public interface IDimensionAttribute {
      * @param dimensionId
      * @return
      */
-    List<DimensionAttributeListDTO> getDimensionAttributeList(int dimensionId);
+    DimensionAttributeListDTO getDimensionAttributeList(int dimensionId);
 
     /**
      * 维度字段数据更改
@@ -71,5 +71,12 @@ public interface IDimensionAttribute {
      * @return
      */
     List<FieldNameDTO> getDimensionAttributeSourceId(int id);
+
+    /**
+     * 根据维度字段id,获取字段详情信息
+     * @param id
+     * @return
+     */
+    DimensionAttributeUpdateDTO getDimensionAttribute(int id);
 
 }

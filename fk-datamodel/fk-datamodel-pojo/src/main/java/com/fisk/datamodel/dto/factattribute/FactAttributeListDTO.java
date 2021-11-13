@@ -10,7 +10,7 @@ public class FactAttributeListDTO extends FactAttributeDTO {
     /**
      * 主键
      */
-    public int id;
+    public long id;
     /**
      * 关联维度表名称
      */

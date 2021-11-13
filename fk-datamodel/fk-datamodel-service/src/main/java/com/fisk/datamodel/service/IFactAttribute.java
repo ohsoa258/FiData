@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
@@ -27,7 +28,7 @@ public interface IFactAttribute {
      * @param dto
      * @return
      */
-    ResultEnum addFactAttribute(int factId, List<FactAttributeDTO> dto);
+    ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto);
 
     /**
      * 事实字段批量删除
@@ -62,5 +63,12 @@ public interface IFactAttribute {
      * @return
      */
     List<FieldNameDTO> getFactAttributeSourceId(int id);
+
+    /**
+     *根据事实id,获取事实表字段列表
+     * @param factId
+     * @return
+     */
+    FactAttributeDetailDTO getFactAttributeDataList(int factId);
 
 }

@@ -131,6 +131,10 @@ public class DimensionFolderImpl
         {
             return listDTOS;
         }
+        for (DimensionFolderDataDTO item:listDTOS)
+        {
+            item.dimensionListDTO=DimensionMap.INSTANCES.listPoToListsDto(list.stream().filter(e->e.dimensionFolderId==item.id).collect(Collectors.toList()));
+        }
         //获取业务域下所有维度id集合
         dimensionPOQueryWrapper.select("id");
         List<Integer> ids=(List)dimensionMapper.selectObjs(dimensionPOQueryWrapper);

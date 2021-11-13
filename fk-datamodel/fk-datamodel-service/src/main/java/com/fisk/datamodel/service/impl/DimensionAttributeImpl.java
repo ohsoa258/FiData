@@ -19,14 +19,17 @@ import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
+import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,55 +54,42 @@ public class DimensionAttributeImpl
     @Resource
     DimensionImpl dimensionImpl;
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
+    public ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
     {
-        //获取非关联维度字段列表
-        List<DimensionAttributeDTO> attributeList=dto.stream()
-                .filter(e->e.attributeType!=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
-                .collect(Collectors.toList());
-        if (attributeList!=null || attributeList.size()==0)
+        //添加或修改维度字段
+        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
+        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
+        boolean result=this.saveOrUpdateBatch(poList);
+        if (!result)
         {
-            List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(attributeList);
-            poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-            boolean flat=this.saveBatch(poList);
-            if (!flat)
-            {
-                return ResultEnum.SAVE_DATA_ERROR;
-            }
+            return ResultEnum.SAVE_DATA_ERROR;
         }
-
-        //获取关联维度字段列表
-        List<DimensionAttributeDTO> associatedList=dto.stream()
-                .filter(e->e.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+        //删除维度字段属性
+        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
+                .map(DimensionAttributeDTO::getId)
                 .collect(Collectors.toList());
-        if (associatedList !=null && associatedList.size()>0)
+        if (ids!=null && ids.size()>0)
         {
             QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+            queryWrapper.notIn("id",ids).lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
             List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
-            for (DimensionAttributeDTO item:associatedList)
+            if (list!=null && list.size()>0)
             {
-                Optional<DimensionAttributePO> first = list.stream().filter(e -> e.dimensionFieldEnName == item.dimensionFieldEnName)
-                        .findFirst();
-                item.associateId=first.get().id;
+                boolean flat=this.remove(queryWrapper);
+                if (!flat)
+                {
+                    return ResultEnum.SAVE_DATA_ERROR;
+                }
             }
-            List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(associatedList);
-            poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-            boolean flat=this.saveBatch(poList);
-            if (!flat)
-            {
-                return ResultEnum.SAVE_DATA_ERROR;
-            }
-
         }
         //是否发布
         if (isPublish)
         {
-            return dimensionImpl.dimensionPublish(dimensionId);
+            ////return dimensionImpl.dimensionPublish(dimensionId);
         }
         return ResultEnum.SUCCESS;
-
     }
 
     @Override
@@ -107,8 +97,7 @@ public class DimensionAttributeImpl
     {
         //判断字段是否与其他表有关联
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("associate_dimension_field_id",ids)
-                .lambda().eq(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+        queryWrapper.in("associate_dimension_field_id",ids);
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         if (list.size()>0)
         {
@@ -117,8 +106,7 @@ public class DimensionAttributeImpl
 
         //判断字段是否与事实表有关联
         QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.in("associate_dimension_field_id",ids)
-                .lambda().eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION);
+        queryWrapper1.in("associate_dimension_field_id",ids);
         List<FactAttributePO> poList=factAttributeMapper.selectList(queryWrapper1);
         if (poList.size()>0)
         {
@@ -130,9 +118,26 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public List<DimensionAttributeListDTO> getDimensionAttributeList(int dimensionId)
+    public DimensionAttributeUpdateDTO getDimensionAttribute(int id)
     {
-        return attributeMapper.getDimensionAttributeList(dimensionId);
+        return DimensionAttributeMap.INSTANCES.poToDetailDto(attributeMapper.selectById(id));
+    }
+
+    @Override
+    public DimensionAttributeListDTO getDimensionAttributeList(int dimensionId)
+    {
+        DimensionAttributeListDTO data=new DimensionAttributeListDTO();
+        DimensionPO dimensionPO=mapper.selectById(dimensionId);
+        if (dimensionPO==null)
+        {
+            return data;
+        }
+        data.sqlScript=dimensionPO.sqlScript;
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        data.attributeDTOList=DimensionAttributeMap.INSTANCES.poListToDtoList(list);
+        return data;
     }
 
     @Override
@@ -223,37 +228,6 @@ public class DimensionAttributeImpl
             dto.fieldLength = item.dimensionFieldLength;
             dto.fieldType = item.dimensionFieldType;
             dto.fieldId= String.valueOf(item.id);
-            //判断是否为关联维度
-            if (item.attributeType==DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
-            {
-                //获取维度关联维度表名称,用于创建关联key
-                DimensionAttributePO attributePO=attributeMapper.selectById(item.associateDimensionFieldId);
-                if (attributePO==null)
-                {
-                    break;
-                }
-                DimensionPO dimensionPO=mapper.selectById(attributePO.dimensionId);
-                if (dimensionPO==null)
-                {
-                    break;
-                }
-                //维度关联表名称
-                dto.associationTable=dimensionPO.dimensionTabName;
-                //维度关联字段名称
-                dto.associationField=attributePO.dimensionFieldEnName;
-                //关联字段来源
-                dto.sourceFieldId=attributePO.tableSourceFieldId;
-                //获取关联维度与本表关联字段名称
-                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(item.associateId);
-                if (dimensionAttributePO==null)
-                {
-                    break;
-                }
-                //关联维度与本表字段关联名称
-                dto.fieldEnName=dimensionAttributePO.dimensionFieldEnName;
-                //关联维度与本表字段关联来源id
-                dto.associationSourceFieldId=dimensionAttributePO.tableSourceFieldId;
-            }
             dtoList.add(dto);
         }
         data.dto=dtoList;
@@ -292,8 +266,7 @@ public class DimensionAttributeImpl
         //获取维度表存在字段来源id
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("table_source_field_id").lambda()
-                .eq(DimensionAttributePO::getDimensionId,id)
-                .ne(DimensionAttributePO::getAttributeType,DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue());
+                .eq(DimensionAttributePO::getDimensionId,id);
         List<Integer> ids=(List)attributeMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         //过滤已添加来源表id
         list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());

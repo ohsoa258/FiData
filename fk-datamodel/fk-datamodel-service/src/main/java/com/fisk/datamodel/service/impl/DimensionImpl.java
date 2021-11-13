@@ -97,7 +97,7 @@ public class DimensionImpl implements IDimension {
         //判断维度表是否存在关联
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.in("associate_dimension_id",id)
-                .lambda().eq(DimensionAttributePO::getAttributeType, DimensionAttributeEnum.ASSOCIATED_DIMENSION);
+                .lambda().eq(DimensionAttributePO::getAssociateDimensionFieldId, 0);
         List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
         if (poList.size()>0)
         {
@@ -106,7 +106,7 @@ public class DimensionImpl implements IDimension {
         //判断维度表是否与事实表有关联
         QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
         queryWrapper1.in("associate_dimension_id",id)
-                .lambda().eq(FactAttributePO::getAttributeType, FactAttributeEnum.ASSOCIATED_DIMENSION);
+                .lambda().eq(FactAttributePO::getAssociateDimensionFieldId, 0);
         List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
         if (factAttributePOList.size()>0)
         {
@@ -158,8 +158,11 @@ public class DimensionImpl implements IDimension {
     public List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto)
     {
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId,dto.businessAreaId)
-                .ne(DimensionPO::getId,dto.dimensionId);
+        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionPO::getBusinessId,dto.businessAreaId);
+        if (dto.dimensionId !=0)
+        {
+            queryWrapper.lambda().ne(DimensionPO::getId,dto.dimensionId);
+        }
         List<DimensionPO> list=mapper.selectList(queryWrapper);
         return DimensionMap.INSTANCES.poToListNameDto(list);
     }

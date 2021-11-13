@@ -3,30 +3,18 @@ package com.fisk.datamodel.dto.dimensionattribute;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
 @Data
-public class DimensionAttributeListDTO extends DimensionAttributeDTO {
+public class DimensionAttributeListDTO {
     /**
-     * 主键
+     * sql脚本
      */
-    public int id;
-    /**
-     * 关联维度表名称
-     */
-    public String dimensionCnName;
-    /**
-     * 源表名
-     */
-    public String tableSource;
-    /**
-     * 源表字段
-     */
-    public String tableSourceField;
-    /**
-     * 维度关联维度名称
-     */
-    public String associationAttributeName;
+    public String sqlScript;
+
+    public List<DimensionAttributeDTO> attributeDTOList;
 
 }

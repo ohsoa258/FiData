@@ -49,7 +49,7 @@ public class DimensionAttributePO extends BasePO {
      */
     public String dimensionFieldEnName;
     /**
-     * 属性类型：1、业务主键,2、关联维度,3、属性
+     * 属性类型：0：维度属性
      */
     public int attributeType;
     /**
@@ -64,5 +64,9 @@ public class DimensionAttributePO extends BasePO {
      * 关联维度id
      */
     public int associateId;
+    /**
+     * 是否业务主键 0:否 1:是
+     */
+    public int isPrimaryKey;
 
 }

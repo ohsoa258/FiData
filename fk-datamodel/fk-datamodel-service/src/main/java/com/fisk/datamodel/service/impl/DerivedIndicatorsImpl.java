@@ -289,7 +289,7 @@ public class DerivedIndicatorsImpl
         {
             ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
             //判断是否为关联维度
-            if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
+            /*if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
             {
                 //查看关联维度字段相关信息
                 DimensionAttributePO po1=dimensionAttributeMapper.selectById(item.associateDimensionId);
@@ -310,7 +310,7 @@ public class DerivedIndicatorsImpl
                 dto.fieldType=item.factFieldType;
                 dto.fieldCnName=item.factFieldCnName;
                 dtoList.add(dto);
-            }
+            }*/
         }
         return dtoList;
     }

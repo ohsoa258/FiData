@@ -12,13 +12,9 @@ public enum FactAttributeEnum implements BaseEnum {
      */
     FACTS_PROPERTIES(0,"事实属性"),
     /**
-     * 关联维度
-     */
-    ASSOCIATED_DIMENSION(1,"关联维度"),
-    /**
      * 度量
      */
-    MEASURE(2,"度量");
+    MEASURE(1,"度量");
 
     FactAttributeEnum(int value, String name) {
         this.name = name;

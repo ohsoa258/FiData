@@ -29,17 +29,24 @@ public class FactAttributeController {
     @Resource
     IFactAttribute service;
 
-    @ApiOperation("获取事实字段表列表")
+    /*@ApiOperation("获取事实字段表列表")
     @GetMapping("/getFactAttributeList/{factId}")
     public ResultEntity<Object> getFactAttributeList(@PathVariable int factId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeList(factId));
+    }*/
+
+    @ApiOperation("获取事实字段表列表")
+    @GetMapping("/getFactAttributeList/{id}")
+    public ResultEntity<Object> getFactAttributeList(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeDataList(id));
     }
+
 
     @ApiOperation("添事实字段")
     @PostMapping("/addFactAttribute")
     public ResultEntity<Object> addFactAttribute(@Validated @RequestBody FactAttributeAddDTO dto)
     {
-        return ResultEntityBuild.build(service.addFactAttribute(dto.factId,dto.list));
+        return ResultEntityBuild.build(service.addFactAttribute(dto.factId,dto.isPublish,dto.list));
     }
 
     @ApiOperation("删除事实字段")

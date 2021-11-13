@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
@@ -61,5 +62,12 @@ public interface IFact {
      * @return
      */
     List<FactScreenDropDTO> getFactScreenDropList();
+
+    /**
+     * 更新事实脚本数据
+     * @param dto
+     * @return
+     */
+    ResultEnum updateFactSql(DimensionSqlDTO dto);
 
 }

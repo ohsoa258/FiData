@@ -7,10 +7,11 @@ import lombok.Data;
  */
 @Data
 public class FactAttributeDTO {
+    public long id;
     /**
      * 表字段来源id
      */
-    public int tableSourceFieldId;
+    //public int tableSourceFieldId;
     /**
      * 维度表中文字段名称
      */
@@ -33,7 +34,7 @@ public class FactAttributeDTO {
      */
     public String factFieldEnName;
     /**
-     * 属性类型：1、业务主键,2、关联维度,3、属性
+     * 属性类型：1、事实属性,2、度量
      */
     public int attributeType;
     /**
@@ -44,8 +45,5 @@ public class FactAttributeDTO {
      * 关联维度字段id
      */
     public int associateDimensionFieldId;
-    /**
-     * 关联维度id
-     */
-    public int associateId;
+
 }

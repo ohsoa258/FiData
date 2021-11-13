@@ -10,5 +10,6 @@ import java.util.List;
 @Data
 public class FactAttributeAddDTO {
     public int factId;
+    public boolean isPublish;
     public List<FactAttributeDTO> list;
 }
