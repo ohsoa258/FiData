@@ -167,11 +167,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         String inport = po.inport;
         String[] inportIds = inport.split(",");
-        list = Arrays.stream(inportIds).map(inportId ->
-                        this.query().eq("id", inportId).one())
-                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
-                .map(this::getBuildNifiCustomWorkFlowDTO)
-                .collect(Collectors.toList());
+        List<BuildNifiCustomWorkFlowDTO> result = new ArrayList<>();
+        for (String inportId : inportIds) {
+            NifiCustomWorkflowDetailPO id = this.query().eq("id", inportId).one();
+            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(id);
+            BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO = getBuildNifiCustomWorkFlowDTO(nifiCustomWorkflowDetailDTO);
+            result.add(buildNifiCustomWorkFlowDTO);
+        }
+        list = result;
         return list;
     }
 
@@ -207,7 +210,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (ChannelDataEnum.TASKGROUP.getName().equalsIgnoreCase(dto.componentType)) {
             flow.appId = dto.id;
         }
-        // 调度任务才有的属性
+        // 调度才有的属性
         if (componentType.equalsIgnoreCase(dto.componentType)) {
             flow.nifiCustomWorkflowName = dto.componentName;
             flow.nifiCustomWorkflowId = dto.id;
@@ -232,10 +235,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         switch (componentsId) {
             // 调度
             case 1:
-                return DataClassifyEnum.CUSTOMWORKSTRUCTURE;
+                return DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT;
             // 任务组
             case 2:
-                return DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT;
+                return DataClassifyEnum.CUSTOMWORKSTRUCTURE;
             // 数据接入(数据湖)
             case 3:
                 return DataClassifyEnum.CUSTOMWORKDATAACCESS;
