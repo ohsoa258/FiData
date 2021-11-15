@@ -46,4 +46,9 @@ public class TbTableAccessDTO {
      * SQL脚本
      */
     public String sqlScript;
+
+    /**
+     * 0: 发布;  1: 保存sql脚本
+     */
+    public int flag;
 }

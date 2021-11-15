@@ -1566,7 +1566,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 物理表id
         atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
         // 调用atlas
-        ResultEntity<Object> result = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        ResultEntity<Object> result = new ResultEntity<>();
+        if (dto.flag == 0) {
+            result = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        }
         if (result.code == 0) {
             po.publish = 1;
         } else {
@@ -1705,26 +1708,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
 
-                String fieldName = getFieldName(conn, po.dbName);
+//                String fieldName = getFieldName(conn, po.dbName);
                 //分页获取数据
 //                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by " + "id" + " ASC) " +
 //                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
             }
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
-            ResultSet rSet = st.executeQuery(getTotalSql);
-            int rowCount = 0;
-            if (rSet.next()) {
-                rowCount = rSet.getInt("total");
-            }
-            rSet.close();
+            assert st != null;
+//            ResultSet rSet = st.executeQuery(getTotalSql);
+//            int rowCount = 0;
+//            if (rSet.next()) {
+//                rowCount = rSet.getInt("total");
+//            }
+//            rSet.close();
 
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArray(rs);
-            array.pageIndex = query.pageIndex;
-            array.pageSize = query.pageSize;
-            array.total = rowCount;
+//            array.pageIndex = query.pageIndex;
+//            array.pageSize = query.pageSize;
+//            array.total = rowCount;
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);

@@ -57,7 +57,7 @@ public class TableAccessController {
      * @return 返回值
      */
     @PutMapping("/edit")
-    @ApiOperation(value = "修改")
+    @ApiOperation(value = "发布 or 保存sql_script")
     public ResultEntity<Object> editData(@RequestBody TbTableAccessDTO dto) {
         return ResultEntityBuild.build(service.updateTableAccessData(dto));
     }
