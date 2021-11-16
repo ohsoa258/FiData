@@ -54,12 +54,6 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(service.updateDimensionAttribute(dto));
     }
 
-    @GetMapping("/getDimensionEntity")
-    @ApiOperation("获取维度表元数据(用于DW创建表)")
-    public ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
-    }
-
     @GetMapping("/getDimensionAttributeDetail/{id}")
     @ApiOperation("根据维度字段id获取维度字段详情")
     public ResultEntity<Object> getDimensionAttributeDetail(@RequestParam("id") int id) {
@@ -82,6 +76,12 @@ public class DimensionAttributeController {
     @GetMapping("/getDimensionAttributeSourceId/{id}")
     public ResultEntity<Object> getDimensionAttributeSourceId(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeSourceId(id));
+    }*/
+
+    /*@GetMapping("/getDimensionEntity")
+    @ApiOperation("获取维度表元数据(用于DW创建表)")
+    public ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }*/
 
 }

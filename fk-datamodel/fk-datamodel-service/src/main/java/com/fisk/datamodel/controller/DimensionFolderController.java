@@ -5,7 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
-import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.service.IDimensionFolder;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,7 +60,7 @@ public class DimensionFolderController {
 
     @ApiOperation("根据维度文件夹id集合,发布相关维度")
     @PostMapping("/publicDimensionFolder")
-    public ResultEntity<Object> publicDimensionFolder(@Validated @RequestBody DimensionFolderPublishDTO dto) {
+    public ResultEntity<Object> publicDimensionFolder(@Validated @RequestBody DimensionFolderPublishQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublishDimensionFolder(dto));
     }
 

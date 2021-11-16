@@ -38,6 +38,13 @@ public interface IFactAttribute {
     ResultEnum deleteFactAttribute(List<Integer> ids);
 
     /**
+     * 根据事实表字段id,获取字段详情
+     * @param factAttributeId
+     * @return
+     */
+    FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId);
+
+    /**
      * 事实字段数据更改
      * @param dto
      * @return

@@ -3,6 +3,7 @@ package com.fisk.datamodel.map;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -51,5 +52,12 @@ public interface FactAttributeMap {
      * @return
      */
     List<FactAttributeDTO> poListsToDtoList(List<FactAttributePO> po);
+
+    /**
+     * poDetail==>Dto
+     * @param po
+     * @return
+     */
+    FactAttributeUpdateDTO poDetailToDto(FactAttributePO po);
 
 }

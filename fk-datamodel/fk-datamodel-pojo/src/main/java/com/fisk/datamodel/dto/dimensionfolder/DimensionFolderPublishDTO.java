@@ -9,9 +9,8 @@ import java.util.List;
  */
 @Data
 public class DimensionFolderPublishDTO {
-
-    public List<Integer> dimensionFolderIds;
-
-    public int businessAreaId;
-
+    public long dimensionId;
+    public String dimensionName;
+    public String sqlScript;
+    public List<DimensionFolderPublishDetailDTO> fieldList;
 }

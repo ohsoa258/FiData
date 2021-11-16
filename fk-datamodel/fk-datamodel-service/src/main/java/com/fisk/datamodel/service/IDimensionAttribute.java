@@ -66,13 +66,6 @@ public interface IDimensionAttribute {
     List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id);
 
     /**
-     * 根据维度id获取维度字段所有来源id
-     * @param id
-     * @return
-     */
-    List<FieldNameDTO> getDimensionAttributeSourceId(int id);
-
-    /**
      * 根据维度字段id,获取字段详情信息
      * @param id
      * @return

@@ -12,6 +12,7 @@ import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.dto.dimensionattribute.*;
@@ -48,20 +49,16 @@ public class DimensionAttributeImpl
     @Resource
     DimensionAttributeMapper attributeMapper;
     @Resource
-    DataAccessClient client;
-    @Resource
     FactAttributeMapper factAttributeMapper;
     @Resource
-    DimensionImpl dimensionImpl;
+    DimensionFolderImpl dimensionFolder;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
     {
         //删除维度字段属性
-        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
-                .map(DimensionAttributeDTO::getId)
-                .collect(Collectors.toList());
+        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
         {
             QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
@@ -87,6 +84,8 @@ public class DimensionAttributeImpl
         //是否发布
         if (isPublish)
         {
+            DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
+
             ////return dimensionImpl.dimensionPublish(dimensionId);
         }
         return ResultEnum.SUCCESS;
@@ -165,6 +164,15 @@ public class DimensionAttributeImpl
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id)
+    {
+        QueryWrapper <DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionAttributePO::getDimensionId,id);
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        return DimensionAttributeMap.INSTANCES.poToNameListDTO(list);
+    }
+
 
 
 
@@ -235,46 +243,6 @@ public class DimensionAttributeImpl
         }
         data.dto=dtoList;*/
         return data;
-    }
-
-    @Override
-    public List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id)
-    {
-        QueryWrapper <DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionAttributePO::getDimensionId,id);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
-        return DimensionAttributeMap.INSTANCES.poToNameListDTO(list);
-    }
-
-    @Override
-    public List<FieldNameDTO> getDimensionAttributeSourceId(int id)
-    {
-       /* //查询维度表
-        DimensionPO dimensionPO=mapper.selectById(id);
-        if (dimensionPO==null)
-        {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "维度表不存在");
-        }
-        ResultEntity<Object> data = client.getTableFieldId(dimensionPO.tableSourceId);
-        if (ResultEnum.SUCCESS.equals(data.code))
-        {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, "获取数据接入表数据失败");
-        }
-        List<FieldNameDTO> list=JSON.parseArray(JSON.toJSONString(data.data), FieldNameDTO.class);
-        System.out.println(list);
-        if (list ==null || list.size()==0)
-        {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据接入表数据为空");
-        }
-        //获取维度表存在字段来源id
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("table_source_field_id").lambda()
-                .eq(DimensionAttributePO::getDimensionId,id);
-        List<Integer> ids=(List)attributeMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
-        //过滤已添加来源表id
-        list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
-        return list;*/
-        return null;
     }
 
 }

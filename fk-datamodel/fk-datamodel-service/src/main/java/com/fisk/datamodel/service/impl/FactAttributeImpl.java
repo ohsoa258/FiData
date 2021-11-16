@@ -25,6 +25,7 @@ import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
 import net.bytebuddy.implementation.bytecode.Throw;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,6 +104,12 @@ public class FactAttributeImpl
     }
 
     @Override
+    public FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId)
+    {
+        return FactAttributeMap.INSTANCES.poDetailToDto(mapper.selectById(factAttributeId));
+    }
+
+    @Override
     public ResultEnum updateFactAttribute(FactAttributeUpdateDTO dto)
     {
         FactAttributePO po=mapper.selectById(dto.id);
@@ -123,7 +130,6 @@ public class FactAttributeImpl
         po.factFieldLength=dto.factFieldLength;
         po.factFieldEnName=dto.factFieldEnName;
         po.factFieldType=dto.factFieldType;
-        ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
         return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

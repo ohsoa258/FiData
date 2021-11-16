@@ -41,7 +41,6 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeDataList(id));
     }
 
-
     @ApiOperation("添事实字段")
     @PostMapping("/addFactAttribute")
     public ResultEntity<Object> addFactAttribute(@Validated @RequestBody FactAttributeAddDTO dto)
@@ -54,6 +53,12 @@ public class FactAttributeController {
     public ResultEntity<Object> deleteFactAttribute(@RequestBody List<Integer> ids)
     {
         return ResultEntityBuild.build(service.deleteFactAttribute(ids));
+    }
+
+    @GetMapping("/getFactAttributeDetail/{id}")
+    @ApiOperation("根据事实字段id获取事实字段详情")
+    public ResultEntity<Object> getFactAttributeDetail(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeDetail(id));
     }
 
     @ApiOperation("修改事实字段")
@@ -69,7 +74,7 @@ public class FactAttributeController {
     }
 
     @GetMapping("/getFactAttributeData")
-    @ApiOperation("根绝事实id获取事实字段详情")
+    @ApiOperation("根据事实id获取事实字段详情")
     public ResultEntity<Object> getFactAttributeData(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(id));
     }

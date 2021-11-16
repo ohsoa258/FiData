@@ -1,6 +1,7 @@
 package com.fisk.datamodel.map;
 
 import com.fisk.datamodel.dto.dimensionattribute.*;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishDetailDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -70,5 +71,12 @@ public interface DimensionAttributeMap {
      * @return
      */
     DimensionAttributeUpdateDTO poToDetailDto(DimensionAttributePO po);
+
+    /**
+     * po==>PublishDto
+     * @param dto
+     * @return
+     */
+    List<DimensionFolderPublishDetailDTO> poToPublishDto(List<DimensionAttributePO> dto);
 
 }

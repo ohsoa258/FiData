@@ -1,10 +1,9 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
-import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 
 import java.util.List;
 
@@ -53,6 +52,6 @@ public interface IDimensionFolder {
      * @param dto
      * @return
      */
-    ResultEnum batchPublishDimensionFolder(DimensionFolderPublishDTO dto);
+    ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto);
 
 }
