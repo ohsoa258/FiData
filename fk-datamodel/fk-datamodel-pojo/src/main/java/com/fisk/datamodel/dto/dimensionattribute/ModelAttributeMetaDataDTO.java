@@ -6,10 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class
-
-ModelAttributeMetaDataDTO {
-
+public class ModelAttributeMetaDataDTO {
     /**
      * 字段id
      */
@@ -30,7 +27,7 @@ ModelAttributeMetaDataDTO {
     public int fieldLength;
 
     /**
-     * 属性类型：0、业务主键,1、关联维度,2、属性
+     * 属性类型：0、维度属性
      */
     public int attributeType;
 

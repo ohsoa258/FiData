@@ -78,10 +78,10 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaDataList(businessAreaId));
     }*/
 
-    @ApiOperation("根据维度id获取维度字段所有来源id")
+    /*@ApiOperation("根据维度id获取维度字段所有来源id")
     @GetMapping("/getDimensionAttributeSourceId/{id}")
     public ResultEntity<Object> getDimensionAttributeSourceId(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeSourceId(id));
-    }
+    }*/
 
 }

@@ -1,6 +1,7 @@
 package com.fisk.task.enums;
 
 import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.filter.dto.FilterEnum;
 
 /**
  * @author: DennyHui
@@ -30,5 +31,16 @@ public enum DbTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static DbTypeEnum getValue(String name) {
+        DbTypeEnum[] carTypeEnums = values();
+        for (DbTypeEnum carTypeEnum : carTypeEnums) {
+            String queryName=carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return null;
     }
 }

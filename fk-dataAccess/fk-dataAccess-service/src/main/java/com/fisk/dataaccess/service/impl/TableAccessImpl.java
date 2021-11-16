@@ -54,6 +54,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -1634,10 +1636,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             rSet.close();
             //分页获取数据
-            int offset = 0;
-            if (query.pageIndex > 1) {
-                offset = query.pageSize * query.pageIndex;
-            }
+            int offset=(query.pageIndex-1)*query.pageSize;
             query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
@@ -1672,6 +1671,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //获取列名
                 FieldNameDTO dto = new FieldNameDTO();
                 dto.fieldName = metaData.getColumnLabel(i);
+                dto.fieldType = metaData.getColumnTypeName(i);
                 dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
                 dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
                 fieldNameDTOList.add(dto);
@@ -1695,12 +1695,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
-                int offset = 0;
-                if (query.pageIndex > 1) {
-                    offset = query.pageSize * query.pageIndex;
-                }
-                //分页获取数据
-                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+                // 显示前十条
+                query.querySql = query.querySql + " limit 10 offset 0";
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -1708,32 +1704,54 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
 
-//                String fieldName = getFieldName(conn, po.dbName);
-                //分页获取数据
-//                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by " + "id" + " ASC) " +
-//                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
+                // 显示前十条
+                query.querySql = "SELECT top 10 * FROM (" + query.querySql + ") as tba111";
             }
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             assert st != null;
-//            ResultSet rSet = st.executeQuery(getTotalSql);
-//            int rowCount = 0;
-//            if (rSet.next()) {
-//                rowCount = rSet.getInt("total");
-//            }
-//            rSet.close();
 
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArray(rs);
-//            array.pageIndex = query.pageIndex;
-//            array.pageSize = query.pageSize;
-//            array.total = rowCount;
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         return array;
+    }
+
+    @Override
+    public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
+
+        BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
+
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
+        TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", appId).one();
+        List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
+        if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
+        switch (dbTypeEnum) {
+            case sqlserver:
+                dto.driveType = DbTypeEnum.sqlserver;
+                break;
+            case mysql:
+                dto.driveType = DbTypeEnum.mysql;
+                break;
+            case oracle:
+                dto.driveType = DbTypeEnum.oracle;
+            default:
+                break;
+        }
+        dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
+        dto.appAbbreviation = registrationPo.appAbbreviation;
+        dto.tableName = tableAccessPo.tableName;
+        dto.selectSql = tableAccessPo.sqlScript;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
     /**
@@ -1754,23 +1772,5 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         return conn;
-    }
-
-    private String getFieldName(Connection conn, String tableName) {
-        String fieldName = "";
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
-            while (resultSet.next()) {
-                fieldName = resultSet.getString("COLUMN_NAME");
-                return fieldName;
-            }
-
-        } catch (Exception e) {
-            log.error("【getColumnsName】获取表字段报错, ex", e);
-            return null;
-        }
-
-        return fieldName;
     }
 }

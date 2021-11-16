@@ -23,14 +23,6 @@ public class DimensionPO extends BasePO {
      */
     public int businessId;
     /**
-     * 应用id(删)
-     */
-    public int appId;
-    /**
-     * 来源表id(删)
-     */
-    public int tableSourceId;
-    /**
      * 维度名称
      */
     public String dimensionCnName;

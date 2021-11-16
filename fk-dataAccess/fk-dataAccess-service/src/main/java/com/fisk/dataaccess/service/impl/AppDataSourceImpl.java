@@ -7,6 +7,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.MysqlConUtils;
 import com.fisk.dataaccess.utils.SqlServerConUtils;
+import com.fisk.dataaccess.utils.SqlServerPlusUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,12 +27,13 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         DataSourceDTO dataSource = mapper.getDataSource(appId);
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerConUtils sqlServerConUtils = new SqlServerConUtils();
+        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         AppDataSourcePO po = this.query().eq("app_id", appId).one();
         dataSource.appName = po.dbName;
         if ("mysql".equalsIgnoreCase(dataSource.driveType)) {
             dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd);
         } else if ("sqlserver".equalsIgnoreCase(dataSource.driveType)) {
-            dataSource.tableDtoList = sqlServerConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+            dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
         }
 
         return dataSource;

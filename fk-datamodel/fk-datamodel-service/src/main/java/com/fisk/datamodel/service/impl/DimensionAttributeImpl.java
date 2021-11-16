@@ -165,6 +165,9 @@ public class DimensionAttributeImpl
         return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
+
+
+
     @Override
     public List<ModelMetaDataDTO> getDimensionMetaDataList(int businessAreaId)
     {
@@ -192,7 +195,7 @@ public class DimensionAttributeImpl
     public ModelMetaDataDTO getDimensionMetaData(int id)
     {
         ModelMetaDataDTO data=new ModelMetaDataDTO();
-        DimensionPO po=mapper.selectById(id);
+        /*DimensionPO po=mapper.selectById(id);
         if (po==null)
         {
             return data;
@@ -230,7 +233,7 @@ public class DimensionAttributeImpl
             dto.fieldId= String.valueOf(item.id);
             dtoList.add(dto);
         }
-        data.dto=dtoList;
+        data.dto=dtoList;*/
         return data;
     }
 
@@ -246,7 +249,7 @@ public class DimensionAttributeImpl
     @Override
     public List<FieldNameDTO> getDimensionAttributeSourceId(int id)
     {
-        //查询维度表
+       /* //查询维度表
         DimensionPO dimensionPO=mapper.selectById(id);
         if (dimensionPO==null)
         {
@@ -270,7 +273,8 @@ public class DimensionAttributeImpl
         List<Integer> ids=(List)attributeMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         //过滤已添加来源表id
         list = list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
-        return list;
+        return list;*/
+        return null;
     }
 
 }

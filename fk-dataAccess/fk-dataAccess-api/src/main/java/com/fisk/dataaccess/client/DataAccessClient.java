@@ -10,6 +10,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -152,4 +153,8 @@ public interface DataAccessClient {
 
     @GetMapping("/dataAccessTree/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId();
+
+    @GetMapping("/physicalTable/getBuildPhysicalTableDTO")
+    public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
+            @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId);
 }

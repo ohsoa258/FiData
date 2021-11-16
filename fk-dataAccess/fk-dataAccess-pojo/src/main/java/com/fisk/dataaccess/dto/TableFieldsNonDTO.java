@@ -25,6 +25,10 @@ public class TableFieldsNonDTO extends BaseDTO {
      * table_access（id）
      */
     public long tableAccessId;
+    /**
+     * 源字段
+     */
+    public String sourceFieldName;
 
     /**
      * 字段名称

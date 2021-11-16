@@ -68,5 +68,9 @@ public class DimensionAttributePO extends BasePO {
      * 是否业务主键 0:否 1:是
      */
     public int isPrimaryKey;
+    /**
+     * 源字段名称
+     */
+    public String sourceFieldName;
 
 }
