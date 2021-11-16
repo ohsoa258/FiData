@@ -1672,7 +1672,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //获取列名
                 FieldNameDTO dto = new FieldNameDTO();
                 dto.fieldName = metaData.getColumnLabel(i);
-                dto.fieldType = metaData.getColumnTypeName(i);
+                dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
                 dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
                 fieldNameDTOList.add(dto);
             }

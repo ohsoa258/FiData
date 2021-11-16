@@ -58,14 +58,6 @@ public class DimensionAttributeImpl
     @Override
     public ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
     {
-        //添加或修改维度字段
-        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
-        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-        boolean result=this.saveOrUpdateBatch(poList);
-        if (!result)
-        {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
         //删除维度字段属性
         List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
                 .map(DimensionAttributeDTO::getId)
@@ -83,6 +75,14 @@ public class DimensionAttributeImpl
                     return ResultEnum.SAVE_DATA_ERROR;
                 }
             }
+        }
+        //添加或修改维度字段
+        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
+        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
+        boolean result=this.saveOrUpdateBatch(poList);
+        if (!result)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
         //是否发布
         if (isPublish)

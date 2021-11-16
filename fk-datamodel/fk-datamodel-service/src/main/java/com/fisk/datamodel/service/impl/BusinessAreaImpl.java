@@ -20,6 +20,7 @@ import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.BusinessProcessMapper;
@@ -87,6 +88,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             return ResultEnum.DATA_EXISTS;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
+        po.setIsPublish(PublicStatusEnum.UN_PUBLIC.getValue());
         boolean save = this.save(po);
 
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

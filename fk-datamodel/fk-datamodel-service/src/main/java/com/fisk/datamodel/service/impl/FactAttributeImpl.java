@@ -63,13 +63,6 @@ public class FactAttributeImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto) {
-        //添加事实字段
-        List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto);
-        poList.stream().map(e->e.factId=factId).collect(Collectors.toList());
-        if (!this.saveOrUpdateBatch(poList))
-        {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
         //删除维度字段属性
         List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
                 .map(FactAttributeDTO::getId)
@@ -86,6 +79,13 @@ public class FactAttributeImpl
                     return ResultEnum.SAVE_DATA_ERROR;
                 }
             }
+        }
+        //添加事实字段
+        List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto);
+        poList.stream().map(e->e.factId=factId).collect(Collectors.toList());
+        if (!this.saveOrUpdateBatch(poList))
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
         //是否发布
         if (isPublish)
