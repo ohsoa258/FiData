@@ -54,6 +54,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -1720,6 +1722,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
+    @Override
+    public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
+
+        BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
+
+        TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
+        List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
+        if (tableAccessPo == null || registrationPo == null || CollectionUtils.isEmpty(listPo)) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+        dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
+        dto.appAbbreviation = registrationPo.appAbbreviation;
+        dto.tableName = tableAccessPo.tableName;
+        dto.selectSql = tableAccessPo.sqlScript;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
+    }
+
     /**
      * 连接数据库
      *
@@ -1738,23 +1758,5 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         return conn;
-    }
-
-    private String getFieldName(Connection conn, String tableName) {
-        String fieldName = "";
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
-            while (resultSet.next()) {
-                fieldName = resultSet.getString("COLUMN_NAME");
-                return fieldName;
-            }
-
-        } catch (Exception e) {
-            log.error("【getColumnsName】获取表字段报错, ex", e);
-            return null;
-        }
-
-        return fieldName;
     }
 }

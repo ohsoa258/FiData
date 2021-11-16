@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class BuildPhysicalTableDTO {
     public List<TableFieldsDTO> tableFieldsDTOS;
+    public String appAbbreviation;
     public String selectSql;
     public String tableName;
 }

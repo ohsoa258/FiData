@@ -22,6 +22,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -286,4 +287,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 结果集
      */
     OdsResultDTO getDataAccessQueryList(OdsQueryDTO query);
+
+    ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId);
 }

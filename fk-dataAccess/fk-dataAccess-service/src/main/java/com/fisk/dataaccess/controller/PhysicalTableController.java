@@ -21,6 +21,7 @@ import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
@@ -275,6 +276,14 @@ public class PhysicalTableController {
 
         return service.getAtlasBuildTableAndColumn(id, appid);
     }
+
+    @GetMapping("/getBuildPhysicalTableDTO")
+    public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
+            @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId) {
+
+        return service.getBuildPhysicalTableDTO(tableId, appId);
+    }
+
 
     @GetMapping("/getAtlasWriteBackDataDTO")
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(
