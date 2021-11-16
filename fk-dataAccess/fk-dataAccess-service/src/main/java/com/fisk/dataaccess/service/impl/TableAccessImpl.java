@@ -1672,6 +1672,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //获取列名
                 FieldNameDTO dto = new FieldNameDTO();
                 dto.fieldName = metaData.getColumnLabel(i);
+                dto.fieldType = metaData.getColumnTypeName(i);
                 dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
                 dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
                 fieldNameDTOList.add(dto);
@@ -1707,28 +1708,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
-
-//                String fieldName = getFieldName(conn, po.dbName);
-                //分页获取数据
-//                query.querySql = query.querySql + "select top " + query.pageSize + " o.* from (select row_number() over(order by " + "id" + " ASC) " +
-//                        "as rownumber,* from(SELECT * FROM [stuinfo]) as oo) AS o where rownumber>" + query.pageIndex + ";";
             }
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             assert st != null;
-//            ResultSet rSet = st.executeQuery(getTotalSql);
-//            int rowCount = 0;
-//            if (rSet.next()) {
-//                rowCount = rSet.getInt("total");
-//            }
-//            rSet.close();
 
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
             array = resultSetToJsonArray(rs);
-//            array.pageIndex = query.pageIndex;
-//            array.pageSize = query.pageSize;
-//            array.total = rowCount;
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);

@@ -36,6 +36,10 @@ public class TableFieldsDTO extends BaseDTO {
      * table_access（id）
      */
     public Long tableAccessId;
+    /**
+     * 源字段
+     */
+    public String sourceFieldName;
 
     /**
      * 字段名称

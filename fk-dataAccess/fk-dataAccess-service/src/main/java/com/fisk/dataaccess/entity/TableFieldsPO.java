@@ -23,6 +23,11 @@ public class TableFieldsPO extends BasePO {
     public String atlasFieldId;
 
     /**
+     * 源字段
+     */
+    public String sourceFieldName;
+
+    /**
      * 字段名称
      */
     public String fieldName;
