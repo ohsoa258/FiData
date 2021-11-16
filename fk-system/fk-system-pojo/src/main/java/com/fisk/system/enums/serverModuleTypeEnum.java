@@ -10,7 +10,11 @@ public enum  serverModuleTypeEnum implements BaseEnum {
 
     DATA_INPUT("数据接入",0),
 
-    DATA_MODEL("数据建模",1);
+    DATA_MODEL("数据建模",1),
+
+    DATA_DISPATCH("数据调度",2),
+
+    DATA_SERVICE("Api服务",3);
 
     private final String name;
     private final int value;

@@ -1,15 +1,18 @@
 package com.fisk.chartvisual.map;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.ChildvisualDTO;
+import com.fisk.chartvisual.dto.ContentDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.entity.BaseChartProperty;
+import com.fisk.chartvisual.entity.ChartChildvisualPO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
 
 /**
  * @author gy
@@ -27,7 +30,8 @@ public interface ChartMap {
      */
     @Mappings({
             @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
-            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "content",source = "content",qualifiedByName="publicSplit")
     })
     ChartPO dtoToPo(ReleaseChart dto);
 
@@ -70,6 +74,16 @@ public interface ChartMap {
     void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 
     /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    @Mappings({
+            @Mapping(target = "componentBackground",source = "componentBackground",qualifiedByName="stringConvertByte")
+    })
+    ChartChildvisualPO dtoToPo(ChildvisualDTO dto);
+
+    /**
      * 字节转base64
      * @param image
      * @return
@@ -93,5 +107,17 @@ public interface ChartMap {
             return  null;
         }
         return DatatypeConverter.parseBase64Binary(image);
+    }
+
+    /**
+     * json拆分公共的
+     * @param content
+     * @return
+     */
+    @Named("publicSplit")
+    default String publicSplit(String content){
+        JSONObject jsonObject = JSONObject.parseObject(content);
+        ContentDTO datalist = JSONObject.parseObject(jsonObject.toJSONString(), ContentDTO.class);
+        return JSONObject.toJSONString(datalist);
     }
 }
