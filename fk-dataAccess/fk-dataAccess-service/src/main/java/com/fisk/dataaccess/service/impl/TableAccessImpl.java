@@ -1726,11 +1726,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
 
-        TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", appId).one();
+        TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", appId).one();
         List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
-        if (tableAccessPo == null || registrationPo == null || CollectionUtils.isEmpty(listPo)) {
+        if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
+        switch (dbTypeEnum) {
+            case sqlserver:
+                dto.driveType = DbTypeEnum.sqlserver;
+                break;
+            case mysql:
+                dto.driveType = DbTypeEnum.mysql;
+                break;
+            case oracle:
+                dto.driveType = DbTypeEnum.oracle;
+            default:
+                break;
         }
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
