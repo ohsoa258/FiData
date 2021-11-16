@@ -156,5 +156,5 @@ public interface DataAccessClient {
 
     @GetMapping("/physicalTable/getBuildPhysicalTableDTO")
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
-            @RequestParam("id") long id, @RequestParam("app_id") long appid);
+            @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId);
 }
