@@ -56,5 +56,8 @@ public class FactAttributePO extends BasePO {
      * 关联维度id
      */
     public int associateId;
-
+    /**
+     * 源字段名称
+     */
+    public String sourceFieldName;
 }

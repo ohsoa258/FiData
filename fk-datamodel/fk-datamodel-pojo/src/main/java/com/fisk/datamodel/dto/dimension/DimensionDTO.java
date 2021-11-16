@@ -16,11 +16,6 @@ DimensionDTO {
      */
     public int dimensionFolderId;
     public int businessId;
-    /**
-     * 应用id
-     */
-    /*public int appId;
-    public int tableSourceId;*/
     public String dimensionCnName;
     public String dimensionEnName;
     public String dimensionTabName;

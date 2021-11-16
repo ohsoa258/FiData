@@ -105,8 +105,7 @@ public class DimensionImpl implements IDimension {
         }
         //判断维度表是否与事实表有关联
         QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.in("associate_dimension_id",id)
-                .lambda().eq(FactAttributePO::getAssociateDimensionFieldId, 0);
+        queryWrapper1.in("associate_dimension_id",id);
         List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
         if (factAttributePOList.size()>0)
         {
@@ -165,68 +164,6 @@ public class DimensionImpl implements IDimension {
         }
         List<DimensionPO> list=mapper.selectList(queryWrapper);
         return DimensionMap.INSTANCES.poToListNameDto(list);
-    }
-
-
-
-
-    @Override
-    public IPage<DimensionDTO> getDimensionList(QueryDTO dto)
-    {
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        if (dto.id !=0)
-        {
-            queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.id)
-                                 .or()
-                                 .eq(DimensionPO::getShare,true);
-        }
-        Page<DimensionPO> data=new Page<>(dto.getPage(),dto.getSize());
-        return DimensionMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
-    }
-
-    @Override
-    public ResultEnum dimensionPublish(int id)
-    {
-        try{
-            DimensionPO po=mapper.selectById(id);
-            if (po==null)
-            {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(po.businessId);
-            if (businessAreaPO==null)
-            {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-            DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
-            pushDto.dimensionId=id;
-            pushDto.dimensionName=po.dimensionTabName;
-            pushDto.businessAreaName=businessAreaPO.getBusinessName();
-            pushDto.createType= CreateTypeEnum.CREATE_DIMENSION.getValue();
-            pushDto.userId=userHelper.getLoginUserInfo().id;
-            //发送消息
-            //publishTaskClient.publishBuildAtlasDorisTableTask(pushDto);
-        }
-        catch (Exception ex){
-            log.error(ex.getMessage());
-            return ResultEnum.PUBLISH_FAILURE;
-        }
-        return ResultEnum.SUCCESS;
-    }
-
-    @Override
-    public void updatePublishStatus(int id,int isSuccess)
-    {
-        DimensionPO po=mapper.selectById(id);
-        if (po==null)
-        {
-            log.info(id+":数据不存在");
-            throw new FkException(ResultEnum.PUBLISH_FAILURE);
-        }
-        po.isPublish=isSuccess;
-        int flat=mapper.updateById(po);
-        String msg=flat>0?"发布成功":"发布失败";
-        log.info(po.dimensionTabName+":"+msg);
     }
 
 }

@@ -47,27 +47,6 @@ public interface IDimension {
     ResultEnum deleteDimension(int id);
 
     /**
-     * 获取维度表列表
-     * @param dto
-     * @return
-     */
-    IPage<DimensionDTO> getDimensionList(QueryDTO dto);
-
-    /**
-     * 发布维度
-     * @param id
-     * @return
-     */
-    ResultEnum dimensionPublish(int id);
-
-    /**
-     * 维度是否发布成功
-     * @param id
-     * @param isSuccess
-     */
-    void updatePublishStatus(int id,int isSuccess);
-
-    /**
      * 更新维度脚本数据
      * @param dto
      * @return

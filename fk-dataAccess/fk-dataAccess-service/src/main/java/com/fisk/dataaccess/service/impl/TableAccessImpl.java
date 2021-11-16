@@ -1634,10 +1634,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             rSet.close();
             //分页获取数据
-            int offset = 0;
-            if (query.pageIndex > 1) {
-                offset = query.pageSize * query.pageIndex;
-            }
+            int offset=0;
+            int pageIndex = query.pageIndex;
+            pageIndex=pageIndex-1;
+            offset =pageIndex*query.pageSize;
             query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
