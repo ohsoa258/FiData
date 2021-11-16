@@ -1695,18 +1695,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
-                int offset = 0;
-                if (query.pageIndex > 1) {
-                    offset = query.pageSize * query.pageIndex;
-                }
-                //分页获取数据
-                query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
+                // 显示前十条
+                query.querySql = query.querySql + " limit 10 offset 0";
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement();
+
+                // 显示前十条
+                query.querySql = "SELECT top 10 * FROM (" + query.querySql + ") as tba111";
             }
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
