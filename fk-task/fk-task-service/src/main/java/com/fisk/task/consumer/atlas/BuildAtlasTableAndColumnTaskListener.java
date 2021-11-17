@@ -14,9 +14,11 @@ import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.atlas.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
@@ -73,7 +75,11 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
-        ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
+        //拿到对象
+        ResultEntity<BuildPhysicalTableDTO> data = dc.getBuildPhysicalTableDTO(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
+        BuildPhysicalTableDTO buildPhysicalTableDTO = data.data;
+        String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
+        /*ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
         log.info("queryRes:" + JSON.toJSONString(queryRes.data));
         log.info("queryRes:" + JSON.toJSONString(queryRes));
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
@@ -213,20 +219,13 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("参数："+JSON.toJSONString(awbd));
         ResultEntity<Object> writeBackRes=dc.addAtlasTableIdAndDorisSql(awbd);
         log.info("数据回写结果："+JSON.toJSONString(writeBackRes));
-        //endregion
-        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
-        tableNifiSettingPO.appId=Integer.valueOf(awbd.appId);
-        tableNifiSettingPO.tableName=awbd.tableName;
-        tableNifiSettingPO.tableAccessId=Integer.valueOf(awbd.tableId);
-        tableNifiSettingPO.selectSql=awbd.dorisSelectSqlStr;
-        tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
-        tableNifiSettingService.save(tableNifiSettingPO);
+        //endregion*/
 
         //向task库中添加数据接入表结构数据
-        saveTableStructure(awbd);
+        //saveTableStructure(awbd);
 
         //incremental insert
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+       /* SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
         if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
             //region 用户corn表达书计算数据下次同步时间
@@ -274,17 +273,24 @@ public class BuildAtlasTableAndColumnTaskListener
             ETLIncremental.incremental_objectivescore_start=null;
             ETLIncremental.incremental_objectivescore_end=null;
             incrementalMapper.insert(ETLIncremental);
-        }
+        }*/
         //endregion
 
         //启动nifi
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        tableNifiSettingPO.appId=Integer.valueOf(inpData.appId);
+        tableNifiSettingPO.tableName=buildPhysicalTableDTO.appAbbreviation+"_"+buildPhysicalTableDTO.tableName;
+        tableNifiSettingPO.tableAccessId=Integer.valueOf(inpData.dbId);
+        tableNifiSettingPO.selectSql=physicalSelect;
+        tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
+        tableNifiSettingService.save(tableNifiSettingPO);
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
         bfd.userId=inpData.userId;
         bfd.appId=Long.parseLong(inpData.appId);
-        bfd.id=Long.parseLong(ae.tableId);
+        bfd.id=Long.parseLong(inpData.dbId);
         bfd.synchronousTypeEnum= SynchronousTypeEnum.TOPGODS;
-        bfd.tableName=ae.tableName;
+        bfd.tableName=tableNifiSettingPO.tableName;
         //类型为物理表
         bfd.type= OlapTableEnum.PHYSICS;
         //来源为数据接入
@@ -293,6 +299,27 @@ public class BuildAtlasTableAndColumnTaskListener
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
     }
+
+    private String createPhysicalTable(BuildPhysicalTableDTO buildPhysicalTableDTO){
+        StringBuilder sqlSelect = new StringBuilder();
+        StringBuilder sqlFileds = new StringBuilder();
+        sqlSelect.append("select ");
+        sqlSelect.append((buildPhysicalTableDTO.driveType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+buildPhysicalTableDTO.appAbbreviation+buildPhysicalTableDTO.tableName+"_pk , ");
+        sqlSelect.append(" '${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code ,");
+        //判断字符串函数与占位符
+        List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
+        tableFieldsDTOS.forEach((l) -> {
+            sqlFileds.append( l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+            sqlSelect.append(l.sourceFieldName+" as "+l.fieldName +" ,");
+            });
+        sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
+        sqlFileds.append(")");
+        sqlSelect.delete(sqlSelect.length()-1,sqlSelect.length());
+        sqlSelect.append(" from ("+buildPhysicalTableDTO.selectSql+")");
+        String s = sqlSelect.toString();
+        return s;
+    }
+
     /**
      * 解释cron表达式
      */
