@@ -85,8 +85,10 @@ public class DimensionAttributeImpl
         if (isPublish)
         {
             DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
-
-            ////return dimensionImpl.dimensionPublish(dimensionId);
+            queryDTO.dimensionId=dimensionId;
+            DimensionPO dimensionPO=mapper.selectById(dimensionId);
+            queryDTO.businessAreaId=dimensionPO==null?0:dimensionPO.businessId;
+            return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return ResultEnum.SUCCESS;
     }

@@ -224,8 +224,9 @@ public class DimensionFolderImpl
                     {
                         if (field.associateDimensionId !=0 && field.associateDimensionFieldId !=0 )
                         {
-                            DimensionPO dimensionFolderPO=dimensionMapper.selectById(field.associateDimensionId);
-                            field.associateDimensionName=dimensionFolderPO==null?"":dimensionFolderPO.dimensionTabName;
+                            DimensionPO dimensionPO=dimensionMapper.selectById(field.associateDimensionId);
+                            field.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                            field.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
                             DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(field.associateDimensionFieldId);
                             field.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
                         }

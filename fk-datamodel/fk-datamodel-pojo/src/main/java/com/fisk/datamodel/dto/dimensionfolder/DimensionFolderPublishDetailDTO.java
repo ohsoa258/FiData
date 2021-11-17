@@ -40,6 +40,10 @@ public class DimensionFolderPublishDetailDTO {
      */
     public String associateDimensionName;
     /**
+     * 关联维度表SQL脚本
+     */
+    public String associateDimensionSqlScript;
+    /**
      * 关联维度字段id
      */
     public int associateDimensionFieldId;

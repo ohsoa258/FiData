@@ -1473,7 +1473,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (AppRegistrationDataDTO item : list) {
             item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
                     .filter(e -> e.appId == item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e -> e.tableName = "ods_" + e.tableName + "_" + item.appAbbreviation).collect(Collectors.toList());
+            item.tableDtoList.stream().map(e -> e.tableName = "ods_" + item.appAbbreviation + "_"+ e.tableName).collect(Collectors.toList());
             if ((item.tableDtoList == null || item.tableDtoList.size() == 0) ||
                     (tableFieldsPOList == null || tableFieldsPOList.size() == 0)) {
                 continue;
