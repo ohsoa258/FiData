@@ -3,7 +3,7 @@ package com.fisk.chartvisual.map;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
 import com.fisk.chartvisual.dto.ChildvisualDTO;
-import com.fisk.chartvisual.dto.ContentDTO;
+import com.fisk.chartvisual.contentSplit.ContentDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.entity.BaseChartProperty;
 import com.fisk.chartvisual.entity.ChartChildvisualPO;

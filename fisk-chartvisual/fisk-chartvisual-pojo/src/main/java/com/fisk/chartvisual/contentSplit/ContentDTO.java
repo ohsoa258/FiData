@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.dto;
+package com.fisk.chartvisual.contentSplit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -9,7 +9,6 @@ import java.util.List;
  * @date 2021/11/16 13:56
  */
 public class ContentDTO {
-
     @JsonProperty("bdColor")
     private String bdcolor;
     private int height;
@@ -20,7 +19,7 @@ public class ContentDTO {
     private boolean selfadaptheight;
     private int bigid;
     @JsonProperty("listSlicer")
-    private List<String> listslicer;
+    private List<Listslicer> listslicer;
     @JsonProperty("bigTyple")
     private int bigtyple;
     public void setBdcolor(String bdcolor) {
@@ -65,10 +64,10 @@ public class ContentDTO {
         return bigid;
     }
 
-    public void setListslicer(List<String> listslicer) {
+    public void setListslicer(List<Listslicer> listslicer) {
         this.listslicer = listslicer;
     }
-    public List<String> getListslicer() {
+    public List<Listslicer> getListslicer() {
         return listslicer;
     }
 
