@@ -57,7 +57,7 @@ public interface ChartMap {
      */
     @Mappings({
             @Mapping(target = "image",source = "image",qualifiedByName="byteConvertString"),
-            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="byteConvertString")
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="byteConvertString"),
     })
     ChartPropertyVO poToVo(ChartPO po);
 

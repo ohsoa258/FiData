@@ -2,6 +2,7 @@ package com.fisk.chartvisual.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.ChartChildvisualPO;
@@ -22,6 +23,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
+import com.google.inject.internal.cglib.proxy.$FixedValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,9 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.fisk.chartvisual.util.dbhelper.Base64.ByteCodeUtils.byteConvertStringFun;
 
 /**
  * @author gy
@@ -130,11 +135,89 @@ public class ChartManageImpl implements IChartManageService {
                 DraftChartPO po=  draftChartMapper.selectById(id);
                 return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
-                return ChartMap.INSTANCES.poToVo(chartMapper.selectById((id)));
+                ChartPO chartPO = chartMapper.selectById((id));
+                String content = this.assemblySplicing(id);
+                chartPO.setContent(content);
+                return ChartMap.INSTANCES.poToVo(chartPO);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
+
+    /**
+     * 报表组件拼接
+     * @param id
+     */
+    public String assemblySplicing(Integer id){
+        QueryWrapper<ChartChildvisualPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(ChartChildvisualPO::getChartId,id)
+                .eq(ChartChildvisualPO::getDelFlag,1);
+        List<ChartChildvisualPO> childvisualList = childvisualMapper.selectList(query);
+        if (!CollectionUtils.isEmpty(childvisualList)){
+            String noImage = childvisualList.stream().filter(e -> e.getComponentBackground() == null)
+                    .map(e -> e.getContent())
+                    .collect(Collectors.joining(","));
+
+            String image = childvisualList.stream().filter(e -> e.getComponentBackground() != null)
+                    .map(e -> {
+                        String content = e.getContent();
+                        return content.substring(0, content.length() - 1) + ",\"" + "componentBackground" + "\":"
+                                + "\"" + byteConvertStringFun(e.getComponentBackground()) + "\"" + "}";
+                    }).collect(Collectors.joining(","));
+
+            return this.chartSplicing(id,noImage,image);
+        }
+
+        return null;
+    }
+
+
+    /**
+     * 报表拼接组件json
+     * @param id
+     * @param noImage
+     * @param image
+     */
+    public String chartSplicing(Integer id,String noImage,String image){
+        ChartPO chartPO = chartMapper.selectById(id);
+        String context = chartPO.getContent();
+        String chartContent = context.substring(1, context.length() - 1);
+        StringBuilder str = new StringBuilder();
+        str.append("{\"listChar\":[");
+        if (!StringUtils.isEmpty(noImage)){
+            str.append(noImage);
+        }
+
+        if (!StringUtils.isEmpty(noImage) && !StringUtils.isEmpty(image)){
+            str.append(",");
+        }
+
+        if (!StringUtils.isEmpty(image)){
+            str.append(image);
+        }else {
+            if (StringUtils.isEmpty(image)){
+                str.append("],");
+                str.append(chartContent);
+                str.append("}");
+            }
+        }
+
+        if (StringUtils.isEmpty(noImage)){
+            str.append("],");
+            str.append(chartContent);
+            str.append("}");
+        }
+
+        if (!StringUtils.isEmpty(noImage) && !StringUtils.isEmpty(image)){
+            str.append("],");
+            str.append(chartContent);
+            str.append("}");
+        }
+
+        return str.toString();
+    }
+
 
     @Override
     public ResultEnum updateChart(ChartPropertyEditDTO dto) {
@@ -155,6 +238,30 @@ public class ChartManageImpl implements IChartManageService {
                 }
                 ChartMap.INSTANCES.editDtoToPo(dto, release);
                 res = chartMapper.updateById(release);
+
+                if (!StringUtils.isEmpty(dto.content)){
+                    // 删除报表组件
+                    QueryWrapper<ChartChildvisualPO> query = new QueryWrapper<>();
+                    query.lambda()
+                            .eq(ChartChildvisualPO::getChartId,dto.id)
+                            .eq(ChartChildvisualPO::getDelFlag,1);
+                    int delete = childvisualMapper.delete(query);
+                    if (delete <= 0){
+                        return ResultEnum.SAVE_DATA_ERROR;
+                    }
+
+                    // 保存报表组件
+                    List<ChildvisualDTO> poList = this.stringSplit(dto.content, dto.id);
+                    if (!CollectionUtils.isEmpty(poList)){
+                        for (ChildvisualDTO po : poList) {
+                            ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);
+                            int insert = childvisualMapper.insert(childvisualPO);
+                            if (insert == 0) {
+                                return ResultEnum.SAVE_DATA_ERROR;
+                            }
+                        }
+                    }
+                }
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -180,6 +287,16 @@ public class ChartManageImpl implements IChartManageService {
                     return ResultEnum.DATA_NOTEXISTS;
                 }
                 res = chartMapper.deleteByIdWithFill(chart);
+
+                // 删除报表组件
+                QueryWrapper<ChartChildvisualPO> query = new QueryWrapper<>();
+                query.lambda()
+                        .eq(ChartChildvisualPO::getChartId,id)
+                        .eq(ChartChildvisualPO::getDelFlag,1);
+                int delete = childvisualMapper.delete(query);
+                if (delete <= 0){
+                    return ResultEnum.SAVE_DATA_ERROR;
+                }
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

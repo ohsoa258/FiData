@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fisk.common.entity.BaseChartPO;
 import lombok.Data;
 
 /**
@@ -9,14 +10,9 @@ import lombok.Data;
  */
 @TableName("tb_chart_childvisual")
 @Data
-public class ChartChildvisualPO {
+public class ChartChildvisualPO extends BaseChartPO {
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
     private Integer chartId;
     private String content;
     public byte[] componentBackground;
-
-    @TableLogic
-    private Integer delFlag;
 }
