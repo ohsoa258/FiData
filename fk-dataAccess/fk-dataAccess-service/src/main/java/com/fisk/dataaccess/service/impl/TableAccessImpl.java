@@ -1668,31 +1668,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String columnName = metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
-                //获取列名
-                FieldNameDTO dto = new FieldNameDTO();
-                dto.fieldName = metaData.getColumnLabel(i);
-                dto.fieldType = metaData.getColumnTypeName(i);
-                dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-                dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
-                fieldNameDTOList.add(dto);
             }
             array.add(jsonObj);
         }
-        //判断是否有数据,没有数据则获取查询列名
-        if (fieldNameDTOList==null || fieldNameDTOList.size()==0)
-        {
-            // 遍历每一列
-            for (int i = 1; i <= columnCount; i++) {
-                //获取列名
-                FieldNameDTO dto = new FieldNameDTO();
-                dto.fieldName = metaData.getColumnLabel(i);
-                dto.fieldType = metaData.getColumnTypeName(i);
-                dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
-                dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
-                fieldNameDTOList.add(dto);
-            }
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            dto.fieldName = metaData.getColumnLabel(i);
+            dto.fieldType = metaData.getColumnTypeName(i);
+            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
+            fieldNameDTOList.add(dto);
         }
-        data.fieldNameDTOList = fieldNameDTOList.stream().distinct().collect(Collectors.toList());
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
         data.dataArray = array;
         return data;
     }
