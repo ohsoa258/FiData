@@ -1675,8 +1675,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
             dto.fieldName = metaData.getColumnLabel(i);
-            dto.fieldType = metaData.getColumnTypeName(i);
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8"))
+            {
+                dto.fieldType="INT";
+            }
             dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
             fieldNameDTOList.add(dto);
         }
