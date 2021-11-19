@@ -198,7 +198,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private BuildNifiCustomWorkFlowDTO getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailDTO dto) {
 
-        String componentType = "schedule_task";
+        String componentType = "调度任务";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 操作类型
         flow.type = getDataClassifyEnum(dto.componentsId);
