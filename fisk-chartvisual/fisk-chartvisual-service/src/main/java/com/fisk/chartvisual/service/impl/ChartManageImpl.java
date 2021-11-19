@@ -112,17 +112,26 @@ public class ChartManageImpl implements IChartManageService {
         JSONArray jsonArray = jsonObject.getJSONArray("listChar");
         for (int i = 0; i < jsonArray.size(); i++) {
             JSONObject jsonObject1 = jsonArray.getJSONObject(i);
-            String backgroundImage = jsonObject1.getString("componentBackground");
+            JSONObject charProPerty = jsonObject1.getJSONObject("charProPerty");
 
             ChildvisualDTO dto = new ChildvisualDTO();
             dto.setDelFlag(1);
             dto.setChartId(chartId);
             dto.setContent(jsonObject1.toJSONString());
-            if (!StringUtils.isEmpty(backgroundImage)){
-                dto.setComponentBackground(backgroundImage);
-                jsonObject1.remove("componentBackground");
-                dto.setContent(jsonObject1.toJSONString());
+
+            // 删除组件背景图
+            if (charProPerty != null){
+                JSONObject chart = charProPerty.getJSONObject("chart");
+                if (chart != null){
+                    String backgroundImage = chart.getString("componentBackground");
+                    if (!StringUtils.isEmpty(backgroundImage)){
+                        dto.setComponentBackground(backgroundImage);
+                        chart.remove("componentBackground");
+                        dto.setContent(jsonObject1.toJSONString());
+                    }
+                }
             }
+
             dtoList.add(dto);
         }
         return dtoList;
@@ -161,9 +170,10 @@ public class ChartManageImpl implements IChartManageService {
 
             String image = childvisualList.stream().filter(e -> e.getComponentBackground() != null)
                     .map(e -> {
-                        String content = e.getContent();
-                        return content.substring(0, content.length() - 1) + ",\"" + "componentBackground" + "\":"
-                                + "\"" + byteConvertStringFun(e.getComponentBackground()) + "\"" + "}";
+                        StringBuilder context = new StringBuilder(e.getContent());
+                        String componentBackground = "componentBackground" + "\":"+ "\"" +
+                                byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
+                        return context.insert(context.indexOf("\"chart\":")+9,componentBackground);
                     }).collect(Collectors.joining(","));
 
             return this.chartSplicing(id,noImage,image);
