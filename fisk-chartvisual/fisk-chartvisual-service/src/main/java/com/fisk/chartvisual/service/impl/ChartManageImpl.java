@@ -171,7 +171,7 @@ public class ChartManageImpl implements IChartManageService {
             String image = childvisualList.stream().filter(e -> e.getComponentBackground() != null)
                     .map(e -> {
                         StringBuilder context = new StringBuilder(e.getContent());
-                        String componentBackground = "componentBackground" + "\":"+ "\"" +
+                        String componentBackground = "\"componentBackground\"" + ":"+ "\"" +
                                 byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
                         return context.insert(context.indexOf("\"chart\":")+9,componentBackground);
                     }).collect(Collectors.joining(","));
