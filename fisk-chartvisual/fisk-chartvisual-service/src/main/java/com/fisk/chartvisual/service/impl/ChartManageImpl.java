@@ -172,7 +172,7 @@ public class ChartManageImpl implements IChartManageService {
                     .map(e -> {
                         StringBuilder context = new StringBuilder(e.getContent());
                         String componentBackground = "\"componentBackground\"" + ":"+ "\"" +
-                                byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
+                                "data:image/jpg;base64," + byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
                         return context.insert(context.indexOf("\"chart\":")+9,componentBackground);
                     }).collect(Collectors.joining(","));
 
