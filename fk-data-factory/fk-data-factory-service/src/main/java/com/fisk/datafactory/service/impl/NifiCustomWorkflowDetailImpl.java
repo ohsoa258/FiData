@@ -12,7 +12,6 @@ import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
-import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.INifiComponent;
@@ -112,8 +111,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     /**
      * 组装nifi参数
      *
-     * @param pipelineId   pipelineId
-     * @param pipelineName pipelineName
+     * @param pipelineId   tb_nifi_custom_workflow表 id
+     * @param workflowId   tb_nifi_custom_workflow表 workflowId
+     * @param pipelineName tb_nifi_custom_workflow表 pipelineName
      * @param list         list
      * @return NifiCustomWorkListDTO
      */
@@ -129,14 +129,17 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         workListDTO.nifiCustomWorkflowId = workflowId;
         // 管道名称
         workListDTO.pipelineName = pipelineName;
+        // 封装nifi所有节点
         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
+        // 管道详情-tree
         workListDTO.structure = getMenuTree(list);
+        // 管道详情下的任务组-tree
         workListDTO.externalStructure = getMenuTree(list.get(0).workflowId, list);
         return workListDTO;
     }
 
     /**
-     * 获取nifi所有节点
+     * 封装nifi所有节点
      *
      * @param list list
      * @return List<NifiCustomWorkDTO>
@@ -198,7 +201,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private BuildNifiCustomWorkFlowDTO getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailDTO dto) {
 
-        String componentType = "调度任务";
+        String scheduleType = "调度任务";
+        String taskGroupTpye = "任务组";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 操作类型
         flow.type = getDataClassifyEnum(dto.componentsId);
@@ -207,11 +211,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         flow.tableId = dto.tableId;
         flow.groupId = dto.pid;
         // 任务组时，appId即tb_nifi_custom_workflow_detail表id
-        if (ChannelDataEnum.TASKGROUP.getName().equalsIgnoreCase(dto.componentType)) {
+        if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
             flow.appId = dto.id;
         }
         // 调度才有的属性
-        if (componentType.equalsIgnoreCase(dto.componentType)) {
+        if (scheduleType.equalsIgnoreCase(dto.componentType)) {
             flow.nifiCustomWorkflowName = dto.componentName;
             flow.nifiCustomWorkflowId = dto.id;
             flow.scheduleExpression = dto.script;
@@ -289,9 +293,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 获取父子级菜单树
+     * 管道详情-tree
      *
-     * @param list list
+     * @param list tb_nifi_custom_workflow_detail表 list对象
      * @return map
      */
     private Map<Map, Map> getMenuTree(List<NifiCustomWorkflowDetailDTO> list) {
@@ -320,6 +324,13 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         return structure;
     }
 
+    /**
+     * 管道详情下的任务组-tree
+     *
+     * @param workflowId tb_nifi_custom_workflow表 workflowId
+     * @param list tb_nifi_custom_workflow_detail表 list对象
+     * @return map
+     */
     private Map<Map, Map> getMenuTree(String workflowId, List<NifiCustomWorkflowDetailDTO> list) {
         String componentType = "任务组";
         NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
