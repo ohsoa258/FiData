@@ -47,7 +47,9 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
         }
         //判断是否重复
         QueryWrapper<BusinessLimitedAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
+        queryWrapper.lambda()
+                .eq(BusinessLimitedAttributePO::getBusinessLimitedId,dto.businessLimitedId)
+                .eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
                 .eq(BusinessLimitedAttributePO::getCalculationValue,dto.calculationValue)
                 .eq(BusinessLimitedAttributePO::getFactAttributeId,dto.factAttributeId);
         BusinessLimitedAttributePO attributePO=businessLimitedAttributeMapper.selectOne(queryWrapper);
@@ -77,7 +79,9 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     {
         //判断是否重复
         QueryWrapper<BusinessLimitedAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
+        queryWrapper.lambda()
+                .eq(BusinessLimitedAttributePO::getBusinessLimitedId,dto.businessLimitedId)
+                .eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
                 .eq(BusinessLimitedAttributePO::getCalculationValue,dto.calculationValue)
                 .eq(BusinessLimitedAttributePO::getFactAttributeId,dto.factAttributeId);
         BusinessLimitedAttributePO po=businessLimitedAttributeMapper.selectOne(queryWrapper);

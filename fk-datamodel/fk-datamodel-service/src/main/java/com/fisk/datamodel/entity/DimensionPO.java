@@ -43,9 +43,13 @@ public class DimensionPO extends BasePO {
      */
     public Boolean share;
     /**
-     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     * 发布状态：0:未发布、1：发布成功、2：发布失败
      */
     public int isPublish;
+    /**
+     * Doris发布状态0:未发布、1：发布成功、2：发布失败
+     */
+    public int dorisPublish;
     /**
      * 维度sql脚本
      */

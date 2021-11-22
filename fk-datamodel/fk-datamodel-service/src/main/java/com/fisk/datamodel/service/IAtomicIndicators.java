@@ -47,11 +47,11 @@ public interface IAtomicIndicators {
     Page<AtomicIndicatorsResultDTO> getAtomicIndicatorList(AtomicIndicatorsQueryDTO dto);
 
     /**
-     * 获取原子指标下拉列表
-     * @param factId
+     * 获取业务域id获取指标下拉列表
+     * @param businessId
      * @return
      */
-    List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId);
+    List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int businessId);
 
     /**
      * 根据事实表id推送所有原子指标

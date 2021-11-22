@@ -36,14 +36,21 @@ public class BusinessPageResultDTO {
     public String businessEmail;
 
     /**
-     * 业务域发布状态：1:未发布、2：发布成功、3：发布失败
+     * 业务域：数仓建模/分析建模表总数
      */
-    public int isPublish;
-
+    public int modelNumber;
     /**
-     * 发布时间
+     * 数仓建模发布成功数量
+     */
+    public int numberPositionPublishNumber;
+    /**
+     * 分析建模发布成功数量
+     */
+    public int analysisPublishNumber;
+    /**
+     * 创建时间
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public LocalDateTime publishTime;
+    public LocalDateTime createTime;
 
 }

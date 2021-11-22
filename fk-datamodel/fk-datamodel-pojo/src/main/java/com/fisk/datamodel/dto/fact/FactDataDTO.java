@@ -16,7 +16,7 @@ public class FactDataDTO {
     /**
      * 事实表英文名称
      */
-    public String factTableEnName;
+    public String factTabName;
     /**
      * 事实表下字段列表
      */

@@ -11,17 +11,13 @@ import java.time.LocalDateTime;
 public class FactDTO {
     public int id;
     /**
+     * 业务域id
+     */
+    public int businessId;
+    /**
      * 业务过程id
      */
     public int businessProcessId;
-    /**
-     * 应用id
-     */
-    //public int appId;
-    /**
-     * 来源表id
-     */
-    //public int tableSourceId;
     /**
      * 事实表名称
      */

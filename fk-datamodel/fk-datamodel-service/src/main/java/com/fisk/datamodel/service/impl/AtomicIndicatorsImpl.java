@@ -7,6 +7,7 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.DerivedIndicatorsEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
@@ -21,6 +22,8 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +55,6 @@ public class AtomicIndicatorsImpl
         //查询原子指标数据
         QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
         boolean repeat=false;
-        List<String> nameList=new ArrayList<>();
         for (AtomicIndicatorsDTO item: dto)
         {
             queryWrapper.lambda().eq(IndicatorsPO::getBusinessId,item.businessId)
@@ -64,13 +66,6 @@ public class AtomicIndicatorsImpl
                 repeat=true;
                 break;
             }
-            nameList.add(item.indicatorsName);
-        }
-        //判断输入是否重复
-        HashSet set = new HashSet<>(nameList);
-        if (set.size() != dto.size())
-        {
-            return ResultEnum.DARAMODEL_INPUT_REPEAT;
         }
         //判断是否重复
         if (repeat)
@@ -101,7 +96,33 @@ public class AtomicIndicatorsImpl
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        return AtomicIndicatorsMap.INSTANCES.poToDto(po);
+        AtomicIndicatorsDetailDTO data= AtomicIndicatorsMap.INSTANCES.poToDto(po);
+        //判断是否为公式指标
+        if (data.derivedIndicatorsType==DerivedIndicatorsEnum.BASED_FORMULA.getValue())
+        {
+            boolean exit=false;
+            String formula=data.indicatorsFormula;
+            String regex = "\\[(.*?)]";
+            //截取中括号
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(formula);
+            //循环获取中括号中的值
+            while (matcher.find()) {
+                System.out.println(matcher.group(1));
+                String derivedId=matcher.group(1);
+                //根据中括号的id获取指标名称
+                IndicatorsPO selectByName=mapper.selectById(Integer.parseInt(derivedId));
+                if (selectByName==null)
+                {
+                    exit=true;
+                    break;
+                }
+                //替换中括号中的值
+                formula=formula.replace(derivedId,String.valueOf(selectByName.indicatorsName));
+            }
+            data.indicatorsFormula=formula;
+        }
+        return data;
     }
 
     @Override
@@ -128,6 +149,39 @@ public class AtomicIndicatorsImpl
         po.atomicId=dto.atomicId;
         po.businessLimitedId=dto.businessLimitedId;
         po.timePeriod=dto.timePeriod;
+        po.derivedIndicatorsType=dto.derivedIndicatorsType;
+        //判断是否为公式指标
+        if (dto.derivedIndicatorsType== DerivedIndicatorsEnum.BASED_FORMULA.getValue())
+        {
+            boolean exit=false;
+            String formula=dto.indicatorsFormula;
+            String regex = "\\[(.*?)]";
+            //截取中括号
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(formula);
+            //循环获取中括号中的值
+            while (matcher.find()) {
+                System.out.println(matcher.group(1));
+                String name=matcher.group(1);
+                //根据中括号的名称与业务域获取指标id
+                QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper = new QueryWrapper<>();
+                indicatorsPOQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,po.businessId)
+                        .eq(IndicatorsPO::getIndicatorsName,name);
+                IndicatorsPO selectById=mapper.selectOne(indicatorsPOQueryWrapper);
+                if (selectById==null)
+                {
+                    exit=true;
+                    break;
+                }
+                //替换中括号中的值
+                formula=formula.replace(name,String.valueOf(selectById.id));
+            }
+            if (exit)
+            {
+                return  ResultEnum.PARAMTER_ERROR;
+            }
+            po.indicatorsFormula=formula;
+        }
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -138,12 +192,14 @@ public class AtomicIndicatorsImpl
     }
 
     @Override
-    public List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int factId)
+    public List<AtomicIndicatorDropListDTO> atomicIndicatorDropList(int businessId)
     {
         QueryWrapper<IndicatorsPO> queryWrapper=new QueryWrapper<>();
-        if (factId !=0)
+        if (businessId !=0)
         {
-            queryWrapper.lambda().eq(IndicatorsPO::getFactId,factId);
+            queryWrapper.orderByDesc("create_time").lambda()
+                    .eq(IndicatorsPO::getIndicatorsType,IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue())
+                    .eq(IndicatorsPO::getBusinessId,businessId);
         }
         return AtomicIndicatorsMap.INSTANCES.poToDtoList(mapper.selectList(queryWrapper));
     }

@@ -14,13 +14,11 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.fact.FactDataDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
-import com.fisk.datamodel.map.AtomicIndicatorsMap;
-import com.fisk.datamodel.map.BusinessProcessMap;
-import com.fisk.datamodel.map.FactAttributeMap;
-import com.fisk.datamodel.map.FactMap;
+import com.fisk.datamodel.map.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IBusinessProcess;
 import com.fisk.task.client.PublishTaskClient;
@@ -61,6 +59,10 @@ public class BusinessProcessImpl
     FactAttributeMapper factAttributeMapper;
     @Resource
     IndicatorsMapper indicatorsMapper;
+    @Resource
+    DimensionMapper dimensionMapper;
+    @Resource
+    DimensionAttributeMapper dimensionAttributeMapper;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -78,13 +80,14 @@ public class BusinessProcessImpl
     public ResultEnum addBusinessProcess(BusinessProcessDTO dto)
     {
         QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessProcessPO::getBusinessProcessCnName,dto.businessProcessCnName);
+        queryWrapper.lambda()
+                .eq(BusinessProcessPO::getBusinessId,dto.businessId)
+                .eq(BusinessProcessPO::getBusinessProcessCnName,dto.businessProcessEnName);
         BusinessProcessPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
         {
             return ResultEnum.DATA_EXISTS;
         }
-        dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
         BusinessProcessPO model=BusinessProcessMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -104,7 +107,9 @@ public class BusinessProcessImpl
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessProcessPO::getBusinessProcessCnName,dto.businessProcessCnName);
+        queryWrapper.lambda()
+                .eq(BusinessProcessPO::getBusinessId,dto.businessId)
+                .eq(BusinessProcessPO::getBusinessProcessCnName,dto.businessProcessEnName);
         BusinessProcessPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=dto.id)
         {
@@ -287,6 +292,17 @@ public class BusinessProcessImpl
                 if (attributePOS!=null && attributePOS.size()>0)
                 {
                     fact.attributeList=FactAttributeMap.INSTANCES.poListToDtoList(attributePOS);
+                    //循环获取关联维度表相关数据
+                    for (FactAttributeDataDTO attributeItem:fact.attributeList)
+                    {
+                        if (attributeItem.associateDimensionFieldId !=0)
+                        {
+                            DimensionPO dimensionPO=dimensionMapper.selectById(attributeItem.associateDimensionId);
+                            attributeItem.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                            DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
+                            attributeItem.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        }
+                    }
                     Collections.reverse(fact.attributeList);
                 }
                 List<IndicatorsPO> indicatorsPOS=indicatorsPOList.stream()

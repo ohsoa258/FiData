@@ -9,4 +9,5 @@ import lombok.Data;
 public class FactAttributeDropDTO {
     public long id;
     public String factFieldEnName;
+    public String factFieldType;
 }

@@ -8,6 +8,7 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
@@ -165,6 +166,17 @@ public class DimensionFolderImpl
                         .filter(e->e.getDimensionId()==newId)
                         .sorted(Comparator.comparing(DimensionAttributePO::getCreateTime))
                         .collect(Collectors.toList()));
+                //获取维度关联维度表名称和字段名称
+                for (DimensionAttributeDataDTO attributeItem:item.attributeList)
+                {
+                    if (attributeItem.associateDimensionId !=0)
+                    {
+                        DimensionPO dimensionPO=dimensionMapper.selectById(attributeItem.associateDimensionId);
+                        attributeItem.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
+                        attributeItem.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                    }
+                }
                 //降序排列
                 Collections.reverse(item.attributeList);
             }

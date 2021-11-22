@@ -88,7 +88,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             return ResultEnum.DATA_EXISTS;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
-        po.setIsPublish(PublicStatusEnum.UN_PUBLIC.getValue());
         boolean save = this.save(po);
 
         return save ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

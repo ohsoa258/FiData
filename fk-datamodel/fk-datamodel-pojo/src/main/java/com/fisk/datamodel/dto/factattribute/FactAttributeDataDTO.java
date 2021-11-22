@@ -21,5 +21,21 @@ public class FactAttributeDataDTO {
      * 事实字段描述
      */
     public String factFieldDes;
+    /**
+     * 关联维度表id
+     */
+    public int associateDimensionId;
+    /**
+     * 关联维度表名称
+     */
+    public String associateDimensionName;
+    /**
+     * 关联维度表字段id
+     */
+    public int associateDimensionFieldId;
+    /**
+     * 关联维度表字段名称
+     */
+    public String associateDimensionFieldName;
 
 }

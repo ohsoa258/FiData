@@ -13,17 +13,13 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class FactPO extends BasePO {
     /**
+     * 业务域id
+     */
+    public int businessId;
+    /**
      * 业务过程id
      */
     public int businessProcessId;
-    /**
-     * 应用id(删)
-     */
-    public int appId;
-    /**
-     * 来源表id(删)
-     */
-    public int tableSourceId;
     /**
      * 事实表名称
      */
@@ -44,5 +40,13 @@ public class FactPO extends BasePO {
      * 事实表脚本
      */
     public String sqlScript;
+    /**
+     * DW发布状态0:未发布、1：发布成功、2：发布失败
+     */
+    public int isPublish;
+    /**
+     * Doris发布状态0:未发布、1：发布成功、2：发布失败
+     */
+    public int dorisPublish;
 
 }

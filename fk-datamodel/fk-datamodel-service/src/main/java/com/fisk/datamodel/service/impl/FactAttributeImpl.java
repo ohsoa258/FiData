@@ -154,7 +154,7 @@ public class FactAttributeImpl
         data.appId=businessProcessPO.businessId;
 
         //获取注册表相关数据
-        ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
+        /*ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
         {
             data.appbAbreviation=appAbbreviation.data.appAbbreviation;
@@ -180,7 +180,7 @@ public class FactAttributeImpl
             dto.fieldId=String.valueOf(item.id);
             dtoList.add(dto);
         }
-        data.dto=dtoList;
+        data.dto=dtoList;*/
         return data;
     }
 
@@ -200,6 +200,7 @@ public class FactAttributeImpl
             FactAttributeDropDTO dto = new FactAttributeDropDTO();
             dto.id = item.id;
             dto.factFieldEnName = item.factFieldEnName;
+            dto.factFieldType=item.factFieldType;
             data.add(dto);
         }
         return data;
@@ -213,7 +214,7 @@ public class FactAttributeImpl
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
         }
-        ResultEntity<Object> data=client.getTableFieldId(factPO.tableSourceId);
+        /*ResultEntity<Object> data=client.getTableFieldId(factPO.tableSourceId);
         if (ResultEnum.SUCCESS.equals(data.code))
         {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, "获取数据接入表数据失败");
@@ -223,14 +224,15 @@ public class FactAttributeImpl
         if (list ==null || list.size()==0)
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据接入表数据为空");
-        }
+        }*/
         //获取维度表存在字段来源id
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+       /* QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("table_source_field_id").lambda()
                 .eq(FactAttributePO::getFactId,id);
         List<Integer> ids=(List)mapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         //过滤已添加来源表id
-        return list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());
+        return list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());*/
+        return null;
     }
 
     @Override
