@@ -36,16 +36,17 @@ public class NifiPortImpl implements INifiPort {
         List<NifiCustomWorkflowDetailPO> outports = new ArrayList<>();
 
         switch (dto.flag) {
+            // pid == 0
             case 1:
-                String workflowId = nifiCustomWorkflowImpl.query().eq("id", dto.id).one().workflowId;
-                List<NifiCustomWorkflowDetailPO> list1 = nifiCustomWorkflowDetailImpl.query().eq("workflow_id", workflowId).eq("pid", 0).list();
-                inports = list1.stream().filter(item -> item.inport == null).collect(Collectors.toList());
-                outports = list1.stream().filter(item -> item.outport == null).collect(Collectors.toList());
+                List<NifiCustomWorkflowDetailPO> list1 = nifiCustomWorkflowDetailImpl.query().eq("workflow_id", dto.id).eq("pid", 0).list();
+                inports = list1.stream().filter(item -> item.inport == null || !item.inport.equals("")).collect(Collectors.toList());
+                outports = list1.stream().filter(item -> item.outport == null || !item.outport.equals("")).collect(Collectors.toList());
                 break;
+            // pid != 0
             case 2:
                 List<NifiCustomWorkflowDetailPO> list2 = nifiCustomWorkflowDetailImpl.query().eq("pid", dto.pid).list();
-                inports = list2.stream().filter(item -> item.inport == null).collect(Collectors.toList());
-                outports = list2.stream().filter(item -> item.outport == null).collect(Collectors.toList());
+                inports = list2.stream().filter(item -> item.inport == null || !item.inport.equals("")).collect(Collectors.toList());
+                outports = list2.stream().filter(item -> item.outport == null || !item.outport.equals("")).collect(Collectors.toList());
                 break;
             default:
                 break;

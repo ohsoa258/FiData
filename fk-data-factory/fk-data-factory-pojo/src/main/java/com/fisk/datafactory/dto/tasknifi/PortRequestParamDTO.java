@@ -13,11 +13,11 @@ public class PortRequestParamDTO {
      */
     public int flag;
     /**
-     *
+     *  workflow_id
      */
     public String id;
     /**
-     *
+     * pid
      */
     public long pid;
 }
