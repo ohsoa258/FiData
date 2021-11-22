@@ -31,6 +31,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -534,7 +535,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return baseMapper.getDataList();
     }
 
-    @Transactional(timeout = 3)
+    @SneakyThrows
     @Override
     public ResultEntity<Object> connectDb(DbConnectionDTO dto) {
         Connection conn = null;
@@ -542,7 +543,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             switch (dto.driveType) {
                 case "mysql":
                     Class.forName("com.mysql.jdbc.Driver");
-//                    Thread.sleep(5000);
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     return ResultEntityBuild.build(ResultEnum.SUCCESS);
 
@@ -557,14 +557,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_WARN);
             }
         } catch (Exception e) {
-            try {
-                assert conn != null;
+            if (conn != null) {
                 conn.close();
-            } catch (SQLException ex) {
-                return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
             }
             return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
-        } finally {
+        }finally {
             try {
                 if (conn != null) {
                     conn.close();
