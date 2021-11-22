@@ -343,6 +343,23 @@ public class BuildNifiTaskListener {
      */
     private ProcessGroupEntity buildAppGroup(DataAccessConfigDTO config) {
         //判断是否需要新建组
+        BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+        int count=0;
+        BusinessResult<ProcessGroupEntity> res=null;
+        if(groupComponentId!=null){
+            dto.name = config.groupConfig.appName;
+            dto.details = config.groupConfig.appDetails;
+            dto.groupId=groupComponentId;
+            count = componentsBuild.getGroupCount(groupComponentId);
+            dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+            //创建组件
+             res = componentsBuild.buildProcessGroup(dto);
+            if (res.success) {
+                return res.data;
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+            }
+        }else{
         if (config.groupConfig.newApp) {
             BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
             dto.name = config.groupConfig.appName;
@@ -351,7 +368,7 @@ public class BuildNifiTaskListener {
             int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
             dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
             //创建组件
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+             res = componentsBuild.buildProcessGroup(dto);
             if (res.success) {
                 return res.data;
             } else {
@@ -360,13 +377,13 @@ public class BuildNifiTaskListener {
         } else {
             //说明组件已存在，查询组件并返回
             log.info("【应用id】" + config.groupConfig.componentId);
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.getProcessGroupById(config.groupConfig.componentId);
+             res = componentsBuild.getProcessGroupById(config.groupConfig.componentId);
             if (res.success) {
                 return res.data;
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
             }
-        }
+        }}
     }
 
     /**
@@ -559,7 +576,7 @@ public class BuildNifiTaskListener {
         List<ProcessorEntity> res = new ArrayList<>();
         SynchronousTypeEnum synchronousTypeEnum = dto.synchronousTypeEnum;
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
-        TableNifiSettingPO tableNifiSettingPO1 = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).one();
+        TableNifiSettingPO tableNifiSettingPO1 = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type",dto.type.getValue()).one();
         if (tableNifiSettingPO1 != null) {
             tableNifiSettingPO = tableNifiSettingPO1;
         }
@@ -568,8 +585,11 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.appId= Math.toIntExact(dto.appId);
         tableNifiSettingPO.type=dto.type.getValue();
         tableNifiSettingPO.tableName=config.targetDsConfig.targetTableName;
+        //调度组件
+        ProcessorEntity dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId);
         //读取增量字段组件
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
+        componentConnector(groupId, dispatchProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
         PositionDTO position = queryField.getComponent().getPosition();
 
         // TODO 创建input_port(组)   (后期入库)
@@ -705,6 +725,7 @@ public class BuildNifiTaskListener {
 //                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
+        tableNifiSettingPO.dispatchComponentId=dispatchProcessor.getId();
         tableNifiSettingPO.processorInputPortConnectId=componentInputPortConnectionId;
         tableNifiSettingPO.processorOutputPortConnectId=componentOutputPortConnectionId;
         tableNifiSettingPO.tableInputPortConnectId=taskInputPortConnectionId;
@@ -1159,6 +1180,29 @@ public class BuildNifiTaskListener {
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
+    /**
+     * 执行sql 查询增量字段组件
+     *
+     * @param config      数据接入配置
+     * @param groupId     组id
+     * @param cfgDbPoolId 增量配置库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity queryDispatchProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "queryDispatchProcessor";
+        querySqlDto.details = "queryDispatchProcessor";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName);
+        querySqlDto.dbConnectionId = cfgDbPoolId;
+        querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
+        querySqlDto.scheduleType = config.processorConfig.scheduleType;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
 
     /**
      * 验证是否执行成功

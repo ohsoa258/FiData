@@ -79,11 +79,11 @@ public class BuildAtlasTableAndColumnTaskListener
         ResultEntity<BuildPhysicalTableDTO> data = dc.getBuildPhysicalTableDTO(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
         BuildPhysicalTableDTO buildPhysicalTableDTO = data.data;
         String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
-        /*ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
+        ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
         log.info("queryRes:" + JSON.toJSONString(queryRes.data));
         log.info("queryRes:" + JSON.toJSONString(queryRes));
         AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
-        AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
+        /*AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
         awbd.appId=inpData.appId;
         awbd.tableName= ae.appAbbreviation+"_"+ae.tableName;
@@ -225,7 +225,7 @@ public class BuildAtlasTableAndColumnTaskListener
         //saveTableStructure(awbd);
 
         //incremental insert
-       /* SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
         if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
             //region 用户corn表达书计算数据下次同步时间
@@ -273,17 +273,20 @@ public class BuildAtlasTableAndColumnTaskListener
             ETLIncremental.incremental_objectivescore_start=null;
             ETLIncremental.incremental_objectivescore_end=null;
             incrementalMapper.insert(ETLIncremental);
-        }*/
+        }
         //endregion
 
-        //启动nifi
+        TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", inpData.appId).eq("table_access_id", inpData.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        if(one!=null){
+            tableNifiSettingPO=one;
+        }
         tableNifiSettingPO.appId=Integer.valueOf(inpData.appId);
         tableNifiSettingPO.tableName=buildPhysicalTableDTO.appAbbreviation+"_"+buildPhysicalTableDTO.tableName;
         tableNifiSettingPO.tableAccessId=Integer.valueOf(inpData.dbId);
         tableNifiSettingPO.selectSql=physicalSelect;
         tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
-        tableNifiSettingService.save(tableNifiSettingPO);
+        tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
         bfd.userId=inpData.userId;
@@ -305,7 +308,7 @@ public class BuildAtlasTableAndColumnTaskListener
         StringBuilder sqlFileds = new StringBuilder();
         sqlSelect.append("select ");
         sqlSelect.append((buildPhysicalTableDTO.driveType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+buildPhysicalTableDTO.appAbbreviation+buildPhysicalTableDTO.tableName+"_pk , ");
-        sqlSelect.append(" '${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fk_doris_increment_code ,");
+        sqlSelect.append(" '${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fi_bach_code ,");
         //判断字符串函数与占位符
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
         tableFieldsDTOS.forEach((l) -> {
@@ -315,7 +318,7 @@ public class BuildAtlasTableAndColumnTaskListener
         sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
         sqlFileds.append(")");
         sqlSelect.delete(sqlSelect.length()-1,sqlSelect.length());
-        sqlSelect.append(" from ("+buildPhysicalTableDTO.selectSql+")");
+        sqlSelect.append(" from ("+buildPhysicalTableDTO.selectSql+") xyx");
         String s = sqlSelect.toString();
         return s;
     }

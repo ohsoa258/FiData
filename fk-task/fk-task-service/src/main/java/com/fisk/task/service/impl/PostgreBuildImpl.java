@@ -1,5 +1,6 @@
 package com.fisk.task.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
@@ -58,6 +59,24 @@ public class PostgreBuildImpl implements IPostgreBuild {
             msg = e.getMessage();
         }
         res = BusinessResult.of(re, msg, data);
+        return res;
+    }
+
+    @Override
+    public BusinessResult postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum) {
+        boolean re = false;
+        String msg = null;
+        BusinessResult res = null;
+        JSONArray resultSet=null;
+        try {
+             resultSet = PostgreHelper.postgreQuery(executsql, businessTypeEnum);
+            re = true;
+        } catch (Exception e) {
+            //捕捉错误
+            log.error(e.getMessage());
+            msg = e.getMessage();
+        }
+        res = BusinessResult.of(re, msg, resultSet);
         return res;
     }
     @Override

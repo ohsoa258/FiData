@@ -4,6 +4,8 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 
+import java.sql.ResultSet;
+
 public interface IPostgreBuild {
 
      /**
@@ -20,6 +22,13 @@ public interface IPostgreBuild {
       * @return 返回执行sql查到的结果与sql执行结果
       */
      <T> BusinessResult postgreQuery(String executsql,BusinessTypeEnum businessTypeEnum,T data);
+
+     /**
+      * executsql   执行的sql语句
+      * businessType   执行的数据库
+      * @return 返回执行sql查到的结果与sql执行结果
+      */
+     public BusinessResult<ResultSet> postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum);
 
      /**
       * pgsql stg表数据同步到ods

@@ -1,5 +1,6 @@
 package com.fisk.task.utils;
 
+import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,6 +81,36 @@ public class PostgreHelper {
             PostgreHelper.closeResultSet(resultSet);
         }
         return data;
+    }
+
+    public static JSONArray postgreQuery(String executsql, BusinessTypeEnum businessTypeEnum) {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet resultSet = null;
+        JSONArray objects=null;
+        try {
+            // 1获得连接
+            conn = getConnection(businessTypeEnum==BusinessTypeEnum.DATAMODEL?pgsqlDatamodelUrl:pgsqlDatainputUrl);
+            // 2执行对象
+            stmt = conn.createStatement();
+            // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
+            resultSet = stmt.executeQuery(executsql);
+
+            objects = ResultSetHelper.resultSetToJsonArry(resultSet);
+
+
+        } catch (Exception e) {
+            //捕捉错误
+            log.error(e.getMessage());
+        } finally {
+            //关闭操作对象
+            PostgreHelper.closeStatement(stmt);
+            //关闭连接
+            PostgreHelper.closeConn(conn);
+            //关闭结果集
+            PostgreHelper.closeResultSet(resultSet);
+        }
+        return objects;
     }
 
     public static void postgreUpdate(String executsql, BusinessTypeEnum businessTypeEnum) {

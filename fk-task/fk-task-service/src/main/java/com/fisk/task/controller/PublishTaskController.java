@@ -79,7 +79,7 @@ public class PublishTaskController {
                 MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
                 ArDto);
          //pgsql
-                return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_PGSQL_TABLE_TASK.getName(),
+                return service.publishTask("数据湖表:"+ArDto.tableName+",结构处理成功",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
                 ArDto);
