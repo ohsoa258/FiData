@@ -1571,12 +1571,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ResultEntity<Object> result = new ResultEntity<>();
         if (dto.flag == 0) {
             result = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+            if (result.code == 0) {
+                po.publish = 1;
+            } else {
+                po.publish = 2;
+            }
         }
-        if (result.code == 0) {
-            po.publish = 1;
-        } else {
-            po.publish = 2;
-        }
+
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
