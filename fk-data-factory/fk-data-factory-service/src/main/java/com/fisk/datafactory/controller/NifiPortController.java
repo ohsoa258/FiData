@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.config.SwaggerConfig;
+import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.service.INifiPort;
 import io.swagger.annotations.Api;
@@ -25,9 +26,9 @@ public class NifiPortController {
 
     @PostMapping("/fliterData")
     @ApiOperation(value = "过滤当前节点inport及outport")
-    public ResultEntity<Object> getFilterData(@RequestBody PortRequestParamDTO dto) {
+    public ResultEntity<NifiPortsDTO> getFilterData(@RequestBody PortRequestParamDTO dto) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFilterData(dto));
+        return service.getFilterData(dto);
     }
 
 }

@@ -15,7 +15,7 @@ public class PortRequestParamDTO {
     /**
      *
      */
-    public long id;
+    public String id;
     /**
      *
      */

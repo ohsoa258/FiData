@@ -20,7 +20,7 @@ import org.springframework.context.ConfigurableApplicationContext;
         "com.fisk.common.exception",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.task.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.dataaccess.client","com.fisk.datamodel.client"})
+@EnableFeignClients(basePackages = {"com.fisk.dataaccess.client","com.fisk.datamodel.client","com.fisk.datafactory"})
 @EnableApolloConfig
 public class FkTaskApplication {
     public static void main(String[] args) {

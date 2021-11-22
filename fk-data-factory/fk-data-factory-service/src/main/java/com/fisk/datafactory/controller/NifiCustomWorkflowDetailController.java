@@ -6,12 +6,14 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @author Lock
@@ -22,6 +24,8 @@ import javax.annotation.Resource;
 public class NifiCustomWorkflowDetailController {
     @Resource
     INifiCustomWorkflowDetail service;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @ApiOperation("添加管道详情")
     @PostMapping("/add")
@@ -47,9 +51,14 @@ public class NifiCustomWorkflowDetailController {
 
         if (data.code == 0) {
             // TODO: 调用nifi生成流程
-            log.info("nifi: ");
-            System.out.println(data.data);
-        }
+            log.info("nifi: 管道开始创建");
+            Map<Map, Map> externalStructure = workListDTO.externalStructure;
+            Map<Map, Map> structure = workListDTO.structure;
+            workListDTO.externalStructure1=externalStructure.toString();
+            workListDTO.structure1=structure.toString();
+            publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
+            log.info("nifi: 管道创建成功");
+        }//
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }
