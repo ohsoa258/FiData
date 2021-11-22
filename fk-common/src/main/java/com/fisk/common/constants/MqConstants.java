@@ -37,6 +37,8 @@ public class MqConstants {
 
         public static final String BUILD_OLAP_CREATEMODEL_FLOW="task.build.olap.createmodel.flow";
 
+        public static final String BUILD_CUSTOMWORK_FLOW="task.build.customwork.flow";
+
     }
 
     public static final class RouterConstants{
@@ -52,5 +54,6 @@ public class MqConstants {
         public static final String TASK_BUILD_DATAINPUT_PGSQL_STGTOODS_ROUTER = "task.build.datainput.pgsql.stgtoods.#";
         public static final String TASK_BUILD_DATAINPUT_DELETE_PGSQL_TABLE_ROUTER = "task.build.datainput.delete.pgsql.table.#";
         public static final String TASK_BUILD_OLAP_CREATEMODEL_ROUTER="task.build.olap.createmodel.#";
+        public static final String TASK_BUILD_CUSTOMWORK_ROUTER="task.build.customwork.#";
     }
 }

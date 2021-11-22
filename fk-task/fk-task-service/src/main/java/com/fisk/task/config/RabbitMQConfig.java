@@ -117,6 +117,24 @@ public class RabbitMQConfig {
     public Queue buildOlapCreatemodelQueue() {
         return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW).build();
     }
+
+    /*
+    * 声明队列
+    * */
+    @Bean("buildCustomWorkFlowQueue")
+    public Queue buildNifiCustomWorkFlowQueue() {
+        return QueueBuilder.durable(MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW).build();
+    }
+
+    /*
+    * 绑定队列和交换机
+    * */
+    @Bean
+    public Binding buildNifiCustomWorkFlowExchange(@Qualifier("buildCustomWorkFlowQueue") Queue queue,
+                                                @Qualifier("itemTopicExchange") Exchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange).with(MqConstants.RouterConstants.TASK_BUILD_CUSTOMWORK_ROUTER).noargs();
+    }
+
     /**
      * 绑定队列和交换机
      */

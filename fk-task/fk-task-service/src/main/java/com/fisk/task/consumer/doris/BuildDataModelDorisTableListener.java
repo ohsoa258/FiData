@@ -142,7 +142,7 @@ public class BuildDataModelDorisTableListener
 
     }
 
-    private void createNiFiFlow(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
+    public void createNiFiFlow(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
         BuildDbControllerServiceDTO buildDbControllerServiceDTO = new BuildDbControllerServiceDTO();
         //数据连接池
         ControllerServiceEntity  data=new ControllerServiceEntity();
@@ -174,13 +174,33 @@ public class BuildDataModelDorisTableListener
             data.setId(appNifiSettingPO.targetDbPoolComponentId);
 
         }else{
+            //创建应用组
+
+            BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+            dto.name = modelMetaDataDTO.tableName;
+            dto.details = modelMetaDataDTO.tableName;
+            //根据组个数，定义坐标
+            int count=0;
+            if(modelMetaDataDTO.groupComponentId!=null){
+                 count = componentsBuild.getGroupCount(modelMetaDataDTO.groupComponentId);
+            }else{
+                 count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+            }
+
+            dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+            BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+            if (res.success) {
+                data1 = res.data;
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+            }
             buildDbControllerServiceDTO.driverLocation= NifiConstants.DriveConstants.POSTGRESQL_DRIVE_PATH;
             buildDbControllerServiceDTO.conUrl=pgsqlDatamodelUrl;
             buildDbControllerServiceDTO.driverName= DriverTypeEnum.POSTGRESQL.getName();
             buildDbControllerServiceDTO.pwd=pgsqlDatamodelPassword;
             buildDbControllerServiceDTO.name=businessAreaName;
             buildDbControllerServiceDTO.enabled = true;
-            buildDbControllerServiceDTO.groupId = NifiConstants.ApiConstants.ROOT_NODE;
+            buildDbControllerServiceDTO.groupId = data1.getId();
             buildDbControllerServiceDTO.details=businessAreaName;
             buildDbControllerServiceDTO.user=pgsqlDatamodelUsername;
             BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
@@ -189,20 +209,7 @@ public class BuildDataModelDorisTableListener
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
             }
-            //创建应用组
 
-            BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-            dto.name = modelMetaDataDTO.tableName;
-            dto.details = modelMetaDataDTO.tableName;
-            //根据组个数，定义坐标
-            int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
-            dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
-            if (res.success) {
-                data1 = res.data;
-            } else {
-                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
-            }
 
             // TODO: 创建input组件功能(第一层应用)
             ProcessGroupEntity processGroupData1 = null;
@@ -281,7 +288,7 @@ public class BuildDataModelDorisTableListener
             appNifiSettingPO=appNifiSettingPO1;
         }
         appNifiSettingPO.targetDbPoolComponentId=controllerServiceEntity.getId();
-        appNifiSettingPO.appId=modelMetaDataDTO.appId;
+        appNifiSettingPO.appId= String.valueOf(modelMetaDataDTO.appId);
         appNifiSettingPO.type=dataClassifyEnum.getValue();
         //做判断,是否新增
         appNifiSettingPO.appComponentId=processGroupEntity1.getId();

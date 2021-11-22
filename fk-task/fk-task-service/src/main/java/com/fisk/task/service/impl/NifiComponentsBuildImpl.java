@@ -1376,9 +1376,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         source.setType(buildConnectDTO.source.typeEnum);
 
         // 第二层output_port连线没有这个参数
+        List<String> selectedRelationships = new ArrayList<>();
         if (buildConnectDTO.level == 3) {
-            List<String> selectedRelationships = new ArrayList<>();
+
             selectedRelationships.add("success");
+            component.setSelectedRelationships(selectedRelationships);
+        }else if(buildConnectDTO.level == 4){
+            selectedRelationships.add("wait");
             component.setSelectedRelationships(selectedRelationships);
         }
 

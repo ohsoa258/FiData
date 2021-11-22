@@ -47,7 +47,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * OLAP创建模型
      */
-    BUILD_CREATEMODEL_TASK(9,"创建模型");
+    BUILD_CREATEMODEL_TASK(9,"创建模型"),
+    /*
+    * nifi管道
+    * */
+    BUILD_CUSTOMWORK_TASK(10,"创建nifi管道");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

@@ -139,8 +139,8 @@ public class BuildNifiTaskListener {
         ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
 
         //2. 创建应用组
-        ProcessGroupEntity groupEntity = buildAppGroup(configDTO);
-        appNifiSettingPO.appId = Math.toIntExact(dto.appId);
+        ProcessGroupEntity groupEntity = buildAppGroup(configDTO,dto.groupComponentId);
+        appNifiSettingPO.appId = String.valueOf(dto.appId);
         appNifiSettingPO.appComponentId = groupEntity.getId();
         appNifiSettingPO.type=dto.dataClassifyEnum.getValue();
         appGroupId = groupEntity.getId();
@@ -168,7 +168,10 @@ public class BuildNifiTaskListener {
         ids.add(dto.id);
         dataModelTableVO.ids=ids;
         dataModelVO.indicatorIdList=dataModelTableVO;
-        componentsBuild.deleteNifiFlow(dataModelVO);
+        TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type",dto.type.getValue()).one();
+        if (tableNifiSettingPO.tableComponentId!=null) {
+            componentsBuild.deleteNifiFlow(dataModelVO);
+        }
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
         // 创建input_port(任务)   (后期入库)
@@ -341,7 +344,7 @@ public class BuildNifiTaskListener {
      * @param config 数据接入配置
      * @return 组信息
      */
-    private ProcessGroupEntity buildAppGroup(DataAccessConfigDTO config) {
+    private ProcessGroupEntity buildAppGroup(DataAccessConfigDTO config,String groupComponentId) {
         //判断是否需要新建组
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
         int count=0;
@@ -361,11 +364,15 @@ public class BuildNifiTaskListener {
             }
         }else{
         if (config.groupConfig.newApp) {
-            BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+
             dto.name = config.groupConfig.appName;
             dto.details = config.groupConfig.appDetails;
             //根据组个数，定义坐标
-            int count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+            if(groupComponentId!=null){
+                 count = componentsBuild.getGroupCount(groupComponentId);
+            }else{
+                 count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+            }
             dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
             //创建组件
              res = componentsBuild.buildProcessGroup(dto);
@@ -1379,7 +1386,7 @@ public class BuildNifiTaskListener {
      * @param typeEnum typeEnum
      * @return connection id
      */
-    private String buildPortConnection(String fatherComponentId, String destinationGroupId, String destinationId, ConnectableDTO.TypeEnum destinationTypeEnum,
+    public String buildPortConnection(String fatherComponentId, String destinationGroupId, String destinationId, ConnectableDTO.TypeEnum destinationTypeEnum,
                                        String sourceGroupId, String sourceId, ConnectableDTO.TypeEnum sourceTypeEnum, int level, PortComponentEnum typeEnum) {
         BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
         NifiConnectDTO destination = new NifiConnectDTO();

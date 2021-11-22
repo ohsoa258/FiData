@@ -74,7 +74,6 @@ public class BuildModelTaskListener {
         dataModelTableVO.type=OlapTableEnum.KPI;
         dataModelTableVO.ids=olapPOS1.stream().map(e -> e.getId()).collect(Collectors.toList());
         dataModelVO.indicatorIdList=dataModelTableVO;
-        iNifiComponentsBuild.deleteNifiFlow(dataModelVO);
         if (data.code == 0) {
             List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
             for (OlapPO olapPO:olapPOS) {

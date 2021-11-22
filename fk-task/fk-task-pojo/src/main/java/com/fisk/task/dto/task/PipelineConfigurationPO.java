@@ -7,8 +7,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @TableName("tb_pipeline_configuration")
-public class PipelineConfigurationPO {
-    public Integer app_id;
+public class PipelineConfigurationPO extends BasePO {
+    public String app_id;
     public String appComponentId;
     public String inFunnelId;
     public String outFunnelId;

@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_app_nifi_setting")
 public class AppNifiSettingPO extends BasePO {
-  public Integer appPid;
-  public Integer appId;
+  public String appPid;
+  public String appId;
   public String appComponentId;
   public String targetDbPoolComponentId;
   public String sourceDbPoolComponentId;
