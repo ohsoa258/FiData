@@ -5,11 +5,7 @@ import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * <p>
@@ -124,25 +120,29 @@ public class SqlServerPlusUtils {
         return list;
     }
 
-    public List<Map<String, String>> getTablesPlus(Connection conn, String dbName) {
-        ArrayList<Map<String, String>> tableList = null;
-        Map<String, String> tableMap = new HashMap<>();
+    public Map<String, String> getTablesPlus(Connection conn, String dbName) {
+//        ArrayList<Map<String, String>> tableList = null;
+        Map<String, String> tableMap = new LinkedHashMap<>();
         try {
             Statement stmt = conn.createStatement();
 
-            ResultSet resultSet = stmt.executeQuery("select name, schema_name(schema_id) from sys.tables");
-            tableList = new ArrayList<>();
+            ResultSet resultSet = stmt.executeQuery("select *,RANK() over(order by tabl.field) from \n" +
+                    "(\n" +
+                    "select name, schema_name(schema_id) as field from sys.tables\n" +
+                    ") as tabl");
+//            tableList = new ArrayList<>();
             while (resultSet.next()) {
+                // TABLE_NAME
                 String name = resultSet.getString("name");
-                String field2 = resultSet.getString("");
-                tableMap.put(field2, name);
-                tableList.add(tableMap);
+                // 架构名
+                String field2 = resultSet.getString("field");
+                tableMap.put(name, field2);
             }
         } catch (SQLException e) {
-            log.error("【getTables】获取表名报错, ex", e);
+            log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
             return null;
         }
-        return tableList;
+        return tableMap;
     }
 
     public List<TablePyhNameDTO> getTableNameAndColumnsPlus(String url, String user, String password, String dbName) {
@@ -158,24 +158,23 @@ public class SqlServerPlusUtils {
             list = new ArrayList<>();
 
             // 获取指定数据库所有表
-            List<Map<String, String>> mapList = this.getTablesPlus(conn, dbName);
+            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
 
             List<TablePyhNameDTO> finalList = list;
-            mapList.stream().map(e -> {
-                e.keySet().forEach(s -> {
-                    String tableName = e.get(s);
-                    List<TableStructureDTO> columnsName = getColumnsName(conn, tableName);
-                    TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                    tablePyhNameDTO.setTableName(s + "." + tableName);
-                    tablePyhNameDTO.setFields(columnsName);
-                    finalList.add(tablePyhNameDTO);
-                });
-                return null;
-            }).collect(Collectors.toList());
 
+            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
+                tablePyhNameDTO.setFields(columnsName);
+                finalList.add(tablePyhNameDTO);
+            }
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
-            log.error("【getTableNameAndColumns】获取表及表字段报错, ex", e);
+            log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
             return null;
         }
         return list;
