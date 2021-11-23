@@ -10,6 +10,5 @@ import java.util.List;
 @Data
 public class DimensionFolderPublishQueryDTO {
     public int businessAreaId;
-    public List<Integer> dimensionFolderIds;
-    public int dimensionId;
+    public List<Integer> dimensionIds;
 }

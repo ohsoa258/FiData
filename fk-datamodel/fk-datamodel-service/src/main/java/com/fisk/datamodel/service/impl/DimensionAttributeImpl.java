@@ -85,7 +85,9 @@ public class DimensionAttributeImpl
         if (isPublish)
         {
             DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
-            queryDTO.dimensionId=dimensionId;
+            List<Integer> dimensionIds=new ArrayList<>();
+            dimensionIds.add(dimensionId);
+            queryDTO.dimensionIds=dimensionIds;
             DimensionPO dimensionPO=mapper.selectById(dimensionId);
             queryDTO.businessAreaId=dimensionPO==null?0:dimensionPO.businessId;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);

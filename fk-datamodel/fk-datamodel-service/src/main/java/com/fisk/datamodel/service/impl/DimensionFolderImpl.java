@@ -196,12 +196,7 @@ public class DimensionFolderImpl
             }
             //获取维度文件夹下所有维度
             QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-            if (dto.dimensionId ==0)
-            {
-                queryWrapper.in("dimension_folder_id",dto.dimensionFolderIds);
-            }else {
-                queryWrapper.lambda().eq(DimensionPO::getId,dto.dimensionId);
-            }
+            queryWrapper.in("id",dto.dimensionIds);
             List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper);
             if (dimensionPOList==null || dimensionPOList.size()==0)
             {
