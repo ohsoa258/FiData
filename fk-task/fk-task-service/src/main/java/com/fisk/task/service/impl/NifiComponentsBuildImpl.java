@@ -1583,7 +1583,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessorEntity> createNotifyProcessor(BuildNotifyProcessorDTO data) {
         //流程分支，是否自动结束
         List<String> autoRes = new ArrayList<>();
-        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
 
         Map<String, String> map = new HashMap<>(3);
         map.put("distributed-cache-service", data.distributedCacheService);
@@ -1616,7 +1616,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessorEntity> createWaitProcessor(BuildWaitProcessorDTO data) {
         //流程分支，是否自动结束
         List<String> autoRes = new ArrayList<>();
-        autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoRes.add(AutoEndBranchTypeEnum.EXPIRED.getName());
 
         Map<String, String> map = new HashMap<>(3);
         map.put("distributed-cache-service", data.distributedCacheService);

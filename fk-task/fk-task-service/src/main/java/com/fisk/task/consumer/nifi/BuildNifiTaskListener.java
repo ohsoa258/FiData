@@ -732,7 +732,6 @@ public class BuildNifiTaskListener {
 //                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                1, PortComponentEnum.APP_OUTPUT_PORT_CONNECTION);
 
-        tableNifiSettingPO.dispatchComponentId=dispatchProcessor.getId();
         tableNifiSettingPO.processorInputPortConnectId=componentInputPortConnectionId;
         tableNifiSettingPO.processorOutputPortConnectId=componentOutputPortConnectionId;
         tableNifiSettingPO.tableInputPortConnectId=taskInputPortConnectionId;

@@ -10,31 +10,31 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 调度任务
      */
-    SCHEDULE_TASK(1,"schedule_task"),
+    SCHEDULE_TASK(1,"调度任务"),
     /**
      * 任务组
      */
-    TASKGROUP(2,"taskgroup"),
+    TASKGROUP(2,"任务组"),
     /**
      * 数据湖表任务
      */
-    DATALAKE_TASK(3,"datalake_task"),
+    DATALAKE_TASK(3,"数据湖表任务"),
     /**
      * 数仓维度表任务组
      */
-    DW_DIMENSION_TASK(4,"dw_dimension_task"),
+    DW_DIMENSION_TASK(4,"数仓维度表任务"),
     /**
      * 数仓事实表任务组
      */
-    DW_FACT_TASK(5,"dw_fact_task"),
+    DW_FACT_TASK(5,"数仓事实表任务"),
     /**
      * 分析模型维度表任务组
      */
-    OLAP_DIMENSION_TASK(6,"olap_dimension_task"),
+    OLAP_DIMENSION_TASK(6,"分析模型维度表任务"),
     /**
      * 分析模型事实表任务组
      */
-    OLAP_FACT_TASK(7,"olap_fact_task");
+    OLAP_FACT_TASK(7,"分析模型事实表任务");
 
     ChannelDataEnum(int value, String name) {
         this.name = name;

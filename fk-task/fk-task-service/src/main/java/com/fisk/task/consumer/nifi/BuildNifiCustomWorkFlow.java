@@ -73,9 +73,7 @@ public class BuildNifiCustomWorkFlow {
     @Resource
     private DataFactoryClient dataFactoryClient;
 
-    /*
-     * TODO 找飞鸿,list,假如是层级,把appid装进去
-     * */
+
     @RabbitHandler
     @MQConsumerLog
     public void msg(String data, Channel channel, Message message) {
@@ -88,8 +86,8 @@ public class BuildNifiCustomWorkFlow {
         //2.建立流程--根据类别建立对应的流程
         createCustomWorkNifiFlow(dto);
         //先外部后里面
-        createNotifyProcessor(dto.externalStructure);
-        createNotifyProcessor(dto.structure);
+        createNotifyProcessor(dto.externalStructure,1);
+        createNotifyProcessor(dto.structure,2);
         //4.连线--根据流程关系连线
         createConnectingLine(dto);
 
@@ -141,6 +139,7 @@ public class BuildNifiCustomWorkFlow {
         appNifiSettingPO.type = DataClassifyEnum.CUSTOMWORKSTRUCTURE.getValue();
         appNifiSettingPO.appComponentId = res.data.getId();
         appNifiSettingService.save(appNifiSettingPO);
+        createGroupPipeline(appNifiSettingPO,nifiCustomWorkListDTO.pipelineName);
         //外部组
         Map<Map, Map> externalStructure = nifiCustomWorkListDTO.externalStructure;
         Iterator<Map.Entry<Map, Map>> externalStructureMap = externalStructure.entrySet().iterator();
@@ -259,6 +258,28 @@ public class BuildNifiCustomWorkFlow {
                 pipelineConfiguration.save(pipelineConfigurationPO);
             }
         }
+    }
+
+    private void createGroupPipeline(AppNifiSettingPO appNifiSettingPO,String groupName){
+        BuildPortDTO buildPortDTO = new BuildPortDTO();
+        buildPortDTO.componentX = 500.0;
+        buildPortDTO.componentY = 500.0;
+        buildPortDTO.componentId = appNifiSettingPO.appComponentId;
+        buildPortDTO.portName = groupName;
+        PortEntity inputPort = componentsBuild.buildInputPort(buildPortDTO);
+        PortEntity outputPort = componentsBuild.buildOutputPort(buildPortDTO);
+        FunnelDTO funnelDTO = new FunnelDTO();
+        funnelDTO.groupId = buildPortDTO.componentId;
+        BusinessResult<FunnelEntity> funnel1 = componentsBuild.createFunnel(funnelDTO);
+        BusinessResult<FunnelEntity> funnel2 = componentsBuild.createFunnel(funnelDTO);
+        PipelineConfigurationPO pipelineConfigurationPO = new PipelineConfigurationPO();
+        pipelineConfigurationPO.app_id = appNifiSettingPO.appId;
+        pipelineConfigurationPO.appComponentId = appNifiSettingPO.appComponentId;
+        pipelineConfigurationPO.outputPortId = outputPort.getId();
+        pipelineConfigurationPO.inputPortId = inputPort.getId();
+        pipelineConfigurationPO.inFunnelId = funnel1.data.getId();
+        pipelineConfigurationPO.outFunnelId = funnel2.data.getId();
+        pipelineConfiguration.save(pipelineConfigurationPO);
     }
 
     private List<AppNifiSettingDTO> createCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO) {
@@ -381,220 +402,185 @@ public class BuildNifiCustomWorkFlow {
         return appNifiSettingDTOS;
     }
 
-    private String createNotifyProcessor1(NifiCustomWorkListDTO nifiCustomWorkListDTO) {
-        List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkListDTO.nifiCustomWorkDTOS;
-        for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-            BuildNifiCustomWorkFlowDTO nifiNode = nifiCustomWorkDTO.NifiNode;
-            AppNifiSettingPO one = appNifiSettingService.query().eq("app_id", nifiNode.groupId).eq("type", DataClassifyEnum.CUSTOMWORKSTRUCTURE.getValue()).one();
-            //组id在这里
-            String groupId = one.appComponentId;
-            // 等他的接口,创建完流程之后,创建notify组件,两个控制器服务
-            String releaseSignalIdentifier = UUID.randomUUID().toString();
-            BusinessResult<ControllerServiceEntity> redisDistributedMapCacheClientService = null;
-            try {
-                //创建控制器服务
-                BuildRedisConnectionPoolServiceDTO buildRedisConnectionPoolServiceDTO = new BuildRedisConnectionPoolServiceDTO();
-                buildRedisConnectionPoolServiceDTO.groupId = groupId;
-                buildRedisConnectionPoolServiceDTO.connectionString = redisHost + ":6379";
-                buildRedisConnectionPoolServiceDTO.details = "RedisConnectionPoolService";
-                buildRedisConnectionPoolServiceDTO.name = "RedisConnectionPoolService";
-                buildRedisConnectionPoolServiceDTO.enabled = true;
-                BusinessResult<ControllerServiceEntity> redisConnectionPoolService = componentsBuild.createRedisConnectionPoolService(buildRedisConnectionPoolServiceDTO);
-                BuildRedisDistributedMapCacheClientServiceDTO buildRedisDistributedMapCacheClientServiceDTO = new BuildRedisDistributedMapCacheClientServiceDTO();
-                buildRedisDistributedMapCacheClientServiceDTO.groupId = groupId;
-                buildRedisDistributedMapCacheClientServiceDTO.enabled = true;
-                buildRedisDistributedMapCacheClientServiceDTO.name = "RedisDistributedMapCacheClientService";
-                buildRedisDistributedMapCacheClientServiceDTO.details = "RedisDistributedMapCacheClientService";
-                buildRedisDistributedMapCacheClientServiceDTO.redisConnectionPool = redisConnectionPoolService.data.getId();
-                redisDistributedMapCacheClientService = componentsBuild.createRedisDistributedMapCacheClientService(buildRedisDistributedMapCacheClientServiceDTO);
-                BuildNotifyProcessorDTO buildNotifyProcessorDTO = new BuildNotifyProcessorDTO();
-                buildNotifyProcessorDTO.groupId = groupId;
-                buildNotifyProcessorDTO.name = "NotifyProcessor";
-                buildNotifyProcessorDTO.details = "NotifyProcessor";
-                buildNotifyProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
-                buildNotifyProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
-                componentsBuild.createNotifyProcessor(buildNotifyProcessorDTO);
-                // 创建wait组件
-                //查询组里子组的个数
-                ProcessGroupsEntity processGroups = NifiHelper.getProcessGroupsApi().getProcessGroups(groupId);
-
-                BuildWaitProcessorDTO buildWaitProcessorDTO = new BuildWaitProcessorDTO();
-                buildWaitProcessorDTO.details = "buildWaitProcessorDTO";
-                buildWaitProcessorDTO.name = "buildWaitProcessorDTO";
-                buildWaitProcessorDTO.groupId = groupId;
-                buildWaitProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
-                buildWaitProcessorDTO.expirationDuration = "3 min";
-                buildWaitProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
-                buildWaitProcessorDTO.targetSignalCount = String.valueOf(processGroups.getProcessGroups().size());
-                componentsBuild.createWaitProcessor(buildWaitProcessorDTO);
-
-            } catch (ApiException e) {
-                log.error("组查询失败，【" + e.getResponseBody() + "】: ", e);
-            }
-        }
-        return null;
-    }
-
     /*
      *port,漏斗之间的连线
      */
-    private void createNotifyProcessor(Map<Map, Map> structure) {
-        List<NifiCustomWorkflowDetailDTO> inports = new ArrayList<>();
+    private void createNotifyProcessor(Map<Map, Map> structure,int flag) {
+        /*List<NifiCustomWorkflowDetailDTO> inports = new ArrayList<>();
         List<NifiCustomWorkflowDetailDTO> outports = new ArrayList<>();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         String groupId = null;
-        String appGroupId = null;
-        try {
+        String appGroupId = null;*/
             PortRequestParamDTO portRequestParamDTO = new PortRequestParamDTO();
             Iterator<Map.Entry<Map, Map>> entries = structure.entrySet().iterator();
             while (entries.hasNext()) {
-                //(父,子)  
+                //(父,子)
                 Map.Entry<Map, Map> entry = entries.next();
                 log.info("父对象 = " + entry.getKey() + ", 子对象 = " + entry.getValue());
                 Map<String, String> fnode = entry.getKey();
+                if(flag==1){
+                    Iterator<Map.Entry<String, String>> iterator = fnode.entrySet().iterator();
+                    Map.Entry<String, String> entry1 = iterator.next();
+                    portRequestParamDTO.id = entry1.getKey();
+                    portRequestParamDTO.flag = flag;
+                    createProcessorAndConnection(portRequestParamDTO,portRequestParamDTO.id);
+
+                }
                 Map<String, String> node = entry.getValue();
                 Iterator<Map.Entry<String, String>> entries1 = node.entrySet().iterator();
                 while (entries1.hasNext()) {
                     Map.Entry<String, String> entry1 = entries1.next();
                     log.info("父对象-id = " + entry1.getKey() + ", 父对象-名称 = " + entry1.getValue());
-                    portRequestParamDTO.flag = 0;
-                    portRequestParamDTO.id = entry1.getKey();
-                    ResultEntity<NifiPortsDTO> filterData = dataFactoryClient.getFilterData(portRequestParamDTO);
-                    NifiPortsDTO data = filterData.data;
-                    inports = data.inports;
-                    outports = data.outports;
-                    //1.inport与infunnel连接,我现在有父id,可以拿到漏斗和port组件
-                    PipelineConfigurationPO pipelineConfigurationPO = pipelineConfiguration.query().eq("app_id", entry1.getKey()).one();
-                    groupId = pipelineConfigurationPO.appComponentId;
-                    //创建控制器服务,一层一个,唯一身份标识也是一层一个
-                    String releaseSignalIdentifier = UUID.randomUUID().toString();
-                    BuildRedisConnectionPoolServiceDTO buildRedisConnectionPoolServiceDTO = new BuildRedisConnectionPoolServiceDTO();
-                    buildRedisConnectionPoolServiceDTO.groupId = groupId;
-                    buildRedisConnectionPoolServiceDTO.connectionString = redisHost + ":6379";
-                    buildRedisConnectionPoolServiceDTO.details = "RedisConnectionPoolService";
-                    buildRedisConnectionPoolServiceDTO.name = "RedisConnectionPoolService";
-                    buildRedisConnectionPoolServiceDTO.enabled = true;
-                    BusinessResult<ControllerServiceEntity> redisConnectionPoolService = componentsBuild.createRedisConnectionPoolService(buildRedisConnectionPoolServiceDTO);
-                    BuildRedisDistributedMapCacheClientServiceDTO buildRedisDistributedMapCacheClientServiceDTO = new BuildRedisDistributedMapCacheClientServiceDTO();
-                    buildRedisDistributedMapCacheClientServiceDTO.groupId = groupId;
-                    buildRedisDistributedMapCacheClientServiceDTO.enabled = true;
-                    buildRedisDistributedMapCacheClientServiceDTO.name = "RedisDistributedMapCacheClientService";
-                    buildRedisDistributedMapCacheClientServiceDTO.details = "RedisDistributedMapCacheClientService";
-                    buildRedisDistributedMapCacheClientServiceDTO.redisConnectionPool = redisConnectionPoolService.data.getId();
-                    BusinessResult<ControllerServiceEntity> redisDistributedMapCacheClientService = componentsBuild.createRedisDistributedMapCacheClientService(buildRedisDistributedMapCacheClientServiceDTO);
-                    //生成wait组件
-                    BuildWaitProcessorDTO buildWaitProcessorDTO = new BuildWaitProcessorDTO();
-                    buildWaitProcessorDTO.details = "buildWaitProcessorDTO";
-                    buildWaitProcessorDTO.name = "buildWaitProcessorDTO";
-                    buildWaitProcessorDTO.groupId = groupId;
-                    buildWaitProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
-                    buildWaitProcessorDTO.expirationDuration = "3 min";
-                    buildWaitProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
-                    buildWaitProcessorDTO.targetSignalCount = String.valueOf(outports.size());
-                    BusinessResult<ProcessorEntity> waitProcessor = componentsBuild.createWaitProcessor(buildWaitProcessorDTO);
-
-                    //2.infunnel与各个组连接
-                    for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : inports) {
-                        if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.TASKGROUP.getName())) {
-                            PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", nifiCustomWorkflowDetailDTO.id).one();
-                            // 连接api infunnel连接pipelineConfigurationPO1的inputport
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO1.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                    pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DATALAKE_TASK.getName())) {
-                            // 连接api infunnel连接tb_table_nifi_setting,物理表的table_inputport,table_id
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKPHYSICS.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                    pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_DIMENSION_TASK.getName())) {
-                            //TODO 连接api infunnel连接tb_table_nifi_setting,维度的table_inputport,table_id
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKDIMENSION.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                    pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_FACT_TASK.getName())) {
-                            //TODO 连接api infunnel连接tb_table_nifi_setting,事实的table_inputport,table_id
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                    pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
-                            //TODO 连接api infunnel连接tb_table_nifi_setting,指标的table_inputport,table_id
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKKPI.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                    pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        }
+                    portRequestParamDTO.flag = 2;
+                    portRequestParamDTO.pid=entry1.getKey();
+                    createProcessorAndConnection(portRequestParamDTO,portRequestParamDTO.pid);
                     }
-
-                    for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : outports) {
-                        //创建notify组件,一个nifiCustomWorkflowDetailDTO一个
-                        BuildNotifyProcessorDTO buildNotifyProcessorDTO = new BuildNotifyProcessorDTO();
-                        buildNotifyProcessorDTO.groupId = groupId;
-                        buildNotifyProcessorDTO.name = "NotifyProcessor";
-                        buildNotifyProcessorDTO.details = "NotifyProcessor";
-                        buildNotifyProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
-                        buildNotifyProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
-                        BusinessResult<ProcessorEntity> notifyProcessor = componentsBuild.createNotifyProcessor(buildNotifyProcessorDTO);
-
-                        if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.TASKGROUP.getName())) {
-                            PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", nifiCustomWorkflowDetailDTO.id).one();
-                            //TODO 找到子组,在其下,创建控制器服务与notify组件,连接pipelineConfigurationPO1的outputport和notify组件
-                            buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO1.appComponentId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                                    pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO1.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DATALAKE_TASK.getName())) {
-                            //TODO 连接tb_table_nifi_setting,物理表的table_inputport,table_id和api outfunnel
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKPHYSICS.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                                    appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_DIMENSION_TASK.getName())) {
-                            //TODO 连接tb_table_nifi_setting,维度的table_inputport,table_id和api outfunnel
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKDIMENSION.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                                    appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_FACT_TASK.getName())) {
-                            //TODO 连接tb_table_nifi_setting,事实的table_inputport,table_id和api outfunnel
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                                    appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
-                            //TODO 连接tb_table_nifi_setting,指标的table_inputport,table_id和api outfunnel
-                            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
-                            appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                            buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                                    appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                        }
-                        buildNifiTaskListener.buildPortConnection(groupId, pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.outFunnelId, ConnectableDTO.TypeEnum.FUNNEL,
-                                groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-
-                    }
-                    //TODO pipelineConfigurationPO.inport-pipelineConfigurationPO.infunnel      outfunnel-wait  wait-wait  wait-outport
-                    //人麻了
-                    buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL,
-                            groupId, pipelineConfigurationPO.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-                    buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.waitComponentId, ConnectableDTO.TypeEnum.PROCESSOR,
-                            groupId, pipelineConfigurationPO.outFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-                    buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.waitComponentId, ConnectableDTO.TypeEnum.PROCESSOR,
-                            groupId, pipelineConfigurationPO.waitComponentId, ConnectableDTO.TypeEnum.PROCESSOR, 4, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
-                    buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                            groupId, pipelineConfigurationPO.waitComponentId, ConnectableDTO.TypeEnum.PROCESSOR, 4, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
-                }
             }
+
+    }
+
+    public void createProcessorAndConnection(PortRequestParamDTO portRequestParamDTO,String pKey){
+        try {
+        String groupId="";
+        String appGroupId="";
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+
+        ResultEntity<NifiPortsDTO> filterData = dataFactoryClient.getFilterData(portRequestParamDTO);
+        NifiPortsDTO data = filterData.data;
+        List<NifiCustomWorkflowDetailDTO> inports = data.inports;
+        List<NifiCustomWorkflowDetailDTO> outports = data.outports;
+
+        //1.inport与infunnel连接,我现在有父id,可以拿到漏斗和port组件
+        PipelineConfigurationPO pipelineConfigurationPO = pipelineConfiguration.query().eq("app_id", pKey).one();
+        groupId = pipelineConfigurationPO.appComponentId;
+        //创建控制器服务,一层一个,唯一身份标识也是一层一个
+        String releaseSignalIdentifier = UUID.randomUUID().toString();
+        BuildRedisConnectionPoolServiceDTO buildRedisConnectionPoolServiceDTO = new BuildRedisConnectionPoolServiceDTO();
+        buildRedisConnectionPoolServiceDTO.groupId = groupId;
+        buildRedisConnectionPoolServiceDTO.connectionString = redisHost + ":6379";
+        buildRedisConnectionPoolServiceDTO.details = "RedisConnectionPoolService";
+        buildRedisConnectionPoolServiceDTO.name = "RedisConnectionPoolService";
+        buildRedisConnectionPoolServiceDTO.enabled = true;
+        BusinessResult<ControllerServiceEntity> redisConnectionPoolService = componentsBuild.createRedisConnectionPoolService(buildRedisConnectionPoolServiceDTO);
+        BuildRedisDistributedMapCacheClientServiceDTO buildRedisDistributedMapCacheClientServiceDTO = new BuildRedisDistributedMapCacheClientServiceDTO();
+        buildRedisDistributedMapCacheClientServiceDTO.groupId = groupId;
+        buildRedisDistributedMapCacheClientServiceDTO.enabled = true;
+        buildRedisDistributedMapCacheClientServiceDTO.name = "RedisDistributedMapCacheClientService";
+        buildRedisDistributedMapCacheClientServiceDTO.details = "RedisDistributedMapCacheClientService";
+        buildRedisDistributedMapCacheClientServiceDTO.redisConnectionPool = redisConnectionPoolService.data.getId();
+        BusinessResult<ControllerServiceEntity> redisDistributedMapCacheClientService = componentsBuild.createRedisDistributedMapCacheClientService(buildRedisDistributedMapCacheClientServiceDTO);
+        //生成wait组件
+        BuildWaitProcessorDTO buildWaitProcessorDTO = new BuildWaitProcessorDTO();
+        buildWaitProcessorDTO.details = "buildWaitProcessorDTO";
+        buildWaitProcessorDTO.name = "buildWaitProcessorDTO";
+        buildWaitProcessorDTO.groupId = groupId;
+        buildWaitProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
+        buildWaitProcessorDTO.expirationDuration = "3 min";
+        buildWaitProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
+        buildWaitProcessorDTO.targetSignalCount = String.valueOf(outports.size());
+        BusinessResult<ProcessorEntity> waitProcessor = componentsBuild.createWaitProcessor(buildWaitProcessorDTO);
+
+        //2.infunnel与各个组连接
+        for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : inports) {
+            if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.TASKGROUP.getName())) {
+                PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", nifiCustomWorkflowDetailDTO.id).one();
+                // 连接api infunnel连接pipelineConfigurationPO1的inputport
+                buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO1.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                        pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DATALAKE_TASK.getName())) {
+                // 连接api infunnel连接tb_table_nifi_setting,物理表的table_inputport,table_id
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKPHYSICS.getValue()).one();
+
+                    appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+
+                buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                        pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_DIMENSION_TASK.getName())) {
+                // 连接api infunnel连接tb_table_nifi_setting,维度的table_inputport,table_id
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKDIMENSION.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                        pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_FACT_TASK.getName())) {
+                // 连接api infunnel连接tb_table_nifi_setting,事实的table_inputport,table_id
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                        pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
+                // 连接api infunnel连接tb_table_nifi_setting,指标的table_inputport,table_id
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKKPI.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                        pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            }
+        }
+
+        for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : outports) {
+            //创建notify组件,一个nifiCustomWorkflowDetailDTO一个
+            BuildNotifyProcessorDTO buildNotifyProcessorDTO = new BuildNotifyProcessorDTO();
+            buildNotifyProcessorDTO.groupId = groupId;
+            buildNotifyProcessorDTO.name = "NotifyProcessor";
+            buildNotifyProcessorDTO.details = "NotifyProcessor";
+            buildNotifyProcessorDTO.distributedCacheService = redisDistributedMapCacheClientService.data.getId();
+            buildNotifyProcessorDTO.releaseSignalIdentifier = releaseSignalIdentifier;
+            BusinessResult<ProcessorEntity> notifyProcessor = componentsBuild.createNotifyProcessor(buildNotifyProcessorDTO);
+
+            if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.TASKGROUP.getName())) {
+                PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", nifiCustomWorkflowDetailDTO.id).one();
+                // 找到子组,在其下,创建控制器服务与notify组件,连接pipelineConfigurationPO1的outputport和notify组件
+                buildNifiTaskListener.buildPortConnection(groupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                        pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO1.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DATALAKE_TASK.getName())) {
+                // 连接tb_table_nifi_setting,物理表的table_inputport,table_id和api outfunnel
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKPHYSICS.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(groupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                        appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_DIMENSION_TASK.getName())) {
+                // 连接tb_table_nifi_setting,维度的table_inputport,table_id和api outfunnel
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKDIMENSION.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                        appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_FACT_TASK.getName())) {
+                // 连接tb_table_nifi_setting,事实的table_inputport,table_id和api outfunnel
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                        appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
+                // 连接tb_table_nifi_setting,指标的table_inputport,table_id和api outfunnel
+                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
+                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                        appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+            }
+            buildNifiTaskListener.buildPortConnection(groupId, pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.outFunnelId, ConnectableDTO.TypeEnum.FUNNEL,
+                    groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+
+        }
+        // pipelineConfigurationPO.inport-pipelineConfigurationPO.infunnel      outfunnel-wait  wait-wait  wait-outport
+        buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL,
+                groupId, pipelineConfigurationPO.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+        buildNifiTaskListener.buildPortConnection(groupId, groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                groupId, pipelineConfigurationPO.outFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+        buildNifiTaskListener.buildPortConnection(groupId, groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 4, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+        buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
         } catch (ApiException e) {
             e.printStackTrace();
         }
@@ -636,7 +622,7 @@ public class BuildNifiCustomWorkFlow {
                                 //端点
                                 PipelineConfigurationPO pipelineConfigurationPO = pipelineConfiguration.query().eq("app_id", buildNifiCustomWorkFlowDTO.appId).eq("del_flag", 1).one();
                                 String inputPortId = pipelineConfigurationPO.inputPortId;
-                                //TODO 调用连接api
+                                // 调用连接api
                                 buildNifiTaskListener.buildPortConnection(parentGroupId, pipelineConfigurationPO.appComponentId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         parentGroupId, componentId, ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
@@ -648,7 +634,7 @@ public class BuildNifiCustomWorkFlow {
                                 //流程组port组件父id
                                 String parentGroupId1 = processGroup.getComponent().getParentGroupId();
                                 String tableInputPortId = tableNifiSettingPO.tableInputPortId;
-                                //TODO 调用连接api
+                                // 调用连接api
                                 buildNifiTaskListener.buildPortConnection(parentGroupId, parentGroupId1, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         parentGroupId, componentId, ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
@@ -665,16 +651,22 @@ public class BuildNifiCustomWorkFlow {
                                 PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", buildNifiCustomWorkFlowDTO.appId).eq("del_flag", 1).one();
                                 String outputPortId = pipelineConfigurationPO1.outputPortId;
                                 String inputPortId = pipelineConfigurationPO.inputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO.appComponentId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         pipelineConfigurationPO1.appComponentId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+
+                            }else if(Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)){
+                                NifiSchedulingComponentPO one = nifiSchedulingComponent.query().eq("nifi_custom_workflow_detail_id", buildNifiCustomWorkFlowDTO.nifiCustomWorkflowId).eq("del_flag", 1).one();
+
+                                buildNifiTaskListener.buildPortConnection(one.groupComponentId, pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                                        one.groupComponentId, one.componentId, ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
                             } else {
                                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", buildNifiCustomWorkFlowDTO.tableId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
                                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
                                 String tableOutputPortId = tableNifiSettingPO.tableOutputPortId;
                                 String outputPortId = pipelineConfigurationPO.outputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, processGroup.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         pipelineConfigurationPO.appComponentId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
@@ -688,7 +680,7 @@ public class BuildNifiCustomWorkFlow {
                                 String outputPortId = pipelineConfigurationPO.outputPortId;
                                 PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", buildNifiCustomWorkFlowDTO.appId).eq("del_flag", 1).one();
                                 String inputPortId = pipelineConfigurationPO1.inputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, pipelineConfigurationPO1.appComponentId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         pipelineConfigurationPO.appComponentId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
@@ -697,7 +689,7 @@ public class BuildNifiCustomWorkFlow {
                                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", buildNifiCustomWorkFlowDTO.tableId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
                                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
                                 String tableInputPortId = tableNifiSettingPO.tableInputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, processGroup.getComponent().getParentGroupId(), tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         pipelineConfigurationPO.appComponentId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
                             }
@@ -711,7 +703,7 @@ public class BuildNifiCustomWorkFlow {
                             if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
                                 PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", buildNifiCustomWorkFlowDTO.appId).eq("del_flag", 1).one();
                                 String outputPortId = pipelineConfigurationPO1.outputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO1.appComponentId, processGroup.getId(), tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         pipelineConfigurationPO1.appComponentId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
@@ -720,7 +712,7 @@ public class BuildNifiCustomWorkFlow {
                                 TableNifiSettingPO tableNifiSettingPO1 = tableNifiSettingService.query().eq("table_access_id", buildNifiCustomWorkFlowDTO.tableId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
                                 ProcessGroupEntity processGroup1 = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO1.tableComponentId);
                                 String tableOutputPortId = tableNifiSettingPO1.tableOutputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(processGroup1.getId(), processGroup.getId(), tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         processGroup1.getId(), tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
@@ -733,7 +725,7 @@ public class BuildNifiCustomWorkFlow {
                             if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
                                 PipelineConfigurationPO pipelineConfigurationPO1 = pipelineConfiguration.query().eq("app_id", buildNifiCustomWorkFlowDTO.appId).eq("del_flag", 1).one();
                                 String inputPortId = pipelineConfigurationPO1.inputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(processGroup.getId(), pipelineConfigurationPO1.appComponentId, pipelineConfigurationPO1.outputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         processGroup.getId(), inputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
@@ -743,7 +735,7 @@ public class BuildNifiCustomWorkFlow {
                                 ProcessGroupEntity processGroup1 = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO1.tableComponentId);
                                 String parentGroupId = processGroup1.getComponent().getParentGroupId();
                                 String tableInputPortId = tableNifiSettingPO1.tableInputPortId;
-                                // TODO 调用连接api
+                                //  调用连接api
                                 buildNifiTaskListener.buildPortConnection(processGroup.getId(), parentGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         processGroup.getId(), tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 

@@ -19,7 +19,8 @@ public enum AutoEndBranchTypeEnum implements BaseEnum {
     UNNMATCHED(5, "unmatched"),
     MATCHED(6, "matched"),
     MERGED(7, "merged"),
-    SPLIT(8,"split");
+    SPLIT(8,"split"),
+    EXPIRED(9,"expired");
 
     AutoEndBranchTypeEnum(int value, String name) {
         this.value = value;
