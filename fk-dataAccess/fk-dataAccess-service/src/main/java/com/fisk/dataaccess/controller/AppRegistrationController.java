@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
@@ -19,7 +18,6 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -70,12 +68,12 @@ public class AppRegistrationController {
         }
 
         // TODO: atlas对接应用注册
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.appId = vo.appId;
-        atlasEntityQueryDTO.userId = vo.userId;
-        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
-        log.info("task:" + JSON.toJSONString(task));
-        System.out.println("task = " + task);
+//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+//        atlasEntityQueryDTO.appId = vo.appId;
+//        atlasEntityQueryDTO.userId = vo.userId;
+//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
+//        log.info("task:" + JSON.toJSONString(task));
+//        System.out.println("task = " + task);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }

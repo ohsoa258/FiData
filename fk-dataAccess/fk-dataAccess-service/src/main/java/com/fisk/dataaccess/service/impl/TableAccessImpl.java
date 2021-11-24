@@ -1568,7 +1568,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 物理表id
         atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
         //表名称
-        atlasEntityQueryDTO.tableName=po.tableName;
+        atlasEntityQueryDTO.tableName=model.tableName;
         // 调用atlas
         ResultEntity<Object> result = new ResultEntity<>();
         if (dto.flag == 0) {
