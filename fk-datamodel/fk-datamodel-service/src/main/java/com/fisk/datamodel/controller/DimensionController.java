@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.service.IDimension;
@@ -61,6 +62,18 @@ public class DimensionController {
     @PutMapping("/editDimensionSql")
     public ResultEntity<Object> editDimensionSql(@Validated @RequestBody DimensionSqlDTO dto) {
         return ResultEntityBuild.build(service.updateDimensionSql(dto));
+    }
+
+    @ApiOperation("根据业务域id获取设置时间维度")
+    @GetMapping("/getDimensionDateAttribute/{id}")
+    public ResultEntity<Object> getDimensionDateAttribute(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionDateAttribute(id));
+    }
+
+    @ApiOperation("修改业务域下时间维度表以及字段")
+    @PutMapping("/updateDimensionDateAttribute")
+    public ResultEntity<Object> updateDimensionDateAttribute(@Validated @RequestBody DimensionDateAttributeDTO dto) {
+        return ResultEntityBuild.build(service.updateDimensionDateAttribute(dto));
     }
 
 }

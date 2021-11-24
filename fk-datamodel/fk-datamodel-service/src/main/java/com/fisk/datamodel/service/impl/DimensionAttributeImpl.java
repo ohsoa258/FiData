@@ -57,29 +57,27 @@ public class DimensionAttributeImpl
     @Override
     public ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
     {
-        //删除维度字段属性
-        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
-        if (ids!=null && ids.size()>0)
+        //根据维度id,删除所有字段数据
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        if (list !=null && list.size()>0)
         {
-            QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.notIn("id",ids).lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
-            List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
-            if (list!=null && list.size()>0)
+            for (DimensionAttributePO item:list)
             {
-                boolean flat=this.remove(queryWrapper);
-                if (!flat)
+                int flat=attributeMapper.deleteByIdWithFill(item);
+                if (flat==0)
                 {
-                    return ResultEnum.SAVE_DATA_ERROR;
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                 }
             }
         }
-        //添加或修改维度字段
+        //批量添加维度字段数据
         List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
         poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-        boolean result=this.saveOrUpdateBatch(poList);
-        if (!result)
+        if (!this.saveBatch(poList))
         {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //是否发布
         if (isPublish)

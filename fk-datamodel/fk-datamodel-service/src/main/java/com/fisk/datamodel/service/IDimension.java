@@ -3,10 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
-import com.fisk.datamodel.dto.dimension.DimensionDTO;
-import com.fisk.datamodel.dto.dimension.DimensionListDTO;
-import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
@@ -59,5 +56,19 @@ public interface IDimension {
      * @return
      */
     List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto);
+
+    /**
+     * 设置维度日期属性
+     * @param dto
+     * @return
+     */
+    ResultEnum updateDimensionDateAttribute(DimensionDateAttributeDTO dto);
+
+    /**
+     * 根据业务域id,获取时间维度表以及字段
+     * @param businessId
+     * @return
+     */
+    DimensionDateAttributeDTO getDimensionDateAttribute(int businessId);
 
 }

@@ -72,5 +72,9 @@ public class DimensionAttributePO extends BasePO {
      * 源字段名称
      */
     public String sourceFieldName;
+    /**
+     * 是否维度表字段
+     */
+    public Boolean isDateDimensionField;
 
 }

@@ -54,5 +54,9 @@ public class DimensionPO extends BasePO {
      * 维度sql脚本
      */
     public String sqlScript;
+    /**
+     * 是否为日期维度表
+     */
+    public Boolean isDateDimension;
 
 }

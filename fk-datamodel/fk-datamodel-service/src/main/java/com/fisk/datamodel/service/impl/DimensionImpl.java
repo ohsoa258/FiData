@@ -1,24 +1,15 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.CreateTypeEnum;
-import com.fisk.datamodel.enums.DimensionAttributeEnum;
-import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
-import com.fisk.datamodel.map.DimensionFolderMap;
 import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimension;
@@ -28,6 +19,7 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -42,10 +34,6 @@ public class DimensionImpl implements IDimension {
 
     @Resource
     DimensionMapper mapper;
-    @Resource
-    UserHelper userHelper;
-    @Resource
-    BusinessAreaMapper businessAreaMapper;
     @Resource
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
@@ -164,6 +152,59 @@ public class DimensionImpl implements IDimension {
         }
         List<DimensionPO> list=mapper.selectList(queryWrapper);
         return DimensionMap.INSTANCES.poToListNameDto(list);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum updateDimensionDateAttribute(DimensionDateAttributeDTO dto)
+    {
+        DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
+        if (dimensionPO ==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(dto.dimensionAttributeId);
+        if (dimensionAttributePO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        dimensionPO.isDateDimension=true;
+        int flat=mapper.updateById(dimensionPO);
+        if (flat==0)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        dimensionAttributePO.isDateDimensionField=true;
+        return dimensionAttributeMapper.updateById(dimensionAttributePO)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public DimensionDateAttributeDTO getDimensionDateAttribute(int businessId)
+    {
+        DimensionDateAttributeDTO data=new DimensionDateAttributeDTO();
+        //查询设置时间维度表
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DimensionPO::getBusinessId,businessId)
+                .eq(DimensionPO::getIsDateDimension,true);
+        List<DimensionPO> dimensionPOList=mapper.selectList(queryWrapper);
+        if (dimensionPOList ==null && dimensionPOList.size()==0)
+        {
+            return data;
+        }
+        data.dimensionId=dimensionPOList.get(0).id;
+        //查询设置时间维度表字段
+        QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
+        queryWrapper1.lambda()
+                .eq(DimensionAttributePO::getDimensionId,data.dimensionId)
+                .eq(DimensionAttributePO::getIsDateDimensionField,true);
+        List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(queryWrapper1);
+        if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
+        {
+            return data;
+        }
+        data.dimensionAttributeId=dimensionAttributePOList.get(0).id;
+        return data;
     }
 
 }
