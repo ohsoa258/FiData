@@ -18,7 +18,7 @@ import java.util.List;
  * @author WangYan
  * @date 2021/8/23 16:33
  */
-@Api(tags = {SwaggerConfig.TAG_3})
+@Api(tags = {SwaggerConfig.TAG_4})
 @RestController
 @RequestMapping("/DataDomain")
 public class DataDomainController {
