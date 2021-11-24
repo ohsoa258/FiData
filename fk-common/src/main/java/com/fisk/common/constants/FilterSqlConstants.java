@@ -26,6 +26,8 @@ public class FilterSqlConstants {
      * 调度中心-管道服务
      */
     public static final String CUSTOM_WORKFLOW_SQL = " where Field in ('workflow_name','status','create_time','create_user','update_time','update_user')";
-
-
+    /**
+     * 系统管理--用户关联
+     */
+    public static  final String USER_INFO_SQL=" where Field not in('id','del_flag','create_user','update_user','password','error_number','error_time')";
 }
