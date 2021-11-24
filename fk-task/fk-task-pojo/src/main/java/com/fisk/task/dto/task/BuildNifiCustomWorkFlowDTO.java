@@ -21,7 +21,7 @@ public class BuildNifiCustomWorkFlowDTO {
     //表名(为空)
     public String tableName;
     //组id(当前组件pid)
-    public Long groupId;
+    public String groupId;
 
     // 后四个属性只有调度任务才有
     //组件名称(管道名称)

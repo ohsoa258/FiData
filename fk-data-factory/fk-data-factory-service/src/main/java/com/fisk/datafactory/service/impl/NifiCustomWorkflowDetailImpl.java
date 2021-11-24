@@ -134,7 +134,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 管道详情-tree
         workListDTO.structure = getMenuTree(list);
         // 管道详情下的任务组-tree
-        workListDTO.externalStructure = getMenuTree(list.get(0).workflowId, list);
+        workListDTO.externalStructure = getMenuTree(workflowId, list);
         return workListDTO;
     }
 
@@ -209,7 +209,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 表类型
         flow.tableType = getOlapTableEnum(dto.componentsId);
         flow.tableId = dto.tableId;
-        flow.groupId = dto.pid;
+
+        if (dto.pid == 0) {
+            flow.groupId = dto.workflowId;
+        } else{
+            flow.groupId = dto.pid.toString();
+        }
+
+
         // 任务组时，appId即tb_nifi_custom_workflow_detail表id
         if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
             flow.appId = dto.id;
@@ -339,7 +346,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         Map structure1 = new HashMap();
         structure1.put(workflowPo.workflowId, workflowPo.workflowName);
 
-        Map structure2 = collect.stream().collect(Collectors.toMap(dto -> dto.id, dto -> dto.componentName, (a, b) -> b));
+        Map<Long, String> map = new HashMap<>();
+        for (NifiCustomWorkflowDetailDTO dto : collect) {
+            map.put(dto.id, dto.componentName);
+        }
+        Map structure2 = map;
         structure.put(structure1, structure2);
         return structure;
     }
