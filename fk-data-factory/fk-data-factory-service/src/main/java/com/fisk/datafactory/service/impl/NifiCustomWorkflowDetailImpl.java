@@ -211,11 +211,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         flow.tableId = dto.tableId;
 
         if (dto.pid == 0) {
-            flow.groupId = dto.workflowId;
+            flow.groupId = this.query().eq("id", dto.id).one().workflowId;
         } else{
             flow.groupId = dto.pid.toString();
         }
 
+        flow.workflowDetailId = dto.id;
 
         // 任务组时，appId即tb_nifi_custom_workflow_detail表id
         if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {

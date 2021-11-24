@@ -32,6 +32,6 @@ public class BuildNifiCustomWorkFlowDTO {
     public String scheduleExpression;
     //调度方式
     public SchedulingStrategyTypeEnum scheduleType;
-
-
+    // 管道详情表id
+    public Long workflowDetailId;
 }
