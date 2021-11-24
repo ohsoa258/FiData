@@ -1,13 +1,22 @@
 package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.dto.MetaDataConfigDTO;
+import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.*;
+import com.fisk.system.dto.roleinfo.RolePageDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserPageDTO;
+import com.fisk.system.dto.userinfo.UserPowerDTO;
+import com.fisk.system.dto.userinfo.UserQueryDTO;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
@@ -17,7 +26,6 @@ import com.fisk.system.service.IUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -37,6 +45,12 @@ public class UserServiceImpl implements IUserService {
     UserHelper userHelper;
     @Resource
     RoleUserAssignmentMapper roleUserAssignmentMapper;
+    @Resource
+    GetConfigDTO getConfig;
+    @Resource
+    GenerateCondition generateCondition;
+    @Resource
+    GetMetadata getMetadata;
 
     /**
      * 校验手机号或用户名是否存在
@@ -55,9 +69,15 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserDTO> listUserData()
+    public Page<UserDTO> listUserData(UserQueryDTO query)
     {
-        return  mapper.userList();
+        StringBuilder str = new StringBuilder();
+        //筛选器拼接
+        str.append(generateCondition.getCondition(query.dto));
+        UserPageDTO dto=new UserPageDTO();
+        dto.page=query.page;
+        dto.where = str.toString();
+        return  mapper.userList(dto.page,dto);
     }
 
 
@@ -233,4 +253,26 @@ public class UserServiceImpl implements IUserService {
         po.password=passwordEncoder.encode(dto.getPassword());
         return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Override
+    public List<FilterFieldDTO> getUserInfoColumn()
+    {
+        //拼接参数
+        MetaDataConfigDTO dto=new MetaDataConfigDTO();
+        dto.url= getConfig.url;
+        dto.userName=getConfig.username;
+        dto.password=getConfig.password;
+        dto.tableName="tb_user_info";
+        dto.tableAlias="a";
+        dto.filterSql= FilterSqlConstants.USER_INFO_SQL;
+        List<FilterFieldDTO> list=getMetadata.getMetadataList(dto);
+        //添加创建人
+        FilterFieldDTO data=new FilterFieldDTO();
+        data.columnName="b.username";
+        data.columnType="varchar(50)";
+        data.columnDes="创建人";
+        list.add(data);
+        return list;
+    }
+
 }

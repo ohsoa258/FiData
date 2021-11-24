@@ -4,7 +4,9 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
-import com.fisk.system.dto.RoleInfoDTO;
+import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.service.IRoleInfoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -25,10 +27,10 @@ public class RoleInfoController {
     @Resource
     IRoleInfoService service;
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @ApiOperation("获取所有角色信息")
-    public ResultEntity<Object> getRoleList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listRoleData());
+    public ResultEntity<Object> getRoleList(@RequestBody RoleInfoQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listRoleData(query));
     }
 
     @ApiOperation("添加角色")
@@ -53,6 +55,12 @@ public class RoleInfoController {
     @PutMapping("/edit")
     public ResultEntity<Object> editRole(@Validated @RequestBody RoleInfoDTO dto) {
         return ResultEntityBuild.build(service.updateRole(dto));
+    }
+
+    @GetMapping("/getColumn")
+    @ApiOperation("获取角色筛选器列表")
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleInfoColumn());
     }
 
 }

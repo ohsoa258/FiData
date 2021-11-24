@@ -1,4 +1,4 @@
-package com.fisk.system.dto;
+package com.fisk.system.dto.roleinfo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.fisk.system.dto;
+package com.fisk.system.dto.userinfo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.dto.BaseDTO;
@@ -30,7 +30,7 @@ public class UserDTO {
 
     public String password;
 
-    ////@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public Date createTime;
 
     public String createUser;

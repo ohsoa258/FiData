@@ -1,4 +1,4 @@
-package com.fisk.system.dto;
+package com.fisk.system.dto.userinfo;
 
 import lombok.Data;
 

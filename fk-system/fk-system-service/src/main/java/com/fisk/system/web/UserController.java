@@ -7,7 +7,8 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ChangePasswordDTO;
-import com.fisk.system.dto.UserDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserQueryDTO;
 import com.fisk.system.service.IUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,11 +32,11 @@ public class UserController {
     private IUserService service;
 
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @ApiOperation("用户列表")
-    public ResultEntity<Object> getUserList()
+    public ResultEntity<Object> getUserList(@RequestBody UserQueryDTO query)
     {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listUserData());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listUserData(query));
     }
 
     /**
@@ -112,6 +113,12 @@ public class UserController {
     @ApiOperation("修改用户密码")
     public ResultEntity<Object> changePassword(@Validated @RequestBody ChangePasswordDTO dto) {
         return ResultEntityBuild.build(service.changePassword(dto));
+    }
+
+    @GetMapping("/getColumn")
+    @ApiOperation("获取用户筛选器列表")
+    public ResultEntity<Object> getColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserInfoColumn());
     }
 
 

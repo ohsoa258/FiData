@@ -1,9 +1,10 @@
 package com.fisk.system.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.system.dto.RoleInfoDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
+import com.fisk.system.dto.roleinfo.RolePageDTO;
+import com.fisk.system.dto.roleinfo.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,5 +23,13 @@ public interface RoleInfoMapper extends FKBaseMapper<RoleInfoPO> {
      * @return 查询结果
      */
     List<RoleInfoDTO> roleList();
+
+    /**
+     * 获取角色分页数据
+     * @param page
+     * @param query
+     * @return
+     */
+    Page<RoleInfoDTO> roleList(Page<RoleInfoDTO> page, @Param("query")RolePageDTO query);
 
 }

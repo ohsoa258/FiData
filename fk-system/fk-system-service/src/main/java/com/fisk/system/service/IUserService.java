@@ -1,12 +1,12 @@
 package com.fisk.system.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.*;
-import com.fisk.system.entity.UserPO;
+import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserPowerDTO;
+import com.fisk.system.dto.userinfo.UserQueryDTO;
 
 import java.util.List;
 
@@ -66,10 +66,10 @@ public interface IUserService {
 
     /**
      * 用户列表
-     *
-     * @return 查询结果
+     * @param query
+     * @return
      */
-    List<UserDTO> listUserData();
+    Page<UserDTO> listUserData(UserQueryDTO query);
 
     /**
      * 查询用户
@@ -91,5 +91,11 @@ public interface IUserService {
      * @return 返回值
      */
     ResultEnum changePassword(ChangePasswordDTO dto);
+
+    /**
+     * 获取用户表相关字段
+     * @return
+     */
+    List<FilterFieldDTO> getUserInfoColumn();
 
 }

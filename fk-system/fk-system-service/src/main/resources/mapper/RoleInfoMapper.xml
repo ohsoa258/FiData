@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.system.mapper.RoleInfoMapper">
 
-    <select id="roleList" resultType="com.fisk.system.dto.RoleInfoDTO">
+    <select id="roleList" resultType="com.fisk.system.dto.roleinfo.RoleInfoDTO">
         select a.id,
         a.role_name as roleName,
         a.role_desc as roleDesc,
@@ -11,6 +11,10 @@
         a.create_time as createTime
         from tb_role_info a
         left join tb_user_info b on a.create_user = b.id
-        where a.del_flag = 1 ORDER BY a.create_time desc
+        where a.del_flag = 1
+        <if test="query.where !=null and query.where.length()>0 ">
+            ${query.where}
+        </if>
     </select>
+    
 </mapper>

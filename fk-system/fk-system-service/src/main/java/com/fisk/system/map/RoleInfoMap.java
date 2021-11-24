@@ -2,8 +2,8 @@ package com.fisk.system.map;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.system.dto.RoleInfoDTO;
-import com.fisk.system.dto.RolePowerDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
+import com.fisk.system.dto.roleinfo.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
