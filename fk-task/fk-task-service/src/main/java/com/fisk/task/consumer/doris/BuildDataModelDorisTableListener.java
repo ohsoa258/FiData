@@ -26,6 +26,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.dto.taskpgtablestructure.TaskPgTableStructureParameterDTO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -80,6 +81,8 @@ public class BuildDataModelDorisTableListener
     TaskDwDimMapper taskDwDimMapper;
     @Resource
     DataAccessClient client;
+    @Resource
+    TaskPgTableStructureMapper taskPgTableStructureMapper;
     @Resource
     INifiComponentsBuild componentsBuild;
     @Value("${pgsql-datamodel.url}")
@@ -599,16 +602,19 @@ public class BuildDataModelDorisTableListener
                     {
                         po.fieldType=fieldData.fieldType+"("+fieldData.fieldLength+")";
                     }
-                    //是否为关联维度
-                    /*if (fieldData.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
-                    {
-                        po.fieldName=fieldData.associationTable+"_pk";
-                        po.fieldType="varchar(100)";
-                    }*/
                     poList.add(po);
                 }
             }
-            this.saveBatch(poList);
+            if (this.saveBatch(poList))
+            {
+                TaskPgTableStructureParameterDTO dto1=new TaskPgTableStructureParameterDTO();
+                dto1.version="";
+                String sql = taskPgTableStructureMapper.pgCheckTableStructure(dto1);
+                if (sql !=null && sql.length()>0)
+                {
+
+                }
+            }
         }
         catch (Exception ex)
         {
