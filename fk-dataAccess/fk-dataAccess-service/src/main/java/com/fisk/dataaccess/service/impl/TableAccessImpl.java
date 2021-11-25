@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
@@ -1430,7 +1431,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public ResultEntity<List<ChannelDataDTO>> getTableId() {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, baseMapper.listTableIdAndName());
+
+        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
+                .select(AppRegistrationPO::getId,AppRegistrationPO::getAppName));
+
+        List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
+
+        channelDataDTOList.forEach(dto -> {
+            List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
+                    .eq(TableAccessPO::getAppId, dto.id)
+                    .select(TableAccessPO::getId, TableAccessPO::getTableName));
+            dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+        });
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, channelDataDTOList);
     }
 
     @Override

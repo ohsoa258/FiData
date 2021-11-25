@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
+import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -116,5 +117,10 @@ public interface TableAccessMap {
      */
     List<TableAccessPO> listTbDtoToPo(List<TbTableAccessDTO> list);
 
-
+    /**
+     * list: po -> dto
+     * @param list source
+     * @return target
+     */
+    List<ChannelDataChildDTO> listPoToChannelDataDto(List<TableAccessPO> list);
 }

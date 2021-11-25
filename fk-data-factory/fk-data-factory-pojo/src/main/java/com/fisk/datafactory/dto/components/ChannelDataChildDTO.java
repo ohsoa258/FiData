@@ -2,21 +2,17 @@ package com.fisk.datafactory.dto.components;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * @author Lock
  */
 @Data
-public class ChannelDataDTO {
+public class ChannelDataChildDTO {
     /**
-     * 应用id or 业务域id
+     * 表id
      */
     public long id;
     /**
-     * 应用名 or 业务域名
+     * 表名称
      */
     public String tableName;
-
-    public List<ChannelDataChildDTO> list;
 }

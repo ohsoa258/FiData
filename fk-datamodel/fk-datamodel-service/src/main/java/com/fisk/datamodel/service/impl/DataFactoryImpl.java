@@ -30,24 +30,25 @@ public class DataFactoryImpl implements IDataFactory {
     public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
         List<ChannelDataDTO> list = new ArrayList<>();
         switch ((int) dto.id) {
-            case 1:
-            case 2:
-                break;
+            // 数据湖
             case 3:
 
                 if (client.getTableId().code == 0) {
                     list = client.getTableId().data;
-//                    list = JSON.parseArray(JSON.toJSONString(client.getTableId().data), ChannelDataDTO.class);
                 }
                 break;
+            // 维度表
             case 4:
             case 6:
                 list = DataFactoryMap.INSTANCES.tableDtosToPos(dimensionMapper.getDimensionTabList());
                 break;
+            // 事实表
             case 5:
             case 7:
                 list = DataFactoryMap.INSTANCES.tablesDtosToPos(factMapper.getFactTabList());
                 break;
+            case 1:
+            case 2:
             default:
                 break;
         }

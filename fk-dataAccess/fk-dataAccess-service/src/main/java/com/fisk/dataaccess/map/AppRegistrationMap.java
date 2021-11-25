@@ -3,7 +3,10 @@ package com.fisk.dataaccess.map;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -56,5 +59,21 @@ public interface AppRegistrationMap {
      */
     List<AppRegistrationDataDTO> listPoToDtoList(List<AppRegistrationPO> list);
 
+    /**
+     * po -> dto
+     *
+     * @param po source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "appName", target = "tableName")
+    })
+    ChannelDataDTO poToChannelDataDto(AppRegistrationPO po);
 
+    /**
+     * list: po -> dto
+     * @param list source
+     * @return target
+     */
+    List<ChannelDataDTO> listPoToChannelDataDto(List<AppRegistrationPO> list);
 }
