@@ -43,7 +43,7 @@ public class TableAccessPO extends BasePO {
      */
     public Integer isRealtime;
     /**
-     * 0: 未发布  1: 发布成功  2: 发布失败
+     * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public Integer publish;
 

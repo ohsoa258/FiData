@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -281,7 +282,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         NifiVO vo = new NifiVO();
         List<TableListVO> tableList = new ArrayList<>();
 
-        if (accessList != null && !accessList.isEmpty()) {
+        if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
             List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());

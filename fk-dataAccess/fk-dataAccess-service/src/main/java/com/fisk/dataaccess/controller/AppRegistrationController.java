@@ -157,19 +157,22 @@ public class AppRegistrationController {
             pgsqlDelTableDTO.tableList = collect;
         }
 
-        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
-        DataModelVO dataModelVO = new DataModelVO();
-        dataModelVO.delBusiness=true;
-        DataModelTableVO dataModelTableVO = new DataModelTableVO();
-        dataModelTableVO.ids=nifiVO.tableIdList;
-        dataModelTableVO.type= OlapTableEnum.PHYSICS;
-        dataModelVO.physicsIdList=dataModelTableVO;
-        dataModelVO.businessId=nifiVO.appId;
-        dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
-        dataModelVO.userId=nifiVO.userId;
-        publishTaskClient.deleteNifiFlow(dataModelVO);
-        log.info("task删除应用{}", task);
-        System.out.println(task);
+        // 只有存在表时才会删除
+        if (CollectionUtils.isNotEmpty(nifiVO.tableList) && CollectionUtils.isNotEmpty(nifiVO.tableIdList)) {
+            ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+            DataModelVO dataModelVO = new DataModelVO();
+            dataModelVO.delBusiness=true;
+            DataModelTableVO dataModelTableVO = new DataModelTableVO();
+            dataModelTableVO.ids=nifiVO.tableIdList;
+            dataModelTableVO.type= OlapTableEnum.PHYSICS;
+            dataModelVO.physicsIdList=dataModelTableVO;
+            dataModelVO.businessId=nifiVO.appId;
+            dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
+            dataModelVO.userId=nifiVO.userId;
+            publishTaskClient.deleteNifiFlow(dataModelVO);
+            log.info("task删除应用{}", task);
+            System.out.println(task);
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }

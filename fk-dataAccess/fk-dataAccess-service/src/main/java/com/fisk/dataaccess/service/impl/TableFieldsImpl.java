@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.filter.method.GenerateCondition;
@@ -24,14 +23,12 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -126,18 +123,19 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
-        List<TableFieldsDTO> list = dto.list;
+//        List<TableFieldsDTO> list = dto.list;
 
-        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
+/*        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
                 .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
-                .select(TableFieldsPO::getId));
+                .select(TableFieldsPO::getId));*/
 
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
-        if (CollectionUtils.isEmpty(list) || tableSyncmodeDTO == null) {
+        if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
         // 保存tb_table_fields
+/*
         boolean success = true;
         for (TableFieldsDTO tableFieldsDTO : list) {
             // 0: 未操作的数据  1: 新增  2: 编辑
@@ -171,7 +169,21 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
+*/
+        // 全删全插
+        try {
+            List<TableFieldsPO> list = this.query().eq("table_access_id", dto.id).list();
+            if (!CollectionUtils.isEmpty(list)) {
+                list.forEach(e -> baseMapper.deleteByIdWithFill(e));
+            }
+            // list: dto -> po
+            List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(dto.list);
+            this.saveBatch(listPo);
+        } catch (Exception e) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
 
+        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;
         // 保存tb_table_business
         int businessMode = 3;

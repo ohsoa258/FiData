@@ -775,13 +775,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsPO> list = tableFieldsImpl.query()
                 .eq("table_access_id", id)
                 .list();
-
-        // 判断是否存在表字段
-        if (list == null || list.isEmpty()) {
-            return ResultEntityBuild.build(ResultEnum.SUCCESS);
-        }
         try {
-            list.forEach(e -> fieldsMapper.deleteByIdWithFill(e));
+            // 判断是否存在表字段
+            if (!CollectionUtils.isEmpty(list)) {
+                list.forEach(e -> fieldsMapper.deleteByIdWithFill(e));
+            }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
@@ -791,16 +789,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         NifiVO vo = new NifiVO();
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-//        vo.appComponentId = registrationPO.componentId;
         vo.appAtlasId = registrationPO.atlasInstanceId;
 
         List<TableListVO> voList = new ArrayList<>();
         TableListVO tableListVO = new TableListVO();
         tableListVO.userId = userInfo.id;
         tableListVO.tableAtlasId = modelAccess.atlasTableId;
-//        NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", modelAccess.id).eq("app_id", modelAccess.appId).one();
-
-//        tableListVO.nifiSettingTableName = nifiSettingPO.tableName;
         voList.add(tableListVO);
 
         vo.tableList = voList;
@@ -808,8 +802,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
         vo.tableIdList = tableIdList;
-
-
         log.info("删除的物理表信息,{}", vo);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
@@ -1547,40 +1539,47 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return dto;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
-
-        TableAccessPO model = this.getById(dto.id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-
-        // dto -> po
-        TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
-
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        AtlasIdsVO atlasIdsVO = tableFieldsImpl.getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
-        // 应用注册id
-        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
-        // 物理表id
-        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
-        //表名称
-        atlasEntityQueryDTO.tableName=model.tableName;
-        // 调用atlas
-        ResultEntity<Object> result = new ResultEntity<>();
-        if (dto.flag == 0) {
-            result = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-            if (result.code == 0) {
-                po.publish = 1;
-            } else {
-                po.publish = 2;
+        boolean success;
+        try {
+            TableAccessPO model = this.getById(dto.id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
             }
+
+            // dto -> po
+            TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+            success = this.updateById(po);
+
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+            AtlasIdsVO atlasIdsVO = tableFieldsImpl.getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
+            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+            atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+            // 应用注册id
+            atlasEntityQueryDTO.appId = atlasIdsVO.appId;
+            // 物理表id
+            atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+            //表名称
+            atlasEntityQueryDTO.tableName = model.tableName;
+            // 调用atlas
+            // 发布
+            if (success && dto.flag == 0) {
+                Thread.sleep(200);
+                publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+            }
+
+            // TODO: 调用存储过程
+            if (success) {
+
+            }
+
+        } catch (Exception e) {
+            return ResultEnum.UPDATE_DATA_ERROR;
         }
 
-        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Transactional
