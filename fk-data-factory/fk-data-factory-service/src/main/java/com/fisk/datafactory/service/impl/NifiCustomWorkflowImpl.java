@@ -51,6 +51,11 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     @Override
     public ResultEnum addData(NifiCustomWorkflowDTO dto) {
 
+        List<String> workflowNameList = this.list().stream().map(po -> po.workflowName).collect(Collectors.toList());
+        if (workflowNameList.contains(dto.workflowName)) {
+            return ResultEnum.WORKFLOWNAME_EXISTS;
+        }
+
         // dto -> po
         NifiCustomWorkflowPO model = NifiCustomWorkflowMap.INSTANCES.dtoToPo(dto);
         // 参数校验

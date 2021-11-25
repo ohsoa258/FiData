@@ -104,8 +104,11 @@ public enum ResultEnum {
     BUSINESS_AREA_EXIST(8005,"该业务域下,已存在该维度表"),
     NAME_REPEATED(8006,"名称重复"),
 
-
-    TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式");
+    /**
+     * 数据工厂
+     */
+    TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式"),
+    WORKFLOWNAME_EXISTS(9002,"管道名称已存在");
 
 
     ResultEnum(int code, String msg) {
