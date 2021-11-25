@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -158,6 +159,40 @@ public class DimensionImpl implements IDimension {
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum updateDimensionDateAttribute(DimensionDateAttributeDTO dto)
     {
+        //根据业务域id,还原之前的维度表设置的日期维度
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DimensionPO::getBusinessId,dto.businessAreaId)
+                .eq(DimensionPO::getIsDimDateTbl,true);
+        List<DimensionPO> list=mapper.selectList(queryWrapper);
+        //获取维度字段
+        QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
+        List<DimensionAttributePO> attributePOList=dimensionAttributeMapper.selectList(queryWrapper1);
+        if (list!=null && list.size()>0)
+        {
+            for (DimensionPO item:list)
+            {
+                item.isDimDateTbl=false;
+                if (mapper.updateById(item)==0)
+                {
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                }
+                List<DimensionAttributePO> attributePOS=attributePOList.stream()
+                        .filter(e->e.dimensionId==item.id).collect(Collectors.toList());
+                if (attributePOS !=null && attributePOList.size()>0)
+                {
+                    for (DimensionAttributePO attributePO:attributePOS)
+                    {
+                        attributePO.isDimDateField=false;
+                        if (dimensionAttributeMapper.updateById(attributePO)==0)
+                        {
+                            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                        }
+                    }
+                }
+            }
+        }
+
         DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
         if (dimensionPO ==null)
         {
@@ -168,13 +203,13 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        dimensionPO.isDateDimension=true;
+        dimensionPO.isDimDateTbl=true;
         int flat=mapper.updateById(dimensionPO);
         if (flat==0)
         {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        dimensionAttributePO.isDateDimensionField=true;
+        dimensionAttributePO.isDimDateField=true;
         return dimensionAttributeMapper.updateById(dimensionAttributePO)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -186,7 +221,7 @@ public class DimensionImpl implements IDimension {
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DimensionPO::getBusinessId,businessId)
-                .eq(DimensionPO::getIsDateDimension,true);
+                .eq(DimensionPO::getIsDimDateTbl,true);
         List<DimensionPO> dimensionPOList=mapper.selectList(queryWrapper);
         if (dimensionPOList ==null && dimensionPOList.size()==0)
         {
@@ -197,7 +232,7 @@ public class DimensionImpl implements IDimension {
         QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
         queryWrapper1.lambda()
                 .eq(DimensionAttributePO::getDimensionId,data.dimensionId)
-                .eq(DimensionAttributePO::getIsDateDimensionField,true);
+                .eq(DimensionAttributePO::getIsDimDateField,true);
         List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(queryWrapper1);
         if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
         {

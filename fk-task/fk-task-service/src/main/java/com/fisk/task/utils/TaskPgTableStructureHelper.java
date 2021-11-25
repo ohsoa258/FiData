@@ -10,12 +10,26 @@ import java.sql.*;
  * @author JianWenYang
  */
 public class TaskPgTableStructureHelper {
+
+    @Value("${datasource.taskdb.url}")
+    public String taskUrl;
+    @Value("${datasource.taskdb.username}")
+    public String taskUsername;
+    @Value("${datasource.taskdb.password}")
+    public String taskPassword;
+
     @Value("${pgsql-ods.url}")
     public String pgsqlOdsUrl;
     @Value("${pgsql-ods.username}")
     public String pgsqlOdsUsername;
     @Value("${pgsql-ods.password}")
     public String pgsqlOdsPassword;
+
+
+    public void execProcedure(String version){
+
+    }
+
     /**
      * 根据语句修改PgTable表结构
      * @param sql
@@ -35,10 +49,10 @@ public class TaskPgTableStructureHelper {
                 return false;
             }
             //修改表结构
-            //return st.execute(sql);
+            Statement st = conn.createStatement();
+            return st.execute(sql);
         }catch (ClassNotFoundException | SQLException e) {
             return false;
         }
-        return true;
     }
 }

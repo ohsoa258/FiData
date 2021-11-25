@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.dimensionfolder;
+package com.fisk.datamodel.dto.modelpublish;
 
 import lombok.Data;
 
@@ -8,10 +8,10 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class DimensionFolderPublishDataDTO {
+public class ModelPublishDataDTO {
     public long businessAreaId;
     public String businessAreaName;
     public long userId;
     public int createType;
-    public List<DimensionFolderPublishDTO> dimensionList;
+    public List<ModelPublishTableDTO> dimensionList;
 }

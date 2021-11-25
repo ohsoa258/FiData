@@ -20,13 +20,11 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
-import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.task.dto.taskpgtablestructure.TaskPgTableStructureParameterDTO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -45,8 +43,10 @@ import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.PostgreHelper;
+import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -92,6 +92,8 @@ public class BuildDataModelDorisTableListener
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
     @Resource
+    TaskPgTableStructureHelper taskPgTableStructureHelper;
+    @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
     NifiConfigServiceImpl nifiConfigService;
@@ -120,7 +122,7 @@ public class BuildDataModelDorisTableListener
                 //向task库中添加维度数据结构
                 List<ModelMetaDataDTO> list = new ArrayList<>();
                 list.add(modelMetaDataDTO);
-                saveTableStructure(list);
+                //saveTableStructure(list);
                 pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
                 log.info("pg数据库创表结果为" + pgdbTable);
                 String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
@@ -131,7 +133,7 @@ public class BuildDataModelDorisTableListener
                 dimensionAttributeList = dc.getBusinessProcessFact(dimensionAttributeAddDTO.dimensionId);
                 List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
                 //向task库中添加业务下所有事实表数据结构
-                saveTableStructure(modelMetaDataDTOS);
+                //saveTableStructure(modelMetaDataDTOS);
                 for (ModelMetaDataDTO modelMetaDataDTO : modelMetaDataDTOS) {
                     pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
                     log.info(modelMetaDataDTO.tableName + "pg数据库创表结果为" + pgdbTable);
@@ -576,45 +578,43 @@ public class BuildDataModelDorisTableListener
 
     /**
      * 保存建模相关表结构数据
-     * @param dto
+     * @param
      */
-    public void saveTableStructure(List<ModelMetaDataDTO> dto)
+    @Test
+    public void saveTableStructure()
     {
         try {
-            List<TaskPgTableStructurePO> poList=new ArrayList<>();
-            for (ModelMetaDataDTO item: dto) {
-                Thread.sleep(200);
-                //获取时间戳版本号
-                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-                Calendar calendar = Calendar.getInstance();
-                String version = df.format(calendar.getTime());
-                for (ModelAttributeMetaDataDTO fieldData:item.dto)
-                {
-                    TaskPgTableStructurePO po=new TaskPgTableStructurePO();
-                    po.version=version;
-                    po.tableId= String.valueOf(item.id);
-                    po.tableName=item.tableName;
-                    po.fieldId=fieldData.fieldId;
-                    po.fieldName=fieldData.fieldEnName;
-                    po.fieldType=fieldData.fieldType;
-                    po.appId=String.valueOf(item.appId);
-                    if (fieldData.fieldLength !=0)
-                    {
-                        po.fieldType=fieldData.fieldType+"("+fieldData.fieldLength+")";
-                    }
-                    poList.add(po);
+            /*List<TaskPgTableStructurePO> poList=new ArrayList<>();
+            Thread.sleep(200);
+            //获取时间戳版本号
+            DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+            Calendar calendar = Calendar.getInstance();
+            String version = df.format(calendar.getTime());
+            for (ModelPublishFieldDTO item: dto.fieldList) {
+                TaskPgTableStructurePO po = new TaskPgTableStructurePO();
+                po.version = version;
+                po.tableId = String.valueOf(dto.tableId);
+                po.tableName = dto.tableName;
+                po.fieldId = String.valueOf(item.fieldId);
+                po.fieldName = item.fieldEnName;
+                po.fieldType = item.fieldType;
+                if (item.fieldLength != 0) {
+                    po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
+                poList.add(po);
             }
+            //保存成功,调用存储过程,修改表结构
             if (this.saveBatch(poList))
-            {
-                TaskPgTableStructureParameterDTO dto1=new TaskPgTableStructureParameterDTO();
-                dto1.version="";
+            {*/
+                /*TaskPgTableStructureParameterDTO dto1=new TaskPgTableStructureParameterDTO();
+                dto1.version="20211125153400001";
                 String sql = taskPgTableStructureMapper.pgCheckTableStructure(dto1);
                 if (sql !=null && sql.length()>0)
                 {
-
-                }
-            }
+                    //修改表结构
+                    taskPgTableStructureHelper.updatePgTableStructure(sql, "test");
+                }*/
+            //}
         }
         catch (Exception ex)
         {

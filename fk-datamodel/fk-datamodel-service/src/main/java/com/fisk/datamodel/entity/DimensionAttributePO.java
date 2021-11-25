@@ -75,6 +75,6 @@ public class DimensionAttributePO extends BasePO {
     /**
      * 是否维度表字段
      */
-    public Boolean isDateDimensionField;
+    public Boolean isDimDateField;
 
 }

@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class DimensionDateAttributeDTO {
+    public int businessAreaId;
     public long dimensionId;
     public long dimensionAttributeId;
 }

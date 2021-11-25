@@ -57,6 +57,6 @@ public class DimensionPO extends BasePO {
     /**
      * 是否为日期维度表
      */
-    public Boolean isDateDimension;
+    public Boolean isDimDateTbl;
 
 }

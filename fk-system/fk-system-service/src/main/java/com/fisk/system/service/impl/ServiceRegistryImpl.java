@@ -14,6 +14,7 @@ import com.fisk.system.mapper.ServiceRegistryMapper;
 import com.fisk.system.service.IServiceRegistryService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -81,12 +82,35 @@ public class ServiceRegistryImpl implements IServiceRegistryService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public  ResultEnum delServiceRegistry(int id) {
-        ServiceRegistryPO model = mapper.selectById(id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+        try {
+            ServiceRegistryPO model = mapper.selectById(id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            //判断是否为一级菜单
+            if ("1".equals(model.parentServeCode))
+            {
+               QueryWrapper<ServiceRegistryPO> queryWrapper=new QueryWrapper<>();
+               queryWrapper.lambda().eq(ServiceRegistryPO::getParentServeCode,model.serveCode);
+               List<ServiceRegistryPO> list=mapper.selectList(queryWrapper);
+               list.add(model);
+               for (ServiceRegistryPO item:list)
+               {
+                   int flat=mapper.deleteByIdWithFill(item);
+                   if (flat==0)
+                   {
+                       throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                   }
+               }
+               return ResultEnum.SUCCESS;
+            }
+            return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultEnum.SAVE_DATA_ERROR;
         }
-        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

@@ -6,10 +6,11 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.*;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.DimensionFolderPO;
@@ -209,39 +210,49 @@ public class DimensionFolderImpl
             List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper
                     .selectList(attributePOQueryWrapper.in("dimension_id",dimensionIds));
             //遍历取值
-            DimensionFolderPublishDataDTO data=new DimensionFolderPublishDataDTO();
+            ModelPublishDataDTO data=new ModelPublishDataDTO();
             data.businessAreaId=businessAreaPO.getId();
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
             data.userId=userHelper.getLoginUserInfo().id;
-            List<DimensionFolderPublishDTO> dimensionList=new ArrayList<>();
+            List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
             for (DimensionPO item:dimensionPOList)
             {
-                DimensionFolderPublishDTO pushDto=new DimensionFolderPublishDTO();
-                pushDto.dimensionId=Integer.parseInt(String.valueOf(item.id));
-                pushDto.dimensionName=item.dimensionTabName;
+                ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
+                pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
+                pushDto.tableName=item.dimensionTabName;
                 pushDto.sqlScript=item.sqlScript;
                 //获取该维度下所有维度字段
-                pushDto.fieldList=DimensionAttributeMap.INSTANCES.poToPublishDto(dimensionAttributePOList
-                .stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList()));
-                //获取关联维度表名称以及字段名称
-                if (pushDto.fieldList!=null && pushDto.fieldList.size()>0)
+                List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
+                List<DimensionAttributePO> attributePOList=dimensionAttributePOList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());
+                for (DimensionAttributePO attributePO:attributePOList)
                 {
-                    for (DimensionFolderPublishDetailDTO field:pushDto.fieldList)
+                    ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+                    fieldDTO.fieldId=attributePO.id;
+                    fieldDTO.fieldEnName=attributePO.dimensionFieldEnName;
+                    fieldDTO.fieldType=attributePO.dimensionFieldType;
+                    fieldDTO.fieldLength=attributePO.dimensionFieldLength;
+                    fieldDTO.attributeType=attributePO.attributeType;
+                    fieldDTO.isPrimaryKey=attributePO.isPrimaryKey;
+                    fieldDTO.sourceFieldName=attributePO.sourceFieldName;
+                    fieldDTO.associateDimensionId=attributePO.associateDimensionId;
+                    fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+                    //判断是否关联维度
+                    if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
                     {
-                        if (field.associateDimensionId !=0 && field.associateDimensionFieldId !=0 )
-                        {
-                            DimensionPO dimensionPO=dimensionMapper.selectById(field.associateDimensionId);
-                            field.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                            field.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
-                            DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(field.associateDimensionFieldId);
-                            field.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
-                        }
+                        DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.associateDimensionId);
+                        fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                        fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
+                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
+                        fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
                     }
+                    fieldList.add(fieldDTO);
                 }
+                pushDto.fieldList=fieldList;
                 dimensionList.add(pushDto);
             }
             data.dimensionList=dimensionList;
+            String aa="";
             //发送消息
             //publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
         }

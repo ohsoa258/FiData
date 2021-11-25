@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.dimensionfolder;
+package com.fisk.datamodel.dto.modelpublish;
 
 import lombok.Data;
 
@@ -6,19 +6,23 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class DimensionFolderPublishDetailDTO {
+public class ModelPublishFieldDTO {
+    /**
+     * 维度表字段id
+     */
+    public long fieldId;
     /**
      * 维度表英文字段名称
      */
-    public String dimensionFieldEnName;
+    public String fieldEnName;
     /**
      * 维度表字段类型
      */
-    public String dimensionFieldType;
+    public String fieldType;
     /**
      * 维度表字段长度
      */
-    public int dimensionFieldLength;
+    public int fieldLength;
     /**
      * 属性类型：0：维度属性
      */

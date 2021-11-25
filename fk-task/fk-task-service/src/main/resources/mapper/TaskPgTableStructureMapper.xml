@@ -2,11 +2,5 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.task.mapper.TaskPgTableStructureMapper">
-    <select id="pgCheckTableStructure" statementType="CALLABLE" parameterType="com.fisk.task.dto.taskpgtablestructure.TaskPgTableStructureParameterDTO">
-    {call pg_check_table_structure
-         (
-             #{version,mode=IN}
-         )
-    }
-  </select>
+
 </mapper>
