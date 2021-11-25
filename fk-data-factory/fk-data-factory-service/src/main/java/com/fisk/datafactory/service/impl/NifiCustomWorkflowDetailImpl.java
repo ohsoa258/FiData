@@ -201,7 +201,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private BuildNifiCustomWorkFlowDTO getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailDTO dto) {
 
-        String scheduleType = "调度任务";
+        String scheduleType = "开始";
         String taskGroupTpye = "任务组";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 操作类型
@@ -222,7 +222,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
             flow.appId = dto.id;
         }
-        // 调度才有的属性
+        // 开始才有的属性
         if (scheduleType.equalsIgnoreCase(dto.componentType)) {
             flow.nifiCustomWorkflowName = dto.componentName;
             flow.nifiCustomWorkflowId = dto.id;
@@ -245,7 +245,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private DataClassifyEnum getDataClassifyEnum(Integer componentsId) {
         switch (componentsId) {
-            // 调度
+            // 开始
             case 1:
                 return DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT;
             // 任务组
@@ -276,7 +276,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private OlapTableEnum getOlapTableEnum(Integer componentsId) {
         switch (componentsId) {
-            // 调度
+            // 开始
             // 任务组
             case 1:
             case 2:

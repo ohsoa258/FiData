@@ -8,9 +8,9 @@ import com.fisk.common.enums.BaseEnum;
 public enum ChannelDataEnum implements BaseEnum {
 
     /**
-     * 调度任务
+     * 开始
      */
-    SCHEDULE_TASK(1,"调度任务"),
+    SCHEDULE_TASK(1,"开始"),
     /**
      * 任务组
      */
