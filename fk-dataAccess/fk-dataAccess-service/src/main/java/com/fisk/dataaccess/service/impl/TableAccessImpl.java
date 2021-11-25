@@ -1430,21 +1430,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public ResultEntity<List<ChannelDataDTO>> getTableId() {
+    public List<ChannelDataDTO> getTableId() {
 
+        // select id,app_name from tb_app_registration where del_flag=1 ORDER BY create_time DESC;
         List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
-                .select(AppRegistrationPO::getId,AppRegistrationPO::getAppName));
+                .select(AppRegistrationPO::getId,AppRegistrationPO::getAppName)
+                .orderByDesc(AppRegistrationPO::getCreateTime));
 
+        // list: po -> dto
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
 
+        // 查询当前应用下面的所有表
         channelDataDTOList.forEach(dto -> {
+            // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
             List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
                     .eq(TableAccessPO::getAppId, dto.id)
                     .select(TableAccessPO::getId, TableAccessPO::getTableName));
+            // list: po->dto 并赋值给dto.list
             dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
         });
 
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, channelDataDTOList);
+        return channelDataDTOList;
     }
 
     @Override

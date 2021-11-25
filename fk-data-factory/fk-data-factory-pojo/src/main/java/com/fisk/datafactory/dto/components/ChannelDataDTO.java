@@ -16,7 +16,7 @@ public class ChannelDataDTO {
     /**
      * 应用名 or 业务域名
      */
-    public String tableName;
+    public String businessName;
 
     public List<ChannelDataChildDTO> list;
 }

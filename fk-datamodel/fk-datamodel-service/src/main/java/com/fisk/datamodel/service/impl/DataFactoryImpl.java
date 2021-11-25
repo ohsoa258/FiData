@@ -8,7 +8,6 @@ import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
-import com.fisk.datamodel.map.DataFactoryMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactMapper;
@@ -83,7 +82,7 @@ public class DataFactoryImpl implements IDataFactory {
         {
             ChannelDataDTO dto=new ChannelDataDTO();
             dto.id=item.getId();
-            dto.tableName=item.getBusinessName();
+            dto.businessName =item.getBusinessName();
             //查询维度
             if (type==1)
             {

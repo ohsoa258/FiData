@@ -66,7 +66,7 @@ public interface AppRegistrationMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "appName", target = "tableName")
+            @Mapping(source = "appName", target = "businessName")
     })
     ChannelDataDTO poToChannelDataDto(AppRegistrationPO po);
 
