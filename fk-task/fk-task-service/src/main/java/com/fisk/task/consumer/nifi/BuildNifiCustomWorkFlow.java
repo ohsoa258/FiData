@@ -335,10 +335,10 @@ public class BuildNifiCustomWorkFlow {
                 modelMetaDataDTO.sqlName = one1.selectSql.substring(4);
                 modelMetaDataDTO.groupComponentId = groupId;
                 if (Objects.equals(nifiNode.tableType, OlapTableEnum.DIMENSION)) {
-                    buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKDIMENSION);
+                    //buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKDIMENSION);
                     appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKDIMENSION;
                 } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.FACT)) {
-                    buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKFACT);
+                    //buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKFACT);
                     appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKFACT;
                 }
                 appNifiSettingDTO.appId = String.valueOf(nifiNode.appId);

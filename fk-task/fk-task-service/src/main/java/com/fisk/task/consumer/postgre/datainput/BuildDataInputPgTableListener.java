@@ -81,7 +81,7 @@ public class BuildDataInputPgTableListener {
         }else{
             StringBuilder sql = new StringBuilder();
             StringBuilder sqlFileds = new StringBuilder();
-            sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pk" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_bach_code varchar(50),");
+            sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pk" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             tableFieldsDTOS.forEach((l) -> {
                 sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
@@ -128,7 +128,7 @@ public class BuildDataInputPgTableListener {
                 }
             }
             for (TableFieldDetailDTO tableFieldDetailDTO:tableFieldDetailDTOS1) {
-                if(Objects.equals(tableFieldDetailDTO.columnName,tablePk)||Objects.equals(tableFieldDetailDTO.columnName,"fi_bach_code")){
+                if(Objects.equals(tableFieldDetailDTO.columnName,tablePk)||Objects.equals(tableFieldDetailDTO.columnName,"fi_batch_code")){
                     continue;
                 }else{
                     sql="ALTER TABLE "+tableName+" DROP COLUMN "+tableFieldDetailDTO.columnName;

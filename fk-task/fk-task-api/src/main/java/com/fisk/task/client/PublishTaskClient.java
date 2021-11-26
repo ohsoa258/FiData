@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
@@ -62,11 +63,11 @@ public interface PublishTaskClient {
     ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody String entityId);
     /**
      * doris创建表BUILD_DATAMODEL_DORIS_TABLE
-     * @param atlasEntityQueryDTO
+     * @param modelPublishDataDTO
      * @return
      */
     @PostMapping("/publishTask/atlasDorisTable")
-    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddListDTO atlasEntityQueryDTO);
+    ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO);
 
 
     /**

@@ -163,7 +163,7 @@ public class BusinessProcessImpl
             dimensionAttributeAddListDTO.dimensionAttributeAddDTOS=list;
             dimensionAttributeAddListDTO.userId=userHelper.getLoginUserInfo().id;
             //发送消息
-            publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
+            //publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
         }
         catch (Exception ex){
             log.error(ex.getMessage());

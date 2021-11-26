@@ -17,4 +17,5 @@ public class ModelPublishTableDTO {
     public int createType;
     public String sqlScript;
     public List<ModelPublishFieldDTO> fieldList;
+    public String groupComponentId;
 }

@@ -20,6 +20,9 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.nifi.*;
@@ -43,7 +46,7 @@ import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.PostgreHelper;
-import com.fisk.task.utils.TaskPgTableStructureHelper;
+//import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -91,8 +94,8 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-    @Resource
-    TaskPgTableStructureHelper taskPgTableStructureHelper;
+    /*@Resource
+    TaskPgTableStructureHelper taskPgTableStructureHelper;*/
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
@@ -111,43 +114,136 @@ public class BuildDataModelDorisTableListener
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        DimensionAttributeAddListDTO inpData = JSON.parseObject(dataInfo, DimensionAttributeAddListDTO.class);
-        List<DimensionAttributeAddDTO> dimensionAttributeAddDTOS = inpData.dimensionAttributeAddDTOS;
-        ResultEntity<Object> dimensionAttributeList = new ResultEntity<>();
-        boolean pgdbTable = false;
-        for (DimensionAttributeAddDTO dimensionAttributeAddDTO : dimensionAttributeAddDTOS) {
-            if (dimensionAttributeAddDTO.createType == 0) {
-                dimensionAttributeList = dc.getDimensionEntity(dimensionAttributeAddDTO.dimensionId);
-                ModelMetaDataDTO modelMetaDataDTO = JSON.parseObject(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
-                //向task库中添加维度数据结构
-                List<ModelMetaDataDTO> list = new ArrayList<>();
-                list.add(modelMetaDataDTO);
-                //saveTableStructure(list);
-                pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
-                log.info("pg数据库创表结果为" + pgdbTable);
-                String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
-                PostgreHelper.postgreExecuteSql(storedProcedure, BusinessTypeEnum.DATAMODEL);
-                //nifi组件配置pg-ods2pg-dw,调用存储过程,根据业务域名称创建组,加数据库连接池,根据表名创建任务组,创建组件
-                createNiFiFlow(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.DIMENSION);
-            } else {
-                dimensionAttributeList = dc.getBusinessProcessFact(dimensionAttributeAddDTO.dimensionId);
-                List<ModelMetaDataDTO> modelMetaDataDTOS = JSON.parseArray(JSON.toJSONString(dimensionAttributeList.data), ModelMetaDataDTO.class);
-                //向task库中添加业务下所有事实表数据结构
-                //saveTableStructure(modelMetaDataDTOS);
-                for (ModelMetaDataDTO modelMetaDataDTO : modelMetaDataDTOS) {
-                    pgdbTable = createPgdbTable(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName);
-                    log.info(modelMetaDataDTO.tableName + "pg数据库创表结果为" + pgdbTable);
-                    String storedProcedure = createStoredProcedure2(modelMetaDataDTO);
-                    PostgreHelper.postgreExecuteSql(storedProcedure, BusinessTypeEnum.DATAMODEL);
-                    //nifi组件配置pg-ods2pg-dw,调用存储过程,根据业务域名称创建组,加数据库连接池,根据表名创建任务组,创建组件
-                    createNiFiFlow(modelMetaDataDTO, dimensionAttributeAddDTO.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.FACT);
-                }
+        //saveTableStructure(list);
+        //1.,查询语句,并存库
+        //2.修改表的存储过程
+        //3.生成nifi流程
+
+        ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
+        List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
+        for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
+                //生成建表语句
+                createPgdbTable2(modelPublishTableDTO);
+                //生成函数,并执行
+            String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
+            //saveTableStructure(list);
+            if(modelPublishTableDTO.createType==0){
+                createNiFiFlow(inpData,modelPublishTableDTO, inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.DIMENSION);
+            }else{
+                createNiFiFlow(inpData,modelPublishTableDTO, inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.FACT);
             }
+
         }
+
+        
+
+
 
     }
 
-    public void createNiFiFlow(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
+    public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO){
+        String tableName=modelPublishTableDTO.tableName;
+        String tableKeyName="";
+        if(modelPublishTableDTO.createType==0){
+             tableKeyName=modelPublishTableDTO.tableName.substring(4)+"_pk";
+        }else{
+            tableKeyName=modelPublishTableDTO.tableName.substring(5)+"_pk";
+        }
+
+        String fieldValue="";
+        String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
+                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";
+        storedProcedureSql+="mysql1:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql1(modelPublishTableDTO);
+        storedProcedureSql+="raise notice'%',mysql1;\nEXECUTE mysql1;\n";
+        storedProcedureSql+="end\n$BODY$;\n";
+        return storedProcedureSql;
+    }
+
+    public String selectSql1(ModelPublishTableDTO modelPublishTableDTO){
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk="";
+        if(modelPublishTableDTO.createType==0){
+             tablePk=modelPublishTableDTO.tableName.substring(0,4);
+        }else{
+            tablePk=modelPublishTableDTO.tableName.substring(0,5);
+        }
+        String selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''";
+        String selectSql1="select newid() as "+tablePk+", ";
+        StringBuilder selectSql2=new StringBuilder();
+        StringBuilder selectSql3=new StringBuilder(tablePk +" varchar,");
+        StringBuilder selectSql4=new StringBuilder(tablePk+"=EXCLUDED."+tablePk+",");
+        StringBuilder selectSql5=new StringBuilder();
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        fieldList.forEach((l) -> {
+            selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
+            selectSql3.append(l.fieldEnName+" varcher ,");
+            selectSql4.append(l.fieldEnName+"=EXCLUDED."+l.fieldEnName+",");
+            if(l.isPrimaryKey==1){
+                selectSql5.append(","+l.fieldEnName);
+            }
+
+            //多表搁置
+            if(l.associateDimensionName!=null){
+
+            }
+        });
+        String sql = selectSql2.toString();
+        sql=sql.substring(0,sql.length()-1);
+        sql+=" from ( "+modelPublishTableDTO.sqlScript+" ) fisk '''||') as t (";
+        String sql1 = selectSql3.toString();
+        String sql3 = selectSql5.toString();
+        if(sql3.length()!=1){
+
+        }
+        sql+=sql1.substring(0,sql1.length()-1)+"))'||' AS ods ON CONFLICT ( "+tablePk+" )  DO UPDATE SET";
+        String sql2 = selectSql4.toString();
+        sql+=sql2.substring(0,sql2.length()-1)+";";
+        return sql;
+    }
+
+    public void createPgdbTable2(ModelPublishTableDTO modelPublishTableDTO){
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk="";
+        if(modelPublishTableDTO.createType==0){
+            tablePk=tableName.substring(4)+"_pk";
+        }else{
+            tablePk=tableName.substring(5)+"_pk";
+        }
+
+        StringBuilder sql = new StringBuilder();
+        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( "+tablePk+", ");
+        sql.append("CREATE TABLE "+modelPublishTableDTO.tableName+" ( "+tablePk+" varchar(50), ");
+        StringBuilder sqlFileds = new StringBuilder();
+        StringBuilder sqlFileds1 = new StringBuilder();
+        fieldList.forEach((l) -> {
+            sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+            if(Objects.nonNull(l.associateDimensionName)){
+                sqlFileds1.append(l.associateDimensionName.substring(4)+"_pk varchar(50),");
+            }
+            if(l.isPrimaryKey==1){
+                pksql.append(l.fieldEnName+" , ");
+            }
+        });
+        String sql1 = sql.toString();
+        String sql2 = sqlFileds.toString();
+        String sql3 = sqlFileds1.toString();
+        String sql4 = pksql.toString();
+        sql1+=sql2+sql3.substring(0,sql3.length()-1)+") "+sql4.substring(0,sql4.length()-1)+");";
+        //创建表
+        iPostgreBuild.postgreBuildTable(sql1, BusinessTypeEnum.DATAMODEL);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("table_name",tableName);
+        taskDwDimMapper.deleteByMap(map);
+            TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
+            //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
+            taskDwDimPO.sqlContent=sql1;//创建表的sql
+            taskDwDimPO.tableName=tableName;
+            taskDwDimPO.storedProcedureName="update"+tableName+"()";
+            taskDwDimMapper.insert(taskDwDimPO);
+    }
+
+    public void createNiFiFlow(ModelPublishDataDTO modelPublishDataDTO,ModelPublishTableDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){
         BuildDbControllerServiceDTO buildDbControllerServiceDTO = new BuildDbControllerServiceDTO();
         //数据连接池
         ControllerServiceEntity  data=new ControllerServiceEntity();
@@ -160,16 +256,16 @@ public class BuildDataModelDorisTableListener
         DataModelVO dataModelVO = new DataModelVO();
         dataModelVO.dataClassifyEnum=dataClassifyEnum;
         dataModelVO.delBusiness=false;
-        dataModelVO.businessId=String.valueOf(modelMetaDataDTO.appId);
+        dataModelVO.businessId=String.valueOf(modelPublishDataDTO.businessAreaId);
         DataModelTableVO dataModelTableVO = new DataModelTableVO();
         dataModelTableVO.type=olapTableEnum;
         List<Long> ids = new ArrayList<>();
-        ids.add(modelMetaDataDTO.id);
+        ids.add(modelMetaDataDTO.tableId);
         dataModelTableVO.ids=ids;
         dataModelVO.indicatorIdList=dataModelTableVO;
         componentsBuild.deleteNifiFlow(dataModelVO);
 
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelMetaDataDTO.appId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelPublishDataDTO.businessAreaId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
         if(appNifiSettingPO!=null){
             try {
                 data1=NifiHelper.getProcessGroupsApi().getProcessGroup(appNifiSettingPO.appComponentId);
@@ -279,10 +375,10 @@ public class BuildDataModelDorisTableListener
 
         //创建组件,启动组件
         TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
-        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), modelMetaDataDTO.sqlName,data1,tableNifiSetting);
+        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), "update"+modelMetaDataDTO.tableName+"()",data1,tableNifiSetting);
 
         //回写
-        savaNifiAllSetting(data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
+        //savaNifiAllSetting(data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
 
     }
 

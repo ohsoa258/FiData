@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.modelpublish;
 
+import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -8,9 +9,8 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class ModelPublishDataDTO {
+public class ModelPublishDataDTO extends MQBaseDTO {
     public long businessAreaId;
     public String businessAreaName;
-    public long userId;
     public List<ModelPublishTableDTO> dimensionList;
 }
