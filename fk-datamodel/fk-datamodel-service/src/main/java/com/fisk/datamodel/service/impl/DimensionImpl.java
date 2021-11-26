@@ -223,7 +223,7 @@ public class DimensionImpl implements IDimension {
                 .eq(DimensionPO::getBusinessId,businessId)
                 .eq(DimensionPO::getIsDimDateTbl,true);
         List<DimensionPO> dimensionPOList=mapper.selectList(queryWrapper);
-        if (dimensionPOList ==null && dimensionPOList.size()==0)
+        if (dimensionPOList ==null || dimensionPOList.size()==0)
         {
             return data;
         }
@@ -234,7 +234,7 @@ public class DimensionImpl implements IDimension {
                 .eq(DimensionAttributePO::getDimensionId,data.dimensionId)
                 .eq(DimensionAttributePO::getIsDimDateField,true);
         List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(queryWrapper1);
-        if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
+        if (dimensionAttributePOList ==null || dimensionAttributePOList.size()==0)
         {
             return data;
         }
