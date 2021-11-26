@@ -1202,7 +1202,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 outputportConnectIds.add(tableNifiSettingPO.processorOutputPortConnectId);
                 outputportConnectIds.add(tableNifiSettingPO.tableOutputPortConnectId);
                 //组件
-                ProcessIds.add(tableNifiSettingPO.dispatchComponentId);
+                //ProcessIds.add(tableNifiSettingPO.dispatchComponentId);
                 ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);

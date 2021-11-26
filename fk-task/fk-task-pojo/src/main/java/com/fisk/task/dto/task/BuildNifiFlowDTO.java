@@ -38,4 +38,13 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     * groupComponentId(管道,如果不为null,就子组里建立nifi流程)
     * */
     public String groupComponentId;
+    /*
+    * tb_nifi_custom_workflow_detail表的主键,用来区分同一张表被多次使用
+    * */
+    public String workflowDetailId;
+
+    /*
+    * //管道英文id(workflowId)
+    * */
+    public String nifiCustomWorkflowId;
 }

@@ -76,6 +76,10 @@ public class NifiHelper {
         return new FunnelApi(getApiClient());
     }
 
+    public static FlowApi getFlowApi(){
+        return new FlowApi(getApiClient());
+    }
+
     /**
      * pid如果为null，返回默认值
      *

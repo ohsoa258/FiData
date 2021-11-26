@@ -78,11 +78,12 @@ public class BuildAtlasTableAndColumnTaskListener
         //拿到对象
         ResultEntity<BuildPhysicalTableDTO> data = dc.getBuildPhysicalTableDTO(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
         BuildPhysicalTableDTO buildPhysicalTableDTO = data.data;
+        log.info("建表原始数据:"+data);
         String physicalSelect = createPhysicalTable(buildPhysicalTableDTO);
         ResultEntity<AtlasEntityDbTableColumnDTO> queryRes = dc.getAtlasBuildTableAndColumn(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
         log.info("queryRes:" + JSON.toJSONString(queryRes.data));
         log.info("queryRes:" + JSON.toJSONString(queryRes));
-        AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
+        //AtlasEntityDbTableColumnDTO ae = JSON.parseObject(JSON.toJSONString(queryRes.data), AtlasEntityDbTableColumnDTO.class);
         /*AtlasWriteBackDataDTO awbd = new AtlasWriteBackDataDTO();
         awbd.tableId=ae.tableId;
         awbd.appId=inpData.appId;
@@ -225,7 +226,7 @@ public class BuildAtlasTableAndColumnTaskListener
         //saveTableStructure(awbd);
 
         //incremental insert
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        /*SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
         if (ae.syncType.equals(OdsDataSyncTypeEnum.timestamp_incremental)) {
             //region 用户corn表达书计算数据下次同步时间
@@ -273,9 +274,13 @@ public class BuildAtlasTableAndColumnTaskListener
             ETLIncremental.incremental_objectivescore_start=null;
             ETLIncremental.incremental_objectivescore_end=null;
             incrementalMapper.insert(ETLIncremental);
-        }
+        }*/
         //endregion
-
+        TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
+        ETLIncremental.object_name=buildPhysicalTableDTO.appAbbreviation+"_"+buildPhysicalTableDTO.tableName;
+        ETLIncremental.enable_flag="1";
+        ETLIncremental.incremental_objectivescore_batchno=UUID.randomUUID().toString();
+        incrementalMapper.insert(ETLIncremental);
         TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", inpData.appId).eq("table_access_id", inpData.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         if(one!=null){

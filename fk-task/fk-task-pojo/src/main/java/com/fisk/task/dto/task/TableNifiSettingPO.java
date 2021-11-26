@@ -39,4 +39,5 @@ public class TableNifiSettingPO extends BasePO {
     public String processorOutputPortConnectId;
     public String tableInputPortConnectId;
     public String tableOutputPortConnectId;
+    public String nifiCustomWorkflowDetailId;
 }

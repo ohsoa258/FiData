@@ -21,4 +21,5 @@ public class AppNifiSettingPO extends BasePO {
   public String outputDucts;
   public String inputPortConnectId;
   public String outputPortConnectId;
+  public String nifiCustomWorkflowId;
 }
