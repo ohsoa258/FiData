@@ -3,8 +3,6 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.filter.method.GenerateCondition;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
@@ -82,13 +80,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEntity<AtlasIdsVO> addData(TableAccessNonDTO dto) {
+    public ResultEnum addData(TableAccessNonDTO dto) {
 
         List<TableFieldsDTO> listDto = dto.list;
         TableSyncmodeDTO syncmodeDto = dto.tableSyncmodeDTO;
         TableBusinessDTO businessDto = dto.businessDTO;
         if (CollectionUtils.isEmpty(listDto) || syncmodeDto == null) {
-            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
+            return ResultEnum.PARAMTER_NOTNULL;
         }
 
         // list: dto -> po
@@ -98,29 +96,30 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 批量添加tb_table_fields
         success = this.saveBatch(listPo);
         if (!success) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
 
         int businessMode = 3;
         if (syncmodeDto.syncMode == businessMode && businessDto != null) {
             success = businessImpl.save(TableBusinessMap.INSTANCES.dtoToPo(businessDto));
             if (!success) {
-                return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+                return ResultEnum.SAVE_DATA_ERROR;
             }
         }
         // 添加tb_table_syncmode
-        TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
         Long tableAccessId = listPo.get(0).tableAccessId;
+        TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
         syncmodePo.id = tableAccessId;
         success = syncmodeImpl.save(syncmodePo);
-        if (!success) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
-        }
 
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        TableAccessPO tableAccessPo = tableAccessImpl.query().eq("id", tableAccessId).one();
-        AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, tableAccessPo.appId, tableAccessId, tableAccessPo.tableName);
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
+        TableAccessPO accessPo = tableAccessImpl.query().eq("id", tableAccessId).one();
+        if (accessPo == null) {
+            return ResultEnum.TABLE_NOT_EXIST;
+        }
+        // 发布
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag);
+
+        return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -211,6 +210,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
         success = syncmodeImpl.updateById(modelSync);
 
+/*
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
@@ -227,11 +227,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (success && dto.flag == 1) {
             publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
         }
+*/
+        // 发布
+        publish(success,model.appId,model.id,model.tableName,dto.flag);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     /**
+     * 组装参数
+     *
      * @param userId    当前登录人id
      * @param appId     应用注册id
      * @param accessId  物理表id
@@ -247,5 +252,33 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         atlasIdsVO.dbId = String.valueOf(accessId);
         atlasIdsVO.tableName = tableName;
         return atlasIdsVO;
+    }
+
+    /**
+     * 调用发布和存储过程
+     *
+     * @param success   true: 保存成功,执行发布
+     * @param appId     应用id
+     * @param accessId  物理表id
+     * @param tableName 物理表-表名
+     * @param flag      0: 保存;  1: 发布
+     */
+    private void publish(boolean success, long appId, long accessId, String tableName, int flag) {
+        if (success && flag == 1) {
+
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+            AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, appId, accessId, tableName);
+            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+            atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+            // 应用注册id
+            atlasEntityQueryDTO.appId = atlasIdsVO.appId;
+            // 物理表id
+            atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+            //表名称
+            atlasEntityQueryDTO.tableName = tableName;
+            // 调用atlas
+            // 保存成功,执行发布,调用存储过程
+            publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        }
     }
 }

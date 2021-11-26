@@ -70,6 +70,7 @@ public enum ResultEnum {
     DATAACCESS_APPNAME_ERROR(5007, "应用名称已存在"),
     DATAACCESS_APPABBREVIATION_SUCCESS(5008, "应用简称有效"),
     DATAACCESS_APPABBREVIATION_ERROR(5009, "应用简称已存在"),
+    TABLE_NOT_EXIST(5010, "当前物理表已删除"),
 
 
     /**
