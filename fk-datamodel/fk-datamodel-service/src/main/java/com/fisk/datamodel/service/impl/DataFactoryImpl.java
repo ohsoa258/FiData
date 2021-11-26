@@ -38,13 +38,6 @@ public class DataFactoryImpl implements IDataFactory {
     public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
         List<ChannelDataDTO> list = new ArrayList<>();
         switch ((int) dto.id) {
-            // 数据湖
-            case 3:
-
-                if (client.getTableId().code == 0) {
-                    list = client.getTableId().data;
-                }
-                break;
             // 维度表
             case 4:
             case 6:
@@ -57,6 +50,7 @@ public class DataFactoryImpl implements IDataFactory {
                 break;
             case 1:
             case 2:
+            case 3:
             default:
                 break;
         }
