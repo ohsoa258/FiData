@@ -77,7 +77,7 @@ public class TableFieldsController {
      * @return 返回值
      */
     @PutMapping("/edit")
-    @ApiOperation(value = "修改物理表字段")
+    @ApiOperation(value = "修改物理表字段--保存&发布")
     public ResultEntity<Object> editData(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(service.updateData(dto));
     }

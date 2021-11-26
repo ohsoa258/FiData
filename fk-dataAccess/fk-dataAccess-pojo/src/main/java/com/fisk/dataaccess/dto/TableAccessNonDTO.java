@@ -77,6 +77,11 @@ public class TableAccessNonDTO extends BaseDTO {
      */
     public TableSyncmodeDTO tableSyncmodeDTO;
 
+    /**
+     * 0: 保存;   1: 保存&发布
+     */
+    public int flag;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }

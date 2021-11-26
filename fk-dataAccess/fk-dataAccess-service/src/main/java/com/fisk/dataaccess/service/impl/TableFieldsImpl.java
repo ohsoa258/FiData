@@ -23,6 +23,8 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -47,6 +49,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableBusinessImpl businessImpl;
     @Resource
     private TableSyncmodeImpl syncmodeImpl;
+    @Resource
+    private PublishTaskClient publishTaskClient;
     @Resource
     private UserHelper userHelper;
 
@@ -129,6 +133,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
                 .select(TableFieldsPO::getId));*/
 
+        TableAccessPO model = tableAccessImpl.getById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
         if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null) {
             return ResultEnum.PARAMTER_NOTNULL;
@@ -201,6 +210,23 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         // 保存tb_table_syncmode
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
         success = syncmodeImpl.updateById(modelSync);
+
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
+        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
+        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
+        // 应用注册id
+        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
+        // 物理表id
+        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
+        //表名称
+        atlasEntityQueryDTO.tableName = model.tableName;
+        // 调用atlas
+        // 保存成功,执行发布,调用存储过程
+        if (success && dto.flag == 1) {
+            publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        }
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }

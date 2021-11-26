@@ -51,7 +51,6 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -1573,7 +1572,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
             success = this.updateById(po);
 
-            UserInfo userInfo = userHelper.getLoginUserInfo();
+            /*UserInfo userInfo = userHelper.getLoginUserInfo();
             AtlasIdsVO atlasIdsVO = tableFieldsImpl.getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
             AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
             atlasEntityQueryDTO.userId = atlasIdsVO.userId;
@@ -1590,10 +1589,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
             }
 
-            // TODO: 调用存储过程
             if (success) {
 
-            }
+            }*/
 
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
