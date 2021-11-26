@@ -201,6 +201,7 @@ public class FactAttributeImpl
             dto.id = item.id;
             dto.factFieldEnName = item.factFieldEnName;
             dto.factFieldType=item.factFieldType;
+            dto.attributeType=item.attributeType;
             data.add(dto);
         }
         return data;

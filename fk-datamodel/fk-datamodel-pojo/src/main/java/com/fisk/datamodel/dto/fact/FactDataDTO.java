@@ -18,6 +18,10 @@ public class FactDataDTO {
      */
     public String factTabName;
     /**
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     */
+    public int isPublish;
+    /**
      * 事实表下字段列表
      */
     public List<FactAttributeDataDTO> attributeList;

@@ -20,7 +20,7 @@ public class BusinessProcessListDTO {
     /**
      * 发布状态：1:未发布、2：发布成功、3：发布失败
      */
-    public int isPublish;
+    //public int isPublish;
     /**
      * 业务过程下事实列表
      */

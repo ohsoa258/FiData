@@ -10,4 +10,5 @@ public class FactAttributeDropDTO {
     public long id;
     public String factFieldEnName;
     public String factFieldType;
+    public int attributeType;
 }

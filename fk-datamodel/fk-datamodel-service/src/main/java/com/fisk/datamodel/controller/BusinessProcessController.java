@@ -7,6 +7,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.service.IBusinessProcess;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -76,12 +77,6 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.businessProcessPush(id));
     }
 
-    @ApiOperation("修改业务过程发布状态")
-    @PutMapping("/editBusinessProcessPublishStatus")
-    public void editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess) {
-        service.updatePublishStatus(id,isSuccess);
-    }
-
     @ApiOperation("根据业务过程id获取业务域id")
     @GetMapping("/getBusinessId/{id}")
     public ResultEntity<Object> getBusinessId(@PathVariable("id")int id) {
@@ -92,6 +87,12 @@ public class BusinessProcessController {
     @GetMapping("/getBusinessProcessList/{businessAreaId}")
     public ResultEntity<Object> getBusinessProcessList(@PathVariable("businessAreaId") int businessAreaId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessList(businessAreaId));
+    }
+
+    @ApiOperation("根据维度id集合,发布相关事实")
+    @PostMapping("/publicFactFolder")
+    public ResultEntity<Object> publicFactFolder(@Validated @RequestBody BusinessProcessPublishQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublishBusinessProcess(dto));
     }
 
 

@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.dimensionfolder;
+package com.fisk.datamodel.dto.businessprocess;
 
 import lombok.Data;
 
@@ -8,9 +8,9 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class DimensionFolderPublishQueryDTO {
+public class BusinessProcessPublishQueryDTO {
     public int businessAreaId;
-    public List<Integer> dimensionIds;
+    public List<Integer> factIds;
     /**
      * 发布备注
      */

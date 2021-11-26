@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
@@ -17,15 +18,18 @@ import java.util.List;
  * @author JianWenYang
  */
 @Service
-public class TableHistoryImpl implements ITableHistory {
+public class TableHistoryImpl
+        extends ServiceImpl<TableHistoryMapper,TableHistoryPO>
+        implements ITableHistory {
 
     @Resource
     TableHistoryMapper mapper;
 
     @Override
-    public ResultEnum addTableHistory(TableHistoryDTO dto)
+    public ResultEnum addTableHistory(List<TableHistoryDTO> dto)
     {
-        return mapper.insert(TableHistoryMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+
+        return this.saveBatch(TableHistoryMap.INSTANCES.dtoListToPoList(dto))?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

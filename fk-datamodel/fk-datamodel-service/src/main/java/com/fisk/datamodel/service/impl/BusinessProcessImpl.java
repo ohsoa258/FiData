@@ -2,7 +2,6 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
@@ -15,15 +14,19 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.fact.FactDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IBusinessProcess;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -63,6 +66,8 @@ public class BusinessProcessImpl
     DimensionMapper dimensionMapper;
     @Resource
     DimensionAttributeMapper dimensionAttributeMapper;
+    @Resource
+    TableHistoryImpl tableHistory;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -120,10 +125,123 @@ public class BusinessProcessImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteBusinessProcess(List<Integer> ids)
     {
-        return this.removeByIds(ids)?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        try {
+            int flat=mapper.deleteBatchIds(ids);
+            if (flat==0)
+            {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.select("id").in("business_process_id",ids);
+            List<Integer> factIds=(List)factMapper.selectObjs(queryWrapper);
+            if (factIds ==null || factIds.size()==0)
+            {
+                return ResultEnum.SUCCESS;
+            }
+            return factMapper.deleteBatchIds(factIds)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResultEnum.SUCCESS;
     }
+
+    @Override
+    public ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto)
+    {
+        try {
+            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.businessAreaId);
+            if (businessAreaPO==null)
+            {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            //获取业务过程下所有事实
+            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.in("id",dto.factIds);
+            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
+            if (factPOList==null || factPOList.size()==0)
+            {
+                throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
+            }
+            //获取事实字段数据
+            QueryWrapper<FactAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+            //获取事实id集合
+            List<Integer> factIds=(List) factMapper.selectObjs(queryWrapper.select("id"));
+            List<FactAttributePO> factAttributePOList=factAttributeMapper
+                    .selectList(attributePOQueryWrapper.in("fact_id",factIds));
+            //遍历取值
+            ModelPublishDataDTO data=new ModelPublishDataDTO();
+            data.businessAreaId=businessAreaPO.getId();
+            data.businessAreaName=businessAreaPO.getBusinessName();
+            data.userId=userHelper.getLoginUserInfo().id;
+            List<ModelPublishTableDTO> factList=new ArrayList<>();
+            for (FactPO item:factPOList)
+            {
+                ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
+                pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
+                pushDto.tableName=item.factTabName;
+                pushDto.createType=CreateTypeEnum.CREATE_FACT.getValue();
+                pushDto.sqlScript=item.sqlScript;
+                //获取该维度下所有维度字段
+                List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
+                List<FactAttributePO> attributePOList=factAttributePOList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
+                for (FactAttributePO attributePO:attributePOList)
+                {
+                    ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+                    fieldDTO.fieldId=attributePO.id;
+                    fieldDTO.fieldEnName=attributePO.factFieldEnName;
+                    fieldDTO.fieldType=attributePO.factFieldType;
+                    fieldDTO.fieldLength=attributePO.factFieldLength;
+                    fieldDTO.attributeType=attributePO.attributeType;
+                    fieldDTO.sourceFieldName=attributePO.sourceFieldName;
+                    fieldDTO.associateDimensionId=attributePO.associateDimensionId;
+                    fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+                    //判断是否关联维度
+                    if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+                    {
+                        DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.associateDimensionId);
+                        fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                        fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
+                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
+                        fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                    }
+                    fieldList.add(fieldDTO);
+                }
+                pushDto.fieldList=fieldList;
+                factList.add(pushDto);
+                data.dimensionList=factList;
+                //发布历史添加数据
+                addTableHistory(dto);
+                //发送消息
+                publishTaskClient.publishBuildAtlasDorisTableTask(data);
+            }
+        } catch (FkException ex) {
+            log.error(ex.getMessage());
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    private void addTableHistory(BusinessProcessPublishQueryDTO dto)
+    {
+        List<TableHistoryDTO> list=new ArrayList<>();
+        for (Integer id:dto.factIds)
+        {
+            TableHistoryDTO data=new TableHistoryDTO();
+            data.remark=dto.remark;
+            data.tableId=id;
+            data.tableType=CreateTypeEnum.CREATE_FACT.getValue();
+            list.add(data);
+        }
+        tableHistory.addTableHistory(list);
+    }
+
+
+
+
+
 
     @Override
     public List<BusinessProcessDropDTO> getBusinessProcessDropList()
@@ -192,21 +310,6 @@ public class BusinessProcessImpl
             list.add(metaDataDTO);
         }
         return list;
-    }
-
-    @Override
-    public void updatePublishStatus(int id,int isSuccess)
-    {
-        BusinessProcessPO po=mapper.selectById(id);
-        if (po==null)
-        {
-            log.info(id+":数据不存在");
-            throw new FkException(ResultEnum.PUBLISH_FAILURE);
-        }
-        po.isPublish=isSuccess;
-        int flat=mapper.updateById(po);
-        String msg=flat>0?"发布成功":"发布失败";
-        log.info(po.businessProcessCnName+":"+msg);
     }
 
     @Override
@@ -317,5 +420,6 @@ public class BusinessProcessImpl
         }
         return dtoList;
     }
+
 
 }

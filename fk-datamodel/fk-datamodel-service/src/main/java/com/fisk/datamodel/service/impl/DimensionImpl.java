@@ -45,7 +45,8 @@ public class DimensionImpl implements IDimension {
     {
 
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
+        queryWrapper.lambda()
+                //.eq(DimensionPO::getBusinessId,dto.businessId)
                 .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
@@ -65,7 +66,8 @@ public class DimensionImpl implements IDimension {
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionPO::getBusinessId,dto.businessId)
+        queryWrapper.lambda()
+                //.eq(DimensionPO::getBusinessId,dto.businessId)
                 .eq(DimensionPO::getDimensionTabName,dto.dimensionTabName);
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=model.id)
@@ -196,12 +198,12 @@ public class DimensionImpl implements IDimension {
         DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
         if (dimensionPO ==null)
         {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEnum.SUCCESS;
         }
         DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(dto.dimensionAttributeId);
         if (dimensionAttributePO==null)
         {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEnum.SUCCESS;
         }
         dimensionPO.isDimDateTbl=true;
         int flat=mapper.updateById(dimensionPO);

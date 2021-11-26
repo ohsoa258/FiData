@@ -48,7 +48,8 @@ public class FactImpl implements IFact {
     public ResultEnum addFact(FactDTO dto)
     {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.businessProcessId)
+        queryWrapper.lambda()
+                //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
                 .eq(FactPO::getFactTableEnName,dto.factTableEnName);
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
@@ -104,7 +105,8 @@ public class FactImpl implements IFact {
             return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.businessProcessId)
+        queryWrapper.lambda()
+                //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
             .eq(FactPO::getFactTableEnName,dto.factTableEnName);
         FactPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)

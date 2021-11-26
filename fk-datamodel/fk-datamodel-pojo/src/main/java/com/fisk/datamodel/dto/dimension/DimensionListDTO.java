@@ -21,6 +21,10 @@ public class DimensionListDTO {
      */
     public String dimensionTabName;
     /**
+     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     */
+    public int isPublish;
+    /**
      * 维度字段列表
      */
     public List<DimensionAttributeDataDTO> attributeList;

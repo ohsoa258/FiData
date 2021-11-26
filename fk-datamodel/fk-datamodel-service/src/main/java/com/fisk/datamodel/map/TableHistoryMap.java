@@ -20,7 +20,7 @@ public interface TableHistoryMap {
      * @param dto
      * @return
      */
-    TableHistoryPO dtoToPo(TableHistoryDTO dto);
+    List<TableHistoryPO> dtoListToPoList(List<TableHistoryDTO> dto);
 
     /**
      * poList==>DtoList

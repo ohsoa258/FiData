@@ -69,13 +69,6 @@ public interface IBusinessProcess {
     List<ModelMetaDataDTO> businessProcessPush(int businessProcessId);
 
     /**
-     * 更改业务过程发布状态
-     * @param id
-     * @param isSuccess
-     */
-    void updatePublishStatus(int id,int isSuccess);
-
-    /**
      * 根据业务过程id,获取业务域id
      * @param factId
      * @return
@@ -88,5 +81,12 @@ public interface IBusinessProcess {
      * @return
      */
     List<BusinessProcessListDTO> getBusinessProcessList(int businessAreaId);
+
+    /**
+     * 批量发布事实表
+     * @param dto
+     * @return
+     */
+    ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto);
 
 }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -40,7 +41,7 @@ public class TableHistoryController {
 
     @ApiOperation("添加发布历史")
     @PostMapping("/addTableHistory")
-    public ResultEntity<Object> addTableHistory(@Validated @RequestBody TableHistoryDTO dto) {
+    public ResultEntity<Object> addTableHistory(@Validated @RequestBody List<TableHistoryDTO> dto) {
         return ResultEntityBuild.build(service.addTableHistory(dto));
     }
 
