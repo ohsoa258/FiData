@@ -137,7 +137,7 @@ public class AppRegistrationController {
 
         ResultEntity<NifiVO> result = service.deleteAppRegistration(id);
 
-        // TODO 删除Atlas和nifi流程
+        // TODO 删除pg库对应的表和nifi流程
         log.info("方法返回值,{}", result.data);
         NifiVO nifiVO = result.data;
 
@@ -146,19 +146,18 @@ public class AppRegistrationController {
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = true;
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
-            List<TableListDTO> collect = nifiVO.tableList.stream().map(e -> {
+
+            pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
                 TableListDTO dto = new TableListDTO();
                 dto.tableAtlasId = e.tableAtlasId;
-//                dto.tableName = e.nifiSettingTableName;
                 dto.userId = nifiVO.userId;
                 return dto;
             }).collect(Collectors.toList());
-
-            pgsqlDelTableDTO.tableList = collect;
         }
 
         // 只有存在表时才会删除
         if (CollectionUtils.isNotEmpty(nifiVO.tableList) && CollectionUtils.isNotEmpty(nifiVO.tableIdList)) {
+            // 删除pg库里对应的表
             ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
             DataModelVO dataModelVO = new DataModelVO();
             dataModelVO.delBusiness=true;

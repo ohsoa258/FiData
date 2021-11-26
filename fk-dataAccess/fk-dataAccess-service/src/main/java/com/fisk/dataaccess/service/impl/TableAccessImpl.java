@@ -787,20 +787,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AppRegistrationPO registrationPO = appRegistrationImpl.query().eq("id", modelAccess.appId).eq("del_flag", 1).one();
 
         NifiVO vo = new NifiVO();
-        vo.appId = String.valueOf(modelAccess.appId);
-        vo.userId = userInfo.id;
-        vo.appAtlasId = registrationPO.atlasInstanceId;
-
         List<TableListVO> voList = new ArrayList<>();
         TableListVO tableListVO = new TableListVO();
+
         tableListVO.userId = userInfo.id;
         tableListVO.tableAtlasId = modelAccess.atlasTableId;
         voList.add(tableListVO);
-
-        vo.tableList = voList;
-
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
+
+        vo.appId = String.valueOf(modelAccess.appId);
+        vo.userId = userInfo.id;
+        vo.appAtlasId = registrationPO.atlasInstanceId;
+        vo.tableList = voList;
         vo.tableIdList = tableIdList;
         log.info("删除的物理表信息,{}", vo);
 
