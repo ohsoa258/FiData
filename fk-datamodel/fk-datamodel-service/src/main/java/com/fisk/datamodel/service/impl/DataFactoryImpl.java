@@ -83,6 +83,7 @@ public class DataFactoryImpl implements IDataFactory {
             ChannelDataDTO dto=new ChannelDataDTO();
             dto.id=item.getId();
             dto.businessName =item.getBusinessName();
+            List<ChannelDataChildDTO> field=new ArrayList<>();
             //查询维度
             if (type==1)
             {
@@ -91,7 +92,6 @@ public class DataFactoryImpl implements IDataFactory {
                         .collect(Collectors.toList());
                 if (dimensionPO !=null && dimensionPO.size()>0)
                 {
-                    List<ChannelDataChildDTO> field=new ArrayList<>();
                     for (DimensionPO dimPO:dimensionPO)
                     {
                         ChannelDataChildDTO child=new ChannelDataChildDTO();
@@ -107,7 +107,6 @@ public class DataFactoryImpl implements IDataFactory {
                         .collect(Collectors.toList());
                 if (factPO !=null && factPO.size()>0)
                 {
-                    List<ChannelDataChildDTO> field=new ArrayList<>();
                     for (FactPO fact:factPO)
                     {
                         ChannelDataChildDTO child=new ChannelDataChildDTO();
