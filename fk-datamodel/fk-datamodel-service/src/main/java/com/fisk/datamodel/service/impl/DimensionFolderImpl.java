@@ -254,7 +254,7 @@ public class DimensionFolderImpl
             data.dimensionList=dimensionList;
             String aa="";
             //发送消息
-            //publishTaskClient.publishBuildAtlasDorisTableTask(data);
+            publishTaskClient.publishBuildAtlasDorisTableTask(data);
         }
         catch (Exception ex){
             log.error(ex.getMessage());

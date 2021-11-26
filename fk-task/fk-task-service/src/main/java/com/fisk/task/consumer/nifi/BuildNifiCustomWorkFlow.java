@@ -112,7 +112,7 @@ public class BuildNifiCustomWorkFlow {
         //tb_app_nifi_setting. tb_table_nifi_setting. tb_nifi_scheduling_component. tb_pipeline_configuration
         //重复发布需要处理这四张表里的老数据
         //暂停原流程
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", nifiCustomWorkListDTO.nifiCustomWorkflowId).one();
+        /*AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", nifiCustomWorkListDTO.nifiCustomWorkflowId).one();
         String appComponentId = appNifiSettingPO.appComponentId;
         try {
             Thread.sleep(200);
@@ -123,7 +123,7 @@ public class BuildNifiCustomWorkFlow {
             NifiHelper.getFlowApi().scheduleComponents(appComponentId,scheduleComponentsEntity);
         } catch (ApiException | InterruptedException e) {
             log.info("此组停止失败:"+appComponentId);
-        }
+        }*/
         List<AppNifiSettingPO> appNifiSettingPOS = appNifiSettingService.query().eq("nifi_custom_workflow_id", nifiCustomWorkListDTO.nifiCustomWorkflowId)
                 .eq("type",DataClassifyEnum.CUSTOMWORKSTRUCTURE.getValue()).list();
         List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkListDTO.nifiCustomWorkDTOS;
