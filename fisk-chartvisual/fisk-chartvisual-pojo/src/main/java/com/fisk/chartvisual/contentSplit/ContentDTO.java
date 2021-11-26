@@ -12,16 +12,16 @@ import java.util.List;
 @Data
 public class ContentDTO {
     @JsonProperty("bdColor")
-    private String bdcolor;
+    private String bdColor;
     private int height;
     private int width;
     @JsonProperty("selfAdaptWidth")
-    private boolean selfadaptwidth;
+    private boolean selfAdaptWidth;
     @JsonProperty("selfAdaptHeight")
-    private boolean selfadaptheight;
+    private boolean selfAdaptHeight;
     private int bigid;
     @JsonProperty("listSlicer")
     private List<ListSlicer> listSlicer;
     @JsonProperty("bigTyple")
-    private int bigtyple;
+    private int bigTyple;
 }
