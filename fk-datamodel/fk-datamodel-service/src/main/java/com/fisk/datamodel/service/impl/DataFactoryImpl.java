@@ -93,7 +93,6 @@ public class DataFactoryImpl implements IDataFactory {
                         child.tableName=dimPO.dimensionTabName;
                         field.add(child);
                     }
-                    dto.list=field;
                 }
             }else {
                 List<FactPO> factPO=factPOList.stream()
@@ -108,9 +107,9 @@ public class DataFactoryImpl implements IDataFactory {
                         child.tableName=fact.factTabName;
                         field.add(child);
                     }
-                    dto.list=field;
                 }
             }
+            dto.list=field;
             data.add(dto);
         }
         return data;

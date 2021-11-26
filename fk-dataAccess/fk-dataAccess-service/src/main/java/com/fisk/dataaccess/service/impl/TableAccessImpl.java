@@ -1686,8 +1686,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
-                //获取sql查询数据集合
                 String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName=metaData.getTableName(i)+"_pk";
+                if ("fi_bach_code".equals(columnName) || tableName.equals("ods_"+columnName))
+                {
+                    continue;
+                }
+                //获取sql查询数据集合
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
             }
@@ -1697,12 +1703,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
             dto.fieldName = metaData.getColumnLabel(i);
+            String tableName=metaData.getTableName(i)+"_pk";
+            if ("fi_bach_code".equals(dto.fieldName) || tableName.equals("ods_"+dto.fieldName))
+            {
+                continue;
+            }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
             if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8"))
             {
                 dto.fieldType="INT";
             }
-            dto.fieldLength = String.valueOf(metaData.getColumnDisplaySize(i));
+            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i)))?"255":String.valueOf(metaData.getColumnDisplaySize(i));
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());

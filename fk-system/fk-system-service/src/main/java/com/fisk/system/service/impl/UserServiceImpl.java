@@ -171,15 +171,15 @@ public class UserServiceImpl implements IUserService {
         }
 
         //计算分页
-        Integer count = data.size(); // 记录总数
-        Integer pageCount = 0; // 页数
+        Integer count = data.size();
+        Integer pageCount = 0;
         if (count % dto.size == 0) {
             pageCount = count / dto.size;
         } else {
             pageCount = count / dto.size + 1;
         }
-        int fromIndex = 0; // 开始索引
-        int toIndex = 0; // 结束索引
+        int fromIndex = 0;
+        int toIndex = 0;
 
         if (dto.page != pageCount) {
             fromIndex = (dto.page - 1) * dto.size;
