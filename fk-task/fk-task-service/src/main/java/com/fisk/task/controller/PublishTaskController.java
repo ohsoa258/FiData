@@ -4,6 +4,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -12,6 +13,7 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.service.IBuildTaskService;
 import com.google.gson.Gson;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,6 +38,7 @@ public class PublishTaskController {
     IBuildTaskService service;
 
     @PostMapping("/nifiFlow")
+    @ApiOperation(value = "创建同步数据nifi流程")
     public ResultEntity<Object> publishBuildNifiFlowTask(@RequestBody BuildNifiFlowDTO data) {
         return service.publishTask("创建表:"+data.tableName+"的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -50,6 +53,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/dorisBuild")
+    @ApiOperation(value = "在Doris中生成stg&ods数据表")
     public ResultEntity<Object> publishBuildDorisTask(@RequestBody TableInfoDTO data) {
         return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -64,6 +68,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasBuildInstance")
+    @ApiOperation(value = "在Atlas中生成实例与数据库的血缘关系")
     public ResultEntity<Object> publishBuildAtlasInstanceTask(@RequestBody AtlasEntityQueryDTO ArDto) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -77,6 +82,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasBuildTableAndColumn")
+    @ApiOperation(value = "在Atlas中生成数据库、表、字段的血缘关系")
     public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto) {
         log.info("进入方法");
          service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
@@ -103,6 +109,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/pgsqlStgOdsIncrementalUpdate")
+    @ApiOperation(value = "数据接入 STG TO ODS")
     public ResultEntity<Object> publishBuildPGSqlStgToOdsTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_PGSQL_STGTOODS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -116,6 +123,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/dorisIncrementalUpdate")
+    @ApiOperation(value = "Doris 增量更新")
     public ResultEntity<Object> publishBuildDorisIncrementalUpdateTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return service.publishTask(TaskTypeEnum.BUILD_DORIS_INCREMENTAL_UPDATE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -129,6 +137,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasEntityDelete")
+    @ApiOperation(value = "Atlas 删除实体")
     public ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody AtlasEntityDeleteDTO entityId) {
         return service.publishTask(TaskTypeEnum.BUILD_ATLAS_ENTITYDELETE_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -141,6 +150,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/deletePgsqlTable")
+    @ApiOperation(value = "pgsql 删除表")
     public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable) {
         return service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_DELETE_PGSQL_STGTOODS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
@@ -154,11 +164,12 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/atlasDorisTable")
-    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody DimensionAttributeAddListDTO dimensionAttributeAddDTOS){
+    @ApiOperation(value = "doris创建表")
+    public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO){
         return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
-                dimensionAttributeAddDTOS);
+                modelPublishDataDTO);
     }
 
     /**
@@ -167,6 +178,7 @@ public class PublishTaskController {
      * @return
      */
     @PostMapping("/NifiCustomWorkFlow")
+    @ApiOperation(value = "创建管道")
     public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO){
         return service.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
