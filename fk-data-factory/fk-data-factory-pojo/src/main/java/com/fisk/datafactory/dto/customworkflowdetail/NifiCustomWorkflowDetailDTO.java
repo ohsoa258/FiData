@@ -12,6 +12,7 @@ public class NifiCustomWorkflowDetailDTO {
     public Long pid;
     public String workflowId;
     public Integer componentsId;
+    public String appId;
     public String tableId;
     /**
      * 常规: 名称

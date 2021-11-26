@@ -49,7 +49,8 @@ public class NifiCustomWorkflowDetailController {
             return ResultEntityBuild.buildData(data.code, data.msg);
         }
 
-        if (data.code == 0) {
+        // 保存成功且前端发布
+        if (data.code == 0 && dto.flag) {
             // TODO: 调用nifi生成流程
             log.info("nifi: 管道开始创建");
             Map<Map, Map> externalStructure = workListDTO.externalStructure;

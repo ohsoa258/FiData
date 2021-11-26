@@ -12,6 +12,10 @@ import java.util.List;
 @Data
 public class NifiCustomWorkflowDetailVO {
     /**
+     * true: 保存&发布  false: 保存
+     */
+    public Boolean flag;
+    /**
      * 管道对象
      */
     public NifiCustomWorkflowDTO dto;
