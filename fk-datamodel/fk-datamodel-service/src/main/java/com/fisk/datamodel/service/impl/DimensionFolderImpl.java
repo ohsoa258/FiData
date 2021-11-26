@@ -213,7 +213,6 @@ public class DimensionFolderImpl
             ModelPublishDataDTO data=new ModelPublishDataDTO();
             data.businessAreaId=businessAreaPO.getId();
             data.businessAreaName=businessAreaPO.getBusinessName();
-            data.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
             for (DimensionPO item:dimensionPOList)
@@ -221,6 +220,7 @@ public class DimensionFolderImpl
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.dimensionTabName;
+                pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
                 pushDto.sqlScript=item.sqlScript;
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();

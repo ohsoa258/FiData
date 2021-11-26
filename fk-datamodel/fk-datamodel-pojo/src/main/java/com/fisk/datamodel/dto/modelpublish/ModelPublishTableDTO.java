@@ -11,6 +11,10 @@ import java.util.List;
 public class ModelPublishTableDTO {
     public long tableId;
     public String tableName;
+    /**
+     * 创建表方式 0:维度 1:事实
+     */
+    public int createType;
     public String sqlScript;
     public List<ModelPublishFieldDTO> fieldList;
 }

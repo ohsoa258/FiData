@@ -12,6 +12,5 @@ public class ModelPublishDataDTO {
     public long businessAreaId;
     public String businessAreaName;
     public long userId;
-    public int createType;
     public List<ModelPublishTableDTO> dimensionList;
 }
