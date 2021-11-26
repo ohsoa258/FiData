@@ -170,15 +170,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         String inport = po.inport;
         String[] inportIds = inport.split(",");
-        List<BuildNifiCustomWorkFlowDTO> result = new ArrayList<>();
-        for (String inportId : inportIds) {
-            NifiCustomWorkflowDetailPO id = this.query().eq("id", inportId).one();
-            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(id);
-            BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO = getBuildNifiCustomWorkFlowDTO(nifiCustomWorkflowDetailDTO);
-            result.add(buildNifiCustomWorkFlowDTO);
-        }
-        list = result;
-        return list;
+        return Arrays.stream(inportIds)
+                .map(inportId -> this.query().eq("id", inportId).one())
+                .filter(Objects::nonNull)
+                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
+                .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
     }
 
     private List<BuildNifiCustomWorkFlowDTO> getOutputDucts(NifiCustomWorkflowDetailPO po) {
@@ -186,11 +182,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         String outport = po.outport;
         String[] outportIds = outport.split(",");
 
-        return Arrays.stream(outportIds).map(outportId ->
-                        this.query().eq("id", outportId).one())
-                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
-                .map(this::getBuildNifiCustomWorkFlowDTO)
-                .collect(Collectors.toList());
+        return Arrays.stream(outportIds)
+                .map(outportId -> this.query().eq("id", outportId).one())
+                .filter(Objects::nonNull).map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
+                .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
     }
 
     /**
