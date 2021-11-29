@@ -47,6 +47,7 @@ import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.PostgreHelper;
 //import com.fisk.task.utils.TaskPgTableStructureHelper;
+import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -110,6 +111,8 @@ public class BuildDataModelDorisTableListener
     public String tableInputPortId;
     public String appOutputPortId;
     public String tableOutputPortId;
+    @Resource
+    TaskPgTableStructureHelper taskPgTableStructureHelper;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
@@ -122,16 +125,18 @@ public class BuildDataModelDorisTableListener
         ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
         List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
         for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
-                //生成建表语句
-                createPgdbTable2(modelPublishTableDTO);
-                //生成函数,并执行
+            //生成版本号
+            //taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
+            //生成建表语句
+            createPgdbTable2(modelPublishTableDTO);
+            //生成函数,并执行
             String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);
             //saveTableStructure(list);
-            if(modelPublishTableDTO.createType==0){
-                createNiFiFlow(inpData,modelPublishTableDTO, inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.DIMENSION);
-            }else{
-                createNiFiFlow(inpData,modelPublishTableDTO, inpData.businessAreaName,DataClassifyEnum.DATAMODELING,OlapTableEnum.FACT);
+            if (modelPublishTableDTO.createType == 0) {
+                createNiFiFlow(inpData, modelPublishTableDTO, inpData.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.DIMENSION);
+            } else {
+                createNiFiFlow(inpData, modelPublishTableDTO, inpData.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.FACT);
             }
 
         }
@@ -670,52 +675,6 @@ public class BuildDataModelDorisTableListener
         storedProcedureSql+="raise notice'%',mysql1;\nEXECUTE mysql1;\n";
         storedProcedureSql+="end\n$BODY$;\n";
         return storedProcedureSql;
-    }
-
-    /**
-     * 保存建模相关表结构数据
-     * @param
-     */
-    @Test
-    public void saveTableStructure()
-    {
-        try {
-            /*List<TaskPgTableStructurePO> poList=new ArrayList<>();
-            Thread.sleep(200);
-            //获取时间戳版本号
-            DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-            Calendar calendar = Calendar.getInstance();
-            String version = df.format(calendar.getTime());
-            for (ModelPublishFieldDTO item: dto.fieldList) {
-                TaskPgTableStructurePO po = new TaskPgTableStructurePO();
-                po.version = version;
-                po.tableId = String.valueOf(dto.tableId);
-                po.tableName = dto.tableName;
-                po.fieldId = String.valueOf(item.fieldId);
-                po.fieldName = item.fieldEnName;
-                po.fieldType = item.fieldType;
-                if (item.fieldLength != 0) {
-                    po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
-                }
-                poList.add(po);
-            }
-            //保存成功,调用存储过程,修改表结构
-            if (this.saveBatch(poList))
-            {*/
-                /*TaskPgTableStructureParameterDTO dto1=new TaskPgTableStructureParameterDTO();
-                dto1.version="20211125153400001";
-                String sql = taskPgTableStructureMapper.pgCheckTableStructure(dto1);
-                if (sql !=null && sql.length()>0)
-                {
-                    //修改表结构
-                    taskPgTableStructureHelper.updatePgTableStructure(sql, "test");
-                }*/
-            //}
-        }
-        catch (Exception ex)
-        {
-            log.error("saveTableStructure:"+ex);
-        }
     }
 
     /**
