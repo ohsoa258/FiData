@@ -106,7 +106,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             // 每一个二级维度
             DimensionDTO dto = new DimensionDTO();
             dto.setDimensionId(dimension.getId());
-            dto.setDimensionCnName(dimension.getDimensionEnName());
+            dto.setDimensionTabName(dimension.getDimensionTabName());
             dto.setDimension(1);
 
             // 每一个二级对应多个三级
@@ -279,7 +279,7 @@ public class DataDomainServiceImpl implements DataDomainService {
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DimensionPO::getBusinessId, businessId)
-                .select(DimensionPO::getDimensionEnName, DimensionPO::getId);
+                .select(DimensionPO::getDimensionTabName, DimensionPO::getId);
         List<DimensionPO> dimensionList = dimensionMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(dimensionList)) {
             return null;

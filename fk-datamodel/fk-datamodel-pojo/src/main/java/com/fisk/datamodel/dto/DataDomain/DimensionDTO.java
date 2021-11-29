@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class DimensionDTO {
     public Long dimensionId;
-    public String dimensionCnName;
+    public String dimensionTabName;
     public List<DimensionAttributeDTO> dimensionAttributeList;
     /**
      * 是否维度 0 否  1 是维度
