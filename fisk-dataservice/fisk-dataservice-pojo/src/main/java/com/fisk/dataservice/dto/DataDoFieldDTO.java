@@ -27,4 +27,11 @@ public class DataDoFieldDTO {
 
     // 指定时间
     private String[] specifiedTime;
+
+    public int fieldId1;
+    public boolean isDimension1;
+
+    public int fieldId2;
+    public boolean isDimension2;
+
 }

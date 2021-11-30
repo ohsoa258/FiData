@@ -1685,8 +1685,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (int i = 1; i <= columnCount; i++) {
                 String columnName = metaData.getColumnLabel(i);
                 //过滤ods表中pk和code默认字段
-                String tableName=metaData.getTableName(i)+"_pk";
-                if ("fi_bach_code".equals(columnName) || tableName.equals("ods_"+columnName))
+                String tableName=metaData.getTableName(i)+"key";
+                if ("fi_batch_code".equals(columnName) || tableName.equals("ods_"+columnName))
                 {
                     continue;
                 }
@@ -1700,8 +1700,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
             dto.fieldName = metaData.getColumnLabel(i);
-            String tableName=metaData.getTableName(i)+"_pk";
-            if ("fi_bach_code".equals(dto.fieldName) || tableName.equals("ods_"+dto.fieldName))
+            String tableName=metaData.getTableName(i)+"key";
+            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_"+dto.fieldName))
             {
                 continue;
             }

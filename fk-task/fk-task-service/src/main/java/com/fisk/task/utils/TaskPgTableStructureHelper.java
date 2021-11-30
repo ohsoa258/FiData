@@ -132,18 +132,18 @@ public class TaskPgTableStructureHelper
             String pgsqlOdsUsername="postgres";
             String pgsqlOdsPassword="Password01!";
             Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+            //修改表结构
+            if (sql!=null && sql.length()>0)
+            {
+                Statement st = conn.createStatement();
+                return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
+            }
             //判断表是否存在
             DatabaseMetaData metaData=conn.getMetaData();
             ResultSet set=metaData.getTables(null,null,tableName,null);
             if (!set.next())
             {
                 return ResultEnum.TASK_TABLE_NOT_EXIST;
-            }
-            //修改表结构
-            if (sql!=null && sql.length()>0)
-            {
-                Statement st = conn.createStatement();
-                return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
             }
             return ResultEnum.SUCCESS;
         }catch (ClassNotFoundException | SQLException e) {
