@@ -46,7 +46,6 @@ import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.PostgreHelper;
-//import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +60,7 @@ import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: cfk
@@ -95,8 +95,8 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-    /*@Resource
-    TaskPgTableStructureHelper taskPgTableStructureHelper;*/
+    @Resource
+    TaskPgTableStructureHelper taskPgTableStructureHelper;
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
@@ -111,8 +111,7 @@ public class BuildDataModelDorisTableListener
     public String tableInputPortId;
     public String appOutputPortId;
     public String tableOutputPortId;
-    @Resource
-    TaskPgTableStructureHelper taskPgTableStructureHelper;
+
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
@@ -152,10 +151,42 @@ public class BuildDataModelDorisTableListener
     public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO){
         String tableName=modelPublishTableDTO.tableName;
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
-                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";
-        storedProcedureSql+="mysql1:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql1(modelPublishTableDTO);
-        storedProcedureSql+="\nraise notice'%',mysql1;\nEXECUTE mysql1;\n";
+                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysqlp text;\nbegin\n";
+        storedProcedureSql+="mysqlp:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql1(modelPublishTableDTO);
+        storedProcedureSql+="\nraise notice'%',mysqlp;\nEXECUTE mysqlp;\n";
         storedProcedureSql+="end\n$BODY$;\n";
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        //找到不同的关联表
+        List<ModelPublishFieldDTO> collect1 = fieldList.stream().filter(e -> e.associateDimensionName != null).collect(Collectors.toList());
+        List<ModelPublishFieldDTO> modelPublishFieldDTOS = collect1.stream().collect(Collectors.collectingAndThen(
+                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ModelPublishFieldDTO::getAssociateDimensionName))), ArrayList::new));
+        modelPublishFieldDTOS.removeAll(Collections.singleton(null));
+        if(modelPublishFieldDTOS.size()!=0){
+            int i=0;
+            for (ModelPublishFieldDTO modelPublishFieldDTO:modelPublishFieldDTOS) {
+                //找到每个关联表关联的所有字段
+                List<ModelPublishFieldDTO> collect = fieldList.stream().filter(e -> e.associateDimensionName != null && e.associateDimensionName.equals(modelPublishFieldDTO.associateDimensionName)).collect(Collectors.toList());
+                //拼接语句,添加外键
+                if(modelPublishFieldDTO.associateDimensionFieldName!=null){
+                    storedProcedureSql=storedProcedureSql.replace("DECLARE\n","DECLARE\nmysql"+i+" text;\n");
+                    //update dim_heihei heihei set hhh_pk=(select hhh_pk from dim_hhh hhh where heihei.ts=hhh.ts  );
+                    String associateDimensionName = modelPublishFieldDTO.associateDimensionName;
+                    String associateDimensionNamePK = modelPublishFieldDTO.associateDimensionName.substring(4)+"_pk";
+                    String sql="update "+modelPublishTableDTO.tableName +" "+modelPublishTableDTO.tableName +" set  "+associateDimensionNamePK+
+                            "=(select "+ associateDimensionNamePK +" from "+ associateDimensionName +" "+associateDimensionName+" where ";
+                            //条件
+
+                    for(int j=0;j<collect.size();j++){
+                        ModelPublishFieldDTO modelPublishFieldDTO1 = collect.get(j);
+                        sql+=modelPublishTableDTO.tableName+"."+modelPublishFieldDTO1.fieldEnName+"="+modelPublishFieldDTO1.associateDimensionName+"."+modelPublishFieldDTO1.associateDimensionFieldName+" and ";
+                    }
+                    sql=sql.substring(0,sql.length()-4)+")";
+                    storedProcedureSql=storedProcedureSql.replace("begin\n","begin\nmysql"+i+":='"+sql+"';\n");
+                    storedProcedureSql=storedProcedureSql.replace("EXECUTE mysqlp;\n","EXECUTE mysqlp;\n\nraise notice'%',mysql"+i+";\nEXECUTE mysql"+i+";\n");
+                }
+                i++;
+            }
+        }
         return storedProcedureSql;
     }
 
@@ -173,6 +204,7 @@ public class BuildDataModelDorisTableListener
         StringBuilder selectSql3=new StringBuilder(tablePk +" varchar,");
         StringBuilder selectSql4=new StringBuilder(tablePk+"=EXCLUDED."+tablePk+",");
         StringBuilder selectSql5=new StringBuilder();
+        StringBuilder selectSql6=new StringBuilder(" ("+modelPublishTableDTO.sqlScript+") fi1 ");
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         fieldList.forEach((l) -> {
             selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
@@ -182,18 +214,24 @@ public class BuildDataModelDorisTableListener
                 selectSql5.append(","+l.fieldEnName);
             }
 
-            //多表搁置
-            if(l.associateDimensionName!=null){
-
-            }
+            //多表
+            /*if(l.associateDimensionName!=null){
+            String filed=l.associateDimensionName.substring(4)+"_pk ";
+                selectSql2.append(filed);
+                selectSql3.append(filed+" varchar,");
+                selectSql4.append(filed+"=EXCLUDED."+filed+",");
+                String uuid=UUID.randomUUID().toString().replaceAll("-","");
+                selectSql6.append(" left join ( select * from "+l.associateDimensionName+" ) fi"+uuid+" on fi1."+l.fieldEnName+"= fi"+uuid+"."+l.associateDimensionFieldName);
+            }*/
         });
+        String sql4 = selectSql6.toString();
         String sql = selectSql2.toString();
         sql=sql.substring(0,sql.length()-1);
-        sql+=" from ( "+modelPublishTableDTO.sqlScript+" ) fisk '''||') as t (";
+        sql+=" from  "+sql4+" '''||') as t (";
         String sql1 = selectSql3.toString();
         String sql3 = selectSql5.toString();
-        if(sql3.length()!=1){
-
+        if(sql3.length()!=0){
+        tablePk=sql3.substring(1);
         }
         sql+=sql1.substring(0,sql1.length()-1)+"))'||' AS ods ON CONFLICT ( "+tablePk+" )  DO UPDATE SET ";
         String sql2 = selectSql4.toString();
@@ -213,7 +251,7 @@ public class BuildDataModelDorisTableListener
         }
 
         StringBuilder sql = new StringBuilder();
-        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( "+tablePk+",");
+        StringBuilder pksql=new StringBuilder("PRIMARY KEY ( ");
         sql.append("CREATE TABLE "+modelPublishTableDTO.tableName+" ( "+tablePk+" varchar(50), ");
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder sqlFileds1 = new StringBuilder();
@@ -226,6 +264,10 @@ public class BuildDataModelDorisTableListener
                 pksql.append(l.fieldEnName+" ,");
             }
         });
+        //如果没有业务主键,就建一个主键
+        if(pksql.length()==14){
+            pksql.append(tablePk+",");
+        }
         String sql1 = sql.toString();
         String sql2 = sqlFileds.toString();
         String sql3 = sqlFileds1.toString();
@@ -270,10 +312,18 @@ public class BuildDataModelDorisTableListener
         ids.add(modelMetaDataDTO.tableId);
         dataModelTableVO.ids=ids;
         dataModelVO.indicatorIdList=dataModelTableVO;
-        componentsBuild.deleteNifiFlow(dataModelVO);
+        if(modelPublishDataDTO.nifiCustomWorkflowId==null){
+            componentsBuild.deleteNifiFlow(dataModelVO);
+        }
+        AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
+        if(modelPublishDataDTO.nifiCustomWorkflowId!=null){
+            appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelPublishDataDTO.businessAreaId).eq("nifi_custom_workflow_id",modelPublishDataDTO.nifiCustomWorkflowId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
 
-        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelPublishDataDTO.businessAreaId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
-        if(appNifiSettingPO!=null){
+        }else{
+             appNifiSettingPO = appNifiSettingService.query().eq("app_id", modelPublishDataDTO.businessAreaId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
+
+        }
+        if(appNifiSettingPO!=null&&modelMetaDataDTO.groupComponentId==null){
             try {
                 data1=NifiHelper.getProcessGroupsApi().getProcessGroup(appNifiSettingPO.appComponentId);
             } catch (ApiException e) {
@@ -281,7 +331,7 @@ public class BuildDataModelDorisTableListener
             }
             data.setId(appNifiSettingPO.targetDbPoolComponentId);
 
-        }else{
+        } else{
             //创建应用组
 
             BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
@@ -291,8 +341,10 @@ public class BuildDataModelDorisTableListener
             int count=0;
             if(modelMetaDataDTO.groupComponentId!=null){
                  count = componentsBuild.getGroupCount(modelMetaDataDTO.groupComponentId);
+                 dto.groupId=modelMetaDataDTO.groupComponentId;
             }else{
                  count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+                 dto.groupId=NifiConstants.ApiConstants.ROOT_NODE;
             }
 
             dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
@@ -382,16 +434,21 @@ public class BuildDataModelDorisTableListener
 
         //创建组件,启动组件
         TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
-        List<ProcessorEntity> components = createComponents(data2.getId(), data.getId(), "update"+modelMetaDataDTO.tableName+"()",data1,tableNifiSetting);
+        String  Componentid= createComponents(data2.getId(), data.getId(), "update"+modelMetaDataDTO.tableName+"()",data1,tableNifiSetting);
 
         //回写
-        savaNifiAllSetting(modelPublishDataDTO,data,data1,data2,components, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
+        savaNifiAllSetting(modelPublishDataDTO,data,data1,data2,Componentid, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
 
     }
 
-    public void savaNifiAllSetting(ModelPublishDataDTO ModelPublishDataDTO,ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,List<ProcessorEntity> processorEntities,ModelPublishTableDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum,TableNifiSettingPO tableNifiSettingPO){
+    public void savaNifiAllSetting(ModelPublishDataDTO ModelPublishDataDTO,ControllerServiceEntity controllerServiceEntity,ProcessGroupEntity processGroupEntity1,ProcessGroupEntity processGroupEntity2,String Componentid,ModelPublishTableDTO modelMetaDataDTO,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum,TableNifiSettingPO tableNifiSettingPO){
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
-        AppNifiSettingPO appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", ModelPublishDataDTO.businessAreaId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
+        AppNifiSettingPO appNifiSettingPO1 = new AppNifiSettingPO();
+        if(ModelPublishDataDTO.nifiCustomWorkflowId==null){
+             appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", ModelPublishDataDTO.businessAreaId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
+        }else{
+            appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", ModelPublishDataDTO.businessAreaId).eq("nifi_custom_workflow_id",ModelPublishDataDTO.nifiCustomWorkflowId).eq("type", dataClassifyEnum.getValue()).eq("del_flag",1).one();
+        }
         if(appNifiSettingPO1!=null){
             appNifiSettingPO=appNifiSettingPO1;
         }
@@ -400,17 +457,22 @@ public class BuildDataModelDorisTableListener
         appNifiSettingPO.type=dataClassifyEnum.getValue();
         //做判断,是否新增
         appNifiSettingPO.appComponentId=processGroupEntity1.getId();
+        appNifiSettingPO.nifiCustomWorkflowId=ModelPublishDataDTO.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
         Map<String, Object>  queryCondition= new HashMap<>();
         queryCondition.put("app_id",ModelPublishDataDTO.businessAreaId);
         queryCondition.put("table_access_id",modelMetaDataDTO.tableId);
         queryCondition.put("type",olapTableEnum.getValue());
+        if(modelMetaDataDTO.nifiCustomWorkflowDetailId!=null&&!Objects.equals(modelMetaDataDTO.nifiCustomWorkflowDetailId,"null")){
+            queryCondition.put("nifi_custom_workflow_detail_id",modelMetaDataDTO.nifiCustomWorkflowDetailId);
+            tableNifiSettingPO.nifiCustomWorkflowDetailId=modelMetaDataDTO.nifiCustomWorkflowDetailId;
+        }
         tableNifiSettingService.removeByMap(queryCondition);
         tableNifiSettingPO.tableAccessId= Math.toIntExact(modelMetaDataDTO.tableId);
         tableNifiSettingPO.tableName=modelMetaDataDTO.tableName;
         tableNifiSettingPO.appId= Math.toIntExact(ModelPublishDataDTO.businessAreaId);
         tableNifiSettingPO.selectSql="call update"+modelMetaDataDTO.tableName+"()";
-        tableNifiSettingPO.queryIncrementProcessorId=processorEntities.get(0).getId();
+        tableNifiSettingPO.queryIncrementProcessorId=Componentid;
         tableNifiSettingPO.tableComponentId=processGroupEntity2.getId();
         tableNifiSettingPO.type=olapTableEnum.getValue();
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
@@ -419,7 +481,7 @@ public class BuildDataModelDorisTableListener
     /*
     * 创建组件
     * */
-    public List<ProcessorEntity> createComponents(String groupId,String componentId,String executsql,ProcessGroupEntity data1,TableNifiSettingPO tableNifiSetting){
+    public String createComponents(String groupId,String componentId,String executsql,ProcessGroupEntity data1,TableNifiSettingPO tableNifiSetting){
         List<ProcessorEntity> processors=new ArrayList<>();
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
@@ -433,6 +495,7 @@ public class BuildDataModelDorisTableListener
         if( !processorEntityBusinessResult.success){
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processorEntityBusinessResult.msg);
         }
+        log.info("组件id为:"+processorEntityBusinessResult.data.getId());
         processors.add(processorEntityBusinessResult.data);
         List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
 
@@ -494,7 +557,7 @@ public class BuildDataModelDorisTableListener
         tableNifiSetting.tableOutputPortId=tableOutputPortId;
         tableNifiSetting.processorInputPortId=inputPortId;
         tableNifiSetting.processorOutputPortId=outputPortId;
-        return processorEntities;
+        return processorEntityBusinessResult.data.getId();
     }
 
     /*

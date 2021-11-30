@@ -17,6 +17,8 @@ import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.nifi.*;
@@ -395,19 +397,34 @@ public class BuildNifiCustomWorkFlow {
                 appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKPHYSICS;
                 appNifiSettingDTOS.add(appNifiSettingDTO);*/
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELING)) {
-                TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", DataClassifyEnum.DATAMODELING.getValue()).eq("del_flag", 1).one();
-                //维度,事实流程 panxin
-                ModelMetaDataDTO modelMetaDataDTO = new ModelMetaDataDTO();
+                TableNifiSettingPO one1 = new TableNifiSettingPO();
+                if(Objects.equals(nifiNode.tableType,OlapTableEnum.CUSTOMWORKDIMENSION)){
+                     one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.DIMENSION.getValue()).eq("del_flag", 1).one();
+                }else if(Objects.equals(nifiNode.tableType,OlapTableEnum.CUSTOMWORKFACT)){
+                     one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.FACT.getValue()).eq("del_flag", 1).one();
+                }
+                 //维度,事实流程 panxin
+                /*ModelMetaDataDTO modelMetaDataDTO = new ModelMetaDataDTO();
                 modelMetaDataDTO.id = Long.parseLong(nifiNode.tableId);
                 modelMetaDataDTO.appId = Math.toIntExact(nifiNode.appId);
                 modelMetaDataDTO.tableName = nifiNode.tableName;
                 modelMetaDataDTO.sqlName = one1.selectSql.substring(4);
-                modelMetaDataDTO.groupComponentId = groupId;
-                if (Objects.equals(nifiNode.tableType, OlapTableEnum.DIMENSION)) {
-                    //buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKDIMENSION);
+                modelMetaDataDTO.groupComponentId = groupId;*/
+                ModelPublishDataDTO modelPublishDataDTO = new ModelPublishDataDTO();
+                modelPublishDataDTO.businessAreaId=one1.appId;
+                modelPublishDataDTO.nifiCustomWorkflowId=nifiCustomWorkListDTO.nifiCustomWorkflowId;
+                ModelPublishTableDTO modelPublishTableDTO = new ModelPublishTableDTO();
+                modelPublishTableDTO.tableName=one1.tableName;
+                modelPublishTableDTO.groupComponentId=groupId;
+                modelPublishTableDTO.tableId= Long.parseLong(nifiNode.tableId);
+                modelPublishTableDTO.nifiCustomWorkflowDetailId= String.valueOf(nifiNode.workflowDetailId);
+                log.info("表id为:"+nifiNode.tableId);
+                if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKDIMENSION)) {
+
+                    buildDataModelDorisTableListener.createNiFiFlow(modelPublishDataDTO, modelPublishTableDTO,nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKDIMENSION);
                     appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKDIMENSION;
-                } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.FACT)) {
-                    //buildDataModelDorisTableListener.createNiFiFlow(modelMetaDataDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKFACT);
+                } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKFACT)) {
+                    buildDataModelDorisTableListener.createNiFiFlow(modelPublishDataDTO, modelPublishTableDTO,nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKFACT);
                     appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKFACT;
                 }
                 appNifiSettingDTO.appId = String.valueOf(nifiNode.appId);
@@ -617,7 +634,7 @@ public class BuildNifiCustomWorkFlow {
                 // 连接tb_table_nifi_setting,维度的table_inputport,table_id和api outfunnel
                 tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKDIMENSION.getValue()).one();
                 appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                buildNifiTaskListener.buildPortConnection(groupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
                         appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
             } else if (Objects.equals(nifiCustomWorkflowDetailDTO.componentType, ChannelDataEnum.DW_FACT_TASK.getName())) {

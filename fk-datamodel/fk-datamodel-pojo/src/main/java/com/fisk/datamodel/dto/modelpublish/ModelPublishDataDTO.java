@@ -13,4 +13,5 @@ public class ModelPublishDataDTO extends MQBaseDTO {
     public long businessAreaId;
     public String businessAreaName;
     public List<ModelPublishTableDTO> dimensionList;
+    public String nifiCustomWorkflowId;
 }

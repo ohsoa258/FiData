@@ -18,4 +18,5 @@ public class ModelPublishTableDTO {
     public String sqlScript;
     public List<ModelPublishFieldDTO> fieldList;
     public String groupComponentId;
+    public String nifiCustomWorkflowDetailId;
 }
