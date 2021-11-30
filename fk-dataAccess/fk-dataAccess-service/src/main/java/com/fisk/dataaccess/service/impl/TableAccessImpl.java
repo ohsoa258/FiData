@@ -1766,7 +1766,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", appId).one();
         List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
         if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
         }
 
         DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);

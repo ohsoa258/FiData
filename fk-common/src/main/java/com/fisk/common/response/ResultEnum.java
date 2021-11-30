@@ -34,6 +34,7 @@ public enum ResultEnum {
     PARAMTER_NOTNULL(1011, "参数不能为空"),
     Table_NAME_EXISTS(1012, "表名已存在"),
     NOTFOUND_REQUEST(1013, "未找到请求"),
+    NIFI_NOT_FIND_DATA(1014, "nifi查不到数据"),
 
     /**
      * 报表可视化服务，错误码从2000开始
