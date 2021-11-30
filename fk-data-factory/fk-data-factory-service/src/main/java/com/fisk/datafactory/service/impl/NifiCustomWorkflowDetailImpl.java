@@ -165,26 +165,39 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         return nifiCustomWorkDTOList;
     }
 
+    /**
+     * 封装输入节点
+     *
+     * @param po po
+     * @return list
+     */
     private List<BuildNifiCustomWorkFlowDTO> getInputDucts(NifiCustomWorkflowDetailPO po) {
-        List<BuildNifiCustomWorkFlowDTO> list;
 
         String inport = po.inport;
         String[] inportIds = inport.split(",");
         return Arrays.stream(inportIds)
                 .map(inportId -> this.query().eq("id", inportId).one())
+                // 确保当前inport没有删除
                 .filter(Objects::nonNull)
                 .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
                 .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
     }
 
+    /**
+     * 封装输出节点
+     *
+     * @param po po
+     * @return list
+     */
     private List<BuildNifiCustomWorkFlowDTO> getOutputDucts(NifiCustomWorkflowDetailPO po) {
-        List<BuildNifiCustomWorkFlowDTO> list = new ArrayList<>();
         String outport = po.outport;
         String[] outportIds = outport.split(",");
 
         return Arrays.stream(outportIds)
                 .map(outportId -> this.query().eq("id", outportId).one())
-                .filter(Objects::nonNull).map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
+                // 确保当前outport没有删除
+                .filter(Objects::nonNull)
+                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
                 .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
     }
 
@@ -337,7 +350,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     private Map<Map, Map> getMenuTree(String workflowId, List<NifiCustomWorkflowDetailDTO> list) {
         String componentType = "任务组";
         NifiCustomWorkflowPO workflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
-        List<NifiCustomWorkflowDetailDTO> collect = list.stream().filter(item -> item.pid == 0 && componentType.equalsIgnoreCase(item.componentType)).collect(Collectors.toList());
+        List<NifiCustomWorkflowDetailDTO> collect = list.stream()
+                .filter(item -> item.pid == 0 && componentType.equalsIgnoreCase(item.componentType))
+                .collect(Collectors.toList());
         Map<Map, Map> structure = new HashMap<>();
         Map structure1 = new HashMap();
         structure1.put(workflowPo.workflowId, workflowPo.workflowName);
@@ -358,6 +373,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // TODO 修改inport&outport
+
+
         // 执行删除
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
