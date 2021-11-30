@@ -81,7 +81,7 @@ public class BuildDataInputPgTableListener {
         }else{
             StringBuilder sql = new StringBuilder();
             StringBuilder sqlFileds = new StringBuilder();
-            sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "_pk" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
+            sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             tableFieldsDTOS.forEach((l) -> {
                 sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
@@ -106,7 +106,7 @@ public class BuildDataInputPgTableListener {
             String tableName=tableFieldDetailDTOS.get(0).tableName;
             String tableName1="stg_"+tableName.substring(4);
             String tablePk=tableFieldDetailDTOS.get(0).tableName;
-            tablePk=tablePk.substring(4)+"_pk";
+            tablePk=tablePk.substring(4)+"key";
             String sql="";
             String sql1="";
             //库里已有的字段

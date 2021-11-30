@@ -1215,7 +1215,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
-                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
+                //ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
                 nifiRemoveDTO.appId=appNifiSettingPO.appComponentId;
                 nifiRemoveDTO.ProcessIds = ProcessIds;
                 nifiRemoveDTO.controllerServicesIds = controllerServicesIds;

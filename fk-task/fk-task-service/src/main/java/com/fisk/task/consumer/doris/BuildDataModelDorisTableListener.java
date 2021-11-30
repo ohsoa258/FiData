@@ -171,7 +171,7 @@ public class BuildDataModelDorisTableListener
                     storedProcedureSql=storedProcedureSql.replace("DECLARE\n","DECLARE\nmysql"+i+" text;\n");
                     //update dim_heihei heihei set hhh_pk=(select hhh_pk from dim_hhh hhh where heihei.ts=hhh.ts  );
                     String associateDimensionName = modelPublishFieldDTO.associateDimensionName;
-                    String associateDimensionNamePK = modelPublishFieldDTO.associateDimensionName.substring(4)+"_pk";
+                    String associateDimensionNamePK = modelPublishFieldDTO.associateDimensionName.substring(4)+"key";
                     String sql="update "+modelPublishTableDTO.tableName +" "+modelPublishTableDTO.tableName +" set  "+associateDimensionNamePK+
                             "=(select "+ associateDimensionNamePK +" from "+ associateDimensionName +" "+associateDimensionName+" where ";
                             //条件
@@ -194,9 +194,9 @@ public class BuildDataModelDorisTableListener
         String tableName = modelPublishTableDTO.tableName;
         String tablePk="";
         if(modelPublishTableDTO.createType==0){
-             tablePk=modelPublishTableDTO.tableName.substring(4)+"_pk";
+             tablePk=modelPublishTableDTO.tableName.substring(4)+"key";
         }else{
-            tablePk=modelPublishTableDTO.tableName.substring(5)+"_pk";
+            tablePk=modelPublishTableDTO.tableName.substring(5)+"key";
         }
         String selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''";
         String selectSql1="select sys_guid() as "+tablePk+", ";
@@ -245,9 +245,9 @@ public class BuildDataModelDorisTableListener
         String tableName = modelPublishTableDTO.tableName;
         String tablePk="";
         if(modelPublishTableDTO.createType==0){
-            tablePk=tableName.substring(4)+"_pk";
+            tablePk=tableName.substring(4)+"key";
         }else{
-            tablePk=tableName.substring(5)+"_pk";
+            tablePk=tableName.substring(5)+"key";
         }
 
         StringBuilder sql = new StringBuilder();
@@ -258,7 +258,7 @@ public class BuildDataModelDorisTableListener
         fieldList.forEach((l) -> {
             sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             if(Objects.nonNull(l.associateDimensionName)){
-                sqlFileds1.append(l.associateDimensionName.substring(4)+"_pk varchar(50),");
+                sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }
             if(l.isPrimaryKey==1){
                 pksql.append(l.fieldEnName+" ,");
@@ -497,7 +497,7 @@ public class BuildDataModelDorisTableListener
         }
         log.info("组件id为:"+processorEntityBusinessResult.data.getId());
         processors.add(processorEntityBusinessResult.data);
-        List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
+        //List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
 
         ProcessorEntity processor = processorEntityBusinessResult.data;
 
@@ -566,7 +566,7 @@ public class BuildDataModelDorisTableListener
     * */
     private boolean createPgdbTable(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName){
         String tableName=modelMetaDataDTO.tableName;
-        String tableKeyName=modelMetaDataDTO.tableName+"_pk";
+        String tableKeyName=modelMetaDataDTO.tableName+"key";
         //创建pgdb表
         //1.拼接sql
         StringBuilder sql = new StringBuilder();
@@ -588,9 +588,9 @@ public class BuildDataModelDorisTableListener
                 String tableName2="";
                 if(l!=null){
                     tableName2=l.associationTable;
-                    sqlFileds.append( tableName2+"_pk" + " " + "varchar" + " ,");
-                    Map.put(tableName2+"_pk",tableName2+"_pk");
-                    strings.add(tableName2+"_pk");
+                    sqlFileds.append( tableName2+"key" + " " + "varchar" + " ,");
+                    Map.put(tableName2+"key",tableName2+"key");
+                    strings.add(tableName2+"key");
                 }
             }
         });
@@ -636,13 +636,13 @@ public class BuildDataModelDorisTableListener
         storedProcedureSql+="mysql1:='"+selectSql(modelMetaDataDTO)+"';\n";
         storedProcedureSql+="FOR resrow1 IN EXECUTE mysql1\n";
         storedProcedureSql+="LOOP\n";
-        storedProcedureSql+="mysql2:='select case when count(*)>0 THEN ''y'' ELSE ''n'' end from "+modelMetaDataDTO.tableName+" where "+modelMetaDataDTO.tableName+"_pk=';\n";
-        storedProcedureSql+="mysql2:=mysql2 ||''''|| resrow1."+modelMetaDataDTO.tableName+"_pk||'''';\n";
+        storedProcedureSql+="mysql2:='select case when count(*)>0 THEN ''y'' ELSE ''n'' end from "+modelMetaDataDTO.tableName+" where "+modelMetaDataDTO.tableName+"key=';\n";
+        storedProcedureSql+="mysql2:=mysql2 ||''''|| resrow1."+modelMetaDataDTO.tableName+"key||'''';\n";
         storedProcedureSql+="raise notice'%',mysql2;";
         storedProcedureSql+="EXECUTE mysql2 into geshu;\n";
         storedProcedureSql+="raise notice'%',geshu;\n";
         storedProcedureSql+="if geshu!='y' then \n";
-        storedProcedureSql+="insert_sql:='insert into "+modelMetaDataDTO.tableName+"( "+modelMetaDataDTO.tableName+"_pk, fk_doris_increment_code,";
+        storedProcedureSql+="insert_sql:='insert into "+modelMetaDataDTO.tableName+"( "+modelMetaDataDTO.tableName+"key, fk_doris_increment_code,";
        /* for (String field:fieldEnNames) {
             fieldString+=field+",";
             fieldValue+="'''||resrow1."+field+"||''',";
@@ -655,8 +655,8 @@ public class BuildDataModelDorisTableListener
         }
         fieldString=fieldString.substring(0,fieldString.length()-1);
         fieldValue=fieldValue.substring(0,fieldValue.length()-1)+")';\n";
-        fieldUpdate=fieldUpdate.substring(0,fieldUpdate.length()-1)+" where "+modelMetaDataDTO.tableName+"_pk= '''||resrow1."+modelMetaDataDTO.tableName+"_pk||'''';\n";
-        storedProcedureSql+=fieldString+" ) values ( '''||resrow1."+modelMetaDataDTO.tableName+"_pk||''','''||resrow1.fk_doris_increment_code||''',";
+        fieldUpdate=fieldUpdate.substring(0,fieldUpdate.length()-1)+" where "+modelMetaDataDTO.tableName+"key= '''||resrow1."+modelMetaDataDTO.tableName+"key||'''';\n";
+        storedProcedureSql+=fieldString+" ) values ( '''||resrow1."+modelMetaDataDTO.tableName+"key||''','''||resrow1.fk_doris_increment_code||''',";
         storedProcedureSql+=fieldValue;
         storedProcedureSql+="EXECUTE insert_sql;\n";
         storedProcedureSql+="else\n";
@@ -673,7 +673,7 @@ public class BuildDataModelDorisTableListener
     * */
     public String selectSql(ModelMetaDataDTO modelMetaDataDTO){
         List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
-        String selectSql="select  ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName +"_pk,ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+".fk_doris_increment_code ,";
+        String selectSql="select  ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName +"key,ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+".fk_doris_increment_code ,";
         String selectSql1=" ";
         String selectSql2="";
         String selectSql3="";
@@ -698,13 +698,13 @@ public class BuildDataModelDorisTableListener
             if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
                 //这里要改,前缀
                 if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
-                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "_pk,0),";
+                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "key,0),";
                 } else {
-                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "_pk,''''null''''),";
+                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "key,''''null''''),";
 
                 }
                 //别名我说的算
-                selectSql4+="dim_"+tableFieldsDTO.originalTableName+"_pk  varchar,";
+                selectSql4+="dim_"+tableFieldsDTO.originalTableName+"key  varchar,";
             }
             if(d.associationField!=null){
                 //这里要改,前缀
@@ -720,14 +720,14 @@ public class BuildDataModelDorisTableListener
         selectSql1=selectSql1.substring(0,selectSql1.length()-1)+" from ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName;
         selectSql=selectSql+selectSql1+selectSql2;
         selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
-        selectSql3=modelMetaDataDTO.tableName+"_pk varchar, fk_doris_increment_code varchar,"+selectSql3;
+        selectSql3=modelMetaDataDTO.tableName+"key varchar, fk_doris_increment_code varchar,"+selectSql3;
         selectSql=selectSql+selectSql3+selectSql4.substring(0,selectSql4.length()-1)+")";
         return selectSql;
     }
 
     public String createStoredProcedure2(ModelMetaDataDTO modelMetaDataDTO){
         String tableName=modelMetaDataDTO.tableName;
-        String tableKeyName=modelMetaDataDTO.tableName+"_pk";
+        String tableKeyName=modelMetaDataDTO.tableName+"key";
         String fieldValue="";
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
                 "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";

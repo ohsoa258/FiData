@@ -714,18 +714,18 @@ public class BuildNifiTaskListener {
             //连接器
             componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //更新日志
-            ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
-            tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
+            //ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
+            //tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
             //连接器
-            componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
+            //componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
 
-            lastId = processorEntity.getId();
+            lastId = evaluateJsons.getId();
             res.add(mergeRes);
             res.add(processorEntity1);
             res.add(queryNumbers);
             res.add(numberToJsonRes);
             res.add(evaluateJsons);
-            res.add(processorEntity);
+            //res.add(processorEntity);
         }
 
         ProcessorEntity processor = null;
