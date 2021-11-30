@@ -23,6 +23,7 @@ import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -34,6 +35,7 @@ import java.util.List;
  * @author Lock
  */
 @Service
+@Slf4j
 public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsPO> implements ITableFields {
     @Resource
     private GenerateCondition generateCondition;
@@ -133,7 +135,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                 .select(TableFieldsPO::getId));*/
 
         TableAccessPO model = tableAccessImpl.getById(dto.id);
-        if (model == null) {
+        // TODO 临时bug修复
+        TableAccessPO model2 = tableAccessImpl.getById(dto.list.get(0).tableAccessId);
+
+        if (model == null && model2 == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -276,6 +281,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
             //表名称
             atlasEntityQueryDTO.tableName = tableName;
+            log.info("给nifi组装参数" + atlasEntityQueryDTO);
+            System.out.println("atlasEntityQueryDTO = " + atlasEntityQueryDTO);
             // 调用atlas
             // 保存成功,执行发布,调用存储过程
             publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
