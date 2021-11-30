@@ -121,14 +121,16 @@ public class BuildDataModelDorisTableListener
         //1.,查询语句,并存库
         //2.修改表的存储过程
         //3.生成nifi流程
-
         ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
         List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
         for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
             //生成版本号
-            //taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
-            //生成建表语句
-            createPgdbTable2(modelPublishTableDTO);
+            ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
+            if (resultEnum.getCode()==ResultEnum.TASK_TABLE_NOT_EXIST.getCode())
+            {
+                //生成建表语句
+                createPgdbTable2(modelPublishTableDTO);
+            }
             //生成函数,并执行
             String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);

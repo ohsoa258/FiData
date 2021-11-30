@@ -1,15 +1,13 @@
 package com.fisk.task.utils;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -21,6 +19,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
+@Component
 @Slf4j
 public class TaskPgTableStructureHelper
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
@@ -28,7 +27,7 @@ public class TaskPgTableStructureHelper
      * 保存建模相关表结构数据
      * @param
      */
-    public void saveTableStructure(ModelPublishTableDTO dto)
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto)
     {
         try {
             List<TaskPgTableStructurePO> poList=new ArrayList<>();
@@ -51,20 +50,20 @@ public class TaskPgTableStructureHelper
                 poList.add(po);
             }
             //保存成功,调用存储过程,获取修改表结构SQL语句
-            if (this.saveBatch(poList))
+            if (!this.saveBatch(poList))
             {
-                String sql = execProcedure(version);
+                return ResultEnum.SAVE_DATA_ERROR;
             }
+            //执行存储过程
+            String sql = execProcedure(version);
+            //判断是否有修改语句
+            return updatePgTableStructure(sql,dto.tableName);
         }
         catch (Exception ex)
         {
             log.error("saveTableStructure:"+ex);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
-    }
-    @Test
-    public void  getSql() throws Exception{
-        String sql=execProcedure("20211009150658001");
-        Boolean aa=updatePgTableStructure(sql,"fact_log");
     }
 
     /**
@@ -91,7 +90,7 @@ public class TaskPgTableStructureHelper
         while (rs.next()) {
             String value=rs.getString(1);
             if (value !=null && value.length()>0) {
-                str.append(value);
+                str.append(value.toLowerCase());
             }
         }
         //这个判断会自动指向下一个游标
@@ -102,7 +101,7 @@ public class TaskPgTableStructureHelper
             while (rs1.next()) {
                 String value=rs1.getString(1);
                 if (value !=null && value.length()>0) {
-                    str.append(value);
+                    str.append(value.toLowerCase());
                 }
                 try{//关闭rs1
                     if(rs1 == null){
@@ -125,7 +124,7 @@ public class TaskPgTableStructureHelper
      * @param tableName
      * @return
      */
-    public boolean updatePgTableStructure(String sql,String tableName)
+    public ResultEnum updatePgTableStructure(String sql,String tableName)
     {
         try {
             Class.forName("org.postgresql.Driver");
@@ -138,15 +137,17 @@ public class TaskPgTableStructureHelper
             ResultSet set=metaData.getTables(null,null,tableName,null);
             if (!set.next())
             {
-                return false;
+                return ResultEnum.TASK_TABLE_NOT_EXIST;
             }
             //修改表结构
-            Statement st = conn.createStatement();
-            boolean result= st.execute(sql);
-            String aa="";
+            if (sql!=null && sql.length()>0)
+            {
+                Statement st = conn.createStatement();
+                return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
+            }
+            return ResultEnum.SUCCESS;
         }catch (ClassNotFoundException | SQLException e) {
-            return false;
+            return ResultEnum.UPDATE_DATA_ERROR;
         }
-        return true;
     }
 }
