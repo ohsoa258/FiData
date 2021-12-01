@@ -1384,6 +1384,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         }else if(buildConnectDTO.level == 4){
             selectedRelationships.add("wait");
             component.setSelectedRelationships(selectedRelationships);
+        }else if(buildConnectDTO.level == 5){
+            selectedRelationships.add("matched");
+            component.setSelectedRelationships(selectedRelationships);
         }
 
         component.setDestination(destination);
