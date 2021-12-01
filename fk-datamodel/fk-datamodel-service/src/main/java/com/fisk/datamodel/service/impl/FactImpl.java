@@ -54,7 +54,7 @@ public class FactImpl implements IFact {
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.FACT_EXIST;
         }
         FactPO model= FactMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
