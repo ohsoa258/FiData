@@ -1,6 +1,6 @@
 package com.fisk.datamodel.service;
 
-import com.fisk.dataservice.dto.DataDoFieldDTO;
+import com.fisk.dataservice.dto.isDimensionDTO;
 
 import java.util.List;
 
@@ -14,5 +14,5 @@ public interface IDataService {
      * @param dto
      * @return
      */
-    //boolean isExistAssociate(List<DataDoFieldDTO> dto);
+    boolean isExistAssociate(isDimensionDTO dto);
 }
