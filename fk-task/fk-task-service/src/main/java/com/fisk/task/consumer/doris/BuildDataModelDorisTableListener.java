@@ -125,6 +125,7 @@ public class BuildDataModelDorisTableListener
         for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
             //生成版本号
             ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
+            log.info("执行存储过程返回结果"+resultEnum.getCode());
             if (resultEnum.getCode()==ResultEnum.TASK_TABLE_NOT_EXIST.getCode())
             {
                 //生成建表语句

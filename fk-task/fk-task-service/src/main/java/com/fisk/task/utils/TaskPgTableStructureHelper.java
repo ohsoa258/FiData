@@ -7,6 +7,7 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -50,14 +52,18 @@ public class TaskPgTableStructureHelper
                 poList.add(po);
                 if (item.associateDimensionId !=0 && item.associateDimensionFieldId !=0)
                 {
-                    po.fieldId=String.valueOf(item.associateDimensionId);
-                    po.fieldName=item.associateDimensionName.substring(4)+"key";
-                    po.fieldType="VARCHAR(255)";
-                    poList.add(po);
+                    TaskPgTableStructurePO po2 = new TaskPgTableStructurePO();
+                    po2.version = version;
+                    po2.tableId = String.valueOf(dto.tableId);
+                    po2.tableName = dto.tableName;
+                    po2.fieldId=String.valueOf(item.associateDimensionId);
+                    po2.fieldName=item.associateDimensionName.substring(4)+"key";
+                    po2.fieldType="VARCHAR(255)";
+                    poList.add(po2);
                 }
             }
             //保存成功,调用存储过程,获取修改表结构SQL语句
-            if (!this.saveBatch(poList))
+            if (!this.saveBatch(poList.stream().distinct().collect(Collectors.toList())))
             {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
@@ -73,6 +79,13 @@ public class TaskPgTableStructureHelper
         }
     }
 
+   /* @Test
+    public void  tests()throws Exception
+    {
+        String aa=execProcedure("20211201135546548");
+        String bb="";
+    }
+*/
     /**
      * 执行存储过程,获取更改表结构SQL语句
      * @param version
@@ -94,6 +107,10 @@ public class TaskPgTableStructureHelper
         cs.setString(1,version);
         cs.execute();
         ResultSet rs = cs.getResultSet();
+        if (rs==null)
+        {
+            return "";
+        }
         while (rs.next()) {
             String value=rs.getString(1);
             if (value !=null && value.length()>0) {
