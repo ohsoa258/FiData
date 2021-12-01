@@ -10,8 +10,10 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
@@ -47,13 +49,9 @@ public class FactAttributeImpl
     @Resource
     FactAttributeMapper mapper;
     @Resource
-    DimensionMapper dimensionMapper;
-    @Resource
-    DimensionAttributeMapper attributeMapper;
-    @Resource
     BusinessProcessMapper businessProcessMapper;
     @Resource
-    DataAccessClient client;
+    BusinessProcessImpl businessProcess;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -91,7 +89,13 @@ public class FactAttributeImpl
         //是否发布
         if (isPublish)
         {
-            ////return dimensionImpl.dimensionPublish(dimensionId);
+            BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
+            List<Integer> dimensionIds=new ArrayList<>();
+            dimensionIds.add(factId);
+            queryDTO.factIds=dimensionIds;
+            FactPO factPO=factMapper.selectById(factId);
+            queryDTO.businessAreaId=factPO==null?0:factPO.businessId;
+            return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;
     }

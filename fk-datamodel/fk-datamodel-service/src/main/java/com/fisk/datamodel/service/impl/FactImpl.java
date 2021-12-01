@@ -50,7 +50,7 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(FactPO::getFactTableEnName,dto.factTableEnName);
+                .eq(FactPO::getFactTableEnName,dto.factTabName);
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
@@ -107,7 +107,7 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-            .eq(FactPO::getFactTableEnName,dto.factTableEnName);
+            .eq(FactPO::getFactTableEnName,dto.factTabName);
         FactPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)
         {

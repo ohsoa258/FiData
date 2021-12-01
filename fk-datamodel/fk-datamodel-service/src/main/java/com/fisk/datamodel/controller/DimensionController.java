@@ -9,7 +9,9 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.service.IDataService;
 import com.fisk.datamodel.service.IDimension;
+import com.fisk.dataservice.dto.isDimensionDTO;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,6 +29,8 @@ import javax.annotation.Resource;
 public class DimensionController {
     @Resource
     IDimension service;
+    @Resource
+    IDataService iDataService;
 
     @ApiOperation("获取关联维度列表")
     @PostMapping("/getAssociateDimensionList")
@@ -74,6 +78,12 @@ public class DimensionController {
     @PutMapping("/updateDimensionDateAttribute")
     public ResultEntity<Object> updateDimensionDateAttribute(@Validated @RequestBody DimensionDateAttributeDTO dto) {
         return ResultEntityBuild.build(service.updateDimensionDateAttribute(dto));
+    }
+
+    @ApiOperation("判断维度与维度、事实与维度是否存在关联")
+    @PostMapping("/isExistAssociate")
+    public ResultEntity<Object> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.isExistAssociate(dto));
     }
 
 }

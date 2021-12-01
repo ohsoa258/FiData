@@ -5,10 +5,13 @@ import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
+import com.fisk.dataservice.dto.isDimensionDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -133,5 +136,14 @@ public interface DataModelClient {
      */
     @GetMapping("/business/editBusinessAreaPublishStatus")
     ResultEntity<Object> editBusinessAreaPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
+
+
+    /**
+     * 判断维度与维度、事实与维度是否存在关联
+     * @param dto
+     * @return
+     */
+    @GetMapping("/dimension/isExistAssociate")
+    ResultEntity<Object> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
 
 }
