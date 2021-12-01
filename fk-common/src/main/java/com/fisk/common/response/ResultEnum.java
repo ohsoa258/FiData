@@ -104,8 +104,10 @@ public enum ResultEnum {
     PUBLISH_FAILURE(8002, "发布失败"),
     FIELDS_ASSOCIATED(8003,"选中字段存在关联"),
     TABLE_ASSOCIATED(8004,"表中字段存在关联"),
-    BUSINESS_AREA_EXIST(8005,"该业务域下,已存在该维度表"),
+    DIMENSION_EXIST(8005,"已存在该维度表"),
     NAME_REPEATED(8006,"名称重复"),
+    FACT_EXIST(8007,"已存在该事实表"),
+    BUSINESS_AREA_EXIST(8008,"业务域名称已存在"),
 
     /**
      * 数据工厂
