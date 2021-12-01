@@ -435,7 +435,7 @@ public class BuildDataModelDorisTableListener
 
         //创建组件,启动组件
         TableNifiSettingPO tableNifiSetting = new TableNifiSettingPO();
-        String  Componentid= createComponents(data2.getId(), data.getId(), "update"+modelMetaDataDTO.tableName+"()",data1,tableNifiSetting);
+        String  Componentid= createComponents(modelPublishDataDTO,data2.getId(), data.getId(), "update"+modelMetaDataDTO.tableName+"()",data1,tableNifiSetting);
 
         //回写
         savaNifiAllSetting(modelPublishDataDTO,data,data1,data2,Componentid, modelMetaDataDTO,dataClassifyEnum,olapTableEnum, tableNifiSetting);
@@ -482,7 +482,7 @@ public class BuildDataModelDorisTableListener
     /*
     * 创建组件
     * */
-    public String createComponents(String groupId,String componentId,String executsql,ProcessGroupEntity data1,TableNifiSettingPO tableNifiSetting){
+    public String createComponents(ModelPublishDataDTO ModelPublishDataDTO,String groupId,String componentId,String executsql,ProcessGroupEntity data1,TableNifiSettingPO tableNifiSetting){
         List<ProcessorEntity> processors=new ArrayList<>();
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
@@ -498,7 +498,9 @@ public class BuildDataModelDorisTableListener
         }
         log.info("组件id为:"+processorEntityBusinessResult.data.getId());
         processors.add(processorEntityBusinessResult.data);
-        //List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
+        if(ModelPublishDataDTO.nifiCustomWorkflowId!=null){
+            List<ProcessorEntity> processorEntities = componentsBuild.enabledProcessor(groupId, processors);
+        }
 
         ProcessorEntity processor = processorEntityBusinessResult.data;
 
