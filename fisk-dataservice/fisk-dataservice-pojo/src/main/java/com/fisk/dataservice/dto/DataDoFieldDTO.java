@@ -10,11 +10,12 @@ import java.util.Date;
  */
 @Data
 public class DataDoFieldDTO {
-    public Integer fieldId;
-    public String fieldName;
-    public String where;
-    public String whereValue;
-    public DataDoFieldTypeEnum fieldType;
+    private Integer fieldId;
+    private String fieldName;
+    private String where;
+    private String whereValue;
+    private DataDoFieldTypeEnum fieldType;
+    private String tableName;
     /**
      * 是否维度 0 否  1 是维度
      */
@@ -27,11 +28,4 @@ public class DataDoFieldDTO {
 
     // 指定时间
     private String[] specifiedTime;
-
-    public int fieldId1;
-    public boolean isDimension1;
-
-    public int fieldId2;
-    public boolean isDimension2;
-
 }

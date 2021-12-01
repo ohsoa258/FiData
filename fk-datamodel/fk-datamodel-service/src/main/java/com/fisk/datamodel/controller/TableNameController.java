@@ -1,15 +1,15 @@
 package com.fisk.datamodel.controller;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataservice.dto.IndicatorDTO;
+import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -36,4 +36,9 @@ public class TableNameController {
         return service.getAggregation(id);
     }
 
+    @RequestMapping("/getIndicatorsLogic")
+    public ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(@RequestBody IndicatorFeignDTO dto){
+
+        return service.getIndicatorsLogic(dto);
+    }
 }

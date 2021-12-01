@@ -4,6 +4,8 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.dataservice.dto.IndicatorDTO;
+import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.isDimensionDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
@@ -134,6 +136,8 @@ public interface DataModelClient {
     @GetMapping("/business/editBusinessAreaPublishStatus")
     ResultEntity<Object> editBusinessAreaPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
 
+    @RequestMapping("/tableName/getIndicatorsLogic")
+    ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(@RequestBody IndicatorFeignDTO dto);
 
     /**
      * 判断维度与维度、事实与维度是否存在关联
