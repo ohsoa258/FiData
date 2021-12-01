@@ -50,11 +50,11 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(FactPO::getFactTableEnName,dto.factTableEnName);
+                .eq(FactPO::getFactTableEnName,dto.factTabName);
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.FACT_EXIST;
         }
         FactPO model= FactMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
@@ -107,7 +107,7 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-            .eq(FactPO::getFactTableEnName,dto.factTableEnName);
+            .eq(FactPO::getFactTableEnName,dto.factTabName);
         FactPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)
         {

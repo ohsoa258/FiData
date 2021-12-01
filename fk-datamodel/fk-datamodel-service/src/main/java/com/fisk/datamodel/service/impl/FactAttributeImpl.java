@@ -10,8 +10,10 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
@@ -20,6 +22,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
@@ -47,13 +50,9 @@ public class FactAttributeImpl
     @Resource
     FactAttributeMapper mapper;
     @Resource
-    DimensionMapper dimensionMapper;
-    @Resource
-    DimensionAttributeMapper attributeMapper;
-    @Resource
     BusinessProcessMapper businessProcessMapper;
     @Resource
-    DataAccessClient client;
+    BusinessProcessImpl businessProcess;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -64,6 +63,12 @@ public class FactAttributeImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto) {
+        //判断是否存在
+        FactPO factPO=factMapper.selectById(factId);
+        if (factPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
         //删除维度字段属性
         List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
                 .map(FactAttributeDTO::getId)
@@ -91,7 +96,18 @@ public class FactAttributeImpl
         //是否发布
         if (isPublish)
         {
-            ////return dimensionImpl.dimensionPublish(dimensionId);
+            BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
+            List<Integer> dimensionIds=new ArrayList<>();
+            dimensionIds.add(factId);
+            //修改发布状态
+            factPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+            if (factMapper.updateById(factPO)==0)
+            {
+                return ResultEnum.PUBLISH_FAILURE;
+            }
+            queryDTO.factIds=dimensionIds;
+            queryDTO.businessAreaId=factPO.businessId;
+            return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;
     }

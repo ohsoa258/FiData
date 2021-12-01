@@ -2,22 +2,19 @@ package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 /**
  * 发送任务
@@ -53,7 +50,7 @@ public interface PublishTaskClient {
      */
 
     @PostMapping("/publishTask/atlasBuildTableAndColumn")
-    ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto);
+    ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto);
     /**
      * 元数据删除
      * @param entityId

@@ -3,13 +3,13 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.service.IBuildTaskService;
 import com.google.gson.Gson;
@@ -83,7 +83,7 @@ public class PublishTaskController {
      */
     @PostMapping("/atlasBuildTableAndColumn")
     @ApiOperation(value = "在Atlas中生成数据库、表、字段的血缘关系")
-    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody AtlasEntityQueryDTO ArDto) {
+    public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
         log.info("进入方法");
          service.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,

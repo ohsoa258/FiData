@@ -85,7 +85,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
         if (businessAreaPO !=null)
         {
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.BUSINESS_AREA_EXIST;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
         boolean save = this.save(po);
@@ -122,7 +122,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
         if (businessAreaPO !=null && businessAreaPO.id !=businessAreaDTO.id)
         {
-            return ResultEnum.NAME_REPEATED;
+            return ResultEnum.BUSINESS_AREA_EXIST;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;

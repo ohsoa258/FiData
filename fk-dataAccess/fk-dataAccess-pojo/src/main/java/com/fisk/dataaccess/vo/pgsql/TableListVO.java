@@ -15,7 +15,7 @@ public class TableListVO {
      */
     public Long userId;
     /**
-     * 回写的表名(存放在tb_nifi_setting)
+     * 回写的表名(存放在tb_nifi_setting,现在已改成应用简称_表名)
      */
     public String nifiSettingTableName;
     /**

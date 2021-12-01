@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -23,7 +23,7 @@ import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -252,6 +252,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         return atlasIdsVO;
     }
 
+
+
     /**
      * 调用发布和存储过程
      *
@@ -263,7 +265,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      */
     private void publish(boolean success, long appId, long accessId, String tableName, int flag) {
         if (success && flag == 1) {
-
+/*
             UserInfo userInfo = userHelper.getLoginUserInfo();
             AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, appId, accessId, tableName);
             AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
@@ -275,10 +277,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             //表名称
             atlasEntityQueryDTO.tableName = tableName;
             log.info("给nifi组装参数" + atlasEntityQueryDTO);
-            System.out.println("atlasEntityQueryDTO = " + atlasEntityQueryDTO);
-            // 调用atlas
+            System.out.println("atlasEntityQueryDTO = " + atlasEntityQueryDTO);*/
+
+            ResultEntity<BuildPhysicalTableDTO> buildPhysicalTableDTO = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
+            BuildPhysicalTableDTO data = buildPhysicalTableDTO.data;
+            data.appId = String.valueOf(appId);
+            data.dbId = String.valueOf(accessId);
+
             // 保存成功,执行发布,调用存储过程
-            publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+            publishTaskClient.publishBuildAtlasTableTask(data);
         }
     }
 }

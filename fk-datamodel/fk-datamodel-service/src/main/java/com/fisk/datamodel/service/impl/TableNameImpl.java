@@ -1,23 +1,28 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.IndicatorsTypeEnum;
+import com.fisk.datamodel.mapper.*;
+import com.fisk.dataservice.dto.IndicatorDTO;
+import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
-import com.fisk.datamodel.entity.DimensionPO;
-import com.fisk.datamodel.entity.FactPO;
-import com.fisk.datamodel.entity.IndicatorsPO;
-import com.fisk.datamodel.mapper.DimensionAttributeMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
-import com.fisk.datamodel.mapper.FactMapper;
-import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.ITableName;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
+import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 
 /**
  * @author Lock
@@ -34,6 +39,12 @@ public class TableNameImpl implements ITableName {
     IndicatorsMapper indicatorsMapper;
     @Resource
     FactMapper factMapper;
+    @Resource
+    BusinessLimitedMapper businessLimitedMapper;
+    @Resource
+    BusinessLimitedAttributeMapper attributeMapper;
+    @Resource
+    FactAttributeMapper factAttributeMapper;
 
     @Override
     public ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field) {
@@ -82,5 +93,76 @@ public class TableNameImpl implements ITableName {
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, indicators.getCalculationLogic());
+    }
+
+    @Override
+    public ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(IndicatorFeignDTO dto) {
+        List<IndicatorDTO> dtoList = new ArrayList<>();
+
+        dto.getIndicatorList().stream().forEach(b -> {
+            IndicatorsPO indicatorsPO = indicatorsMapper.selectById(b.getId());
+            if (indicatorsPO == null){
+                return;
+            }
+
+            IndicatorDTO indicator = new IndicatorDTO();
+            indicator.setId(b.getId());
+            indicator.setFieldName(b.getFieldName());
+            indicator.setTableName(b.getTableName());
+            if (indicatorsPO.getIndicatorsType() == IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue()){
+                // 原子指标
+                indicator.setType(ATOMIC_INDICATORS);
+                indicator.setCalculationLogic(indicatorsPO.getCalculationLogic());
+                dtoList.add(indicator);
+            }else if (indicatorsPO.getIndicatorsType() == IndicatorsTypeEnum.DERIVED_INDICATORS.getValue()){
+                // 派生指标
+                QueryWrapper<BusinessLimitedPO> query = new QueryWrapper<>();
+                query.lambda().eq(BusinessLimitedPO::getId,indicatorsPO.getBusinessLimitedId());
+                BusinessLimitedPO limitedPO = businessLimitedMapper.selectOne(query);
+                if (limitedPO != null){
+                    QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,limitedPO.getId());
+                    List<BusinessLimitedAttributePO> attributePOList = attributeMapper.selectList(queryWrapper);
+
+                    indicator.setType(DERIVED_INDICATORS);
+                    indicator.setTimePeriod(indicatorsPO.timePeriod);
+                    indicator.setWhereTimeLogic(attributePOList.stream().filter(e -> e!=null)
+                            .map(e -> {
+                                String factFieldName = this.getFactFieldName(e.getFactAttributeId(),e.getCalculationLogic(),e.getCalculationValue());
+                                return factFieldName;
+                            }).collect(Collectors.joining(" AND ")));
+                }
+
+                dtoList.add(indicator);
+            }
+        });
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,dtoList);
+    }
+
+
+    /**
+     * 查询业务限定字段名称
+     * @param id
+     * @return
+     */
+    public String getFactFieldName(Integer id,String calculationLogic,String calculationValue){
+        FactAttributePO factAttributePO = factAttributeMapper.selectById(id);
+        if (factAttributePO != null){
+            DimensionPO dimension = dimensionMapper.selectById(factAttributePO.getAssociateDimensionId());
+            DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
+            if (dimension == null){
+                return "1 = 1";
+            }else {
+                String tableName = dimension.getDimensionTabName();
+                // String dimensionFieldEnName = dimensionAttribute.getDimensionFieldEnName();
+                String str1 = tableName.substring(0, tableName.indexOf("_"));
+                String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "_pk";
+                String subQuery = " SELECT " + dimensionTabName + " FROM " + tableName + " WHERE " +
+                        dimensionTabName + calculationLogic + calculationValue;
+                return factMapper.selectById(factAttributePO.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";
+            }
+        }
+        return null;
     }
 }

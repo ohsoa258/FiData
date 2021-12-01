@@ -21,7 +21,7 @@ public class DimensionListDTO {
      */
     public String dimensionTabName;
     /**
-     * 发布状态：1:未发布、2：发布成功、3：发布失败
+     * 发布状态：0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public int isPublish;
     /**

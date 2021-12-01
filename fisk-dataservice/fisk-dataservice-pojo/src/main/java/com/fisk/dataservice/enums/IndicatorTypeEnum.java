@@ -1,21 +1,19 @@
-package com.fisk.datamodel.enums;
+package com.fisk.dataservice.enums;
 
 import com.fisk.common.enums.BaseEnum;
 
 /**
- * @author JianWenYang
+ * @author WangYan
+ * @date 2021/11/29 15:33
+ * 指标类型
  */
-public enum PublicStatusEnum implements BaseEnum {
+public enum IndicatorTypeEnum implements BaseEnum {
 
-    UN_PUBLIC(0,"未发布"),
+    ATOMIC_INDICATORS(0,"原子指标"),
 
-    PUBLIC_SUCCESS(1,"发布成功"),
+    DERIVED_INDICATORS(1,"派生指标");
 
-    PUBLIC_FAILURE(2,"发布失败"),
-
-    PUBLIC_ING(3,"正在发布");
-
-    PublicStatusEnum(int value, String name) {
+    IndicatorTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
@@ -32,5 +30,4 @@ public enum PublicStatusEnum implements BaseEnum {
     public String getName() {
         return name;
     }
-
 }

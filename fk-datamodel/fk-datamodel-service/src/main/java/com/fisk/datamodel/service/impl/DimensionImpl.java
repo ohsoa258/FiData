@@ -51,7 +51,7 @@ public class DimensionImpl implements IDimension {
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null)
         {
-            return ResultEnum.BUSINESS_AREA_EXIST;
+            return ResultEnum.DIMENSION_EXIST;
         }
         dto.isPublish= PublicStatusEnum.UN_PUBLIC.getValue();
         DimensionPO model= DimensionMap.INSTANCES.dtoToPo(dto);
@@ -72,7 +72,7 @@ public class DimensionImpl implements IDimension {
         DimensionPO po=mapper.selectOne(queryWrapper);
         if (po !=null && po.id !=model.id)
         {
-            return ResultEnum.BUSINESS_AREA_EXIST;
+            return ResultEnum.DIMENSION_EXIST;
         }
         model= DimensionMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
