@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.filter.method.GenerateCondition;
@@ -24,12 +25,14 @@ import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -118,6 +121,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         if (accessPo == null) {
             return ResultEnum.TABLE_NOT_EXIST;
         }
+
+        // 修改发布状态
+        if (dto.flag == 1) {
+            accessPo.publish = 3;
+            tableAccessImpl.updateById(accessPo);
+        }
+
         // 发布
         publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag);
 
@@ -128,17 +138,15 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
-//        List<TableFieldsDTO> list = dto.list;
+        List<TableFieldsDTO> list = dto.list;
 
-/*        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
+        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
                 .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
-                .select(TableFieldsPO::getId));*/
+                .select(TableFieldsPO::getId));
 
         TableAccessPO model = tableAccessImpl.getById(dto.id);
-        // TODO 临时bug修复
-        TableAccessPO model2 = tableAccessImpl.getById(dto.list.get(0).tableAccessId);
 
-        if (model == null && model2 == null) {
+        if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -148,7 +156,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 保存tb_table_fields
-/*
         boolean success = true;
         for (TableFieldsDTO tableFieldsDTO : list) {
             // 0: 未操作的数据  1: 新增  2: 编辑
@@ -182,7 +189,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
-*/
+/*
         // 全删全插
         try {
             List<TableFieldsPO> list = this.query().eq("table_access_id", dto.id).list();
@@ -195,18 +202,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
+*/
 
-        boolean success = true;
+//        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;
         // 保存tb_table_business
         int businessMode = 3;
         if (tableSyncmodeDTO.syncMode == businessMode && businessDto != null) {
 
-//            TableBusinessPO businessPo = businessDto.toEntity(TableBusinessPO.class);
             TableBusinessPO businessPo = TableBusinessMap.INSTANCES.dtoToPo(businessDto);
             success = businessImpl.saveOrUpdate(businessPo);
-
-//            success = businessImpl.updateById(businessPo);
             if (!success) {
                 return ResultEnum.UPDATE_DATA_ERROR;
             }
@@ -215,24 +220,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         TableSyncmodePO modelSync = tableSyncmodeDTO.toEntity(TableSyncmodePO.class);
         success = syncmodeImpl.updateById(modelSync);
 
-/*
-
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
-        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-        atlasEntityQueryDTO.userId = atlasIdsVO.userId;
-        // 应用注册id
-        atlasEntityQueryDTO.appId = atlasIdsVO.appId;
-        // 物理表id
-        atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
-        //表名称
-        atlasEntityQueryDTO.tableName = model.tableName;
-        // 调用atlas
-        // 保存成功,执行发布,调用存储过程
-        if (success && dto.flag == 1) {
-            publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+        // 修改发布状态
+        if (dto.flag == 1) {
+            model.publish = 3;
+            tableAccessImpl.updateById(model);
         }
-*/
+
         // 发布
         publish(success,model.appId,model.id,model.tableName,dto.flag);
 
