@@ -12,6 +12,8 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.service.IBuildTaskService;
@@ -186,5 +188,27 @@ public class TestController {
                 MqConstants.QueueConstants.BUILD_NIFI_FLOW,
                 data);
     }
+
+    @PostMapping("/testDelete")
+    public void publishBuildNifiFlowTaskDelete() {
+
+        PgsqlDelTableDTO delTable = new PgsqlDelTableDTO();
+        delTable.delApp = false;
+        delTable.userId = 57L;
+        delTable.appAtlasId = "";
+        List<TableListDTO> tableList = new ArrayList<>();
+        TableListDTO dto = new TableListDTO();
+        dto.userId = 57L;
+        dto.tableName = "cus_address1";
+        tableList.add(dto);
+        delTable.tableList = tableList;
+
+        service.publishTask(TaskTypeEnum.BUILD_DATAINPUT_DELETE_PGSQL_STGTOODS_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW,
+                delTable);
+
+    }
+
 
 }

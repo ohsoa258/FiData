@@ -48,11 +48,11 @@ public class BuildDataInputDeletePgTableListener {
         PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAINPUT);
         log.info("delsql:"+delSqlStr);
         log.info("执行pg delete table 完成");
-        log.info("开始删除atals实例");
+//        log.info("开始删除atals实例");
         atlasEntityId.forEach((a)->{
             //AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
             //BusinessResult resDel=atlas.atlasEntityDelete(ad);
         });
-        log.info("Atlas实例删除完成");
+//        log.info("Atlas实例删除完成");
     }
 }
