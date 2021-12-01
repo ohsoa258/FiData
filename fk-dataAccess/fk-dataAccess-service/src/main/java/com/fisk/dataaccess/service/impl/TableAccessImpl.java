@@ -792,6 +792,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         tableListVO.userId = userInfo.id;
         tableListVO.tableAtlasId = modelAccess.atlasTableId;
+        tableListVO.nifiSettingTableName = registrationPO.appAbbreviation + "_" + modelAccess.tableName;
         voList.add(tableListVO);
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
