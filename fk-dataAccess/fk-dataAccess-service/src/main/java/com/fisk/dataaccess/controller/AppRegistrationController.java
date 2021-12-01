@@ -168,6 +168,7 @@ public class AppRegistrationController {
             dataModelVO.businessId=nifiVO.appId;
             dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
             dataModelVO.userId=nifiVO.userId;
+            // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
             log.info("task删除应用{}", task);
             System.out.println(task);
