@@ -110,8 +110,7 @@ public class DataServiceImpl implements IDataService {
                 return false;
             }
             QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
-            queryWrapper1.select("associate_dimension_id").lambda()
-                    .ne(DimensionAttributePO::getAssociateDimensionId,0)
+            queryWrapper1.select("dimension_id").lambda()
                     .eq(DimensionAttributePO::getDimensionId,dimensionAttributePO1.dimensionId);
             List<Integer> dimensionIds=(List)dimensionAttributeMapper.selectObjs(queryWrapper1);
             if (dimensionIds !=null && dimensionIds.size()>0)

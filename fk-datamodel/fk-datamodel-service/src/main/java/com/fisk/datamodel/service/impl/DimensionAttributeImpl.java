@@ -19,6 +19,7 @@ import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.DimensionMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
@@ -79,6 +80,14 @@ public class DimensionAttributeImpl
         {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }*/
+
+        //判断是否存在
+        DimensionPO dimensionPO=mapper.selectById(dimensionId);
+        if (dimensionPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
         //删除维度字段属性
         List<Integer> ids=(List)dto.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
@@ -105,9 +114,14 @@ public class DimensionAttributeImpl
             DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
             List<Integer> dimensionIds=new ArrayList<>();
             dimensionIds.add(dimensionId);
+            //修改发布状态
+            dimensionPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+            if (mapper.updateById(dimensionPO)==0)
+            {
+                return ResultEnum.PUBLISH_FAILURE;
+            }
             queryDTO.dimensionIds=dimensionIds;
-            DimensionPO dimensionPO=mapper.selectById(dimensionId);
-            queryDTO.businessAreaId=dimensionPO==null?0:dimensionPO.businessId;
+            queryDTO.businessAreaId=dimensionPO.businessId;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return ResultEnum.SUCCESS;

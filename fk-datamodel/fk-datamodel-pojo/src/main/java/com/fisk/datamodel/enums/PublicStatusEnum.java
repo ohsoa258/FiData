@@ -11,7 +11,9 @@ public enum PublicStatusEnum implements BaseEnum {
 
     PUBLIC_SUCCESS(1,"发布成功"),
 
-    PUBLIC_FAILURE(2,"发布失败");
+    PUBLIC_FAILURE(2,"发布失败"),
+
+    PUBLIC_ING(3,"正在发布");
 
     PublicStatusEnum(int value, String name) {
         this.name = name;

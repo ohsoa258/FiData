@@ -20,6 +20,7 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IBusinessProcess;
@@ -149,6 +150,7 @@ public class BusinessProcessImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto)
     {
         try {
@@ -165,6 +167,16 @@ public class BusinessProcessImpl
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
             }
+            //更改发布状态
+            for (FactPO item:factPOList)
+            {
+                item.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+                if (factMapper.updateById(item)==0)
+                {
+                    throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                }
+            }
+
             //获取事实字段数据
             QueryWrapper<FactAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
             //获取事实id集合

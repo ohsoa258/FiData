@@ -17,6 +17,7 @@ import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.DimensionFolderPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.DimensionFolderMap;
 import com.fisk.datamodel.map.DimensionMap;
@@ -249,6 +250,7 @@ public class DimensionFolderImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto)
     {
         try{
@@ -265,6 +267,16 @@ public class DimensionFolderImpl
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
             }
+            //更改发布状态
+            for (DimensionPO item:dimensionPOList)
+            {
+                item.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+                if (dimensionMapper.updateById(item)==0)
+                {
+                    throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                }
+            }
+
             //获取维度字段数据
             QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
             //获取维度id集合

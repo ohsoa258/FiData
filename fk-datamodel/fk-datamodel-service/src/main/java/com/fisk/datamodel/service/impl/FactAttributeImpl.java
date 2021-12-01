@@ -22,6 +22,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
@@ -62,6 +63,12 @@ public class FactAttributeImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto) {
+        //判断是否存在
+        FactPO factPO=factMapper.selectById(factId);
+        if (factPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
         //删除维度字段属性
         List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
                 .map(FactAttributeDTO::getId)
@@ -92,9 +99,14 @@ public class FactAttributeImpl
             BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
             List<Integer> dimensionIds=new ArrayList<>();
             dimensionIds.add(factId);
+            //修改发布状态
+            factPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+            if (factMapper.updateById(factPO)==0)
+            {
+                return ResultEnum.PUBLISH_FAILURE;
+            }
             queryDTO.factIds=dimensionIds;
-            FactPO factPO=factMapper.selectById(factId);
-            queryDTO.businessAreaId=factPO==null?0:factPO.businessId;
+            queryDTO.businessAreaId=factPO.businessId;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;
