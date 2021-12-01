@@ -312,7 +312,7 @@ public class BuildAtlasTableAndColumnTaskListener
         StringBuilder sqlSelect = new StringBuilder();
         StringBuilder sqlFileds = new StringBuilder();
         sqlSelect.append("select ");
-        sqlSelect.append((buildPhysicalTableDTO.driveType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+buildPhysicalTableDTO.appAbbreviation+buildPhysicalTableDTO.tableName+"key , ");
+        sqlSelect.append((buildPhysicalTableDTO.driveType== DbTypeEnum.sqlserver ?" NEWID()":" UUID() ")+" as "+buildPhysicalTableDTO.appAbbreviation+"_"+buildPhysicalTableDTO.tableName+"key , ");
         sqlSelect.append(" '${" + NifiConstants.AttrConstants.LOG_CODE + "}' as fi_batch_code ,");
         //判断字符串函数与占位符
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;

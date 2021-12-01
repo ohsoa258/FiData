@@ -48,6 +48,13 @@ public class TaskPgTableStructureHelper
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
                 poList.add(po);
+                if (item.associateDimensionId !=0 && item.associateDimensionFieldId !=0)
+                {
+                    po.fieldId=String.valueOf(item.associateDimensionId);
+                    po.fieldName=item.associateDimensionName.substring(4)+"key";
+                    po.fieldType="VARCHAR(255)";
+                    poList.add(po);
+                }
             }
             //保存成功,调用存储过程,获取修改表结构SQL语句
             if (!this.saveBatch(poList))

@@ -767,7 +767,7 @@ public class BuildNifiTaskListener {
         String componentOutputPortConnectionId = buildPortConnection(groupId,
                 groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
                 groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
-                3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+                5, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
 
         // 创建output connection(任务)
         String taskOutputPortConnectionId = buildPortConnection(groupEntityId,
