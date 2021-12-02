@@ -290,10 +290,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO tableAccessPO = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-//                NifiSettingPO nifiSettingPO = nifiSettingImpl.query().eq("table_id", tableAccessPO.id).eq("app_id", id).one();
                 tableVO.tableAtlasId = tableAccessPO.atlasTableId;
-//                tableVO.nifiSettingTableName = nifiSettingPO.tableName;
-//                tableVO.tableComponentId = tableAccessPO.componentId;
+                tableVO.nifiSettingTableName = model + "_" + tableAccessPO.tableName;
                 tableList.add(tableVO);
             }
 

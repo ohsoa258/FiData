@@ -7,6 +7,7 @@ import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -279,10 +280,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             log.info("给nifi组装参数" + atlasEntityQueryDTO);
             System.out.println("atlasEntityQueryDTO = " + atlasEntityQueryDTO);*/
 
+            UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> buildPhysicalTableDTO = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
             BuildPhysicalTableDTO data = buildPhysicalTableDTO.data;
             data.appId = String.valueOf(appId);
             data.dbId = String.valueOf(accessId);
+            data.userId = userInfo.id;
 
             // 保存成功,执行发布,调用存储过程
             publishTaskClient.publishBuildAtlasTableTask(data);
