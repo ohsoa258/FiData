@@ -68,7 +68,7 @@ public class AtomicIndicatorsController {
 
     @GetMapping("/getAtomicIndicators")
     @ApiOperation("获取事实表指标(用于Doris创建表)")
-    public ResultEntity<Object> getAtomicIndicators(@RequestParam("id") int id) {
+    public ResultEntity<Object> getAtomicIndicators(@RequestParam("id") List<Integer> id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorPush(id));
     }
 

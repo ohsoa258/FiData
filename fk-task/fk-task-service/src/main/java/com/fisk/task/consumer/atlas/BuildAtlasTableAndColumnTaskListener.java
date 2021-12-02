@@ -363,36 +363,4 @@ public class BuildAtlasTableAndColumnTaskListener
         return TriggerUtils.computeFireTimes(cronTriggerImpl, null, numTimes);
     }
 
-    /**
-     * 向task库中添加数据接入表结构数据
-     * @param dto
-     */
-    public void saveTableStructure(AtlasWriteBackDataDTO dto)
-    {
-        try {
-            List<TaskPgTableStructurePO> poList=new ArrayList<>();
-            //获取时间戳版本号
-            DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-            Calendar calendar = Calendar.getInstance();
-            String version = df.format(calendar.getTime());
-            for (AtlasEntityColumnDTO item: dto.columnsKeys)
-            {
-                TaskPgTableStructurePO po=new TaskPgTableStructurePO();
-                po.version=version;
-                po.appId=dto.appId;
-                po.tableName=dto.tableName;
-                po.tableId=dto.tableId;
-                po.fieldName=item.columnName;
-                po.fieldId=String.valueOf(item.columnId);
-                po.fieldType=item.dataType;
-                poList.add(po);
-            }
-            this.saveBatch(poList);
-        }
-        catch (Exception ex)
-        {
-            log.error("saveTableStructure:"+ex);
-        }
-    }
-
 }
