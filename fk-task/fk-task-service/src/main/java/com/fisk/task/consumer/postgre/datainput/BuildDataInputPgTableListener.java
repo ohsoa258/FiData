@@ -16,6 +16,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IPostgreBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.CronExpression;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -24,9 +25,8 @@ import javax.annotation.Resource;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * @author: DennyHui
@@ -47,9 +47,7 @@ public class BuildDataInputPgTableListener {
     public void msg(String dataInfo, Channel channel, Message message) {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);
-        AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
-        ResultEntity<BuildPhysicalTableDTO> data = dc.getBuildPhysicalTableDTO(Long.parseLong(inpData.dbId), Long.parseLong(inpData.appId));
-        BuildPhysicalTableDTO buildPhysicalTableDTO = data.data;
+        BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
         //修改或创建表
         String selectTableSql="select\n" +
                 "col.table_schema,\n" +
@@ -84,7 +82,7 @@ public class BuildDataInputPgTableListener {
             sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             tableFieldsDTOS.forEach((l) -> {
-                sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+                sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
             });
             sqlFileds.delete(sqlFileds.length() - 1, sqlFileds.length());
             sqlFileds.append(")");
@@ -119,8 +117,8 @@ public class BuildDataInputPgTableListener {
                         tableFieldDetailDTOS1.remove(tableFieldDetailDTOS.get(i));
                     }else if(Objects.equals(tableFieldDetailDTOS.get(i).columnName,tableFieldsDTOS.get(j).fieldName)&&!Objects.equals(tableFieldDetailDTOS.get(i).udtName,tableFieldsDTOS.get(j).fieldType)){
                         //修改字段ALTER TABLE table_name ALTER COLUMN column_name TYPE datatype;
-                        sql="ALTER TABLE "+tableName+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType;
-                        sql1="ALTER TABLE "+tableName1+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType;
+                        sql="ALTER TABLE "+tableName+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType+"("+tableFieldsDTOS.get(j).fieldLength+")";
+                        sql1="ALTER TABLE "+tableName1+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType+"("+tableFieldsDTOS.get(j).fieldLength+")";
                         log.info("修改字段" + sql);
                         pg.postgreBuildTable(sql,BusinessTypeEnum.DATAINPUT);
                         pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
@@ -147,13 +145,31 @@ public class BuildDataInputPgTableListener {
             }
             for (TableFieldsDTO tableFieldsDTO:tableFieldsDTOS1) {
                 //添加字段ALTER TABLE table_name ADD column_name datatype;
-                sql="ALTER TABLE "+tableName+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType;
-                sql1="ALTER TABLE "+tableName1+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType;
+                sql="ALTER TABLE "+tableName+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType+"("+tableFieldsDTO.fieldLength+")";
+                sql1="ALTER TABLE "+tableName1+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType+"("+tableFieldsDTO.fieldLength+")";
                 log.info("添加字段" + sql);
                 pg.postgreBuildTable(sql,BusinessTypeEnum.DATAINPUT);
                 pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
             }
         }
 
+    }
+
+    public static void main(String[] args) {
+        CronExpression expr = null;
+        try {
+            expr = new CronExpression("0 25 20 * * ?");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        System.out.println(expr.getNextValidTimeAfter(new Date()));
+        System.out.println(expr.getTimeZone());
+        System.out.println(expr.getExpressionSummary());
+        System.out.println("=======");
+        TimeZone tz = TimeZone.getTimeZone("GMT - 1200");
+        expr.setTimeZone(tz);
+        System.out.println(expr.getNextValidTimeAfter(new Date()));
+        System.out.println(expr.getTimeZone());
+        System.out.println(expr.getExpressionSummary());
     }
 }
