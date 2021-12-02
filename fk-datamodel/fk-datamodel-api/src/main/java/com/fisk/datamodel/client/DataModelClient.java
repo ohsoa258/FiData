@@ -145,6 +145,6 @@ public interface DataModelClient {
      * @return
      */
     @PostMapping("/dimension/isExistAssociate")
-    ResultEntity<Object> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
+    ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
 
 }

@@ -82,7 +82,7 @@ public class DimensionController {
 
     @ApiOperation("判断维度与维度、事实与维度是否存在关联")
     @PostMapping("/isExistAssociate")
-    public ResultEntity<Object> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
+    public ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.isExistAssociate(dto));
     }
 

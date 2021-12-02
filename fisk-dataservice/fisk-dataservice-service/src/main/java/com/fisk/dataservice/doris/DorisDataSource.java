@@ -13,7 +13,8 @@ public class DorisDataSource {
     /**
      * 2.创建连接
      */
-    public static final String URL = "jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db"+"?useUnicode=true&characterEncoding=utf-8&useSSL=false";
+    public static final String URL = "jdbc:mysql://192.168.11.134:9030/dmp_olap"+
+            "?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
 
     /**
      * 3.用户名
@@ -23,5 +24,5 @@ public class DorisDataSource {
     /**
      * 4.密码
      */
-    public static final String PASSWORD = "root123";
+    public static final String PASSWORD = "Password01!";
 }
