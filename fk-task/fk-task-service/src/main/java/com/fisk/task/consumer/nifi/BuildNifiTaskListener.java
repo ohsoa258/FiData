@@ -1031,8 +1031,8 @@ public class BuildNifiTaskListener {
         config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
         String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
         String ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
-        String syncMode = config.cfgDsConfig.syncMode == 1 ? "full_volume" : "timestamp_incremental";
-        log.info("同步类型为:" + syncMode + config.cfgDsConfig.syncMode);
+        String syncMode = config.targetDsConfig.syncMode == 1 ? "full_volume" : "timestamp_incremental";
+        log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
         executsql = "select public.data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "','${" + NifiConstants.AttrConstants.LOG_CODE + "}'" + ")";
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
