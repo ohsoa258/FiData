@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
@@ -157,4 +158,8 @@ public interface DataAccessClient {
     @GetMapping("/physicalTable/getBuildPhysicalTableDTO")
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
             @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId);
+
+    @ApiOperation("修改物理表发布状态")
+    @PutMapping("/physicalTable/updateTablePublishStatus")
+    public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto);
 }

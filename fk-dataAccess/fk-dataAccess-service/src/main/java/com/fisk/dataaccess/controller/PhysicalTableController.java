@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
@@ -337,6 +338,12 @@ public class PhysicalTableController {
     @ApiOperation("根据接入表id获取所有字段id")
     public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldId(id));
+    }
+
+    @ApiOperation("修改物理表发布状态")
+    @PutMapping("/updateTablePublishStatus")
+    public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto){
+        service.updateTablePublishStatus(dto);
     }
 
 }

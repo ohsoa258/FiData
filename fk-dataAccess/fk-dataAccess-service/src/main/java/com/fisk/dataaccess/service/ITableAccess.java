@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -289,4 +290,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
     OdsResultDTO getDataAccessQueryList(OdsQueryDTO query);
 
     ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId);
+
+    void updateTablePublishStatus(ModelPublishStatusDTO dto);
 }

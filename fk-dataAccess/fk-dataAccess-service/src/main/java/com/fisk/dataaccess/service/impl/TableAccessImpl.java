@@ -26,6 +26,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -1796,6 +1797,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = tableAccessPo.tableName;
         dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
+    }
+
+    @Override
+    public void updateTablePublishStatus(ModelPublishStatusDTO dto) {
+        TableAccessPO model = baseMapper.selectById(dto.tableId);
+        if (model != null) {
+            model.publish = dto.publish;
+            baseMapper.updateById(model);
+        }
     }
 
     /**
