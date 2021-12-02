@@ -205,10 +205,11 @@ public class DimensionAttributeImpl
         List<ModelMetaDataDTO> list=new ArrayList<>();
         //根据事实表id查询所有字段
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("associate_dimension_id").in("fact_id",factIds);
+        queryWrapper.select("associate_dimension_id").in("fact_id",factIds)
+        .lambda().ne(FactAttributePO::getAssociateDimensionId,0);
         List<Integer> dimensionIds=(List)factAttributeMapper.selectObjs(queryWrapper);
         dimensionIds=dimensionIds.stream().distinct().collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(dimensionIds))
+        if (!CollectionUtils.isEmpty(dimensionIds))
         {
             for (Integer id:dimensionIds)
             {
