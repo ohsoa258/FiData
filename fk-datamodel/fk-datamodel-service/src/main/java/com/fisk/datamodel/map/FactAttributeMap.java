@@ -1,5 +1,6 @@
 package com.fisk.datamodel.map;
 
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
@@ -59,5 +60,12 @@ public interface FactAttributeMap {
      * @return
      */
     FactAttributeUpdateDTO poDetailToDto(FactAttributePO po);
+
+    /**
+     * attributePo==>Dto
+     * @param po
+     * @return
+     */
+    List<AtomicIndicatorFactAttributeDTO> attributePoToDto(List<FactAttributePO> po);
 
 }

@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -9,6 +10,7 @@ import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
+import com.fisk.datamodel.entity.FactPO;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
@@ -197,28 +199,22 @@ public class DimensionAttributeImpl
         return DimensionAttributeMap.INSTANCES.poToNameListDTO(list);
     }
 
-
-
-
     @Override
-    public List<ModelMetaDataDTO> getDimensionMetaDataList(int businessAreaId)
+    public List<ModelMetaDataDTO> getDimensionMetaDataList(List<Integer> factIds)
     {
         List<ModelMetaDataDTO> list=new ArrayList<>();
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionPO::getBusinessId,businessAreaId);
-        List<DimensionPO> poList=mapper.selectList(queryWrapper);
-        if (poList==null || poList.size()==0)
+        //根据事实表id查询所有字段
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("associate_dimension_id").in("fact_id",factIds);
+        List<Integer> dimensionIds=(List)factAttributeMapper.selectObjs(queryWrapper);
+        dimensionIds=dimensionIds.stream().distinct().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(dimensionIds))
         {
-            return list;
-        }
-        for (DimensionPO item:poList)
-        {
-            ModelMetaDataDTO dto=getDimensionMetaData((int)item.id);
-            if (dto==null)
+            for (Integer id:dimensionIds)
             {
-                break;
+                ModelMetaDataDTO dto=getDimensionMetaData(id);
+                list.add(dto);
             }
-            list.add(dto);
         }
         return list;
     }
@@ -227,7 +223,7 @@ public class DimensionAttributeImpl
     public ModelMetaDataDTO getDimensionMetaData(int id)
     {
         ModelMetaDataDTO data=new ModelMetaDataDTO();
-        /*DimensionPO po=mapper.selectById(id);
+        DimensionPO po=mapper.selectById(id);
         if (po==null)
         {
             return data;
@@ -236,7 +232,7 @@ public class DimensionAttributeImpl
         data.id=po.id;
         data.appId=po.businessId;
         //获取注册表相关数据
-        ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
+        /*ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
         if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
         {
             data.appbAbreviation=appAbbreviation.data.appAbbreviation;
@@ -246,7 +242,7 @@ public class DimensionAttributeImpl
         if (tableAccess.code==ResultEnum.SUCCESS.getCode() || tableAccess.data !=null)
         {
             data.sourceTableName=tableAccess.data.tableName;
-        }
+        }*/
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
         List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
@@ -257,15 +253,26 @@ public class DimensionAttributeImpl
         }
         for (DimensionAttributePO item:list) {
             ModelAttributeMetaDataDTO dto = new ModelAttributeMetaDataDTO();
-            dto.sourceFieldId=item.tableSourceFieldId;
-            dto.attributeType = item.attributeType;
             dto.fieldEnName = item.dimensionFieldEnName;
             dto.fieldLength = item.dimensionFieldLength;
             dto.fieldType = item.dimensionFieldType;
             dto.fieldId= String.valueOf(item.id);
+            dto.attributeType=1;
             dtoList.add(dto);
+            //判断维度是否关联维度
+            if (item.associateDimensionId !=0 && item.associateDimensionFieldId !=0)
+            {
+                DimensionPO po1=mapper.selectById(item.associateDimensionId);
+                if (po1 !=null)
+                {
+                    ModelAttributeMetaDataDTO dto1 = new ModelAttributeMetaDataDTO();
+                    dto1.attributeType=2;
+                    dto1.associationTable=po1.dimensionTabName;
+                    dtoList.add(dto1);
+                }
+            }
         }
-        data.dto=dtoList;*/
+        data.dto=dtoList;
         return data;
     }
 

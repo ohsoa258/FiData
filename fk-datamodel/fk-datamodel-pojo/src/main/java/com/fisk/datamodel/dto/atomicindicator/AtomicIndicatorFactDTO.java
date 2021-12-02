@@ -11,5 +11,10 @@ import java.util.List;
 public class AtomicIndicatorFactDTO {
     public long factId;
     public String factTable;
+    public int businessAreaId;
     public List<AtomicIndicatorPushDTO> list;
+    /**
+     * 拼接外部表
+     */
+    public List<AtomicIndicatorFactAttributeDTO> factAttributeDTOList;
 }

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,7 +83,7 @@ public class BusinessAreaController {
 
     @GetMapping("/getBusinessAreaPublicData")
     @ApiOperation(value = "根据业务域id,获取相关维度以及原子指标")
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") int id) {
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") List<Integer> id) {
         return service.getBusinessAreaPublicData(id);
     }
 

@@ -43,8 +43,8 @@ public class TaskPgTableStructurePO extends BasePO {
     public String fieldType;
 
     /**
-     *数据接入app_id、数据建模business_id
+     * 0：数据接入 1：事实表 2：维度表
      */
-    public String appId;
+    public int tableType;
 
 }

@@ -229,8 +229,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
             //根据事实表id获取指标
             data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(factIds);
-
-            //data.dimensionList=dimensionAttribute.getDimensionMetaDataList(businessAreaId);
+            //获取事实表关联的维度
+            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(factIds);
 
         }
         catch (Exception e)

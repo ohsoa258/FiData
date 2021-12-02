@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorPushDTO {
     /**
-     * 字段类型：0 退化指标 1关联维度 2 原子指标
+     * 字段类型：1 退化指标 2关联维度 3 原子指标
      */
     public int attributeType;
     /**

@@ -27,7 +27,7 @@ public class ModelAttributeMetaDataDTO {
     public int fieldLength;
 
     /**
-     * 属性类型：0、维度属性
+     * 属性类型：1、维度属性 2、关联
      */
     public int attributeType;
 

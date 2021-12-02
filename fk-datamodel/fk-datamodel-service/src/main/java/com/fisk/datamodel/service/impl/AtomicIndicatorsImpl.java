@@ -11,12 +11,14 @@ import com.fisk.datamodel.enums.DerivedIndicatorsEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
+import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import com.fisk.datamodel.vo.DataIndicatorVO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -218,7 +220,9 @@ public class AtomicIndicatorsImpl
             }
             dto.factId=po.id;
             dto.factTable=po.factTabName;
+            dto.businessAreaId=po.businessId;
             dto.list=getAtomicIndicator(id);
+            dto.factAttributeDTOList=getFactAttributeList(id);
             list.add(dto);
         }
         return list;
@@ -232,7 +236,7 @@ public class AtomicIndicatorsImpl
     public List<AtomicIndicatorPushDTO> getAtomicIndicator(int factId)
     {
         List<AtomicIndicatorPushDTO> data=new ArrayList<>();
-        //获取事实表**************************关联的维度
+        //获取事实表关联的维度
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,factId);
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
@@ -245,8 +249,26 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item:dimensionPOList)
             {
                 AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                dto.attributeType=1;
+                dto.attributeType=2;
                 dto.dimensionTableName=item.dimensionTabName;
+                data.add(dto);
+            }
+        }
+        //获取事实表中的退化维度
+        QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper<>();
+        factAttributePOQueryWrapper.lambda()
+                .eq(FactAttributePO::getAttributeType,FactAttributeEnum.DEGENERATION_DIMENSION)
+                .eq(FactAttributePO::getFactId,factId);
+        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(factAttributePOQueryWrapper);
+        if (factAttributePOList !=null && factAttributePOList.size()>0)
+        {
+            for (FactAttributePO po:factAttributePOList)
+            {
+                AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+                dto.attributeType=1;
+                dto.factFieldName=po.factFieldEnName;
+                dto.factFieldType=po.factFieldType;
+                dto.factFieldLength=po.factFieldLength;
                 data.add(dto);
             }
         }
@@ -258,13 +280,48 @@ public class AtomicIndicatorsImpl
         for (IndicatorsPO item:indicatorsPO)
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-            dto.attributeType=2;
+            dto.attributeType=3;
             dto.atomicIndicatorName=item.indicatorsName;
             dto.aggregationLogic=item.calculationLogic;
             //获取聚合字段
             FactAttributePO factAttributePO=factAttributeMapper.selectById(item.factAttributeId);
             dto.aggregatedField=factAttributePO==null?"":factAttributePO.factFieldEnName;
             data.add(dto);
+        }
+        return data;
+    }
+
+    /**
+     * 根据事实表id,获取该事实表下所有字段
+     * @param factId
+     * @return
+     */
+    public List<AtomicIndicatorFactAttributeDTO> getFactAttributeList(int factId)
+    {
+        List<AtomicIndicatorFactAttributeDTO> data=new ArrayList<>();
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
+        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper);
+        data= FactAttributeMap.INSTANCES.attributePoToDto(factAttributePOList);
+        //获取关联维度表
+        queryWrapper.select("associate_dimension_id");
+        List<Integer> dimensionIds=(List)factAttributeMapper.selectObjs(queryWrapper);
+        dimensionIds.stream().distinct().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(dimensionIds))
+        {
+            QueryWrapper<DimensionPO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.in("id",dimensionIds);
+            List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper1);
+            if (CollectionUtils.isEmpty(dimensionPOList))
+            {
+                for (DimensionPO item:dimensionPOList)
+                {
+                    AtomicIndicatorFactAttributeDTO dto=new AtomicIndicatorFactAttributeDTO();
+                    dto.associateDimensionTable=item.dimensionTabName;
+                    dto.attributeType=1;
+                    data.add(dto);
+                }
+            }
         }
         return data;
     }
