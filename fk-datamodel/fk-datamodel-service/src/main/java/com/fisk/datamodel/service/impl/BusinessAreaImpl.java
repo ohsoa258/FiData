@@ -223,9 +223,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(
-            
-    )
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(IndicatorQueryDTO dto)
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         try {
