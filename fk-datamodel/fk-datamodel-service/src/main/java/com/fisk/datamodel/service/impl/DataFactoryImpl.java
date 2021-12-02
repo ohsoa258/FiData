@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,15 +39,21 @@ public class DataFactoryImpl implements IDataFactory {
     public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
         List<ChannelDataDTO> list = new ArrayList<>();
         switch ((int) dto.id) {
-            // 维度表
+            // 数仓维度
             case 4:
-            case 6:
-                list = getModelDataList(1);
+                list = getModelDataList(4);
                 break;
-            // 事实表
+            //分析维度
+            case 6:
+                list = getModelDataList(6);
+                break;
+            // 数仓事实
             case 5:
+                list = getModelDataList(5);
+                break;
+            // 分析事实
             case 7:
-                list = getModelDataList(2);
+                list = getModelDataList(7);
                 break;
             case 1:
             case 2:
@@ -78,40 +85,74 @@ public class DataFactoryImpl implements IDataFactory {
             dto.id=item.getId();
             dto.businessName =item.getBusinessName();
             List<ChannelDataChildDTO> field=new ArrayList<>();
-            //查询维度
-            if (type==1)
+            switch (type)
             {
-                List<DimensionPO> dimensionPO=dimensionPOList.stream()
-                        .filter(e->e.businessId==item.id)
-                        .collect(Collectors.toList());
-                if (dimensionPO !=null && dimensionPO.size()>0)
-                {
-                    for (DimensionPO dimPO:dimensionPO)
+                case 4:
+                    List<DimensionPO> dimensionPO=dimensionPOList.stream()
+                            .filter(e->e.businessId==item.id && e.isPublish==3)
+                            .collect(Collectors.toList());
+                    if (dimensionPO !=null && dimensionPO.size()>0)
                     {
-                        ChannelDataChildDTO child=new ChannelDataChildDTO();
-                        child.id=dimPO.id;
-                        child.tableName=dimPO.dimensionTabName;
-                        field.add(child);
+                        for (DimensionPO dimPO:dimensionPO)
+                        {
+                            ChannelDataChildDTO child=new ChannelDataChildDTO();
+                            child.id=dimPO.id;
+                            child.tableName=dimPO.dimensionTabName;
+                            field.add(child);
+                        }
                     }
-                }
-            }else {
-                List<FactPO> factPO=factPOList.stream()
-                        .filter(e->e.businessId==item.id)
-                        .collect(Collectors.toList());
-                if (factPO !=null && factPO.size()>0)
-                {
-                    for (FactPO fact:factPO)
+                    break;
+                case 6:
+                    List<DimensionPO> dimensionPO6=dimensionPOList.stream()
+                            .filter(e->e.businessId==item.id && e.dorisPublish==3)
+                            .collect(Collectors.toList());
+                    if (dimensionPO6 !=null && dimensionPO6.size()>0)
                     {
-                        ChannelDataChildDTO child=new ChannelDataChildDTO();
-                        child.id=fact.id;
-                        child.tableName=fact.factTabName;
-                        field.add(child);
+                        for (DimensionPO dimPO:dimensionPO6)
+                        {
+                            ChannelDataChildDTO child=new ChannelDataChildDTO();
+                            child.id=dimPO.id;
+                            child.tableName=dimPO.dimensionTabName;
+                            field.add(child);
+                        }
                     }
-                }
+                    break;
+                case 5:
+                    List<FactPO> factPO=factPOList.stream()
+                            .filter(e->e.businessId==item.id && e.isPublish==3)
+                            .collect(Collectors.toList());
+                    if (factPO !=null && factPO.size()>0)
+                    {
+                        for (FactPO fact:factPO)
+                        {
+                            ChannelDataChildDTO child=new ChannelDataChildDTO();
+                            child.id=fact.id;
+                            child.tableName=fact.factTabName;
+                            field.add(child);
+                        }
+                    }
+                    break;
+                case 7:
+                    List<FactPO> factPO7=factPOList.stream()
+                            .filter(e->e.businessId==item.id && e.dorisPublish==3)
+                            .collect(Collectors.toList());
+                    if (factPO7 !=null && factPO7.size()>0)
+                    {
+                        for (FactPO fact:factPO7)
+                        {
+                            ChannelDataChildDTO child=new ChannelDataChildDTO();
+                            child.id=fact.id;
+                            child.tableName=fact.factTabName;
+                            field.add(child);
+                        }
+                    }
+                    break;
             }
             dto.list=field;
             data.add(dto);
         }
+        // 反转倒序
+        Collections.reverse(data);
         return data;
     }
 

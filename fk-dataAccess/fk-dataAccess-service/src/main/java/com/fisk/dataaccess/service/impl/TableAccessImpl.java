@@ -1444,6 +1444,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
             List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
                     .eq(TableAccessPO::getAppId, dto.id)
+                    // publish=3: 正在发布
+                    .eq(TableAccessPO::getPublish,3)
                     .select(TableAccessPO::getId, TableAccessPO::getTableName));
             // list: po->dto 并赋值给dto.list
             dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
@@ -1473,6 +1475,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         list = AppRegistrationMap.INSTANCES.listPoToDtoList(appRegistrationPOList);
         //获取所有表配置数据
         QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
+        // 只需要发布状态为3: 正在发布
+        tableAccessPOQueryWrapper.lambda().eq(TableAccessPO::getPublish,3);
         List<TableAccessPO> tableAccessPOList = accessMapper.selectList(tableAccessPOQueryWrapper);
         if (tableAccessPOList == null || tableAccessPOList.size() == 0) {
             return list;
@@ -1499,6 +1503,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2).collect(Collectors.toList());
             }
         }
+        // 反转: 倒序排序
+        Collections.reverse(list);
         return list;
     }
 
