@@ -15,6 +15,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
@@ -222,15 +223,18 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(List<Integer> factIds)
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(
+            
+    )
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         try {
             data.userId=userHelper.getLoginUserInfo().id;
+            data.businessAreaId=dto.businessAreaId;
             //根据事实表id获取指标
-            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(factIds);
+            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(dto.factIds);
             //获取事实表关联的维度
-            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(factIds);
+            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(dto.factIds);
             //消息推送
             publishTaskClient.publishOlapCreateModel(data);
         }

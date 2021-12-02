@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.BusinessAreaDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.BusinessPageResultDTO;
 import com.fisk.datamodel.dto.BusinessQueryDTO;
+import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.service.IBusinessArea;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -83,8 +84,8 @@ public class BusinessAreaController {
 
     @PostMapping("/getBusinessAreaPublicData")
     @ApiOperation(value = "根据事实字段集合,在Doris中创建相关表")
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestBody List<Integer> id) {
-        return service.getBusinessAreaPublicData(id);
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestBody IndicatorQueryDTO dto) {
+        return service.getBusinessAreaPublicData(dto);
     }
 
     @GetMapping("/businessAreaPublic")

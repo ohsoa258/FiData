@@ -12,6 +12,7 @@ import java.util.List;
  */
 @Data
 public class BusinessAreaGetDataDTO extends MQBaseDTO {
+    public int businessAreaId;
     public List<AtomicIndicatorFactDTO> atomicIndicatorList;
     public List<ModelMetaDataDTO> dimensionList;
 }

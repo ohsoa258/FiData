@@ -6,6 +6,7 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
+import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 
 import java.util.List;
@@ -83,10 +84,10 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
 
     /**
      * Doris发布
-     * @param factIds
+     * @param dto
      * @return
      */
-    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(List<Integer> factIds);
+    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(IndicatorQueryDTO dto);
 
     /**
      * 更改业务域发布状态
