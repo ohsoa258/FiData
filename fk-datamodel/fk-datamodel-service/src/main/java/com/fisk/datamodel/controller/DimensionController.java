@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IDataService;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.dataservice.dto.isDimensionDTO;
@@ -85,5 +86,12 @@ public class DimensionController {
     public ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.isExistAssociate(dto));
     }
+
+    @ApiOperation("修改维度发布状态")
+    @PutMapping("/updateDimensionPublishStatus")
+    public void updateDimensionPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto){
+        service.updateDimensionPublishStatus(dto);
+    }
+
 
 }

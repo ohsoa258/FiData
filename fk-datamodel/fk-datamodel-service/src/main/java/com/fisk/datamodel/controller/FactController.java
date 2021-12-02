@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IFact;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -74,6 +75,12 @@ public class FactController {
     @PutMapping("/editFactSql")
     public ResultEntity<Object> editFactSql(@Validated @RequestBody DimensionSqlDTO dto) {
         return ResultEntityBuild.build(service.updateFactSql(dto));
+    }
+
+    @ApiOperation("修改事实发布状态")
+    @PutMapping("/updateFactPublishStatus")
+    public void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto){
+        service.updateFactPublishStatus(dto);
     }
 
 }

@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 
 import java.util.List;
 
@@ -69,5 +70,11 @@ public interface IFact {
      * @return
      */
     ResultEnum updateFactSql(DimensionSqlDTO dto);
+
+    /**
+     * 根据事实id,更改发布状态
+     * @param dto
+     */
+    void updateFactPublishStatus(ModelPublishStatusDTO dto);
 
 }

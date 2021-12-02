@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
@@ -242,6 +243,23 @@ public class DimensionImpl implements IDimension {
         }
         data.dimensionAttributeId=dimensionAttributePOList.get(0).id;
         return data;
+    }
+
+    @Override
+    public void updateDimensionPublishStatus(ModelPublishStatusDTO dto)
+    {
+        DimensionPO po=mapper.selectById(dto.id);
+        if (po !=null)
+        {
+            //0:DW发布状态
+            if (dto.type==0)
+            {
+                po.isPublish=dto.status;
+            }else {
+                po.dorisPublish=dto.status;
+            }
+            mapper.updateById(po);
+        }
     }
 
 }

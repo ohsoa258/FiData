@@ -7,6 +7,7 @@ import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 
 import java.util.List;
 
@@ -70,5 +71,11 @@ public interface IDimension {
      * @return
      */
     DimensionDateAttributeDTO getDimensionDateAttribute(int businessId);
+
+    /**
+     * 根据维度id,更改发布状态
+     * @param dto
+     */
+    void updateDimensionPublishStatus(ModelPublishStatusDTO dto);
 
 }

@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataservice.dto.IndicatorDTO;
 import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
@@ -74,23 +75,6 @@ public interface DataModelClient {
     ResultEntity<Object> factSyncModePush(@PathVariable("id") int id);
 
     /**
-     * 更改维度发布状态
-     * @param id
-     * @param isSuccess
-     * @return
-     */
-    @GetMapping("/dimension/editPublishStatus")
-    ResultEntity<Object> editPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
-
-    /**
-     *更改业务过程发布状态
-     * @param id
-     * @return
-     */
-    @GetMapping("/businessProcess/editBusinessProcessPublishStatus")
-    ResultEntity<Object> editBusinessProcessPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
-
-    /**
      * 根据业务域id获取相关维度以及原子指标
      * @param id
      * @return
@@ -128,14 +112,10 @@ public interface DataModelClient {
     ResultEntity<Object> getBusinessId(@PathVariable("id")int id);
 
     /**
-     * 更改业务域发布状态
-     * @param id
-     * @param isSuccess
+     * 获取指标
+     * @param dto
      * @return
      */
-    @GetMapping("/business/editBusinessAreaPublishStatus")
-    ResultEntity<Object> editBusinessAreaPublishStatus(@RequestParam("id")int id,@RequestParam("isSuccess")int isSuccess);
-
     @RequestMapping("/tableName/getIndicatorsLogic")
     ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(@RequestBody IndicatorFeignDTO dto);
 
@@ -146,5 +126,21 @@ public interface DataModelClient {
      */
     @PostMapping("/dimension/isExistAssociate")
     ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
+
+    /**
+     * 修改维度发布状态
+     * @param dto
+     */
+    @PostMapping("/dimension/updateDimensionPublishStatus")
+    void updateDimensionPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
+
+    /**
+     * 修改事实发布状态
+     * @param dto
+     */
+    @PostMapping("/fact/updateFactPublishStatus")
+    void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
+
+
 
 }

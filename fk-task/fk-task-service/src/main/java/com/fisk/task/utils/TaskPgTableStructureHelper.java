@@ -15,6 +15,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,13 +80,12 @@ public class TaskPgTableStructureHelper
         }
     }
 
-   /* @Test
+    @Test
     public void  tests()throws Exception
     {
-        String aa=execProcedure("20211201135546548");
+        String aa=execProcedure("20211202110855701");
         String bb="";
     }
-*/
     /**
      * 执行存储过程,获取更改表结构SQL语句
      * @param version
@@ -93,8 +93,6 @@ public class TaskPgTableStructureHelper
      */
     public String execProcedure(String version) throws Exception
     {
-        //拼接SQL
-        StringBuilder str=new StringBuilder();
         //配置数据库参数
         Class.forName("com.mysql.jdbc.Driver");
         String url="jdbc:mysql://192.168.11.130:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
@@ -102,44 +100,57 @@ public class TaskPgTableStructureHelper
         String pass="root123";
         //获取数据库连接
         Connection conn=DriverManager.getConnection(url,user,pass);
-        //调用过程stu_pro
-        CallableStatement cs=(CallableStatement)conn.prepareCall("call pg_check_table_structure(?)");
-        cs.setString(1,version);
-        cs.execute();
-        ResultSet rs = cs.getResultSet();
-        if (rs==null)
-        {
+        try {
+            //拼接SQL
+            StringBuilder str=new StringBuilder();
+            List<String> sqlList=new ArrayList<>();
+            //调用过程stu_pro
+            CallableStatement cs=(CallableStatement)conn.prepareCall("call pg_check_table_structure(?)");
+            cs.setString(1,version);
+            cs.execute();
+            ResultSet rs = cs.getResultSet();
+            if (rs==null)
+            {
+                return "";
+            }
+            while (rs.next()) {
+                String value=rs.getString(1);
+                if (value !=null && value.length()>0) {
+                    sqlList.add(value.toLowerCase());
+                }
+            }
+            //这个判断会自动指向下一个游标
+            while(cs.getMoreResults()) {
+                //得到第二个结果集
+                ResultSet rs1 = cs.getResultSet();
+                //处理第二个结果集
+                while (rs1.next()) {
+                    String value=rs1.getString(1);
+                    if (value !=null && value.length()>0) {
+                        sqlList.add(value.toLowerCase());
+                    }
+                    try{//关闭rs1
+                        if(rs1 == null){
+                            rs1.close();
+                        }
+                        if(rs==null){
+                            rs.close();
+                        }
+                    }catch(SQLException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+            //反转
+            Collections.reverse(sqlList);
+            String sql=String.join(" ", sqlList.stream().distinct().collect(Collectors.toList()));
+            str.append(sql);
+            return str.toString();
+        }catch (SQLException e) {
+            log.error("execProcedure:"+e);
+            conn.close();
             return "";
         }
-        while (rs.next()) {
-            String value=rs.getString(1);
-            if (value !=null && value.length()>0) {
-                str.append(value.toLowerCase());
-            }
-        }
-        //这个判断会自动指向下一个游标
-        while(cs.getMoreResults()) {
-            //得到第二个结果集
-            ResultSet rs1 = cs.getResultSet();
-            //处理第二个结果集
-            while (rs1.next()) {
-                String value=rs1.getString(1);
-                if (value !=null && value.length()>0) {
-                    str.append(value.toLowerCase());
-                }
-                try{//关闭rs1
-                    if(rs1 == null){
-                        rs1.close();
-                    }
-                    if(rs==null){
-                        rs.close();
-                    }
-                }catch(SQLException e){
-                    e.printStackTrace();
-                }
-            }
-        }
-        return str.toString();
     }
 
     /**
@@ -148,14 +159,14 @@ public class TaskPgTableStructureHelper
      * @param tableName
      * @return
      */
-    public ResultEnum updatePgTableStructure(String sql,String tableName)
+    public ResultEnum updatePgTableStructure(String sql,String tableName) throws Exception
     {
+        Class.forName("org.postgresql.Driver");
+        String pgsqlOdsUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified";
+        String pgsqlOdsUsername="postgres";
+        String pgsqlOdsPassword="Password01!";
+        Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         try {
-            Class.forName("org.postgresql.Driver");
-            String pgsqlOdsUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified";
-            String pgsqlOdsUsername="postgres";
-            String pgsqlOdsPassword="Password01!";
-            Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
             //修改表结构
             if (sql!=null && sql.length()>0)
             {
@@ -170,7 +181,9 @@ public class TaskPgTableStructureHelper
                 return ResultEnum.TASK_TABLE_NOT_EXIST;
             }
             return ResultEnum.SUCCESS;
-        }catch (ClassNotFoundException | SQLException e) {
+        }catch (SQLException e) {
+            log.error("updatePgTableStructure:"+e);
+            conn.close();
             return ResultEnum.UPDATE_DATA_ERROR;
         }
     }

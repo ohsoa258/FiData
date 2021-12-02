@@ -10,6 +10,7 @@ import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactDropDTO;
 import com.fisk.datamodel.dto.fact.FactListDTO;
 import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.FactPO;
@@ -158,6 +159,23 @@ public class FactImpl implements IFact {
         }
         model.sqlScript=dto.sqlScript;
         return mapper.updateById(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public void updateFactPublishStatus(ModelPublishStatusDTO dto)
+    {
+        FactPO po=mapper.selectById(dto.id);
+        if (po !=null)
+        {
+            //0:DW发布状态
+            if (dto.type==0)
+            {
+                po.isPublish=dto.status;
+            }else {
+                po.dorisPublish=dto.status;
+            }
+            mapper.updateById(po);
+        }
     }
 
 }
