@@ -9,6 +9,7 @@
 			 a.email,
 			 a.create_time as createTime,
 			 a.user_account as userAccount,
+			 a.valid,
 			 b.username as createUser
         from tb_user_info a
         left join tb_user_info b on a.create_user = b.id

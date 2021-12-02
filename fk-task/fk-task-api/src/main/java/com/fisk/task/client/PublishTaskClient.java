@@ -2,6 +2,7 @@ package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -73,7 +74,7 @@ public interface PublishTaskClient {
      * @return
      */
     @PostMapping("/olapTask/CreateModel")
-    ResultEntity<Object> publishOlapCreateModel(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto);
+    ResultEntity<Object> publishOlapCreateModel(@RequestBody BusinessAreaGetDataDTO buildCreateModelTaskDto);
 
     @PostMapping("/olapTask/selectByName")
     ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName);

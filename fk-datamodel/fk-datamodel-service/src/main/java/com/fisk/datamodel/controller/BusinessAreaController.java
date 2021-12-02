@@ -81,9 +81,9 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataList(query));
     }
 
-    @GetMapping("/getBusinessAreaPublicData")
-    @ApiOperation(value = "根据业务域id,获取相关维度以及原子指标")
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestParam("id") List<Integer> id) {
+    @PostMapping("/getBusinessAreaPublicData")
+    @ApiOperation(value = "根据事实字段集合,在Doris中创建相关表")
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestBody List<Integer> id) {
         return service.getBusinessAreaPublicData(id);
     }
 

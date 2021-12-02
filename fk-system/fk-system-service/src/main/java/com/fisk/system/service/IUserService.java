@@ -7,6 +7,7 @@ import com.fisk.system.dto.*;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.dto.userinfo.UserQueryDTO;
+import com.fisk.system.dto.userinfo.UserValidDTO;
 
 import java.util.List;
 
@@ -97,5 +98,12 @@ public interface IUserService {
      * @return
      */
     List<FilterFieldDTO> getUserInfoColumn();
+
+    /**
+     * 设置用户是否有效
+     * @param dto
+     * @return
+     */
+    ResultEnum updateUserValid(UserValidDTO dto);
 
 }

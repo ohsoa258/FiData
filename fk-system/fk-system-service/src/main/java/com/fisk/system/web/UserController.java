@@ -9,6 +9,7 @@ import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserQueryDTO;
+import com.fisk.system.dto.userinfo.UserValidDTO;
 import com.fisk.system.service.IUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -85,6 +86,12 @@ public class UserController {
     public ResultEntity<Object> deleteUser(@PathVariable("id") int id)
     {
         return ResultEntityBuild.build(service.deleteUser(id));
+    }
+
+    @PutMapping("/updateUserValid")
+    @ApiOperation("设置用户是否有效")
+    public ResultEntity<Object> updateUserValid(@Validated @RequestBody UserValidDTO dto) {
+        return ResultEntityBuild.build(service.updateUserValid(dto));
     }
 
     @ApiOperation("根据id获取用户详情")

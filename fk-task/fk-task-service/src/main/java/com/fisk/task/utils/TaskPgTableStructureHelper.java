@@ -42,6 +42,8 @@ public class TaskPgTableStructureHelper
             for (ModelPublishFieldDTO item: dto.fieldList) {
                 TaskPgTableStructurePO po = new TaskPgTableStructurePO();
                 po.version = version;
+                //判断是否为维度
+                po.tableType=dto.createType==0?2:dto.createType;
                 po.tableId = String.valueOf(dto.tableId);
                 po.tableName = dto.tableName;
                 po.fieldId = String.valueOf(item.fieldId);

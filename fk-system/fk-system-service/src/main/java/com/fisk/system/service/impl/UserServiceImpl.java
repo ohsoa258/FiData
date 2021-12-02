@@ -12,11 +12,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.system.dto.*;
-import com.fisk.system.dto.roleinfo.RolePageDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
-import com.fisk.system.dto.userinfo.UserPageDTO;
-import com.fisk.system.dto.userinfo.UserPowerDTO;
-import com.fisk.system.dto.userinfo.UserQueryDTO;
+import com.fisk.system.dto.userinfo.*;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.UserPO;
 import com.fisk.system.map.UserMap;
@@ -94,8 +90,21 @@ public class UserServiceImpl implements IUserService {
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
         UserPO po = UserMap.INSTANCES.dtoToPo(dto);
+        po.valid=true;
         // 3.写入数据库
         return mapper.insert(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum updateUserValid(UserValidDTO dto)
+    {
+        UserPO po=mapper.selectById(dto.id);
+        if (po==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        po.valid=dto.valid;
+        return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -158,18 +167,36 @@ public class UserServiceImpl implements IUserService {
             queryWrapper1.select("user_id").lambda().eq(RoleUserAssignmentPO::getRoleId,dto.roleId);
             List<Object> list=roleUserAssignmentMapper.selectObjs(queryWrapper1);
             List<Integer> ids=(List<Integer>)(List)list;
-            userPOQueryWrapper.in("id",ids);
-            data.addAll(mapper.selectList(userPOQueryWrapper.orderByDesc("create_time")));
-            //获取未选中用户
-            queryWrapper.notIn("id",ids);
-            //获取下标
-            int index=data.size();
-            data.addAll(index,mapper.selectList(queryWrapper.orderByDesc("create_time")));
+            if (ids !=null && ids.size()>0)
+            {
+                userPOQueryWrapper.in("id",ids).orderByDesc("create_time");
+                List<UserPO> userPo = mapper.selectList(userPOQueryWrapper);
+                if (userPo !=null || userPo.size()>0)
+                {
+                    data.addAll(userPo);
+                }
+                //获取未选中用户
+                queryWrapper.notIn("id",ids);
+                //获取下标
+                int index=data.size();
+                List<UserPO> userPo1 = mapper.selectList(queryWrapper.orderByDesc("create_time"));
+                if (userPo1 !=null || userPo1.size()>0)
+                {
+                    data.addAll(index,userPo1);
+                }
+            }else {
+                //获取下标
+                int index=data.size();
+                List<UserPO> userPo1 = mapper.selectList(queryWrapper.orderByDesc("create_time"));
+                if (userPo1 !=null || userPo1.size()>0)
+                {
+                    data.addAll(index,userPo1);
+                }
+            }
         }
         else {
             data=mapper.selectList(queryWrapper.orderByDesc("create_time"));
         }
-
         //计算分页
         Integer count = data.size();
         Integer pageCount = 0;
@@ -190,6 +217,10 @@ public class UserServiceImpl implements IUserService {
         }
         int total=data.size();
         Page<UserPowerDTO> page=new Page<>();
+        if (total==0)
+        {
+            return page;
+        }
         data=data.subList(fromIndex,toIndex);
         page.setRecords(UserMap.INSTANCES.poToPageDto(data));
         page.setCurrent(dto.getPage());

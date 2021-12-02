@@ -207,11 +207,11 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     {
         try
         {
-            BuildCreateModelTaskDto dto=new BuildCreateModelTaskDto();
+            /*BuildCreateModelTaskDto dto=new BuildCreateModelTaskDto();
             dto.businessAreaId=id;
             dto.userId=userHelper.getLoginUserInfo().id;
             ResultEntity<Object> objectResultEntity = publishTaskClient.publishOlapCreateModel(dto);
-            System.out.println(objectResultEntity);
+            System.out.println(objectResultEntity);*/
         }
         catch (Exception ex)
         {
@@ -226,12 +226,13 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         try {
-
+            data.userId=userHelper.getLoginUserInfo().id;
             //根据事实表id获取指标
             data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(factIds);
             //获取事实表关联的维度
             data.dimensionList=dimensionAttribute.getDimensionMetaDataList(factIds);
-
+            //消息推送
+            publishTaskClient.publishOlapCreateModel(data);
         }
         catch (Exception e)
         {

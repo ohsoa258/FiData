@@ -34,5 +34,9 @@ public class UserDTO {
     public Date createTime;
 
     public String createUser;
+    /**
+     * 是否有效
+     */
+    public boolean valid;
 
 }

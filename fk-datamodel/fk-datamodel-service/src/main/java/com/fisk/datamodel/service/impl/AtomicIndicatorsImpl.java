@@ -47,9 +47,7 @@ public class AtomicIndicatorsImpl
     @Resource
     FactMapper factMapper;
     @Resource
-    BusinessAreaMapper businessAreaMapper;
-    @Resource
-    BusinessProcessMapper businessProcessMapper;
+    BusinessLimitedAttributeMapper businessLimitedAttributeMapper;
 
     @Override
     public ResultEnum addAtomicIndicators(List<AtomicIndicatorsDTO> dto)
@@ -256,22 +254,38 @@ public class AtomicIndicatorsImpl
         }
         //获取事实表中的退化维度
         QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper<>();
-        factAttributePOQueryWrapper.lambda()
+        factAttributePOQueryWrapper.select("id").lambda()
                 .eq(FactAttributePO::getAttributeType,FactAttributeEnum.DEGENERATION_DIMENSION)
                 .eq(FactAttributePO::getFactId,factId);
-        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(factAttributePOQueryWrapper);
-        if (factAttributePOList !=null && factAttributePOList.size()>0)
+        List<Integer> factAttributeIds=(List)factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+        if (factAttributeIds !=null && factAttributeIds.size()>0)
         {
-            for (FactAttributePO po:factAttributePOList)
+            //存在退化维度,则查询该退化维度在业务限定中是否用到
+            QueryWrapper<BusinessLimitedAttributePO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.select("fact_attribute_id").in("fact_attribute_id",factAttributeIds);
+            List<Integer> factAttributeIds1=(List)businessLimitedAttributeMapper.selectObjs(queryWrapper1);
+            if (factAttributeIds1 !=null && factAttributeIds1.size()>0)
             {
-                AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                dto.attributeType=1;
-                dto.factFieldName=po.factFieldEnName;
-                dto.factFieldType=po.factFieldType;
-                dto.factFieldLength=po.factFieldLength;
-                data.add(dto);
+                //退化在业务限定中用到,则字段进入Doris
+                QueryWrapper<FactAttributePO> factAttributePOQueryWrapper1=new QueryWrapper<>();
+                factAttributePOQueryWrapper1.in("id",factAttributeIds1);
+                List<FactAttributePO> factAttributePOS=factAttributeMapper.selectList(factAttributePOQueryWrapper1);
+                if (factAttributePOS !=null && factAttributePOS.size()>0)
+                {
+                    for (FactAttributePO po:factAttributePOS)
+                    {
+                        AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+                        dto.attributeType=1;
+                        dto.factFieldName=po.factFieldEnName;
+                        dto.factFieldType=po.factFieldType;
+                        dto.factFieldLength=po.factFieldLength;
+                        data.add(dto);
+                    }
+                }
             }
+
         }
+
         //获取事实表下所有原子指标
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper=new QueryWrapper<>();
         indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId,factId)

@@ -31,6 +31,10 @@ public class UserPO extends BasePO {
     public String email;
 
     public String userAccount;
+    /**
+     * 是否有效
+     */
+    public boolean valid;
 
 
 }
