@@ -205,57 +205,34 @@ public class AtomicIndicatorsImpl
     }
 
     @Override
-    public List<AtomicIndicatorFactDTO> atomicIndicatorPush(int businessAreaId)
+    public List<AtomicIndicatorFactDTO> atomicIndicatorPush(List<Integer> factIds)
     {
         List<AtomicIndicatorFactDTO> list=new ArrayList<>();
-        //判断业务域是否存在
-        BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(businessAreaId);
-        if (businessAreaPO==null)
+        for (Integer id:factIds)
         {
-            return list;
-        }
-        //获取业务域下的所有业务过程
-        QueryWrapper<BusinessProcessPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessProcessPO::getBusinessId,businessAreaId);
-        List<BusinessProcessPO> businessProcessPOList=businessProcessMapper.selectList(queryWrapper);
-        if (businessProcessPOList==null || businessProcessPOList.size()==0)
-        {
-            return list;
-        }
-        for (BusinessProcessPO item:businessProcessPOList)
-        {
-            QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-            factPOQueryWrapper.lambda().eq(FactPO::getBusinessProcessId,item.id);
-            List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
-            if (factPOList==null || factPOList.size()==0)
+            AtomicIndicatorFactDTO dto=new AtomicIndicatorFactDTO();
+            FactPO po=factMapper.selectById(id);
+            if (po==null)
             {
-                break;
+                continue;
             }
-            for (FactPO factPO:factPOList)
-            {
-                AtomicIndicatorFactDTO data=new AtomicIndicatorFactDTO();
-                data.factId=factPO.id;
-                data.factTable=factPO.factTabName;
-                List<AtomicIndicatorPushDTO> atomicIndicator=getAtomicIndicator((int)factPO.id);
-                if (atomicIndicator!=null)
-                {
-                    data.list=atomicIndicator;
-                    list.add(data);
-                }
-            }
+            dto.factId=po.id;
+            dto.factTable=po.factTabName;
+            dto.list=getAtomicIndicator(id);
+            list.add(dto);
         }
         return list;
     }
 
     /**
-     * 根据事实表获取所有原子指标
+     * 根据事实表获取所有原子指标/退化维度字段/关联维度表名称
      * @param factId
      * @return
      */
     public List<AtomicIndicatorPushDTO> getAtomicIndicator(int factId)
     {
         List<AtomicIndicatorPushDTO> data=new ArrayList<>();
-        //获取事实表关联的维度
+        //获取事实表**************************关联的维度
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,factId);
         List<Object> list=factAttributeMapper.selectObjs(queryWrapper);
@@ -268,7 +245,7 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item:dimensionPOList)
             {
                 AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                //dto.attributeType=FactAttributeEnum.ASSOCIATED_DIMENSION.getValue();
+                dto.attributeType=1;
                 dto.dimensionTableName=item.dimensionTabName;
                 data.add(dto);
             }
@@ -281,6 +258,7 @@ public class AtomicIndicatorsImpl
         for (IndicatorsPO item:indicatorsPO)
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
+            dto.attributeType=2;
             dto.atomicIndicatorName=item.indicatorsName;
             dto.aggregationLogic=item.calculationLogic;
             //获取聚合字段

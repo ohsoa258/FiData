@@ -222,20 +222,22 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(int businessAreaId)
+    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(List<Integer> factIds)
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         try {
-            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(businessAreaId);
-            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(businessAreaId);
+
+            //根据事实表id获取指标
+            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(factIds);
+
+            //data.dimensionList=dimensionAttribute.getDimensionMetaDataList(businessAreaId);
+
         }
         catch (Exception e)
         {
             log.error("BusinessAreaImpl,getBusinessAreaPublicData："+e.getMessage());
-//            data=null;
             return ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR,data);
         }
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS,data);
     }
 

@@ -82,11 +82,11 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     ResultEntity<Object> businessAreaPublic(int id);
 
     /**
-     * 获取业务域下所有维度以及原子指标
-     * @param businessArea
+     * Doris发布
+     * @param factIds
      * @return
      */
-    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(int businessArea);
+    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(List<Integer> factIds);
 
     /**
      * 更改业务域发布状态

@@ -80,12 +80,12 @@ public class TaskPgTableStructureHelper
         }
     }
 
-    @Test
+    /*@Test
     public void  tests()throws Exception
     {
-        String aa=execProcedure("20211202110855701");
+        String aa=execProcedure("20211202112943758");
         String bb="";
-    }
+    }*/
     /**
      * 执行存储过程,获取更改表结构SQL语句
      * @param version
@@ -141,8 +141,7 @@ public class TaskPgTableStructureHelper
                     }
                 }
             }
-            //反转
-            Collections.reverse(sqlList);
+            sqlList=sqlList.stream().distinct().collect(Collectors.toList());
             String sql=String.join(" ", sqlList.stream().distinct().collect(Collectors.toList()));
             str.append(sql);
             return str.toString();

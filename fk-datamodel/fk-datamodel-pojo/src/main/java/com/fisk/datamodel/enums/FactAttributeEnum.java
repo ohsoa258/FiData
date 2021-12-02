@@ -8,13 +8,17 @@ import com.fisk.common.enums.BaseEnum;
 public enum FactAttributeEnum implements BaseEnum {
 
     /**
-     * 事实属性
+     * 退化维度
      */
-    FACTS_PROPERTIES(0,"事实属性"),
+    DEGENERATION_DIMENSION(0,"退化维度"),
+    /**
+     * 维度键
+     */
+    DIMENSION_KEY(1,"维度键"),
     /**
      * 度量
      */
-    MEASURE(1,"度量");
+    MEASURE(2,"度量");
 
     FactAttributeEnum(int value, String name) {
         this.name = name;
