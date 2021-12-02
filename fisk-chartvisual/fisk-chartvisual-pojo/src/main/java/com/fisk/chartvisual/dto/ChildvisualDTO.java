@@ -12,5 +12,6 @@ public class ChildvisualDTO {
     private Integer chartId;
     private String content;
     private String componentBackground;
+    private String layComponentBackground;
     private Integer delFlag;
 }

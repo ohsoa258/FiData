@@ -80,7 +80,8 @@ public interface ChartMap {
      * @return
      */
     @Mappings({
-            @Mapping(target = "componentBackground",source = "componentBackground",qualifiedByName="stringConvertByte")
+            @Mapping(target = "componentBackground",source = "componentBackground",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "layComponentBackground",source = "layComponentBackground",qualifiedByName="stringConvertByte")
     })
     ChartChildvisualPO dtoToPo(ChildvisualDTO dto);
 

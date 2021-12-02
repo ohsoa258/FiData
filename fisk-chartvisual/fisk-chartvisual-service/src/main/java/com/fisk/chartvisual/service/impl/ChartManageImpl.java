@@ -130,6 +130,16 @@ public class ChartManageImpl implements IChartManageService {
                         dto.setContent(jsonObject1.toJSONString());
                     }
                 }
+
+                JSONObject layoutPanelData = charProPerty.getJSONObject("layoutPanelData");
+                if (layoutPanelData != null){
+                    String backgroundImage = layoutPanelData.getString("laycomponentbackground");
+                    if (!StringUtils.isEmpty(backgroundImage)){
+                        dto.setLayComponentBackground(backgroundImage);
+                        layoutPanelData.remove("laycomponentbackground");
+                        dto.setContent(jsonObject1.toJSONString());
+                    }
+                }
             }
 
             dtoList.add(dto);
@@ -164,16 +174,23 @@ public class ChartManageImpl implements IChartManageService {
                 .eq(ChartChildvisualPO::getDelFlag,1);
         List<ChartChildvisualPO> childvisualList = childvisualMapper.selectList(query);
         if (!CollectionUtils.isEmpty(childvisualList)){
-            String noImage = childvisualList.stream().filter(e -> e.getComponentBackground() == null)
+            String noImage = childvisualList.stream().filter(e -> e.getComponentBackground() == null && e.getLayComponentBackground() == null)
                     .map(e -> e.getContent())
                     .collect(Collectors.joining(","));
 
-            String image = childvisualList.stream().filter(e -> e.getComponentBackground() != null)
+            String image = childvisualList.stream().filter(e -> e.getComponentBackground() != null || e.getLayComponentBackground() != null)
                     .map(e -> {
                         StringBuilder context = new StringBuilder(e.getContent());
-                        String componentBackground = "\"componentBackground\"" + ":"+ "\"" +
-                                "data:image/jpg;base64," + byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
-                        return context.insert(context.indexOf("\"chart\":")+9,componentBackground);
+                        if (e.getComponentBackground() != null){
+                            String componentBackground = "\"componentBackground\"" + ":"+ "\"" +
+                                    "data:image/jpg;base64," + byteConvertStringFun(e.getComponentBackground()) + "\"" + ",";
+                            context.insert(context.indexOf("\"chart\":")+9,componentBackground);
+                        }else if (e.getLayComponentBackground() != null){
+                            String componentBackground = "\"laycomponentbackground\"" + ":"+ "\"" +
+                                    "data:image/jpg;base64," + byteConvertStringFun(e.getLayComponentBackground()) + "\"" + ",";
+                            context.insert(context.indexOf("\"layoutPanelData\":") + 19,componentBackground);
+                        }
+                        return context;
                     }).collect(Collectors.joining(","));
 
             return this.chartSplicing(id,noImage,image);

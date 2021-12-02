@@ -15,4 +15,5 @@ public class ChartChildvisualPO extends BaseChartPO {
     private Integer chartId;
     private String content;
     public byte[] componentBackground;
+    public byte[] layComponentBackground;
 }
