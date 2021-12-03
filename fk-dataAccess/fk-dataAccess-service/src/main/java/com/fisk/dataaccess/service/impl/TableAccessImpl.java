@@ -1212,14 +1212,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         appRegistrationPO.appDes = "postgerToDoris";
         appRegistrationPO.appType = 1;
         appRegistrationPO.delFlag = 1;
-        appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
+        //appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
         appDataSourcePO.appId = appRegistrationPO.id;//后面加上AppRegistrationPO.id
         //ConnectStr   driveType   ConnectAccount   ConnectPwd
         appDataSourcePO.driveType = "postgresql";
         appDataSourcePO.connectAccount = pgsqlDatamodelUsername;
         appDataSourcePO.connectPwd = pgsqlDatamodelPassword;
         appDataSourcePO.connectStr = pgsqlDatamodelUrl;
-        appDataSourceImpl.save(appDataSourcePO);
+        //appDataSourceImpl.save(appDataSourcePO);
         tableAccessPO.appId = appRegistrationPO.id;//后续补上AppRegistrationPO.id
         tableAccessPO.isRealtime = 1;
         tableAccessPO.tableName = tableName;
@@ -1227,7 +1227,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         insertTableAccessPO(tableAccessPO);//可能都要返回id
         tableSyncmodePO.syncMode = 1;
         tableSyncmodePO.id = tableAccessPO.id;//tableAccess.id
-        tableSyncmodeImpl.save(tableSyncmodePO);
+        //tableSyncmodeImpl.save(tableSyncmodePO);
 //        nifiSettingPO.tableId = tableAccessPO.id;//tableAccess.id
 //        nifiSettingPO.appId = appRegistrationPO.id;
 //        nifiSettingPO.selectSql = selectSql;
