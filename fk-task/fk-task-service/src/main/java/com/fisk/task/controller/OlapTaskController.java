@@ -3,6 +3,7 @@ package com.fisk.task.controller;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.entity.OlapPO;
@@ -28,15 +29,15 @@ public class OlapTaskController {
     IOlap olap;
     /**
      * 创建模型
-     * @param buildCreateModelTaskDto
+     * @param businessAreaGetDataDTO
      * @return
      */
     @PostMapping("/CreateModel")
-    public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody BuildCreateModelTaskDto buildCreateModelTaskDto){
+    public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody BusinessAreaGetDataDTO businessAreaGetDataDTO){
         return service.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
-                buildCreateModelTaskDto);
+                businessAreaGetDataDTO);
     }
     @PostMapping("/selectByName")
     public ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName){

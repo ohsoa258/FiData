@@ -183,7 +183,7 @@ public class BuildNifiTaskListener {
             tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type",dto.type.getValue()).one();
 
         }
-          if (tableNifiSettingPO.tableComponentId!=null) {
+          if (tableNifiSettingPO!=null&&tableNifiSettingPO.tableComponentId!=null) {
             componentsBuild.deleteNifiFlow(dataModelVO);
         }
         ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
@@ -327,6 +327,9 @@ public class BuildNifiTaskListener {
                 processorConfig.sourceExecSqlQuery=tableNifiSettingPO.selectSql;
             }
             sourceDsConfig=res.data.sourceDsConfig;
+            //TODO 任务表少个参数存同步方式
+            //targetDbPoolConfig.syncMode=res.data.targetDsConfig.syncMode;
+            targetDbPoolConfig.syncMode=1;
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {//pg_dw----doris_olap
             if(appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
                 groupConfig.newApp=false;

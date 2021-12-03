@@ -61,9 +61,9 @@ public class BuildModelTaskListener {
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
-        BuildCreateModelTaskDto inpData = JSON.parseObject(dataInfo, BuildCreateModelTaskDto.class);
-        ResultEntity<BusinessAreaGetDataDTO> data = client.getBusinessAreaPublicData(inpData.businessAreaId);
-        //删除此业务域下所有的表与nifi流程
+        log.info("doris组装参数:"+dataInfo);
+        BusinessAreaGetDataDTO data = JSON.parseObject(dataInfo, BusinessAreaGetDataDTO.class);
+        /*//删除此业务域下所有的表与nifi流程
         List<OlapPO> olapPOS1 = olap.selectOlapByBusinessAreaId(String.valueOf(inpData.businessAreaId));
         DataModelVO dataModelVO = new DataModelVO();
         dataModelVO.dataClassifyEnum=DataClassifyEnum.DATAMODELING;
@@ -73,9 +73,9 @@ public class BuildModelTaskListener {
         DataModelTableVO dataModelTableVO = new DataModelTableVO();
         dataModelTableVO.type=OlapTableEnum.KPI;
         dataModelTableVO.ids=olapPOS1.stream().map(e -> e.getId()).collect(Collectors.toList());
-        dataModelVO.indicatorIdList=dataModelTableVO;
-        if (data.code == 0) {
-            List<OlapPO> olapPOS=  olap.build(inpData.businessAreaId, data.data);
+        dataModelVO.indicatorIdList=dataModelTableVO;*/
+            //创建Doris实际表和外部表
+            List<OlapPO> olapPOS=  olap.build(data.businessAreaId, data);
             for (OlapPO olapPO:olapPOS) {
                 log.info("Doris建表开始:"+olapPO.tableName);
                 doris.dorisBuildTable("DROP TABLE IF EXISTS " + olapPO.tableName);
@@ -84,7 +84,7 @@ public class BuildModelTaskListener {
                 ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig(olapPO.tableName, olapPO.selectDataSql);
                 BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
                 log.info("nifi配置结束,开始创建nifi流程");
-                buildNifiFlowDTO.userId=inpData.userId;
+                buildNifiFlowDTO.userId=data.userId;
                 buildNifiFlowDTO.appId=olapPO.businessAreaId;
                 OlapPO olapPO1 = olap.selectByName(olapPO.tableName);
                 buildNifiFlowDTO.id=olapPO1.id;
@@ -96,6 +96,5 @@ public class BuildModelTaskListener {
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 log.info("nifi流程配置结束");
             }
-        }
     }
 }
