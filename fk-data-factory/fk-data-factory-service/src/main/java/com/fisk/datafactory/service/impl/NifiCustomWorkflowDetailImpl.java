@@ -175,12 +175,17 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         String inport = po.inport;
         String[] inportIds = inport.split(",");
-        return Arrays.stream(inportIds)
-                .map(inportId -> this.query().eq("id", inportId).one())
-                // 确保当前inport没有删除
-                .filter(Objects::nonNull)
-                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
-                .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
+        // 确保当前inport没有删除
+        List<BuildNifiCustomWorkFlowDTO> list = new ArrayList<>();
+        for (String inportId : inportIds) {
+            NifiCustomWorkflowDetailPO id = this.query().eq("id", inportId).one();
+            if (id != null) {
+                NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(id);
+                BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO = getBuildNifiCustomWorkFlowDTO(nifiCustomWorkflowDetailDTO);
+                list.add(buildNifiCustomWorkFlowDTO);
+            }
+        }
+        return list;
     }
 
     /**
@@ -211,6 +216,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         String scheduleType = "开始";
         String taskGroupTpye = "任务组";
+        String olapDimensionTask = "分析模型维度表任务";
+        String olapFactTask = "分析模型事实表任务";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 操作类型
         flow.type = getDataClassifyEnum(dto.componentsId);
@@ -268,8 +275,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.CUSTOMWORKDATAMODELING;
             // 分析模型维度、事实
             case 6:
+                return DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL;
             case 7:
-                return DataClassifyEnum.CUSTOMWORKDATAMODELKPL;
+                return DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL;
             default:
                 break;
         }
@@ -300,8 +308,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return OlapTableEnum.CUSTOMWORKFACT;
             // 分析模型维度、事实
             case 6:
+                return OlapTableEnum.CUSTOMWORKDIMENSIONKPI;
             case 7:
-                return OlapTableEnum.CUSTOMWORKKPI;
+                return OlapTableEnum.CUSTOMWORKFACTKPI;
             default:
                 break;
         }
