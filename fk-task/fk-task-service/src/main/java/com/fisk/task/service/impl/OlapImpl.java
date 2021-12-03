@@ -88,7 +88,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append("(");
         StringBuilder sqlFiledBuild = new StringBuilder();
         //主键
-        String keyName=dto.tableName+"key";
+        String keyName=dto.tableName.substring(4)+"key";
         String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
         String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
@@ -113,7 +113,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<ModelAttributeMetaDataDTO> dto1 = dto.dto;
         String tableName="external_"+dto.tableName;
         String sql="drop table if exists "+tableName+";\n";
-        sql+="CREATE EXTERNAL TABLE "+tableName+" ( "+dto.tableName+"key varchar(50),";
+        sql+="CREATE EXTERNAL TABLE "+tableName+" ( "+dto.tableName.substring(4)+"key varchar(50),";
         for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO:dto1) {
             sql+=modelAttributeMetaDataDTO.fieldEnName+" "+modelAttributeMetaDataDTO.fieldType+",";
         }
@@ -122,12 +122,13 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         associationKeys.removeAll(Collections.singleton(" null "));
         associationKeys.stream().distinct();
         for (String associationKey:associationKeys) {
-            sql+=associationKey+" varchar(50),";
+            sql+=associationKey.substring(5,associationKey.length()-1)+"key varchar(50),";
         }
 
         sql=sql.substring(0,sql.length()-1)+")\n" + "ENGINE=ODBC\nPROPERTIES\n";
         sql+="(\"host\" = \"192.168.1.250\",\"port\" = \"5432\",\"user\" = \"postgres\",\"password\" = \"Password01!\",\"database\" = \"dmp_dw\",\"table\" = \"KKKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
         sql=sql.replace("KKKKK",dto.tableName);
+        log.info("维度外部表建表语句:"+sql);
         doris.dorisBuildTable(sql);
         return tableName;
     }
@@ -148,7 +149,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String keyName=(dto.factTable+"key").toLowerCase();
         //维度字段
         dto.list.stream().filter(e->e.attributeType==2).forEach(e->{
-            sql.append("`"+e.dimensionTableName+"key` VARCHAR(50) COMMENT \"\" , ");
+            sql.append("`"+e.dimensionTableName.substring(4)+"key` VARCHAR(50) COMMENT \"\" , ");
             aggregateKeys.add(e.dimensionTableName);
         });
         //退化维度
@@ -158,7 +159,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.deleteCharAt(sql.lastIndexOf(","));
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
-            String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e+"key`").collect(Collectors.joining(","));
+            String aggregateKeysSql=aggregateKeys.stream().map(e->"`"+e.substring(4)+"key`").collect(Collectors.joining(","));
             //排序字段
             sql.append(" DISTRIBUTED BY HASH("+aggregateKeysSql+") BUCKETS 16");
         }
@@ -187,10 +188,10 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");
             }else if(e.attributeType==2){
-                groupSql.append(""+e.dimensionTableName+"key , ");
-                aggregationFunSql.append("COALESCE("+e.dimensionTableName+"key,'') AS "+e.dimensionTableName.toLowerCase()+" , ");
+                groupSql.append(""+e.dimensionTableName.substring(4)+"key , ");
+                aggregationFunSql.append("COALESCE("+e.dimensionTableName.substring(4)+"key,'') AS "+e.dimensionTableName.toLowerCase()+" , ");
             }else if(e.attributeType==1){
-                groupSql.append(""+e.factFieldName+",");
+                groupSql.append(""+e.factFieldName+", ");
                 aggregationFunSql.append("COALESCE("+e.factFieldName+",'') AS "+e.factFieldName.toLowerCase()+" , ");
             }
         });
@@ -205,11 +206,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append(" FROM ");
         sql.append("external_"+tableName);
         sql.append(" ");
-        /*if (groupSql.length()>0){
+        if (groupSql.length()>0){
             groupSql.deleteCharAt(groupSql.length()-1);
             sql.append("GROUP BY ");
             sql.append(groupSql);
-        }*/
+        }
         return sql.toString();
     }
 
@@ -227,12 +228,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<String> associateDimensionTableList = factAttributeDTOList.stream().map(d -> " " + d.associateDimensionTable + " ").collect(Collectors.toList());
         associateDimensionTableList.removeAll(Collections.singleton(" null "));
         associateDimensionTableList.stream().distinct();
+        //' dim_test20211149 '
         for (String associateDimensionTable:associateDimensionTableList) {
-            sql+=associateDimensionTable+" varchar(50),";
+            sql+=associateDimensionTable.substring(5,associateDimensionTable.length()-1)+"key varchar(50),";
         }
         sql=sql.substring(0,sql.length()-1)+")\n" + "ENGINE=ODBC\nPROPERTIES\n";
         sql+="(\"host\" = \"192.168.1.250\",\"port\" = \"5432\",\"user\" = \"postgres\",\"password\" = \"Password01!\",\"database\" = \"dmp_dw\",\"table\" = \"KKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
         sql=sql.replace("KKKK",dto.factTable);
+        log.info("指标外部表建表语句:"+sql);
         doris.dorisBuildTable(sql);
         return tableName;
     }
