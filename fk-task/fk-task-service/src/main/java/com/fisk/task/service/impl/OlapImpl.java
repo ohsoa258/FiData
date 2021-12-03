@@ -58,6 +58,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
+            po.tableId=e.id;
             poList.add(po);
         });
         //指标表
@@ -69,6 +70,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             po.createTableSql=buildCreateAggregateModelSql(e);
             po.selectDataSql=buildSelectAggregateModelDataSql(e);
             po.type=OlapTableEnum.KPI;
+            po.tableId=e.factId;
             poList.add(po);
         });
         saveBatch(poList);

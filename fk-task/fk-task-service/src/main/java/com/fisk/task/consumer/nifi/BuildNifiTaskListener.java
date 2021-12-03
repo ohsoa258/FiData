@@ -688,9 +688,11 @@ public class BuildNifiTaskListener {
         componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
         String lastId = putDatabaseRecord.getId();
+        Boolean isLastId=true;
 
         //pg2doris不需要调用存储过程
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
+            isLastId=false;
             //合并流文件组件
             ProcessorEntity mergeRes = mergeContentProcessor(groupId);
             tableNifiSettingPO.mergeContentProcessorId = mergeRes.getId();
@@ -767,10 +769,19 @@ public class BuildNifiTaskListener {
 //                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
 
         // 创建output_port connection(组)
-        String componentOutputPortConnectionId = buildPortConnection(groupId,
-                groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
-                5, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+        String componentOutputPortConnectionId="";
+        if(isLastId){
+            componentOutputPortConnectionId = buildPortConnection(groupId,
+                    groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                    groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
+                    3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+        }else{
+            componentOutputPortConnectionId = buildPortConnection(groupId,
+                    groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                    groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
+                    5, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+        }
+
 
         // 创建output connection(任务)
         String taskOutputPortConnectionId = buildPortConnection(groupEntityId,
@@ -793,6 +804,7 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.processorInputPortId=inputPortId;
         tableNifiSettingPO.processorOutputPortId=outputPortId;
         tableNifiSettingPO.nifiCustomWorkflowDetailId=dto.workflowDetailId;
+        tableNifiSettingPO.selectSql=config.processorConfig.sourceExecSqlQuery;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         appNifiSettingPO.nifiCustomWorkflowId=dto.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);

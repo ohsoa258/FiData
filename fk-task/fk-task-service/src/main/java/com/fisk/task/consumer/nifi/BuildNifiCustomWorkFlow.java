@@ -24,10 +24,12 @@ import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.task.*;
+import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.service.impl.*;
 import com.fisk.task.utils.NifiHelper;
@@ -75,6 +77,8 @@ public class BuildNifiCustomWorkFlow {
     private String redisHost;
     @Resource
     private DataFactoryClient dataFactoryClient;
+    @Resource
+    OlapMapper olapMapper;
 
 
     @RabbitHandler
@@ -432,11 +436,27 @@ public class BuildNifiCustomWorkFlow {
                 appNifiSettingDTO.tableId = Integer.valueOf(nifiNode.tableId);
                 appNifiSettingDTO.type = nifiNode.type.getValue();
                 //appNifiSettingDTOS.add(appNifiSettingDTO);
-            } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELKPL)) {
+            } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)||
+                    Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
                 BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
+                OlapPO olapPO=new OlapPO();
                 buildNifiFlowDTO.userId = nifiCustomWorkListDTO.userId;
                 buildNifiFlowDTO.appId = Long.valueOf(nifiNode.appId);
-                TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", DataClassifyEnum.DATAMODELKPL.getValue()).eq("del_flag", 1).one();
+                HashMap<String, Object> conditionHashMap = new HashMap<>();
+                conditionHashMap.put("del_flag",1);
+                conditionHashMap.put("table_id",nifiNode.tableId);
+                if(Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)){
+                    conditionHashMap.put("type",1);
+                }else{
+                    conditionHashMap.put("type",0);
+                }
+                List<OlapPO> olapPOS = olapMapper.selectByMap(conditionHashMap);
+                if(olapPOS.size()>0){
+                     olapPO = olapPOS.get(0);
+                }else{
+                    log.error("没有关联指标表");
+                }
+                TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", DataClassifyEnum.DATAMODELKPL.getValue()).eq("del_flag", 1).one();
                 buildNifiFlowDTO.id = Long.valueOf(one1.tableAccessId);
                 buildNifiFlowDTO.type = OlapTableEnum.KPI;
                 buildNifiFlowDTO.dataClassifyEnum = DataClassifyEnum.DATAMODELKPL;
@@ -451,7 +471,7 @@ public class BuildNifiCustomWorkFlow {
                 appNifiSettingDTO.appId = String.valueOf(nifiNode.appId);
                 appNifiSettingDTO.appPid = String.valueOf(nifiNode.groupId);
                 appNifiSettingDTO.tableId = Integer.valueOf(nifiNode.tableId);
-                appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKKPI;
+                //appNifiSettingDTO.tableType = OlapTableEnum.CUSTOMWORKKPI;
                 appNifiSettingDTO.type = nifiNode.type.getValue();
                 //appNifiSettingDTOS.add(appNifiSettingDTO);
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
@@ -597,8 +617,32 @@ public class BuildNifiCustomWorkFlow {
 
             } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
                 // 连接api infunnel连接tb_table_nifi_setting,指标的table_inputport,table_id
-                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKKPI.getValue()).one();
-                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                HashMap<String, Object> conditionHashMap = new HashMap<>();
+                List<OlapPO> olapPOS=new ArrayList<>();
+                OlapPO olapPO = new OlapPO();
+                conditionHashMap.put("del_flag",1);
+                conditionHashMap.put("table_id",nifiCustomWorkflowDetailDTO.tableId);
+                if(Objects.equals("olap_fact_task",nifiCustomWorkflowDetailDTO.componentType)){
+                    conditionHashMap.put("type",0);
+                    olapPOS= olapMapper.selectByMap(conditionHashMap);
+                }else{
+                    conditionHashMap.put("type",1);
+                    olapPOS=olapMapper.selectByMap(conditionHashMap);
+                }
+                if(olapPOS!=null&&olapPOS.size()!=0){
+                    olapPO=olapPOS.get(0);
+                }else{
+                    log.error("未找到对应指标表");
+                }
+                if(Objects.equals("olap_fact_task",nifiCustomWorkflowDetailDTO.componentType)){
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id)
+                            .eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type",OlapTableEnum.CUSTOMWORKFACTKPI).one();
+
+                }else{
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id)
+                            .eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type",OlapTableEnum.CUSTOMWORKDIMENSIONKPI).one();
+                }
+                 appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                         pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 

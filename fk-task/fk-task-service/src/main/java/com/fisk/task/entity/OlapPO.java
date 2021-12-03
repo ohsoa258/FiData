@@ -18,4 +18,5 @@ public class OlapPO extends BasePO {
     public String createTableSql;
     public String selectDataSql;
     public OlapTableEnum type;
+    public Long tableId;
 }
