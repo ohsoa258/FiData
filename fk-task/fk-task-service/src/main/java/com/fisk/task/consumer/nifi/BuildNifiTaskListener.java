@@ -677,7 +677,13 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //执行查询组件
-        ProcessorEntity executeSQLRecord = createExecuteSQLRecord(config, groupId, sourceDbPoolId, tableNifiSettingPO);
+        ProcessorEntity executeSQLRecord=new ProcessorEntity();
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
+             executeSQLRecord = createExecuteSQLRecord(config, groupId, targetDbPoolId, tableNifiSettingPO);
+        }else{
+            executeSQLRecord = createExecuteSQLRecord(config, groupId, sourceDbPoolId, tableNifiSettingPO);
+        }
+
         tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
         //连接器
         componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -805,6 +811,7 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.processorOutputPortId=outputPortId;
         tableNifiSettingPO.nifiCustomWorkflowDetailId=dto.workflowDetailId;
         tableNifiSettingPO.selectSql=config.processorConfig.sourceExecSqlQuery;
+        tableNifiSettingPO.type=dto.type.getValue();
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         appNifiSettingPO.nifiCustomWorkflowId=dto.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
