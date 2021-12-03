@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
@@ -233,10 +234,25 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(dto.factIds);
             //获取事实表关联的维度
             data.dimensionList=dimensionAttribute.getDimensionMetaDataList(dto.factIds);
+            //更改事实表Doris发布状态
+            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.in("id",dto.factIds);
+            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
+            if (!CollectionUtils.isEmpty(factPOList))
+            {
+                for (FactPO po:factPOList)
+                {
+                    po.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
+                    if (factMapper.updateById(po)==0)
+                    {
+                        throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                    }
+                }
+            }
             //消息推送
             publishTaskClient.publishOlapCreateModel(data);
         }
-        catch (Exception e)
+        catch (FkException e)
         {
             log.error("BusinessAreaImpl,getBusinessAreaPublicData："+e.getMessage());
             return ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR,data);

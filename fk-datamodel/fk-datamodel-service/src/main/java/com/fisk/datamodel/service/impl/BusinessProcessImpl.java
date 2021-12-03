@@ -176,7 +176,6 @@ public class BusinessProcessImpl
                     throw new FkException(ResultEnum.PUBLISH_FAILURE);
                 }
             }
-
             //获取事实字段数据
             QueryWrapper<FactAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
             //获取事实id集合

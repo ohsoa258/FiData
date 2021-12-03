@@ -88,8 +88,7 @@ public class DimensionImpl implements IDimension {
         }
         //判断维度表是否存在关联
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("associate_dimension_id",id)
-                .lambda().eq(DimensionAttributePO::getAssociateDimensionFieldId, 0);
+        queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId,id);
         List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
         if (poList.size()>0)
         {
@@ -97,13 +96,12 @@ public class DimensionImpl implements IDimension {
         }
         //判断维度表是否与事实表有关联
         QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.in("associate_dimension_id",id);
+        queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId,id);
         List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
         if (factAttributePOList.size()>0)
         {
             return ResultEnum.TABLE_ASSOCIATED;
         }
-
         //判断是否发布
         if (model.isPublish!=PublicStatusEnum.UN_PUBLIC.getValue())
         {
@@ -119,7 +117,6 @@ public class DimensionImpl implements IDimension {
             tableVO.ids=ids;
             vo.dimensionIdList=tableVO;
         }
-
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

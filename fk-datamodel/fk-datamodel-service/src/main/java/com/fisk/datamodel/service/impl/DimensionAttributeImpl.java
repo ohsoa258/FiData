@@ -166,6 +166,7 @@ public class DimensionAttributeImpl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto)
     {
         DimensionAttributePO po=attributeMapper.selectById(dto.id);
@@ -181,6 +182,10 @@ public class DimensionAttributeImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
+        //更改维度表发布状态
+        ////DimensionPO dimensionPO=mapper.selectById(po.dimensionId);
+        ////dimensionPO.isPublish=PublicStatusEnum.UN_PUBLIC.getValue();
+        //更改维度字段数据
         po.dimensionFieldCnName=dto.dimensionFieldCnName;
         po.dimensionFieldDes=dto.dimensionFieldDes;
         po.dimensionFieldLength=dto.dimensionFieldLength;

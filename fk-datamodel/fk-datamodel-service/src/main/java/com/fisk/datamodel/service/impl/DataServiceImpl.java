@@ -1,7 +1,9 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
+import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
@@ -14,6 +16,7 @@ import org.junit.Test;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,8 @@ public class DataServiceImpl implements IDataService {
     IndicatorsMapper indicatorsMapper;
     @Resource
     FactAttributeMapper factAttributeMapper;
+    @Resource
+    DimensionMapper dimensionMapper;
 
     @Override
     public boolean isExistAssociate(isDimensionDTO dto)
@@ -142,4 +147,37 @@ public class DataServiceImpl implements IDataService {
         }
         return false;
     }
+
+    @Override
+    public DimensionTimePeriodDTO getDimensionDate(int indicatorsId)
+    {
+        DimensionTimePeriodDTO dto=new DimensionTimePeriodDTO();
+        IndicatorsPO indicatorsPO=indicatorsMapper.selectById(indicatorsId);
+        if (indicatorsPO==null)
+        {
+            return dto;
+        }
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DimensionPO::getBusinessId,indicatorsPO.businessId)
+                .eq(DimensionPO::getIsDimDateTbl,true);
+        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper);
+        if (dimensionPOList ==null || dimensionPOList.size()==0)
+        {
+            return dto;
+        }
+        //查询日期字段表字段
+        List<Integer> dimensionIds=(List) dimensionMapper.selectObjs(queryWrapper.select("id"));
+        QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+        attributePOQueryWrapper.in("dimension_id",dimensionIds);
+        List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(attributePOQueryWrapper);
+        if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
+        {
+            return dto;
+        }
+        dto.dimensionTabName=dimensionPOList.get(0).dimensionTabName;
+        dto.dimensionAttributeField=dimensionAttributePOList.get(0).dimensionFieldEnName;
+        return dto;
+    }
+
 }

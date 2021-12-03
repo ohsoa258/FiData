@@ -30,8 +30,6 @@ import javax.annotation.Resource;
 public class DimensionController {
     @Resource
     IDimension service;
-    @Resource
-    IDataService iDataService;
 
     @ApiOperation("获取关联维度列表")
     @PostMapping("/getAssociateDimensionList")
@@ -79,12 +77,6 @@ public class DimensionController {
     @PutMapping("/updateDimensionDateAttribute")
     public ResultEntity<Object> updateDimensionDateAttribute(@Validated @RequestBody DimensionDateAttributeDTO dto) {
         return ResultEntityBuild.build(service.updateDimensionDateAttribute(dto));
-    }
-
-    @ApiOperation("判断维度与维度、事实与维度是否存在关联")
-    @PostMapping("/isExistAssociate")
-    public ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.isExistAssociate(dto));
     }
 
     @ApiOperation("修改维度发布状态")

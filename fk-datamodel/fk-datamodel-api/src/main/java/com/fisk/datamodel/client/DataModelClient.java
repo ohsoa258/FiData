@@ -124,8 +124,16 @@ public interface DataModelClient {
      * @param dto
      * @return
      */
-    @PostMapping("/dimension/isExistAssociate")
+    @PostMapping("/dataService/isExistAssociate")
     ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
+
+    /**
+     * 根据派生指标id,获取该业务域下日期维度以及字段
+     * @param id
+     * @return
+     */
+    @GetMapping("/dataService/getDimensionDate/{id}")
+    ResultEntity<Boolean> getDimensionDate(@PathVariable("id") int id);
 
     /**
      * 修改维度发布状态
