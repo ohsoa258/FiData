@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDropQueryDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.service.IFactAttribute;
 import io.swagger.annotations.Api;
@@ -73,10 +74,10 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactMetaData(id));
     }
 
-    @GetMapping("/getFactAttributeData")
+    @PostMapping("/getFactAttributeData")
     @ApiOperation("根据事实id获取事实字段详情")
-    public ResultEntity<Object> getFactAttributeData(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(id));
+    public ResultEntity<Object> getFactAttributeData(@RequestBody FactAttributeDropQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(dto));
     }
 
     @ApiOperation("根据事实id获取事实字段所有来源id")

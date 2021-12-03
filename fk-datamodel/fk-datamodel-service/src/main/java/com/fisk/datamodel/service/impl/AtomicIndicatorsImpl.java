@@ -321,12 +321,12 @@ public class AtomicIndicatorsImpl
         queryWrapper.select("associate_dimension_id");
         List<Integer> dimensionIds=(List)factAttributeMapper.selectObjs(queryWrapper);
         dimensionIds.stream().distinct().collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(dimensionIds))
+        if (!CollectionUtils.isEmpty(dimensionIds))
         {
             QueryWrapper<DimensionPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.in("id",dimensionIds);
             List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper1);
-            if (CollectionUtils.isEmpty(dimensionPOList))
+            if (!CollectionUtils.isEmpty(dimensionPOList))
             {
                 for (DimensionPO item:dimensionPOList)
                 {

@@ -4,10 +4,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
+import com.fisk.datamodel.dto.factattribute.*;
 
 import java.util.List;
 
@@ -60,9 +57,9 @@ public interface IFactAttribute {
 
     /**
      * 根据事实id获取事实下字段
-     * @param id
+     * @param dto
      */
-    List<FactAttributeDropDTO> GetFactAttributeData(int id);
+    List<FactAttributeDropDTO> GetFactAttributeData(FactAttributeDropQueryDTO dto);
 
     /**
      * 根据事实表id获取来源表下未添加字段

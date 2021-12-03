@@ -22,6 +22,10 @@ public class FactDataDTO {
      */
     public int isPublish;
     /**
+     * Doris发布状态 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
+     */
+    public int dorisPublish;
+    /**
      * 事实表下字段列表
      */
     public List<FactAttributeDataDTO> attributeList;
