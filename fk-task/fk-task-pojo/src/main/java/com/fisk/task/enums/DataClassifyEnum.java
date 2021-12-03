@@ -4,14 +4,15 @@ import com.fisk.common.enums.BaseEnum;
 
 public enum DataClassifyEnum  implements BaseEnum {
     /**
-     * 数据接入,数据建模Datamodeling  DataAccess
+     * 数据接入,数据建模Datamodeling  DataAccess  dimension
      */
     DATAMODELING(0,"数据建模-维度事实"),
     DATAACCESS(1,"数据接入"),
     DATAMODELKPL(2,"数据建模-指标"),
     //管道服务
     CUSTOMWORKDATAMODELING(3,"管道服务-数据建模-维度事实"),
-    CUSTOMWORKDATAMODELKPL(4,"管道服务-数据建模-指标"),
+    CUSTOMWORKDATAMODELDIMENSIONKPL(4,"管道服务-数据建模-维度指标"),
+    CUSTOMWORKDATAMODELFACTKPL(8,"管道服务-数据建模-事实指标"),
     CUSTOMWORKDATAACCESS(5,"管道服务-数据接入"),
     CUSTOMWORKSTRUCTURE(6,"结构层级"),
     //scheduling component

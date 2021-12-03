@@ -17,7 +17,8 @@ public enum OlapTableEnum implements BaseEnum {
     /**
      * 任务状态
      */
-    CUSTOMWORKKPI(4,"管道服务-指标表"),
+    CUSTOMWORKDIMENSIONKPI(4,"管道服务-维度指标表"),
+    CUSTOMWORKFACTKPI(8,"管道服务-事实指标表"),
     CUSTOMWORKDIMENSION(5,"管道服务-维度表"),
     /*
      * 物理表,事实表physics
