@@ -39,11 +39,12 @@ public class TaskPgTableStructureHelper
             DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
             Calendar calendar = Calendar.getInstance();
             String version = df.format(calendar.getTime());
+            int type=dto.createType==0?2:dto.createType;
             for (ModelPublishFieldDTO item: dto.fieldList) {
                 TaskPgTableStructurePO po = new TaskPgTableStructurePO();
                 po.version = version;
                 //判断是否为维度
-                po.tableType=dto.createType==0?2:dto.createType;
+                po.tableType=type;
                 po.tableId = String.valueOf(dto.tableId);
                 po.tableName = dto.tableName;
                 po.fieldId = String.valueOf(item.fieldId);
@@ -57,6 +58,7 @@ public class TaskPgTableStructureHelper
                 {
                     TaskPgTableStructurePO po2 = new TaskPgTableStructurePO();
                     po2.version = version;
+                    po2.tableType=type;
                     po2.tableId = String.valueOf(dto.tableId);
                     po2.tableName = dto.tableName;
                     po2.fieldId=String.valueOf(item.associateDimensionId);
@@ -71,7 +73,7 @@ public class TaskPgTableStructureHelper
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             //执行存储过程
-            String sql = execProcedure(version);
+            String sql = execProcedure(version,type);
             //判断是否有修改语句
             return updatePgTableStructure(sql,dto.tableName);
         }
@@ -85,7 +87,7 @@ public class TaskPgTableStructureHelper
     /*@Test
     public void  tests()throws Exception
     {
-        String aa=execProcedure("20211202112943758");
+        String aa=execProcedure("20211203140317267",1);
         String bb="";
     }*/
     /**
@@ -93,7 +95,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    public String execProcedure(String version) throws Exception
+    public String execProcedure(String version,int type) throws Exception
     {
         //配置数据库参数
         Class.forName("com.mysql.jdbc.Driver");
@@ -107,8 +109,9 @@ public class TaskPgTableStructureHelper
             StringBuilder str=new StringBuilder();
             List<String> sqlList=new ArrayList<>();
             //调用过程stu_pro
-            CallableStatement cs=(CallableStatement)conn.prepareCall("call pg_check_table_structure(?)");
+            CallableStatement cs=(CallableStatement)conn.prepareCall("call pg_check_table_structure(?,?)");
             cs.setString(1,version);
+            cs.setInt(2,type);
             cs.execute();
             ResultSet rs = cs.getResultSet();
             if (rs==null)

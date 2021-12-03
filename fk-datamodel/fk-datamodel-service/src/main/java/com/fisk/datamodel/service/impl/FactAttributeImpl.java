@@ -15,10 +15,7 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
-import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
+import com.fisk.datamodel.dto.factattribute.*;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
@@ -201,24 +198,25 @@ public class FactAttributeImpl
     }
 
     @Override
-    public List<FactAttributeDropDTO> GetFactAttributeData(int id)
+    public List<FactAttributeDropDTO> GetFactAttributeData(FactAttributeDropQueryDTO dto)
     {
         List<FactAttributeDropDTO> data=new ArrayList<>();
-        FactPO po=factMapper.selectById(id);
+        FactPO po=factMapper.selectById(dto.id);
         if (po==null)
         {
             return data;
         }
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,id);
+        queryWrapper.in("attribute_type",dto.type).lambda()
+                .eq(FactAttributePO::getFactId,dto.id);
         List<FactAttributePO> list=mapper.selectList(queryWrapper);
         for (FactAttributePO item:list) {
-            FactAttributeDropDTO dto = new FactAttributeDropDTO();
-            dto.id = item.id;
-            dto.factFieldEnName = item.factFieldEnName;
-            dto.factFieldType=item.factFieldType;
-            dto.attributeType=item.attributeType;
-            data.add(dto);
+            FactAttributeDropDTO dropDTO = new FactAttributeDropDTO();
+            dropDTO.id = item.id;
+            dropDTO.factFieldEnName = item.factFieldEnName;
+            dropDTO.factFieldType=item.factFieldType;
+            dropDTO.attributeType=item.attributeType;
+            data.add(dropDTO);
         }
         return data;
     }
