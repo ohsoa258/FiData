@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
@@ -25,6 +26,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
     @Resource
     DataModelClient client;
 
+    public static final String ATOM_ALIAS = "a";
+
     @Override
     public Object query(List<DataDoFieldDTO> apiConfigureFieldList) {
         // 创建Sql
@@ -33,8 +36,6 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql);
         return dataDomainDTOList;
     }
-
-    public static final String ATOM_ALIAS = "a";
 
     public String buildSql(List<DataDoFieldDTO> apiConfigureFieldList) {
 
@@ -68,16 +69,29 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                         }).collect(Collectors.toList())
         );
 
-        // 拼接原子指标
+        // 获取所有指标
         List<IndicatorDTO> indicatorList = client.getIndicatorsLogic(indicatorFeignDTO).getData();
+
+        StringBuilder str = new StringBuilder();
+        List<IndicatorDTO> count = indicatorList.stream().filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
+        AtomicInteger aliasCount = new AtomicInteger(0);
+        // 拼接原子指标
         String atom = indicatorList.stream()
                 .filter(e -> e.getType() == ATOMIC_INDICATORS)
                 .map(e -> {
+
+                    // 判断指标数量是否是子查询
                     StringBuilder stringBuilder = new StringBuilder();
+                    if (count.size() >= 2){
+                        stringBuilder.append("(");
+                    }
+
                     String atr = "SELECT " + dimColumn + ","
                             + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
+                            + " AS " + e.getFieldName()
                             + " FROM " + e.getTableName() + " JOIN ";
 
+                    // JOIN ON 字符串拼接
                     String arr = dimColumnFieldList.stream().map(b -> {
                         StringBuilder stringBuilder1 = new StringBuilder();
                         stringBuilder1.append(b.getTableName() + " ON ");
@@ -102,12 +116,50 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                         return stringBuilder1;
                     }).collect(Collectors.joining(" JOIN "));
 
+                    // GROUP BY
                     stringBuilder.append(atr);
                     stringBuilder.append(arr);
                     stringBuilder.append(" GROUP BY " + dimColumn);
+
+                    // 子查询 AS
+                    if (count.size() >= 2){
+                        stringBuilder.append(")");
+                        stringBuilder.append(" AS ");
+                        String atomAlias = ATOM_ALIAS + aliasCount.incrementAndGet();
+                        stringBuilder.append(atomAlias);
+
+                        // 两个子表的JOIN ON条件
+                        if (aliasCount.intValue()%2!=1){
+                            stringBuilder.append(" ON ");
+                            int aliasDec = aliasCount.decrementAndGet();
+                            int aliasInc = aliasCount.incrementAndGet();
+                            String collect = dimColumnFieldList.stream().map(d -> {
+                                String aliasOn = ATOM_ALIAS + aliasDec  + "." + escapeStr[0] + d.getFieldName() + escapeStr[1] + "=" +
+                                        ATOM_ALIAS + aliasInc + "." + escapeStr[0] + d.getFieldName() + escapeStr[1];
+                                return aliasOn;
+                            }).collect(Collectors.joining(" AND "));
+
+                            stringBuilder.append(collect);
+
+                            // SELECT 最外层
+                            String collect1 = dimColumnFieldList.stream().map(d -> {
+                                String aliasOn = ATOM_ALIAS + aliasDec + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
+                                return aliasOn;
+                            }).collect(Collectors.joining(","));
+
+                            AtomicInteger aliasDec1 = new AtomicInteger();
+                            String collect2 = indicatorList.stream()
+                                    .filter(c -> c.getType() == ATOMIC_INDICATORS)
+                                    .map(c -> ATOM_ALIAS + aliasDec1.incrementAndGet() + "." + escapeStr[0] + c.getFieldName() + escapeStr[1])
+                                    .collect(Collectors.joining(","));
+                            String s = "SELECT " + collect1 + "," + collect2 + " FROM ";
+                            str.insert(0,s);
+                        }
+                    }
                     return stringBuilder.toString();
                 }).collect(Collectors.joining(" JOIN "));
 
+        str.append(atom);
 
 
         // 拼接派生指标
@@ -116,9 +168,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 //                .map(e -> {
 //
 //                });
-
-        StringBuilder stringBuilder = new StringBuilder();
-        return atom;
+        return str.toString();
     }
 
     /**
