@@ -124,8 +124,11 @@ public class TableNameImpl implements ITableName {
                     queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,limitedPO.getId());
                     List<BusinessLimitedAttributePO> attributePOList = attributeMapper.selectList(queryWrapper);
 
+                    IndicatorsPO indicatorsPO1 = indicatorsMapper.selectById(indicatorsPO.getAtomicId());
+                    indicator.setFieldName(indicatorsPO1.getIndicatorsName());
                     indicator.setType(DERIVED_INDICATORS);
                     indicator.setTimePeriod(indicatorsPO.timePeriod);
+                    indicator.setCalculationLogic(indicatorsPO1.getCalculationLogic());
                     indicator.setWhereTimeLogic(attributePOList.stream().filter(e -> e!=null)
                             .map(e -> {
                                 String factFieldName = this.getFactFieldName(e.getFactAttributeId(),e.getCalculationLogic(),e.getCalculationValue());

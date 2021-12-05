@@ -1,9 +1,12 @@
 package com.fisk.dataservice.service.impl;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.dataservice.dto.*;
 import com.fisk.dataservice.service.BuildSqlService;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.stream.Collectors;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
 import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.WHERE;
 import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
+import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 import static com.fisk.dataservice.utils.database.DatabaseConnect.execQueryResultList;
 
 /**
@@ -91,30 +95,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                             + " AS " + e.getFieldName()
                             + " FROM " + e.getTableName() + " JOIN ";
 
-                    // JOIN ON 字符串拼接
-                    String arr = dimColumnFieldList.stream().map(b -> {
-                        StringBuilder stringBuilder1 = new StringBuilder();
-                        stringBuilder1.append(b.getTableName() + " ON ");
-
-                        isDimensionDTO dimensionDTO = new isDimensionDTO();
-                        dimensionDTO.setDimensionOne(0);
-                        dimensionDTO.setDimensionTwo(b.getDimension());
-                        dimensionDTO.setFieldIdOne(e.getId());
-                        dimensionDTO.setFieldIdTwo(b.getFieldId());
-                        if (client.isExistAssociate(dimensionDTO).getData()){
-                            // 追加字段关联key
-                            String name = b.getTableName();
-                            String str1 = name.substring(0, name.indexOf("_"));
-                            String filedName = name.substring(str1.length()+1, name.length()) + "_key";
-
-                            String onSubQuery= b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
-                                    "=" + e.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1];
-                            stringBuilder1.append(onSubQuery);
-                        }else{
-                            stringBuilder1.append("1 = 1");
-                        }
-                        return stringBuilder1;
-                    }).collect(Collectors.joining(" JOIN "));
+                    String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
 
                     // GROUP BY
                     stringBuilder.append(atr);
@@ -159,16 +140,101 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     return stringBuilder.toString();
                 }).collect(Collectors.joining(" JOIN "));
 
-        str.append(atom);
-
-
         // 拼接派生指标
-//        indicatorList.stream()
-//                .filter(e -> e.getType() == DERIVED_INDICATORS)
-//                .map(e -> {
-//
-//                });
+        String derive = indicatorList.stream()
+                .filter(e -> e.getType() == DERIVED_INDICATORS)
+                .map(e -> {
+
+                    StringBuilder str1 = new StringBuilder();
+
+                    // 子查询
+                    StringBuilder stringBuilder = new StringBuilder();
+                    int frequency = 0;
+
+                    String atr = "(SELECT " + dimColumn + ","
+                            + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
+                            + " AS " + e.getFieldName()
+                            + "," + "dim_date.full_date"
+                            + " FROM " + e.getTableName() + " JOIN ";
+
+                    String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
+
+                    // GROUP BY
+                    stringBuilder.append(atr);
+                    stringBuilder.append(arr);
+                    stringBuilder.append(" GROUP BY " + dimColumn + "," + "dim_date.full_date" + ")");
+
+                    String alias = stringBuilder + " AS " + ATOM_ALIAS;
+                    // 第一个子查询别名
+                    int i = ++frequency;
+                    int i1 = ++frequency;
+                    str1.append(" FROM " + alias + i);
+                    str1.append(" JOIN " + alias + i1);
+                    str1.append(" ON ");
+                    DimensionTimePeriodDTO dto = client.getDimensionDate(e.getId()).getData();
+                    str1.append("DATE_FORMAT(a1.full_date, '%m')>=DATE_FORMAT(a2.full_date, '%m')" + " AND ");
+                    str1.append(dimColumnFieldList.stream().map(d -> {
+                        String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
+                                + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
+                        return aliasOn;
+                    }).collect(Collectors.joining(" AND ")));
+
+                    // SELECT 最外层
+                    String collect1 = dimColumnFieldList.stream().map(d -> {
+                        String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
+                        return aliasOn;
+                    }).collect(Collectors.joining(","));
+
+                    str1.insert(0,"SELECT " + collect1 + ","
+                            + e.getCalculationLogic() + "(" + ATOM_ALIAS + frequency + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")");
+
+                    // GROUP BY a1.a1.`year`,a1.`product_class
+                    str1.append(" GROUP BY " + collect1);
+                    return str1.toString();
+                }).collect(Collectors.joining(","));
+
+        if (StringUtils.isEmpty(atom)){
+            str.append(derive);
+        }else {
+            str.append(atom);
+        }
+
+
         return str.toString();
+    }
+
+    /**
+     * JOIN ON 字符串拼接
+     * @param dimColumnFieldList
+     * @param escapeStr
+     * @param id
+     * @param tableName
+     * @return
+     */
+    public String joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName){
+        return dimColumnFieldList.stream().map(b -> {
+            StringBuilder stringBuilder1 = new StringBuilder();
+            stringBuilder1.append(b.getTableName() + " ON ");
+
+            isDimensionDTO dimensionDTO = new isDimensionDTO();
+            dimensionDTO.setDimensionOne(0);
+            dimensionDTO.setDimensionTwo(b.getDimension());
+            dimensionDTO.setFieldIdOne(id);
+            dimensionDTO.setFieldIdTwo(b.getFieldId());
+            if (client.isExistAssociate(dimensionDTO).getData()){
+                // 追加字段关联key
+                String name = b.getTableName();
+                String str1 = name.substring(0, name.indexOf("_"));
+                String filedName = name.substring(str1.length()+1, name.length()) + "_key";
+
+                String onSubQuery= b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
+                        "=" + tableName + "." + escapeStr[0] + filedName + escapeStr[1];
+                stringBuilder1.append(onSubQuery);
+            }else{
+                stringBuilder1.append("1 = 1");
+            }
+            return stringBuilder1;
+        }).collect(Collectors.joining(" JOIN "));
     }
 
     /**

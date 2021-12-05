@@ -3,6 +3,7 @@ package com.fisk.datamodel.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
+import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataservice.dto.IndicatorDTO;
@@ -116,7 +117,7 @@ public interface DataModelClient {
      * @param dto
      * @return
      */
-    @RequestMapping("/tableName/getIndicatorsLogic")
+    @PostMapping("/tableName/getIndicatorsLogic")
     ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(@RequestBody IndicatorFeignDTO dto);
 
     /**
@@ -133,7 +134,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/dataService/getDimensionDate/{id}")
-    ResultEntity<Boolean> getDimensionDate(@PathVariable("id") int id);
+    ResultEntity<DimensionTimePeriodDTO> getDimensionDate(@PathVariable("id") int id);
 
     /**
      * 修改维度发布状态

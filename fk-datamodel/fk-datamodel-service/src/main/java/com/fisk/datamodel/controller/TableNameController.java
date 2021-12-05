@@ -36,7 +36,7 @@ public class TableNameController {
         return service.getAggregation(id);
     }
 
-    @RequestMapping("/getIndicatorsLogic")
+    @PostMapping("/getIndicatorsLogic")
     public ResultEntity<List<IndicatorDTO>> getIndicatorsLogic(@RequestBody IndicatorFeignDTO dto){
 
         return service.getIndicatorsLogic(dto);

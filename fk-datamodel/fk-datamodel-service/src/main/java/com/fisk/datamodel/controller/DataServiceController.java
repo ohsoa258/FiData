@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.service.IDataService;
 import com.fisk.dataservice.dto.isDimensionDTO;
 import io.swagger.annotations.ApiOperation;
@@ -31,7 +32,7 @@ public class DataServiceController {
 
     @ApiOperation("根据派生指标id,获取该业务域下日期维度以及字段")
     @GetMapping("/getDimensionDate/{id}")
-    public ResultEntity<Object> getDimensionDate(@PathVariable("id") int id) {
+    public ResultEntity<DimensionTimePeriodDTO> getDimensionDate(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.getDimensionDate(id));
     }
 
