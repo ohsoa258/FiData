@@ -169,7 +169,8 @@ public class DataServiceImpl implements IDataService {
         //查询日期字段表字段
         List<Integer> dimensionIds=(List) dimensionMapper.selectObjs(queryWrapper.select("id"));
         QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-        attributePOQueryWrapper.in("dimension_id",dimensionIds);
+        attributePOQueryWrapper.in("dimension_id",dimensionIds).lambda()
+                .eq(DimensionAttributePO::getIsDimDateField,true);
         List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(attributePOQueryWrapper);
         if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
         {
