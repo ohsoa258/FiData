@@ -223,7 +223,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sql="drop table if exists "+tableName+";\n";
         sql+="CREATE EXTERNAL TABLE "+tableName+" ( ";
         for (AtomicIndicatorFactAttributeDTO atomicIndicatorFactAttributeDTO:factAttributeDTOList) {
-            if(atomicIndicatorFactAttributeDTO.attributeType==0){
+            if(atomicIndicatorFactAttributeDTO.attributeType==0||atomicIndicatorFactAttributeDTO.attributeType==2){
                 sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" "+atomicIndicatorFactAttributeDTO.factFieldType+",";
             }
         }

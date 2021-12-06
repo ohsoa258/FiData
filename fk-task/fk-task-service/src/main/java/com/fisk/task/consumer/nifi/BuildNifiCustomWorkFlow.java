@@ -613,14 +613,14 @@ public class BuildNifiCustomWorkFlow {
                 buildNifiTaskListener.buildPortConnection(pipelineConfigurationPO.appComponentId, appGroupId, tableNifiSettingPO.tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                         pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inFunnelId, ConnectableDTO.TypeEnum.FUNNEL, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
-            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
+            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("分析模型")) {
                 // 连接api infunnel连接tb_table_nifi_setting,指标的table_inputport,table_id
                 HashMap<String, Object> conditionHashMap = new HashMap<>();
                 List<OlapPO> olapPOS=new ArrayList<>();
                 OlapPO olapPO = new OlapPO();
                 conditionHashMap.put("del_flag",1);
                 conditionHashMap.put("table_id",nifiCustomWorkflowDetailDTO.tableId);
-                if(Objects.equals("olap_fact_task",nifiCustomWorkflowDetailDTO.componentType)){
+                if(Objects.equals(ChannelDataEnum.OLAP_FACT_TASK.getName(),nifiCustomWorkflowDetailDTO.componentType)){
                     conditionHashMap.put("type",0);
                     olapPOS= olapMapper.selectByMap(conditionHashMap);
                 }else{
@@ -632,7 +632,7 @@ public class BuildNifiCustomWorkFlow {
                 }else{
                     log.error("未找到对应指标表");
                 }
-                if(Objects.equals("olap_fact_task",nifiCustomWorkflowDetailDTO.componentType)){
+                if(Objects.equals(ChannelDataEnum.OLAP_FACT_TASK.getName(),nifiCustomWorkflowDetailDTO.componentType)){
                     tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id)
                             .eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type",OlapTableEnum.CUSTOMWORKFACTKPI).one();
 
@@ -683,14 +683,21 @@ public class BuildNifiCustomWorkFlow {
                 // 连接tb_table_nifi_setting,事实的table_inputport,table_id和api outfunnel
                 tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
                 appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                buildNifiTaskListener.buildPortConnection(groupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
                         appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
-            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("olap")) {
+            } else if (nifiCustomWorkflowDetailDTO.componentType.startsWith("分析模型")) {
                 // 连接tb_table_nifi_setting,指标的table_inputport,table_id和api outfunnel
-                tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.tableId).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKFACT.getValue()).one();
-                appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
-                buildNifiTaskListener.buildPortConnection(appGroupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                OlapPO olapPO = new OlapPO();
+                if(Objects.equals(nifiCustomWorkflowDetailDTO.componentType,ChannelDataEnum.OLAP_DIMENSION_TASK.getName())){
+                     olapPO = getOlapPO(1, Integer.parseInt(nifiCustomWorkflowDetailDTO.tableId));
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKDIMENSIONKPI.getValue()).one();
+                }else{
+                    olapPO = getOlapPO(0, Integer.parseInt(nifiCustomWorkflowDetailDTO.tableId));
+                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("nifi_custom_workflow_detail_id",nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMWORKFACTKPI.getValue()).one();
+                }
+                 appGroupId = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId).getComponent().getParentGroupId();
+                buildNifiTaskListener.buildPortConnection(groupId, groupId, notifyProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
                         appGroupId, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
             }
@@ -911,7 +918,7 @@ public class BuildNifiCustomWorkFlow {
         OlapPO olapPO = new OlapPO();
         conditionHashMap.put("del_flag",1);
         conditionHashMap.put("table_id",tableId);
-        conditionHashMap.put("type",1);
+        conditionHashMap.put("type",type);
         olapPOS= olapMapper.selectByMap(conditionHashMap);
         if(olapPOS!=null&&olapPOS.size()!=0){
             olapPO=olapPOS.get(0);

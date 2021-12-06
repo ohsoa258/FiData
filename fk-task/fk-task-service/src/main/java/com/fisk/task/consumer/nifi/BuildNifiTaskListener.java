@@ -469,7 +469,8 @@ public class BuildNifiTaskListener {
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "【target】" + targetRes.msg + ",【source】" + sourceRes.msg);
             }
-        }else if(Objects.equals(buildNifiFlowDTO.dataClassifyEnum,DataClassifyEnum.CUSTOMWORKDATAACCESS)){
+        }else if(Objects.equals(buildNifiFlowDTO.dataClassifyEnum,DataClassifyEnum.CUSTOMWORKDATAACCESS)||
+                Objects.equals(buildNifiFlowDTO.dataClassifyEnum,DataClassifyEnum.DATAMODELKPL)){
             BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.TARGET);
             BusinessResult<ControllerServiceEntity> targetRes = componentsBuild.buildDbControllerService(targetDto);
 
@@ -1464,6 +1465,7 @@ public class BuildNifiTaskListener {
         NifiConnectDTO destination = new NifiConnectDTO();
         NifiConnectDTO source = new NifiConnectDTO();
         ConnectionEntity connectionEntity;
+        log.info("连接参数为:"+fatherComponentId+","+destinationGroupId+","+destinationId+","+destinationTypeEnum+","+sourceGroupId+","+sourceId+","+sourceTypeEnum+","+level+","+typeEnum);
         switch (typeEnum.getValue()) {
                 // 创建input_port连接(应用)
             case 6:
