@@ -90,6 +90,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
         try {
+            if (dto.flag) {
+                // 正在发布
+                workflowDTO.status = 3;
+            }
             workflowService.editData(workflowDTO);
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -103,6 +107,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        // nifi
         NifiCustomWorkListDTO workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, dto.list);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);

@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -90,6 +91,14 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
     @Override
     public ResultEnum editData(NifiCustomWorkflowDTO dto) {
+
+        // 判断名称是否重复
+        QueryWrapper<NifiCustomWorkflowPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(NifiCustomWorkflowPO::getWorkflowName, dto.workflowName);
+        NifiCustomWorkflowPO workflowPo = mapper.selectOne(queryWrapper);
+        if (workflowPo != null && workflowPo.id != dto.id) {
+            return ResultEnum.WORKFLOWNAME_EXISTS;
+        }
 
         // 参数校验
         NifiCustomWorkflowPO model = this.getById(dto.id);

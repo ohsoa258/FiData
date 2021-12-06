@@ -193,6 +193,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Transactional(rollbackFor = RuntimeException.class)
     public ResultEnum updateAppRegistration(AppRegistrationEditDTO dto) {
 
+        // 判断名称是否重复
+        QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppRegistrationPO::getAppName, dto.appName);
+        AppRegistrationPO registrationPo = mapper.selectOne(queryWrapper);
+        if (registrationPo != null && registrationPo.id != dto.id) {
+            return ResultEnum.DATAACCESS_APPNAME_ERROR;
+        }
+
         // 获取当前登陆人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;

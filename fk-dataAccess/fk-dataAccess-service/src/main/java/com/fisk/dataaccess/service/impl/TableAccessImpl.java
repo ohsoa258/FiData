@@ -1568,6 +1568,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
+
+        // 判断名称是否重复
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName);
+        TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
+        if (tableAccessPo != null && tableAccessPo.id != dto.id) {
+            return ResultEnum.DATAACCESS_APPNAME_ERROR;
+        }
+
         boolean success;
         try {
             TableAccessPO model = this.getById(dto.id);
