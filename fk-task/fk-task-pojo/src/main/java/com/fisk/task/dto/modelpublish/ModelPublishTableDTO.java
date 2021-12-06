@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.modelpublish;
+package com.fisk.task.dto.modelpublish;
 
 import lombok.Data;
 
@@ -12,7 +12,7 @@ public class ModelPublishTableDTO {
     public long tableId;
     public String tableName;
     /**
-     * 创建表方式 0:维度 1:事实
+     * 创建表方式 2:维度 1:事实 3: 数据接入
      */
     public int createType;
     public String sqlScript;

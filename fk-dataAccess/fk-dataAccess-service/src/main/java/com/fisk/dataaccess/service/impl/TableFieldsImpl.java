@@ -11,10 +11,7 @@ import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
-import com.fisk.dataaccess.entity.TableAccessPO;
-import com.fisk.dataaccess.entity.TableBusinessPO;
-import com.fisk.dataaccess.entity.TableFieldsPO;
-import com.fisk.dataaccess.entity.TableSyncmodePO;
+import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
@@ -24,6 +21,8 @@ import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -261,34 +261,54 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param success   true: 保存成功,执行发布
      * @param appId     应用id
      * @param accessId  物理表id
-     * @param tableName 物理表-表名
+     * @param tableName 物理表tableName
      * @param flag      0: 保存;  1: 发布
      */
     private void publish(boolean success, long appId, long accessId, String tableName, int flag) {
         if (success && flag == 1) {
-/*
             UserInfo userInfo = userHelper.getLoginUserInfo();
-            AtlasIdsVO atlasIdsVO = getAtlasIdsVO(userInfo.id, appId, accessId, tableName);
-            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-            atlasEntityQueryDTO.userId = atlasIdsVO.userId;
-            // 应用注册id
-            atlasEntityQueryDTO.appId = atlasIdsVO.appId;
-            // 物理表id
-            atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
-            //表名称
-            atlasEntityQueryDTO.tableName = tableName;
-            log.info("给nifi组装参数" + atlasEntityQueryDTO);
-            System.out.println("atlasEntityQueryDTO = " + atlasEntityQueryDTO);*/
-
-            UserInfo userInfo = userHelper.getLoginUserInfo();
-            ResultEntity<BuildPhysicalTableDTO> buildPhysicalTableDTO = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
-            BuildPhysicalTableDTO data = buildPhysicalTableDTO.data;
+            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
+            BuildPhysicalTableDTO data = result.data;
             data.appId = String.valueOf(appId);
             data.dbId = String.valueOf(accessId);
             data.userId = userInfo.id;
 
-            // 保存成功,执行发布,调用存储过程
+            // 版本号入库、调用存储存储过程
+            List<TableFieldsPO> list = this.query().eq("id", accessId).list();
+            AppRegistrationPO registration = iAppRegistration.getById(appId);
+            String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
+            data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
+
+            // 执行发布
             publishTaskClient.publishBuildAtlasTableTask(data);
         }
+    }
+
+    /**
+     * 封装版本号和修改表结构的参数
+     *
+     * @param accessId 物理表名
+     * @param odsTableName ods表名
+     * @param createType 3: 代表数据接入
+     * @param list 表字段
+     * @return dto
+     */
+    private ModelPublishTableDTO getModelPublishTableDTO(long accessId, String odsTableName, int createType, List<TableFieldsPO> list) {
+        ModelPublishTableDTO dto = new ModelPublishTableDTO();
+        List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+
+        list.stream().map(e -> {
+            ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();
+            fieldDTO.fieldId = e.id;
+            fieldDTO.fieldEnName = e.fieldName;
+            fieldDTO.fieldType = e.fieldType;
+            fieldDTO.fieldLength = Math.toIntExact(e.fieldLength);
+            return fieldList.add(fieldDTO);
+        });
+
+        dto.tableId = accessId;
+        dto.tableName = odsTableName;
+        dto.fieldList = fieldList;
+        return dto;
     }
 }

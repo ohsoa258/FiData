@@ -1,19 +1,19 @@
 package com.fisk.task.consumer.postgre.datainput;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
-import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.TableFieldDetailDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IPostgreBuild;
+import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronExpression;
@@ -21,10 +21,8 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
 
@@ -41,6 +39,8 @@ public class BuildDataInputPgTableListener {
     IPostgreBuild pg;
     @Resource
     DataAccessClient dc;
+    @Resource
+    TaskPgTableStructureHelper taskPgTableStructureHelper;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
@@ -76,6 +76,7 @@ public class BuildDataInputPgTableListener {
         List<TableFieldDetailDTO> arrayLists = JSONArray.parseArray(JSON.toJSONString(resultSetBusinessResult.data), TableFieldDetailDTO.class);
         if(arrayLists!=null&&arrayLists.size()!=0){
             updataOrCreateTable(arrayLists,buildPhysicalTableDTO.tableFieldsDTOS);
+            saveOrUpdate(buildPhysicalTableDTO.modelPublishTableDTO);
         }else{
             StringBuilder sql = new StringBuilder();
             StringBuilder sqlFileds = new StringBuilder();
@@ -152,6 +153,14 @@ public class BuildDataInputPgTableListener {
                 pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
             }
         }
+
+    }
+
+    public void saveOrUpdate(ModelPublishTableDTO dto) {
+
+        // 保存版本号
+        taskPgTableStructureHelper.saveTableStructure(dto);
+        log.info("保存版本号");
 
     }
 

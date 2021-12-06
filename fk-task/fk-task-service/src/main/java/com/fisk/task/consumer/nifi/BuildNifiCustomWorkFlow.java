@@ -1,7 +1,6 @@
 package com.fisk.task.consumer.nifi;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
@@ -16,13 +15,12 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
-import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.controller.PublishTaskController;
-import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
+import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;

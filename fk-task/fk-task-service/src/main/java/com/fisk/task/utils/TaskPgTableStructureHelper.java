@@ -2,12 +2,11 @@ package com.fisk.task.utils;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamodel.dto.modelpublish.ModelPublishFieldDTO;
-import com.fisk.datamodel.dto.modelpublish.ModelPublishTableDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -15,7 +14,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +25,7 @@ import java.util.stream.Collectors;
 public class TaskPgTableStructureHelper
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
     /**
-     * 保存建模相关表结构数据
+     * 保存建模相关表结构数据(保存版本号)
      * @param
      */
     public ResultEnum saveTableStructure(ModelPublishTableDTO dto)
@@ -75,7 +73,7 @@ public class TaskPgTableStructureHelper
             //执行存储过程
             String sql = execProcedure(version,type);
             //判断是否有修改语句
-            return updatePgTableStructure(sql,dto.tableName);
+            return updatePgTableStructure(sql,dto.tableName,dto.createType);
         }
         catch (Exception ex)
         {
@@ -163,13 +161,21 @@ public class TaskPgTableStructureHelper
      * @param tableName
      * @return
      */
-    public ResultEnum updatePgTableStructure(String sql,String tableName) throws Exception
+    public ResultEnum updatePgTableStructure(String sql,String tableName,int createType) throws Exception
     {
         Class.forName("org.postgresql.Driver");
-        String pgsqlOdsUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified";
+        String pgsqlDwUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified";
+        String pgsqlOdsUrl="jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified";
         String pgsqlOdsUsername="postgres";
         String pgsqlOdsPassword="Password01!";
-        Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+        Connection conn;
+        if (createType == 3) {
+            // 数据接入
+            conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+        } else {
+            // 数据建模
+            conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+        }
         try {
             //修改表结构
             if (sql!=null && sql.length()>0)
@@ -177,6 +183,7 @@ public class TaskPgTableStructureHelper
                 Statement st = conn.createStatement();
                 return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
             }
+/*
             //判断表是否存在
             DatabaseMetaData metaData=conn.getMetaData();
             ResultSet set=metaData.getTables(null,null,tableName,null);
@@ -184,6 +191,8 @@ public class TaskPgTableStructureHelper
             {
                 return ResultEnum.TASK_TABLE_NOT_EXIST;
             }
+*/
+
             return ResultEnum.SUCCESS;
         }catch (SQLException e) {
             log.error("updatePgTableStructure:"+e);

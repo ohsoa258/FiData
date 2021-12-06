@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.modelpublish;
+package com.fisk.task.dto.modelpublish;
 
 import lombok.Data;
 

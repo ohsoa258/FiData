@@ -1,6 +1,7 @@
 package com.fisk.datamodel.dto.modelpublish;
 
 import com.fisk.task.dto.MQBaseDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import lombok.Data;
 
 import java.util.List;
