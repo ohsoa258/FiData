@@ -3,14 +3,17 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.DimensionAttributePO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
@@ -43,10 +46,12 @@ public class DimensionAttributeImpl
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionFolderImpl dimensionFolder;
+    @Resource
+    TableHistoryImpl tableHistory;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto)
+    public ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto)
     {
         //根据维度id,删除所有字段数据
         /*QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
@@ -72,18 +77,18 @@ public class DimensionAttributeImpl
         }*/
 
         //判断是否存在
-        DimensionPO dimensionPO=mapper.selectById(dimensionId);
+        DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
         if (dimensionPO==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         //删除维度字段属性
-        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
+        List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
         {
             QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.notIn("id",ids).lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+            queryWrapper.notIn("id",ids).lambda().eq(DimensionAttributePO::getDimensionId,dto.dimensionId);
             List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
             if (list!=null && list.size()>0)
             {
@@ -95,23 +100,35 @@ public class DimensionAttributeImpl
             }
         }
         //添加或修改维度字段
-        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
-        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
+        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto.list);
+        poList.stream().map(e->e.dimensionId=dto.dimensionId).collect(Collectors.toList());
         boolean result=this.saveOrUpdateBatch(poList);
         //是否发布
-        if (isPublish)
+        if (dto.isPublish)
         {
             DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
             List<Integer> dimensionIds=new ArrayList<>();
-            dimensionIds.add(dimensionId);
+            dimensionIds.add(dto.dimensionId);
             //修改发布状态
             dimensionPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
             if (mapper.updateById(dimensionPO)==0)
             {
-                return ResultEnum.PUBLISH_FAILURE;
+                throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }
             queryDTO.dimensionIds=dimensionIds;
             queryDTO.businessAreaId=dimensionPO.businessId;
+            //添加发布历史
+            List<TableHistoryDTO> tableHistoryDTOList=new ArrayList<>();
+            TableHistoryDTO tableHistoryDTO=new TableHistoryDTO();
+            tableHistoryDTO.tableType= CreateTypeEnum.CREATE_DIMENSION.getValue();
+            tableHistoryDTO.remark=dto.remark;
+            tableHistoryDTO.tableId=dto.dimensionId;
+            tableHistoryDTOList.add(tableHistoryDTO);
+            ResultEnum resultEnum = tableHistory.addTableHistory(tableHistoryDTOList);
+            if (resultEnum !=ResultEnum.SUCCESS)
+            {
+                throw new FkException(ResultEnum.ADD_TABLE_HISTORY);
+            }
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return ResultEnum.SUCCESS;

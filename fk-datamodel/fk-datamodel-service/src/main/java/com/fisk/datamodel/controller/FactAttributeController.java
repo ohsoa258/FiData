@@ -46,7 +46,7 @@ public class FactAttributeController {
     @PostMapping("/addFactAttribute")
     public ResultEntity<Object> addFactAttribute(@Validated @RequestBody FactAttributeAddDTO dto)
     {
-        return ResultEntityBuild.build(service.addFactAttribute(dto.factId,dto.isPublish,dto.list));
+        return ResultEntityBuild.build(service.addFactAttribute(dto));
     }
 
     @ApiOperation("删除事实字段")

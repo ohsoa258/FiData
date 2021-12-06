@@ -69,6 +69,10 @@ public class DimensionAttributePO extends BasePO {
      */
     public int isPrimaryKey;
     /**
+     *源表名称
+     */
+    public String sourceTableName;
+    /**
      * 源字段名称
      */
     public String sourceFieldName;

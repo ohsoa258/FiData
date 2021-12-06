@@ -22,5 +22,9 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     public String businessAreaName;
     public int createType;
+    /**
+     * 发布备注
+     */
+    public String remark;
     public List<DimensionAttributeDTO> list;
 }

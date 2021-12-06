@@ -108,6 +108,7 @@ public enum ResultEnum {
     NAME_REPEATED(8006,"名称重复"),
     FACT_EXIST(8007,"已存在该事实表"),
     BUSINESS_AREA_EXIST(8008,"业务域名称已存在"),
+    ADD_TABLE_HISTORY(8009,"添加发布历史失败"),
 
     /**
      * 数据工厂
