@@ -16,12 +16,10 @@ public interface IDimensionAttribute {
 
     /**
      * 添加维度字段
-     * @param dimensionId
      * @param dto
-     * @param isPublish
      * @return 添加结果
      */
-    ResultEnum addOrUpdateDimensionAttribute(int dimensionId,boolean isPublish,List<DimensionAttributeDTO> dto);
+    ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto);
 
     /**
      * 批量删除维度字段

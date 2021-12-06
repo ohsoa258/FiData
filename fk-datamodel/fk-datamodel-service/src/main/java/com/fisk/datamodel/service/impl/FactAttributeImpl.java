@@ -16,7 +16,9 @@ import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
@@ -50,6 +52,8 @@ public class FactAttributeImpl
     BusinessProcessMapper businessProcessMapper;
     @Resource
     BusinessProcessImpl businessProcess;
+    @Resource
+    TableHistoryImpl tableHistory;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -59,21 +63,21 @@ public class FactAttributeImpl
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto) {
+    public ResultEnum addFactAttribute(FactAttributeAddDTO dto) {
         //判断是否存在
-        FactPO factPO=factMapper.selectById(factId);
+        FactPO factPO=factMapper.selectById(dto.factId);
         if (factPO==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
         //删除维度字段属性
-        List<Integer> ids=(List)dto.stream().filter(e->e.id!=0)
+        List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0)
                 .map(FactAttributeDTO::getId)
                 .collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
         {
             QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.notIn("id",ids).lambda().eq(FactAttributePO::getFactId,factId);
+            queryWrapper.notIn("id",ids).lambda().eq(FactAttributePO::getFactId,dto.factId);
             List<FactAttributePO> list=mapper.selectList(queryWrapper);
             if (list!=null && list.size()>0)
             {
@@ -84,26 +88,38 @@ public class FactAttributeImpl
             }
         }
         //添加事实字段
-        List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto);
-        poList.stream().map(e->e.factId=factId).collect(Collectors.toList());
+        List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
+        poList.stream().map(e->e.factId=dto.factId).collect(Collectors.toList());
         if (!this.saveOrUpdateBatch(poList))
         {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //是否发布
-        if (isPublish)
+        if (dto.isPublish)
         {
             BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
             List<Integer> dimensionIds=new ArrayList<>();
-            dimensionIds.add(factId);
+            dimensionIds.add(dto.factId);
             //修改发布状态
             factPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
             if (factMapper.updateById(factPO)==0)
             {
-                return ResultEnum.PUBLISH_FAILURE;
+                throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }
             queryDTO.factIds=dimensionIds;
             queryDTO.businessAreaId=factPO.businessId;
+            //添加发布历史
+            List<TableHistoryDTO> tableHistoryDTOList=new ArrayList<>();
+            TableHistoryDTO tableHistoryDTO=new TableHistoryDTO();
+            tableHistoryDTO.tableType= CreateTypeEnum.CREATE_FACT.getValue();
+            tableHistoryDTO.remark=dto.remark;
+            tableHistoryDTO.tableId=dto.factId;
+            tableHistoryDTOList.add(tableHistoryDTO);
+            ResultEnum resultEnum = tableHistory.addTableHistory(tableHistoryDTOList);
+            if (resultEnum !=ResultEnum.SUCCESS)
+            {
+                throw new FkException(ResultEnum.ADD_TABLE_HISTORY);
+            }
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;

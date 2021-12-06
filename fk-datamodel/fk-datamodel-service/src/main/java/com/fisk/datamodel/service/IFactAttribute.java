@@ -21,11 +21,10 @@ public interface IFactAttribute {
 
     /**
      *事实字段表添加
-     * @param factId
      * @param dto
      * @return
      */
-    ResultEnum addFactAttribute(int factId,boolean isPublish, List<FactAttributeDTO> dto);
+    ResultEnum addFactAttribute(FactAttributeAddDTO dto);
 
     /**
      * 事实字段批量删除

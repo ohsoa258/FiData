@@ -11,5 +11,9 @@ import java.util.List;
 public class FactAttributeAddDTO {
     public int factId;
     public boolean isPublish;
+    /**
+     * 发布备注
+     */
+    public String remark;
     public List<FactAttributeDTO> list;
 }
