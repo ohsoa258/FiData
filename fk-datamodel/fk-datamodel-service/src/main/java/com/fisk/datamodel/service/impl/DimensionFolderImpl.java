@@ -291,6 +291,8 @@ public class DimensionFolderImpl
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
+            //发布历史添加数据
+            addTableHistory(dto);
             for (DimensionPO item:dimensionPOList)
             {
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
@@ -328,8 +330,6 @@ public class DimensionFolderImpl
                 dimensionList.add(pushDto);
             }
             data.dimensionList=dimensionList;
-            //发布历史添加数据
-            addTableHistory(dto);
             //发送消息
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
         }

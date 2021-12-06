@@ -191,6 +191,8 @@ public class BusinessProcessImpl
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> factList=new ArrayList<>();
+            //发布历史添加数据
+            addTableHistory(dto);
             for (FactPO item:factPOList)
             {
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
@@ -226,8 +228,6 @@ public class BusinessProcessImpl
                 pushDto.fieldList=fieldList;
                 factList.add(pushDto);
                 data.dimensionList=factList;
-                //发布历史添加数据
-                addTableHistory(dto);
                 //发送消息
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
             }
