@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
@@ -26,6 +27,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ public class FactImpl implements IFact {
     @Resource
     FactAttributeMapper attributeMapper;
     @Resource
-    BusinessProcessMapper businessProcessMapper;
+    FactAttributeImpl factAttributeImpl;
 
     @Override
     public ResultEnum addFact(FactDTO dto)
@@ -69,7 +71,19 @@ public class FactImpl implements IFact {
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        //查询业务域
+        //删除事实字段表
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
+        List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
+        if (!CollectionUtils.isEmpty(factAttributeIds))
+        {
+            ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
+            if (ResultEnum.SUCCESS !=resultEnum)
+            {
+                throw new FkException(resultEnum);
+            }
+        }
+       /* //查询业务域
         BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
         if (businessProcessPO==null)
         {
@@ -86,7 +100,7 @@ public class FactImpl implements IFact {
         List<Long> ids=new ArrayList<>();
         ids.add(Long.valueOf(id));
         tableVO.ids=ids;
-        vo.factIdList=tableVO;
+        vo.factIdList=tableVO;*/
 
         return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }

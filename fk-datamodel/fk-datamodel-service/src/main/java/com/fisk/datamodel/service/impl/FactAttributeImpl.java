@@ -112,7 +112,6 @@ public class FactAttributeImpl
     @Override
     public ResultEnum deleteFactAttribute(List<Integer> ids)
     {
-
         return mapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

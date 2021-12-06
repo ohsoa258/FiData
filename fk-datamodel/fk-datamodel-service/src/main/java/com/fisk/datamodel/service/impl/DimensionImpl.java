@@ -21,6 +21,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -40,6 +41,8 @@ public class DimensionImpl implements IDimension {
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     FactAttributeMapper factAttributeMapper;
+    @Resource
+    DimensionAttributeImpl dimensionAttributeImpl;
 
     @Override
     public ResultEnum addDimension(DimensionDTO dto)
@@ -80,6 +83,7 @@ public class DimensionImpl implements IDimension {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteDimension(int id)
     {
         DimensionPO model=mapper.selectById(id);
@@ -102,6 +106,19 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.TABLE_ASSOCIATED;
         }
+        //删除维度字段数据
+        QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+        attributePOQueryWrapper.select("id").lambda().eq(DimensionAttributePO::getDimensionId,id);
+        List<Integer> dimensionAttributeIds=(List)dimensionAttributeMapper.selectObjs(attributePOQueryWrapper);
+        if (!CollectionUtils.isEmpty(dimensionAttributeIds))
+        {
+            ResultEnum resultEnum = dimensionAttributeImpl.deleteDimensionAttribute(dimensionAttributeIds);
+            if (ResultEnum.SUCCESS !=resultEnum)
+            {
+                throw new FkException(resultEnum);
+            }
+        }
+
         //判断是否发布
         if (model.isPublish!=PublicStatusEnum.UN_PUBLIC.getValue())
         {
