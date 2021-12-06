@@ -74,7 +74,7 @@ public class BuildDataInputPgTableListener {
         selectTableSql=selectTableSql.replace("tableName","ods_" + buildPhysicalTableDTO.appAbbreviation.toLowerCase() + "_" + buildPhysicalTableDTO.tableName.toLowerCase());
         BusinessResult resultSetBusinessResult = pg.postgreQuery(selectTableSql, BusinessTypeEnum.DATAINPUT);
         List<TableFieldDetailDTO> arrayLists = JSONArray.parseArray(JSON.toJSONString(resultSetBusinessResult.data), TableFieldDetailDTO.class);
-        if(arrayLists.size()!=0){
+        if(arrayLists!=null&&arrayLists.size()!=0){
             updataOrCreateTable(arrayLists,buildPhysicalTableDTO.tableFieldsDTOS);
         }else{
             StringBuilder sql = new StringBuilder();
