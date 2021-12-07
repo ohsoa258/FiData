@@ -12,6 +12,8 @@ public class IndicatorDTO {
 
     private Integer id;
     private String fieldName;
+    // 派生名字
+    private String deriveName;
     private IndicatorTypeEnum type;
     private String tableName;
     // 原子指标属性

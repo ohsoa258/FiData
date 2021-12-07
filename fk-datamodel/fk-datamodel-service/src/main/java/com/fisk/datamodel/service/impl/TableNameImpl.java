@@ -126,6 +126,7 @@ public class TableNameImpl implements ITableName {
 
                     IndicatorsPO indicatorsPO1 = indicatorsMapper.selectById(indicatorsPO.getAtomicId());
                     indicator.setFieldName(indicatorsPO1.getIndicatorsName());
+                    indicator.setDeriveName(indicatorsPO.getIndicatorsName());
                     indicator.setType(DERIVED_INDICATORS);
                     indicator.setTimePeriod(indicatorsPO.timePeriod);
                     indicator.setCalculationLogic(indicatorsPO1.getCalculationLogic());

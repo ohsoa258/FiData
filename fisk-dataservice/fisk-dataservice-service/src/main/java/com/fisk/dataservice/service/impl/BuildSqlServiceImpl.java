@@ -151,10 +151,12 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     StringBuilder stringBuilder = new StringBuilder();
                     int frequency = 0;
 
+                    // SELECT时间周期
+                    DimensionTimePeriodDTO dto = client.getDimensionDate(e.getId()).getData();
                     String atr = "(SELECT " + dimColumn + ","
                             + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
                             + " AS " + e.getFieldName()
-                            + "," + "dim_date.full_date"
+                            + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField()
                             + " FROM " + e.getTableName() + " JOIN ";
 
                     String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
@@ -171,8 +173,19 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     str1.append(" FROM " + alias + i);
                     str1.append(" JOIN " + alias + i1);
                     str1.append(" ON ");
-                    DimensionTimePeriodDTO dto = client.getDimensionDate(e.getId()).getData();
-                    str1.append("DATE_FORMAT(a1.full_date, '%m')>=DATE_FORMAT(a2.full_date, '%m')" + " AND ");
+
+                    // 判断时间周期
+                    String timePeriod = null;
+                    if (e.getTimePeriod().equals("YTD")){
+                        timePeriod = "'%y'";
+                    }else if (e.getTimePeriod().equals("MTD")){
+                        timePeriod = "'%m'";
+                    }else if (e.getTimePeriod().equals("QTD")){
+                        timePeriod = "'%q'";
+                    }
+
+                    str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
+                    str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")" + " AND ");
                     str1.append(dimColumnFieldList.stream().map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
                                 + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
@@ -186,7 +199,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }).collect(Collectors.joining(","));
 
                     str1.insert(0,"SELECT " + collect1 + ","
-                            + e.getCalculationLogic() + "(" + ATOM_ALIAS + frequency + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")");
+                            + e.getCalculationLogic() + "(" + ATOM_ALIAS + frequency + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
+                            + " AS " + e.getDeriveName());
 
                     // GROUP BY a1.a1.`year`,a1.`product_class
                     str1.append(" GROUP BY " + collect1);
@@ -198,8 +212,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         }else {
             str.append(atom);
         }
-
-
+        
         return str.toString();
     }
 
