@@ -1569,51 +1569,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEnum updateTableAccessData(TbTableAccessDTO dto) {
 
+        TableAccessPO model = this.getById(dto.id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
         // 判断名称是否重复
         QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName);
+        // 限制在同一应用下
+        queryWrapper.lambda().eq(TableAccessPO::getTableName, dto.tableName).eq(TableAccessPO::getAppId, model.appId);
         TableAccessPO tableAccessPo = baseMapper.selectOne(queryWrapper);
         if (tableAccessPo != null && tableAccessPo.id != dto.id) {
-            return ResultEnum.DATAACCESS_APPNAME_ERROR;
+            return ResultEnum.TABLE_IS_EXIST;
         }
 
-        boolean success;
-        try {
-            TableAccessPO model = this.getById(dto.id);
-            if (model == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
+        // dto -> po
+        TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
 
-            // dto -> po
-            TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
-            success = this.updateById(po);
-
-            /*UserInfo userInfo = userHelper.getLoginUserInfo();
-            AtlasIdsVO atlasIdsVO = tableFieldsImpl.getAtlasIdsVO(userInfo.id, model.appId, model.id, model.tableName);
-            AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-            atlasEntityQueryDTO.userId = atlasIdsVO.userId;
-            // 应用注册id
-            atlasEntityQueryDTO.appId = atlasIdsVO.appId;
-            // 物理表id
-            atlasEntityQueryDTO.dbId = atlasIdsVO.dbId;
-            //表名称
-            atlasEntityQueryDTO.tableName = model.tableName;
-            // 调用atlas
-            // 发布
-            if (success && dto.flag == 0) {
-                Thread.sleep(200);
-                publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-            }
-
-            if (success) {
-
-            }*/
-
-        } catch (Exception e) {
-            return ResultEnum.UPDATE_DATA_ERROR;
-        }
-
-        return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Transactional
