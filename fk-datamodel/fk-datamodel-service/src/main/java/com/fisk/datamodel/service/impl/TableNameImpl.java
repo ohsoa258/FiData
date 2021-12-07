@@ -161,7 +161,7 @@ public class TableNameImpl implements ITableName {
                 String tableName = dimension.getDimensionTabName();
                 // String dimensionFieldEnName = dimensionAttribute.getDimensionFieldEnName();
                 String str1 = tableName.substring(0, tableName.indexOf("_"));
-                String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "_pk";
+                String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "_key";
                 String subQuery = " SELECT " + dimensionTabName + " FROM " + tableName + " WHERE " +
                         dimensionTabName + calculationLogic + calculationValue;
                 return factMapper.selectById(factAttributePO.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";

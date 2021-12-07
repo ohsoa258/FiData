@@ -161,10 +161,15 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
 
-                    // GROUP BY
+                    // SELECT
                     stringBuilder.append(atr);
                     stringBuilder.append(arr);
-                    stringBuilder.append(" GROUP BY " + dimColumn + "," + "dim_date.full_date" + ")");
+
+                    // WHERE
+                    stringBuilder.append(" WHERE " + e.getWhereTimeLogic());
+
+                    // GROUP BY
+                    stringBuilder.append(" GROUP BY " + dimColumn + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField() + ")");
 
                     String alias = stringBuilder + " AS " + ATOM_ALIAS;
                     // 第一个子查询别名
