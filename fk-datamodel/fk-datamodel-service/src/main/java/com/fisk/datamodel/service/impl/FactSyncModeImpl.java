@@ -102,7 +102,7 @@ public class FactSyncModeImpl implements IFactSyncMode {
         if (factAttributePO !=null)
         {
             dto.factTableField=factAttributePO.factFieldEnName;
-            dto.sourceFieldId=factAttributePO.tableSourceFieldId;
+            //dto.sourceFieldId=factAttributePO.tableSourceFieldId;
         }
         return dto;
     }

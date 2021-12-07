@@ -35,14 +35,4 @@ public class BusinessAreaPO extends BasePO {
      */
     private String businessEmail;
 
-    /**
-     * 发布状态：1:未发布、2：发布成功、3：发布失败
-     */
-    private int isPublish;
-
-    /**
-     * 发布时间
-     */
-    private LocalDateTime publishTime;
-
 }

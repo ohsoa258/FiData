@@ -17,18 +17,6 @@ public class DimensionAttributePO extends BasePO {
      */
     public int dimensionId;
     /**
-     * 应用id
-     */
-    public int appId;
-    /**
-     * 来源表id
-     */
-    public int tableSourceId;
-    /**
-     *表来源字段id
-     */
-    public int tableSourceFieldId;
-    /**
      * 维度表中文字段名称
      */
     public String dimensionFieldCnName;
@@ -60,10 +48,6 @@ public class DimensionAttributePO extends BasePO {
      * 关联维度字段表id
      */
     public int associateDimensionFieldId;
-    /**
-     * 关联维度id
-     */
-    public int associateId;
     /**
      * 是否业务主键 0:否 1:是
      */

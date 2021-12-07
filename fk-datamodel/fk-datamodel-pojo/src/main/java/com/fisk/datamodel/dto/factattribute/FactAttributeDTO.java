@@ -46,6 +46,10 @@ public class FactAttributeDTO {
      */
     public int associateDimensionFieldId;
     /**
+     * 源表名称
+     */
+    public String sourceTableName;
+    /**
      * 源字段名称
      */
     public String sourceFieldName;

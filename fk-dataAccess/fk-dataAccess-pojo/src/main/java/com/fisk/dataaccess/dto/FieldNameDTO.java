@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class FieldNameDTO {
     public long id;
+    public String sourceTableName;
     public String sourceFieldName;
     public String fieldName;
     public String fieldType;

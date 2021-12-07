@@ -89,11 +89,4 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(IndicatorQueryDTO dto);
 
-    /**
-     * 更改业务域发布状态
-     * @param id
-     * @param isSuccess
-     */
-    void updatePublishStatus(int id,int isSuccess);
-
 }

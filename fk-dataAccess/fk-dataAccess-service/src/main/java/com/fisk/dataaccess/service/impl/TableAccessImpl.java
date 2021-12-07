@@ -1689,7 +1689,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //获取列名
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
-            // 元字段
+            //源表
+            dto.sourceTableName=metaData.getTableName(i);
+            // 源字段
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName=metaData.getTableName(i)+"key";

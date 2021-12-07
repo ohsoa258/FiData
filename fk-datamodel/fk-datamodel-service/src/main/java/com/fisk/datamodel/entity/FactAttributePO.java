@@ -17,10 +17,6 @@ public class FactAttributePO extends BasePO {
      */
     public int factId;
     /**
-     *表来源字段id
-     */
-    public int tableSourceFieldId;
-    /**
      * 业务过程字段表中文字段名称
      */
     public String factFieldCnName;
@@ -53,9 +49,9 @@ public class FactAttributePO extends BasePO {
      */
     public int associateDimensionFieldId;
     /**
-     * 关联维度id
+     * 源表名称
      */
-    public int associateId;
+    public String sourceTableName;
     /**
      * 源字段名称
      */
