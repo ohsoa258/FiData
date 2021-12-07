@@ -274,7 +274,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.userId = userInfo.id;
 
             // 版本号入库、调用存储存储过程
-            List<TableFieldsPO> list = this.query().eq("id", accessId).list();
+            List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
@@ -297,15 +297,16 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         ModelPublishTableDTO dto = new ModelPublishTableDTO();
         List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
 
-        list.stream().map(e -> {
+        list.forEach(po -> {
             ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();
-            fieldDTO.fieldId = e.id;
-            fieldDTO.fieldEnName = e.fieldName;
-            fieldDTO.fieldType = e.fieldType;
-            fieldDTO.fieldLength = Math.toIntExact(e.fieldLength);
-            return fieldList.add(fieldDTO);
+            fieldDTO.fieldId = po.id;
+            fieldDTO.fieldEnName = po.fieldName;
+            fieldDTO.fieldType = po.fieldType;
+            fieldDTO.fieldLength = Math.toIntExact(po.fieldLength);
+            fieldList.add(fieldDTO);
         });
 
+        dto.createType = createType;
         dto.tableId = accessId;
         dto.tableName = odsTableName;
         dto.fieldList = fieldList;

@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
@@ -12,6 +14,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_fields")
 public class TableFieldsPO extends BasePO {
+    @TableId(value = "id", type = IdType.AUTO)
+    public long id;
     /**
      * table_access（id）
      */
