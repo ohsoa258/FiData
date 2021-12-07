@@ -183,7 +183,6 @@ public class TaskPgTableStructureHelper
                 Statement st = conn.createStatement();
                 return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
             }
-/*
             //判断表是否存在
             DatabaseMetaData metaData=conn.getMetaData();
             ResultSet set=metaData.getTables(null,null,tableName,null);
@@ -191,8 +190,6 @@ public class TaskPgTableStructureHelper
             {
                 return ResultEnum.TASK_TABLE_NOT_EXIST;
             }
-*/
-
             return ResultEnum.SUCCESS;
         }catch (SQLException e) {
             log.error("updatePgTableStructure:"+e);
