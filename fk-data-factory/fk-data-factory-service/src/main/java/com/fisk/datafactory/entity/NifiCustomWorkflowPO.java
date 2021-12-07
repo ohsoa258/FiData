@@ -40,7 +40,7 @@ public class NifiCustomWorkflowPO extends BasePO {
      */
     public String listEdge;
     /**
-     * 状态：已发布（1）、未发布（0）
+     * 已发布（1）、未发布（0）、发布失败（2）、正在发布（3）
      */
     public int status;
 
