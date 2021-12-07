@@ -10,5 +10,6 @@ import java.util.List;
 @Data
 public class IndicatorQueryDTO {
     public int businessAreaId;
+    public String remark;
     public List<Integer> factIds;
 }

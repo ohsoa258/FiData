@@ -15,7 +15,11 @@ public enum  CreateTypeEnum implements BaseEnum {
     /**
      * Doris创建事实表
      */
-    CREATE_FACT(1,"创建事实");
+    CREATE_FACT(1,"创建事实"),
+    /**
+     * Doris创建指标表
+     */
+    CREATE_DORIS(2,"创建指标表");
 
     CreateTypeEnum(int value, String name) {
         this.name = name;

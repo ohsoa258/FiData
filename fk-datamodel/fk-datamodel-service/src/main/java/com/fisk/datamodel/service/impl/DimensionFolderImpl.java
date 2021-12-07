@@ -61,6 +61,8 @@ public class DimensionFolderImpl
     TableHistoryImpl tableHistory;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    DimensionImpl dimensionImpl;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto)
@@ -108,6 +110,20 @@ public class DimensionFolderImpl
             if (dimIds==null || ids.size()==0)
             {
                 return ResultEnum.SUCCESS;
+            }
+            //判断维度表是否存在关联
+            boolean isExistAssociated=false;
+            for (Integer id:dimIds)
+            {
+                ResultEnum resultEnum = dimensionImpl.deleteDimension(id);
+                if (resultEnum.getCode()==ResultEnum.TABLE_ASSOCIATED.getCode())
+                {
+                    isExistAssociated=true;
+                }
+            }
+            if (isExistAssociated)
+            {
+                return ResultEnum.TABLE_ASSOCIATED;
             }
             return dimensionMapper.deleteBatchIds(dimIds)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {

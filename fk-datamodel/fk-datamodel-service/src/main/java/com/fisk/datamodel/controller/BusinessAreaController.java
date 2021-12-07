@@ -88,10 +88,4 @@ public class BusinessAreaController {
         return service.getBusinessAreaPublicData(dto);
     }
 
-    @GetMapping("/businessAreaPublic")
-    @ApiOperation(value = "根据业务域id,推送业务域下相关维度以及原子指标数据")
-    public ResultEntity<Object> businessAreaPublic(@RequestParam("id") int id) {
-        return service.businessAreaPublic(id);
-    }
-
 }

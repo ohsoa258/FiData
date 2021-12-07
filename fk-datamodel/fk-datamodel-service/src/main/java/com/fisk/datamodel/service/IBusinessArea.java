@@ -76,13 +76,6 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query);
 
     /**
-     * 根据业务域id发布
-     * @param id
-     * @return
-     */
-    ResultEntity<Object> businessAreaPublic(int id);
-
-    /**
      * Doris发布
      * @param dto
      * @return

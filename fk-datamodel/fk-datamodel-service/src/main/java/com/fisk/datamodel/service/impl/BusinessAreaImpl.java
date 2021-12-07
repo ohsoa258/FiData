@@ -16,11 +16,15 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.BusinessAreaMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
@@ -43,6 +47,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +82,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     BusinessProcessMapper businessProcessMapper;
     @Resource
     FactMapper factMapper;
+    @Resource
+    TableHistoryImpl tableHistory;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -205,25 +212,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     @Override
-    public ResultEntity<Object> businessAreaPublic(int id)
-    {
-        try
-        {
-            /*BuildCreateModelTaskDto dto=new BuildCreateModelTaskDto();
-            dto.businessAreaId=id;
-            dto.userId=userHelper.getLoginUserInfo().id;
-            ResultEntity<Object> objectResultEntity = publishTaskClient.publishOlapCreateModel(dto);
-            System.out.println(objectResultEntity);*/
-        }
-        catch (Exception ex)
-        {
-            log.error(ex.getMessage());
-            return ResultEntityBuild.build(ResultEnum.PUBLISH_FAILURE);
-        }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
-    }
-
-    @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(IndicatorQueryDTO dto)
     {
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
@@ -249,6 +238,25 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                     }
                 }
             }
+            //更改维度表Doris发布状态
+            if (!CollectionUtils.isEmpty(data.dimensionList))
+            {
+                for (ModelMetaDataDTO item:data.dimensionList)
+                {
+                    DimensionPO dimensionPO=dimensionMapper.selectById(item.id);
+                    if (dimensionPO==null)
+                    {
+                        continue;
+                    }
+                    dimensionPO.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
+                    if (dimensionMapper.updateById(dimensionPO)==0)
+                    {
+                        throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                    }
+                }
+            }
+            //发布历史
+            addTableHistory(dto);
             //消息推送
             publishTaskClient.publishOlapCreateModel(data);
         }
@@ -258,6 +266,20 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             return ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR,data);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS,data);
+    }
+
+    private void addTableHistory(IndicatorQueryDTO dto)
+    {
+        List<TableHistoryDTO> list=new ArrayList<>();
+        for (Integer id:dto.factIds)
+        {
+            TableHistoryDTO data=new TableHistoryDTO();
+            data.remark=dto.remark;
+            data.tableId=id;
+            data.tableType= CreateTypeEnum.CREATE_DORIS.getValue();
+            list.add(data);
+        }
+        tableHistory.addTableHistory(list);
     }
 
 }
