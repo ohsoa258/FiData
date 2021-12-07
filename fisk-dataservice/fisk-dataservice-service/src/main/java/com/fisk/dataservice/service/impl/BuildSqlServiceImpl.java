@@ -166,7 +166,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     stringBuilder.append(arr);
 
                     // WHERE
-                    stringBuilder.append(" WHERE " + e.getWhereTimeLogic());
+                    if (!StringUtils.isEmpty(e.getWhereTimeLogic())){
+                        stringBuilder.append(" WHERE " + e.getWhereTimeLogic());
+                    }
 
                     // GROUP BY
                     stringBuilder.append(" GROUP BY " + dimColumn + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField() + ")");
@@ -209,6 +211,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     // GROUP BY a1.a1.`year`,a1.`product_class
                     str1.append(" GROUP BY " + collect1);
+
+                    // ORDER BY
+                    str1.append(" ORDER BY " + collect1);
                     return str1.toString();
                 }).collect(Collectors.joining(","));
 
