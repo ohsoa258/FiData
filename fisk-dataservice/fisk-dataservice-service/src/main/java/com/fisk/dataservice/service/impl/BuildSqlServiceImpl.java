@@ -149,6 +149,24 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .filter(e -> e.getType() == DERIVED_INDICATORS)
                 .map(e -> {
 
+                    // 派生指标时间周期必须JOIN year
+                    DataDoFieldDTO doFieldDTO = new DataDoFieldDTO();
+                    doFieldDTO.setFieldId(2543);
+                    doFieldDTO.setFieldName("year");
+                    doFieldDTO.setTableName("dim_date");
+                    doFieldDTO.setFieldType(COLUMN);
+                    doFieldDTO.setDimension(1);
+                    apiConfigureFieldList.add(doFieldDTO);
+                    ArrayList<DataDoFieldDTO> doFieldArrayList = apiConfigureFieldList.stream().collect(Collectors.collectingAndThen(Collectors.toCollection(() -> new TreeSet<>
+                            (Comparator.comparing(tc -> tc.getFieldName()))), ArrayList::new));
+
+                    // 维度的
+                    List<DataDoFieldDTO> dataDoFieldDTOList = doFieldArrayList.stream().filter(tp -> tp.getDimension() == 1 && tp.getFieldType() == COLUMN).collect(Collectors.toList());
+
+                    String dimColumns = dataDoFieldDTOList.stream()
+                            .map(tp -> tp.getTableName() + "." + escapeStr[0] + tp.getFieldName() + escapeStr[1])
+                            .collect(Collectors.joining(","));
+
                     StringBuilder str1 = new StringBuilder();
 
                     // 子查询
@@ -157,7 +175,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     // SELECT时间周期
                     DimensionTimePeriodDTO dto = client.getDimensionDate(e.getId()).getData();
-                    String atr = "(SELECT " + dimColumn + ","
+                    String atr = "(SELECT " + dimColumns + ","
                             + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
                             + " AS " + e.getFieldName()
                             + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField()
@@ -175,7 +193,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }
 
                     // GROUP BY
-                    stringBuilder.append(" GROUP BY " + dimColumn + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField() + ")");
+                    stringBuilder.append(" GROUP BY " + dimColumns + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField() + ")");
 
                     String alias = stringBuilder + " AS " + ATOM_ALIAS;
                     // 第一个子查询别名
@@ -200,17 +218,22 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                         str1.append("(" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + ")" + " AND ");
                     }else {
                         str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
-                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")" + " AND ");
+                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")");
                     }
 
-                    str1.append(dimColumnFieldList.stream().map(d -> {
+                    // 追加JOIN ON year字段相等
+                    str1.append(" AND " + ATOM_ALIAS + i + "." + "`year`" + "=" + ATOM_ALIAS + i1 + "." + "`year`");
+
+                    str1.append(" AND ");
+
+                    str1.append(dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals("dim_date")).map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
                                 + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
                         return aliasOn;
                     }).collect(Collectors.joining(" AND ")));
 
                     // SELECT 最外层
-                    String collect1 = dimColumnFieldList.stream().map(d -> {
+                    String collect1 = dataDoFieldDTOList.stream().map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
                         return aliasOn;
                     }).collect(Collectors.joining(","));

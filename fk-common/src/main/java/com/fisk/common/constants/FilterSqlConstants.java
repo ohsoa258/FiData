@@ -30,4 +30,8 @@ public class FilterSqlConstants {
      * 系统管理--用户关联
      */
     public static  final String USER_INFO_SQL=" where Field not in('id','del_flag','create_user','update_user','password','error_number','error_time')";
+    /**
+     * API管理--下游系统
+     */
+    public static  final String DOWNSTREAM_SYSTEM=" where Field in('down_system_name','system_info','user_name','create_time','create_user','update_time','update_user')";
 }

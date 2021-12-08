@@ -4,12 +4,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
@@ -56,6 +61,9 @@ public class ApiFieldServiceImpl implements ApiFieldService {
 
     @Resource
     private RedisUtil redis;
+
+    @Resource
+    private GetMetadata getMetadata;
 
     @Override
     public List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize, ConfigureUserDTO user) {
@@ -427,5 +435,19 @@ public class ApiFieldServiceImpl implements ApiFieldService {
                 str.append(queryFieldList);
             }
         }
+    }
+
+    @Override
+    public List<FilterFieldDTO> getColumn() {
+        return getMetadata.getMetadataList(
+                "dmp_dataservice_db",
+                "configure_user",
+                "",
+                FilterSqlConstants.DOWNSTREAM_SYSTEM);
+    }
+
+    @Override
+    public Page<NifiCustomWorkflowVO> whereListData(NifiCustomWorkflowQueryDTO query) {
+        return null;
     }
 }

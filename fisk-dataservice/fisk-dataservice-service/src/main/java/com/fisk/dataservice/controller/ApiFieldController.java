@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
@@ -68,5 +70,17 @@ public class ApiFieldController {
     @GetMapping("/getById")
     public ResultEntity<Object> getById(Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getById(id));
+    }
+
+    @ApiOperation(value = "获取下游系统过滤字段")
+    @GetMapping("/getColumn")
+    public ResultEntity<Object> getBusinessColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.getColumn());
+    }
+
+    @PostMapping("/pageFilter")
+    @ApiOperation(value = "筛选器")
+    public ResultEntity<Page<NifiCustomWorkflowVO>> whereListData(@RequestBody NifiCustomWorkflowQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.whereListData(query));
     }
 }
