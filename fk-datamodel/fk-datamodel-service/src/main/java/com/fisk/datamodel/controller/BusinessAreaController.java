@@ -56,7 +56,6 @@ public class BusinessAreaController {
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除业务域(url拼接)")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
-
         return ResultEntityBuild.build(service.deleteBusinessArea(id));
     }
 
@@ -84,8 +83,8 @@ public class BusinessAreaController {
 
     @PostMapping("/getBusinessAreaPublicData")
     @ApiOperation(value = "根据事实字段集合,在Doris中创建相关表")
-    public ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(@RequestBody IndicatorQueryDTO dto) {
-        return service.getBusinessAreaPublicData(dto);
+    public ResultEntity<Object> getBusinessAreaPublicData(@RequestBody IndicatorQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaPublicData(dto));
     }
 
 }

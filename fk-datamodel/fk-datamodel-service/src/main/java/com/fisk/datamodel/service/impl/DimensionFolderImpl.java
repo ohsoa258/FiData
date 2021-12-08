@@ -176,6 +176,8 @@ public class DimensionFolderImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
+        //维度文件夹更改不能更改业务域id
+        dto.businessId=model.businessId;
         model=DimensionFolderMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(model)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }

@@ -299,7 +299,13 @@ public class AtomicIndicatorsImpl
             dto.aggregationLogic=item.calculationLogic;
             //获取聚合字段
             FactAttributePO factAttributePO=factAttributeMapper.selectById(item.factAttributeId);
-            dto.aggregatedField=factAttributePO==null?"":factAttributePO.factFieldEnName;
+            if (factAttributePO==null)
+            {
+                continue;
+            }
+            dto.aggregatedField=factAttributePO.factFieldEnName;
+            dto.factFieldType=factAttributePO.factFieldType;
+            dto.factFieldLength=factAttributePO.factFieldLength;
             data.add(dto);
         }
         return data;

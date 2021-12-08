@@ -108,18 +108,7 @@ public class FactAttributeImpl
             }
             queryDTO.factIds=dimensionIds;
             queryDTO.businessAreaId=factPO.businessId;
-            //添加发布历史
-            List<TableHistoryDTO> tableHistoryDTOList=new ArrayList<>();
-            TableHistoryDTO tableHistoryDTO=new TableHistoryDTO();
-            tableHistoryDTO.tableType= CreateTypeEnum.CREATE_FACT.getValue();
-            tableHistoryDTO.remark=dto.remark;
-            tableHistoryDTO.tableId=dto.factId;
-            tableHistoryDTOList.add(tableHistoryDTO);
-            ResultEnum resultEnum = tableHistory.addTableHistory(tableHistoryDTOList);
-            if (resultEnum !=ResultEnum.SUCCESS)
-            {
-                throw new FkException(ResultEnum.ADD_TABLE_HISTORY);
-            }
+            queryDTO.remark=dto.remark;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;

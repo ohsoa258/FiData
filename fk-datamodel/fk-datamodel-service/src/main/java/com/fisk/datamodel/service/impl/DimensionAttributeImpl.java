@@ -117,18 +117,7 @@ public class DimensionAttributeImpl
             }
             queryDTO.dimensionIds=dimensionIds;
             queryDTO.businessAreaId=dimensionPO.businessId;
-            //添加发布历史
-            List<TableHistoryDTO> tableHistoryDTOList=new ArrayList<>();
-            TableHistoryDTO tableHistoryDTO=new TableHistoryDTO();
-            tableHistoryDTO.tableType= CreateTypeEnum.CREATE_DIMENSION.getValue();
-            tableHistoryDTO.remark=dto.remark;
-            tableHistoryDTO.tableId=dto.dimensionId;
-            tableHistoryDTOList.add(tableHistoryDTO);
-            ResultEnum resultEnum = tableHistory.addTableHistory(tableHistoryDTOList);
-            if (resultEnum !=ResultEnum.SUCCESS)
-            {
-                throw new FkException(ResultEnum.ADD_TABLE_HISTORY);
-            }
+            queryDTO.remark=dto.remark;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return ResultEnum.SUCCESS;

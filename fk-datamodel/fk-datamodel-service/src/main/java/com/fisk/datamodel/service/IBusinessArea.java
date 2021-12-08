@@ -7,6 +7,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.*;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
+import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 
 import java.util.List;
@@ -80,6 +81,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param dto
      * @return
      */
-    ResultEntity<BusinessAreaGetDataDTO> getBusinessAreaPublicData(IndicatorQueryDTO dto);
+    ResultEnum getBusinessAreaPublicData(IndicatorQueryDTO dto);
+
+    /**
+     * 获取业务域数量
+     * @return
+     */
+    WebIndexDTO getBusinessArea();
 
 }
