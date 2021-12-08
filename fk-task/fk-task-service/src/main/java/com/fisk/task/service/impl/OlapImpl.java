@@ -191,7 +191,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append(" , ");
             }else if(e.attributeType==2){
                 groupSql.append(""+e.dimensionTableName.substring(4)+"key , ");
-                aggregationFunSql.append("COALESCE("+e.dimensionTableName.substring(4)+"key,'') AS "+e.dimensionTableName.toLowerCase()+" , ");
+                aggregationFunSql.append("COALESCE("+e.dimensionTableName.substring(4)+"key,'') AS "+e.dimensionTableName.toLowerCase().substring(4)+"key , ");
             }else if(e.attributeType==1){
                 groupSql.append(""+e.factFieldName+", ");
                 aggregationFunSql.append("COALESCE("+e.factFieldName+",'') AS "+e.factFieldName.toLowerCase()+" , ");
@@ -224,7 +224,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql+="CREATE EXTERNAL TABLE "+tableName+" ( ";
         for (AtomicIndicatorFactAttributeDTO atomicIndicatorFactAttributeDTO:factAttributeDTOList) {
             if(atomicIndicatorFactAttributeDTO.attributeType==0||atomicIndicatorFactAttributeDTO.attributeType==2){
-                sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" "+atomicIndicatorFactAttributeDTO.factFieldType+",";
+                if(Objects.equals(atomicIndicatorFactAttributeDTO.factFieldType,"NUMERIC")||
+                        atomicIndicatorFactAttributeDTO.factFieldType.contains("FLOAT")){
+                    sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" FLOAT,";
+                }else{
+                    sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" "+atomicIndicatorFactAttributeDTO.factFieldType+",";
+                }
+
+
             }
         }
         List<String> associateDimensionTableList = factAttributeDTOList.stream().map(d -> " " + d.associateDimensionTable + " ").collect(Collectors.toList());

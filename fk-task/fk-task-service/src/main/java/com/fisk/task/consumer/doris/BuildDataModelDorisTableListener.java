@@ -202,8 +202,21 @@ public class BuildDataModelDorisTableListener
         StringBuilder selectSql6=new StringBuilder(" ("+modelPublishTableDTO.sqlScript+") fi1 ");
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         fieldList.forEach((l) -> {
-            selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
-            selectSql3.append(l.fieldEnName+" varchar ,");
+            log.info("字段属性为:"+l);
+            if(l.fieldType.contains("float")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
+                selectSql3.append(l.fieldEnName+" numeric ,");
+            }else if(l.fieldType.contains("VARCHAR")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
+                selectSql3.append(l.fieldEnName+" VARCHAR ,");
+            }else if(l.fieldType.contains("INT")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0),");
+                selectSql3.append(l.fieldEnName+" int ,");
+            }else if(l.fieldType.contains("NUMERIC")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
+                selectSql3.append(l.fieldEnName+" numeric ,");
+            }
+
             selectSql4.append(l.fieldEnName+"=EXCLUDED."+l.fieldEnName+",");
             if(l.isPrimaryKey==1){
                 selectSql5.append(","+l.fieldEnName);

@@ -1,5 +1,6 @@
 package com.fisk.task.dto.nifi;
 
+import com.davis.client.model.ConnectionDTO;
 import lombok.Data;
 
 /**
@@ -28,4 +29,6 @@ public class BuildConnectDTO {
      * 区别不同port连接线封装不同的对象
      */
     public int level;
+
+    public ConnectionDTO.LoadBalanceStrategyEnum loadBalanceStrategyEnum;
 }

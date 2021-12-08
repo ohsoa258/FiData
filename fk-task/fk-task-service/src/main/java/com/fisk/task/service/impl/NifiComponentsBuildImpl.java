@@ -1332,6 +1332,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         component.setDestination(destination);
         component.setSource(source);
+        if(Objects.equals(buildConnectDTO.loadBalanceStrategyEnum,ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE)){
+            component.setLoadBalanceCompression(ConnectionDTO.LoadBalanceCompressionEnum.DO_NOT_COMPRESS);
+            component.setLoadBalanceStrategy(ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE);
+        }
         // 构造的参数
         body.setRevision(revisionDTO);
         body.setDisconnectedNodeAcknowledged(false);
@@ -1387,6 +1391,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         }else if(buildConnectDTO.level == 5){
             selectedRelationships.add("matched");
             component.setSelectedRelationships(selectedRelationships);
+        }
+        if(Objects.equals(buildConnectDTO.loadBalanceStrategyEnum,ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE)){
+            component.setLoadBalanceCompression(ConnectionDTO.LoadBalanceCompressionEnum.DO_NOT_COMPRESS);
+            component.setLoadBalanceStrategy(ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE);
         }
 
         component.setDestination(destination);

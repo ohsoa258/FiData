@@ -83,7 +83,11 @@ public class BuildDataInputPgTableListener {
             sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             tableFieldsDTOS.forEach((l) -> {
-                sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
+                if(l.fieldType.contains("FLOAT")){
+                    sqlFileds.append(l.fieldName + " " + " numeric ,");
+                }else{
+                    sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
+                }
             });
             sqlFileds.delete(sqlFileds.length() - 1, sqlFileds.length());
             sqlFileds.append(")");

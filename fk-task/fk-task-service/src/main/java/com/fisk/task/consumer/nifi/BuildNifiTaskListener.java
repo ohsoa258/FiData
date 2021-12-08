@@ -134,7 +134,14 @@ public class BuildNifiTaskListener {
             appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", dto.appId).eq("nifi_custom_workflow_id",dto.nifiCustomWorkflowId).eq("type",dto.dataClassifyEnum.getValue()).eq("del_flag",1).one();
 
         }else{
-            appNifiSettingPO1 = appNifiSettingService.query().eq("app_id", dto.appId).eq("type",dto.dataClassifyEnum.getValue()).eq("del_flag",1).one();
+            List<AppNifiSettingPO> list = appNifiSettingService.query().eq("app_id", dto.appId).eq("type", dto.dataClassifyEnum.getValue()).eq("del_flag", 1).list();
+            if (list != null && list.size() != 0) {
+                for (AppNifiSettingPO appNifiSettingPO2 : list) {
+                    if (appNifiSettingPO2.nifiCustomWorkflowId == null) {
+                        appNifiSettingPO1 = appNifiSettingPO2;
+                    }
+                }
+            }
 
         }
           if (appNifiSettingPO1 != null) {
@@ -248,8 +255,14 @@ public class BuildNifiTaskListener {
             appNifiSettingPO=appNifiSettingService.query().eq("app_id",appId).eq("nifi_custom_workflow_id",buildNifiFlowDTO.nifiCustomWorkflowId).eq("type",dataClassifyEnum.getValue()).eq("del_flag", 1).one();
 
         }else{
-           appNifiSettingPO= appNifiSettingService.query().eq("app_id",appId).eq("type",dataClassifyEnum.getValue()).eq("del_flag", 1).one();
-
+           List<AppNifiSettingPO> list = appNifiSettingService.query().eq("app_id", appId).eq("type", dataClassifyEnum.getValue()).eq("del_flag", 1).list();
+           if (list != null && list.size() != 0) {
+               for (AppNifiSettingPO appNifiSettingPO2 : list) {
+                   if (appNifiSettingPO2.nifiCustomWorkflowId == null) {
+                       appNifiSettingPO = appNifiSettingPO2;
+                   }
+               }
+           }
        }
         NifiConfigPO nifiConfigPO = nifiConfigService.query().one();
         //TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
@@ -1500,6 +1513,57 @@ public class BuildNifiTaskListener {
                 buildConnectDTO.level = level;
                 buildConnectDTO.destination = destination;
                 buildConnectDTO.source = source;
+                connectionEntity = componentsBuild.buildOutPortPortConnections(buildConnectDTO);
+                return connectionEntity.getId();
+            default:
+                break;
+        }
+        return null;
+    }
+
+    public String buildPortConnection2(String fatherComponentId, String destinationGroupId, String destinationId, ConnectableDTO.TypeEnum destinationTypeEnum,
+                                       String sourceGroupId, String sourceId, ConnectableDTO.TypeEnum sourceTypeEnum, int level, PortComponentEnum typeEnum, ConnectionDTO.LoadBalanceStrategyEnum loadBalanceStrategy) {
+        BuildConnectDTO buildConnectDTO = new BuildConnectDTO();
+        NifiConnectDTO destination = new NifiConnectDTO();
+        NifiConnectDTO source = new NifiConnectDTO();
+        ConnectionEntity connectionEntity;
+        log.info("连接参数为:"+fatherComponentId+","+destinationGroupId+","+destinationId+","+destinationTypeEnum+","+sourceGroupId+","+sourceId+","+sourceTypeEnum+","+level+","+typeEnum+","+loadBalanceStrategy);
+        switch (typeEnum.getValue()) {
+            // 创建input_port连接(应用)
+            case 6:
+                // 创建input_port连接(任务)
+            case 8:
+                // 创建input_port连接(组)
+            case 10:
+                buildConnectDTO.fatherComponentId = fatherComponentId;
+                destination.groupId = destinationGroupId;
+                destination.id = destinationId;
+                destination.typeEnum = destinationTypeEnum;
+                source.groupId = sourceGroupId;
+                source.id = sourceId;
+                source.typeEnum = sourceTypeEnum;
+                buildConnectDTO.destination = destination;
+                buildConnectDTO.source = source;
+                buildConnectDTO.loadBalanceStrategyEnum=loadBalanceStrategy;
+                connectionEntity = componentsBuild.buildInputPortConnections(buildConnectDTO);
+                return connectionEntity.getId();
+            // 创建output_port连接(应用)
+            case 7:
+                // 创建output_port连接(任务)
+            case 9:
+                // 创建output_port连接(组)
+            case 11:
+                buildConnectDTO.fatherComponentId = fatherComponentId;
+                destination.groupId = destinationGroupId;
+                destination.id = destinationId;
+                destination.typeEnum = destinationTypeEnum;
+                source.groupId = sourceGroupId;
+                source.id = sourceId;
+                source.typeEnum = sourceTypeEnum;
+                buildConnectDTO.level = level;
+                buildConnectDTO.destination = destination;
+                buildConnectDTO.source = source;
+                buildConnectDTO.loadBalanceStrategyEnum=loadBalanceStrategy;
                 connectionEntity = componentsBuild.buildOutPortPortConnections(buildConnectDTO);
                 return connectionEntity.getId();
             default:
