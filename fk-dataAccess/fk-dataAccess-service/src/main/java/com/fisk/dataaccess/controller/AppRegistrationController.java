@@ -270,10 +270,4 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAccessQueryList(query));
     }
 
-    @ApiOperation(value = "查询数据接入下所有业务系统个数")
-    @GetMapping("/num")
-    public ResultEntity<Object> getDataAccessNum() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessNum());
-    }
-
 }

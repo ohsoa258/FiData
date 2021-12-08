@@ -28,6 +28,7 @@ public class SwaggerConfig {
     public static final String TAG_3 = "nifi-component-controller";
     public static final String TAG_4 = "nifi-custom-workflow-detail-controller";
     public static final String TAG_5 = "nifi-port-controller";
+    public static final String TAG_6 = "SystemWebIndex-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -39,6 +40,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_3, "可视化视图-组件列表"))
                 .tags(new Tag(TAG_4, "NIFI数据管道详情"))
                 .tags(new Tag(TAG_5, "提供nifi参数"))
+                .tags(new Tag(TAG_6, "首页API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
