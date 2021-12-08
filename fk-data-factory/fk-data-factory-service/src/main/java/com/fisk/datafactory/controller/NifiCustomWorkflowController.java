@@ -64,4 +64,10 @@ public class NifiCustomWorkflowController {
     public ResultEntity<Page<NifiCustomWorkflowVO>> listData(@RequestBody NifiCustomWorkflowQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
+
+    @ApiOperation(value = "查询数据调度图当天运行情况")
+    @GetMapping("/num")
+    public ResultEntity<Object> getNum() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNum());
+    }
 }

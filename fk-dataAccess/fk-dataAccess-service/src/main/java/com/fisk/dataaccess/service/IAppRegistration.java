@@ -160,4 +160,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     public List<AppRegistrationPO> getByAppName(String appName);
+
+    /**
+     * 查询数据接入下所有业务系统个数
+     *
+     * @return dto
+     */
+    DataAccessNumDTO getDataAccessNum();
 }

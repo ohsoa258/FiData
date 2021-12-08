@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -56,4 +57,11 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return 筛选结果
      */
     Page<NifiCustomWorkflowVO> listData(NifiCustomWorkflowQueryDTO query);
+
+    /**
+     * 查询数据调度图当天运行情况
+     *
+     * @return dto
+     */
+    NifiCustomWorkflowNumDTO getNum();
 }

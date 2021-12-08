@@ -607,4 +607,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<AppRegistrationPO> byAppName = mapper.getByAppName(appName);
         return byAppName;
     }
+
+    @Override
+    public DataAccessNumDTO getDataAccessNum() {
+        DataAccessNumDTO dto = new DataAccessNumDTO();
+
+        dto.num = query().list().size();
+        return dto;
+    }
 }

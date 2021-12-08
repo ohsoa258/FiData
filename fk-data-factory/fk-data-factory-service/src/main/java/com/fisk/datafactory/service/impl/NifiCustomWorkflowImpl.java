@@ -11,6 +11,7 @@ import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
@@ -163,5 +164,20 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         data.where = querySql.toString();
 
         return baseMapper.filter(query.page, data);
+    }
+
+    @Override
+    public NifiCustomWorkflowNumDTO getNum() {
+        NifiCustomWorkflowNumDTO dto = new NifiCustomWorkflowNumDTO();
+
+        // 未发布即未运行
+        dto.notRun = baseMapper.getNum(0);
+        // 发布成功即成功
+        dto.success = baseMapper.getNum(1);
+        // 发布失败即失败
+        dto.failure = baseMapper.getNum(2);
+        // 正在发布即运行
+        dto.running = baseMapper.getNum(3);
+        return dto;
     }
 }
