@@ -24,7 +24,7 @@ public class SystemWebIndexController {
     @Resource
     INifiCustomWorkflow service;
 
-    @ApiOperation(value = "查询数据接入下所有业务系统个数")
+    @ApiOperation(value = "查询数据调度图当天运行情况")
     @GetMapping("/getDataSchedule")
     public ResultEntity<Object> getDataAccessNum() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNum());
