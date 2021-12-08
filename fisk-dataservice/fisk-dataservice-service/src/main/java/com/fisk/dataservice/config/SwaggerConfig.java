@@ -23,10 +23,10 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "api-field-controller";
-    public static final String TAG_2 = "configure-field-controller";
-    public static final String TAG_3 = "configure-user-controller";
-    public static final String TAG_4 = "data-domain-controller";
+    public static final String TAG_1 = "api-controller";
+    public static final String TAG_2 = "api-field-controller";
+    public static final String TAG_3 = "applicationRegistration-controller";
+    public static final String TAG_4 = "data-source-controller";
 
     @Bean
     public Docket createRestApi() {
