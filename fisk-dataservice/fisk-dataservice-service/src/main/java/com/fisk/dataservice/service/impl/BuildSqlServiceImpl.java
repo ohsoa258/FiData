@@ -9,8 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -79,6 +78,11 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         StringBuilder str = new StringBuilder();
         List<IndicatorDTO> count = indicatorList.stream().filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
         AtomicInteger aliasCount = new AtomicInteger(0);
+
+        // 从表根据表名去重
+        TreeSet<DataDoFieldDTO> tableNameSet = dimColumnFieldList.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(c -> c.getTableName()))));
+        List<DataDoFieldDTO> tableNameList = tableNameSet.stream().collect(Collectors.toList());
+
         // 拼接原子指标
         String atom = indicatorList.stream()
                 .filter(e -> e.getType() == ATOMIC_INDICATORS)
@@ -95,7 +99,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                             + " AS " + e.getFieldName()
                             + " FROM " + e.getTableName() + " JOIN ";
 
-                    String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
+                    String arr = this.joinString(tableNameList, escapeStr, e.getId(), e.getTableName());
 
                     // GROUP BY
                     stringBuilder.append(atr);
@@ -159,7 +163,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                             + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField()
                             + " FROM " + e.getTableName() + " JOIN ";
 
-                    String arr = this.joinString(dimColumnFieldList, escapeStr, e.getId(), e.getTableName());
+                    String arr = this.joinString(tableNameList, escapeStr, e.getId(), e.getTableName());
 
                     // SELECT
                     stringBuilder.append(atr);
@@ -184,15 +188,21 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     // 判断时间周期
                     String timePeriod = null;
                     if (e.getTimePeriod().equals("YTD")){
-                        timePeriod = "'%y'";
-                    }else if (e.getTimePeriod().equals("MTD")){
                         timePeriod = "'%m'";
-                    }else if (e.getTimePeriod().equals("QTD")){
+                    }else if (e.getTimePeriod().equals("MTD")){
                         timePeriod = "'%q'";
+                    }else if (e.getTimePeriod().equals("QTD")){
+                        timePeriod = null;
                     }
 
-                    str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
-                    str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")" + " AND ");
+                    if (StringUtils.isEmpty(str)){
+                        str1.append("(" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + " )>=");
+                        str1.append("(" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + ")" + " AND ");
+                    }else {
+                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
+                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")" + " AND ");
+                    }
+
                     str1.append(dimColumnFieldList.stream().map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
                                 + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
