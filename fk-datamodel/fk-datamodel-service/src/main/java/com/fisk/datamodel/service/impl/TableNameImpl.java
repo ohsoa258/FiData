@@ -5,6 +5,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.dataservice.dto.IndicatorDTO;
@@ -153,19 +154,30 @@ public class TableNameImpl implements ITableName {
     public String getFactFieldName(Integer id,String calculationLogic,String calculationValue){
         FactAttributePO factAttributePO = factAttributeMapper.selectById(id);
         if (factAttributePO != null){
-            DimensionPO dimension = dimensionMapper.selectById(factAttributePO.getAssociateDimensionId());
-            DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
-            if (dimension == null){
-                return "1 = 1";
-            }else {
+            if (factAttributePO.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()){
+                DimensionPO dimension = dimensionMapper.selectById(factAttributePO.getAssociateDimensionId());
                 String tableName = dimension.getDimensionTabName();
                 // String dimensionFieldEnName = dimensionAttribute.getDimensionFieldEnName();
                 String str1 = tableName.substring(0, tableName.indexOf("_"));
-                String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "_key";
+                String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "key";
                 String subQuery = " SELECT " + dimensionTabName + " FROM " + tableName + " WHERE " +
                         dimensionTabName + calculationLogic + calculationValue;
                 return factMapper.selectById(factAttributePO.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";
+            }else {
+                FactPO factPO=factMapper.selectById(factAttributePO.factId);
+                if (factPO !=null)
+                {
+                    return factPO.factTabName+"."+factAttributePO.factFieldEnName+calculationLogic + calculationValue;
+                }
+
             }
+
+           /* DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
+            if (dimension == null){
+                return "1 = 1";
+            }else {
+
+            }*/
         }
         return null;
     }

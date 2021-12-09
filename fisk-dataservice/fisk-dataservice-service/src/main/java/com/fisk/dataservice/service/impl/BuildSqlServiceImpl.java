@@ -150,13 +150,13 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .map(e -> {
 
                     // 派生指标时间周期必须JOIN year
-                    DataDoFieldDTO doFieldDTO = new DataDoFieldDTO();
+                   /* DataDoFieldDTO doFieldDTO = new DataDoFieldDTO();
                     doFieldDTO.setFieldId(2543);
                     doFieldDTO.setFieldName("year");
                     doFieldDTO.setTableName("dim_date");
                     doFieldDTO.setFieldType(COLUMN);
                     doFieldDTO.setDimension(1);
-                    apiConfigureFieldList.add(doFieldDTO);
+                    apiConfigureFieldList.add(doFieldDTO);*/
                     ArrayList<DataDoFieldDTO> doFieldArrayList = apiConfigureFieldList.stream().collect(Collectors.collectingAndThen(Collectors.toCollection(() -> new TreeSet<>
                             (Comparator.comparing(tc -> tc.getFieldName()))), ArrayList::new));
 
@@ -217,14 +217,19 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                         str1.append("(" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + " )>=");
                         str1.append("(" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + ")" + " AND ");
                     }else {
-                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
-                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")");
+                        str1.append("DATE_FORMAT(FROM_UNIXTIME("
+                                + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "/1000" + "," + "'%Y-%m-%d %h:%i:%s'),"
+                                + timePeriod +" )>=");
+
+                        str1.append("DATE_FORMAT(FROM_UNIXTIME("
+                                + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + "/1000" + "," + "'%Y-%m-%d %h:%i:%s'),"
+                                + timePeriod +" )");
                     }
 
                     // 追加JOIN ON year字段相等
-                    str1.append(" AND " + ATOM_ALIAS + i + "." + "`year`" + "=" + ATOM_ALIAS + i1 + "." + "`year`");
+                    str1.append(" AND " + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + ">=" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField());
 
-                    String dim_date = dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals("dim_date")).map(d -> {
+                    String dim_date = dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals(dto.getDimensionTabName())).map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
                                 + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
                         return aliasOn;
@@ -284,7 +289,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 // 追加字段关联key
                 String name = b.getTableName();
                 String str1 = name.substring(0, name.indexOf("_"));
-                String filedName = name.substring(str1.length()+1, name.length()) + "_key";
+                String filedName = name.substring(str1.length()+1, name.length()) + "key";
 
                 String onSubQuery= b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
                         "=" + tableName + "." + escapeStr[0] + filedName + escapeStr[1];
