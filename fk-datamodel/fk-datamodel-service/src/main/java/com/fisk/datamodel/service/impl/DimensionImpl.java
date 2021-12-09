@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
@@ -16,6 +17,9 @@ import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,8 @@ public class DimensionImpl implements IDimension {
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionAttributeImpl dimensionAttributeImpl;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public ResultEnum addDimension(DimensionDTO dto)
@@ -87,52 +93,61 @@ public class DimensionImpl implements IDimension {
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteDimension(int id)
     {
-        DimensionPO model=mapper.selectById(id);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        //判断维度表是否存在关联
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId,id);
-        List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
-        if (poList.size()>0)
-        {
-            return ResultEnum.TABLE_ASSOCIATED;
-        }
-        //判断维度表是否与事实表有关联
-        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId,id);
-        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
-        if (factAttributePOList.size()>0)
-        {
-            return ResultEnum.TABLE_ASSOCIATED;
-        }
-        //删除维度字段数据
-        QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-        attributePOQueryWrapper.select("id").lambda().eq(DimensionAttributePO::getDimensionId,id);
-        List<Integer> dimensionAttributeIds=(List)dimensionAttributeMapper.selectObjs(attributePOQueryWrapper);
-        if (!CollectionUtils.isEmpty(dimensionAttributeIds))
-        {
-            ResultEnum resultEnum = dimensionAttributeImpl.deleteDimensionAttribute(dimensionAttributeIds);
-            if (ResultEnum.SUCCESS !=resultEnum)
-            {
-                throw new FkException(resultEnum);
+        try {
+            DimensionPO model=mapper.selectById(id);
+            if (model == null) {
+                return ResultEnum.DATA_NOTEXISTS;
             }
-        }
-        //拼接niFi删除表参数
-        DataModelVO vo = niFiDelTable(model.businessId, id);
-        //推送消息
+            //判断维度表是否存在关联
+            QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.lambda().eq(DimensionAttributePO::getAssociateDimensionId,id);
+            List<DimensionAttributePO> poList=dimensionAttributeMapper.selectList(queryWrapper);
+            if (poList.size()>0)
+            {
+                return ResultEnum.TABLE_ASSOCIATED;
+            }
+            //判断维度表是否与事实表有关联
+            QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.lambda().eq(FactAttributePO::getAssociateDimensionId,id);
+            List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(queryWrapper1);
+            if (factAttributePOList.size()>0)
+            {
+                return ResultEnum.TABLE_ASSOCIATED;
+            }
+            //删除维度字段数据
+            QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+            attributePOQueryWrapper.select("id").lambda().eq(DimensionAttributePO::getDimensionId,id);
+            List<Integer> dimensionAttributeIds=(List)dimensionAttributeMapper.selectObjs(attributePOQueryWrapper);
+            if (!CollectionUtils.isEmpty(dimensionAttributeIds))
+            {
+                ResultEnum resultEnum = dimensionAttributeImpl.deleteDimensionAttribute(dimensionAttributeIds);
+                if (ResultEnum.SUCCESS !=resultEnum)
+                {
+                    throw new FkException(resultEnum);
+                }
+            }
+            //拼接删除niFi参数
+            //DataModelVO vo = niFiDelProcess(model.businessId, id);
+            //拼接删除DW/Doris库中维度表
+            PgsqlDelTableDTO dto = delDwDorisTable(model.dimensionTabName);
+            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
-        return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        }
+        catch (Exception e)
+        {
+            log.error("deleteDimension:"+e.getMessage());
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
     }
 
     /**
-     * 拼接niFi删除表参数
+     * 拼接niFi删除流程
      * @param businessAreaId
      * @param dimensionId
      * @return
      */
-    public DataModelVO niFiDelTable(int businessAreaId,int dimensionId)
+    public DataModelVO niFiDelProcess(int businessAreaId,int dimensionId)
     {
         DataModelVO vo=new DataModelVO();
         vo.businessId= String.valueOf(businessAreaId);
@@ -145,6 +160,24 @@ public class DimensionImpl implements IDimension {
         tableVO.ids=ids;
         vo.dimensionIdList=tableVO;
         return vo;
+    }
+
+    /**
+     * 拼接删除DW/Doris表
+     * @param dimensionName
+     * @return
+     */
+    public PgsqlDelTableDTO delDwDorisTable(String dimensionName)
+    {
+        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
+        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
+        dto.delApp=false;
+        List<TableListDTO> tableList=new ArrayList<>();
+        TableListDTO table=new TableListDTO();
+        table.tableName=dimensionName;
+        tableList.add(table);
+        dto.tableList=tableList;
+        return dto;
     }
 
     @Override

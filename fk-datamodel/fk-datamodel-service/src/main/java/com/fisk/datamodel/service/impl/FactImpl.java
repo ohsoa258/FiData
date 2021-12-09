@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
@@ -24,8 +25,12 @@ import com.fisk.datamodel.mapper.FactMapper;
 import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -38,6 +43,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class FactImpl implements IFact {
 
     @Resource
@@ -46,6 +52,8 @@ public class FactImpl implements IFact {
     FactAttributeMapper attributeMapper;
     @Resource
     FactAttributeImpl factAttributeImpl;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public ResultEnum addFact(FactDTO dto)
@@ -66,27 +74,37 @@ public class FactImpl implements IFact {
     @Override
     public ResultEnum deleteFact(int id)
     {
-        FactPO po=mapper.selectById(id);
-        if (po==null)
-        {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        //删除事实字段表
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
-        List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
-        if (!CollectionUtils.isEmpty(factAttributeIds))
-        {
-            ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
-            if (ResultEnum.SUCCESS !=resultEnum)
+        try {
+            FactPO po=mapper.selectById(id);
+            if (po==null)
             {
-                throw new FkException(resultEnum);
+                return ResultEnum.DATA_NOTEXISTS;
             }
-        }
-        //拼接niFi删除表参数
-        DataModelVO vo = niFiDelTable(po.businessId, id);
+            //删除事实字段表
+            QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId,id);
+            List<Integer> factAttributeIds=(List)attributeMapper.selectObjs(queryWrapper);
+            if (!CollectionUtils.isEmpty(factAttributeIds))
+            {
+                ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
+                if (ResultEnum.SUCCESS !=resultEnum)
+                {
+                    throw new FkException(resultEnum);
+                }
+            }
+            //拼接删除niFi参数
+            //DataModelVO vo = niFiDelTable(po.businessId, id);
+            //拼接删除DW/Doris库中维度表
+            PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
+            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
-        return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+            return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        }
+        catch (Exception e)
+        {
+            log.error("deleteFact:"+e.getMessage());
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
     }
 
     /**
@@ -108,6 +126,24 @@ public class FactImpl implements IFact {
         tableVO.ids=ids;
         vo.factIdList=tableVO;
         return vo;
+    }
+
+    /**
+     * 拼接删除DW/Doris表
+     * @param factName
+     * @return
+     */
+    public PgsqlDelTableDTO delDwDorisTable(String factName)
+    {
+        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
+        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
+        dto.delApp=false;
+        List<TableListDTO> tableList=new ArrayList<>();
+        TableListDTO table=new TableListDTO();
+        table.tableName=factName;
+        tableList.add(table);
+        dto.tableList=tableList;
+        return dto;
     }
 
     @Override
