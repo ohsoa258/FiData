@@ -337,4 +337,9 @@ public class ChartManageImpl implements IChartManageService {
         query.id = userInfo.id;
         return chartMapper.listChartDataByUserId(page, query);
     }
+
+    @Override
+    public ResultEntity<Long> amount() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,chartMapper.getAmount());
+    }
 }

@@ -70,5 +70,9 @@ public interface IChartManageService {
      */
     Page<ChartPropertyVO> listData(Page<ChartPropertyVO> page, ChartQueryDTO query);
 
-
+    /**
+     * 获取报表数据可视化数量
+     * @return
+     */
+    ResultEntity<Long> amount();
 }
