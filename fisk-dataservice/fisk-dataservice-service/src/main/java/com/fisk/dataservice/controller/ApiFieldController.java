@@ -85,10 +85,4 @@ public class ApiFieldController {
     public ResultEntity<Page<DownSystemQueryVO>> whereListData(@RequestBody DownSystemQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.whereListData(query));
     }
-
-    @ApiOperation(value = "获取数据服务系统数量")
-    @GetMapping("/amount")
-    public ResultEntity<Long> amount() {
-        return configureFieldService.getAmount();
-    }
 }

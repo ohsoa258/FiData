@@ -27,6 +27,7 @@ public class SwaggerConfig {
     public static final String TAG_2 = "api-field-controller";
     public static final String TAG_3 = "applicationRegistration-controller";
     public static final String TAG_4 = "data-source-controller";
+    public static final String TAG_5 = "systemWebIndex-controller";
 
     @Bean
     public Docket createRestApi() {

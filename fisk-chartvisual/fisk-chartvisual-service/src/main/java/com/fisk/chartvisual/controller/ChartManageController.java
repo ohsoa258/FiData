@@ -67,10 +67,4 @@ public class ChartManageController {
     public ResultEntity<Page<ChartPropertyVO>> listData(@RequestBody ChartQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query.page, query));
     }
-
-    @ApiOperation("获取报表数据可视化数量")
-    @GetMapping("/amount")
-    public ResultEntity<Long> amount() {
-        return service.amount();
-    }
 }
