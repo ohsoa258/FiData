@@ -765,15 +765,20 @@ public class BuildNifiCustomWorkFlow {
 
                             } else {
                                 //调度组件与任务流连接
+                                TableNifiSettingPO tableNifiSettingPO=new TableNifiSettingPO();
                                 OlapPO olapPO = new OlapPO();
                                 if(Objects.equals(buildNifiCustomWorkFlowDTO.tableType.getValue(),4)){
                                      olapPO = getOlapPO(0, Integer.parseInt(buildNifiCustomWorkFlowDTO.tableId));
-                                }else{
+                                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("nifi_custom_workflow_detail_id",buildNifiCustomWorkFlowDTO.workflowDetailId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
+                                }else if(Objects.equals(buildNifiCustomWorkFlowDTO.tableType.getValue(),8)){
                                     olapPO = getOlapPO(1, Integer.parseInt(buildNifiCustomWorkFlowDTO.tableId));
+                                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("nifi_custom_workflow_detail_id",buildNifiCustomWorkFlowDTO.workflowDetailId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
+                                }else{
+                                    tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", buildNifiCustomWorkFlowDTO.tableId).eq("nifi_custom_workflow_detail_id",buildNifiCustomWorkFlowDTO.workflowDetailId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
                                 }
+                                log.info("连接对象参数:"+tableNifiSettingPO);
 
-                                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("nifi_custom_workflow_detail_id",buildNifiCustomWorkFlowDTO.workflowDetailId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
-                                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
+                                   ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
                                 //流程组port组件父id
                                 String parentGroupId1 = processGroup.getComponent().getParentGroupId();
                                 String tableInputPortId = tableNifiSettingPO.tableInputPortId;
@@ -902,9 +907,13 @@ public class BuildNifiCustomWorkFlow {
                                 ProcessGroupEntity processGroup1 = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO1.tableComponentId);
                                 String parentGroupId = processGroup1.getComponent().getParentGroupId();
                                 String tableInputPortId = tableNifiSettingPO1.tableInputPortId;
+                                ProcessGroupEntity processGroup2 = NifiHelper.getProcessGroupsApi().getProcessGroup(parentGroupId);
+                                String parentGroupId1 = processGroup2.getComponent().getParentGroupId();
+                                PortEntity outputPort = NifiHelper.getOutputPortsApi().getOutputPort(tableNifiSettingPO.tableOutputPortId);
+                                String parentGroupId2 = outputPort.getComponent().getParentGroupId();
                                 //  调用连接api
-                                buildNifiTaskListener.buildPortConnection2(processGroup.getId(), parentGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                                        processGroup.getId(), tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION,ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE);
+                                buildNifiTaskListener.buildPortConnection2(parentGroupId1, parentGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                                        parentGroupId2, tableNifiSettingPO.tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT, 0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION,ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE);
 
                             }
                         }
