@@ -77,7 +77,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
             UserDetail userInfo = payload.getUserDetail();
             // 3.3.刷新jwt
             jwtUtils.refreshJwt(userInfo.getId());
-            log.info("用户{}正在访问{}", userInfo.getUsername(), request.getURI().getPath());
+            log.info("用户{}正在访问{}", userInfo.getUserAccount(), request.getURI().getPath());
         } catch (Exception e) {
             // 解析失败，token有误
             log.info(e.getMessage());

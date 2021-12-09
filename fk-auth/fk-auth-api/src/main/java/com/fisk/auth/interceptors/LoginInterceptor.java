@@ -36,7 +36,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             Payload payload = jwtUtils.parseJwt(jwt);
             // 获取用户
             UserDetail userDetails = payload.getUserDetail();
-            log.info("用户{}正在访问。", userDetails.getUsername());
+            log.info("用户{}正在访问。", userDetails.getUserAccount());
             // 保存用户
             UserContext.setUser(userDetails);
             return true;

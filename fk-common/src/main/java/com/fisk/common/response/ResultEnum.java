@@ -35,6 +35,7 @@ public enum ResultEnum {
     Table_NAME_EXISTS(1012, "表名已存在"),
     NOTFOUND_REQUEST(1013, "未找到请求"),
     NIFI_NOT_FIND_DATA(1014, "nifi查不到数据"),
+    LOGIN_ACCOUNT_DISABLED(1015,"该登录账号已被禁用"),
 
     /**
      * 报表可视化服务，错误码从2000开始

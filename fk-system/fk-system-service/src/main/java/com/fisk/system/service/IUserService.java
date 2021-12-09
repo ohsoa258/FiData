@@ -59,11 +59,11 @@ public interface IUserService {
     /**
      * 查询用户
      *
-     * @param username username
-     * @param password password
+     * @param userAccount
+     * @param password
      * @return 查询结果
      */
-    UserDTO queryUser(String username, String password);
+    UserDTO queryUser(String userAccount, String password);
 
     /**
      * 用户列表

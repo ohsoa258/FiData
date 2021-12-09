@@ -20,13 +20,13 @@ public interface UserClient {
     /**
      * 根据用户名和密码查询用户
      *
-     * @param username 用户名
+     * @param userAccount 用户名
      * @param password 密码
      * @return 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping("/info")
     ResultEntity<UserDTO> queryUser(
-            @RequestParam("username") String username,
+            @RequestParam("userAccount") String userAccount,
             @RequestParam("password") String password);
 
     /**

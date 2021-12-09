@@ -233,22 +233,26 @@ public class UserServiceImpl implements IUserService {
     /**
      * 登录: 根据用户名和密码查询用户?
      *
-     * @param username username
-     * @param password password
+     * @param userAccount
+     * @param password
      * @return 执行结果
      */
     @Override
-    public UserDTO queryUser(String username, String password) {
+    public UserDTO queryUser(String userAccount, String password) {
 
         // 1.根据用户名查询用户,不能根据密码,参数是明文,数据库中的是加密后的
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(UserPO::getUsername, username);
+                .eq(UserPO::getUserAccount, userAccount);
         UserPO po = mapper.selectOne(queryWrapper);
         // 2.判断是否存在
         if (po == null) {
             // 用户名错误
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        if (!po.valid)
+        {
+            throw new FkException(ResultEnum.LOGIN_ACCOUNT_DISABLED);
         }
         // 3.校验密码(原理)先根据密文推算出盐值,然后明文+盐值,密码,再次比较新密文和密文
         if (!passwordEncoder.matches(password, po.getPassword())) {

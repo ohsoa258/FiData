@@ -58,16 +58,16 @@ public class UserController {
     /**
      * 根据用户名和密码查询用户
      *
-     * @param username username
+     * @param userAccount userAccount
      * @param password password
      * @return 用户实体 为null说明不存在
      */
     @GetMapping
     public ResultEntity<Object> queryUser(
-            @RequestParam("username") String username,
+            @RequestParam("userAccount") String userAccount,
             @RequestParam("password") String password)
     {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryUser(username,password));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryUser(userAccount,password));
     }
     /**
      * 编辑用户保存
