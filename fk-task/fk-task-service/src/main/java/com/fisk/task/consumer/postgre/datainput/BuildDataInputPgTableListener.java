@@ -162,7 +162,11 @@ public class BuildDataInputPgTableListener {
 
     public void saveOrUpdate(ModelPublishTableDTO dto) {
         log.info("开始保存版本号,参数为{}", dto);
-        // 保存版本号
+        // 保存ods版本号
+        taskPgTableStructureHelper.saveTableStructure(dto);
+        dto.tableName = "stg_" + dto.tableName.substring(4);
+        dto.createType = 4;
+        // 保存stg版本号
         taskPgTableStructureHelper.saveTableStructure(dto);
         log.info("保存版本号");
 

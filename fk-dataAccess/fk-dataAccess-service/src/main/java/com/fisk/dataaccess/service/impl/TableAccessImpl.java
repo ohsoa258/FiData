@@ -1689,6 +1689,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //获取列名
         for (int i = 1; i <= columnCount; i++) {
             FieldNameDTO dto = new FieldNameDTO();
+            String fieldType1 = "date";
+            String fieldType2 = "time";
             //源表
             dto.sourceTableName=metaData.getTableName(i);
             // 源字段
@@ -1704,7 +1706,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             {
                 dto.fieldType="INT";
             }
-            dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i)))?"255":String.valueOf(metaData.getColumnDisplaySize(i));
+            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
+                dto.fieldLength = "50";
+            }else {
+                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i)))?"255":String.valueOf(metaData.getColumnDisplaySize(i));
+            }
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());

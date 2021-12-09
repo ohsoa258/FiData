@@ -196,7 +196,7 @@ public class TaskPgTableStructureHelper
         String pgsqlOdsUsername="postgres";
         String pgsqlOdsPassword="Password01!";
         Connection conn;
-        if (createType == 3) {
+        if (createType == 3 || createType == 4) {
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {

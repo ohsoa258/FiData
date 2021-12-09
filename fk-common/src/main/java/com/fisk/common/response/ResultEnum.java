@@ -74,6 +74,7 @@ public enum ResultEnum {
     DATAACCESS_APPABBREVIATION_ERROR(5009, "应用简称已存在"),
     TABLE_NOT_EXIST(5010, "当前物理表已删除"),
     TABLE_IS_EXIST(5011, "物理表名已存在"),
+    TASK_EXEC_FAILURE(5012, "task模块publishBuildAtlasTableTask方法执行失败"),
 
 
     /**

@@ -280,7 +280,12 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
 
             // 执行发布
-            publishTaskClient.publishBuildAtlasTableTask(data);
+            try {
+                publishTaskClient.publishBuildAtlasTableTask(data);
+            } catch (Exception e) {
+                log.info("发布失败", e);
+                log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
+            }
         }
     }
 
