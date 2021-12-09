@@ -72,6 +72,8 @@ public class BusinessProcessImpl
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     TableHistoryImpl tableHistory;
+    @Resource
+    FactImpl factImpl;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -145,9 +147,18 @@ public class BusinessProcessImpl
             {
                 return ResultEnum.SUCCESS;
             }
-            return factMapper.deleteBatchIds(factIds)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+            for (Integer id:factIds)
+            {
+                ResultEnum resultEnum = factImpl.deleteFact(id);
+                if (resultEnum.getCode()!=ResultEnum.SUCCESS.getCode())
+                {
+                    continue;
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("delete businessProcess:"+e);
+            return ResultEnum.SAVE_DATA_ERROR;
         }
         return ResultEnum.SUCCESS;
     }

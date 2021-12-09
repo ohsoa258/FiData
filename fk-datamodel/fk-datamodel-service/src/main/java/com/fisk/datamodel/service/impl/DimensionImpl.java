@@ -78,6 +78,7 @@ public class DimensionImpl implements IDimension {
         {
             return ResultEnum.DIMENSION_EXIST;
         }
+        dto.businessId=model.businessId;
         model= DimensionMap.INSTANCES.dtoToPo(dto);
         return mapper.updateById(model)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -118,23 +119,32 @@ public class DimensionImpl implements IDimension {
                 throw new FkException(resultEnum);
             }
         }
+        //拼接niFi删除表参数
+        DataModelVO vo = niFiDelTable(model.businessId, id);
+        //推送消息
 
-        //判断是否发布
-        if (model.isPublish!=PublicStatusEnum.UN_PUBLIC.getValue())
-        {
-            //删除组合对象
-            DataModelVO vo=new DataModelVO();
-            vo.businessId= String.valueOf(model.businessId);
-            vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-            vo.delBusiness=false;
-            DataModelTableVO tableVO=new DataModelTableVO();
-            tableVO.type= OlapTableEnum.DIMENSION;
-            List<Long> ids=new ArrayList<>();
-            ids.add(Long.valueOf(id));
-            tableVO.ids=ids;
-            vo.dimensionIdList=tableVO;
-        }
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 拼接niFi删除表参数
+     * @param businessAreaId
+     * @param dimensionId
+     * @return
+     */
+    public DataModelVO niFiDelTable(int businessAreaId,int dimensionId)
+    {
+        DataModelVO vo=new DataModelVO();
+        vo.businessId= String.valueOf(businessAreaId);
+        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+        vo.delBusiness=false;
+        DataModelTableVO tableVO=new DataModelTableVO();
+        tableVO.type= OlapTableEnum.DIMENSION;
+        List<Long> ids=new ArrayList<>();
+        ids.add(Long.valueOf(dimensionId));
+        tableVO.ids=ids;
+        vo.dimensionIdList=tableVO;
+        return vo;
     }
 
     @Override

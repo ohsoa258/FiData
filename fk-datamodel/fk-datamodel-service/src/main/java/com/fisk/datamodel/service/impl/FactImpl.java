@@ -83,26 +83,31 @@ public class FactImpl implements IFact {
                 throw new FkException(resultEnum);
             }
         }
-       /* //查询业务域
-        BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
-        if (businessProcessPO==null)
-        {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
+        //拼接niFi删除表参数
+        DataModelVO vo = niFiDelTable(po.businessId, id);
 
-        //删除组合对象
+        return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 拼接niFi删除表参数
+     * @param businessAreaId
+     * @param factId
+     * @return
+     */
+    public DataModelVO niFiDelTable(int businessAreaId,int factId)
+    {
         DataModelVO vo=new DataModelVO();
-        vo.businessId= String.valueOf(businessProcessPO.businessId);
+        vo.businessId= String.valueOf(businessAreaId);
         vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
         vo.delBusiness=false;
         DataModelTableVO tableVO=new DataModelTableVO();
         tableVO.type= OlapTableEnum.FACT;
         List<Long> ids=new ArrayList<>();
-        ids.add(Long.valueOf(id));
+        ids.add(Long.valueOf(factId));
         tableVO.ids=ids;
-        vo.factIdList=tableVO;*/
-
-        return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        vo.factIdList=tableVO;
+        return vo;
     }
 
     @Override
