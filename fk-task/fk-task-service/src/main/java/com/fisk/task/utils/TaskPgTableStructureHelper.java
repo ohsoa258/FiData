@@ -7,6 +7,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -24,6 +25,32 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TaskPgTableStructureHelper
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
+
+
+    public static String taskdbUrl;
+
+    public static String taskdbUsername;
+
+    public static String taskdbPassword;
+
+    public static String driverClassName;
+    @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
+    public  void setTaskdbUrl(String taskdbUrl) {
+        TaskPgTableStructureHelper.taskdbUrl = taskdbUrl;
+    }
+    @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
+    public  void setTaskdbUsername(String taskdbUsername) {
+        TaskPgTableStructureHelper.taskdbUsername = taskdbUsername;
+    }
+    @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
+    public  void setTaskdbPassword(String taskdbPassword) {
+        TaskPgTableStructureHelper.taskdbPassword = taskdbPassword;
+    }
+    @Value("${spring.datasource.dynamic.datasource.taskdb.driver-class-name}")
+    public  void setDriverClassName(String driverClassName) {
+        TaskPgTableStructureHelper.driverClassName = driverClassName;
+    }
+
     /**
      * 保存建模相关表结构数据(保存版本号)
      * @param
@@ -96,10 +123,10 @@ public class TaskPgTableStructureHelper
     public String execProcedure(String version,int type) throws Exception
     {
         //配置数据库参数
-        Class.forName("com.mysql.jdbc.Driver");
-        String url="jdbc:mysql://192.168.11.130:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
-        String user="root";
-        String pass="root123";
+        Class.forName(driverClassName);
+        String url=taskdbUrl;
+        String user=taskdbUsername;
+        String pass=taskdbPassword;
         //获取数据库连接
         Connection conn=DriverManager.getConnection(url,user,pass);
         try {
