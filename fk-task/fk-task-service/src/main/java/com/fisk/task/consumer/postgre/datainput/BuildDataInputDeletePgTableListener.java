@@ -7,6 +7,7 @@ import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.IAtlasBuildInstance;
+import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.utils.PostgreHelper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: DennyHui
@@ -30,29 +32,44 @@ import java.util.List;
 public class BuildDataInputDeletePgTableListener {
     @Resource
     IAtlasBuildInstance atlas;
+    @Resource
+    IDorisBuild doris;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
     public void msg(String dataInfo, Channel channel, Message message) {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
-        PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
         StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
-        List<String> atlasEntityId=new ArrayList();;
-        inputData.tableList.forEach((t)->{
-            buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+", ");
-            atlasEntityId.add(t.tableAtlasId);
-        });
-        String delSqlStr=buildDelSqlStr.toString();
-        delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
-        PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAINPUT);
-        log.info("delsql:"+delSqlStr);
-        log.info("执行pg delete table 完成");
+        PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
+        if(Objects.equals(inputData.businessTypeEnum,BusinessTypeEnum.DATAINPUT)){
+            List<String> atlasEntityId=new ArrayList();;
+            inputData.tableList.forEach((t)->{
+                buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+", ");
+                atlasEntityId.add(t.tableAtlasId);
+            });
+            String delSqlStr=buildDelSqlStr.toString();
+            delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
+            PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAINPUT);
+            log.info("delsql:"+delSqlStr);
+            log.info("执行pg delete table 完成");
 //        log.info("开始删除atals实例");
-        atlasEntityId.forEach((a)->{
-            //AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
-            //BusinessResult resDel=atlas.atlasEntityDelete(ad);
-        });
+            atlasEntityId.forEach((a)->{
+                //AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
+                //BusinessResult resDel=atlas.atlasEntityDelete(ad);
+            });
 //        log.info("Atlas实例删除完成");
+        }else{
+            inputData.tableList.forEach((t)->{
+                buildDelSqlStr.append(t.tableName+", ");
+            });
+            String delSqlStr=buildDelSqlStr.toString();
+            delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
+            PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAMODEL);
+            doris.dorisBuildTable(delSqlStr);
+            log.info("delsql:"+delSqlStr);
+            log.info("执行pg delete table 完成");
+        }
+
     }
 }

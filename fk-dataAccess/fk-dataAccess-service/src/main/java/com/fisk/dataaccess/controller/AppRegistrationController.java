@@ -3,6 +3,7 @@ package com.fisk.dataaccess.controller;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.dto.PageDTO;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -145,6 +146,7 @@ public class AppRegistrationController {
         pgsqlDelTableDTO.userId = nifiVO.userId;
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = true;
+        pgsqlDelTableDTO.businessTypeEnum= BusinessTypeEnum.DATAINPUT;
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
 
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
