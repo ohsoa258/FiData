@@ -8,7 +8,8 @@ import com.fisk.dataservice.dto.DownSystemPageDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.vo.DownSystemQueryVO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import java.util.List;
 import java.util.Map;
 
@@ -39,4 +40,11 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
      * @return 查询结果
      */
     Page<DownSystemQueryVO> filter(Page<DownSystemQueryVO> page, @Param("query") DownSystemPageDTO query);
+
+    /**
+     * 获取数据服务系统数量
+     * @return
+     */
+    @Select("SELECT COUNT(1) FROM configure_user WHERE del_flag = '1'")
+    Long amount();
 }

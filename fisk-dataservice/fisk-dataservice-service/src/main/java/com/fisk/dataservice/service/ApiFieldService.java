@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -79,4 +80,10 @@ public interface ApiFieldService {
      * @return 筛选结果
      */
     Page<DownSystemQueryVO> whereListData(DownSystemQueryDTO query);
+
+    /**
+     * 获取数据服务系统数量
+     * @return
+     */
+    ResultEntity<Long> getAmount();
 }

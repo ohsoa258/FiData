@@ -12,6 +12,8 @@ import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
@@ -469,5 +471,10 @@ public class ApiFieldServiceImpl implements ApiFieldService {
         data.where = querySql.toString();
 
         return configureMapper.filter(query.page, data);
+    }
+
+    @Override
+    public ResultEntity<Long> getAmount() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,configureMapper.amount());
     }
 }
