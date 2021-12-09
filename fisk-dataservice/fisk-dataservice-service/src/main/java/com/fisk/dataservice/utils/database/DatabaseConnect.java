@@ -4,15 +4,14 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.BeanHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StopWatch;
-
+import static com.fisk.dataservice.utils.database.DatabaseConfig.*;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-
-import static com.fisk.dataservice.doris.DorisDataSource.*;
 
 /**
  * @author WangYan
@@ -20,6 +19,7 @@ import static com.fisk.dataservice.doris.DorisDataSource.*;
  * 数据库连接器
  */
 @Slf4j
+@Configuration
 public class DatabaseConnect {
 
     /**
@@ -28,7 +28,7 @@ public class DatabaseConnect {
      * @return 查询结果
      */
     public static List<Map<String, Object>> execQueryResultList(String sql) {
-        Connection connection = connection(URL, USER, PASSWORD);
+        Connection connection = connection(url, username, password);
         List<Map<String, Object>> data = execQueryResultMaps(sql, connection);
         return data;
     }
@@ -38,7 +38,7 @@ public class DatabaseConnect {
      */
     public static Connection connection(String connectionStr, String acc, String pwd) {
         try {
-            Class.forName(DRIVER);
+            Class.forName(driver);
             Connection connection = DriverManager.getConnection(connectionStr,acc,pwd);
             log.info("【connection】数据库连接成功, 连接信息【" + connectionStr + "】");
             return connection;

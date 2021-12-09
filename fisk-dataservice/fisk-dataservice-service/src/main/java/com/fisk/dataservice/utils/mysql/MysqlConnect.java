@@ -14,7 +14,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.fisk.dataservice.doris.DorisDataSource.*;
+import static com.fisk.dataservice.utils.database.DatabaseConfig.*;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -39,12 +39,8 @@ public class MysqlConnect {
         StringBuffer str = new StringBuffer();
         String collect;
         try {
-            Class.forName(DRIVER);
-            String url = URL;
-            String user = USER;
-            String password = PASSWORD;
-
-            Connection conn = DriverManager.getConnection(url, user, password);
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, username, password);
             // 3.1创建执行器
             Statement statement = conn.createStatement();
             // 3.2执行器执行sql语句 获得ResultSet结果集
@@ -144,12 +140,8 @@ public class MysqlConnect {
         StringBuffer str = new StringBuffer();
         String collect;
         try {
-            Class.forName(DRIVER);
-            String url = URL;
-            String user = USER;
-            String password = PASSWORD;
-
-            Connection conn = DriverManager.getConnection(url, user, password);
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, username, password);
             // 3.1创建执行器
             Statement statement = conn.createStatement();
             // 3.2执行器执行sql语句 获得ResultSet结果集
