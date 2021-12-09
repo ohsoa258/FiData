@@ -258,7 +258,10 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         auto.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
 
         //组件属性
-        Map<String, String> map = new HashMap<>(0);
+        Map<String, String> map = new HashMap<>(5);
+        map.put("Max Bin Age","30 sec");
+        map.put("Minimum Group Size","1 GB");
+        map.put("Attribute Strategy","Keep All Unique Attributes");
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();

@@ -268,8 +268,10 @@ public class BuildNifiTaskListener {
         //TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("table_access_id", id).eq("type",type.getValue()).one();
         if(res.data!=null&&appNifiSettingPO!=null&&appNifiSettingPO.appComponentId!=null){
             data.groupConfig.newApp=false;
-        }else if(res.data!=null&&appNifiSettingPO==null){
-            data.groupConfig.newApp=true;
+        }else{
+            if(data!=null&&data.groupConfig!=null){
+                data.groupConfig.newApp=true;
+            }
         }
 
         /*if (tableNifiSettingPO != null) {

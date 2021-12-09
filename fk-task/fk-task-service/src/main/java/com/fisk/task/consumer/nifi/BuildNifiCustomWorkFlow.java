@@ -100,12 +100,16 @@ public class BuildNifiCustomWorkFlow {
         createConnectingLine(dto);
         //启动
         try {
-            Thread.sleep(200);
+
             ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
-            NifiHelper.getFlowApi().scheduleComponents(groupStructure,scheduleComponentsEntity);
+            //启动两次,防止有的组件创建不及时导致没启动
+            for(int i=3;i>0;i--){
+                Thread.sleep(200);
+                NifiHelper.getFlowApi().scheduleComponents(groupStructure,scheduleComponentsEntity);
+            }
         } catch (ApiException | InterruptedException e) {
             log.info("此组启动失败:"+groupStructure);
         }
@@ -799,9 +803,9 @@ public class BuildNifiCustomWorkFlow {
                             }else if(Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)){
                                 NifiSchedulingComponentPO one = nifiSchedulingComponent.query().eq("nifi_custom_workflow_detail_id", buildNifiCustomWorkFlowDTO.nifiCustomWorkflowId).eq("del_flag", 1).one();
 
-                                buildNifiTaskListener.buildPortConnection2(one.groupComponentId, pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                                /*buildNifiTaskListener.buildPortConnection2(one.groupComponentId, pipelineConfigurationPO.appComponentId, pipelineConfigurationPO.inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
                                         one.groupComponentId, one.componentId, ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION,ConnectionDTO.LoadBalanceStrategyEnum.SINGLE_NODE);
-
+*/
                             } else {
                                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", buildNifiCustomWorkFlowDTO.tableId).eq("nifi_custom_workflow_detail_id",buildNifiCustomWorkFlowDTO.workflowDetailId).eq("type", buildNifiCustomWorkFlowDTO.tableType.getValue()).eq("del_flag", 1).one();
                                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSettingPO.tableComponentId);
