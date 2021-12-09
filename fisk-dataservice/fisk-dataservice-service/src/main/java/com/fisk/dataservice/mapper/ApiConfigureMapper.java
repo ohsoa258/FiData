@@ -1,7 +1,12 @@
 package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
+import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.dataservice.dto.DownSystemPageDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
+import com.fisk.dataservice.vo.DownSystemQueryVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;;
 import java.util.List;
@@ -25,4 +30,13 @@ public interface ApiConfigureMapper extends BaseMapper<ApiConfigurePO> {
                         @Param("currentPage")Integer currentPage,
                         @Param("pageSize")Integer pageSize
     );
+
+    /**
+     * 筛选器分页功能
+     *
+     * @param page  分页对象
+     * @param query query对象
+     * @return 查询结果
+     */
+    Page<DownSystemQueryVO> filter(Page<DownSystemQueryVO> page, @Param("query") DownSystemPageDTO query);
 }

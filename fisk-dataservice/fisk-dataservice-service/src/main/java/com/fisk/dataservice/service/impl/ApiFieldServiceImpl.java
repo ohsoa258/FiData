@@ -7,16 +7,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.constants.FilterSqlConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.redis.RedisKeyBuild;
 import com.fisk.common.redis.RedisKeyEnum;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserInfo;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
+import com.fisk.dataservice.dto.DownSystemPageDTO;
+import com.fisk.dataservice.dto.DownSystemQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigureFieldPO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.entity.ConfigureUserPO;
@@ -28,6 +32,7 @@ import com.fisk.dataservice.mapper.ApiConfigureMapper;
 import com.fisk.dataservice.mapper.ConfigureUserMapper;
 import com.fisk.dataservice.mapper.MiddleConfigureMapper;
 import com.fisk.dataservice.service.ApiFieldService;
+import com.fisk.dataservice.vo.DownSystemQueryVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -64,6 +69,9 @@ public class ApiFieldServiceImpl implements ApiFieldService {
 
     @Resource
     private GetMetadata getMetadata;
+
+    @Resource
+    private GenerateCondition generateCondition;
 
     @Override
     public List<Map> queryField(String apiRoute, Integer currentPage, Integer pageSize, ConfigureUserDTO user) {
@@ -447,7 +455,19 @@ public class ApiFieldServiceImpl implements ApiFieldService {
     }
 
     @Override
-    public Page<NifiCustomWorkflowVO> whereListData(NifiCustomWorkflowQueryDTO query) {
-        return null;
+    public Page<DownSystemQueryVO> whereListData(DownSystemQueryDTO query) {
+        StringBuilder querySql = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            querySql.append(" and down_system_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+        }
+
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+        DownSystemPageDTO data = new DownSystemPageDTO();
+        data.page = query.page;
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
+
+        return configureMapper.filter(query.page, data);
     }
 }

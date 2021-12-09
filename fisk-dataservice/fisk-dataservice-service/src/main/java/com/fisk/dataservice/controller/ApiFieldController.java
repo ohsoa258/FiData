@@ -9,8 +9,10 @@ import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
+import com.fisk.dataservice.dto.DownSystemQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
 import com.fisk.dataservice.service.ApiFieldService;
+import com.fisk.dataservice.vo.DownSystemQueryVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -80,7 +82,7 @@ public class ApiFieldController {
 
     @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
-    public ResultEntity<Page<NifiCustomWorkflowVO>> whereListData(@RequestBody NifiCustomWorkflowQueryDTO query) {
+    public ResultEntity<Page<DownSystemQueryVO>> whereListData(@RequestBody DownSystemQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, configureFieldService.whereListData(query));
     }
 }

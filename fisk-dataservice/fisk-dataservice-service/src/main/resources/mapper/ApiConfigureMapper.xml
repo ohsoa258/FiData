@@ -6,4 +6,22 @@
     <select id="queryData" resultType="java.util.Map">
        ${splitSql} limit #{currentPage},#{pageSize}
     </select>
+
+    <select id="filter" resultType="com.fisk.dataservice.vo.DownSystemQueryVO">
+      SELECT
+        id,
+        down_system_name,
+        system_info,
+        user_name,
+        `password`,
+        create_time,
+        update_time
+    FROM
+        `configure_user`
+    WHERE
+        del_flag = '1'
+    <if test="query.where !=null and query.where.length()>0 ">
+        ${query.where}
+    </if>
+    </select>
 </mapper>

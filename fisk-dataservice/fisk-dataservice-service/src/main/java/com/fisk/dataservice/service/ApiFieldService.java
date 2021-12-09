@@ -7,7 +7,9 @@ import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.dataservice.dto.ApiConfigureDTO;
 import com.fisk.dataservice.dto.ConfigureUserDTO;
+import com.fisk.dataservice.dto.DownSystemQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigurePO;
+import com.fisk.dataservice.vo.DownSystemQueryVO;
 
 import java.util.List;
 import java.util.Map;
@@ -76,5 +78,5 @@ public interface ApiFieldService {
      * @param query 查询条件
      * @return 筛选结果
      */
-    Page<NifiCustomWorkflowVO> whereListData(NifiCustomWorkflowQueryDTO query);
+    Page<DownSystemQueryVO> whereListData(DownSystemQueryDTO query);
 }

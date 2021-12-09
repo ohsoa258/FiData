@@ -224,13 +224,16 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     // 追加JOIN ON year字段相等
                     str1.append(" AND " + ATOM_ALIAS + i + "." + "`year`" + "=" + ATOM_ALIAS + i1 + "." + "`year`");
 
-                    str1.append(" AND ");
-
-                    str1.append(dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals("dim_date")).map(d -> {
+                    String dim_date = dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals("dim_date")).map(d -> {
                         String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
                                 + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
                         return aliasOn;
-                    }).collect(Collectors.joining(" AND ")));
+                    }).collect(Collectors.joining(" AND "));
+
+                    if (!StringUtils.isEmpty(dim_date)){
+                        str1.append(" AND ");
+                        str1.append(dim_date);
+                    }
 
                     // SELECT 最外层
                     String collect1 = dataDoFieldDTOList.stream().map(d -> {
