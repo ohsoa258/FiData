@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.dto.MetaDataConfigDTO;
@@ -31,6 +32,8 @@ import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -211,9 +215,12 @@ public class BusinessAreaImpl
             }
             //删除业务过程和事实表
             delBusinessProcessFact(id);
-            //删除DW、Doris库中相关表--拼接参数
-            DataModelVO vo = niFiDelTable(id);
-            vo.dimensionIdList.ids.removeAll(idArray);
+            //删除niFi流程--拼接参数
+            //DataModelVO vo = niFiDelTable(id);
+            //vo.dimensionIdList.ids.removeAll(idArray);
+            //拼接删除DW/Doris库中维度事实表
+            PgsqlDelTableDTO dto = delDwDorisTable(idArray, id);
+            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
             if (result) {
                 return ResultEnum.BUSINESS_AREA_EXISTS_ASSOCIATED;
@@ -323,6 +330,47 @@ public class BusinessAreaImpl
         factTable.ids = (List) factMapper.selectObjs(factPOQueryWrapper2).stream().collect(Collectors.toList());
         vo.factIdList = factTable;
         return vo;
+    }
+
+    private PgsqlDelTableDTO delDwDorisTable(List<Integer> idArray,long businessAreaId)
+    {
+        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
+        dto.delApp=true;
+        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
+        List<TableListDTO> tableList=new ArrayList<>();
+
+        //获取维度表名称集合
+        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DimensionPO::getBusinessId,businessAreaId);
+        if (!CollectionUtils.isEmpty(idArray))
+        {
+            queryWrapper.select("dimension_tab_name").notIn("id",idArray);
+        }
+        List<String> dimensionNameList=(List) dimensionMapper.selectObjs(queryWrapper);
+        if (!CollectionUtils.isEmpty(dimensionNameList))
+        {
+            for (String name:dimensionNameList)
+            {
+                TableListDTO table=new TableListDTO();
+                table.tableName=name;
+                tableList.add(table);
+            }
+        }
+        //获取事实表名称集合
+        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
+        factPOQueryWrapper.lambda().eq(FactPO::getBusinessId,businessAreaId);
+        List<String> factNameList=(List) factMapper.selectObjs(factPOQueryWrapper);
+        if (!CollectionUtils.isEmpty(factNameList))
+        {
+            for (String name:factNameList)
+            {
+                TableListDTO table=new TableListDTO();
+                table.tableName=name;
+                tableList.add(table);
+            }
+        }
+        return dto;
     }
 
     @Override
