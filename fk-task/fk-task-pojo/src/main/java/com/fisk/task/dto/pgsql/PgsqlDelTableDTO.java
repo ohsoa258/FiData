@@ -1,5 +1,6 @@
 package com.fisk.task.dto.pgsql;
 
+import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 
@@ -22,6 +23,8 @@ public class PgsqlDelTableDTO extends MQBaseDTO {
     public List<TableListDTO> tableList;
 
     public boolean delApp;
+
+    public BusinessTypeEnum businessTypeEnum;
 
 }
 
