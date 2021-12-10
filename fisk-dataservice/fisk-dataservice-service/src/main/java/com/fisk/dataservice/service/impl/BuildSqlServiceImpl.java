@@ -1,6 +1,5 @@
 package com.fisk.dataservice.service.impl;
 
-import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.dataservice.dto.*;
@@ -253,8 +252,19 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     // GROUP BY a1.a1.`year`,a1.`product_class
                     str1.append(" GROUP BY " + collect1);
 
+                    String collect2 = dataDoFieldDTOList.stream().map(d -> {
+                        List<String> column = client.getDimensionFieldNameList(dto.getDimensionTabName()).getData();
+                        String aliasOn = null;
+                        if (column.contains(d.getFieldName())){
+                            aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "+0";
+                        }else {
+                            aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
+                        }
+                        return aliasOn;
+                    }).collect(Collectors.joining(","));
+
                     // ORDER BY
-                    str1.append(" ORDER BY " + collect1);
+                    str1.append(" ORDER BY " + collect2);
                     return str1.toString();
                 }).collect(Collectors.joining(","));
 
