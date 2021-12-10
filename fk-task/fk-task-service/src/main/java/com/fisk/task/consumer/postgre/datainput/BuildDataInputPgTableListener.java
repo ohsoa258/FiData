@@ -75,7 +75,7 @@ public class BuildDataInputPgTableListener {
         BusinessResult resultSetBusinessResult = pg.postgreQuery(selectTableSql, BusinessTypeEnum.DATAINPUT);
         List<TableFieldDetailDTO> arrayLists = JSONArray.parseArray(JSON.toJSONString(resultSetBusinessResult.data), TableFieldDetailDTO.class);
         if(arrayLists!=null&&arrayLists.size()!=0){
-            updataOrCreateTable(arrayLists,buildPhysicalTableDTO.tableFieldsDTOS);
+            //updataOrCreateTable(arrayLists,buildPhysicalTableDTO.tableFieldsDTOS);
             saveOrUpdate(buildPhysicalTableDTO.modelPublishTableDTO);
         }else{
             StringBuilder sql = new StringBuilder();
@@ -85,6 +85,8 @@ public class BuildDataInputPgTableListener {
             tableFieldsDTOS.forEach((l) -> {
                 if(l.fieldType.contains("FLOAT")){
                     sqlFileds.append(l.fieldName + " " + " numeric ,");
+                }else if(l.fieldType.contains("INT")){
+                    sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
                 }else{
                     sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
                 }

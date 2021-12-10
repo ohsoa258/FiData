@@ -12,6 +12,7 @@ import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.service.IOlap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -30,6 +31,8 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     OlapMapper mapper;
     @Resource
     IDorisBuild doris;
+    @Value("${external-table-link}")
+    public String externalTableLink;
     /**
      * 生成建模sql(创建指标表sql，创建维度表sql,查询指标表数据sql)
      * @param businessAreaId 业务域id
@@ -128,7 +131,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         }
 
         sql=sql.substring(0,sql.length()-1)+")\n" + "ENGINE=ODBC\nPROPERTIES\n";
-        sql+="(\"host\" = \"192.168.1.250\",\"port\" = \"5432\",\"user\" = \"postgres\",\"password\" = \"Password01!\",\"database\" = \"dmp_dw\",\"table\" = \"KKKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
+        sql+="("+externalTableLink+",\"table\" = \"KKKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
         sql=sql.replace("KKKKK",dto.tableName);
         log.info("维度外部表建表语句:"+sql);
         doris.dorisBuildTable(sql);

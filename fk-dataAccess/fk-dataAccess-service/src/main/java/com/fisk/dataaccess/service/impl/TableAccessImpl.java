@@ -646,6 +646,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 将应用名称封装进去
         AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppId()).one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         dto.setAppName(modelReg.getAppName());
 
         // 查询tb_table_fields数据
@@ -665,7 +668,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 查询tb_table_business
         TableBusinessPO modelBusiness = this.businessMapper.getData(id);
-//        TableBusinessDTO businessDTO = new TableBusinessDTO(modelBusiness);
         TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
         dto.setBusinessDTO(businessDTO);
 
@@ -792,8 +794,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableListVO tableListVO = new TableListVO();
 
         tableListVO.userId = userInfo.id;
-        tableListVO.tableAtlasId = modelAccess.atlasTableId;
-        tableListVO.nifiSettingTableName = registrationPO.appAbbreviation + "_" + modelAccess.tableName;
+//        tableListVO.tableAtlasId = modelAccess.atlasTableId;
+        tableListVO.tableName = registrationPO.appAbbreviation + "_" + modelAccess.tableName;
         voList.add(tableListVO);
         List<Long> tableIdList = new ArrayList<>();
         tableIdList.add(id);
@@ -1509,6 +1511,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return list;
     }
 
+/*
     @Override
     public List<FieldNameDTO> getTableFieldByQuery(String query) {
         List<FieldNameDTO> list = new ArrayList<>();
@@ -1533,6 +1536,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         return list;
     }
+*/
 
     @Override
     public ResultEnum addTableAccessData(TbTableAccessDTO dto) {
@@ -1711,11 +1715,60 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }else {
                 dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i)))?"255":String.valueOf(metaData.getColumnDisplaySize(i));
             }
+
+            // 转换表字段类型和长度
+            List<String> list = transformField(dto.fieldType, dto.fieldLength);
+            dto.fieldType = list.get(0);
+            dto.fieldLength = list.get(1);
+
             fieldNameDTOList.add(dto);
         }
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
         data.dataArray = array;
         return data;
+    }
+
+    /**
+     * 转换表字段类型和长度
+     *
+     * @param fieldType   fieldType
+     * @param fieldLength fieldLength
+     * @return target
+     */
+    private static List<String> transformField(String fieldType, String fieldLength) {
+
+        // 浮点型
+        List<String> floatType = new ArrayList<>();
+        floatType.add("double");
+
+        // 字符型
+        List<String> charType = new ArrayList<>();
+        charType.add("");
+
+        // 数值型
+        List<String> integerType = new ArrayList<>();
+        integerType.add("tinyint");
+        integerType.add("smallint");
+        integerType.add("mediumint");
+        integerType.add("int");
+        integerType.add("integer");
+        integerType.add("bigint");
+
+        //
+        List<String> fieldList = new LinkedList<>();
+
+        // boolean类型长度放开
+        if (Integer.parseInt(fieldLength) <= 1) {
+            fieldList.add("VARCHAR");
+            fieldList.add("20");
+        } else if (Integer.parseInt(fieldLength) >= 5000) {
+            fieldList.add("TEXT");
+            fieldList.add("0");
+        } else {
+            fieldList.add("VARCHAR");
+            fieldList.add(fieldLength);
+        }
+        return fieldList;
     }
 
     @Override

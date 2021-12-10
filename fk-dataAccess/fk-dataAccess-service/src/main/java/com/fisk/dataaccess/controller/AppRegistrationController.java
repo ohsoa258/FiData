@@ -153,6 +153,7 @@ public class AppRegistrationController {
                 TableListDTO dto = new TableListDTO();
                 dto.tableAtlasId = e.tableAtlasId;
                 dto.userId = nifiVO.userId;
+                dto.tableName = e.tableName;
                 return dto;
             }).collect(Collectors.toList());
         }

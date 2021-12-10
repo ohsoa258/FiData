@@ -237,7 +237,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<AppRegistrationDataDTO> getDataAppRegistrationMeta();
 
-    List<FieldNameDTO> getTableFieldByQuery(String query);
+//    List<FieldNameDTO> getTableFieldByQuery(String query);
     /**
      * 物理表单表添加
      *

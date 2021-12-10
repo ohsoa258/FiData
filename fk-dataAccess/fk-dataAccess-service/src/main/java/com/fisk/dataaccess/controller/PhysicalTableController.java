@@ -228,7 +228,7 @@ public class PhysicalTableController {
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
                 TableListDTO dto = new TableListDTO();
                 dto.tableAtlasId = e.tableAtlasId;
-                dto.tableName = e.nifiSettingTableName;
+                dto.tableName = e.tableName;
                 dto.userId = nifiVO.userId;
                 return dto;
             }).collect(Collectors.toList());
