@@ -161,6 +161,7 @@ public class AppRegistrationController {
         // 只有存在表时才会删除
         if (CollectionUtils.isNotEmpty(nifiVO.tableList) && CollectionUtils.isNotEmpty(nifiVO.tableIdList)) {
             // 删除pg库里对应的表
+            log.info("删除pg库的数据为,{}", pgsqlDelTableDTO);
             ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
             DataModelVO dataModelVO = new DataModelVO();
             dataModelVO.delBusiness=true;
