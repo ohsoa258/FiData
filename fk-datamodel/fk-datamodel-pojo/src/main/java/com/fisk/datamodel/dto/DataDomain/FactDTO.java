@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class FactDTO {
     public Long factId;
-    public String factTableEnName;
+    public String factTabName;
     /**
      * 原子指标 三级
      */

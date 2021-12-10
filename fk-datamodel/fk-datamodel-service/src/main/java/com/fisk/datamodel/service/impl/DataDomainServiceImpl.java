@@ -182,7 +182,7 @@ public class DataDomainServiceImpl implements DataDomainService {
         QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(FactPO::getBusinessProcessId, businessId)
-                .select(FactPO::getId, FactPO::getFactTableEnName);
+                .select(FactPO::getId, FactPO::getFactTabName);
         List<FactPO> fact = factMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(fact)) {
             return;
@@ -198,7 +198,7 @@ public class DataDomainServiceImpl implements DataDomainService {
 
             FactDTO dto = new FactDTO();
             dto.setFactId(factPO.getId());
-            dto.setFactTableEnName(factPO.getFactTableEnName());
+            dto.setFactTabName(factPO.getFactTabName());
             dto.setAtomicIndicatorsList(atomicIndicatorsList);
             dto.setDerivedIndicatorsList(derivedIndicatorsList);
             dto.setDimension(0);
