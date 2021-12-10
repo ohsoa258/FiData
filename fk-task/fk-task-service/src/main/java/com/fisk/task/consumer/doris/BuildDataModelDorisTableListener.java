@@ -89,7 +89,7 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-    @Value(("${pgdw-dblink}"))
+    @Value("${pgdw-dblink}")
     public String pgdwDblink;
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
@@ -129,6 +129,7 @@ public class BuildDataModelDorisTableListener
             }
             //生成函数,并执行
             String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
+            log.info("dw库生成函数:"+storedProcedure3);
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);
             //saveTableStructure(list);
             if (modelPublishTableDTO.createType == 0) {
@@ -156,7 +157,7 @@ public class BuildDataModelDorisTableListener
         }
         String fileds=tablePk+",";
         for (ModelPublishFieldDTO modelPublishFieldDTO:fieldList1) {
-            fileds+=modelPublishFieldDTO.fieldEnName+",";
+            fileds+="\""+modelPublishFieldDTO.fieldEnName+"\",";
         }
         fileds=fileds.substring(0,fileds.length()-1);
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
@@ -218,22 +219,22 @@ public class BuildDataModelDorisTableListener
         fieldList.forEach((l) -> {
             log.info("字段属性为:"+l);
             if(l.fieldType.contains("float")){
-                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
-                selectSql3.append(l.fieldEnName+" numeric ,");
+                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0.00),");
+                selectSql3.append("\""+l.fieldEnName+"\" numeric ,");
             }else if(l.fieldType.contains("VARCHAR")){
-                selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
-                selectSql3.append(l.fieldEnName+" VARCHAR ,");
+                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,null),");
+                selectSql3.append("\""+l.fieldEnName+"\" VARCHAR ,");
             }else if(l.fieldType.contains("INT")){
-                selectSql2.append("coalesce("+l.sourceFieldName+" ,0),");
-                selectSql3.append(l.fieldEnName+" int ,");
+                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0),");
+                selectSql3.append("\""+l.fieldEnName+"\" int ,");
             }else if(l.fieldType.contains("NUMERIC")){
-                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
-                selectSql3.append(l.fieldEnName+" numeric ,");
+                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0.00),");
+                selectSql3.append("\""+l.fieldEnName+"\" numeric ,");
             }
 
-            selectSql4.append(l.fieldEnName+"=EXCLUDED."+l.fieldEnName+",");
+            selectSql4.append("\""+l.fieldEnName+"\"=EXCLUDED.\""+l.fieldEnName+"\",");
             if(l.isPrimaryKey==1){
-                selectSql5.append(","+l.fieldEnName);
+                selectSql5.append(",\""+l.fieldEnName+"\"");
             }
 
             //多表
@@ -279,14 +280,14 @@ public class BuildDataModelDorisTableListener
         StringBuilder sqlFileds1 = new StringBuilder();
         fieldList.forEach((l) -> {
             if(l.fieldType.contains("INT")){
-                sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + ",");
+                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
             }
-            sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+            sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }
             if(l.isPrimaryKey==1){
-                pksql.append(l.fieldEnName+" ,");
+                pksql.append("\""+l.fieldEnName+"\" ,");
             }
         });
         //如果没有业务主键,就建一个主键

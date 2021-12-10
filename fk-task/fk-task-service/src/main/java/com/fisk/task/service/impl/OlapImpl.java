@@ -54,7 +54,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             fileds.add(" "+e.tableName.substring(4)+"key ,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            String selectSql="SELECT "+fileds.stream().collect(Collectors.joining(","));
+            String selectSql="SELECT "+fileds.stream().map(d->"`"+d+"`").collect(Collectors.joining(","));
             selectSql+=correlationFileds.stream().collect(Collectors.joining(","));
             selectSql=selectSql.substring(0,selectSql.length()-1);
             po.selectDataSql=selectSql+" FROM external_"+e.tableName+"";
@@ -62,6 +62,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
             po.tableId=e.id;
+            log.info("查询外表语句"+po.selectDataSql);
             poList.add(po);
         });
         //指标表
@@ -74,6 +75,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             po.selectDataSql=buildSelectAggregateModelDataSql(e);
             po.type=OlapTableEnum.KPI;
             po.tableId=e.factId;
+            log.info("查询外表语句"+po.selectDataSql);
             poList.add(po);
         });
         saveBatch(poList);
@@ -120,7 +122,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sql="drop table if exists "+tableName+";\n";
         sql+="CREATE EXTERNAL TABLE "+tableName+" ( "+dto.tableName.substring(4)+"key varchar(50),";
         for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO:dto1) {
-            sql+=modelAttributeMetaDataDTO.fieldEnName+" "+modelAttributeMetaDataDTO.fieldType+",";
+            sql+="`"+modelAttributeMetaDataDTO.fieldEnName+"` "+modelAttributeMetaDataDTO.fieldType+",";
         }
         //TODO 问题二
         List<String> associationKeys = dto1.stream().map(d -> " " + d.associationTable + " ").collect(Collectors.toList());
@@ -229,9 +231,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             if(atomicIndicatorFactAttributeDTO.attributeType==0||atomicIndicatorFactAttributeDTO.attributeType==2){
                 if(Objects.equals(atomicIndicatorFactAttributeDTO.factFieldType,"NUMERIC")||
                         atomicIndicatorFactAttributeDTO.factFieldType.contains("FLOAT")){
-                    sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" FLOAT,";
+                    sql+="`"+atomicIndicatorFactAttributeDTO.factFieldCnName+"` FLOAT,";
                 }else{
-                    sql+=atomicIndicatorFactAttributeDTO.factFieldCnName+" "+atomicIndicatorFactAttributeDTO.factFieldType+",";
+                    sql+="`"+atomicIndicatorFactAttributeDTO.factFieldCnName+"` "+atomicIndicatorFactAttributeDTO.factFieldType+",";
                 }
 
 
