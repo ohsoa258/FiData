@@ -31,6 +31,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -99,13 +100,15 @@ public class DimensionFolderImpl
     public ResultEnum delDimensionFolder(List<Integer> ids)
     {
         try {
-            int flat=mapper.deleteBatchIds(ids);
-            if (flat==0)
+            QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
+            folderPOQueryWrapper.select("id").in("id",ids);
+            List<Integer> folderIds=(List)mapper.selectObjs(folderPOQueryWrapper);
+            if (CollectionUtils.isEmpty(folderIds))
             {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.select("id").in("dimension_folder_id",ids);
+            queryWrapper.select("id").in("dimension_folder_id",folderIds);
             List<Integer> dimIds=(List) dimensionMapper.selectObjs(queryWrapper);
             if (dimIds==null || ids.size()==0)
             {
@@ -125,7 +128,7 @@ public class DimensionFolderImpl
             {
                 return ResultEnum.TABLE_ASSOCIATED;
             }
-            return dimensionMapper.deleteBatchIds(dimIds)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+            return mapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         } catch (Exception e) {
             e.printStackTrace();
         }

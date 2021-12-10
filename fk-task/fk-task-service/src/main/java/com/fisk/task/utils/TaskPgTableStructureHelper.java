@@ -119,7 +119,7 @@ public class TaskPgTableStructureHelper
                 po.fieldId = String.valueOf(item.fieldId);
                 po.fieldName = item.fieldEnName;
                 po.fieldType = item.fieldType;
-                if (item.fieldLength != 0) {
+                if ("VARCHAR".equals(item.fieldType)) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
                 poList.add(po);
