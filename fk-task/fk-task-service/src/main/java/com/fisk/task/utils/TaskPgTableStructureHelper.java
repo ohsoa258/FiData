@@ -34,6 +34,22 @@ public class TaskPgTableStructureHelper
     public static String taskdbPassword;
 
     public static String driverClassName;
+
+    public static String datainputDriverClassName;
+
+    public static String  pgsqlDatainputUrl;
+
+    public static String pgsqlDatainputUsername;
+
+    public static String pgsqlDatainputPassword;
+
+    public static String pgsqlDatamodelUrl;
+
+    public static String pgsqlDatamodelUsername;
+
+    public static String pgsqlDatamodelPassword;
+
+
     @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
     public  void setTaskdbUrl(String taskdbUrl) {
         TaskPgTableStructureHelper.taskdbUrl = taskdbUrl;
@@ -49,6 +65,34 @@ public class TaskPgTableStructureHelper
     @Value("${spring.datasource.dynamic.datasource.taskdb.driver-class-name}")
     public  void setDriverClassName(String driverClassName) {
         TaskPgTableStructureHelper.driverClassName = driverClassName;
+    }
+    @Value("${pgsql-datainput.driverClassName}")
+    public void setDatainputDriverClassName(String datainputDriverClassName) {
+        TaskPgTableStructureHelper.datainputDriverClassName = datainputDriverClassName;
+    }
+    @Value("${pgsql-datainput.url}")
+    public void setPgsqlDatainputUrl(String pgsqlDatainputUrl) {
+        TaskPgTableStructureHelper.pgsqlDatainputUrl = pgsqlDatainputUrl;
+    }
+    @Value("${pgsql-datainput.username}")
+    public void setPgsqlDatainputUsername(String pgsqlDatainputUsername) {
+        TaskPgTableStructureHelper.pgsqlDatainputUsername = pgsqlDatainputUsername;
+    }
+    @Value("${pgsql-datainput.password}")
+    public void setPgsqlDatainputPassword(String pgsqlDatainputPassword) {
+        TaskPgTableStructureHelper.pgsqlDatainputPassword = pgsqlDatainputPassword;
+    }
+    @Value("${pgsql-datamodel.url}")
+    public void setPgsqlDatamodelUrl(String pgsqlDatamodelUrl) {
+        TaskPgTableStructureHelper.pgsqlDatamodelUrl = pgsqlDatamodelUrl;
+    }
+    @Value("${pgsql-datamodel.username}")
+    public void setPgsqlDatamodelUsername(String pgsqlDatamodelUsername) {
+        TaskPgTableStructureHelper.pgsqlDatamodelUsername = pgsqlDatamodelUsername;
+    }
+    @Value("${pgsql-datamodel.password}")
+    public void setPgsqlDatamodelPassword(String pgsqlDatamodelPassword) {
+        TaskPgTableStructureHelper.pgsqlDatamodelPassword = pgsqlDatamodelPassword;
     }
 
     /**
@@ -190,18 +234,20 @@ public class TaskPgTableStructureHelper
      */
     public ResultEnum updatePgTableStructure(String sql,String tableName,int createType) throws Exception
     {
-        Class.forName("org.postgresql.Driver");
-        String pgsqlDwUrl="jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified";
-        String pgsqlOdsUrl="jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified";
-        String pgsqlOdsUsername="postgres";
-        String pgsqlOdsPassword="Password01!";
+        Class.forName(datainputDriverClassName);
+        String pgsqlDwUrl=pgsqlDatamodelUrl;
+        String pgsqlOdsUrl=pgsqlDatainputUrl;
+        String pgsqlOdsUsername=pgsqlDatainputUsername;
+        String pgsqlDwUsername=pgsqlDatamodelUsername;
+        String pgsqlDwPassword=pgsqlDatamodelPassword;
+        String pgsqlOdsPassword=pgsqlDatainputPassword;
         Connection conn;
         if (createType == 3 || createType == 4) {
             // 数据接入
             conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
         } else {
             // 数据建模
-            conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+            conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
         try {
             //修改表结构

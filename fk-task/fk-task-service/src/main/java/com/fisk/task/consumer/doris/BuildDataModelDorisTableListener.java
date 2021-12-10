@@ -89,6 +89,8 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
+    @Value(("${pgdw-dblink}"))
+    public String pgdwDblink;
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
     @Resource
@@ -145,9 +147,21 @@ public class BuildDataModelDorisTableListener
 
     public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO){
         String tableName=modelPublishTableDTO.tableName;
+        List<ModelPublishFieldDTO> fieldList1 = modelPublishTableDTO.fieldList;
+        String tablePk="";
+        if(modelPublishTableDTO.createType==0){
+            tablePk=modelPublishTableDTO.tableName.substring(4)+"key";
+        }else{
+            tablePk=modelPublishTableDTO.tableName.substring(5)+"key";
+        }
+        String fileds=tablePk+",";
+        for (ModelPublishFieldDTO modelPublishFieldDTO:fieldList1) {
+            fileds+=modelPublishFieldDTO.fieldEnName+",";
+        }
+        fileds=fileds.substring(0,fileds.length()-1);
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
                 "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysqlp text;\nbegin\n";
-        storedProcedureSql+="mysqlp:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql1(modelPublishTableDTO);
+        storedProcedureSql+="mysqlp:='INSERT INTO "+tableName+" ("+fileds+") SELECT "+fileds+" FROM('||' "+selectSql1(modelPublishTableDTO);
         storedProcedureSql+="\nraise notice'%',mysqlp;\nEXECUTE mysqlp;\n";
         storedProcedureSql+="end\n$BODY$;\n";
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
@@ -193,7 +207,7 @@ public class BuildDataModelDorisTableListener
         }else{
             tablePk=modelPublishTableDTO.tableName.substring(5)+"key";
         }
-        String selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''";
+        String selectSql="select * from dblink('||'''"+pgdwDblink+"'''||','||'''";
         String selectSql1="select sys_guid() as "+tablePk+", ";
         StringBuilder selectSql2=new StringBuilder();
         StringBuilder selectSql3=new StringBuilder(tablePk +" varchar,");
@@ -264,6 +278,9 @@ public class BuildDataModelDorisTableListener
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder sqlFileds1 = new StringBuilder();
         fieldList.forEach((l) -> {
+            if(l.fieldType.contains("INT")){
+                sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + ",");
+            }
             sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
@@ -570,187 +587,10 @@ public class BuildDataModelDorisTableListener
         return processorEntityBusinessResult.data.getId();
     }
 
-    /*
-    * 创建表
-    *
-    * */
-    private boolean createPgdbTable(ModelMetaDataDTO modelMetaDataDTO,String businessAreaName){
-        String tableName=modelMetaDataDTO.tableName;
-        String tableKeyName=modelMetaDataDTO.tableName+"key";
-        //创建pgdb表
-        //1.拼接sql
-        StringBuilder sql = new StringBuilder();
-        List<String> strings = new ArrayList<>();
-        Map<String, String> Map = new HashMap<>();
-        String stg_table =  modelMetaDataDTO.tableName;
-        String stg_sql = "";
-        sql.append("CREATE TABLE tableName ( "+tableKeyName+" varchar PRIMARY KEY,fk_doris_increment_code varchar,");
-        StringBuilder sqlFileds = new StringBuilder();
-        List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
-        dto.forEach((l) -> {
-            if(l.associationTable==null){
-            sqlFileds.append( l.fieldEnName + " " + l.fieldType.toLowerCase() + " ,");
-            ResultEntity<Object> tableField = client.getTableField(l.sourceFieldId);
-            TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
-            Map.put(l.fieldEnName,tableFieldsDTO.fieldName);
-            strings.add(l.fieldEnName);
-            }else{
-                String tableName2="";
-                if(l!=null){
-                    tableName2=l.associationTable;
-                    sqlFileds.append( tableName2+"key" + " " + "varchar" + " ,");
-                    Map.put(tableName2+"key",tableName2+"key");
-                    strings.add(tableName2+"key");
-                }
-            }
-        });
-        modelMetaDataDTO.fieldEnNames=strings;
-        modelMetaDataDTO.fieldEnNameMaps=Map;
-        sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
-        sqlFileds.append(")");
-        sql.append(sqlFileds);
-        stg_sql = sql.toString().replace("tableName", tableName);
-        //2.连接jdbc执行sql
-        String deleteSql="DROP TABLE IF EXISTS " + tableName;
-        iPostgreBuild.postgreBuildTable(deleteSql, BusinessTypeEnum.DATAMODEL);
-        BusinessResult datamodel = iPostgreBuild.postgreBuildTable(stg_sql, BusinessTypeEnum.DATAMODEL);
-        log.info("【PGSTG】" + stg_sql);
-        TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
-        taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
-        taskDwDimPO.sqlContent=stg_sql;//创建表的sql
-        taskDwDimPO.tableName=stg_table;
-        taskDwDimPO.storedProcedureName="update"+tableName+"()";
-        taskDwDimMapper.insert(taskDwDimPO);
-        modelMetaDataDTO.sqlName=taskDwDimPO.storedProcedureName;
-        if(datamodel.success==true){
-            return true;
-        }else {
-            return false;
-        }
-    }
-    /*
-    * 创建存储过程
-    * */
-    public String createStoredProcedure(ModelMetaDataDTO modelMetaDataDTO){
-        List<String> fieldEnNames = modelMetaDataDTO.fieldEnNames;
-        List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
-        String fieldString="";
-        String fieldValue="";
-        String fieldUpdate="";
-        fieldEnNames.removeAll(Collections.singleton(null));
-        String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update";
-        storedProcedureSql+=modelMetaDataDTO.tableName+"() \n" +
-                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\n";
-        storedProcedureSql+= "mysql1 text;\nmysql2 text;\nresrow1 record;\ngeshu text;\ninsert_sql TEXT;\n update_sql TEXT;\n";
-        storedProcedureSql+="begin\n";
-        storedProcedureSql+="mysql1:='"+selectSql(modelMetaDataDTO)+"';\n";
-        storedProcedureSql+="FOR resrow1 IN EXECUTE mysql1\n";
-        storedProcedureSql+="LOOP\n";
-        storedProcedureSql+="mysql2:='select case when count(*)>0 THEN ''y'' ELSE ''n'' end from "+modelMetaDataDTO.tableName+" where "+modelMetaDataDTO.tableName+"key=';\n";
-        storedProcedureSql+="mysql2:=mysql2 ||''''|| resrow1."+modelMetaDataDTO.tableName+"key||'''';\n";
-        storedProcedureSql+="raise notice'%',mysql2;";
-        storedProcedureSql+="EXECUTE mysql2 into geshu;\n";
-        storedProcedureSql+="raise notice'%',geshu;\n";
-        storedProcedureSql+="if geshu!='y' then \n";
-        storedProcedureSql+="insert_sql:='insert into "+modelMetaDataDTO.tableName+"( "+modelMetaDataDTO.tableName+"key, fk_doris_increment_code,";
-       /* for (String field:fieldEnNames) {
-            fieldString+=field+",";
-            fieldValue+="'''||resrow1."+field+"||''',";
-            fieldUpdate+=field+"='''||resrow1."+field+"||''',";
-        }*/
-        for (String key : modelMetaDataDTO.fieldEnNameMaps.keySet()) {
-            fieldString+=key+",";
-            fieldValue+="'''||resrow1."+modelMetaDataDTO.fieldEnNameMaps.get(key)+"||''',";
-            fieldUpdate+=key+"='''||resrow1."+modelMetaDataDTO.fieldEnNameMaps.get(key)+"||''',";
-        }
-        fieldString=fieldString.substring(0,fieldString.length()-1);
-        fieldValue=fieldValue.substring(0,fieldValue.length()-1)+")';\n";
-        fieldUpdate=fieldUpdate.substring(0,fieldUpdate.length()-1)+" where "+modelMetaDataDTO.tableName+"key= '''||resrow1."+modelMetaDataDTO.tableName+"key||'''';\n";
-        storedProcedureSql+=fieldString+" ) values ( '''||resrow1."+modelMetaDataDTO.tableName+"key||''','''||resrow1.fk_doris_increment_code||''',";
-        storedProcedureSql+=fieldValue;
-        storedProcedureSql+="EXECUTE insert_sql;\n";
-        storedProcedureSql+="else\n";
-        storedProcedureSql+="update_sql:='update "+modelMetaDataDTO.tableName+" set fk_doris_increment_code='''||resrow1.fk_doris_increment_code||''',"+fieldUpdate;//塞字段,慢慢塞吧
-        storedProcedureSql+="EXECUTE update_sql;\n";
-        storedProcedureSql+="end if;\n";
-        storedProcedureSql+="END LOOP;\n";
-        storedProcedureSql+="end;\n";
-        storedProcedureSql+="$BODY$;\n";
-        return storedProcedureSql;
-    }
-    /*
-    * 拼装查询数据的sql
-    * */
-    public String selectSql(ModelMetaDataDTO modelMetaDataDTO){
-        List<ModelAttributeMetaDataDTO> dto = modelMetaDataDTO.dto;
-        String selectSql="select  ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName +"key,ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+".fk_doris_increment_code ,";
-        String selectSql1=" ";
-        String selectSql2="";
-        String selectSql3="";
-        String selectSql4=" ";
-        int id=0;
-        for (ModelAttributeMetaDataDTO d:dto) {
-            //d.sourceFieldId;
-            id=d.sourceFieldId;
-            ResultEntity<Object> tableField = client.getTableField(id);
-            TableFieldsDTO tableFieldsDTO = JSON.parseObject(JSON.toJSONString(tableField.data), TableFieldsDTO.class);
-            //拼接selectsql
-            if (!Objects.equals(d.attributeType, 1)) {
-                if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
-                    selectSql += "coalesce( ods_" + modelMetaDataDTO.appbAbreviation + "_" + modelMetaDataDTO.sourceTableName + "." + tableFieldsDTO.fieldName + ",0),";
-                } else {
-                    selectSql += "coalesce( ods_" + modelMetaDataDTO.appbAbreviation + "_" + modelMetaDataDTO.sourceTableName + "." + tableFieldsDTO.fieldName + ",''''null''''),";
-                }
-                //主表
-                selectSql3 += tableFieldsDTO.fieldName + " " + tableFieldsDTO.fieldType.toLowerCase() + ",";
-            }
 
-            if(d.associationTable!=null&&!selectSql1.contains(d.associationTable)){//去重去空
-                //这里要改,前缀
-                if (Objects.equals(d.fieldType.toLowerCase(), "int")) {
-                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "key,0),";
-                } else {
-                    selectSql1 += "coalesce( ods_" + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "." + tableFieldsDTO.appbAbreviation + "_" + tableFieldsDTO.originalTableName + "key,''''null''''),";
 
-                }
-                //别名我说的算
-                selectSql4+="dim_"+tableFieldsDTO.originalTableName+"key  varchar,";
-            }
-            if(d.associationField!=null){
-                //这里要改,前缀
-                ResultEntity<Object> tableField1 = client.getTableField(d.associationSourceFieldId);
-                TableFieldsDTO tableFieldsDTO1 = JSON.parseObject(JSON.toJSONString(tableField1.data), TableFieldsDTO.class);
-                selectSql2+=" left join ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+" on ods_"+tableFieldsDTO.appbAbreviation+"_"+tableFieldsDTO.originalTableName+"."+tableFieldsDTO.fieldName+"=ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName+"."+tableFieldsDTO1.fieldName;
-            }
-        }
-        if(Objects.equals(selectSql1," ")){
-            selectSql=selectSql.substring(0,selectSql.length()-1);
-            selectSql3=selectSql3.substring(0,selectSql3.length()-1);
-        }
-        selectSql1=selectSql1.substring(0,selectSql1.length()-1)+" from ods_"+modelMetaDataDTO.appbAbreviation+"_"+modelMetaDataDTO.sourceTableName;
-        selectSql=selectSql+selectSql1+selectSql2;
-        selectSql="select * from dblink('||'''host=192.168.1.250 dbname=dmp_ods user=postgres password=Password01!'''||','||'''"+selectSql+"'''||') as t (";
-        selectSql3=modelMetaDataDTO.tableName+"key varchar, fk_doris_increment_code varchar,"+selectSql3;
-        selectSql=selectSql+selectSql3+selectSql4.substring(0,selectSql4.length()-1)+")";
-        return selectSql;
-    }
 
-    public String createStoredProcedure2(ModelMetaDataDTO modelMetaDataDTO){
-        String tableName=modelMetaDataDTO.tableName;
-        String tableKeyName=modelMetaDataDTO.tableName+"key";
-        String fieldValue="";
-        String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
-                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysql1 text;\nbegin\n";
-         storedProcedureSql+="mysql1:='INSERT INTO "+tableName+" SELECT * FROM('||' "+selectSql(modelMetaDataDTO)+")'||' AS ods ON CONFLICT (" ;
-        storedProcedureSql+=tableKeyName+")  DO UPDATE SET ";
-        for (String key : modelMetaDataDTO.fieldEnNameMaps.keySet()) {
-            fieldValue+=key+"=EXCLUDED."+modelMetaDataDTO.fieldEnNameMaps.get(key)+",";
-        }
-        storedProcedureSql+=fieldValue.substring(0,fieldValue.length()-1)+"';\n";
-        storedProcedureSql+="raise notice'%',mysql1;\nEXECUTE mysql1;\n";
-        storedProcedureSql+="end\n$BODY$;\n";
-        return storedProcedureSql;
-    }
+
 
     /**
      * 创建input_port/output_port组件

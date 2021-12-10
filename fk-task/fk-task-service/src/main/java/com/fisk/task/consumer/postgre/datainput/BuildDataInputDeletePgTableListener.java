@@ -6,6 +6,7 @@ import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.service.IDorisBuild;
 import com.fisk.task.utils.PostgreHelper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,6 +36,8 @@ public class BuildDataInputDeletePgTableListener {
     IAtlasBuildInstance atlas;
     @Resource
     IDorisBuild doris;
+    @Resource
+    TaskPgTableStructureMapper taskPgTableStructureMapper;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
@@ -42,11 +46,16 @@ public class BuildDataInputDeletePgTableListener {
         log.info("dataInfo:" + dataInfo);
         StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
         PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
+        HashMap<String, Object> conditionHashMap = new HashMap<>();
         if(Objects.equals(inputData.businessTypeEnum,BusinessTypeEnum.DATAINPUT)){
             List<String> atlasEntityId=new ArrayList();;
             inputData.tableList.forEach((t)->{
                 buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+", ");
                 atlasEntityId.add(t.tableAtlasId);
+                conditionHashMap.put("table_name","stg_"+t.tableName);
+                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                conditionHashMap.put("table_name","ods_"+t.tableName);
+                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
             });
             String delSqlStr=buildDelSqlStr.toString();
             delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
@@ -62,6 +71,8 @@ public class BuildDataInputDeletePgTableListener {
         }else{
             inputData.tableList.forEach((t)->{
                 buildDelSqlStr.append(t.tableName+", ");
+                conditionHashMap.put("table_name",t.tableName);
+                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
             });
             String delSqlStr=buildDelSqlStr.toString();
             delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
