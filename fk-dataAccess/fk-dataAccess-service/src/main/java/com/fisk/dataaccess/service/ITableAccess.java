@@ -16,7 +16,6 @@ import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
-import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -229,8 +228,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<ChannelDataDTO> getTableId();
 
-    List<TableIdAndNameVO> getTableIds();
-
     /**
      * 获取所有应用下表以及字段数据
      * @return
@@ -292,4 +289,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId);
 
     void updateTablePublishStatus(ModelPublishStatusDTO dto);
+
+    /**
+     * 根据appId和tableId 获取appName和tableName
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    ResultEntity<ComponentIdDTO> getAppNameAndTableName(DataAccessIdsDTO dto);
 }

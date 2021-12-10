@@ -44,8 +44,10 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableId());
     }
 
-    @GetMapping("/getTableIds")
-    public ResultEntity<Object> getTableIds() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds());
+    @ApiOperation("根据appId和tableId 获取appName和tableName")
+    @PostMapping("/getAppNameAndTableName")
+    public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto) {
+        ResultEntity<ComponentIdDTO> result = service.getAppNameAndTableName(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 }

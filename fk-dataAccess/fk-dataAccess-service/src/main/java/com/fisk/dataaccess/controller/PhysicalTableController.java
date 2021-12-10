@@ -234,7 +234,7 @@ public class PhysicalTableController {
             }).collect(Collectors.toList());
         }
         // 删除pg库对应的表
-        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+//        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
 
         DataModelVO dataModelVO = new DataModelVO();
         dataModelVO.delBusiness=false;

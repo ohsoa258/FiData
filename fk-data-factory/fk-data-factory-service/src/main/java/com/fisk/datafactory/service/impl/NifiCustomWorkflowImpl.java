@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,13 +10,19 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.map.NifiCustomWorkflowMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
@@ -49,6 +56,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     private GenerateCondition generateCondition;
     @Resource
     private GetMetadata getMetadata;
+    @Resource
+    private DataAccessClient dataAccessClient;
+
 
     @Override
     public ResultEnum addData(NifiCustomWorkflowDTO dto) {
@@ -87,6 +97,44 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         if (CollectionUtils.isNotEmpty(list)) {
             vo.list = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list);
         }
+
+        List<NifiCustomWorkflowDetailDTO> dtoList = vo.list;
+
+        dtoList.forEach(e ->{
+            ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
+            switch (channelDataEnum) {
+                // 数据湖表任务
+                case DATALAKE_TASK:
+
+                    DataAccessIdsDTO dataAccessIdsDTO = new DataAccessIdsDTO();
+                    dataAccessIdsDTO.appId = Long.valueOf(e.appId);
+                    dataAccessIdsDTO.tableId = Long.valueOf(e.tableId);
+
+                    ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dataAccessIdsDTO);
+                    if (result.code == 0) {
+                        ResultEntity<ComponentIdDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
+                        ComponentIdDTO dto = JSON.parseObject(JSON.toJSONString(resultEntity.data), ComponentIdDTO.class);
+                        e.appName = dto.appName;
+                        e.tableName = dto.tableName;
+                    }
+                    break;
+                // 数仓维度表任务组
+                case DW_DIMENSION_TASK:
+                    break;
+                // 数仓事实表任务组
+                case DW_FACT_TASK:
+                    break;
+                // 分析模型维度表任务组
+                case OLAP_DIMENSION_TASK:
+                    break;
+                //分析模型事实表任务组
+                case OLAP_FACT_TASK:
+                    break;
+                default:
+                    break;
+            }
+
+        });
         return vo;
     }
 

@@ -54,5 +54,15 @@ public enum ChannelDataEnum implements BaseEnum {
         return name;
     }
 
+    public static ChannelDataEnum getValue(String name) {
+        ChannelDataEnum[] carTypeEnums = values();
+        for (ChannelDataEnum carTypeEnum : carTypeEnums) {
+            String queryName=carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
 
 }

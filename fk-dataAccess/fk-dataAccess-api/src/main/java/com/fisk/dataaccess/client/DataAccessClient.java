@@ -162,4 +162,8 @@ public interface DataAccessClient {
     @ApiOperation("修改物理表发布状态")
     @PutMapping("/physicalTable/updateTablePublishStatus")
     public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto);
+
+    @ApiOperation("根据appId和tableId 获取appName和tableName")
+    @PostMapping("/dataAccessTree/getAppNameAndTableName")
+    public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);
 }

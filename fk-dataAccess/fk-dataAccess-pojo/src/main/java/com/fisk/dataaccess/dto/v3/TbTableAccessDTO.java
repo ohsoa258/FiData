@@ -51,4 +51,9 @@ public class TbTableAccessDTO {
      * 0: 发布;  1: 保存sql脚本
      */
     public int flag;
+
+    /**
+     * 用于拦截sql保存时空字符
+     */
+    public int sqlFlag;
 }

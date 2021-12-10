@@ -23,7 +23,6 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -45,7 +44,6 @@ import com.fisk.dataaccess.utils.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
-import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -1458,13 +1456,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<TableIdAndNameVO> getTableIds() {
-        List<TableIdAndNameDTO> list = baseMapper.listTableIdAndNames();
-
-        return TableAccessMap.INSTANCES.tableDtosToPos(list);
-    }
-
-    @Override
     public List<AppRegistrationDataDTO> getDataAppRegistrationMeta() {
 
         List<AppRegistrationDataDTO> list = new ArrayList<>();
@@ -1576,6 +1567,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO model = this.getById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+        // sql保存时丢失
+        if (dto.sqlFlag == 1 && "".equals(dto.sqlScript)) {
+            return ResultEnum.SQL_EXCEPT_CLEAR;
         }
 
         // 判断名称是否重复
@@ -1745,7 +1740,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<String> charType = new ArrayList<>();
         charType.add("");
 
-        // 数值型
+        // Number型
+        // 整型
         List<String> integerType = new ArrayList<>();
         integerType.add("tinyint");
         integerType.add("smallint");
@@ -1753,6 +1749,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         integerType.add("int");
         integerType.add("integer");
         integerType.add("bigint");
+        // 精确数值型
+        List<String> accurateType = new ArrayList<>();
+        accurateType.add("decimal");
+        accurateType.add("numeric");
+        // 货币、近似数值型
+        List<String> otherType = new ArrayList<>();
+        otherType.add("money");
+        otherType.add("smallmoney");
+        otherType.add("float");
+        otherType.add("real");
 
         //
         List<String> fieldList = new LinkedList<>();
@@ -1763,6 +1769,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             fieldList.add("20");
         } else if (Integer.parseInt(fieldLength) >= 5000) {
             fieldList.add("TEXT");
+            fieldList.add("0");
+        } else if (integerType.contains(fieldType.toLowerCase())) {
+            fieldList.add("INT");
+            fieldList.add("0");
+        } else if (accurateType.contains(fieldType.toLowerCase()) || otherType.contains(fieldType.toLowerCase())) {
+            fieldList.add("FLOAT");
             fieldList.add("0");
         } else {
             fieldList.add("VARCHAR");
@@ -1849,6 +1861,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             model.publish = dto.publish;
             baseMapper.updateById(model);
         }
+    }
+
+    @Override
+    public ResultEntity<ComponentIdDTO> getAppNameAndTableName(DataAccessIdsDTO dto) {
+
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dto.appId).one();
+        TableAccessPO accessPo = this.query().eq("id", dto.tableId).one();
+        if (registrationPo == null || accessPo == null) {
+            ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        ComponentIdDTO componentIdDTO = new ComponentIdDTO();
+        componentIdDTO.appName = registrationPo.appName;
+        componentIdDTO.tableName = accessPo.tableName;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
     /**

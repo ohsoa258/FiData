@@ -76,6 +76,7 @@ public enum ResultEnum {
     TABLE_NOT_EXIST(5010, "当前物理表已删除"),
     TABLE_IS_EXIST(5011, "物理表名已存在"),
     TASK_EXEC_FAILURE(5012, "task模块publishBuildAtlasTableTask方法执行失败"),
+    SQL_EXCEPT_CLEAR(5013, "当前SQL异常清除"),
 
 
     /**

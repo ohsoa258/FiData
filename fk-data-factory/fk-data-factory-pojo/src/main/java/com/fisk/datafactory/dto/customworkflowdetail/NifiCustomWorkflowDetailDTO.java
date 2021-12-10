@@ -14,6 +14,8 @@ public class NifiCustomWorkflowDetailDTO {
     public Integer componentsId;
     public String appId;
     public String tableId;
+    public String appName;
+    public String tableName;
     /**
      * 常规: 名称
      */

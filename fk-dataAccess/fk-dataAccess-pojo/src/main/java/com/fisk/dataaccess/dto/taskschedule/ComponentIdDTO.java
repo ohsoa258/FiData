@@ -19,4 +19,12 @@ public class ComponentIdDTO {
      * 调度组件id
      */
     public String schedulerComponentId;
+    /**
+     * 应用名称
+     */
+    public String appName;
+    /**
+     * 物理表名
+     */
+    public String tableName;
 }
