@@ -137,6 +137,14 @@ public interface DataModelClient {
     ResultEntity<DimensionTimePeriodDTO> getDimensionDate(@PathVariable("id") int id);
 
     /**
+     * 根据时间维度表名称获取所有字段
+     * @param tableName
+     * @return
+     */
+    @GetMapping("/dataService/getDimensionFieldNameList/{tableName}")
+    ResultEntity<List<String>> getDimensionFieldNameList(@PathVariable("tableName") String tableName);
+
+    /**
      * 修改维度发布状态
      * @param dto
      */
@@ -149,7 +157,5 @@ public interface DataModelClient {
      */
     @PostMapping("/fact/updateFactPublishStatus")
     void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
-
-
 
 }

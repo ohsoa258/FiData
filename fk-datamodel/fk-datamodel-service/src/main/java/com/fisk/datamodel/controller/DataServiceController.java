@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -34,6 +35,12 @@ public class DataServiceController {
     @GetMapping("/getDimensionDate/{id}")
     public ResultEntity<DimensionTimePeriodDTO> getDimensionDate(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.getDimensionDate(id));
+    }
+
+    @ApiOperation("根据时间维度表名称获取所有字段")
+    @GetMapping("/getDimensionFieldNameList/{tableName}")
+    public ResultEntity<List<String>> getDimensionFieldNameList(@PathVariable("tableName") String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.getDimensionFieldNameList(tableName));
     }
 
 }

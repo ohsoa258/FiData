@@ -128,6 +128,7 @@ spring:
 
   redis:
     host: 192.168.11.130
+    #host: 192.168.21.13
 
 
 logging:

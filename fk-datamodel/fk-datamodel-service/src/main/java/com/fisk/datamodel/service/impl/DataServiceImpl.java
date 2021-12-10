@@ -12,11 +12,13 @@ import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.IDataService;
 import com.fisk.dataservice.dto.isDimensionDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DataServiceImpl implements IDataService {
     @Resource
     DimensionAttributeMapper dimensionAttributeMapper;
@@ -179,6 +182,30 @@ public class DataServiceImpl implements IDataService {
         dto.dimensionTabName=dimensionPOList.get(0).dimensionTabName;
         dto.dimensionAttributeField=dimensionAttributePOList.get(0).dimensionFieldEnName;
         return dto;
+    }
+
+    @Override
+    public List<String> getDimensionFieldNameList(String tableName)
+    {
+        List<String> nameList=new ArrayList<>();
+        try {
+            QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.lambda().eq(DimensionPO::getDimensionTabName,tableName);
+            DimensionPO po=dimensionMapper.selectOne(queryWrapper);
+            if (po==null)
+            {
+                return nameList;
+            }
+            QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+            attributePOQueryWrapper.select("dimension_field_en_name").lambda()
+                    .eq(DimensionAttributePO::getDimensionId,po.id);
+            nameList=(List)dimensionAttributeMapper.selectObjs(attributePOQueryWrapper);
+        }
+        catch (Exception e)
+        {
+            log.error("getDimensionFieldNameList:"+e);
+        }
+        return nameList;
     }
 
 }

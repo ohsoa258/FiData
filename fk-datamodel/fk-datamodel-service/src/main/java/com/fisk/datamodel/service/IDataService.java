@@ -23,4 +23,11 @@ public interface IDataService {
      * @return
      */
     DimensionTimePeriodDTO getDimensionDate(int indicatorsId);
+
+    /**
+     * 根据时间维度表名获取表下所有字段
+     * @param tableName
+     * @return
+     */
+    List<String> getDimensionFieldNameList(String tableName);
 }
