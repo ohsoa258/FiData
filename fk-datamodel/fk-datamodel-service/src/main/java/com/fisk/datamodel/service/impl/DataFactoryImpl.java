@@ -1,7 +1,12 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -154,6 +159,23 @@ public class DataFactoryImpl implements IDataFactory {
         // 反转倒序
         Collections.reverse(data);
         return data;
+    }
+
+    @Override
+    public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto)
+    {
+        ComponentIdDTO componentIdDTO=new ComponentIdDTO();
+        BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.appId);
+        componentIdDTO.appName=businessAreaPO==null?"":businessAreaPO.getBusinessName();
+        if (dto.flag==4 || dto.flag==6)
+        {
+            DimensionPO dimensionPO=dimensionMapper.selectById(dto.tableId);
+            componentIdDTO.tableName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+        }else {
+            FactPO factPO=factMapper.selectById(dto.tableId);
+            componentIdDTO.tableName=factPO==null?"":factPO.factTabName;
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.fisk.datamodel.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
@@ -11,6 +12,7 @@ import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.isDimensionDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -157,5 +159,13 @@ public interface DataModelClient {
      */
     @PostMapping("/fact/updateFactPublishStatus")
     void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
+
+    /**
+     * 根据appId和tableId 获取appName和tableName
+     * @param dto
+     * @return
+     */
+    @PostMapping("/getAppNameAndTableName")
+    ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);
 
 }
