@@ -59,6 +59,7 @@ public enum ResultEnum {
      * 用户中心
      */
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
+    ORIGINAL_PASSWORD_ERROR(4002,"用户原密码错误"),
 
     /**
      * 数据接入模块

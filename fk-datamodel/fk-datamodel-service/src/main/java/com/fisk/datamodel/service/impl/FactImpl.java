@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
@@ -54,6 +55,8 @@ public class FactImpl implements IFact {
     FactAttributeImpl factAttributeImpl;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public ResultEnum addFact(FactDTO dto)
@@ -61,7 +64,7 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-                .eq(FactPO::getFactTableEnName,dto.factTabName);
+                .eq(FactPO::getFactTabName,dto.factTabName);
         FactPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
@@ -95,8 +98,8 @@ public class FactImpl implements IFact {
             //拼接删除niFi参数
             //DataModelVO vo = niFiDelTable(po.businessId, id);
             //拼接删除DW/Doris库中维度表
-            PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
-            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+            //PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
+            //publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
             return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
@@ -143,6 +146,7 @@ public class FactImpl implements IFact {
         table.tableName=factName;
         tableList.add(table);
         dto.tableList=tableList;
+        dto.userId=userHelper.getLoginUserInfo().id;
         return dto;
     }
 
@@ -163,7 +167,7 @@ public class FactImpl implements IFact {
         QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 //.eq(FactPO::getBusinessProcessId,dto.businessProcessId)
-            .eq(FactPO::getFactTableEnName,dto.factTabName);
+            .eq(FactPO::getFactTabName,dto.factTabName);
         FactPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)
         {

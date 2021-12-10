@@ -106,4 +106,11 @@ public interface IUserService {
      */
     ResultEnum updateUserValid(UserValidDTO dto);
 
+    /**
+     * 用户更改密码
+     * @param dto
+     * @return
+     */
+    ResultEnum updatePassword(ChangePasswordDTO dto);
+
 }

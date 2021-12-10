@@ -8,5 +8,9 @@ import lombok.Data;
 @Data
 public class ChangePasswordDTO {
     public int id;
+    /**
+     * 原密码
+     */
+    public String originalPassword;
     public String password;
 }

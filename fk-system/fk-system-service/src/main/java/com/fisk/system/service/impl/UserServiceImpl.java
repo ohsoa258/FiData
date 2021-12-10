@@ -76,7 +76,6 @@ public class UserServiceImpl implements IUserService {
         return  mapper.userList(dto.page,dto);
     }
 
-
     @Override
     public ResultEnum register(UserDTO dto) {
         //1.判断用户名是否已存在
@@ -272,6 +271,7 @@ public class UserServiceImpl implements IUserService {
         if (model == null) {
             return dto;
         }
+        dto.id=model.id;
         dto.userAccount=model.userAccount;
         dto.userName=model.username;
         return dto;
@@ -308,6 +308,23 @@ public class UserServiceImpl implements IUserService {
         data.columnDes="创建人";
         list.add(data);
         return list;
+    }
+
+    @Override
+    public ResultEnum updatePassword(ChangePasswordDTO dto)
+    {
+        UserPO userPO=mapper.selectById(dto.id);
+        if (userPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        if (!passwordEncoder.matches(dto.originalPassword, userPO.getPassword()))
+        {
+            return ResultEnum.ORIGINAL_PASSWORD_ERROR;
+        }
+        userPO.password=passwordEncoder.encode(dto.password);
+        return mapper.updateById(userPO)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+
     }
 
 }

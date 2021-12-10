@@ -128,5 +128,10 @@ public class UserController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserInfoColumn());
     }
 
+    @PutMapping("/updatePassword")
+    @ApiOperation("用户修改个人密码")
+    public ResultEntity<Object> updatePassword(@Validated @RequestBody ChangePasswordDTO dto) {
+        return ResultEntityBuild.build(service.updatePassword(dto));
+    }
 
 }

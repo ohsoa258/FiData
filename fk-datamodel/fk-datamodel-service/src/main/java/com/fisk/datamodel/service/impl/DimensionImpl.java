@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
@@ -49,6 +50,8 @@ public class DimensionImpl implements IDimension {
     DimensionAttributeImpl dimensionAttributeImpl;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public ResultEnum addDimension(DimensionDTO dto)
@@ -129,8 +132,8 @@ public class DimensionImpl implements IDimension {
             //拼接删除niFi参数
             //DataModelVO vo = niFiDelProcess(model.businessId, id);
             //拼接删除DW/Doris库中维度表
-            PgsqlDelTableDTO dto = delDwDorisTable(model.dimensionTabName);
-            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+            //PgsqlDelTableDTO dto = delDwDorisTable(model.dimensionTabName);
+            //publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
             return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
@@ -177,6 +180,7 @@ public class DimensionImpl implements IDimension {
         table.tableName=dimensionName;
         tableList.add(table);
         dto.tableList=tableList;
+        dto.userId=userHelper.getLoginUserInfo().id;
         return dto;
     }
 

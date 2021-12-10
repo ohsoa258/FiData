@@ -7,6 +7,7 @@ import lombok.Data;
  */
 @Data
 public class UserInfoCurrentDTO {
+    public long id;
     public String userName;
     public String userAccount;
 }
