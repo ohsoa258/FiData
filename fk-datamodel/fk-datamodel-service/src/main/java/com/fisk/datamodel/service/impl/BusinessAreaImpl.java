@@ -336,6 +336,7 @@ public class BusinessAreaImpl
     {
         PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
         dto.delApp=true;
+        dto.userId=userHelper.getLoginUserInfo().id;
         dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
         List<TableListDTO> tableList=new ArrayList<>();
 

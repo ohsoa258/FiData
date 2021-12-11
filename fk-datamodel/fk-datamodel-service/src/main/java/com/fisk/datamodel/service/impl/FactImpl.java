@@ -98,8 +98,8 @@ public class FactImpl implements IFact {
             //拼接删除niFi参数
             //DataModelVO vo = niFiDelTable(po.businessId, id);
             //拼接删除DW/Doris库中维度表
-            //PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
-            //publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+            PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
+            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
             return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
