@@ -234,7 +234,7 @@ public class PhysicalTableController {
             }).collect(Collectors.toList());
         }
         // 删除pg库对应的表
-//        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+        ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
 
         DataModelVO dataModelVO = new DataModelVO();
         dataModelVO.delBusiness=false;
@@ -246,7 +246,7 @@ public class PhysicalTableController {
         dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         dataModelVO.userId=nifiVO.userId;
         // 删除nifi流程
-        publishTaskClient.deleteNifiFlow(dataModelVO);
+        //publishTaskClient.deleteNifiFlow(dataModelVO);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }

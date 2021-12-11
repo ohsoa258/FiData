@@ -164,7 +164,7 @@ public class AppRegistrationController {
             log.info("当前用户id为,{}", nifiVO.userId);
             pgsqlDelTableDTO.userId = nifiVO.userId;
             log.info("删除pg库的数据为,{}", pgsqlDelTableDTO);
-//            ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+            ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
             DataModelVO dataModelVO = new DataModelVO();
             dataModelVO.delBusiness=true;
             DataModelTableVO dataModelTableVO = new DataModelTableVO();
@@ -175,7 +175,7 @@ public class AppRegistrationController {
             dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
             dataModelVO.userId=nifiVO.userId;
             // 删除nifi流程
-            publishTaskClient.deleteNifiFlow(dataModelVO);
+            //publishTaskClient.deleteNifiFlow(dataModelVO);
 //            log.info("task删除应用{}", task);
 //            System.out.println(task);
         }
