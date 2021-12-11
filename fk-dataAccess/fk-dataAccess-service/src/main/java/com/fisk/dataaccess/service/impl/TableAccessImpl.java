@@ -1868,13 +1868,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dto.appId).one();
         TableAccessPO accessPo = this.query().eq("id", dto.tableId).one();
-        if (registrationPo == null || accessPo == null) {
-            ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        }
 
         ComponentIdDTO componentIdDTO = new ComponentIdDTO();
-        componentIdDTO.appName = registrationPo.appName;
-        componentIdDTO.tableName = accessPo.tableName;
+        componentIdDTO.appName = registrationPo == null ? "" : registrationPo.appName;
+        componentIdDTO.tableName = accessPo == null ? "" : accessPo.tableName;
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 

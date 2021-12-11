@@ -3,16 +3,13 @@ package com.fisk.datamodel.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataservice.dto.IndicatorDTO;
 import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.dataservice.dto.isDimensionDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -165,7 +162,7 @@ public interface DataModelClient {
      * @param dto
      * @return
      */
-    @PostMapping("/getAppNameAndTableName")
+    @PostMapping("/DataFactory/getAppNameAndTableName")
     ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);
 
 }

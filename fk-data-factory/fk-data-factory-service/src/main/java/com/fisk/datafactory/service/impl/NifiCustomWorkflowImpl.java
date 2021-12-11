@@ -30,6 +30,7 @@ import com.fisk.datafactory.mapper.NifiCustomWorkflowMapper;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import com.fisk.datamodel.client.DataModelClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +59,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     private GetMetadata getMetadata;
     @Resource
     private DataAccessClient dataAccessClient;
+    @Resource
+    private DataModelClient dataModelClient;
 
 
     @Override
@@ -100,42 +103,78 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
         List<NifiCustomWorkflowDetailDTO> dtoList = vo.list;
 
-        dtoList.forEach(e ->{
+        for (NifiCustomWorkflowDetailDTO e : dtoList) {
             ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
             switch (channelDataEnum) {
                 // 数据湖表任务
                 case DATALAKE_TASK:
-
-                    DataAccessIdsDTO dataAccessIdsDTO = new DataAccessIdsDTO();
-                    dataAccessIdsDTO.appId = Long.valueOf(e.appId);
-                    dataAccessIdsDTO.tableId = Long.valueOf(e.tableId);
-
-                    ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dataAccessIdsDTO);
-                    if (result.code == 0) {
-                        ResultEntity<ComponentIdDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
-                        ComponentIdDTO dto = JSON.parseObject(JSON.toJSONString(resultEntity.data), ComponentIdDTO.class);
-                        e.appName = dto.appName;
-                        e.tableName = dto.tableName;
+                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        break;
                     }
+                    getDataAccessIdsDtoAccess(e, 3);
                     break;
                 // 数仓维度表任务组
                 case DW_DIMENSION_TASK:
+                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        break;
+                    }
+                    getDataAccessIdsDtoMOdel(e, 4);
                     break;
                 // 数仓事实表任务组
                 case DW_FACT_TASK:
+                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        break;
+                    }
+                    getDataAccessIdsDtoMOdel(e, 5);
                     break;
                 // 分析模型维度表任务组
                 case OLAP_DIMENSION_TASK:
+                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        break;
+                    }
+                    getDataAccessIdsDtoMOdel(e, 6);
                     break;
-                //分析模型事实表任务组
+                //分析模型事实表任务
                 case OLAP_FACT_TASK:
+                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                        break;
+                    }
+                    getDataAccessIdsDtoMOdel(e, 7);
                     break;
                 default:
                     break;
             }
-
-        });
+        }
         return vo;
+    }
+
+    private void getDataAccessIdsDtoAccess(NifiCustomWorkflowDetailDTO e, int flag) {
+
+        DataAccessIdsDTO dto = new DataAccessIdsDTO();
+        dto.appId = Long.valueOf(e.appId);
+        dto.tableId = Long.valueOf(e.tableId);
+        dto.flag = flag;
+        ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dto);
+        getName(e, result);
+    }
+
+    private void getDataAccessIdsDtoMOdel(NifiCustomWorkflowDetailDTO e, int flag) {
+
+        DataAccessIdsDTO dto = new DataAccessIdsDTO();
+        dto.appId = Long.valueOf(e.appId);
+        dto.tableId = Long.valueOf(e.tableId);
+        dto.flag = flag;
+        ResultEntity<Object> result = dataModelClient.getAppNameAndTableName(dto);
+        getName(e, result);
+    }
+
+    private void getName(NifiCustomWorkflowDetailDTO e, ResultEntity<Object> result) {
+        if (result.code == 0) {
+            ResultEntity<ComponentIdDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
+            ComponentIdDTO dto = JSON.parseObject(JSON.toJSONString(resultEntity.data), ComponentIdDTO.class);
+            e.appName = dto.appName;
+            e.tableName = dto.tableName;
+        }
     }
 
     @Override
