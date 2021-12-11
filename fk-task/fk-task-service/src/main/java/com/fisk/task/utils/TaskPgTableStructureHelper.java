@@ -250,6 +250,7 @@ public class TaskPgTableStructureHelper
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
         try {
+            log.info("执行存储过程返回修改语句:"+sql);
             //修改表结构
             if (sql!=null && sql.length()>0)
             {
