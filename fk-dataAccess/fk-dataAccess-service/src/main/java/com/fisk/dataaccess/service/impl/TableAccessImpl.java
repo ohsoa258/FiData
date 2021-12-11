@@ -1764,17 +1764,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<String> fieldList = new LinkedList<>();
 
         // boolean类型长度放开
-        if (Integer.parseInt(fieldLength) <= 1) {
-            fieldList.add("VARCHAR");
-            fieldList.add("20");
-        } else if (Integer.parseInt(fieldLength) >= 5000) {
-            fieldList.add("TEXT");
-            fieldList.add("0");
-        } else if (integerType.contains(fieldType.toLowerCase())) {
+        if (integerType.contains(fieldType.toLowerCase())) {
             fieldList.add("INT");
             fieldList.add("0");
         } else if (accurateType.contains(fieldType.toLowerCase()) || otherType.contains(fieldType.toLowerCase())) {
             fieldList.add("FLOAT");
+            fieldList.add("0");
+        } else if (Integer.parseInt(fieldLength) <= 1) {
+            fieldList.add("VARCHAR");
+            fieldList.add("20");
+        } else if (Integer.parseInt(fieldLength) >= 5000) {
+            fieldList.add("TEXT");
             fieldList.add("0");
         } else {
             fieldList.add("VARCHAR");

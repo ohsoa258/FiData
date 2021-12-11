@@ -12,7 +12,7 @@ public class ModelPublishStatusDTO {
      */
     public long tableId;
     /**
-     * 发布状态
+     * 发布状态 1: 发布成功  2: 发布失败
      */
     public int publish;
 }
