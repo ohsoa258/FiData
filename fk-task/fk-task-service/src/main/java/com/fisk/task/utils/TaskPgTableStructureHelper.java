@@ -115,9 +115,9 @@ public class TaskPgTableStructureHelper
                 //判断是否为维度
                 po.tableType=type;
                 po.tableId = String.valueOf(dto.tableId);
-                po.tableName = dto.tableName;
+                po.tableName = dto.tableName.toLowerCase();
                 po.fieldId = String.valueOf(item.fieldId);
-                po.fieldName = item.fieldEnName;
+                po.fieldName = item.fieldEnName.toLowerCase();
                 po.fieldType = item.fieldType;
                 if ("VARCHAR".equals(item.fieldType)) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
@@ -129,9 +129,9 @@ public class TaskPgTableStructureHelper
                     po2.version = version;
                     po2.tableType=type;
                     po2.tableId = String.valueOf(dto.tableId);
-                    po2.tableName = dto.tableName;
+                    po2.tableName = dto.tableName.toLowerCase();
                     po2.fieldId=String.valueOf(item.associateDimensionId);
-                    po2.fieldName=item.associateDimensionName.substring(4)+"key";
+                    po2.fieldName=(item.associateDimensionName.substring(4)+"key").toLowerCase();
                     po2.fieldType="VARCHAR(255)";
                     poList.add(po2);
                 }
