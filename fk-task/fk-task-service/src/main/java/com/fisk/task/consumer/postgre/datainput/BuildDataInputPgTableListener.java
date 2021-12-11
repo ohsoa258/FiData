@@ -6,6 +6,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -74,23 +75,32 @@ public class BuildDataInputPgTableListener {
         selectTableSql=selectTableSql.replace("tableName","ods_" + buildPhysicalTableDTO.appAbbreviation.toLowerCase() + "_" + buildPhysicalTableDTO.tableName.toLowerCase());
         BusinessResult resultSetBusinessResult = pg.postgreQuery(selectTableSql, BusinessTypeEnum.DATAINPUT);
         List<TableFieldDetailDTO> arrayLists = JSONArray.parseArray(JSON.toJSONString(resultSetBusinessResult.data), TableFieldDetailDTO.class);
-        if(arrayLists!=null&&arrayLists.size()!=0){
-            //updataOrCreateTable(arrayLists,buildPhysicalTableDTO.tableFieldsDTOS);
-            saveOrUpdate(buildPhysicalTableDTO.modelPublishTableDTO);
-        }else{
+
+        ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
+        log.info("开始保存ods版本号,参数为{}", dto);
+        // 保存ods版本号
+        ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto);
+        dto.tableName = "stg_" + dto.tableName.substring(4);
+        dto.createType = 4;
+        log.info("开始保存stg版本号,参数为{}", dto);
+        // 保存stg版本号
+        taskPgTableStructureHelper.saveTableStructure(dto);
+        log.info("保存版本号方法执行成功");
+
+        if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
             StringBuilder sql = new StringBuilder();
             StringBuilder sqlFileds = new StringBuilder();
             sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             tableFieldsDTOS.forEach((l) -> {
-                if(l.fieldType.contains("FLOAT")){
-                    sqlFileds.append("\"" +l.fieldName + "\" " + " numeric ,");
-                }else if(l.fieldType.contains("INT")){
-                    sqlFileds.append("\"" +l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
-                }else if(l.fieldType.contains("TEXT")){
+                if (l.fieldType.contains("FLOAT")) {
+                    sqlFileds.append("\"" + l.fieldName + "\" " + " numeric ,");
+                } else if (l.fieldType.contains("INT")) {
+                    sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
+                } else if (l.fieldType.contains("TEXT")) {
                     sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-                }else{
-                    sqlFileds.append("\"" +l.fieldName + "\" " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
+                } else {
+                    sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
                 }
             });
             sqlFileds.delete(sqlFileds.length() - 1, sqlFileds.length());
