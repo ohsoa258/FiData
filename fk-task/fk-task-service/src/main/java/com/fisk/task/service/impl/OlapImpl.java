@@ -47,14 +47,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
             e.tableName=e.tableName.toLowerCase();
-            List<String> fileds=e.dto.stream().map(d->" "+d.fieldEnName.toLowerCase()+" ").collect(Collectors.toList());
+            List<String> fileds=e.dto.stream().map(d->" "+d.fieldEnName+" ").collect(Collectors.toList());
             List<String> correlationFileds=e.dto.stream().map(d->" "+d.associationTable+" ").collect(Collectors.toList());
             correlationFileds.removeAll(Collections.singleton(" null "));
             correlationFileds.stream().distinct();
             fileds.add(" "+e.tableName.substring(4)+"key ,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            String selectSql="SELECT "+fileds.stream().map(d->"`"+d+"`").collect(Collectors.joining(","));
+            String selectSql="SELECT "+fileds.stream().collect(Collectors.joining(","));
             selectSql+=correlationFileds.stream().collect(Collectors.joining(","));
             selectSql=selectSql.substring(0,selectSql.length()-1);
             po.selectDataSql=selectSql+" FROM external_"+e.tableName+"";
@@ -99,7 +99,17 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sqlUniqueBuild = "ENGINE=OLAP  UNIQUE KEY(`" + keyName + "`,";
         String sqlDistributedBuild = "DISTRIBUTED BY HASH(`" + keyName + "`,";
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
-        dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName.toLowerCase() + "` " + l.fieldType +"("+l.fieldLength+ ") comment " + "'" + l.fieldCnName + "' ,"));
+        //dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName + "` " + l.fieldType +"("+l.fieldLength+ ") comment " + "'" + l.fieldCnName + "' ,"));
+        List<ModelAttributeMetaDataDTO> dto2 = dto.dto;
+        for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO:dto2) {
+             if(modelAttributeMetaDataDTO.fieldType.contains("TEXT")||modelAttributeMetaDataDTO.fieldType.contains("INT")){
+                 sqlFiledBuild.append("`"+modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType + " comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
+
+             }else{
+                 sqlFiledBuild.append("`"+modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType +"("+modelAttributeMetaDataDTO.fieldLength+ ") comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
+
+             }
+        }
         //TODO  问题一
         List<ModelAttributeMetaDataDTO> dto1 = dto.dto;
         List<String> fileds=dto1.stream().map(d->" "+d.associationTable+" ").collect(Collectors.toList());

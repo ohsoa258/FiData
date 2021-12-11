@@ -279,10 +279,13 @@ public class BuildDataModelDorisTableListener
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder sqlFileds1 = new StringBuilder();
         fieldList.forEach((l) -> {
-            if(l.fieldType.contains("INT")){
+            if(l.fieldType.contains("INT")||l.fieldType.contains("TEXT")){
                 sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
+            }else if(l.fieldType.contains("NUMERIC")||l.fieldType.contains("numeric")){
+                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(20) ,");
+            }else{
+                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             }
-            sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }

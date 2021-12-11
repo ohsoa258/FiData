@@ -311,7 +311,7 @@ public class BuildAtlasTableAndColumnTaskListener
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
         tableFieldsDTOS.forEach((l) -> {
             sqlFileds.append( l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
-            sqlSelect.append("["+l.sourceFieldName+"] as "+l.fieldName +" ,");
+            sqlSelect.append("["+l.sourceFieldName+"] as ["+l.fieldName +"] ,");
             });
         sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
         sqlFileds.append(")");
