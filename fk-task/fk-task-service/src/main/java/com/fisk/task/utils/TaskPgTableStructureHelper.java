@@ -1,5 +1,6 @@
 package com.fisk.task.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -9,7 +10,9 @@ import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,6 +28,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TaskPgTableStructureHelper
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO> {
+
+    @Resource
+    TaskPgTableStructureMapper taskPgTableStructureMapper;
 
 
     public static String taskdbUrl;
@@ -144,7 +150,7 @@ public class TaskPgTableStructureHelper
             //执行存储过程
             String sql = execProcedure(version,type);
             //判断是否有修改语句
-            return updatePgTableStructure(sql,dto.tableName,dto.createType);
+            return updatePgTableStructure(sql,version,dto.createType);
         }
         catch (Exception ex)
         {
@@ -229,10 +235,10 @@ public class TaskPgTableStructureHelper
     /**
      * 根据语句修改PgTable表结构
      * @param sql
-     * @param tableName
+     * @param version
      * @return
      */
-    public ResultEnum updatePgTableStructure(String sql,String tableName,int createType) throws Exception
+    public ResultEnum updatePgTableStructure(String sql,String version,int createType) throws Exception
     {
         Class.forName(datainputDriverClassName);
         String pgsqlDwUrl=pgsqlDatamodelUrl;
@@ -250,6 +256,16 @@ public class TaskPgTableStructureHelper
             conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
         }
         try {
+            //检查版本
+            ResultEnum resultEnum = checkVersion(version, conn);
+            if (resultEnum==ResultEnum.TASK_TABLE_NOT_EXIST)
+            {
+                return resultEnum;
+            }
+            else if (resultEnum!=ResultEnum.SUCCESS)
+            {
+                return resultEnum;
+            }
             log.info("执行存储过程返回修改语句:"+sql);
             //修改表结构
             if (sql!=null && sql.length()>0)
@@ -257,18 +273,56 @@ public class TaskPgTableStructureHelper
                 Statement st = conn.createStatement();
                 return st.execute(sql)==true?ResultEnum.SUCCESS:ResultEnum.SQL_ERROR;
             }
-            //判断表是否存在
-            DatabaseMetaData metaData=conn.getMetaData();
-            ResultSet set=metaData.getTables(null,null,tableName,null);
-            if (!set.next())
-            {
-                return ResultEnum.TASK_TABLE_NOT_EXIST;
-            }
             return ResultEnum.SUCCESS;
         }catch (SQLException e) {
             log.error("updatePgTableStructure:"+e);
-            conn.close();
-            return ResultEnum.UPDATE_DATA_ERROR;
         }
+        finally {
+            conn.close();
+        }
+        return ResultEnum.UPDATE_DATA_ERROR;
     }
+
+    /**
+     * 根据版本号找出更新前表是否存在
+     * @param version
+     * @param conn
+     * @return
+     * @throws Exception
+     */
+    public ResultEnum checkVersion(String version,Connection conn) throws Exception
+    {
+        try {
+            QueryWrapper<TaskPgTableStructurePO> queryWrapper=new QueryWrapper<>();
+            queryWrapper.lambda().eq(TaskPgTableStructurePO::getVersion,version);
+            List<TaskPgTableStructurePO> taskPgTableStructurePOList=taskPgTableStructureMapper.selectList(queryWrapper);
+            if (!CollectionUtils.isEmpty(taskPgTableStructurePOList))
+            {
+                QueryWrapper<TaskPgTableStructurePO> taskPgTableStructurePOQueryWrapper=new QueryWrapper<>();
+                taskPgTableStructurePOQueryWrapper.orderByDesc("create_time").lambda()
+                        .eq(TaskPgTableStructurePO::getTableType,taskPgTableStructurePOList.get(0).tableType)
+                        .ne(TaskPgTableStructurePO::getVersion,version)
+                        .eq(TaskPgTableStructurePO::getTableId,taskPgTableStructurePOList.get(0).tableId);
+                List<TaskPgTableStructurePO> taskPgTableStructurePOList1=taskPgTableStructureMapper
+                        .selectList(taskPgTableStructurePOQueryWrapper);
+                if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1))
+                {
+                    //判断表是否存在
+                    DatabaseMetaData metaData=conn.getMetaData();
+                    ResultSet set=metaData.getTables(null,null,taskPgTableStructurePOList1.get(0).tableName,null);
+                    if (set.next())
+                    {
+                        return ResultEnum.SUCCESS;
+                    }
+                }
+                return ResultEnum.TASK_TABLE_NOT_EXIST;
+            }
+        }
+        catch (Exception e)
+        {
+            log.error("checkVersion:"+e);
+        }
+        return ResultEnum.PARAMTER_ERROR;
+    }
+
 }
