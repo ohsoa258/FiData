@@ -58,6 +58,7 @@ import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1654,7 +1655,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array.total = rowCount;
             rs.close();
         } catch (ClassNotFoundException | SQLException e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,":"+e.getMessage());
         }
         return array;
     }

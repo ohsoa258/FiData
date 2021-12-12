@@ -371,6 +371,7 @@ public class BusinessAreaImpl
                 tableList.add(table);
             }
         }
+        dto.tableList=tableList;
         return dto;
     }
 
