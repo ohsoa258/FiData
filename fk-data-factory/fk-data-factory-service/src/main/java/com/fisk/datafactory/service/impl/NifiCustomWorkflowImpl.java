@@ -103,48 +103,51 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
         List<NifiCustomWorkflowDetailDTO> dtoList = vo.list;
 
-        for (NifiCustomWorkflowDetailDTO e : dtoList) {
-            ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
-            switch (channelDataEnum) {
-                // 数据湖表任务
-                case DATALAKE_TASK:
-                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+        if (CollectionUtils.isNotEmpty(dtoList)) {
+            for (NifiCustomWorkflowDetailDTO e : dtoList) {
+                ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
+                switch (channelDataEnum) {
+                    // 数据湖表任务
+                    case DATALAKE_TASK:
+                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                            break;
+                        }
+                        getDataAccessIdsDtoAccess(e, 3);
                         break;
-                    }
-                    getDataAccessIdsDtoAccess(e, 3);
-                    break;
-                // 数仓维度表任务组
-                case DW_DIMENSION_TASK:
-                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                    // 数仓维度表任务组
+                    case DW_DIMENSION_TASK:
+                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                            break;
+                        }
+                        getDataAccessIdsDtoMOdel(e, 4);
                         break;
-                    }
-                    getDataAccessIdsDtoMOdel(e, 4);
-                    break;
-                // 数仓事实表任务组
-                case DW_FACT_TASK:
-                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                    // 数仓事实表任务组
+                    case DW_FACT_TASK:
+                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                            break;
+                        }
+                        getDataAccessIdsDtoMOdel(e, 5);
                         break;
-                    }
-                    getDataAccessIdsDtoMOdel(e, 5);
-                    break;
-                // 分析模型维度表任务组
-                case OLAP_DIMENSION_TASK:
-                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                    // 分析模型维度表任务组
+                    case OLAP_DIMENSION_TASK:
+                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                            break;
+                        }
+                        getDataAccessIdsDtoMOdel(e, 6);
                         break;
-                    }
-                    getDataAccessIdsDtoMOdel(e, 6);
-                    break;
-                //分析模型事实表任务
-                case OLAP_FACT_TASK:
-                    if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                    //分析模型事实表任务
+                    case OLAP_FACT_TASK:
+                        if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
+                            break;
+                        }
+                        getDataAccessIdsDtoMOdel(e, 7);
                         break;
-                    }
-                    getDataAccessIdsDtoMOdel(e, 7);
-                    break;
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
         }
+
         return vo;
     }
 
