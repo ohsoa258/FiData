@@ -116,6 +116,13 @@ public class TableNameImpl implements ITableName {
                 indicator.setCalculationLogic(indicatorsPO.getCalculationLogic());
                 dtoList.add(indicator);
             }else if (indicatorsPO.getIndicatorsType() == IndicatorsTypeEnum.DERIVED_INDICATORS.getValue()){
+                IndicatorsPO indicatorsPO1 = indicatorsMapper.selectById(indicatorsPO.getAtomicId());
+                indicator.setFieldName(indicatorsPO1.getIndicatorsName());
+                indicator.setDeriveName(indicatorsPO.getIndicatorsName());
+                indicator.setType(DERIVED_INDICATORS);
+                indicator.setTimePeriod(indicatorsPO.timePeriod);
+                indicator.setCalculationLogic(indicatorsPO1.getCalculationLogic());
+
                 // 派生指标
                 QueryWrapper<BusinessLimitedPO> query = new QueryWrapper<>();
                 query.lambda().eq(BusinessLimitedPO::getId,indicatorsPO.getBusinessLimitedId());
@@ -124,13 +131,6 @@ public class TableNameImpl implements ITableName {
                     QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
                     queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,limitedPO.getId());
                     List<BusinessLimitedAttributePO> attributePOList = attributeMapper.selectList(queryWrapper);
-
-                    IndicatorsPO indicatorsPO1 = indicatorsMapper.selectById(indicatorsPO.getAtomicId());
-                    indicator.setFieldName(indicatorsPO1.getIndicatorsName());
-                    indicator.setDeriveName(indicatorsPO.getIndicatorsName());
-                    indicator.setType(DERIVED_INDICATORS);
-                    indicator.setTimePeriod(indicatorsPO.timePeriod);
-                    indicator.setCalculationLogic(indicatorsPO1.getCalculationLogic());
                     indicator.setWhereTimeLogic(attributePOList.stream().filter(e -> e!=null)
                             .map(e -> {
                                 String factFieldName = this.getFactFieldName(e.getFactAttributeId(),e.getCalculationLogic(),e.getCalculationValue());
