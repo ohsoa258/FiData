@@ -35,7 +35,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         // 创建Sql
         String sql = this.buildSql(apiConfigureFieldList);
         // 查询结果集
-        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql);
+        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql.toLowerCase());
         return dataDomainDTOList;
     }
 
@@ -75,7 +75,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         List<IndicatorDTO> indicatorList = client.getIndicatorsLogic(indicatorFeignDTO).getData();
 
         StringBuilder str = new StringBuilder();
-        List<IndicatorDTO> count = indicatorList.stream().filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
+        List<IndicatorDTO> count = indicatorList.stream().filter(e -> e != null)
+                .filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
         AtomicInteger aliasCount = new AtomicInteger(0);
 
         // 从表根据表名去重
@@ -104,6 +105,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     stringBuilder.append(atr);
                     stringBuilder.append(arr);
                     stringBuilder.append(" GROUP BY " + dimColumn);
+                    stringBuilder.append(" ORDER BY " + dimColumn);
 
                     // 子查询 AS
                     if (count.size() >= 2){
@@ -149,13 +151,6 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .map(e -> {
 
                     // 派生指标时间周期必须JOIN year
-                   /* DataDoFieldDTO doFieldDTO = new DataDoFieldDTO();
-                    doFieldDTO.setFieldId(2543);
-                    doFieldDTO.setFieldName("year");
-                    doFieldDTO.setTableName("dim_date");
-                    doFieldDTO.setFieldType(COLUMN);
-                    doFieldDTO.setDimension(1);
-                    apiConfigureFieldList.add(doFieldDTO);*/
                     ArrayList<DataDoFieldDTO> doFieldArrayList = apiConfigureFieldList.stream().collect(Collectors.collectingAndThen(Collectors.toCollection(() -> new TreeSet<>
                             (Comparator.comparing(tc -> tc.getFieldName()))), ArrayList::new));
 
@@ -205,38 +200,42 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     // 判断时间周期
                     String timePeriod = null;
                     if (e.getTimePeriod().equals("YTD")){
-                        timePeriod = "'%m'";
+                        timePeriod = "'%y'";
                     }else if (e.getTimePeriod().equals("MTD")){
-                        timePeriod = "'%q'";
+                        timePeriod = "'%m'";
                     }else if (e.getTimePeriod().equals("QTD")){
-                        timePeriod = null;
+                        timePeriod = "'%q'";
                     }
 
                     if (StringUtils.isEmpty(str)){
                         str1.append("(" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + " )>=");
                         str1.append("(" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + ")" + " AND ");
                     }else {
-                        str1.append("DATE_FORMAT(FROM_UNIXTIME("
-                                + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "/1000" + "," + "'%Y-%m-%d %h:%i:%s'),"
-                                + timePeriod +" )>=");
-
-                        str1.append("DATE_FORMAT(FROM_UNIXTIME("
-                                + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + "/1000" + "," + "'%Y-%m-%d %h:%i:%s'),"
-                                + timePeriod +" )");
+                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
+                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")");
                     }
 
-                    // 追加JOIN ON year字段相等
-                    str1.append(" AND " + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + ">=" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField());
+                    // 到三个 JOIN 查询
+                    String timePeriods = dataDoFieldDTOList.stream().map(d -> {
+                        List<String> column = client.getDimensionFieldNameList(dto.getDimensionTabName()).getData();
+                        if (column.contains(d.getFieldName())){
+                            String aliasOn = escapeStr[0] + d.getFieldName() + escapeStr[0];
+                            return aliasOn;
+                        }
 
-                    String dim_date = dataDoFieldDTOList.stream().filter(d -> !d.getTableName().equals(dto.getDimensionTabName())).map(d -> {
-                        String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "="
-                                + ATOM_ALIAS + i1 + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
-                        return aliasOn;
-                    }).collect(Collectors.joining(" AND "));
+                        return null;
+                    }).collect(Collectors.joining(","));
 
-                    if (!StringUtils.isEmpty(dim_date)){
-                        str1.append(" AND ");
-                        str1.append(dim_date);
+                    if (!StringUtils.isEmpty(timePeriods)){
+                        // 时间周期表的列
+                        str1.append(" JOIN ");
+                        str1.append("(SELECT " + timePeriods + ",");
+                        str1.append("max(" + dto.getDimensionAttributeField() + ")" + " AS " + "maxkey");
+                        str1.append(" FROM " + dto.getDimensionTabName());
+                        // GROUP BY
+                        str1.append(" GROUP BY " + timePeriods + ")" + " AS " + ATOM_ALIAS + 3);
+                        // ON 条件
+                        str1.append(" ON " + ATOM_ALIAS + 3 + "." + "maxkey" + "=" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField());
                     }
 
                     // SELECT 最外层

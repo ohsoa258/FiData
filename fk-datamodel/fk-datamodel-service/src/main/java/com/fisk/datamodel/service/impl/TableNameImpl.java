@@ -156,12 +156,13 @@ public class TableNameImpl implements ITableName {
         if (factAttributePO != null){
             if (factAttributePO.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()){
                 DimensionPO dimension = dimensionMapper.selectById(factAttributePO.getAssociateDimensionId());
+                DimensionAttributePO dimensionAttributePO = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
                 String tableName = dimension.getDimensionTabName();
                 // String dimensionFieldEnName = dimensionAttribute.getDimensionFieldEnName();
                 String str1 = tableName.substring(0, tableName.indexOf("_"));
                 String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "key";
                 String subQuery = " SELECT " + dimensionTabName + " FROM " + tableName + " WHERE " +
-                        dimensionTabName + calculationLogic + calculationValue;
+                        dimensionAttributePO.getDimensionFieldEnName() + calculationLogic + calculationValue;
                 return factMapper.selectById(factAttributePO.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";
             }else {
                 FactPO factPO=factMapper.selectById(factAttributePO.factId);
@@ -171,13 +172,6 @@ public class TableNameImpl implements ITableName {
                 }
 
             }
-
-           /* DimensionAttributePO dimensionAttribute = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
-            if (dimension == null){
-                return "1 = 1";
-            }else {
-
-            }*/
         }
         return null;
     }
