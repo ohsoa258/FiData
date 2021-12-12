@@ -58,7 +58,6 @@ import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -1737,6 +1736,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<String> floatType = new ArrayList<>();
         floatType.add("double");
 
+        // 文本类型
+        List<String> textTpye = new ArrayList<>();
+        textTpye.add("text");
+
         // 字符型
         List<String> charType = new ArrayList<>();
         charType.add("");
@@ -1767,6 +1770,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // boolean类型长度放开
         if (integerType.contains(fieldType.toLowerCase())) {
             fieldList.add("INT");
+            fieldList.add("0");
+        } else if (textTpye.contains(fieldType.toLowerCase())) {
+            fieldList.add("TEXT");
             fieldList.add("0");
         } else if (accurateType.contains(fieldType.toLowerCase()) || otherType.contains(fieldType.toLowerCase())) {
             fieldList.add("FLOAT");
