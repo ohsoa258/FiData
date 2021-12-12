@@ -81,7 +81,7 @@ public class DimensionController {
 
     @ApiOperation("修改维度发布状态")
     @PutMapping("/updateDimensionPublishStatus")
-    public void updateDimensionPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto){
+    public void updateDimensionPublishStatus(@RequestBody ModelPublishStatusDTO dto){
         service.updateDimensionPublishStatus(dto);
     }
 

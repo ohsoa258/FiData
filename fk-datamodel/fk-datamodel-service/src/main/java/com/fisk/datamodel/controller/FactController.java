@@ -79,7 +79,7 @@ public class FactController {
 
     @ApiOperation("修改事实发布状态")
     @PutMapping("/updateFactPublishStatus")
-    public void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto){
+    public void updateFactPublishStatus(@RequestBody ModelPublishStatusDTO dto){
         service.updateFactPublishStatus(dto);
     }
 

@@ -148,14 +148,14 @@ public interface DataModelClient {
      * @param dto
      */
     @PutMapping("/dimension/updateDimensionPublishStatus")
-    void updateDimensionPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
+    void updateDimensionPublishStatus(@RequestBody ModelPublishStatusDTO dto);
 
     /**
      * 修改事实发布状态
      * @param dto
      */
     @PutMapping("/fact/updateFactPublishStatus")
-    void updateFactPublishStatus(@Validated @RequestBody ModelPublishStatusDTO dto);
+    void updateFactPublishStatus(@RequestBody ModelPublishStatusDTO dto);
 
     /**
      * 根据appId和tableId 获取appName和tableName
