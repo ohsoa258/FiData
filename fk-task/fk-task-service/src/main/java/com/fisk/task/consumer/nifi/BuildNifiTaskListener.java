@@ -703,18 +703,18 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
         //连接器
         componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //数据入库
-        ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config, groupId, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
-        tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
-        //连接器
-        componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
-        String lastId = putDatabaseRecord.getId();
+        String lastId = executeSQLRecord.getId();
         Boolean isLastId=true;
 
         //pg2doris不需要调用存储过程
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId=false;
+            //数据入库
+            ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(config, groupId, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
+            tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
+            //连接器
+            componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //合并流文件组件
             ProcessorEntity mergeRes = mergeContentProcessor(groupId);
             tableNifiSettingPO.mergeContentProcessorId = mergeRes.getId();
@@ -752,6 +752,7 @@ public class BuildNifiTaskListener {
             res.add(queryNumbers);
             res.add(numberToJsonRes);
             res.add(evaluateJsons);
+            res.add(putDatabaseRecord);
             //res.add(processorEntity);
         }
 
@@ -837,7 +838,7 @@ public class BuildNifiTaskListener {
         res.add(logProcessor);
         res.add(delSqlRes);
         res.add(executeSQLRecord);
-        res.add(putDatabaseRecord);
+
         return res;
     }
 

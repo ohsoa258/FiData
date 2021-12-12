@@ -157,13 +157,14 @@ public class BuildDataModelDorisTableListener
         }
         String fileds=tablePk+",";
         for (ModelPublishFieldDTO modelPublishFieldDTO:fieldList1) {
-            fileds+="\""+modelPublishFieldDTO.fieldEnName+"\",";
+            fileds+=""+modelPublishFieldDTO.fieldEnName+",";
         }
+        String truncateTable="'truncate table "+tableName+"';\n";
         fileds=fileds.substring(0,fileds.length()-1);
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
-                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysqlp text;\nbegin\n";
-        storedProcedureSql+="mysqlp:='INSERT INTO "+tableName+" ("+fileds+") SELECT "+fileds+" FROM('||' "+selectSql1(modelPublishTableDTO);
-        storedProcedureSql+="\nraise notice'%',mysqlp;\nEXECUTE mysqlp;\n";
+                "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysqlp text;\nmysqlk text;\nbegin\n";
+        storedProcedureSql+="mysqlk:="+truncateTable+"mysqlp:='INSERT INTO "+tableName+" ("+fileds+") SELECT "+fileds+" FROM('||' "+selectSql1(modelPublishTableDTO);
+        storedProcedureSql+="\nraise notice'%',mysqlk;\nEXECUTE mysqlk;\nraise notice'%',mysqlp;\nEXECUTE mysqlp;\n";
         storedProcedureSql+="end\n$BODY$;\n";
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         //找到不同的关联表
@@ -179,18 +180,21 @@ public class BuildDataModelDorisTableListener
                 //拼接语句,添加外键
                 if(modelPublishFieldDTO.associateDimensionFieldName!=null){
                     storedProcedureSql=storedProcedureSql.replace("DECLARE\n","DECLARE\nmysql"+i+" text;\n");
-                    //update dim_heihei heihei set hhh_pk=(select hhh_pk from dim_hhh hhh where heihei.ts=hhh.ts  );
+                    //	UPDATE fact_InternetSales1
+                    //  SET Date1key=d.Date1key
+                    // FROM dim_Date1 as d
+                    //  WHERE fact_InternetSales1.orderdate=d.fulldatealternatekey
                     String associateDimensionName = modelPublishFieldDTO.associateDimensionName;
                     String associateDimensionNamePK = modelPublishFieldDTO.associateDimensionName.substring(4)+"key";
-                    String sql="update "+modelPublishTableDTO.tableName +" "+modelPublishTableDTO.tableName +" set  "+associateDimensionNamePK+
-                            "=(select "+ associateDimensionNamePK +" from "+ associateDimensionName +" "+associateDimensionName+" where ";
+                    String sql="update "+modelPublishTableDTO.tableName +" set  "+associateDimensionNamePK+
+                            "="+associateDimensionName+"."+associateDimensionNamePK +" from "+associateDimensionName +" where ";
                             //条件
 
                     for(int j=0;j<collect.size();j++){
                         ModelPublishFieldDTO modelPublishFieldDTO1 = collect.get(j);
                         sql+=modelPublishTableDTO.tableName+"."+modelPublishFieldDTO1.fieldEnName+"="+modelPublishFieldDTO1.associateDimensionName+"."+modelPublishFieldDTO1.associateDimensionFieldName+" and ";
                     }
-                    sql=sql.substring(0,sql.length()-4)+")";
+                    sql=sql.substring(0,sql.length()-4);
                     storedProcedureSql=storedProcedureSql.replace("begin\n","begin\nmysql"+i+":='"+sql+"';\n");
                     storedProcedureSql=storedProcedureSql.replace("EXECUTE mysqlp;\n","EXECUTE mysqlp;\n\nraise notice'%',mysql"+i+";\nEXECUTE mysql"+i+";\n");
                 }
@@ -218,23 +222,23 @@ public class BuildDataModelDorisTableListener
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         fieldList.forEach((l) -> {
             log.info("字段属性为:"+l);
-            if(l.fieldType.contains("float")){
-                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0.00),");
-                selectSql3.append("\""+l.fieldEnName+"\" numeric ,");
-            }else if(l.fieldType.contains("VARCHAR")){
-                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,null),");
-                selectSql3.append("\""+l.fieldEnName+"\" VARCHAR ,");
-            }else if(l.fieldType.contains("INT")){
-                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0),");
-                selectSql3.append("\""+l.fieldEnName+"\" int ,");
-            }else if(l.fieldType.contains("NUMERIC")){
-                selectSql2.append("coalesce(\""+l.sourceFieldName+"\" ,0.00),");
-                selectSql3.append("\""+l.fieldEnName+"\" numeric ,");
+            if(l.fieldType.toLowerCase().contains("float")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
+                selectSql3.append(""+l.fieldEnName+" numeric ,");
+            }else if(l.fieldType.toLowerCase().contains("varchar")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,null),");
+                selectSql3.append(""+l.fieldEnName+" VARCHAR ,");
+            }else if(l.fieldType.toLowerCase().contains("int")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0),");
+                selectSql3.append(""+l.fieldEnName+" int ,");
+            }else if(l.fieldType.toLowerCase().contains("numeric")){
+                selectSql2.append("coalesce("+l.sourceFieldName+" ,0.00),");
+                selectSql3.append(""+l.fieldEnName+" numeric ,");
             }
 
-            selectSql4.append("\""+l.fieldEnName+"\"=EXCLUDED.\""+l.fieldEnName+"\",");
+            selectSql4.append(""+l.fieldEnName+"=EXCLUDED."+l.fieldEnName+",");
             if(l.isPrimaryKey==1){
-                selectSql5.append(",\""+l.fieldEnName+"\"");
+                selectSql5.append(","+l.fieldEnName+"");
             }
 
             //多表
@@ -278,19 +282,20 @@ public class BuildDataModelDorisTableListener
         sql.append("CREATE TABLE "+modelPublishTableDTO.tableName+" ( "+tablePk+" varchar(50), ");
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder sqlFileds1 = new StringBuilder();
+        log.info("pg_dw建表字段信息:"+fieldList);
         fieldList.forEach((l) -> {
             if(l.fieldType.contains("INT")||l.fieldType.contains("TEXT")){
-                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + ",");
-            }else if(l.fieldType.contains("NUMERIC")||l.fieldType.contains("numeric")){
-                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(20) ,");
+                sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + ",");
+            }else if(l.fieldType.toLowerCase().contains("numeric")||l.fieldType.toLowerCase().contains("float")){
+                sqlFileds.append( ""+l.fieldEnName + " float ,");
             }else{
-                sqlFileds.append( "\""+l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+                sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             }
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }
             if(l.isPrimaryKey==1){
-                pksql.append("\""+l.fieldEnName+"\" ,");
+                pksql.append(""+l.fieldEnName+" ,");
             }
         });
         //如果没有业务主键,就建一个主键

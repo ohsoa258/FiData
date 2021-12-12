@@ -455,7 +455,7 @@ public class BuildNifiCustomWorkFlow {
                 if(olapPOS.size()>0){
                      olapPO = olapPOS.get(0);
                 }else{
-                    log.error("没有关联指标表");
+                    log.error("未找到对应指标表"+nifiNode.type+"表id"+nifiNode.tableId);
                 }
                 TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
                 buildNifiFlowDTO.id = Long.valueOf(one1.tableAccessId);
@@ -624,6 +624,8 @@ public class BuildNifiCustomWorkFlow {
                 OlapPO olapPO = new OlapPO();
                 conditionHashMap.put("del_flag",1);
                 conditionHashMap.put("table_id",nifiCustomWorkflowDetailDTO.tableId);
+                log.info("判断值:"+Objects.equals(ChannelDataEnum.OLAP_FACT_TASK.getName(),nifiCustomWorkflowDetailDTO.componentType));
+                log.info("连接点参数:"+nifiCustomWorkflowDetailDTO);
                 if(Objects.equals(ChannelDataEnum.OLAP_FACT_TASK.getName(),nifiCustomWorkflowDetailDTO.componentType)){
                     conditionHashMap.put("type",0);
                     olapPOS= olapMapper.selectByMap(conditionHashMap);
@@ -631,10 +633,11 @@ public class BuildNifiCustomWorkFlow {
                     conditionHashMap.put("type",1);
                     olapPOS=olapMapper.selectByMap(conditionHashMap);
                 }
+                log.info("查询条件:"+conditionHashMap);
                 if(olapPOS!=null&&olapPOS.size()!=0){
                     olapPO=olapPOS.get(0);
                 }else{
-                    log.error("未找到对应指标表");
+                    log.error("未找到对应指标表"+nifiCustomWorkflowDetailDTO.componentType+"表id"+nifiCustomWorkflowDetailDTO.tableId);
                 }
                 if(Objects.equals(ChannelDataEnum.OLAP_FACT_TASK.getName(),nifiCustomWorkflowDetailDTO.componentType)){
                     tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id)

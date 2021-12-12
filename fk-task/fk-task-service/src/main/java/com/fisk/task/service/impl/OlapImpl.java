@@ -47,17 +47,28 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> poList =new ArrayList<>();
         dto.dimensionList.forEach(e->{
             e.tableName=e.tableName.toLowerCase();
-            List<String> fileds=e.dto.stream().map(d->" "+d.fieldEnName+" ").collect(Collectors.toList());
+            List<String> fileds=new ArrayList<>();
+            fileds.add(" "+e.tableName.substring(4)+"key ");
+            fileds.addAll(e.dto.stream().map(d->" "+d.fieldEnName+" ").collect(Collectors.toList()));
             List<String> correlationFileds=e.dto.stream().map(d->" "+d.associationTable+" ").collect(Collectors.toList());
             correlationFileds.removeAll(Collections.singleton(" null "));
+            fileds.removeAll(Collections.singleton(" null "));
             correlationFileds.stream().distinct();
-            fileds.add(" "+e.tableName.substring(4)+"key ,");
             OlapPO po=new OlapPO();
             po.businessAreaId=businessAreaId;
-            String selectSql="SELECT "+fileds.stream().collect(Collectors.joining(","));
-            selectSql+=correlationFileds.stream().collect(Collectors.joining(","));
+            String selectSql=fileds.stream().collect(Collectors.joining(","));
+            //selectSql+=correlationFileds.stream().collect(Collectors.joining(","));
+            log.info("external表拼接参数"+selectSql);
+            if(correlationFileds!=null&&correlationFileds.size()>0){
+                selectSql+=",";
+                for (String correlationFiled:correlationFileds) {
+                    selectSql+=correlationFiled.trim().substring(4)+"key,";
+                }
+            }
             selectSql=selectSql.substring(0,selectSql.length()-1);
-            po.selectDataSql=selectSql+" FROM external_"+e.tableName+"";
+            //po.selectDataSql=selectSql+" FROM external_"+e.tableName+"";
+            String doUpdateOrInsertSql="insert into "+e.tableName+" ("+selectSql+") select  "+selectSql +" from ( select "+selectSql+" FROM external_"+e.tableName+") dw";
+            po.selectDataSql=doUpdateOrInsertSql;
             po.tableName=e.tableName;
             po.createTableSql=buildCreateUniqModelSql(e);
             po.type= OlapTableEnum.DIMENSION;
@@ -101,21 +112,27 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sqlFiledBuild.append("`"+keyName + "` VARCHAR(50)  comment " + "'" + keyName + "' ,");
         //dto.dto.forEach((l) -> sqlFiledBuild.append("`"+l.fieldEnName + "` " + l.fieldType +"("+l.fieldLength+ ") comment " + "'" + l.fieldCnName + "' ,"));
         List<ModelAttributeMetaDataDTO> dto2 = dto.dto;
-        for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO:dto2) {
-             if(modelAttributeMetaDataDTO.fieldType.contains("TEXT")||modelAttributeMetaDataDTO.fieldType.contains("INT")){
-                 sqlFiledBuild.append("`"+modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType + " comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
+        for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO : dto2) {
+            if (modelAttributeMetaDataDTO.fieldType != null) {
+                if (modelAttributeMetaDataDTO.fieldType.contains("TEXT") || modelAttributeMetaDataDTO.fieldType.contains("INT")) {
+                    sqlFiledBuild.append("`" + modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType + " comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
 
-             }else{
-                 sqlFiledBuild.append("`"+modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType +"("+modelAttributeMetaDataDTO.fieldLength+ ") comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
+                } else if (modelAttributeMetaDataDTO.fieldType.toLowerCase().contains("numeric")||
+                        modelAttributeMetaDataDTO.fieldType.toLowerCase().contains("float")) {
+                    sqlFiledBuild.append("`" + modelAttributeMetaDataDTO.fieldEnName + "` float" + " comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
 
-             }
+                } else {
+                    sqlFiledBuild.append("`" + modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType + "(" + modelAttributeMetaDataDTO.fieldLength + ") comment " + "'" + modelAttributeMetaDataDTO.fieldCnName + "' ,");
+
+                }
+            }
         }
         //TODO  问题一
         List<ModelAttributeMetaDataDTO> dto1 = dto.dto;
         List<String> fileds=dto1.stream().map(d->" "+d.associationTable+" ").collect(Collectors.toList());
         fileds.removeAll(Collections.singleton(" null "));
         fileds.stream().distinct();
-        fileds.forEach((l) -> sqlFiledBuild.append("`"+l.toLowerCase() + "' varchar(50) ,"));
+        fileds.forEach((l) -> sqlFiledBuild.append("`"+l.toLowerCase().trim().substring(4) + "key` varchar(50) ,"));
         String sqlFiled = sqlFiledBuild.toString();
         sqlFiled=sqlFiled.substring(0,sqlFiled.length()-1)+")";
         String sqlUnique = sqlUniqueBuild;
@@ -132,7 +149,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         String sql="drop table if exists "+tableName+";\n";
         sql+="CREATE EXTERNAL TABLE "+tableName+" ( "+dto.tableName.substring(4)+"key varchar(50),";
         for (ModelAttributeMetaDataDTO modelAttributeMetaDataDTO:dto1) {
-            sql+="`"+modelAttributeMetaDataDTO.fieldEnName+"` "+modelAttributeMetaDataDTO.fieldType+",";
+            if (modelAttributeMetaDataDTO.fieldEnName != null) {
+                if (modelAttributeMetaDataDTO.fieldType.toLowerCase().contains("numeric")||modelAttributeMetaDataDTO.fieldType.toLowerCase().contains("float")) {
+                    sql += "`" + modelAttributeMetaDataDTO.fieldEnName + "` float,";
+                } else {
+                    sql += "`" + modelAttributeMetaDataDTO.fieldEnName + "` " + modelAttributeMetaDataDTO.fieldType + ",";
+                }
+            }
+
         }
         //TODO 问题二
         List<String> associationKeys = dto1.stream().map(d -> " " + d.associationTable + " ").collect(Collectors.toList());
@@ -194,6 +218,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder sql=new StringBuilder();
         StringBuilder aggregationFunSql=new StringBuilder();
         StringBuilder groupSql=new StringBuilder();
+        StringBuilder filedsBuilder = new StringBuilder();
         String tableName=dto.factTable;
         dto.list.forEach(e->{
             if(e.attributeType==3){
@@ -204,12 +229,15 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append(") ,0)AS ");
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");
+                filedsBuilder.append(e.atomicIndicatorName.toLowerCase()+", ");
             }else if(e.attributeType==2){
                 groupSql.append(""+e.dimensionTableName.substring(4)+"key , ");
                 aggregationFunSql.append("COALESCE("+e.dimensionTableName.substring(4)+"key,'') AS "+e.dimensionTableName.toLowerCase().substring(4)+"key , ");
+                filedsBuilder.append(e.dimensionTableName.toLowerCase().substring(4)+"key , ");
             }else if(e.attributeType==1){
                 groupSql.append(""+e.factFieldName+", ");
                 aggregationFunSql.append("COALESCE("+e.factFieldName+",'') AS "+e.factFieldName.toLowerCase()+" , ");
+                filedsBuilder.append(e.factFieldName.toLowerCase()+" , ");
             }
         });
         if (aggregationFunSql.length()>0){
@@ -228,7 +256,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             sql.append("GROUP BY ");
             sql.append(groupSql);
         }
-        return sql.toString();
+        String fileds = filedsBuilder.deleteCharAt(filedsBuilder.length()-2).toString();
+        String doUpdateOrInsertSql="insert into "+tableName+" ("+fileds+") select  "+fileds +" from ( "+sql.toString()+") dw";
+        return doUpdateOrInsertSql;
     }
 
     public String createExternalTable(AtomicIndicatorFactDTO dto){
@@ -239,8 +269,8 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql+="CREATE EXTERNAL TABLE "+tableName+" ( ";
         for (AtomicIndicatorFactAttributeDTO atomicIndicatorFactAttributeDTO:factAttributeDTOList) {
             if(atomicIndicatorFactAttributeDTO.attributeType==0||atomicIndicatorFactAttributeDTO.attributeType==2){
-                if(Objects.equals(atomicIndicatorFactAttributeDTO.factFieldType,"NUMERIC")||
-                        atomicIndicatorFactAttributeDTO.factFieldType.contains("FLOAT")){
+                if(atomicIndicatorFactAttributeDTO.factFieldType.toLowerCase().contains("numeric")||
+                        atomicIndicatorFactAttributeDTO.factFieldType.toLowerCase().contains("float")){
                     sql+="`"+atomicIndicatorFactAttributeDTO.factFieldCnName+"` FLOAT,";
                 }else{
                     sql+="`"+atomicIndicatorFactAttributeDTO.factFieldCnName+"` "+atomicIndicatorFactAttributeDTO.factFieldType+",";
