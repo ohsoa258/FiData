@@ -94,7 +94,7 @@ public class DataFactoryImpl implements IDataFactory {
             {
                 case 4:
                     List<DimensionPO> dimensionPO=dimensionPOList.stream()
-                            .filter(e->e.businessId==item.id && e.isPublish==3)
+                            .filter(e->e.businessId==item.id && (e.isPublish==1 || e.isPublish==3))
                             .collect(Collectors.toList());
                     if (dimensionPO !=null && dimensionPO.size()>0)
                     {
@@ -109,7 +109,7 @@ public class DataFactoryImpl implements IDataFactory {
                     break;
                 case 6:
                     List<DimensionPO> dimensionPO6=dimensionPOList.stream()
-                            .filter(e->e.businessId==item.id && e.dorisPublish==3)
+                            .filter(e->e.businessId==item.id && (e.dorisPublish==1 || e.dorisPublish==3))
                             .collect(Collectors.toList());
                     if (dimensionPO6 !=null && dimensionPO6.size()>0)
                     {
@@ -124,7 +124,7 @@ public class DataFactoryImpl implements IDataFactory {
                     break;
                 case 5:
                     List<FactPO> factPO=factPOList.stream()
-                            .filter(e->e.businessId==item.id && e.isPublish==3)
+                            .filter(e->e.businessId==item.id && (e.isPublish==1 || e.isPublish==3))
                             .collect(Collectors.toList());
                     if (factPO !=null && factPO.size()>0)
                     {
@@ -139,7 +139,7 @@ public class DataFactoryImpl implements IDataFactory {
                     break;
                 case 7:
                     List<FactPO> factPO7=factPOList.stream()
-                            .filter(e->e.businessId==item.id && e.dorisPublish==3)
+                            .filter(e->e.businessId==item.id && (e.dorisPublish==1 || e.dorisPublish==3))
                             .collect(Collectors.toList());
                     if (factPO7 !=null && factPO7.size()>0)
                     {
