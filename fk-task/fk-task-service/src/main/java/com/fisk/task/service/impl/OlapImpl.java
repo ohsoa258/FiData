@@ -287,7 +287,8 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             sql+=associateDimensionTable.substring(5,associateDimensionTable.length()-1)+"key varchar(50),";
         }
         sql=sql.substring(0,sql.length()-1)+")\n" + "ENGINE=ODBC\nPROPERTIES\n";
-        sql+="(\"host\" = \"192.168.1.250\",\"port\" = \"5432\",\"user\" = \"postgres\",\"password\" = \"Password01!\",\"database\" = \"dmp_dw\",\"table\" = \"KKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
+        //sql+="("+externalTableLink+",\"table\" = \"KKKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
+        sql+="("+externalTableLink+",\"table\" = \"KKKK\",\"driver\" = \"PostgreSQL\",\"odbc_type\" = \"postgresql\");";
         sql=sql.replace("KKKK",dto.factTable);
         log.info("指标外部表建表语句:"+sql);
         doris.dorisBuildTable(sql);

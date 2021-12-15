@@ -13,6 +13,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -121,7 +122,13 @@ public class BuildNifiTaskListener {
     @RabbitHandler
     @MQConsumerLog
     public void msg(String data, Channel channel, Message message) {
+        ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
+        modelPublishStatusDTO.publish=1;
+
+        try{
         BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
+            modelPublishStatusDTO.tableId=dto.id;
+            client.updateTablePublishStatus(modelPublishStatusDTO);
         //获取数据接入配置项
         DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum,dto.type,dto.dataClassifyEnum,dto.tableName,dto.selectSql,dto);
         if (configDTO == null) {
@@ -223,6 +230,9 @@ public class BuildNifiTaskListener {
             }
         }
         writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(), schedulerComponentId);*/
+        } catch (Exception e) {
+        log.error("nifi流程创建失败"+e.getMessage());
+        }
     }
 
     /**

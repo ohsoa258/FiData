@@ -9,6 +9,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.controller.PublishTaskController;
@@ -62,6 +63,15 @@ public class BuildModelTaskListener {
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         log.info("doris组装参数:"+dataInfo);
+        int tableId=0;
+        int tableType=0;
+        ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
+        modelPublishStatusDTO.type=1;
+
+        try {
+
+
+
         BusinessAreaGetDataDTO data = JSON.parseObject(dataInfo, BusinessAreaGetDataDTO.class);
         /*//删除此业务域下所有的表与nifi流程
         List<OlapPO> olapPOS1 = olap.selectOlapByBusinessAreaId(String.valueOf(inpData.businessAreaId));
@@ -77,6 +87,8 @@ public class BuildModelTaskListener {
             //创建Doris实际表和外部表
             List<OlapPO> olapPOS=  olap.build(data.businessAreaId, data);
             for (OlapPO olapPO:olapPOS) {
+                tableId= Math.toIntExact(olapPO.tableId);
+                tableType=olapPO.type.getValue();
                 log.info("Doris建表开始:"+olapPO.tableName);
                 doris.dorisBuildTable("DROP TABLE IF EXISTS " + olapPO.tableName);
                 doris.dorisBuildTable(olapPO.createTableSql);
@@ -94,7 +106,28 @@ public class BuildModelTaskListener {
                 buildNifiFlowDTO.tableName=olapPO.tableName;
                 buildNifiFlowDTO.selectSql=olapPO.selectDataSql;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
+                //1是维度
+                if(tableType==1){
+                    modelPublishStatusDTO.status=1;
+                    modelPublishStatusDTO.id= Math.toIntExact(tableId);
+                    client.updateDimensionPublishStatus(modelPublishStatusDTO);
+                }else{
+                    modelPublishStatusDTO.status=1;
+                    modelPublishStatusDTO.id= Math.toIntExact(tableId);
+                    client.updateFactPublishStatus(modelPublishStatusDTO);
+                }
                 log.info("nifi流程配置结束");
             }
+        }catch (Exception e){
+            if(tableType==1){
+                modelPublishStatusDTO.status=2;
+                modelPublishStatusDTO.id= Math.toIntExact(tableId);
+                client.updateDimensionPublishStatus(modelPublishStatusDTO);
+            }else{
+                modelPublishStatusDTO.status=2;
+                modelPublishStatusDTO.id= Math.toIntExact(tableId);
+                client.updateFactPublishStatus(modelPublishStatusDTO);
+            }
+        }
     }
 }

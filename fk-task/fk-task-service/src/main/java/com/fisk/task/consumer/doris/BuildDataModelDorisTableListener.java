@@ -19,6 +19,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -99,6 +100,8 @@ public class BuildDataModelDorisTableListener
     NifiConfigServiceImpl nifiConfigService;
     @Resource
     TableNifiSettingServiceImpl tableNifiSettingService;
+    @Resource
+    public DataModelClient dataModelClient;
     public String appParentGroupId;
     public String appGroupId;
     public String groupEntityId;
@@ -112,13 +115,20 @@ public class BuildDataModelDorisTableListener
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
+        ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
+        int id=0;
+        int tableType=0;
         //saveTableStructure(list);
         //1.,查询语句,并存库
         //2.修改表的存储过程
         //3.生成nifi流程
+        try {
         ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
         List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
-        for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
+
+            for (ModelPublishTableDTO modelPublishTableDTO:dimensionList) {
+                id=modelPublishStatusDTO.id;
+                tableType=modelPublishTableDTO.createType;
             //生成版本号
             ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
             log.info("执行存储过程返回结果"+resultEnum.getCode());
@@ -137,12 +147,36 @@ public class BuildDataModelDorisTableListener
             } else {
                 createNiFiFlow(inpData, modelPublishTableDTO, inpData.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.FACT);
             }
+            //0维度表
+            if(modelPublishTableDTO.createType==0){
+                modelPublishStatusDTO.status=1;
+                modelPublishStatusDTO.id= Math.toIntExact(modelPublishTableDTO.tableId);
+                modelPublishStatusDTO.type=0;
+                dataModelClient.updateDimensionPublishStatus(modelPublishStatusDTO);
+            }else{
+                modelPublishStatusDTO.status=1;
+                modelPublishStatusDTO.id= Math.toIntExact(modelPublishTableDTO.tableId);
+                modelPublishStatusDTO.type=0;
+                dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
+            }
 
         }
 
-        
 
-
+        }catch (Exception e){
+            log.error("dw发布失败,表id为"+id+e.getMessage());
+            /*if(tableType==0){
+                modelPublishStatusDTO.status=1;
+                modelPublishStatusDTO.id= Math.toIntExact(id);
+                modelPublishStatusDTO.type=0;
+                dataModelClient.updateDimensionPublishStatus(modelPublishStatusDTO);
+            }else{
+                modelPublishStatusDTO.status=1;
+                modelPublishStatusDTO.id= Math.toIntExact(id);
+                modelPublishStatusDTO.type=0;
+                dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
+            }*/
+        }
 
     }
 

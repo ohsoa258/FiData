@@ -457,6 +457,7 @@ public class BuildNifiCustomWorkFlow {
                 }else{
                     log.error("未找到对应指标表"+nifiNode.type+"表id"+nifiNode.tableId);
                 }
+                log.info("表类别:"+nifiNode.type+"表id:"+nifiNode.tableId+"表信息"+olapPO);
                 TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
                 buildNifiFlowDTO.id = Long.valueOf(one1.tableAccessId);
                 buildNifiFlowDTO.type = nifiNode.tableType;
