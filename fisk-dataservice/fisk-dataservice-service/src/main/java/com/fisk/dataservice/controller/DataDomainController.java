@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Api(tags = {SwaggerConfig.TAG_4})
 @RestController
-@RequestMapping("/DataDomain")
+@RequestMapping("/dataSource")
 public class DataDomainController {
 
     @Resource

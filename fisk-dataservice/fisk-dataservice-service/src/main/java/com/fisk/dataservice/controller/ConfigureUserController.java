@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Api(tags = {SwaggerConfig.TAG_3})
 @RestController
-@RequestMapping("/User")
+@RequestMapping("/application")
 public class ConfigureUserController {
 
     @Resource

@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Api(tags = {SwaggerConfig.TAG_2})
 @RestController
-@RequestMapping("/config")
+@RequestMapping("/apiField")
 public class ConfigureFieldController {
 
     @Resource
