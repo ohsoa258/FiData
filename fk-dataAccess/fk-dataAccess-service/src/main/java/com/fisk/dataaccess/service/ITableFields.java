@@ -15,11 +15,18 @@ import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 public interface ITableFields extends IService<TableFieldsPO> {
     /**
      * 分页
+     *
      * @param query query
      * @return 分页结果
      */
     Page<DataReviewVO> listData(DataReviewQueryDTO query);
 
+    /**
+     * 根据id查询表字段
+     *
+     * @param id id
+     * @return dto
+     */
     TableFieldsDTO getTableField(int id);
 
     /**

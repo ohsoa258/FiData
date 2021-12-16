@@ -8,6 +8,5 @@ import com.fisk.dataaccess.service.INifiSetting;
 /**
  * @author Lock
  */
-//@Service
 public class NifiSettingImpl extends ServiceImpl<NifiSettingMapper, NifiSettingPO> implements INifiSetting {
 }

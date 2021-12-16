@@ -153,9 +153,9 @@ public class PhysicalTableController {
             // 应用注册id
             atlasEntityQueryDTO.appId = atlasIds.appId;
             atlasEntityQueryDTO.dbId = atlasIds.dbId;
-//            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
-//            log.info("task:" + JSON.toJSONString(task));
-//            System.out.println(task);
+////            ResultEntity<Object> task = publishTaskClient.publishBuildAtlasTableTask(atlasEntityQueryDTO);
+////            log.info("task:" + JSON.toJSONString(task));
+////            System.out.println(task);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, atlasIdsVO);
@@ -246,7 +246,7 @@ public class PhysicalTableController {
         dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         dataModelVO.userId=nifiVO.userId;
         // 删除nifi流程
-        //publishTaskClient.deleteNifiFlow(dataModelVO);
+        ////publishTaskClient.deleteNifiFlow(dataModelVO);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }
@@ -300,22 +300,10 @@ public class PhysicalTableController {
         return service.dataAccessConfig(id, appid);
     }
 
-    @PostMapping("/addComponentId")
-    public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto) {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addComponentId(dto));
-    }
-
     @ApiOperation("获取数据接入表名以及字段")
     @GetMapping("/getDataAccessMeta")
     public ResultEntity<Object> getDataAccessMeta() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataAccessMeta());
-    }
-
-    @ApiOperation("添加")
-    @GetMapping("/getDimensionMeta")
-    public ResultEntity<Object> getDimensionMeta() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMeta());
     }
 
     /**

@@ -7,8 +7,11 @@ import lombok.Data;
  */
 @Data
 public class DataAccessIdsDTO {
+
     public Long appId;
     public Long tableId;
-    // 区分维度 事实 指标
+    /**
+     * 区分维度 事实 指标
+     */
     public int flag;
 }

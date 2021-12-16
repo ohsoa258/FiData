@@ -10,7 +10,6 @@ import java.io.Serializable;
  * @author Lock
  */
 @Data
-//@TableName("tb_nifi_setting")
 public class NifiSettingPO implements Serializable {
     /**
      * 应用注册id

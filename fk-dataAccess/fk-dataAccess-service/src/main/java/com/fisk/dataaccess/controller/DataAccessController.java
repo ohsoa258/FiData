@@ -32,13 +32,6 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTree());
     }
 
-    @ApiOperation("组件id")
-    @PostMapping("/getComponentId")
-    public ResultEntity<Object> getComponentId(@RequestBody DataAccessIdsDTO dto) {
-        ResultEntity<ComponentIdDTO> result = service.getComponentId(dto);
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
-    }
-
     @GetMapping("/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableId());

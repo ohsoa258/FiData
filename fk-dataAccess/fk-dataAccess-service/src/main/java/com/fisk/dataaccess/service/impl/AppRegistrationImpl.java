@@ -62,8 +62,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
     @Resource
-    private AppDriveTypeImpl appDriveTypeImpl;
-    @Resource
     private AppDriveTypeMapper appDriveTypeMapper;
     @Resource
     private PublishTaskClient publishTaskClient;
@@ -81,8 +79,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsMapper tableFieldsMapper;
     @Resource
     private TableFieldsImpl tableFieldsImpl;
-//    @Resource
-//    private NifiSettingImpl nifiSettingImpl;
 
     /**
      * 添加应用
@@ -175,9 +171,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 总条数
         pageDTO.setTotal(pageReg.getTotal());
         // 总页数
-//        long totalPage = (long) (records1.size() + rows - 1) / rows;
+        // long totalPage = (long) (records1.size() + rows - 1) / rows;
         pageDTO.setTotalPage(pageReg.getPages());
-
         pageDTO.setItems(AppRegistrationMap.INSTANCES.listPoToDto(records2));
 
         return pageDTO;
@@ -297,31 +292,30 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
-                TableAccessPO tableAccessPO = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-                tableVO.tableAtlasId = tableAccessPO.atlasTableId;
-                tableVO.tableName = tableAccessPO.tableName;
+                TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
+                tableVO.tableAtlasId = po.atlasTableId;
+                tableVO.tableName = po.tableName;
                 tableList.add(tableVO);
             }
 
 
             // 删除应用下面的所有表及表结构
-            accessList.forEach(tableAccessPO -> tableAccessMapper.deleteByIdWithFill(tableAccessPO));
+            accessList.forEach(po -> tableAccessMapper.deleteByIdWithFill(po));
             // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
             accessList.stream().map(
                             po -> tableFieldsImpl.query()
                                     .eq("table_access_id", po.id)
                                     .eq("del_flag", 1).list())
                     .flatMap(Collection::stream)
-                    .forEachOrdered(fieldsPO -> tableFieldsMapper.deleteByIdWithFill(fieldsPO));
+                    .forEachOrdered(po -> tableFieldsMapper.deleteByIdWithFill(po));
         }
 
 
-        /**
-         * 将方法的返回值封装
+        /*
+          将方法的返回值封装
          */
         vo.userId = userInfo.id;
         vo.appId = String.valueOf(model.id);
-//        vo.appComponentId = model.componentId;
         vo.tableIdList = tableIdList;
         // atlas应用id
         vo.appAtlasId = atlasInstanceId;
@@ -357,7 +351,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             listAppName.add(appNameDTO);
         }
-
         return listAppName;
     }
 
@@ -387,10 +380,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return appRegistrationDTO;
     }
 
-
-    /**
-     * @return 返回值
-     */
     @Override
     public List<AppRegistrationDTO> getDescDate() {
 
@@ -422,7 +411,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             listAppName.add(appNameDTO);
         }
-
         return listAppName;
     }
 
@@ -430,7 +418,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<AppDriveTypeDTO> getDriveType() {
 
         List<AppDriveTypePO> list = appDriveTypeMapper.listData();
-
         return AppDriveTypeDTO.convertEntityList(list);
     }
 
@@ -439,7 +426,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public AtlasEntityDTO getAtlasEntity(long id) {
 
-        AtlasEntityDTO dto = null;
+        AtlasEntityDTO dto;
         try {
             dto = new AtlasEntityDTO();
 
@@ -467,8 +454,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             dto.dbName = modelDataSource.getDbName();
 
         } catch (Exception e) {
-            log.error("{}方法执行失败: ", e);
-//            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            log.error("方法执行失败:", e);
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         return dto;
@@ -485,7 +472,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEnum.DATA_NOTEXISTS;
         }
         modelReg.atlasInstanceId = atlasInstanceId;
-//        model.delFlag = 1;
         // 保存tb_app_registration
         boolean update = this.updateById(modelReg);
         if (!update) {
@@ -597,21 +583,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     @Override
-    public AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO) {
-        mapper.insertAppRegistrationPO(appRegistrationPO);
-        return appRegistrationPO;
-    }
-
-    @Override
-    public List<AppRegistrationPO> getByAppName(String appName) {
-        List<AppRegistrationPO> byAppName = mapper.getByAppName(appName);
-        return byAppName;
-    }
-
-    @Override
     public DataAccessNumDTO getDataAccessNum() {
         DataAccessNumDTO dto = new DataAccessNumDTO();
-
         dto.num = query().list().size();
         return dto;
     }

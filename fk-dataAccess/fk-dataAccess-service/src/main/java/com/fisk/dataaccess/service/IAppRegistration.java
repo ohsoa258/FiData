@@ -48,6 +48,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 删除
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -55,12 +56,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 根据是否为实时,查询应用名称集合
+     *
      * @return 返回值
      */
     List<AppNameDTO> queryAppName();
 
     /**
      * 根据id查询数据,用于数据回显
+     *
      * @param id 请求参数
      * @return 返回值
      */
@@ -68,12 +71,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 查询应用数据，按照创建时间倒序排序，查出top 10的数据
+     *
      * @return 返回值
      */
     List<AppRegistrationDTO> getDescDate();
 
     /**
      * 获取非实时应用名称
+     *
      * @return 返回值
      */
     List<AppNameDTO> queryNoneRealTimeAppName();
@@ -96,9 +101,9 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     /**
      * atlas通过appid,将atlasInstanceId和atlasDbId保存下来
      *
-     * @param appid appid
+     * @param appid           appid
      * @param atlasInstanceId atlasInstanceId
-     * @param atlasDbId atlasDbId
+     * @param atlasDbId       atlasDbId
      * @return 执行结果
      */
     ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId);
@@ -127,6 +132,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 测试连接
+     *
      * @param dto dto
      * @return 连接结果
      */
@@ -134,6 +140,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 判断应用名称是否重复
+     *
      * @param appName appName
      * @return 执行结果
      */
@@ -141,25 +148,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 判断应用简称是否重复
+     *
      * @param appAbbreviation appAbbreviation
      * @return 执行结果
      */
     ResultEntity<Object> getRepeatAppAbbreviation(String appAbbreviation);
-
-    /**
-     * insertAppRegistrationPO
-     * @param appRegistrationPO dto
-     * @return
-     */
-    AppRegistrationPO insertAppRegistrationPO(AppRegistrationPO appRegistrationPO);
-
-    /**
-     * 通过名称找应用
-     * insertAppRegistrationPO
-     * @param appName dto
-     * @return
-     */
-    public List<AppRegistrationPO> getByAppName(String appName);
 
     /**
      * 查询数据接入下所有业务系统个数

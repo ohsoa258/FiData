@@ -10,6 +10,7 @@ import com.fisk.dataaccess.entity.AppDataSourcePO;
 public interface IAppDataSource extends IService<AppDataSourcePO> {
     /**
      * 获取所有数据源以及数据库、表数据
+     *
      * @param appId appId
      * @return dto
      */

@@ -26,7 +26,6 @@ import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,8 +48,6 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
-    @Value("${spring.datasource.username}")
-    private String username;
 
     /**
      * 添加应用
@@ -68,14 +65,6 @@ public class AppRegistrationController {
             return ResultEntityBuild.buildData(resultEntity.code, resultEntity.msg);
         }
 
-        // TODO: atlas对接应用注册
-//        AtlasEntityQueryDTO atlasEntityQueryDTO = new AtlasEntityQueryDTO();
-//        atlasEntityQueryDTO.appId = vo.appId;
-//        atlasEntityQueryDTO.userId = vo.userId;
-//        ResultEntity<Object> task = publishTaskClient.publishBuildAtlasInstanceTask(atlasEntityQueryDTO);
-//        log.info("task:" + JSON.toJSONString(task));
-//        System.out.println("task = " + task);
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, resultEntity);
     }
 
@@ -91,7 +80,6 @@ public class AppRegistrationController {
             @PathVariable("id") long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
-
 
     /**
      * 分页查询
@@ -175,9 +163,9 @@ public class AppRegistrationController {
             dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
             dataModelVO.userId=nifiVO.userId;
             // 删除nifi流程
-//            publishTaskClient.deleteNifiFlow(dataModelVO);
-//            log.info("task删除应用{}", task);
-//            System.out.println(task);
+////            publishTaskClient.deleteNifiFlow(dataModelVO);
+////            log.info("task删除应用{}", task);
+////            System.out.println(task);
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
@@ -232,11 +220,6 @@ public class AppRegistrationController {
     public ResultEntity<List<AppNameDTO>> getAppNameAndId() {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList());
-    }
-
-    @GetMapping("/test")
-    public ResultEntity<Object> test() {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, username);
     }
 
     @ApiOperation("测试连接")

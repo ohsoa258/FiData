@@ -36,8 +36,6 @@ public class SqlServerConUtils {
             while (resultSet.next()) {
                 tableList.add(resultSet.getString("name"));
             }
-//            System.out.println(tableList);
-
         } catch (SQLException e) {
             log.error("【getTables】获取表名报错, ex", e);
             return null;

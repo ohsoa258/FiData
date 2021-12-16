@@ -24,15 +24,18 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public DataSourceDTO getDataSourceMeta(long appId) {
 
+        String mysqlTpye = "mysql";
+        String sqlserverTpye = "sqlserver";
+
         DataSourceDTO dataSource = mapper.getDataSource(appId);
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerConUtils sqlServerConUtils = new SqlServerConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         AppDataSourcePO po = this.query().eq("app_id", appId).one();
         dataSource.appName = po.dbName;
-        if ("mysql".equalsIgnoreCase(dataSource.driveType)) {
+        if (mysqlTpye.equalsIgnoreCase(dataSource.driveType)) {
             dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd);
-        } else if ("sqlserver".equalsIgnoreCase(dataSource.driveType)) {
+        } else if (sqlserverTpye.equalsIgnoreCase(dataSource.driveType)) {
             dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
         }
 

@@ -75,6 +75,12 @@ public interface TableAccessMap {
     })
     TableIdAndNameVO tableDtoToPo(TableIdAndNameDTO dto);
 
+    /**
+     * list dto -> po
+     *
+     * @param list list
+     * @return target
+     */
     List<TableIdAndNameVO> tableDtosToPos(List<TableIdAndNameDTO> list);
 
     /**
@@ -119,6 +125,7 @@ public interface TableAccessMap {
 
     /**
      * list: po -> dto
+     *
      * @param list source
      * @return target
      */

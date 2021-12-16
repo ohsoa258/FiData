@@ -9,7 +9,6 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskCronDTO;
@@ -79,10 +78,6 @@ public class TaskScheduleController {
             DataAccessIdsDTO accessIdsDTO = new DataAccessIdsDTO();
             accessIdsDTO.appId = taskCronDTO.dto.appId;
             accessIdsDTO.tableId = taskCronDTO.dto.tableId;
-            ResultEntity<Object> clientComponentId = client.getComponentId(accessIdsDTO);
-            ComponentIdDTO data = (ComponentIdDTO) clientComponentId.data;
-            taskCronDTO.dto.appComponentId = data.appComponentId;
-            taskCronDTO.dto.tableComponentId = data.tableComponentId;
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);

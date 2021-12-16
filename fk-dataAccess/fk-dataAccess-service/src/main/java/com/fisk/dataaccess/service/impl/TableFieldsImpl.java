@@ -73,13 +73,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     @Override
     public TableFieldsDTO getTableField(int id) {
         //name 类别  简称
-        TableFieldsPO tableFieldsPO = baseMapper.selectById(id);
-        TableAccessNonDTO data = iTableAccess.getData(tableFieldsPO.tableAccessId);
+        TableFieldsPO po = baseMapper.selectById(id);
+        TableAccessNonDTO data = iTableAccess.getData(po.tableAccessId);
         AppRegistrationDTO data1 = iAppRegistration.getData(data.appId);
         TableFieldsDTO tableFieldsDTO = new TableFieldsDTO();
         tableFieldsDTO.appbAbreviation = data1.appAbbreviation;
-        tableFieldsDTO.fieldName = tableFieldsPO.fieldName;
-        tableFieldsDTO.fieldType = tableFieldsPO.fieldType;
+        tableFieldsDTO.fieldName = po.fieldName;
+        tableFieldsDTO.fieldType = po.fieldType;
         tableFieldsDTO.originalTableName = data.tableName;
         return tableFieldsDTO;
     }
@@ -205,7 +205,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 */
 
-//        boolean success = true;
+////        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;
         // 保存tb_table_business
         int businessMode = 3;
@@ -228,7 +228,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 发布
-        publish(success,model.appId,model.id,model.tableName,dto.flag);
+        publish(success, model.appId, model.id, model.tableName, dto.flag);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -252,7 +252,6 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         atlasIdsVO.tableName = tableName;
         return atlasIdsVO;
     }
-
 
 
     /**
@@ -292,10 +291,10 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     /**
      * 封装版本号和修改表结构的参数
      *
-     * @param accessId 物理表名
+     * @param accessId     物理表名
      * @param odsTableName ods表名
-     * @param createType 3: 代表数据接入
-     * @param list 表字段
+     * @param createType   3: 代表数据接入
+     * @param list         表字段
      * @return dto
      */
     private ModelPublishTableDTO getModelPublishTableDTO(long accessId, String odsTableName, int createType, List<TableFieldsPO> list) {

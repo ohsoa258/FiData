@@ -60,10 +60,10 @@ public interface DataAccessClient {
             @RequestParam("atlas_db_id") String atlasDbId);
 
     /**
-     *  根据应用注册id和物理表id,查询atlasInstanceId和atlasDbId
+     * 根据应用注册id和物理表id,查询atlasInstanceId和atlasDbId
      *
      * @param appid 应用注册id
-     * @param id 物理表id
+     * @param id    物理表id
      * @return AtlasWriteBackDataDTO
      */
     @GetMapping("/physicalTable/getAtlasWriteBackDataDTO")
@@ -72,7 +72,7 @@ public interface DataAccessClient {
             @RequestParam("id") long id);
 
     /**
-     *  物理表回写
+     * 物理表回写
      *
      * @param dto dto
      * @return 执行结果
@@ -84,7 +84,7 @@ public interface DataAccessClient {
     /**
      * 提供给nifi的数据
      *
-     * @param id 物理表id
+     * @param id    物理表id
      * @param appid 应用注册id
      * @return DataAccessConfigDTO
      */
@@ -100,6 +100,7 @@ public interface DataAccessClient {
      */
     @PostMapping("/physicalTable/addComponentId")
     public ResultEntity<Object> addComponentId(@RequestBody NifiAccessDTO dto);
+
     /**
      * getTableField
      *
@@ -138,31 +139,52 @@ public interface DataAccessClient {
      * @return DataAccessConfigDTO
      */
     @GetMapping("/physicalTable/createPgToDorisConfig")
-    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql);
-
-    @GetMapping("/dataAccessTree/getComponentId")
-    public ResultEntity<Object> getComponentId(@RequestBody DataAccessIdsDTO dto);
+    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName") String tableName, @RequestParam("selectSql") String selectSql);
 
 
     /**
      * 根据接入表id获取所有字段id
-     * @param id
-     * @return
+     *
+     * @param id id
+     * @return list
      */
     @GetMapping("/physicalTable/getTableFieldId/{id}")
     public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id);
 
+    /**
+     * 获取所有物理表id
+     *
+     * @return list
+     */
     @GetMapping("/dataAccessTree/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId();
 
+    /**
+     * 封装参数给nifi
+     *
+     * @param tableId tableId
+     * @param appId   appId
+     * @return dto
+     */
     @GetMapping("/physicalTable/getBuildPhysicalTableDTO")
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(
             @RequestParam("table_id") long tableId, @RequestParam("app_id") long appId);
 
+    /**
+     * 更新发布状态
+     *
+     * @param dto dto
+     */
     @ApiOperation("修改物理表发布状态")
     @PutMapping("/physicalTable/updateTablePublishStatus")
     public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto);
 
+    /**
+     * 根据appId和tableId 获取appName和tableName
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
     @ApiOperation("根据appId和tableId 获取appName和tableName")
     @PostMapping("/dataAccessTree/getAppNameAndTableName")
     public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);

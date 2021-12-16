@@ -73,14 +73,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEnum updateNonRealTimeData(TableAccessNonDTO dto);
 
     /**
-     * 根据非实时应用名称,获取远程数据库的表及表对应的字段
-     *
-     * @param appName 请求参数
-     * @return 返回值
-     */
-    Map<String, List<String>> queryDataBase(String appName);
-
-    /**
      * 物理表接口首页分页查询
      *
      * @param key  搜索条件
@@ -150,14 +142,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEnum addAtlasTableIdAndDorisSql(AtlasWriteBackDataDTO dto);
 
     /**
-     * 回写componentId
-     *
-     * @param dto dto
-     * @return 执行结果
-     */
-    ResultEnum addComponentId(NifiAccessDTO dto);
-
-    /**
      * 过滤器
      *
      * @param query 查询条件
@@ -186,8 +170,6 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<DataAccessTreeDTO> getTree();
 
-    Object getDimensionMeta();
-
     /**
      * 添加维度时需要的应用下的物理表
      *
@@ -207,17 +189,17 @@ public interface ITableAccess extends IService<TableAccessPO> {
     /**
      * nifiSettingPO
      *
+     * @param tableName tableName
+     * @param selectSql selectSql
      * @return 表名及查询语句
      */
     BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql);
 
-    ResultEntity<ComponentIdDTO> getComponentId(DataAccessIdsDTO dto);
-
     /**
      * 根据id获取接入表所有字段id
      *
-     * @param id
-     * @return
+     * @param id id
+     * @return list
      */
     List<FieldNameDTO> getTableFieldId(int id);
 
@@ -230,7 +212,8 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 获取所有应用下表以及字段数据
-     * @return
+     *
+     * @return list
      */
     List<AppRegistrationDataDTO> getDataAppRegistrationMeta();
 
@@ -244,6 +227,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 物理表单表回显
+     *
      * @param id id
      * @return dto
      */
@@ -251,6 +235,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 物理表单表修改
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -258,6 +243,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 物理表单表删除
+     *
      * @param id id
      * @return 执行结果
      */
@@ -273,6 +259,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据SQL,获取结果集
+     *
      * @param query
      * @return
      */
@@ -280,13 +267,26 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 根据SQL,获取结果集
+     *
      * @param query query
      * @return 结果集
      */
     OdsResultDTO getDataAccessQueryList(OdsQueryDTO query);
 
+    /**
+     * 封装参数给nifi
+     *
+     * @param tableId tableId
+     * @param appId   appId
+     * @return dto
+     */
     ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId);
 
+    /**
+     * 更新发布状态
+     *
+     * @param dto dto
+     */
     void updateTablePublishStatus(ModelPublishStatusDTO dto);
 
     /**

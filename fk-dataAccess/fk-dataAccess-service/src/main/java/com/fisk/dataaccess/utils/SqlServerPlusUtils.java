@@ -37,8 +37,6 @@ public class SqlServerPlusUtils {
             while (resultSet.next()) {
                 tableList.add(resultSet.getString("name"));
             }
-//            System.out.println(tableList);
-
         } catch (SQLException e) {
             log.error("【getTables】获取表名报错, ex", e);
             return null;
@@ -62,9 +60,9 @@ public class SqlServerPlusUtils {
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-//                dto.fieldType = resultSet.getString("TYPE_NAME");
-//                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-//                dto.fieldDes = resultSet.getString("REMARKS");
+////                dto.fieldType = resultSet.getString("TYPE_NAME");
+////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+///               dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }
 
@@ -108,7 +106,6 @@ public class SqlServerPlusUtils {
                 tablePyhNameDTO.setFields(columnsName);
 
                 tag++;
-//                tablePyhNameDTO.setTag(tag);
                 list.add(tablePyhNameDTO);
             }
 
