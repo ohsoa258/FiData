@@ -127,9 +127,10 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     /**
      * insertTableAccessPO
      *
-     * @return
+     * @param tableAccessPo po
+     * @return 执行结果
      */
-    int insertTableAccessPO(@Param("tableAccessPO") TableAccessPO tableAccessPO);
+    int insertTableAccessPo(@Param("tableAccessPo") TableAccessPO tableAccessPo);
 
     /**
      * 获取所有物理表id
@@ -139,6 +140,11 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
     List<ChannelDataDTO> listTableIdAndName();
 
+    /**
+     * 获取所有物理表id和表名
+     *
+     * @return list
+     */
     @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
     List<TableIdAndNameDTO> listTableIdAndNames();
 }

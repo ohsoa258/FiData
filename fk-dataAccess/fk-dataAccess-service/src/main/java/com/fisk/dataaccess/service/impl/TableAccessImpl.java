@@ -140,33 +140,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addRealTimeData(TableAccessDTO tableAccessDTO) {
 
-        // TODO: 原始SQL表创建(暂时不用集成)
-        // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
-////        AppRegistrationPO one = appRegistrationImpl.query()
-////                .eq("app_name", tableAccessDTO.getAppName())
-////                .eq("del_flag", 1)
-////                .one();
-////        // 0-1.获取appid
-////        long appid = one.getId();
-////
-////        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
-////        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
-////        String driveName = driveTypePO.getName(); // 数据源驱动名称
-////        if (driveName.equalsIgnoreCase("MySqL")) {
-////            // 先创建表
-////            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-////
-////            int i = mysqlTableUtils.createmysqltb(tableAccessDTO);
-////            if (i != 0) {
-////                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
-////            }
-////        } else {
-////            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
-////            int i = sqlServerTableUtils.createSqlServerTB(tableAccessDTO);
-////            if (i != 0) {
-////                throw new FkException(500, "创建" + tableAccessDTO.getTableName() + "表失败");
-////            }
-////        }
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
@@ -174,36 +147,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         TableAccessPO modelAccess = tableAccessDTO.toEntity(TableAccessPO.class);
 
         // 数据保存: 添加应用的时候,相同的表名不可以再次添加
-        /*List<String> tableNameList = baseMapper.getTableName();
-        String tableName = modelAccess.getTableName();
-        boolean contains = tableNameList.contains(tableName);
-        if (contains) {
-            return ResultEnum.Table_NAME_EXISTS;
-        }*/
-//        AppRegistrationPO modelReg = appRegistrationImpl.query()
-//                .eq("app_name", tableAccessDTO.getAppName())
-//                .eq("del_flag", 1)
-//                .one();
-
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         String tableName = modelAccess.getTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
-//        tableNameVO.appId = modelReg.id;
         tableNameVO.appId = tableAccessDTO.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
             return ResultEnum.Table_NAME_EXISTS;
         }
 
-        // 应用注册id
-//        long id = modelReg.getId();
-
         if (tableAccessDTO.appId < 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         modelAccess.setCreateUser(String.valueOf(userId));
-//        modelAccess.setAppId(id);
         modelAccess.appId = tableAccessDTO.appId;
 
         // 0是实时物理表，1是非实时物理表
@@ -237,14 +194,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        // 保存同步频率
-/*
-        TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
-        TableSyncmodePO po = dto.toEntity(TableSyncmodePO.class);
-        po.setId(modelAccess.getId());
-        boolean saveSync = syncmodeImpl.save(po);
-*/
-
         return saveFields ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -257,66 +206,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<AtlasIdsVO> addNonRealTimeData(TableAccessNonDTO tableAccessNonDTO) {
-
-        // 先创建表
-////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-////
-////        int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
-////        if (i != 0) {
-////            throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-////        }
-
-        // 根据应用名称,查询出具体的数据源驱动(现阶段是MySqL和SQL Server)
-        // 0-1.获取appid
-        // TODO: 原始SQL表创建(暂时不用集成)
-////        AppRegistrationPO one = appRegistrationImpl.query()
-////                .eq("app_name", tableAccessNonDTO.getAppName())
-////                .eq("del_flag", 1)
-////                .one();
-////        // 0-1.获取appid
-////        long appid = one.getId();
-////
-////        // 0-2.根据id查询数据源驱动类型(appid就是tb_app_drivetype表的id)
-////        AppDriveTypePO driveTypePO = appDriveTypeImpl.query().eq("id", appid).one();
-////        String driveName = driveTypePO.getName(); // 数据源驱动名称
-////        if (driveName.equalsIgnoreCase("MySqL")) {
-////            // 先创建表
-////            MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-////
-////            int i = mysqlTableUtils.createmysqltb(tableAccessNonDTO);
-////            if (i != 0) {
-////                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-////            }
-////        } else {
-////            SqlServerTableUtils sqlServerTableUtils = new SqlServerTableUtils();
-////            int i = sqlServerTableUtils.createSqlServerTB(tableAccessNonDTO);
-////            if (i != 0) {
-////                throw new FkException(500, "创建" + tableAccessNonDTO.getTableName() + "表失败");
-////            }
-////        }
-
         // 当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
         // 1.dto->po
         TableAccessPO modelAccess = tableAccessNonDTO.toEntity(TableAccessPO.class);
-
-//        List<String> tableNameList = baseMapper.getTableName();
-//        String tableName = modelAccess.getTableName();
-//        boolean contains = tableNameList.contains(tableName);
-//        if (contains) {
-////            return ResultEnum.Table_NAME_EXISTS;
-//            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
-//        }
-
-/*
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-                .eq("app_name", tableAccessNonDTO.getAppName())
-                .eq("del_flag", 1)
-                .one();
-
-*/
         // 判断table_name是否已存在(不同应用注册下,名称可以相同)
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         // TODO: tableName 物理表名称
@@ -330,7 +225,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
         }
 
-//        long id = modelReg.getId();
         if (tableAccessNonDTO.appId < 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
@@ -370,7 +264,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 新增tb_table_business业务时间表
         // 保存tb_table_business数据
         TableBusinessDTO businessDTO = tableAccessNonDTO.getBusinessDTO();
-//        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
         TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
         modelBusiness.setAccessId(modelAccess.getId());
         boolean saveBusiness = this.businessImpl.save(modelBusiness);
@@ -387,10 +280,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!saveSync) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
-////        CreateMysqlTableUtils createMysqlTableUtils = new CreateMysqlTableUtils();
-////
-////       int i = createMysqlTableUtils.createmysqltb(tableAccessNonDTO);
-////        System.out.println(i);
 
         AtlasIdsVO atlasIdsVO = new AtlasIdsVO();
         atlasIdsVO.userId = userId;
@@ -410,16 +299,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     public ResultEnum updateRealTimeData(TableAccessDTO tableAccessDTO) {
-
-        // TODO: 原始SQL表修改(暂时不用集成)
-////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-////
-////        int i = mysqlTableUtils.updatemysqltb(tableAccessDTO);
-////        if (i != 0) {
-////            throw new FkException(500, "操作数据库失败");
-////        }
-
-        // 当前登录人信息
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
@@ -461,16 +340,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (!updateFields || !saveField) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
-////        CreateTableUtils createTableUtils = new CreateTableUtils();
-////        int i = createTableUtils.updatemysqltb(tableAccessDTO);
-////        System.out.println(i);
-
-        // 修改tb_table_syncmode
-/*
-        TableSyncmodeDTO dto = tableAccessDTO.getTableSyncmodeDTO();
-        TableSyncmodePO modelSync = dto.toEntity(TableSyncmodePO.class);
-        boolean updateSync = syncmodeImpl.updateById(modelSync);
-*/
 
         return updateFields ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -483,16 +352,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     public ResultEnum updateNonRealTimeData(TableAccessNonDTO dto) {
-
-        // TODO: 原始SQL表修改(暂时不用集成)
-        // 1.先修改表
-////        MysqlTableUtils mysqlTableUtils = new MysqlTableUtils();
-////
-////        int i = mysqlTableUtils.updatemysqltb(dto);
-////        if (i != 0) {
-////            throw new FkException(500, "操作数据库失败");
-////        }
-
         UserInfo userInfo = userHelper.getLoginUserInfo();
         Long userId = userInfo.id;
 
@@ -512,15 +371,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean updateField = true;
         boolean saveField = true;
         List<TableFieldsDTO> list = dto.getList();
-/*
-        for (TableFieldsDTO tableFieldsDTO : list) {
-
-            TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-            modelField.setUpdateUser(String.valueOf(userId));
-
-            updateField = tableFieldsImpl.updateById(modelField);
-        }
-*/
 
         for (TableFieldsDTO tableFieldsDTO : list) {
             // 0: 未操作的数据  1: 新增  2: 编辑
@@ -559,7 +409,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO 新增tb_table_business业务时间表
         // 4.保存tb_table_business数据
         TableBusinessDTO businessDTO = dto.getBusinessDTO();
-//        TableBusinessPO modelBusiness = businessDTO.toEntity(TableBusinessPO.class);
         TableBusinessPO modelBusiness = TableBusinessMap.INSTANCES.dtoToPo(businessDTO);
         boolean updateBusiness = this.businessImpl.updateById(modelBusiness);
         if (!updateBusiness) {
@@ -777,9 +626,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)
     @Override
     public ResultEntity<AtlasEntityDbTableColumnDTO> getAtlasBuildTableAndColumn(long id, long appid) {
-
         AtlasEntityDbTableColumnDTO dto = null;
-
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", appid).eq("del_flag", 1).one();
@@ -787,17 +634,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelAccess == null || modelDataSource == null || modelSync == null || modelReg == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-
         dto = new AtlasEntityDbTableColumnDTO();
-
         dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
-
         // TODO:驱动类型(改为枚举类型)
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-//            dto.dbType = modelDataSource.driveType;
-
             switch (modelDataSource.driveType) {
                 case "sqlserver":
                     dto.dbType = DbTypeEnum.sqlserver;
@@ -815,10 +657,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     break;
             }
         }
-
         // TODO 新增cron表达式
         dto.cornExpress = modelSync.cornExpression;
-
         // TODO 新增appAbbreviation syncType syncField
         dto.appAbbreviation = modelReg.appAbbreviation;
         switch (modelSync.syncMode) {
@@ -835,21 +675,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             default:
                 break;
         }
-
         dto.tableId = String.valueOf(modelAccess.getId());
-
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
-
         List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
-
         if (list.isEmpty()) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-
         for (TableFieldsPO po : list) {
-
             AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
-
             atlasEntityColumnDTO.setColumnId(po.getId());
             atlasEntityColumnDTO.setColumnName(po.getFieldName());
             atlasEntityColumnDTO.setComment(po.getFieldDes());
@@ -864,53 +697,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             columns.add(atlasEntityColumnDTO);
         }
-
         dto.columns = columns;
-
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_WRITEBACKDATA)
     @Override
     public ResultEntity<AtlasWriteBackDataDTO> getAtlasWriteBackDataDTO(long appid, long id) {
-
         AtlasWriteBackDataDTO dto = new AtlasWriteBackDataDTO();
-
         // 查询tb_app_registration
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-                .eq("id", appid)
-                .eq("del_flag", 1)
-                .one();
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", appid).eq("del_flag", 1).one();
         // 查询tb_app_datasource
-        AppDataSourcePO modelDataSource = appDataSourceImpl.query()
-                .eq("app_id", appid)
-                .eq("del_flag", 1)
-                .one();
+        AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelReg == null || modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-
         dto.appId = modelReg.atlasInstanceId;
         dto.atlasTableId = modelDataSource.atlasDbId;
-
         // 查询tb_table_access
-        TableAccessPO modelAccess = this.query()
-                .eq("id", id)
-                .eq("app_id", appid)
-                .eq("del_flag", 1)
-                .one();
-
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         dto.tableId = modelAccess.atlasTableId;
-//        dto.dorisSelectSqlStr = modelAccess.dorisSelectSqlStr;
-
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
         atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
-
         // TODO:驱动类型
         if (StringUtils.isNotBlank(modelDataSource.driveType)) {
-//            atlasDTO.dbType = modelDataSource.driveType;
             switch (modelDataSource.driveType) {
                 case "sqlserver":
                     atlasDTO.dbType = DbTypeEnum.sqlserver;
@@ -928,36 +740,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     break;
             }
         }
-
         List<AtlasEntityColumnDTO> columns = new ArrayList<>();
 
-        List<TableFieldsPO> list = tableFieldsImpl.query()
-                .eq("table_access_id", id)
-                .eq("del_flag", 1)
-                .list();
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
         if (list.isEmpty()) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         for (TableFieldsPO po : list) {
-
             AtlasEntityColumnDTO atlasEntityColumnDTO = new AtlasEntityColumnDTO();
-
             atlasEntityColumnDTO.setColumnId(po.getId());
             atlasEntityColumnDTO.setColumnName(po.getFieldName());
             atlasEntityColumnDTO.setComment(po.getFieldDes());
             if (po.fieldLength == 0) {
                 atlasEntityColumnDTO.setDataType(po.getFieldType());
             } else {
-
                 atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-
             columns.add(atlasEntityColumnDTO);
         }
-
         dto.columnsKeys = columns;
-
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
@@ -965,41 +767,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addAtlasTableIdAndDorisSql(AtlasWriteBackDataDTO dto) {
-
         // 应用注册id
         long appid = Long.parseLong(dto.appId);
         // 物理表id
         long tableId = Long.parseLong(dto.tableId);
-
         // 物理表: tb_table_access
-        TableAccessPO modelAccess = this.query()
-                .eq("id", tableId)
-                .eq("app_id", appid)
-                .eq("del_flag", 1)
-                .one();
+        TableAccessPO modelAccess = this.query().eq("id", tableId).eq("app_id", appid).eq("del_flag", 1).one();
         if (modelAccess == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         modelAccess.atlasTableId = dto.atlasTableId;
-//        modelAccess.updateUser = dto.userId;
         boolean update = this.updateById(modelAccess);
         if (!update) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-
         List<AtlasEntityColumnDTO> list = dto.columnsKeys;
-
         boolean updateField = true;
         for (AtlasEntityColumnDTO columnDTO : list) {
-
             // 根据本表id查询tb_table_fields
-            TableFieldsPO modelFields = this.tableFieldsImpl.query()
-                    .eq("id", columnDTO.columnId)
-                    .one();
+            TableFieldsPO modelFields = this.tableFieldsImpl.query().eq("id", columnDTO.columnId).one();
             if (modelFields == null) {
                 return ResultEnum.DATA_NOTEXISTS;
             }
-
             // 回写的字段GUID
             modelFields.atlasFieldId = columnDTO.getGuid();
             // 更新tb_table_fields表数据
@@ -1008,31 +797,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 return ResultEnum.SAVE_DATA_ERROR;
             }
         }
-/*
-        // nifi配置表: tb_nifi_setting
-        NifiSettingPO po = new NifiSettingPO();
-        po.tableId = tableId;
-        po.appId = appid;
-        po.tableName = dto.tableName;
-        po.selectSql = dto.dorisSelectSqlStr;
-
-        boolean save = nifiSettingImpl.save(po);
-
-*/
-
         return updateField ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    /**
-     * nifi流程
-     *
-     * @param id    物理表id
-     * @param appid 应用注册id
-     * @return
-     */
     @TraceType(type = TraceTypeEnum.DATAACCESS_CONFIG)
     @Override
     public ResultEntity<DataAccessConfigDTO> dataAccessConfig(long id, long appid) {
+        String mysqlType = "mysql";
+        String sqlserverType = "sqlserver";
+        String postgresqlType = "postgresql";
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
         // app组配置
         GroupConfig groupConfig = new GroupConfig();
@@ -1054,8 +827,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         groupConfig.setAppName(modelReg.getAppName());
         groupConfig.setAppDetails(modelReg.getAppDes());
-        // 回写应用注册组件id
-//        groupConfig.setComponentId(modelReg.componentId);
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelDataSource == null) {
@@ -1063,27 +834,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
         // 选择驱动类型
-        if (Objects.equals(modelDataSource.driveType, "sqlserver")) {
+        if (Objects.equals(modelDataSource.driveType, sqlserverType)) {
             sourceDsConfig.setType(DriverTypeEnum.SQLSERVER);
-        } else if (Objects.equals(modelDataSource.driveType, "mysql")) {
+        } else if (Objects.equals(modelDataSource.driveType, mysqlType)) {
             sourceDsConfig.setType(DriverTypeEnum.MYSQL);
-        } else if (Objects.equals(modelDataSource.driveType, "postgresql")) {
+        } else if (Objects.equals(modelDataSource.driveType, postgresqlType)) {
             sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
-//        sourceDsConfig.componentId = modelReg.sourceDbPoolComponentId;
-        // 4.目标源jdbc连接
-//        targetDsConfig.componentId = modelReg.targetDbPoolComponentId;
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
         if (modelSync == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-
         // TODO: 新增同步方式
         targetDsConfig.syncMode = modelSync.syncMode;
-
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         // 2.任务组配置
         taskGroupConfig.setAppName(modelAccess.getTableName());
@@ -1091,19 +857,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        // TODO: 将app组配置中的setNewApp加上
-//        if (modelReg.componentId == null && modelAccess.componentId == null) {
-//            groupConfig.setNewApp(true);
-//        } else {
-//            groupConfig.setNewApp(false);
-//        }
-        // TODO 回写物理表组件id
-//        taskGroupConfig.setComponentId(modelAccess.componentId);
-
-//        NifiSettingPO modelNifi = nifiSettingImpl.query().eq("app_id", appid).eq("table_id", id).one();
-//        if (modelNifi == null) {
-//            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-//        }
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
@@ -1111,7 +864,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 增量字段
             processorConfig.syncField = modelSync.syncField;
         }
-
         String timerDriver = "Timer driven";
         String corn = "CORN driven";
         if (timerDriver.equalsIgnoreCase(modelSync.timerDriver)) {
@@ -1121,46 +873,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         } else {
             processorConfig.scheduleType = SchedulingStrategyTypeEnum.EVENT;
         }
-        // ods sql
-//        processorConfig.sourceExecSqlQuery = modelNifi.selectSql;
-        // atlas返回的tableName
-//        processorConfig.targetTableName = modelNifi.tableName;
         // TODO  新增: 增量配置库源jdbc连接
         cfgDsConfig.setType(DriverTypeEnum.MYSQL);
         cfgDsConfig.setJdbcStr(jdbcStr);
         cfgDsConfig.setUser(user);
         cfgDsConfig.setPassword(password);
-        /**
-         * 查询tb_nifi_config表,查询value是否未空,
-         */
-
-
         // TODO: 2021/9/4 nifi流程需要物理表字段
-//        TableAccessPO one = this.query().eq("id", id).eq("del_flag", 1).one();
-//        NifiSettingPO settingPO = nifiSettingImpl.query().eq("table_id", id).eq("app_id", appid).one();
-        List<TableFieldsPO> list = this.tableFieldsImpl.query()
-                .eq("table_access_id", id)
-                .eq("del_flag", 1)
-                .list();
+        List<TableFieldsPO> list = this.tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
         List<TableFieldsDTO> fieldsDTOList = TableFieldsMap.INSTANCES.listPoToDto(list);
-
         if (list != null && !list.isEmpty()) {
-//            targetDsConfig.targetTableName = settingPO.tableName;
             targetDsConfig.tableFieldsList = fieldsDTOList;
         }
-
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;
         dto.targetDsConfig = targetDsConfig;
         dto.processorConfig = processorConfig;
         dto.cfgDsConfig = cfgDsConfig;
-
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
     public TableAccessPO insertTableAccessPo(TableAccessPO tableAccessPo) {
-        accessMapper.insertTableAccessPO(tableAccessPo);
+        accessMapper.insertTableAccessPo(tableAccessPo);
         return tableAccessPo;
     }
 
@@ -1172,36 +906,30 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         AppDataSourcePO appDataSourcePo = new AppDataSourcePO();
         TableAccessPO tableAccessPo = new TableAccessPO();
         TableSyncmodePO tableSyncmodePo = new TableSyncmodePO();
-//        NifiSettingPO nifiSettingPO = new NifiSettingPO();
         appRegistrationPo.appName = "postgerToDoris";
         appRegistrationPo.appDes = "postgerToDoris";
         appRegistrationPo.appType = 1;
         appRegistrationPo.delFlag = 1;
-        //appRegistrationImpl.insertAppRegistrationPO(appRegistrationPO);//添加返回id 就是appid
-        appDataSourcePo.appId = appRegistrationPo.id;//后面加上AppRegistrationPO.id
+        //后面加上AppRegistrationPO.id
+        appDataSourcePo.appId = appRegistrationPo.id;
         //ConnectStr   driveType   ConnectAccount   ConnectPwd
         appDataSourcePo.driveType = "postgresql";
         appDataSourcePo.connectAccount = pgsqlDatamodelUsername;
         appDataSourcePo.connectPwd = pgsqlDatamodelPassword;
         appDataSourcePo.connectStr = pgsqlDatamodelUrl;
-        //appDataSourceImpl.save(appDataSourcePo);
-        tableAccessPo.appId = appRegistrationPo.id;//后续补上AppRegistrationPO.id
+        //后续补上AppRegistrationPO.id
+        tableAccessPo.appId = appRegistrationPo.id;
         tableAccessPo.isRealtime = 1;
         tableAccessPo.tableName = tableName;
         tableAccessPo.delFlag = 1;
-        insertTableAccessPo(tableAccessPo);//可能都要返回id
+        //可能都要返回id
+        insertTableAccessPo(tableAccessPo);
         tableSyncmodePo.syncMode = 1;
-        tableSyncmodePo.id = tableAccessPo.id;//tableAccess.id
-        //tableSyncmodeImpl.save(tableSyncmodePo);
-//        nifiSettingPO.tableId = tableAccessPo.id;//tableAccess.id
-//        nifiSettingPO.appId = appRegistrationPO.id;
-//        nifiSettingPO.selectSql = selectSql;
-//        nifiSettingPO.tableName = tableName;
-//        nifiSettingImpl.save(nifiSettingPO);
-        EtlIncrementalPO etlIncrementalPO = new EtlIncrementalPO();
-//        etlIncrementalPO.objectName = nifiSettingPO.tableName;
-        etlIncrementalPO.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
-        etlIncrementalMapper.insert(etlIncrementalPO);
+        //tableAccess.id
+        tableSyncmodePo.id = tableAccessPo.id;
+        EtlIncrementalPO etlIncrementalPo = new EtlIncrementalPO();
+        etlIncrementalPo.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
+        etlIncrementalMapper.insert(etlIncrementalPo);
         buildNifiFlowDTO.appId = appRegistrationPo.id;
         buildNifiFlowDTO.id = tableAccessPo.id;
         buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
@@ -1320,7 +1048,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         QueryWrapper<TableFieldsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id").lambda().eq(TableFieldsPO::getTableAccessId, id);
         List<FieldNameDTO> list = fieldsMapper.listTableName(id);
-        //List<Integer> list=(List)fieldsMapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
         return list;
     }
 
@@ -1359,34 +1086,33 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         //获取所有应用注册列表
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
-        List<AppRegistrationPO> appRegistrationPOList = registrationMapper.selectList(queryWrapper);
-        if (appRegistrationPOList == null || appRegistrationPOList.size() == 0) {
+        List<AppRegistrationPO> poList = registrationMapper.selectList(queryWrapper);
+        if (poList == null || poList.size() == 0) {
             return list;
         }
-        list = AppRegistrationMap.INSTANCES.listPoToDtoList(appRegistrationPOList);
+        list = AppRegistrationMap.INSTANCES.listPoToDtoList(poList);
         //获取所有表配置数据
-        QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
+        QueryWrapper<TableAccessPO> wrapper = new QueryWrapper<>();
         // 只需要发布状态为3: 正在发布 -> 1:发布成功
-        tableAccessPOQueryWrapper.lambda().eq(TableAccessPO::getPublish, 3).or().eq(TableAccessPO::getPublish, 1);
-        List<TableAccessPO> tableAccessPOList = accessMapper.selectList(tableAccessPOQueryWrapper);
-        if (tableAccessPOList == null || tableAccessPOList.size() == 0) {
+        wrapper.lambda().eq(TableAccessPO::getPublish, 3).or().eq(TableAccessPO::getPublish, 1);
+        List<TableAccessPO> tableAccessList = accessMapper.selectList(wrapper);
+        if (tableAccessList == null || tableAccessList.size() == 0) {
             return list;
         }
         //获取表中所有字段配置数据
-        QueryWrapper<TableFieldsPO> tableFieldsPOQueryWrapper = new QueryWrapper<>();
-        List<TableFieldsPO> tableFieldsPOList = fieldsMapper.selectList(tableFieldsPOQueryWrapper
+        QueryWrapper<TableFieldsPO> tableFieldsQueryWrapper = new QueryWrapper<>();
+        List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(tableFieldsQueryWrapper
         );
         for (AppRegistrationDataDTO item : list) {
-            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessPOList.stream()
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
                     .filter(e -> e.appId == item.id).collect(Collectors.toList()));
             item.tableDtoList.stream().map(e -> e.tableName = "ods_" + item.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
-            if ((item.tableDtoList == null || item.tableDtoList.size() == 0) ||
-                    (tableFieldsPOList == null || tableFieldsPOList.size() == 0)) {
+            if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
-                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsPOList.stream()
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream()
                         .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (tableAccessDataDTO.fieldDtoList == null || tableAccessDataDTO.fieldDtoList.size() == 0) {
                     continue;
@@ -1485,7 +1211,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum deleteTableAccessData(long id) {
         // 参数校验
@@ -1626,6 +1352,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     private static List<String> transformField(String fieldType, String fieldLength) {
 
+        Integer textLength = 5000;
+
         // 浮点型
         List<String> floatType = new ArrayList<>();
         floatType.add("double");
@@ -1674,7 +1402,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         } else if (Integer.parseInt(fieldLength) <= 1) {
             fieldList.add("VARCHAR");
             fieldList.add("20");
-        } else if (Integer.parseInt(fieldLength) >= 5000) {
+        } else if (Integer.parseInt(fieldLength) >= textLength) {
             fieldList.add("TEXT");
             fieldList.add("0");
         } else {

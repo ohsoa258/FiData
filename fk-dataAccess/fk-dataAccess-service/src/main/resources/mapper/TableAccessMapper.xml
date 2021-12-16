@@ -29,9 +29,9 @@
         </if>
     </select>
 
-    <insert id="insertTableAccessPO" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+    <insert id="insertTableAccessPo" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
             parameterType="com.fisk.dataaccess.entity.TableAccessPO">
         insert into tb_table_access (app_id,is_realtime,table_name,del_flag) values
-        (#{tableAccessPO.appId},#{tableAccessPO.isRealtime},#{tableAccessPO.tableName},#{tableAccessPO.delFlag})
+        (#{tableAccessPo.appId},#{tableAccessPo.isRealtime},#{tableAccessPo.tableName},#{tableAccessPo.delFlag})
     </insert>
 </mapper>

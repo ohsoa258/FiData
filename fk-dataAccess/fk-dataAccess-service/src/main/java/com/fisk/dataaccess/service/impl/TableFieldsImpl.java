@@ -190,20 +190,18 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
-/*
-        // 全删全插
-        try {
-            List<TableFieldsPO> list = this.query().eq("table_access_id", dto.id).list();
-            if (!CollectionUtils.isEmpty(list)) {
-                list.forEach(e -> baseMapper.deleteByIdWithFill(e));
-            }
-            // list: dto -> po
-            List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(dto.list);
-            this.saveBatch(listPo);
-        } catch (Exception e) {
-            return ResultEnum.UPDATE_DATA_ERROR;
-        }
-*/
+////        // 全删全插
+////        try {
+////            List<TableFieldsPO> list = this.query().eq("table_access_id", dto.id).list();
+////            if (!CollectionUtils.isEmpty(list)) {
+////                list.forEach(e -> baseMapper.deleteByIdWithFill(e));
+////            }
+////            // list: dto -> po
+////            List<TableFieldsPO> listPo = TableFieldsMap.INSTANCES.listDtoToPo(dto.list);
+////            this.saveBatch(listPo);
+////        } catch (Exception e) {
+////            return ResultEnum.UPDATE_DATA_ERROR;
+////        }
 
 ////        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;

@@ -30,6 +30,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 查询appName
+     *
      * @return 返回值
      */
     @Select("select app_name from tb_app_registration where del_flag=1")
@@ -37,21 +38,25 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 根据appName查询id
+     *
      * @param appName appName
      * @return 返回值
      */
     @Select("select id from tb_app_registration where app_name=#{app_name} and del_flag=1")
-    Long getIdByAppName(@Param("app_name")String appName);
+    Long getIdByAppName(@Param("app_name") String appName);
 
     /**
      * 根据appName查询id
+     *
      * @param appName appName
      * @return 返回值
      */
     @Select("select * from tb_app_registration where app_name=#{app_name} and del_flag=1")
-    List<AppRegistrationPO> getByAppName(@Param("app_name")String appName);
+    List<AppRegistrationPO> getByAppName(@Param("app_name") String appName);
+
     /**
      * 倒序查询
+     *
      * @return 返回值
      */
     @Select("select id,app_name,app_des,create_time from tb_app_registration order by create_time desc limit 0,10")
@@ -76,6 +81,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 获取应用注册name及id
+     *
      * @return tree
      */
     @Select("SELECT id,app_name,app_type FROM tb_app_registration WHERE del_flag = 1;")
@@ -83,6 +89,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 查询应用名称及应用简称集合
+     *
      * @return list
      */
     @Select("SELECT app_name,app_abbreviation FROM tb_app_registration WHERE del_flag=1;")
@@ -90,6 +97,7 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
 
     /**
      * 查询appAbbreviation
+     *
      * @return appAbbreviation
      */
     @Select("select app_abbreviation from tb_app_registration where del_flag=1")
@@ -98,8 +106,9 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     /**
      * appRegistrationDTO
      *
-     * @return
+     * @param appRegistrationPo po
+     * @return 执行结果
      */
-    int insertAppRegistrationPO(@Param("appRegistrationPO")AppRegistrationPO appRegistrationPO);
+    int insertAppRegistrationPo(@Param("appRegistrationPO") AppRegistrationPO appRegistrationPo);
 
 }
