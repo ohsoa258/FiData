@@ -1349,7 +1349,7 @@ public class BuildNifiTaskListener {
         dto.sourceDbPoolComponentId = sourceDbPoolComponentId;
         dto.cfgDbPoolComponentId = cfgDbPoolComponentId;
         dto.schedulerComponentId = schedulerComponentId;
-        client.addComponentId(dto);
+//        client.addComponentId(dto);
     }
 
     /**
