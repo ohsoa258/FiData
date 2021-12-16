@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -19,13 +20,13 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppNameDTO extends BaseDTO {
 
+    @ApiModelProperty(value = "应用名称", required = true)
     public String appName;
 
+    @ApiModelProperty(value = "应用类型", required = true)
     public byte appType;
-
+    @ApiModelProperty(value = "主键", required = true)
     public long id;
-
-//    public List<String> appName;
 
     public AppNameDTO(BaseEntity entity) {
         super(entity);

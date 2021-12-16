@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,6 +15,7 @@ import javax.validation.constraints.NotNull;
 public class AppRegistrationEditDTO extends AppRegistrationDTO {
 
     @NotNull(message = "id不可为null")
+    @ApiModelProperty(value = "主键", required = true)
     public long id;
 }
 

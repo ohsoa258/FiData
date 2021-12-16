@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -16,28 +17,20 @@ public class TableNameTreeDTO {
      * 父id
      */
     public long pid;
-/*    *//**
-     * 同步方式
-     *//*
-    public String syncMode;
-    *//**
-     * 表达式
-     *//*
-    public String expression;
-    *//**
-     * 日志
-     *//*
-    public String msg;*/
+
     /**
      * 物理表名
      */
+    @ApiModelProperty(value = "物理表名称", required = true)
     public String tableName;
     /**
      * 1: 数据接入; 2:数据建模
      */
+    @ApiModelProperty(value = "1: 数据接入; 2:数据建模", required = true)
     public int flag;
     /**
      * 0:实时  1:非实时
      */
+    @ApiModelProperty(value = "0:实时  1:非实时", required = true)
     public int appType;
 }

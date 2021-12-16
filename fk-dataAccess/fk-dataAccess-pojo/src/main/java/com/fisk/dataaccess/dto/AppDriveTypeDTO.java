@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,16 +23,19 @@ public class AppDriveTypeDTO extends BaseDTO {
     /**
      * id
      */
+    @ApiModelProperty(value = "主键")
     public long id;
 
     /**
      * 驱动类型
      */
+    @ApiModelProperty(value = "驱动类型", required = true)
     public String name;
 
     /**
      * 模板
      */
+    @ApiModelProperty(value = "连接模板", required = true)
     public String connectStr;
 
 

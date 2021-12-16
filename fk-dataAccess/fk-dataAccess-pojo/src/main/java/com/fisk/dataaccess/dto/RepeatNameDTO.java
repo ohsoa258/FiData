@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Objects;
@@ -15,11 +16,13 @@ public class RepeatNameDTO {
     /**
      * 应用名称
      */
+    @ApiModelProperty(value = "应用名称",required = true)
     public String appName;
 
     /**
      * 应用简称
      */
+    @ApiModelProperty(value = "应用简称",required = true)
     public String appAbbreviation;
 
     @Override

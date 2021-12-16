@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.vo;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Objects;
@@ -13,10 +14,12 @@ public class TableNameVO {
     /**
      * 应用注册id
      */
+    @ApiModelProperty(value = "应用id", required = true)
     public long appId;
     /**
      * 表名
      */
+    @ApiModelProperty(value = "物理表名称", required = true)
     public String tableName;
     @Override
     public boolean equals(Object o) {
