@@ -1291,7 +1291,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         int columnCount = metaData.getColumnCount();
         List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
         // 遍历ResultSet中的每条数据
-        while (rs.next()) {
+        int count = 1;
+        while (rs.next() && count <= 10) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
@@ -1305,6 +1306,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
             }
+            count++;
             array.add(jsonObj);
         }
         //获取列名
