@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -38,6 +39,7 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
 
     /**
      * 删除管道详情
+     *
      * @param id id
      * @return 执行结果
      */
@@ -45,8 +47,17 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
 
     /**
      * 修改单个管道组件
+     *
      * @param dto dto
      * @return 执行结果
      */
     ResultEnum editWorkflow(NifiCustomWorkflowDetailDTO dto);
+
+    /**
+     * 删除单个任务组
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum deleteDataList(WorkflowTaskGroupDTO dto);
 }

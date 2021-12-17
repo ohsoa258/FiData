@@ -1,5 +1,6 @@
 package com.fisk.datafactory.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
@@ -10,6 +11,7 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
@@ -107,9 +109,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        // nifi
-        NifiCustomWorkListDTO workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, dto.list);
-
+        // 前端有时会传入已经删除的组件,后端使用入库后的数据
+        List<NifiCustomWorkflowDetailPO> workflowDetailPOList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
+        NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
+        if (CollectionUtils.isNotEmpty(workflowDetailPOList)) {
+            List<NifiCustomWorkflowDetailDTO> workflowDetailDTOList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(workflowDetailPOList);
+            // nifi
+            workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, workflowDetailDTOList);
+        }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }
 
@@ -232,7 +239,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         if (dto.pid == 0) {
             flow.groupId = this.query().eq("id", dto.id).one().workflowId;
-        } else{
+        } else {
             flow.groupId = dto.pid.toString();
         }
 
@@ -358,7 +365,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      * 管道详情下的任务组-tree
      *
      * @param workflowId tb_nifi_custom_workflow表 workflowId
-     * @param list tb_nifi_custom_workflow_detail表 list对象
+     * @param list       tb_nifi_custom_workflow_detail表 list对象
      * @return map
      */
     private Map<Map, Map> getMenuTree(String workflowId, List<NifiCustomWorkflowDetailDTO> list) {
@@ -406,5 +413,19 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         NifiCustomWorkflowDetailPO po = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(dto);
         // 执行修改
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum deleteDataList(WorkflowTaskGroupDTO dto) {
+        try {
+            List<NifiCustomWorkflowDetailDTO> dtoList = dto.list;
+            if (CollectionUtils.isNotEmpty(dtoList)) {
+                dtoList.forEach(e -> mapper.deleteByIdWithFill(NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(e)));
+            }
+        } catch (Exception e) {
+            return ResultEnum.DELETE_TASK_GRUOP_ERROR;
+        }
+        return null;
     }
 }

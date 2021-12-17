@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -27,14 +28,14 @@ public class NifiCustomWorkflowDetailController {
     @Resource
     PublishTaskClient publishTaskClient;
 
-    @ApiOperation("添加管道详情")
+    @ApiOperation("添加单个管道组件")
     @PostMapping("/add")
     public ResultEntity<NifiCustomWorkflowDetailDTO> addData(@RequestBody NifiCustomWorkflowDetailDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addData(dto));
     }
 
     @GetMapping("/get/{id}")
-    @ApiOperation(value = "回显数据")
+    @ApiOperation(value = "查询单个管道组件")
     public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
@@ -72,9 +73,16 @@ public class NifiCustomWorkflowDetailController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除管道详情")
+    @ApiOperation(value = "删除单个管道组件")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteData(id));
+    }
+
+    @DeleteMapping("/deleteTaskGroup")
+    @ApiOperation(value = "删除单个任务组")
+    public ResultEntity<Object> deleteDataList(@RequestBody WorkflowTaskGroupDTO dto) {
+
+        return ResultEntityBuild.build(service.deleteDataList(dto));
     }
 }
