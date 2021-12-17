@@ -12,6 +12,12 @@ import org.springframework.web.bind.annotation.RequestBody;
  */
 @FeignClient("data-factory")
 public interface DataFactoryClient {
+    /**
+     * nifi管道需要的数据
+     *
+     * @param dto dto
+     * @return dto
+     */
     @PostMapping("/nifiPort/fliterData")
     ResultEntity<NifiPortsDTO> getFilterData(@RequestBody PortRequestParamDTO dto);
 }

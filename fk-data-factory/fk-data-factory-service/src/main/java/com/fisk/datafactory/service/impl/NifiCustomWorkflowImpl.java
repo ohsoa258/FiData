@@ -119,28 +119,28 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoMOdel(e, 4);
+                        getDataAccessIdsDtoModel(e, 4);
                         break;
                     // 数仓事实表任务组
                     case DW_FACT_TASK:
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoMOdel(e, 5);
+                        getDataAccessIdsDtoModel(e, 5);
                         break;
                     // 分析模型维度表任务组
                     case OLAP_DIMENSION_TASK:
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoMOdel(e, 6);
+                        getDataAccessIdsDtoModel(e, 6);
                         break;
                     //分析模型事实表任务
                     case OLAP_FACT_TASK:
                         if (e.appId == null || "".equals(e.appId) || e.tableId == null || "".equals(e.tableId)) {
                             break;
                         }
-                        getDataAccessIdsDtoMOdel(e, 7);
+                        getDataAccessIdsDtoModel(e, 7);
                         break;
                     default:
                         break;
@@ -161,7 +161,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         getName(e, result);
     }
 
-    private void getDataAccessIdsDtoMOdel(NifiCustomWorkflowDetailDTO e, int flag) {
+    private void getDataAccessIdsDtoModel(NifiCustomWorkflowDetailDTO e, int flag) {
 
         DataAccessIdsDTO dto = new DataAccessIdsDTO();
         dto.appId = Long.valueOf(e.appId);
@@ -202,7 +202,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum deleteData(long id) {
 

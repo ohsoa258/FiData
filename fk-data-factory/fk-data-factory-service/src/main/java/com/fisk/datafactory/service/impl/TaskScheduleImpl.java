@@ -2,6 +2,7 @@ package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -37,38 +38,9 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
     @Override
     public ResultEntity<TaskCronDTO> addData(TaskScheduleDTO dto) {
-
-        TaskSchedulePO model = TaskScheduleMap.INSTANCES.dtoToPo(dto);
-        if (model == null) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
-        }
-
-        if ("TIMER".equalsIgnoreCase(model.syncMode)) {
-            model.syncMode = "Timer driven";
-            dto.syncMode = "TIMER_DRIVEN";
-            model.expression += " sec";
-            dto.expression += " sec";
-        } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            model.syncMode = "CRON driven";
-            dto.syncMode = "CRON_DRIVEN";
-        }
-
+        TaskSchedulePO model = encapsulationTaskScheduleDto(dto);
         boolean save = this.save(model);
-        String cronNextTime = "";
-        if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            CronSequenceGenerator cron = null;
-            try {
-                cron = new CronSequenceGenerator(model.expression);
-            } catch (Exception e) {
-                return ResultEntityBuild.build(ResultEnum.TASK_SCHEDULE_CRONEXPRESSION_ERROR);
-            }
-            Date d = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-            Date date = cron.next(d);
-            cronNextTime = sdf.format(date);
-        }
-
+        String cronNextTime = getCronNextTime(model);
         TaskCronDTO taskCronDTO = new TaskCronDTO();
         DataAccessIdDTO dataAccessIdDTO = new DataAccessIdDTO();
         if (save) {
@@ -84,7 +56,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
                         dataAccessIdDTO.olapTableEnum = OlapTableEnum.PHYSICS;
-
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
@@ -103,7 +74,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
                         dataAccessIdDTO.olapTableEnum = OlapTableEnum.KPI;
-
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
@@ -115,7 +85,6 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
                         dataAccessIdDTO.olapTableEnum = OlapTableEnum.DIMENSION;
-
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
@@ -132,59 +101,27 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
                         dataAccessIdDTO.syncMode = dto.syncMode;
                         dataAccessIdDTO.expression = dto.expression;
                         dataAccessIdDTO.olapTableEnum = OlapTableEnum.FACT;
-
                         taskCronDTO.dto = dataAccessIdDTO;
                     }
                     break;
                 default:
                     break;
             }
-
         } else {
             taskCronDTO.code = ResultEnum.SAVE_DATA_ERROR;
             taskCronDTO.cronNextTime = null;
         }
-
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, taskCronDTO);
     }
 
     @Override
     public ResultEntity<TaskCronDTO> editData(TaskScheduleDTO dto) {
-        TaskSchedulePO model = TaskScheduleMap.INSTANCES.dtoToPo(dto);
-        if (model == null) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR);
-        }
-
-        if ("TIMER".equalsIgnoreCase(model.syncMode)) {
-            model.syncMode = "Timer driven";
-            dto.syncMode = "TIMER_DRIVEN";
-            model.expression += " sec";
-            dto.expression += " sec";
-        } else if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            model.syncMode = "CRON driven";
-            dto.syncMode = "CRON_DRIVEN";
-        }
-
+        TaskSchedulePO model = encapsulationTaskScheduleDto(dto);
         TaskSchedulePO taskSchedule = mapper.getTaskSchedule(dto.jobId, dto.flag);
-
         model.id = taskSchedule.id;
         boolean update = this.updateById(model);
 
-        String cronNextTime = "";
-        if ("CRON".equalsIgnoreCase(model.syncMode)) {
-            CronSequenceGenerator cron = null;
-            try {
-                cron = new CronSequenceGenerator(model.expression);
-            } catch (Exception e) {
-                return ResultEntityBuild.build(ResultEnum.TASK_SCHEDULE_CRONEXPRESSION_ERROR);
-            }
-            Date d = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-            Date date = cron.next(d);
-            cronNextTime = sdf.format(date);
-        }
-
+        String cronNextTime = getCronNextTime(model);
         TaskCronDTO taskCronDTO = new TaskCronDTO();
         DataAccessIdDTO dataAccessIdDTO = new DataAccessIdDTO();
         if (update) {
@@ -219,6 +156,10 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
 
     @Override
     public ResultEntity<TaskScheduleDTO> getData(TaskScheduleDTO dto) {
+        String str1 = "T";
+        String str2 = "sec";
+        String str3 = "TIMER";
+        int forCycle = 4;
 
         if (dto == null) {
             return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
@@ -229,13 +170,56 @@ public class TaskScheduleImpl extends ServiceImpl<TaskScheduleMapper, TaskSchedu
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         // TIMER_DRIVEN值去除" sec"
-        if (model.syncMode.contains("T") && model.expression.contains("sec")) {
-            for (int i = 0; i < 4; i++) {
+        if (model.syncMode.contains(str1) && model.expression.contains(str2)) {
+            for (int i = 0; i < forCycle; i++) {
                 model.expression = model.expression.substring(0, model.expression.length() - 1);
             }
-            model.syncMode = "TIMER";
+            model.syncMode = str3;
         }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, TaskScheduleMap.INSTANCES.poToDto(model));
+    }
+
+    private TaskSchedulePO encapsulationTaskScheduleDto(TaskScheduleDTO dto) {
+        String timerType = "TIMER";
+        String timerDrivenType1 = "Timer driven";
+        String timerDrivenType2 = "TIMER_DRIVEN";
+        String cronType = "CRON";
+        String cronDrivenType1 = "CRON driven";
+        String cronDrivenType2 = "CRON_DRIVEN";
+        String secTpye = " sec";
+        TaskSchedulePO model = TaskScheduleMap.INSTANCES.dtoToPo(dto);
+        if (model == null) {
+            throw new FkException(ResultEnum.SAVE_VERIFY_ERROR);
+        }
+        if (timerType.equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = timerDrivenType1;
+            dto.syncMode = timerDrivenType2;
+            model.expression += secTpye;
+            dto.expression += secTpye;
+        } else if (cronType.equalsIgnoreCase(model.syncMode)) {
+            model.syncMode = cronDrivenType1;
+            dto.syncMode = cronDrivenType2;
+        }
+        return model;
+    }
+
+    private String getCronNextTime(TaskSchedulePO model) {
+        String cronType = "CRON";
+        String cronNextTime = "";
+        if (cronType.equalsIgnoreCase(model.syncMode)) {
+            CronSequenceGenerator cron = null;
+            try {
+                cron = new CronSequenceGenerator(model.expression);
+            } catch (Exception e) {
+                throw new FkException(ResultEnum.TASK_SCHEDULE_CRONEXPRESSION_ERROR);
+            }
+            Date d = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = cron.next(d);
+            cronNextTime = sdf.format(date);
+        }
+
+        return cronNextTime;
     }
 }

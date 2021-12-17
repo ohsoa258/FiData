@@ -32,9 +32,9 @@ public class DataAccessIdDTO {
      */
     public String schedulerComponentId;
 
-    /*
-    * 数据类别
-    * */
+    /**
+     * 数据类别
+     */
     public OlapTableEnum olapTableEnum;
 
     /**
