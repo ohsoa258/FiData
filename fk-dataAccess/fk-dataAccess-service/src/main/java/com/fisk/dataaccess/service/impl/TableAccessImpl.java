@@ -1271,7 +1271,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array = resultSetToJsonArray(rs);
+            array = resultSetToJsonArrayDataoMdel(rs);
             array.pageIndex = query.pageIndex;
             array.pageSize = query.pageSize;
             array.total = rowCount;
@@ -1282,7 +1282,68 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    public static OdsResultDTO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException {
+    public static OdsResultDTO resultSetToJsonArrayDataoAccess(ResultSet rs) throws SQLException, JSONException {
+        OdsResultDTO data = new OdsResultDTO();
+        // json数组
+        JSONArray array = new JSONArray();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        // 遍历ResultSet中的每条数据
+        while (rs.next()) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //过滤ods表中pk和code默认字段
+                String tableName = metaData.getTableName(i) + "key";
+                if ("fi_batch_code".equals(columnName) || tableName.equals("ods_" + columnName)) {
+                    continue;
+                }
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+            }
+            array.add(jsonObj);
+        }
+        //获取列名
+        for (int i = 1; i <= columnCount; i++) {
+            FieldNameDTO dto = new FieldNameDTO();
+            String fieldType1 = "date";
+            String fieldType2 = "time";
+            //源表
+            dto.sourceTableName = metaData.getTableName(i);
+            // 源字段
+            dto.sourceFieldName = metaData.getColumnLabel(i);
+            dto.fieldName = metaData.getColumnLabel(i);
+            String tableName = metaData.getTableName(i) + "key";
+            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
+                continue;
+            }
+            dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            if (dto.fieldType.contains("INT2") || dto.fieldType.contains("INT4") || dto.fieldType.contains("INT8")) {
+                dto.fieldType = "INT";
+            }
+            if (dto.fieldType.toLowerCase().contains(fieldType1) || dto.fieldType.toLowerCase().contains(fieldType2)) {
+                dto.fieldLength = "50";
+            } else {
+                dto.fieldLength = "2147483647".equals(String.valueOf(metaData.getColumnDisplaySize(i))) ? "255" : String.valueOf(metaData.getColumnDisplaySize(i));
+            }
+
+            // 转换表字段类型和长度
+            List<String> list = transformField(dto.fieldType, dto.fieldLength);
+            dto.fieldType = list.get(0);
+            dto.fieldLength = list.get(1);
+
+            fieldNameDTOList.add(dto);
+        }
+        data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
+        data.dataArray = array;
+        return data;
+    }
+
+    public static OdsResultDTO resultSetToJsonArrayDataoMdel(ResultSet rs) throws SQLException, JSONException {
         OdsResultDTO data = new OdsResultDTO();
         // json数组
         JSONArray array = new JSONArray();
@@ -1423,26 +1484,23 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Statement st = null;
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement();
-                // 显示前十条
-                query.querySql = query.querySql + " limit 10 offset 0";
+                // 以流的形式    第一个参数: 只可向前滚动查询     第二个参数: 指定不可以更新 ResultSet
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY);
+                // 每次流10条
+                st.setFetchSize(10);
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement();
-
-                // 显示前十条
-                query.querySql = "SELECT top 10 * FROM (" + query.querySql + ") as tba111";
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY);
+                st.setFetchSize(10);
             }
-            //获取总条数
-            String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             assert st != null;
 
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array = resultSetToJsonArray(rs);
+            array = resultSetToJsonArrayDataoAccess(rs);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
