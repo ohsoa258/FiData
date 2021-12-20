@@ -14,10 +14,8 @@ import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
-import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
@@ -26,6 +24,7 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
+import com.fisk.task.dto.task.NifiConfigPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
@@ -428,16 +427,29 @@ public class BuildDataModelDorisTableListener
             buildDbControllerServiceDTO.pwd=pgsqlDatamodelPassword;
             buildDbControllerServiceDTO.name=businessAreaName;
             buildDbControllerServiceDTO.enabled = true;
-            buildDbControllerServiceDTO.groupId = data1.getId();
+       /*     if(modelMetaDataDTO.groupStructureId!=null){
+                buildDbControllerServiceDTO.groupId = modelMetaDataDTO.groupStructureId;
+            }else{
+                buildDbControllerServiceDTO.groupId = data1.getId();
+            }*/
+            buildDbControllerServiceDTO.groupId=NifiConstants.ApiConstants.ROOT_NODE;
             buildDbControllerServiceDTO.details=businessAreaName;
             buildDbControllerServiceDTO.user=pgsqlDatamodelUsername;
-            BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
-            if (controllerServiceEntityBusinessResult.success) {
-                data = controllerServiceEntityBusinessResult.data;
-            } else {
-                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+            NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
+            if(nifiConfigPO!=null){
+                data.setId(nifiConfigPO.componentId);
+            }else{
+                BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildDbControllerService(buildDbControllerServiceDTO);
+                if (controllerServiceEntityBusinessResult.success) {
+                    data = controllerServiceEntityBusinessResult.data;
+                    NifiConfigPO SaveNifiConfigPO = new NifiConfigPO();
+                    SaveNifiConfigPO.componentId =  controllerServiceEntityBusinessResult.data.getId();
+                    SaveNifiConfigPO.componentKey = ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName();
+                    nifiConfigService.save(SaveNifiConfigPO);
+                } else {
+                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+                }
             }
-
 
             // TODO: 创建input组件功能(第一层应用)
             ProcessGroupEntity processGroupData1 = null;

@@ -44,7 +44,12 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public String workflowDetailId;
 
     /*
-    * //管道英文id(workflowId)
+    * 管道英文id(workflowId)
     * */
     public String nifiCustomWorkflowId;
+
+    /*
+    * 最大单位大组id
+    * */
+    public String groupStructureId;
 }

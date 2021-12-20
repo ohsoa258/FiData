@@ -7,9 +7,25 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum ComponentIdTypeEnum implements BaseEnum {
     /**
-     * 查询类型
+     * 查询类型,配置库
      */
     CFG_DB_POOL_COMPONENT_ID(0,"cfgDbPoolComponentId"),
+
+    /**
+     * pg-ods
+     */
+    PG_ODS_DB_POOL_COMPONENT_ID(2,"pgOdsDbPoolComponentId"),
+
+    /**
+     * pg-dw
+     */
+    PG_DW_DB_POOL_COMPONENT_ID(3,"pgDwDbPoolComponentId"),
+
+    /**
+     * doris-olap
+     */
+    DORIS_OLAP_DB_POOL_COMPONENT_ID(4,"dorisOlapDbPoolComponentId"),
+
 
     DRAFT(1,"草稿");
 
