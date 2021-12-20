@@ -67,7 +67,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .collect(toList());
 
             // 所有维度的data
-            List<TableDataDTO> DimeTableData = apiConfigureFieldList.stream()
+            List<TableDataDTO> dimeTableData = apiConfigureFieldList.stream()
                     .filter(e -> e.getDimension() == 1 && (e.getFieldType() == WHERE || e.getFieldType() == COLUMN))
                     .map(e -> iTableName.getTableName(e.getFieldId(), e.getFieldType(), e.getFieldName(), e.dimension).getData())
                     .collect(toList());
@@ -83,7 +83,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                     .collect(toList());
 
             // DimeTableData,slicerDimenList,slicerNoDimenList 合并成一个新的集合
-            List<TableDataDTO> existTableData = Stream.of(DimeTableData, slicerDimenList,slicerNoDimenList).flatMap(Collection::stream).distinct().collect(toList());
+            List<TableDataDTO> existTableData = Stream.of(dimeTableData, slicerDimenList,slicerNoDimenList).flatMap(Collection::stream).distinct().collect(toList());
 
             // 维度
             StringBuilder str = new StringBuilder();
@@ -105,7 +105,7 @@ public class DataDomainServiceImpl implements DataDomainService {
             // 根据 TableNameKey 进行去重
             ArrayList<TableDataDTO> tableKey = existTableData.stream()
                     .filter(e -> StringUtils.isNotBlank(e.getTableNameKey()))
-                    .collect(collectingAndThen(toCollection(() -> new TreeSet<>(Comparator.comparing(U -> U.getTableNameKey()))), ArrayList::new));
+                    .collect(collectingAndThen(toCollection(() -> new TreeSet<>(Comparator.comparing(u -> u.getTableNameKey()))), ArrayList::new));
 
             String queryKey = tableKey.stream()
                     .filter(e -> e.getType() == COLUMN)
@@ -176,7 +176,8 @@ public class DataDomainServiceImpl implements DataDomainService {
             if (StringUtils.isNotBlank(whereField)){
                 whereSlicerField.append(whereField);
             }
-            if (StringUtils.isNotBlank(whereField) && (StringUtils.isNotBlank(slicerDateField) || StringUtils.isNotBlank(serifedTime))){
+            boolean existed = StringUtils.isNotBlank(whereField) && (StringUtils.isNotBlank(slicerDateField) || StringUtils.isNotBlank(serifedTime));
+            if (existed){
                 whereSlicerField.append(" AND ");
             }
             if (StringUtils.isNotBlank(slicerDateField)){
@@ -341,7 +342,8 @@ public class DataDomainServiceImpl implements DataDomainService {
             }else if (StringUtils.isNotBlank(serifedTime)){
                 whereSlicerStr.append(serifedTime);
             }
-            if ((StringUtils.isNotBlank(slicerNoDateField) || StringUtils.isNotBlank(serifedTime)) && StringUtils.isNotBlank(collect2)){
+            boolean existed = (StringUtils.isNotBlank(slicerNoDateField) || StringUtils.isNotBlank(serifedTime)) && StringUtils.isNotBlank(collect2);
+            if (existed){
                 whereSlicerStr.append(" AND ");
             }
             if (StringUtils.isNotBlank(collect2)){

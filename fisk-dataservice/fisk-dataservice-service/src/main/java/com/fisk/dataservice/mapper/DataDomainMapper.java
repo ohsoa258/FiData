@@ -13,6 +13,12 @@ import java.util.List;
 @Mapper
 public interface DataDomainMapper {
 
+    /**
+     * 执行查询sql
+     * @param filedName
+     * @param tableName
+     * @return
+     */
     @Select("SELECT ${filedName} FROM ${tableName}")
     List<Object> queryData(@Param("filedName") String filedName, @Param("tableName")String tableName);
 }

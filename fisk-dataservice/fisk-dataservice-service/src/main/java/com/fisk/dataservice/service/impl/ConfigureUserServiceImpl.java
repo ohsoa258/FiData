@@ -291,24 +291,24 @@ public class ConfigureUserServiceImpl implements ConfigureUserService {
         // 总条数
         int total = dtoList.size();
 
-        Page<ConfigureDTO> configureDTOPage = new Page<>();
-        configureDTOPage.setRecords(startPage(dtoList, currentPage, pageSize));
-        configureDTOPage.setCurrent(currentPage);
-        configureDTOPage.setSize(pageSize);
-        configureDTOPage.setTotal(total);
-        return configureDTOPage;
+        Page<ConfigureDTO> dtoPage = new Page<>();
+        dtoPage.setRecords(startPage(dtoList, currentPage, pageSize));
+        dtoPage.setCurrent(currentPage);
+        dtoPage.setSize(pageSize);
+        dtoPage.setTotal(total);
+        return dtoPage;
     }
 
     /**
      * 根据id查询对应的Api服务
      *
-     * @param ConfigureIdList
+     * @param configureIdList
      * @return
      */
-    public List<ApiConfigurePO> queryApi(List<Integer> ConfigureIdList) {
+    public List<ApiConfigurePO> queryApi(List<Integer> configureIdList) {
         QueryWrapper<ApiConfigurePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .in(ApiConfigurePO::getId, ConfigureIdList)
+                .in(ApiConfigurePO::getId, configureIdList)
                 .orderByDesc(ApiConfigurePO::getCreateTime);
         return apiConfigureMapper.selectList(queryWrapper);
     }

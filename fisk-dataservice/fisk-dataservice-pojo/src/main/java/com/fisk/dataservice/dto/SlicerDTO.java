@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class SlicerDTO {
 
-    private Integer FiledId;
-    private String FiledName;
+    private Integer filedId;
+    private String filedName;
     private Integer isDimension;
 }

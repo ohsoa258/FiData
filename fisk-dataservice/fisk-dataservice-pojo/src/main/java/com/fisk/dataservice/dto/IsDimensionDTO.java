@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class isDimensionDTO {
+public class IsDimensionDTO {
 
     public Integer fieldIdOne;
     /**

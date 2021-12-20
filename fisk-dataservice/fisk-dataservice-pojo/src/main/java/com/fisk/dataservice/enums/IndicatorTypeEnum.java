@@ -9,6 +9,9 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum IndicatorTypeEnum implements BaseEnum {
 
+    /**
+     * 指标类型
+     */
     ATOMIC_INDICATORS(0,"原子指标"),
 
     DERIVED_INDICATORS(1,"派生指标");

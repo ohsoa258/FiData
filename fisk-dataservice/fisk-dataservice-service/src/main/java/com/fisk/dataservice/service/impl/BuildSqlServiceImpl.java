@@ -89,8 +89,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .map(e -> {
 
                     // 判断指标数量是否是子查询
+                    Integer isSubQuery = 2;
                     StringBuilder stringBuilder = new StringBuilder();
-                    if (count.size() >= 2){
+                    if (count.size() >= isSubQuery){
                         stringBuilder.append("(");
                     }
 
@@ -108,14 +109,14 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     stringBuilder.append(" ORDER BY " + dimColumn);
 
                     // 子查询 AS
-                    if (count.size() >= 2){
+                    if (count.size() >= isSubQuery){
                         stringBuilder.append(")");
                         stringBuilder.append(" AS ");
                         String atomAlias = ATOM_ALIAS + aliasCount.incrementAndGet();
                         stringBuilder.append(atomAlias);
 
                         // 两个子表的JOIN ON条件
-                        if (aliasCount.intValue()%2!=1){
+                        if (aliasCount.intValue()%isSubQuery!=1){
                             stringBuilder.append(" ON ");
                             int aliasDec = aliasCount.decrementAndGet();
                             int aliasInc = aliasCount.incrementAndGet();
@@ -199,11 +200,14 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     // 判断时间周期
                     String timePeriod = null;
-                    if (e.getTimePeriod().equals("YTD")){
+                    String yearAccumulate = "YTD";
+                    String monthAccumulate = "MTD";
+                    String quarterlyAccumulate = "QTD";
+                    if (yearAccumulate.equals(e.getTimePeriod())){
                         timePeriod = "'%y'";
-                    }else if (e.getTimePeriod().equals("MTD")){
+                    }else if (monthAccumulate.equals(e.getTimePeriod())){
                         timePeriod = "'%m'";
-                    }else if (e.getTimePeriod().equals("QTD")){
+                    }else if (quarterlyAccumulate.equals(e.getTimePeriod())){
                         timePeriod = "'%q'";
                     }
 
@@ -289,7 +293,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
             StringBuilder stringBuilder1 = new StringBuilder();
             stringBuilder1.append(b.getTableName() + " ON ");
 
-            isDimensionDTO dimensionDTO = new isDimensionDTO();
+            IsDimensionDTO dimensionDTO = new IsDimensionDTO();
             dimensionDTO.setDimensionOne(0);
             dimensionDTO.setDimensionTwo(b.getDimension());
             dimensionDTO.setFieldIdOne(id);

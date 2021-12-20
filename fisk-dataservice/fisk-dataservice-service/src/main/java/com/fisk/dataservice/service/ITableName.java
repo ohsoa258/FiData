@@ -15,10 +15,11 @@ import java.util.List;
 public interface ITableName {
     /**
      * 查询表名
-     * @param id id
-     * @param type type
-     * @param field field
-     * @return tableName
+     * @param id
+     * @param type
+     * @param field
+     * @param isDimension
+     * @return
      */
     ResultEntity<TableDataDTO> getTableName(Integer id, DataDoFieldTypeEnum type, String field,int isDimension);
 
@@ -37,7 +38,7 @@ public interface ITableName {
     ResultEntity<String> getDimensionName(Integer relationId);
 
     /**
-     *
+     * 查询是否存在关联关系
      * @param dto
      * @return
      */

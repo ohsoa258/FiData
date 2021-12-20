@@ -5,7 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.service.IDataService;
-import com.fisk.dataservice.dto.isDimensionDTO;
+import com.fisk.dataservice.dto.IsDimensionDTO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,7 +27,7 @@ public class DataServiceController {
 
     @ApiOperation("判断维度与维度、事实与维度是否存在关联")
     @PostMapping("/isExistAssociate")
-    public ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto) {
+    public ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody IsDimensionDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDataService.isExistAssociate(dto));
     }
 

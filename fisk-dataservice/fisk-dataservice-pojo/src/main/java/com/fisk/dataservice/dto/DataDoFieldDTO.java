@@ -21,11 +21,17 @@ public class DataDoFieldDTO {
      */
     public int dimension;
 
-    // 开始时间
+    /**
+     * 开始时间
+     */
     private String startTime;
-    // 结束时间
+    /**
+     * 结束时间
+     */
     private String endTime;
 
-    // 指定时间
+    /**
+     * 指定时间
+     */
     private String[] specifiedTime;
 }

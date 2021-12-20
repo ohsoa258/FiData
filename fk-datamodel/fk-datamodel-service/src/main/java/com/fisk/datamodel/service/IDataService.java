@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.dataservice.dto.isDimensionDTO;
+import com.fisk.dataservice.dto.IsDimensionDTO;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public interface IDataService {
      * @param dto
      * @return
      */
-    boolean isExistAssociate(isDimensionDTO dto);
+    boolean isExistAssociate(IsDimensionDTO dto);
 
     /**
      * 根据派生指标id获取该业务域下日期维度

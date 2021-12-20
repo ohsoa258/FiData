@@ -109,7 +109,8 @@ public class MysqlConnect {
             str.append(",");
         }
 
-        for (String s : aggregation.split(",")) {
+        String regex =",";
+        for (String s : aggregation.split(regex)) {
             try {
                 Set<DataDoFieldDTO> aggregationList = apiConfigureFieldList.stream()
                         .filter(e -> e.getFieldType() == DataDoFieldTypeEnum.VALUE

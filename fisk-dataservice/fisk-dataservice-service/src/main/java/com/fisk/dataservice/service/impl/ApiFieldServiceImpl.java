@@ -162,8 +162,8 @@ public class ApiFieldServiceImpl implements ApiFieldService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        ApiConfigurePO apiConfigurePO = ApiConfigureMap.INSTANCES.dtoToPo(dto);
-        return configureMapper.updateById(apiConfigurePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        ApiConfigurePO apiConfigurePo = ApiConfigureMap.INSTANCES.dtoToPo(dto);
+        return configureMapper.updateById(apiConfigurePo) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

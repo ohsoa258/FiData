@@ -12,14 +12,20 @@ public class IndicatorDTO {
 
     private Integer id;
     private String fieldName;
-    // 派生名字
+    /**
+     * 派生名字
+     */
     private String deriveName;
     private IndicatorTypeEnum type;
     private String tableName;
-    // 原子指标属性
+    /**
+     * 原子指标属性
+     */
     private String calculationLogic;
 
-    // 派生指标属性
+    /**
+     * 派生指标属性
+     */
     private String timePeriod;
     private String whereTimeLogic;
 }

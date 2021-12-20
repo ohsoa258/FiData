@@ -11,6 +11,13 @@ import java.util.List;
  */
 public interface DataDomainService {
 
+    /**
+     * 拼接Sql方法
+     * @param apiConfigureFieldList
+     * @param currentPage
+     * @param pageSize
+     * @return
+     */
     Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer currentPage, Integer pageSize);
 
     /**

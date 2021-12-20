@@ -8,7 +8,7 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataservice.dto.IndicatorDTO;
 import com.fisk.dataservice.dto.IndicatorFeignDTO;
 import com.fisk.dataservice.dto.TableDataDTO;
-import com.fisk.dataservice.dto.isDimensionDTO;
+import com.fisk.dataservice.dto.IsDimensionDTO;
 import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -125,7 +125,7 @@ public interface DataModelClient {
      * @return
      */
     @PostMapping("/dataService/isExistAssociate")
-    ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody isDimensionDTO dto);
+    ResultEntity<Boolean> isExistAssociate(@Validated @RequestBody IsDimensionDTO dto);
 
     /**
      * 根据派生指标id,获取该业务域下日期维度以及字段

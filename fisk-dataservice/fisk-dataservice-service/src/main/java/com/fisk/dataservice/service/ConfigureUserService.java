@@ -68,6 +68,8 @@ public interface ConfigureUserService {
     /**
      * 根据用户id查询下的所有服务
      * @param id
+     * @param currentPage
+     * @param pageSize
      * @return
      */
     Page<ConfigureDTO> configureByUserId(Integer id,Integer currentPage, Integer pageSize);

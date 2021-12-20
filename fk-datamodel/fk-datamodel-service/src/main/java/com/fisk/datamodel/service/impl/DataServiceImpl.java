@@ -11,13 +11,11 @@ import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.IDataService;
-import com.fisk.dataservice.dto.isDimensionDTO;
+import com.fisk.dataservice.dto.IsDimensionDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +36,7 @@ public class DataServiceImpl implements IDataService {
     DimensionMapper dimensionMapper;
 
     @Override
-    public boolean isExistAssociate(isDimensionDTO dto)
+    public boolean isExistAssociate(IsDimensionDTO dto)
     {
         //是维度字段
         if (dto.dimensionOne==1)

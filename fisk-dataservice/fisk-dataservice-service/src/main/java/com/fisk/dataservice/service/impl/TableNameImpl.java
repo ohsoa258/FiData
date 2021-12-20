@@ -122,9 +122,9 @@ public class TableNameImpl implements ITableName {
         List<OutParameterDTO> list=new ArrayList<>();
 
         //获取原子指标下所有事实表id
-        QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper=new QueryWrapper<>();
-        indicatorsPOQueryWrapper.select("fact_id").in("id",dto.indicatorsIds);
-        List<Integer> factIds=(List)indicatorsMapper.selectObjs(indicatorsPOQueryWrapper).stream().distinct().collect(Collectors.toList());
+        QueryWrapper<IndicatorsPO> indicator =new QueryWrapper<>();
+        indicator.select("fact_id").in("id",dto.indicatorsIds);
+        List<Integer> factIds=(List)indicatorsMapper.selectObjs(indicator).stream().distinct().collect(Collectors.toList());
         //List<Integer> factId=
         if (factIds ==null || factIds.size()==0)
         {
@@ -141,10 +141,10 @@ public class TableNameImpl implements ITableName {
         }
 
         //获取所有事实表下所有事实字段id
-        QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper<>();
-        factAttributePOQueryWrapper.in("fact_id",factIds);
-        List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(factAttributePOQueryWrapper);
-        if (factAttributePOList==null || factAttributePOList.size()==0)
+        QueryWrapper<FactAttributePO> poQueryWrapper =new QueryWrapper<>();
+        poQueryWrapper.in("fact_id",factIds);
+        List<FactAttributePO> factAttributeList =factAttributeMapper.selectList(poQueryWrapper);
+        if (factAttributeList ==null || factAttributeList .size()==0)
         {
             return list;
         }
@@ -153,7 +153,7 @@ public class TableNameImpl implements ITableName {
 
         for (Integer dimensionId:ids)
         {
-            List<FactAttributePO> data=factAttributePOList.stream().filter(e->dimensionId.equals(e.associateDimensionId)).collect(Collectors.toList());
+            List<FactAttributePO> data=factAttributeList .stream().filter(e->dimensionId.equals(e.associateDimensionId)).collect(Collectors.toList());
             OutParameterDTO dto1=new OutParameterDTO();
             if (data ==null || data.size()==0)
             {
@@ -162,20 +162,20 @@ public class TableNameImpl implements ITableName {
                 break;
             }
             //获取维度名称
-            DimensionPO dimensionPO=dimensionMapper.selectById(dimensionId);
-            if (dimensionPO==null)
+            DimensionPO dimensionPo=dimensionMapper.selectById(dimensionId);
+            if (dimensionPo==null)
             {
                 break;
             }
             //获取事实表名称
-            FactAttributePO factAttributePO=data.stream().findFirst().get();
-            FactPO factPO=factMapper.selectById(factAttributePO.factId);
-            if (factPO==null)
+            FactAttributePO factAttributePo=data.stream().findFirst().get();
+            FactPO factPo=factMapper.selectById(factAttributePo.factId);
+            if (factPo==null)
             {
                 break;
             }
-            dto1.factName=factPO.getFactTableEnName()+"_key";
-            dto1.dimensionName=dimensionPO.getDimensionTabName()+"_key";
+            dto1.factName=factPo.getFactTableEnName()+"_key";
+            dto1.dimensionName=dimensionPo.getDimensionTabName()+"_key";
             dto1.whether=1;
             list.add(dto1);
         }
