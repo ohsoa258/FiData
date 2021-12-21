@@ -120,10 +120,10 @@ spring:
           predicates:
             - Path=/taskschedule/**
 
-        - id: datagovern-service # 数据治理
-          uri: lb://datagovern-service
+        - id: datamanagement-service # 数据治理
+          uri: lb://datamanagement-service
           predicates:
-            - Path=/datagovern/**
+            - Path=/datamanagement/**
 
 
   redis:
