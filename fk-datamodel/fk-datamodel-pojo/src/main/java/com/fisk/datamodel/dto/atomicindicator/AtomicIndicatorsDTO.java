@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.atomicindicator;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -8,8 +9,11 @@ import lombok.Data;
 @Data
 public class AtomicIndicatorsDTO {
     public int id;
+    @ApiModelProperty(value = "业务域id",required = true)
     public int businessId;
+    @ApiModelProperty(value = "事实表id",required = true)
     public int factId;
+    @ApiModelProperty(value = "事实字段表id",required = true)
     public int factAttributeId;
     public int indicatorsType;
     public String calculationLogic;

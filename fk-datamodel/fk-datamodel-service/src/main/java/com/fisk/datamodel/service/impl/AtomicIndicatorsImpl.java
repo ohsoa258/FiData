@@ -83,9 +83,7 @@ public class AtomicIndicatorsImpl
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        int flat=mapper.deleteByIdWithFill(po);
-
-        return flat>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
