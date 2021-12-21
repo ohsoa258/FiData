@@ -1487,7 +1487,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (po.driveType.equalsIgnoreCase(mysqlDriver)) {
                 Connection conn = getStatement(DriverTypeEnum.MYSQL.getName(), po.connectStr, po.connectAccount, po.connectPwd);
                 // 以流的形式    第一个参数: 只可向前滚动查询     第二个参数: 指定不可以更新 ResultSet
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY);
+                /*
+                如果PreparedStatement对象初始化时resultSetType参数设置为TYPE_FORWARD_ONLY，
+                在从ResultSet（结果集）中读取记录的时，对于访问过的记录就自动释放了内存。
+                而设置为TYPE_SCROLL_INSENSITIVE或TYPE_SCROLL_SENSITIVE时为了保证能游标能向上移动到任意位置，
+                已经访问过的所有都保留在内存中不能释放。所以大量数据加载的时候，就OOM了
+                 */
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 // 每次流10条
                 st.setFetchSize(10);
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
@@ -1495,7 +1501,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
-                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 st.setFetchSize(10);
             }
             assert st != null;
