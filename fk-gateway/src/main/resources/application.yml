@@ -68,8 +68,8 @@ spring:
             key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式
             # 每一个IP地址，每秒钟最多发起2次请求
             # 每秒钟超过2次请求，则返回429的异常状态码
-            redis-rate-limiter.replenishRate: 50 # 生成令牌的速率
-            redis-rate-limiter.burstCapacity: 30 # 桶的容量
+            redis-rate-limiter.replenishRate: 500 # 生成令牌的速率
+            redis-rate-limiter.burstCapacity: 10 # 桶的容量
 
       # 添加网关路由
       routes:
@@ -128,7 +128,7 @@ spring:
 
   redis:
     host: 192.168.11.130
-    #host: 192.168.21.13
+#    host: 192.168.21.13
 
 
 logging:
