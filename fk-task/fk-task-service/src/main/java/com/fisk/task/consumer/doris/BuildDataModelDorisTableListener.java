@@ -410,8 +410,27 @@ public class BuildDataModelDorisTableListener
                  count = componentsBuild.getGroupCount(modelMetaDataDTO.groupComponentId);
                  dto.groupId=modelMetaDataDTO.groupComponentId;
             }else{
-                 count = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
-                 dto.groupId=NifiConstants.ApiConstants.ROOT_NODE;
+                NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName()).one();
+                if (nifiConfigPO != null) {
+                    dto.groupId = nifiConfigPO.componentId;
+                } else {
+                    BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
+                    buildProcessGroupDTO.name = ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
+                    buildProcessGroupDTO.details = ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
+                    int groupCount = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+                    buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(groupCount);
+                    BusinessResult<ProcessGroupEntity> processGroupEntityBusinessResult = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
+                    if (processGroupEntityBusinessResult.success) {
+                        dto.groupId = processGroupEntityBusinessResult.data.getId();
+                        NifiConfigPO nifiConfigPO1 = new NifiConfigPO();
+                        nifiConfigPO1.componentId=dto.groupId;
+                        nifiConfigPO1.componentKey=ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
+                        nifiConfigService.save(nifiConfigPO1);
+                    } else {
+                        throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processGroupEntityBusinessResult.msg);
+                    }
+                }
+                 count = componentsBuild.getGroupCount(dto.groupId);
             }
 
             dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);

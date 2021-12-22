@@ -127,7 +127,6 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 }
             }
         }
-        //TODO  问题一
         List<ModelAttributeMetaDataDTO> dto1 = dto.dto;
         List<String> fileds=dto1.stream().map(d->" "+d.associationTable+" ").collect(Collectors.toList());
         fileds.removeAll(Collections.singleton(" null "));
@@ -158,7 +157,6 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             }
 
         }
-        //TODO 问题二
         List<String> associationKeys = dto1.stream().map(d -> " " + d.associationTable + " ").collect(Collectors.toList());
         associationKeys.removeAll(Collections.singleton(" null "));
         associationKeys.stream().distinct();
@@ -262,7 +260,6 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     public String createExternalTable(AtomicIndicatorFactDTO dto){
-        //TODO 问题三
         List<AtomicIndicatorFactAttributeDTO> factAttributeDTOList = dto.factAttributeDTOList;
         String tableName="external_"+dto.factTable;
         String sql="drop table if exists "+tableName+";\n";

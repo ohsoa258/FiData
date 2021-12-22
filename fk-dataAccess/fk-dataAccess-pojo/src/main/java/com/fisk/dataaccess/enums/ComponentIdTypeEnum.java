@@ -26,6 +26,15 @@ public enum ComponentIdTypeEnum implements BaseEnum {
      */
     DORIS_OLAP_DB_POOL_COMPONENT_ID(4,"dorisOlapDbPoolComponentId"),
 
+    /*
+    * 日常流程生成组Dailynififlow
+    * */
+    DAILY_NIFI_FLOW_GROUP_ID(5,"dailyNifiFlowGroupId"),
+
+    /*
+    * 管道生成组pipeline
+    * */
+    PIPELINE_NIFI_FLOW_GROUP_ID(6,"pipelineNifiFlowGroupId"),
 
     DRAFT(1,"草稿");
 
