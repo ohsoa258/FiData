@@ -3,6 +3,7 @@ package com.fisk.task.server;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.enums.task.MessageLevelEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
@@ -42,6 +43,7 @@ public class WebSocketServer {
     public void onOpen(Session session, @PathParam("token") String token) throws Exception {
         token = parseToken(token);
         userHelper = context.getBean(UserHelper.class);
+        RedisUtil bean = context.getBean(RedisUtil.class);
         ResultEntity<UserInfo> res = userHelper.getLoginUserInfo(token);
         String msg = "【" + DateTimeUtils.getNow() + "】";
         if (res.code == ResultEnum.SUCCESS.getCode()) {
@@ -51,6 +53,8 @@ public class WebSocketServer {
             WsSessionManager.sendMsgBySession(msg, session, res.data.id, MessageLevelEnum.LOW);
         } else {
             msg += res.msg;
+            UserInfo one = bean.getOne("Bearer "+token);
+            WsSessionManager.add(one.id, session);
             WsSessionManager.sendMsgBySession(msg, session, MessageLevelEnum.LOW);
         }
     }
@@ -76,6 +80,10 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("token") String token) throws Exception {
         token = parseToken(token);
+        /*RedisUtil bean = context.getBean(RedisUtil.class);
+        UserInfo one = bean.getOne("Bearer "+token);
+        log.info("当前用户token为"+token+",查到的用户信息为:"+one);
+        WsSessionManager.sendMsgBySession(msg, session, one.id, MessageLevelEnum.LOW);*/
         log.info("服务端收到客户端[{}]的消息:{}", token, message);
     }
 

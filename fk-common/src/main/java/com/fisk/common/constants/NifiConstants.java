@@ -44,6 +44,10 @@ public class NifiConstants {
         public static final String INCREMENT_END = "IncrementEnd";
         public static final String LOG_CODE = "uuids";
         public static final String NUMBERS = "numbers";
+        public static final String CREATE_TIME="createtime";
+        public static final String START_TIME="start_time";
+        public static final String END_TIME="end_time";
+        public static final String FI_BATCH_CODE="fi_batch_code";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;

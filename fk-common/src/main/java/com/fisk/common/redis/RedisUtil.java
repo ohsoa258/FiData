@@ -1,19 +1,20 @@
 package com.fisk.common.redis;
 
+import com.fisk.common.user.UserInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Lock
  */
 @Component
+@Slf4j
 public class RedisUtil {
 
     @Resource
@@ -602,5 +603,32 @@ public class RedisUtil {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<UserInfo> getList() {
+        String p = "Auth:UserInfo:*";
+        List<UserInfo> userInfos = new ArrayList<>();
+        Set<String> keys = redisTemplate.keys(p);
+        for (String key : keys) {
+            System.out.println(key);
+            UserInfo value = (UserInfo) redisTemplate.opsForValue().get(key);
+            System.out.println(value);
+            userInfos.add(value);
+        }
+        return userInfos;
+    }
+
+    public UserInfo getOne(String token) {
+        String p = "Auth:UserInfo:*";
+        Set<String> keys = redisTemplate.keys(p);
+        for (String key : keys) {
+            System.out.println(key);
+            UserInfo value = (UserInfo) redisTemplate.opsForValue().get(key);
+            System.out.println(value);
+            if(Objects.equals(token,value.token)){
+                return value;
+            }
+        }
+        return null;
     }
 }

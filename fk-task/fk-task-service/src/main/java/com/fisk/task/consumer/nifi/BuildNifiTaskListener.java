@@ -820,19 +820,18 @@ public class BuildNifiTaskListener {
             //连接器
             componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //更新日志
-            //ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
-            //tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
+            ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
+            tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
             //连接器
-            //componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
-
-            lastId = evaluateJsons.getId();
+            componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
+            lastId = processorEntity.getId();
             res.add(mergeRes);
             res.add(processorEntity1);
             res.add(queryNumbers);
             res.add(numberToJsonRes);
             res.add(evaluateJsons);
             res.add(putDatabaseRecord);
-            //res.add(processorEntity);
+            res.add(processorEntity);
         }
 
         ProcessorEntity processor = null;
@@ -881,7 +880,7 @@ public class BuildNifiTaskListener {
             componentOutputPortConnectionId = buildPortConnection(groupId,
                     groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
                     groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
-                    5, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+                    3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
         }
 
 
@@ -1180,7 +1179,8 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "Query numbers Field";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select count(*) as numbers from " + config.processorConfig.targetTableName;
+        //select to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH:mm:ss') as endtime
+        querySqlDto.querySql = "select count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time,min(fi_createtime) as start_time,fi_batch_code as fi_batch_code from " + config.processorConfig.targetTableName+"  group by fi_batch_code";
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -1195,7 +1195,7 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         //调用存储过程sql,存日志
         String cronNextTime = "";
-        if (config.processorConfig.scheduleExpression != null && config.processorConfig.scheduleExpression != "") {
+        /*if (config.processorConfig.scheduleExpression != null && config.processorConfig.scheduleExpression != "") {
             if (Objects.equals(config.processorConfig.scheduleType, SchedulingStrategyTypeEnum.CRON)) {
                 CronSequenceGenerator cron = null;
                 cron = new CronSequenceGenerator(config.processorConfig.scheduleExpression);
@@ -1210,9 +1210,9 @@ public class BuildNifiTaskListener {
                 Date date = new Date(l);
                 cronNextTime = simpleDateFormat.format(date);
             }
-        }
+        }*/
         String executsql = "call nifi_update_etl_log_and_Incremental('";
-        executsql += config.targetDsConfig.targetTableName.toLowerCase() + "','${" + NifiConstants.AttrConstants.NUMBERS + "}',2,'${" + NifiConstants.AttrConstants.LOG_CODE + "}','${" + NifiConstants.AttrConstants.INCREMENT_END + "}','" + cronNextTime + "')";
+        executsql += config.targetDsConfig.targetTableName.toLowerCase() + "','${" + NifiConstants.AttrConstants.NUMBERS + "}',2,'${" + NifiConstants.AttrConstants.FI_BATCH_CODE + "}','${" + NifiConstants.AttrConstants.START_TIME + "}','${" + NifiConstants.AttrConstants.END_TIME + "}')";
         callDbProcedureProcessorDTO.dbConnectionId = config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql = executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
@@ -1268,6 +1268,9 @@ public class BuildNifiTaskListener {
         dto.groupId = groupId;
         List<String> strings = new ArrayList<>();
         strings.add(NifiConstants.AttrConstants.NUMBERS);
+        strings.add(NifiConstants.AttrConstants.END_TIME);
+        strings.add(NifiConstants.AttrConstants.START_TIME);
+        strings.add(NifiConstants.AttrConstants.FI_BATCH_CODE);
         dto.selfDefinedParameter = strings;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
@@ -1335,6 +1338,7 @@ public class BuildNifiTaskListener {
         strings.add(NifiConstants.AttrConstants.INCREMENT_START);
         strings.add(NifiConstants.AttrConstants.INCREMENT_END);
         strings.add(NifiConstants.AttrConstants.LOG_CODE);
+        strings.add(NifiConstants.AttrConstants.START_TIME);
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
         dto.details = "Set Increment Field to Nifi Data flow";
@@ -1448,6 +1452,7 @@ public class BuildNifiTaskListener {
         str.append("select ");
         str.append(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START).append(" as ").append(NifiConstants.AttrConstants.INCREMENT_START).append(", ");
         str.append(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_END).append(" as ").append(NifiConstants.AttrConstants.INCREMENT_END).append(", ");
+        str.append(NifiConstants.AttrConstants.CREATE_TIME).append(" as ").append(NifiConstants.AttrConstants.START_TIME).append(", ");
         str.append("uuid()").append(" as ").append(NifiConstants.AttrConstants.LOG_CODE);
         str.append(" from ").append(NifiConstants.AttrConstants.INCREMENT_DB_TABLE_NAME);
         str.append(" where object_name = '").append(targetDbName).append("' and enable_flag = 1");

@@ -193,7 +193,7 @@ public class BuildDataModelDorisTableListener
             fileds+=""+modelPublishFieldDTO.fieldEnName+",";
         }
         String truncateTable="'truncate table "+tableName+"';\n";
-        fileds=fileds.substring(0,fileds.length()-1);
+        fileds+="fi_createtime,fi_updatetime";
         String storedProcedureSql="CREATE OR REPLACE PROCEDURE public.update"+tableName+"() \n"+
                 "LANGUAGE 'plpgsql'\nas $BODY$\nDECLARE\nmysqlp text;\nmysqlk text;\nbegin\n";
         storedProcedureSql+="mysqlk:="+truncateTable+"mysqlp:='INSERT INTO "+tableName+" ("+fileds+") SELECT "+fileds+" FROM('||' "+selectSql1(modelPublishTableDTO);
@@ -247,9 +247,9 @@ public class BuildDataModelDorisTableListener
         }
         String selectSql="select * from dblink('||'''"+pgdwDblink+"'''||','||'''";
         String selectSql1="select sys_guid() as "+tablePk+", ";
-        StringBuilder selectSql2=new StringBuilder();
-        StringBuilder selectSql3=new StringBuilder(tablePk +" varchar,");
-        StringBuilder selectSql4=new StringBuilder(tablePk+"=EXCLUDED."+tablePk+",");
+        StringBuilder selectSql2=new StringBuilder("coalesce( fi_createtime,null),coalesce( fi_updatetime,null),");
+        StringBuilder selectSql3=new StringBuilder(tablePk +" varchar,fi_createtime varchar,fi_updatetime varchar,");
+        StringBuilder selectSql4=new StringBuilder(tablePk+"=EXCLUDED."+tablePk+",fi_createtime=EXCLUDED.fi_createtime,fi_updatetime=EXCLUDED.fi_updatetime,");
         StringBuilder selectSql5=new StringBuilder();
         StringBuilder selectSql6=new StringBuilder(" ("+modelPublishTableDTO.sqlScript+") fi1 ");
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
@@ -337,6 +337,7 @@ public class BuildDataModelDorisTableListener
         }
         String sql1 = sql.toString();
         String sql2 = sqlFileds.toString();
+        sql2+="fi_createtime varchar(50),fi_updatetime varchar(50),";
         String sql3 = sqlFileds1.toString();
         String sql4 = pksql.toString();
         if(Objects.equals("",sql3)){

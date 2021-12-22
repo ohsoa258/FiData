@@ -49,33 +49,6 @@ public class BuildDataInputPgTableListener {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
-        //修改或创建表
-        String selectTableSql="select\n" +
-                "col.table_schema,\n" +
-                "col.table_name,\n" +
-                "col.ordinal_position,\n" +
-                "col.column_name,\n" +
-                "col.data_type,\n" +
-                "col.character_maximum_length,\n" +
-                "col.numeric_precision,\n" +
-                "col.numeric_scale,\n" +
-                "col.is_nullable,\n" +
-                "col.column_default,\n" +
-                "udt_name,\n" +
-                "des.description\n" +
-                "from\n" +
-                "information_schema.columns col left join pg_description des on\n" +
-                "col.table_name::regclass = des.objoid\n" +
-                "and col.ordinal_position = des.objsubid\n" +
-                "where\n" +
-                " table_name = 'tableName'\n" +
-                "order by\n" +
-                "ordinal_position";
-
-        selectTableSql=selectTableSql.replace("tableName","ods_" + buildPhysicalTableDTO.appAbbreviation.toLowerCase() + "_" + buildPhysicalTableDTO.tableName.toLowerCase());
-        BusinessResult resultSetBusinessResult = pg.postgreQuery(selectTableSql, BusinessTypeEnum.DATAINPUT);
-        List<TableFieldDetailDTO> arrayLists = JSONArray.parseArray(JSON.toJSONString(resultSetBusinessResult.data), TableFieldDetailDTO.class);
-
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         log.info("开始保存ods版本号,参数为{}", dto);
         // 保存ods版本号
@@ -103,8 +76,7 @@ public class BuildDataInputPgTableListener {
                     sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
                 }
             });
-            sqlFileds.delete(sqlFileds.length() - 1, sqlFileds.length());
-            sqlFileds.append(")");
+            sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50))");
             sql.append(sqlFileds);
             String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             String stg_sql2 = sql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);

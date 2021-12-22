@@ -316,7 +316,7 @@ public class BuildAtlasTableAndColumnTaskListener
         sqlFileds.delete(sqlFileds.length()-1,sqlFileds.length());
         sqlFileds.append(")");
         sqlSelect.delete(sqlSelect.length()-1,sqlSelect.length());
-        sqlSelect.append(" from ("+buildPhysicalTableDTO.selectSql+") xyx");
+        sqlSelect.append(",null as fi_createtime from ("+buildPhysicalTableDTO.selectSql+") xyx");
         String s = sqlSelect.toString();
         log.info("物理表查询语句"+s);
         return s;
