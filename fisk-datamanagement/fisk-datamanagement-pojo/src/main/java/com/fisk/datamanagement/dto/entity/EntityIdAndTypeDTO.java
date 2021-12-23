@@ -6,6 +6,10 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class EntityDTO {
-    public EntityTypeDTO entity;
+public class EntityIdAndTypeDTO {
+
+    public String guid;
+
+    public String typeName;
+
 }

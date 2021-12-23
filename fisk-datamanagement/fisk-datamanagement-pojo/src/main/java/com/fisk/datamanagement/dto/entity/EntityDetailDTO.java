@@ -6,6 +6,8 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class EntityDTO {
-    public EntityTypeDTO entity;
+public class EntityDetailDTO {
+
+    public String entityDetailJson;
+
 }

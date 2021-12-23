@@ -57,6 +57,7 @@ public class AtomicIndicatorsImpl
         boolean repeat=false;
         for (AtomicIndicatorsDTO item: dto)
         {
+            item.indicatorsName=item.indicatorsName.toLowerCase();
             queryWrapper.lambda().eq(IndicatorsPO::getBusinessId,item.businessId)
                     .eq(IndicatorsPO::getIndicatorsName,item.indicatorsName);
             IndicatorsPO po=mapper.selectOne(queryWrapper);
@@ -139,7 +140,7 @@ public class AtomicIndicatorsImpl
         {
             return ResultEnum.DATA_EXISTS;
         }
-        po.indicatorsName=dto.indicatorsName;
+        po.indicatorsName=dto.indicatorsName.toLowerCase();
         po.indicatorsDes=dto.indicatorsDes;
         po.calculationLogic=dto.calculationLogic;
         po.indicatorsCnName=dto.indicatorsCnName;
