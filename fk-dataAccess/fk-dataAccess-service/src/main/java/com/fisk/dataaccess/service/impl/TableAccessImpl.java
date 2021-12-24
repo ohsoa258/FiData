@@ -1271,7 +1271,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             query.querySql = query.querySql + " limit " + query.pageSize + " offset " + offset;
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array = resultSetToJsonArrayDataoMdel(rs);
+            array = resultSetToJsonArrayDataModel(rs);
             array.pageIndex = query.pageIndex;
             array.pageSize = query.pageSize;
             array.total = rowCount;
@@ -1282,7 +1282,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    public static OdsResultDTO resultSetToJsonArrayDataoAccess(ResultSet rs) throws SQLException, JSONException {
+    public static OdsResultDTO resultSetToJsonArrayDataAccess(ResultSet rs) throws SQLException, JSONException {
         OdsResultDTO data = new OdsResultDTO();
         // json数组
         JSONArray array = new JSONArray();
@@ -1292,7 +1292,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
         // 遍历ResultSet中的每条数据
         int count = 1;
-        while (rs.next() && count <= 10) {
+        // 预览展示10行
+        int row = 10;
+        while (rs.next() && count <= row) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
@@ -1346,7 +1348,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return data;
     }
 
-    public static OdsResultDTO resultSetToJsonArrayDataoMdel(ResultSet rs) throws SQLException, JSONException {
+    public static OdsResultDTO resultSetToJsonArrayDataModel(ResultSet rs) throws SQLException, JSONException {
         OdsResultDTO data = new OdsResultDTO();
         // json数组
         JSONArray array = new JSONArray();
@@ -1515,7 +1517,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             ResultSet rs = st.executeQuery(query.querySql);
             //获取数据集
-            array = resultSetToJsonArrayDataoAccess(rs);
+            array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
