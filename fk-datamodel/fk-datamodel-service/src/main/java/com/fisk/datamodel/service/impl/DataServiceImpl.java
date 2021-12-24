@@ -178,6 +178,7 @@ public class DataServiceImpl implements IDataService {
             return dto;
         }
         dto.dimensionTabName=dimensionPOList.get(0).dimensionTabName;
+        dto.fieldId=dimensionAttributePOList.get(0).id;
         dto.dimensionAttributeField=dimensionAttributePOList.get(0).dimensionFieldEnName;
         return dto;
     }

@@ -10,6 +10,8 @@ public class DimensionTimePeriodDTO {
 
     public String dimensionTabName;
 
+    public long fieldId;
+
     public String dimensionAttributeField;
 
 }
