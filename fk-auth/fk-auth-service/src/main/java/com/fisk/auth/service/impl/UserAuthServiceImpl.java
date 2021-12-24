@@ -65,7 +65,12 @@ public class UserAuthServiceImpl implements UserAuthService {
         // 生成jwt: token
         String token = SystemConstants.AUTH_TOKEN_HEADER + jwtUtils.createJwt(userDetail);
         UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUserAccount(), token);
-        boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
+
+        if (userInfo.id == 102) {
+            redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, -1);
+        } else {
+            boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
+        }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
     }

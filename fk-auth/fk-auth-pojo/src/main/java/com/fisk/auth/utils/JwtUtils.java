@@ -126,4 +126,13 @@ public class JwtUtils {
     public void refreshJwt(Long userId) {
         redis.expire(RedisKeyBuild.buildLoginUserInfo(userId), RedisKeyEnum.AUTH_USERINFO.getValue());
     }
+
+    /**
+     * 设置token用不过期
+     *
+     * @param userId 用户id
+     */
+    public void permanentToken(Long userId) {
+        redis.expire(RedisKeyBuild.buildLoginUserInfo(userId), -1L);
+    }
 }

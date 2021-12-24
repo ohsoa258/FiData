@@ -75,8 +75,15 @@ public class LoginFilter implements GlobalFilter, Ordered {
             Payload payload = jwtUtils.parseJwt(token);
             // 3.2.获取用户
             UserDetail userInfo = payload.getUserDetail();
-            // 3.3.刷新jwt
-            jwtUtils.refreshJwt(userInfo.getId());
+
+            // 设置报表永久token
+            if (userInfo.getId() == 102) {
+                return chain.filter(exchange);
+            } else {
+                // 3.3.刷新jwt
+                jwtUtils.refreshJwt(userInfo.getId());
+            }
+
             log.info("用户{}正在访问{}", userInfo.getUserAccount(), request.getURI().getPath());
         } catch (Exception e) {
             // 解析失败，token有误
