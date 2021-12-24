@@ -1466,8 +1466,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             fieldList.add("VARCHAR");
             fieldList.add("20");
         } else if (Integer.parseInt(fieldLength) >= textLength) {
-            fieldList.add("TEXT");
-            fieldList.add("0");
+            fieldList.add("VARCHAR");
+            fieldList.add("5000");
         } else {
             fieldList.add("VARCHAR");
             fieldList.add(fieldLength);
