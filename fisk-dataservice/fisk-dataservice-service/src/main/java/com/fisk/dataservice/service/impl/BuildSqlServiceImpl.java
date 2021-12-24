@@ -31,7 +31,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
     @Resource
     DataModelClient client;
 
-    public static final String ATOM_ALIAS = "a";
+    public static final String ATOM_BUILDER = "b1";
+    public static final String DERIVE_BUILDER = "b2";
 
     @Override
     public Object query(List<DataDoFieldDTO> apiConfigureFieldList) {
@@ -140,14 +141,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }
                     return deriveStr;
                 }).collect(Collectors.joining(","));
-
-        if (StringUtils.isEmpty(atom)){
-            str.append(derive);
-        }else {
-            str.append(atom);
-        }
         
-        return str.toString();
+        return this.splicingIndicatorsSql(apiConfigureFieldList,escapeStr,atom,derive,str);
     }
 
     /**
@@ -297,5 +292,52 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         stringBuilder.append(aggregation + deriveOver);
 
         return stringBuilder;
+    }
+
+    /**
+     * 派生和原子指标sql拼接
+     * @param apiConfigureFieldList
+     * @param escapeStr
+     * @param atom
+     * @param derive
+     * @return
+     */
+    public String splicingIndicatorsSql(List<DataDoFieldDTO> apiConfigureFieldList,String[] escapeStr
+            , String atom,String derive,StringBuilder str){
+
+        // 原子指标和派生指标同时存在
+        if (StringUtils.isNotBlank(atom) && StringUtils.isNotBlank(derive)){
+            // 原子
+            StringBuilder atomBuilder = new StringBuilder(atom);
+            atomBuilder.insert(0,"(");
+            atomBuilder.insert(atom.length() +1,")" + " AS " + ATOM_BUILDER);
+            System.out.println(atomBuilder.toString().toLowerCase());
+
+            // 派生
+            StringBuilder deriveBuilder = new StringBuilder(derive);
+            deriveBuilder.insert(0,"(");
+            deriveBuilder.insert(derive.length() +1,")" + " AS " + DERIVE_BUILDER);
+            System.out.println(deriveBuilder.toString().toLowerCase());
+
+            // 维度列
+            String collect = apiConfigureFieldList.stream().filter(e -> e.getFieldType() == COLUMN)
+                    .map(e -> {
+                        String on = ATOM_BUILDER + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + "=" + DERIVE_BUILDER + "." +
+                                escapeStr[2] + e.getFieldName() + escapeStr[2];
+                        return on;
+                    }).collect(Collectors.joining(" AND "));
+
+            str.append("SELECT * FROM " + atomBuilder + " JOIN " + deriveBuilder);
+            str.append(" ON " + collect);
+            return str.toString();
+        }
+
+        if (StringUtils.isEmpty(atom)){
+            str.append(derive);
+        }else {
+            str.append(atom);
+        }
+
+        return str.toString();
     }
 }
