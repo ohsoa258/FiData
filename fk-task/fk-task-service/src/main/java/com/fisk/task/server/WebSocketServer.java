@@ -80,10 +80,6 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String message, Session session, @PathParam("token") String token) throws Exception {
         token = parseToken(token);
-        /*RedisUtil bean = context.getBean(RedisUtil.class);
-        UserInfo one = bean.getOne("Bearer "+token);
-        log.info("当前用户token为"+token+",查到的用户信息为:"+one);
-        WsSessionManager.sendMsgBySession(msg, session, one.id, MessageLevelEnum.LOW);*/
         log.info("服务端收到客户端[{}]的消息:{}", token, message);
     }
 

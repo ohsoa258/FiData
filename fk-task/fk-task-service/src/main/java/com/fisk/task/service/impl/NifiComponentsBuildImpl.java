@@ -1107,7 +1107,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             //删除应用
             if (nifiRemoveDTOList.size()!=0&&nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
-                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(2, 4)) {
+                for (String controllerServicesId : nifiRemoveDTOList.get(0).controllerServicesIds.subList(3, 4)) {
                     if (controllerServicesId != null) {
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
@@ -1205,7 +1205,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 outputportConnectIds.add(tableNifiSettingPO.processorOutputPortConnectId);
                 outputportConnectIds.add(tableNifiSettingPO.tableOutputPortConnectId);
                 //组件
-                //ProcessIds.add(tableNifiSettingPO.dispatchComponentId);
+                ProcessIds.add(tableNifiSettingPO.dispatchComponentId);
                 ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
@@ -1218,7 +1218,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
-                //ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
                 nifiRemoveDTO.appId=appNifiSettingPO.appComponentId;
                 nifiRemoveDTO.ProcessIds = ProcessIds;
                 nifiRemoveDTO.controllerServicesIds = controllerServicesIds;

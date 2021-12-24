@@ -144,24 +144,49 @@ public class BuildNifiCustomWorkFlow {
             //获取大组的控制器服务   includeancestorgroups includedescendantgroups
             ControllerServicesEntity controllerServicesFromGroup = NifiHelper.getFlowApi().getControllerServicesFromGroup(appComponentId, true, true);
             List<ControllerServiceEntity> controllerServices = controllerServicesFromGroup.getControllerServices();
-            NifiConfigPO one = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
-            String componentId = one.componentId;
+            //nifi全局配置服务不受删除管道影响
+            NifiConfigPO cfgNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
+            NifiConfigPO pgOdsNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID.getName()).one();
+            NifiConfigPO pdDwNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
+            NifiConfigPO dorisOlapNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID.getName()).one();
+            String componentId = cfgNifiConfigPo.componentId;
+            String pgOdsComponentId = "";
+            String pdDwComponentId = "";
+            String dorisOlapComponentId = "";
+            if(pgOdsNifiConfigPo!=null){
+                pgOdsComponentId=pgOdsNifiConfigPo.componentId;
+            }
+            if(pdDwNifiConfigPo!=null){
+                pdDwComponentId=pdDwNifiConfigPo.componentId;
+            }
+            if(dorisOlapNifiConfigPo!=null){
+                dorisOlapComponentId=dorisOlapNifiConfigPo.componentId;
+            }
+
             for (ControllerServiceEntity controllerServiceEntity : controllerServices) {
                 //保留配置库服务
-                if (!Objects.equals(controllerServiceEntity.getId(), componentId)) {
-                    //除去被关联的服务
-                    if (!Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
-                        nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
-                    }
+                if (Objects.equals(controllerServiceEntity.getId(), componentId)||
+                        Objects.equals(controllerServiceEntity.getId(), pgOdsComponentId)||
+                        Objects.equals(controllerServiceEntity.getId(), pdDwComponentId)||
+                        Objects.equals(controllerServiceEntity.getId(), dorisOlapComponentId)) {
+                   continue;
+                }
+                //除去被关联的服务
+                if (!Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
+                    nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
                 }
             }
             for (ControllerServiceEntity controllerServiceEntity : controllerServices) {
                 //保留配置库服务
-                if (!Objects.equals(controllerServiceEntity.getId(), componentId)) {
-                    //删除被关联的服务
-                    if (Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
-                        nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
-                    }
+                if (Objects.equals(controllerServiceEntity.getId(), componentId)||
+                        Objects.equals(controllerServiceEntity.getId(), pgOdsComponentId)||
+                        Objects.equals(controllerServiceEntity.getId(), pdDwComponentId)||
+                        Objects.equals(controllerServiceEntity.getId(), dorisOlapComponentId)) {
+                    continue;
+                }
+                //删除服务
+                if (Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
+                    nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
                 }
             }
             ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
