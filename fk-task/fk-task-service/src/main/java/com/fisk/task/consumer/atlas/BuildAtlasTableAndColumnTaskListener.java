@@ -273,7 +273,15 @@ public class BuildAtlasTableAndColumnTaskListener
         ETLIncremental.object_name=buildPhysicalTableDTO.appAbbreviation+"_"+buildPhysicalTableDTO.tableName;
         ETLIncremental.enable_flag="1";
         ETLIncremental.incremental_objectivescore_batchno=UUID.randomUUID().toString();
-        incrementalMapper.insert(ETLIncremental);
+        Map<String, Object> conditionHashMap = new HashMap<>();
+        conditionHashMap.put("object_name",ETLIncremental.object_name);
+        List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
+        if(tbetlIncrementalPos!=null&&tbetlIncrementalPos.size()>0){
+            log.info("此表已有同步记录,无需重复添加");
+        }else{
+            incrementalMapper.insert(ETLIncremental);
+        }
+
         TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", buildPhysicalTableDTO.appId).eq("table_access_id", buildPhysicalTableDTO.dbId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         if(one!=null){
