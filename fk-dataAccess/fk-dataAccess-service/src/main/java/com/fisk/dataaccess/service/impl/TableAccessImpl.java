@@ -1320,7 +1320,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
+            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName))
+            {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
@@ -1361,7 +1362,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String columnName = metaData.getColumnLabel(i);
                 //过滤ods表中pk和code默认字段
                 String tableName = metaData.getTableName(i) + "key";
-                if ("fi_batch_code".equals(columnName) || tableName.equals("ods_" + columnName)) {
+                if ("fi_batch_code".equals(columnName) || tableName.equals("ods_" + columnName)
+                        || "fi_createtime".equals(columnName)
+                        || "fi_updatetime".equals(columnName))
+                {
                     continue;
                 }
                 //获取sql查询数据集合
@@ -1381,7 +1385,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
+            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)
+                    || "fi_createtime".equals(dto.fieldName)
+                    || "fi_updatetime".equals(dto.fieldName))
+            {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
