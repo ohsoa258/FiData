@@ -102,6 +102,13 @@
             <version>1.8.1</version>
             <scope>compile</scope>
         </dependency>
+
+        <!--sqlServer数据库驱动-->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>8.2.0.jre8</version>
+        </dependency>
     </dependencies>
 
     <build>

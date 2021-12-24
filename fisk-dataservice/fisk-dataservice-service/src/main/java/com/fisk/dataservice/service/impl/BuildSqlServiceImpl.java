@@ -3,19 +3,21 @@ package com.fisk.dataservice.service.impl;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.dataservice.dto.*;
+import com.fisk.dataservice.enums.IndicatorTypeEnum;
 import com.fisk.dataservice.service.BuildSqlService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
-import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.WHERE;
+import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.*;
 import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
 import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
+import static com.fisk.dataservice.utils.buidsql.AtomicHelper.*;
+import static com.fisk.dataservice.utils.buidsql.DeriveHelper.*;
 import static com.fisk.dataservice.utils.database.DatabaseConnect.execQueryResultList;
 
 /**
@@ -88,61 +90,21 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .filter(e -> e.getType() == ATOMIC_INDICATORS)
                 .map(e -> {
 
-                    // 判断指标数量是否是子查询
+                    // 判断指标数量是否是大于2,如果大于2存在子查询,不大于2的话不存在
                     Integer isSubQuery = 2;
                     StringBuilder stringBuilder = new StringBuilder();
                     if (count.size() >= isSubQuery){
                         stringBuilder.append("(");
                     }
 
-                    String atr = "SELECT " + dimColumn + ","
-                            + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
-                            + " AS " + e.getFieldName()
-                            + " FROM " + e.getTableName() + " JOIN ";
+                    // 追加基础原子指标sql
+                    StringBuilder stringBuilder1 = this.buildAtomSql(dimColumn, tableNameList, e, escapeStr,e.getType());
+                    stringBuilder.append(stringBuilder1);
 
-                    String arr = this.joinString(tableNameList, escapeStr, e.getId(), e.getTableName());
-
-                    // GROUP BY
-                    stringBuilder.append(atr);
-                    stringBuilder.append(arr);
-                    stringBuilder.append(" GROUP BY " + dimColumn);
-                    stringBuilder.append(" ORDER BY " + dimColumn);
-
-                    // 子查询 AS
-                    if (count.size() >= isSubQuery){
-                        stringBuilder.append(")");
-                        stringBuilder.append(" AS ");
-                        String atomAlias = ATOM_ALIAS + aliasCount.incrementAndGet();
-                        stringBuilder.append(atomAlias);
-
-                        // 两个子表的JOIN ON条件
-                        if (aliasCount.intValue()%isSubQuery!=1){
-                            stringBuilder.append(" ON ");
-                            int aliasDec = aliasCount.decrementAndGet();
-                            int aliasInc = aliasCount.incrementAndGet();
-                            String collect = dimColumnFieldList.stream().map(d -> {
-                                String aliasOn = ATOM_ALIAS + aliasDec  + "." + escapeStr[0] + d.getFieldName() + escapeStr[1] + "=" +
-                                        ATOM_ALIAS + aliasInc + "." + escapeStr[0] + d.getFieldName() + escapeStr[1];
-                                return aliasOn;
-                            }).collect(Collectors.joining(" AND "));
-
-                            stringBuilder.append(collect);
-
-                            // SELECT 最外层
-                            String collect1 = dimColumnFieldList.stream().map(d -> {
-                                String aliasOn = ATOM_ALIAS + aliasDec + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
-                                return aliasOn;
-                            }).collect(Collectors.joining(","));
-
-                            AtomicInteger aliasDec1 = new AtomicInteger();
-                            String collect2 = indicatorList.stream()
-                                    .filter(c -> c.getType() == ATOMIC_INDICATORS)
-                                    .map(c -> ATOM_ALIAS + aliasDec1.incrementAndGet() + "." + escapeStr[0] + c.getFieldName() + escapeStr[1])
-                                    .collect(Collectors.joining(","));
-                            String s = "SELECT " + collect1 + "," + collect2 + " FROM ";
-                            str.insert(0,s);
-                        }
-                    }
+                    // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
+                    aliasField(stringBuilder,isSubQuery,count.size(),
+                            aliasCount, dimColumnFieldList, indicatorList,
+                            str,escapeStr,dimColumn);
                     return stringBuilder.toString();
                 }).collect(Collectors.joining(" JOIN "));
 
@@ -151,124 +113,22 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .filter(e -> e.getType() == DERIVED_INDICATORS)
                 .map(e -> {
 
-                    // 派生指标时间周期必须JOIN year
-                    ArrayList<DataDoFieldDTO> doFieldArrayList = apiConfigureFieldList.stream().collect(Collectors.collectingAndThen(Collectors.toCollection(() -> new TreeSet<>
-                            (Comparator.comparing(tc -> tc.getFieldName()))), ArrayList::new));
-
-                    // 维度的
-                    List<DataDoFieldDTO> dataDoFieldDTOList = doFieldArrayList.stream().filter(tp -> tp.getDimension() == 1 && tp.getFieldType() == COLUMN).collect(Collectors.toList());
-
-                    String dimColumns = dataDoFieldDTOList.stream()
-                            .map(tp -> tp.getTableName() + "." + escapeStr[0] + tp.getFieldName() + escapeStr[1])
+                    // 派生指标别名维度列
+                    String deriveDim = apiConfigureFieldList.stream().filter(b -> b.getDimension() == 1 && b.getFieldType() == COLUMN)
+                            .map(b -> DERIVE + "." + escapeStr[0] + b.getFieldName() + escapeStr[1])
                             .collect(Collectors.joining(","));
 
-                    StringBuilder str1 = new StringBuilder();
+                    // 派生指标sql生成
+                    StringBuilder deriveSql = buildDeriveSql(dimColumn, tableNameList, e, e.getId(), apiConfigureFieldList, escapeStr);
 
-                    // 子查询
-                    StringBuilder stringBuilder = new StringBuilder();
-                    int frequency = 0;
-
-                    // SELECT时间周期
-                    DimensionTimePeriodDTO dto = client.getDimensionDate(e.getId()).getData();
-                    String atr = "(SELECT " + dimColumns + ","
-                            + e.getCalculationLogic() + "(" + e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
-                            + " AS " + e.getFieldName()
-                            + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField()
-                            + " FROM " + e.getTableName() + " JOIN ";
-
-                    String arr = this.joinString(tableNameList, escapeStr, e.getId(), e.getTableName());
-
-                    // SELECT
-                    stringBuilder.append(atr);
-                    stringBuilder.append(arr);
-
-                    // WHERE
-                    if (!StringUtils.isEmpty(e.getWhereTimeLogic())){
-                        stringBuilder.append(" WHERE " + e.getWhereTimeLogic());
-                    }
-
-                    // GROUP BY
-                    stringBuilder.append(" GROUP BY " + dimColumns + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField() + ")");
-
-                    String alias = stringBuilder + " AS " + ATOM_ALIAS;
-                    // 第一个子查询别名
-                    int i = ++frequency;
-                    int i1 = ++frequency;
-                    str1.append(" FROM " + alias + i);
-                    str1.append(" JOIN " + alias + i1);
-                    str1.append(" ON ");
-
-                    // 判断时间周期
-                    String timePeriod = null;
-                    String yearAccumulate = "YTD";
-                    String monthAccumulate = "MTD";
-                    String quarterlyAccumulate = "QTD";
-                    if (yearAccumulate.equals(e.getTimePeriod())){
-                        timePeriod = "'%y'";
-                    }else if (monthAccumulate.equals(e.getTimePeriod())){
-                        timePeriod = "'%m'";
-                    }else if (quarterlyAccumulate.equals(e.getTimePeriod())){
-                        timePeriod = "'%q'";
-                    }
-
-                    if (StringUtils.isEmpty(str)){
-                        str1.append("(" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + " )>=");
-                        str1.append("(" + ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField() + ")" + " AND ");
-                    }else {
-                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i + "." + dto.getDimensionAttributeField() + "," + timePeriod +" )>=");
-                        str1.append("DATE_FORMAT("+ ATOM_ALIAS + i1 + "." + dto.getDimensionAttributeField()+ "," + timePeriod +")");
-                    }
-
-                    // 到三个 JOIN 查询
-                    String timePeriods = dataDoFieldDTOList.stream().map(d -> {
-                        List<String> column = client.getDimensionFieldNameList(dto.getDimensionTabName()).getData();
-                        if (column.contains(d.getFieldName())){
-                            String aliasOn = escapeStr[0] + d.getFieldName() + escapeStr[0];
-                            return aliasOn;
-                        }
-
-                        return null;
-                    }).collect(Collectors.joining(","));
-
-                    if (!StringUtils.isEmpty(timePeriods)){
-                        // 时间周期表的列
-                        str1.append(" JOIN ");
-                        str1.append("(SELECT " + timePeriods + ",");
-                        str1.append("max(" + dto.getDimensionAttributeField() + ")" + " AS " + "maxkey");
-                        str1.append(" FROM " + dto.getDimensionTabName());
-                        // GROUP BY
-                        str1.append(" GROUP BY " + timePeriods + ")" + " AS " + ATOM_ALIAS + 3);
-                        // ON 条件
-                        str1.append(" ON " + ATOM_ALIAS + 3 + "." + "maxkey" + "=" + ATOM_ALIAS + i + "." + dto.getDimensionAttributeField());
-                    }
-
-                    // SELECT 最外层
-                    String collect1 = dataDoFieldDTOList.stream().map(d -> {
-                        String aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
-                        return aliasOn;
-                    }).collect(Collectors.joining(","));
-
-                    str1.insert(0,"SELECT " + collect1 + ","
-                            + e.getCalculationLogic() + "(" + ATOM_ALIAS + frequency + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] + ")"
-                            + " AS " + e.getDeriveName());
-
-                    // GROUP BY a1.a1.`year`,a1.`product_class
-                    str1.append(" GROUP BY " + collect1);
-
-                    String collect2 = dataDoFieldDTOList.stream().map(d -> {
-                        List<String> column = client.getDimensionFieldNameList(dto.getDimensionTabName()).getData();
-                        String aliasOn = null;
-                        if (column.contains(d.getFieldName())){
-                            aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0] + "+0";
-                        }else {
-                            aliasOn = ATOM_ALIAS + i + "." + escapeStr[0] + d.getFieldName() + escapeStr[0];
-                        }
-                        return aliasOn;
-                    }).collect(Collectors.joining(","));
-
+                    StringBuilder deriveStr = new StringBuilder();
+                    deriveStr.append("SELECT ");
+                    deriveStr.append(deriveDim + "," + DERIVE + "." + e.getDeriveName());
+                    deriveStr.append(" FROM (" + deriveSql + ")" + " AS " + DERIVE);
+                    deriveStr.append(" WHERE b.id = 1 ");
                     // ORDER BY
-                    str1.append(" ORDER BY " + collect2);
-                    return str1.toString();
+                    deriveStr.append(" ORDER BY " + deriveDim);
+                    return deriveStr;
                 }).collect(Collectors.joining(","));
 
         if (StringUtils.isEmpty(atom)){
@@ -288,8 +148,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      * @param tableName
      * @return
      */
-    public String joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName){
-        return dimColumnFieldList.stream().map(b -> {
+    public void joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName,StringBuilder stringBuilder){
+        String atr = dimColumnFieldList.stream().map(b -> {
             StringBuilder stringBuilder1 = new StringBuilder();
             stringBuilder1.append(b.getTableName() + " ON ");
 
@@ -298,20 +158,21 @@ public class BuildSqlServiceImpl implements BuildSqlService {
             dimensionDTO.setDimensionTwo(b.getDimension());
             dimensionDTO.setFieldIdOne(id);
             dimensionDTO.setFieldIdTwo(b.getFieldId());
-            if (client.isExistAssociate(dimensionDTO).getData()){
+            if (client.isExistAssociate(dimensionDTO).getData()) {
                 // 追加字段关联key
                 String name = b.getTableName();
                 String str1 = name.substring(0, name.indexOf("_"));
-                String filedName = name.substring(str1.length()+1, name.length()) + "key";
+                String filedName = name.substring(str1.length() + 1, name.length()) + "key";
 
-                String onSubQuery= b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
+                String onSubQuery = b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
                         "=" + tableName + "." + escapeStr[0] + filedName + escapeStr[1];
                 stringBuilder1.append(onSubQuery);
-            }else{
+            } else {
                 stringBuilder1.append("1 = 1");
             }
             return stringBuilder1;
         }).collect(Collectors.joining(" JOIN "));
+        stringBuilder.append(atr);
     }
 
     /**
@@ -325,5 +186,87 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         arr[1] = "`";
         arr[2] = " ";
         return arr;
+    }
+
+    /**
+     * 生成基础原子指标sql
+     * @param dimColumn
+     * @param tableNameList
+     * @param dto
+     * @param escapeStr
+     * @return
+     */
+    public StringBuilder buildAtomSql(String dimColumn, List<DataDoFieldDTO> tableNameList, IndicatorDTO dto, String[] escapeStr, IndicatorTypeEnum type){
+        StringBuilder stringBuilder = new StringBuilder();
+        // SELECT
+        subQuery(dimColumn,dto,escapeStr,stringBuilder);
+        // 查询出子表之间的关系进行JOIN ON
+        this.joinString(tableNameList, escapeStr, dto.getId(), dto.getTableName(),stringBuilder);
+        // 筛选器
+        filter(stringBuilder,dto,type);
+        // 分组和排序
+        sqlSort(dimColumn,stringBuilder,type);
+        // 判断如果是派生之指标,就变成子查询
+        isDerive(stringBuilder,type);
+        return stringBuilder;
+    }
+
+    /**
+     * 派生指标sql生成
+     * @param dimColumn
+     * @param tableNameList
+     * @param indicator
+     * @param deriveId
+     * @param apiConfigureFieldList
+     * @param escapeStr
+     * @return
+     */
+    public StringBuilder buildDeriveSql(String dimColumn,List<DataDoFieldDTO> tableNameList,IndicatorDTO indicator
+            ,Integer deriveId
+            ,List<DataDoFieldDTO> apiConfigureFieldList
+            ,String[] escapeStr){
+        DimensionTimePeriodDTO dto = client.getDimensionDate(deriveId).getData();
+        StringBuilder deriveStr = new StringBuilder();
+        deriveStr.append("SELECT ");
+
+        // 派生指标查询
+        StringBuilder deriveInquire = this.deriveInquire(apiConfigureFieldList, deriveId, indicator, escapeStr);
+
+        // 追加基础原子指标sql
+        String dimColumns = dimColumn + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField();
+        StringBuilder stringBuilder1 = this.buildAtomSql(dimColumns, tableNameList, indicator, escapeStr,indicator.getType());
+
+        // 追加dateKey
+        deriveStr.append(DERIVE_ALIAS + "." + dto.getDimensionAttributeField() + ",");
+        deriveStr.append(deriveInquire + " FROM " + stringBuilder1);
+
+        return deriveStr;
+    }
+
+    /**
+     * 派生指标查询
+     * @param apiConfigureFieldList
+     * @param deriveId
+     * @param indicator
+     * @param escapeStr
+     */
+    public StringBuilder deriveInquire(List<DataDoFieldDTO> apiConfigureFieldList,Integer deriveId,IndicatorDTO indicator,String[] escapeStr){
+        // 派生指标别名维度列
+        String derive = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == COLUMN)
+                .map(e -> DERIVE_ALIAS + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
+                .collect(Collectors.joining(","));
+
+        // 派生指标聚合追加over函数
+        String aggregation = indicator.getCalculationLogic() + "(" + DERIVE_ALIAS + "." + escapeStr[0] + indicator.getFieldName() + escapeStr[1] + ")";
+        DimensionTimePeriodDTO dto = client.getDimensionDate(deriveId).getData();
+        StringBuilder deriveOver = deriveOver(indicator, derive, dto);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        if (StringUtils.isNotBlank(derive)){
+            stringBuilder.append(derive + ",");
+        }
+        stringBuilder.append(aggregation + deriveOver);
+
+        return stringBuilder;
     }
 }
