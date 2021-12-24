@@ -328,7 +328,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }).collect(Collectors.joining(" AND "));
 
             str.append("SELECT * FROM " + atomBuilder + " JOIN " + deriveBuilder);
-            str.append(" ON " + collect);
+            if (StringUtils.isNotBlank(collect)){
+                str.append(" ON " + collect);
+            }
             return str.toString();
         }
 
