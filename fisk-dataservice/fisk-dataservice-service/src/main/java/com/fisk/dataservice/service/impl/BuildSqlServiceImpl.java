@@ -7,6 +7,7 @@ import com.fisk.dataservice.enums.IndicatorTypeEnum;
 import com.fisk.dataservice.service.BuildSqlService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -98,7 +99,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }
 
                     // 追加基础原子指标sql
-                    StringBuilder stringBuilder1 = this.buildAtomSql(dimColumn, tableNameList, e, escapeStr,e.getType());
+                    StringBuilder stringBuilder1 = this.buildAtomSql(dimColumn, tableNameList, e, escapeStr,e.getType(),null);
                     stringBuilder.append(stringBuilder1);
 
                     // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
@@ -123,11 +124,20 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     StringBuilder deriveStr = new StringBuilder();
                     deriveStr.append("SELECT ");
-                    deriveStr.append(deriveDim + "," + DERIVE + "." + e.getDeriveName());
+
+                    // 判断是否存在维度列
+                    if (StringUtils.isNotBlank(deriveDim)){
+                        deriveStr.append(deriveDim + ",");
+                    }
+
+                    deriveStr.append( DERIVE + "." + e.getDeriveName());
                     deriveStr.append(" FROM (" + deriveSql + ")" + " AS " + DERIVE);
-                    deriveStr.append(" WHERE b.id = 1 ");
+
                     // ORDER BY
-                    deriveStr.append(" ORDER BY " + deriveDim);
+                    if (StringUtils.isNotBlank(deriveDim)){
+                        deriveStr.append(" WHERE b.id = 1 ");
+                        deriveStr.append(" ORDER BY " + deriveDim);
+                    }
                     return deriveStr;
                 }).collect(Collectors.joining(","));
 
@@ -148,7 +158,20 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      * @param tableName
      * @return
      */
-    public void joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName,StringBuilder stringBuilder){
+    public void joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName
+            ,StringBuilder stringBuilder
+            ,Integer deriveId
+            ,IndicatorTypeEnum type){
+        // 派生指标一定存在时间周期关系
+        if (CollectionUtils.isEmpty(dimColumnFieldList) && type == DERIVED_INDICATORS){
+            DimensionTimePeriodDTO data = client.getDimensionDate(deriveId).getData();
+            DataDoFieldDTO dto = new DataDoFieldDTO();
+            dto.setFieldId((int) data.getFieldId());
+            dto.setDimension(1);
+            dto.setTableName(data.getDimensionTabName());
+            dimColumnFieldList.add(dto);
+        }
+
         String atr = dimColumnFieldList.stream().map(b -> {
             StringBuilder stringBuilder1 = new StringBuilder();
             stringBuilder1.append(b.getTableName() + " ON ");
@@ -196,12 +219,14 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      * @param escapeStr
      * @return
      */
-    public StringBuilder buildAtomSql(String dimColumn, List<DataDoFieldDTO> tableNameList, IndicatorDTO dto, String[] escapeStr, IndicatorTypeEnum type){
+    public StringBuilder buildAtomSql(String dimColumn, List<DataDoFieldDTO> tableNameList, IndicatorDTO dto, String[] escapeStr
+            , IndicatorTypeEnum type
+            , Integer deriveId){
         StringBuilder stringBuilder = new StringBuilder();
         // SELECT
         subQuery(dimColumn,dto,escapeStr,stringBuilder);
         // 查询出子表之间的关系进行JOIN ON
-        this.joinString(tableNameList, escapeStr, dto.getId(), dto.getTableName(),stringBuilder);
+        this.joinString(tableNameList, escapeStr, dto.getId(), dto.getTableName(),stringBuilder,deriveId,type);
         // 筛选器
         filter(stringBuilder,dto,type);
         // 分组和排序
@@ -233,8 +258,12 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         StringBuilder deriveInquire = this.deriveInquire(apiConfigureFieldList, deriveId, indicator, escapeStr);
 
         // 追加基础原子指标sql
-        String dimColumns = dimColumn + "," + dto.getDimensionTabName() + "." + dto.getDimensionAttributeField();
-        StringBuilder stringBuilder1 = this.buildAtomSql(dimColumns, tableNameList, indicator, escapeStr,indicator.getType());
+        StringBuilder dimColumns = new StringBuilder();
+        if (StringUtils.isNotBlank(dimColumn)){
+            dimColumns.append(dimColumn + ",");
+        }
+        dimColumns.append(dto.getDimensionTabName() + "." + dto.getDimensionAttributeField());
+        StringBuilder stringBuilder1 = this.buildAtomSql(dimColumns.toString(), tableNameList, indicator, escapeStr,indicator.getType(),deriveId);
 
         // 追加dateKey
         deriveStr.append(DERIVE_ALIAS + "." + dto.getDimensionAttributeField() + ",");

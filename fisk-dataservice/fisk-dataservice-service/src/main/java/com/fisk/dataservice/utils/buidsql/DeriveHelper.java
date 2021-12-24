@@ -64,9 +64,9 @@ public class DeriveHelper {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("over(PARTITION BY YEAR("+ dateKey + ")");
         stringBuilder.append(","+ timePeriod + "(" + dateKey + ")" + " ORDER BY " + dateKey);
-        stringBuilder.append(" rows BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS " + indicator.getDeriveName() + ",");
+        stringBuilder.append(" rows BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS " + indicator.getDeriveName());
         if (StringUtils.isNotBlank(derive)){
-            stringBuilder.append("row_number() over(PARTITION BY "+ derive  +" ORDER BY "+ dateKey +" DESC) AS id");
+            stringBuilder.append("," + "row_number() over(PARTITION BY "+ derive  +" ORDER BY "+ dateKey +" DESC) AS id");
         }
         return stringBuilder;
     }
