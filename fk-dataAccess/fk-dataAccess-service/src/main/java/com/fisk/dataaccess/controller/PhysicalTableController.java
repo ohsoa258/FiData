@@ -246,7 +246,7 @@ public class PhysicalTableController {
         dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         dataModelVO.userId=nifiVO.userId;
         // 删除nifi流程
-        ////publishTaskClient.deleteNifiFlow(dataModelVO);
+        publishTaskClient.deleteNifiFlow(dataModelVO);
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
     }

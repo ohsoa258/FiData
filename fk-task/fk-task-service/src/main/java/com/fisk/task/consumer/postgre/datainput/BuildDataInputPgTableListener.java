@@ -59,29 +59,29 @@ public class BuildDataInputPgTableListener {
         taskPgTableStructureHelper.saveTableStructure(dto);
 */
         log.info("保存版本号方法执行成功");
-
+        StringBuilder sql = new StringBuilder();
+        StringBuilder sqlFileds = new StringBuilder();
+        sql.append("CREATE TABLE tableName ( " );
+        List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
+        tableFieldsDTOS.forEach((l) -> {
+            if(l.fieldType.contains("FLOAT")){
+                sqlFileds.append("" +l.fieldName + " " + " numeric ,");
+            }else if(l.fieldType.contains("INT")){
+                sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+            }else if(l.fieldType.contains("TEXT")){
+                sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+            }else{
+                sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
+            }
+        });
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),"+ buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY)");
+        sql.append(sqlFileds);
+        String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
+        String stg_sql2 = sql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
+        stg_sql2="DROP TABLE IF EXISTS "+"stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName+";"+stg_sql2;
+        pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
         if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-            StringBuilder sql = new StringBuilder();
-            StringBuilder sqlFileds = new StringBuilder();
-            sql.append("CREATE TABLE tableName ( " + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY,fi_batch_code varchar(50),");
-            List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
-            tableFieldsDTOS.forEach((l) -> {
-                if(l.fieldType.contains("FLOAT")){
-                    sqlFileds.append("" +l.fieldName + " " + " numeric ,");
-                }else if(l.fieldType.contains("INT")){
-                    sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-                }else if(l.fieldType.contains("TEXT")){
-                    sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-                }else{
-                    sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
-                }
-            });
-            sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50))");
-            sql.append(sqlFileds);
-            String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-            String stg_sql2 = sql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             pg.postgreBuildTable(stg_sql1, BusinessTypeEnum.DATAINPUT);
-            pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
             log.info("【PGSTG】" + stg_sql1);
             log.info("pg：建表完成");
         }
@@ -117,7 +117,7 @@ public class BuildDataInputPgTableListener {
                 }
             }
             for (TableFieldDetailDTO tableFieldDetailDTO:tableFieldDetailDTOS1) {
-                if(Objects.equals(tableFieldDetailDTO.columnName,tablePk)||Objects.equals(tableFieldDetailDTO.columnName,"fi_batch_code")){
+                if(Objects.equals(tableFieldDetailDTO.columnName,tablePk)){
                     continue;
                 }else{
                     sql="ALTER TABLE "+tableName+" DROP COLUMN "+tableFieldDetailDTO.columnName;

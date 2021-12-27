@@ -260,6 +260,8 @@ public class BuildNifiTaskListener {
         }
         writeBackComponentId(dto.appId, groupEntity.getId(), dto.id, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(), schedulerComponentId);*/
         } catch (Exception e) {
+            modelPublishStatusDTO.publish=2;
+            client.updateTablePublishStatus(modelPublishStatusDTO);
             log.error("nifi流程创建失败" + e.getMessage());
         }
     }
@@ -1163,7 +1165,7 @@ public class BuildNifiTaskListener {
         String ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
         String syncMode = config.targetDsConfig.syncMode == 1 ? "full_volume" : "timestamp_incremental";
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
-        executsql = "select public.data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "','${" + NifiConstants.AttrConstants.LOG_CODE + "}'" + ")";
+        executsql = "select public.data_stg_to_ods2 ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "')";
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql;
@@ -1180,7 +1182,7 @@ public class BuildNifiTaskListener {
         querySqlDto.details = "Query numbers Field";
         querySqlDto.groupId = groupId;
         //select to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH:mm:ss') as endtime
-        querySqlDto.querySql = "select count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time,min(fi_createtime) as start_time,fi_batch_code as fi_batch_code from " + config.processorConfig.targetTableName+"  group by fi_batch_code";
+        querySqlDto.querySql = "select count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time,min(fi_createtime) as start_time from " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -1211,10 +1213,17 @@ public class BuildNifiTaskListener {
                 cronNextTime = simpleDateFormat.format(date);
             }
         }*/
+        String executsql1="UPDATE tb_etl_log SET `status` =2,enddate=NOW(),datarows='${"+ NifiConstants.AttrConstants.NUMBERS + "}'";
+        executsql1+="WHERE\n" +
+                "\tid=(SELECT a.mid FROM(SELECT MAX(id) as mid from tb_etl_log where tablename='"+config.targetDsConfig.targetTableName.toLowerCase()+"') a );\n";
+        executsql1+="INSERT INTO tb_etl_Incremental(object_name,enable_flag,incremental_objectivescore_start,incremental_objectivescore_end) VALUES('";
+        executsql1+=config.targetDsConfig.targetTableName.toLowerCase() + "',2,'${" + NifiConstants.AttrConstants.START_TIME + "}','${" + NifiConstants.AttrConstants.END_TIME + "}');";
+
+
         String executsql = "call nifi_update_etl_log_and_Incremental('";
-        executsql += config.targetDsConfig.targetTableName.toLowerCase() + "','${" + NifiConstants.AttrConstants.NUMBERS + "}',2,'${" + NifiConstants.AttrConstants.FI_BATCH_CODE + "}','${" + NifiConstants.AttrConstants.START_TIME + "}','${" + NifiConstants.AttrConstants.END_TIME + "}')";
+        executsql += config.targetDsConfig.targetTableName.toLowerCase() + "','${" + NifiConstants.AttrConstants.NUMBERS + "}',2,'${" + NifiConstants.AttrConstants.START_TIME + "}','${" + NifiConstants.AttrConstants.END_TIME + "}')";
         callDbProcedureProcessorDTO.dbConnectionId = config.cfgDsConfig.componentId;
-        callDbProcedureProcessorDTO.executsql = executsql;
+        callDbProcedureProcessorDTO.executsql = executsql1;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         callDbProcedureProcessorDTO.haveNextOne = false;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
@@ -1270,7 +1279,6 @@ public class BuildNifiTaskListener {
         strings.add(NifiConstants.AttrConstants.NUMBERS);
         strings.add(NifiConstants.AttrConstants.END_TIME);
         strings.add(NifiConstants.AttrConstants.START_TIME);
-        strings.add(NifiConstants.AttrConstants.FI_BATCH_CODE);
         dto.selfDefinedParameter = strings;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
@@ -1337,7 +1345,6 @@ public class BuildNifiTaskListener {
         ArrayList<String> strings = new ArrayList<>();
         strings.add(NifiConstants.AttrConstants.INCREMENT_START);
         strings.add(NifiConstants.AttrConstants.INCREMENT_END);
-        strings.add(NifiConstants.AttrConstants.LOG_CODE);
         strings.add(NifiConstants.AttrConstants.START_TIME);
         BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
         dto.name = "Set Increment Field";
@@ -1452,8 +1459,7 @@ public class BuildNifiTaskListener {
         str.append("select ");
         str.append(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START).append(" as ").append(NifiConstants.AttrConstants.INCREMENT_START).append(", ");
         str.append(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_END).append(" as ").append(NifiConstants.AttrConstants.INCREMENT_END).append(", ");
-        str.append(NifiConstants.AttrConstants.CREATE_TIME).append(" as ").append(NifiConstants.AttrConstants.START_TIME).append(", ");
-        str.append("uuid()").append(" as ").append(NifiConstants.AttrConstants.LOG_CODE);
+        str.append(NifiConstants.AttrConstants.CREATE_TIME).append(" as ").append(NifiConstants.AttrConstants.START_TIME);
         str.append(" from ").append(NifiConstants.AttrConstants.INCREMENT_DB_TABLE_NAME);
         str.append(" where object_name = '").append(targetDbName).append("' and enable_flag = 1");
         return str.toString();

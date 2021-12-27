@@ -1077,6 +1077,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 }
                 //暂停13个组件
                 this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
+                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+                scheduleComponentsEntity.setId(nifiRemoveDTO.groupId);
+                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+                scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+                NifiHelper.getFlowApi().scheduleComponents(nifiRemoveDTO.groupId, scheduleComponentsEntity);
                 for (ProcessorEntity processorEntity:processorEntities) {
                     //terminateProcessorCall
                     NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());

@@ -164,7 +164,7 @@ public class BuildDataModelDorisTableListener
 
         }catch (Exception e){
             log.error("dw发布失败,表id为"+id+e.getMessage());
-            /*if(tableType==0){
+            if(tableType==0){
                 modelPublishStatusDTO.status=1;
                 modelPublishStatusDTO.id= Math.toIntExact(id);
                 modelPublishStatusDTO.type=0;
@@ -174,7 +174,7 @@ public class BuildDataModelDorisTableListener
                 modelPublishStatusDTO.id= Math.toIntExact(id);
                 modelPublishStatusDTO.type=0;
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
-            }*/
+            }
         }
 
     }
