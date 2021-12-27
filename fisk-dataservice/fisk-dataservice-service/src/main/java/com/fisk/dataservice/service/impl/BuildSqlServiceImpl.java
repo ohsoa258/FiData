@@ -81,7 +81,11 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         StringBuilder str = new StringBuilder();
         List<IndicatorDTO> count = indicatorList.stream().filter(e -> e != null)
                 .filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
+
+        // 子查询别名
         AtomicInteger aliasCount = new AtomicInteger(0);
+        // 当前第几条子查询,方便后面判断追加 ORDER BY
+        AtomicInteger currentNumber = new AtomicInteger(0);
 
         // 从表根据表名去重
         TreeSet<DataDoFieldDTO> tableNameSet = dimColumnFieldList.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(c -> c.getTableName()))));
@@ -94,6 +98,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     // 判断指标数量是否是大于2,如果大于2存在子查询,不大于2的话不存在
                     Integer isSubQuery = 2;
+                    currentNumber.incrementAndGet();
                     StringBuilder stringBuilder = new StringBuilder();
                     if (count.size() >= isSubQuery){
                         stringBuilder.append("(");
@@ -105,8 +110,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
                     // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
                     aliasField(stringBuilder,isSubQuery,count.size(),
-                            aliasCount, dimColumnFieldList, indicatorList,
-                            str,escapeStr,dimColumn);
+                            aliasCount, dimColumnFieldList,
+                            escapeStr,dimColumn,currentNumber
+                            ,str);
                     return stringBuilder.toString();
                 }).collect(Collectors.joining(" JOIN "));
 

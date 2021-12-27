@@ -62,13 +62,12 @@ public class AtomicHelper {
      * @param count
      * @param aliasCount
      * @param dimColumnFieldList
-     * @param indicatorList
-     * @param str
      * @param escapeStr
+     * @param currentNumber
      */
-    public static void aliasField(StringBuilder stringBuilder, Integer isSubQuery, Integer count, AtomicInteger aliasCount,
-                           List<DataDoFieldDTO> dimColumnFieldList, List<IndicatorDTO> indicatorList,
-                           StringBuilder str, String[] escapeStr, String dimColumn){
+    public static void aliasField(StringBuilder stringBuilder, Integer isSubQuery, Integer count,
+                                  AtomicInteger aliasCount, List<DataDoFieldDTO> dimColumnFieldList,
+                                  String[] escapeStr, String dimColumn, AtomicInteger currentNumber,StringBuilder str){
         if (count >= isSubQuery){
             stringBuilder.append(")");
             stringBuilder.append(" AS ");
@@ -76,7 +75,7 @@ public class AtomicHelper {
             stringBuilder.append(atomAlias);
 
             // 两个子表的JOIN ON条件
-            if (aliasCount.intValue()%isSubQuery!=1){
+            if (aliasCount.intValue() > 1){
                 // 维度列不存在,两个子查询不需要 ON 条件
                 if (!StringUtils.isEmpty(dimColumn)){
                     stringBuilder.append(" ON ");
@@ -91,11 +90,15 @@ public class AtomicHelper {
                 }).collect(Collectors.joining(" AND "));
 
                 stringBuilder.append(aliasOn);
-                // 当存在两个原子指标时,最外层ORDER BY
-                dimeSort(dimColumnFieldList,aliasDec,stringBuilder,escapeStr);
 
-                // sql存在子查询的时候,在SELECT最外层追加需要查询的字段
-                queryAlias(dimColumnFieldList, indicatorList,aliasDec, str,escapeStr);
+                // sql最外层进行ORDER BY
+                if (count.equals(currentNumber.intValue())){
+                    dimeSort(dimColumnFieldList,aliasDec,stringBuilder,escapeStr);
+                    // sql最外层追加SELECT
+                    if (count >= isSubQuery) {
+                        str.insert(0,"SELECT * FROM ");
+                    }
+                }
             }
         }
     }
