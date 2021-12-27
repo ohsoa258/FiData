@@ -123,6 +123,7 @@ public enum ResultEnum {
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式"),
     WORKFLOWNAME_EXISTS(9002,"管道名称已存在"),
     DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
+    SCHEDULE_PARAME_NULL(9004,"请设置[开始]组件的调度参数"),
 
     /**
      * 元数据

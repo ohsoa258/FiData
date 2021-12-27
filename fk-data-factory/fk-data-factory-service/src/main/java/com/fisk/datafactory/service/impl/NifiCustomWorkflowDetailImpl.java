@@ -86,6 +86,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
 
+        String componentType = "开始";
+
         // 修改tb_nifi_custom_wokflow
         NifiCustomWorkflowDTO workflowDTO = dto.dto;
         if (workflowDTO == null) {
@@ -102,6 +104,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         List<NifiCustomWorkflowDetailPO> list = NifiCustomWorkflowDetailMap.INSTANCES.listDtoToPo(dto.list);
+
+        // 判断开始组件是否有调度参数
+        List<NifiCustomWorkflowDetailPO> start = list.stream().filter(e -> componentType.equalsIgnoreCase(e.componentType)).collect(Collectors.toList());
+        for (NifiCustomWorkflowDetailPO e : start) {
+            if (e.schedule == null || e.script == null) {
+                return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
+            }
+        }
 
         // 批量保存tb_nifi_custom_wokflow_detail
         boolean success = this.updateBatchById(list);
