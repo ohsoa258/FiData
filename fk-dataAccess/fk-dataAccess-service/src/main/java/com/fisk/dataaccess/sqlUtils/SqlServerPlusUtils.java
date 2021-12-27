@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.utils;
+package com.fisk.dataaccess.sqlUtils;
 
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;

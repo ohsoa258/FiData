@@ -5,9 +5,9 @@ import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
-import com.fisk.dataaccess.utils.MysqlConUtils;
-import com.fisk.dataaccess.utils.SqlServerConUtils;
-import com.fisk.dataaccess.utils.SqlServerPlusUtils;
+import com.fisk.dataaccess.sqlUtils.MysqlConUtils;
+import com.fisk.dataaccess.sqlUtils.SqlServerConUtils;
+import com.fisk.dataaccess.sqlUtils.SqlServerPlusUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

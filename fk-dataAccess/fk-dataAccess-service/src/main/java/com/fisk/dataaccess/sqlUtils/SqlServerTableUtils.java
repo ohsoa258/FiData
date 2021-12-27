@@ -1,15 +1,6 @@
-package com.fisk.dataaccess.utils;
+package com.fisk.dataaccess.sqlUtils;
 
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
-import com.fisk.dataaccess.dto.TableFieldsDTO;
 import org.springframework.stereotype.Component;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Lock
