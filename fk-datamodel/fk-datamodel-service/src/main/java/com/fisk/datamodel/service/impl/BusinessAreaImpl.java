@@ -156,7 +156,7 @@ public class BusinessAreaImpl
                 return ResultEnum.DATA_NOTEXISTS;
             }
             //判断该业务域下维度文件夹中的维度表是否被引用
-            List<Integer> idArray = checkIsAssociate(id);
+            List<Long> idArray = checkIsAssociate(id);
             //删除业务域维度文件夹、维度
             idArray = idArray.stream().distinct().collect(Collectors.toList());
 
@@ -243,14 +243,14 @@ public class BusinessAreaImpl
      * @param id
      * @return
      */
-    private List<Integer> checkIsAssociate(long id)
+    private List<Long> checkIsAssociate(long id)
     {
-        List<Integer> dimensionIds = new ArrayList<>();
-        List<Integer> idArray = new ArrayList<>();
+        List<Long> dimensionIds = new ArrayList<>();
+        List<Long> idArray = new ArrayList<>();
         QueryWrapper<DimensionFolderPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id").lambda()
                 .eq(DimensionFolderPO::getBusinessId, id);
-        List<Integer> dimensionFolderIds = (List) dimensionFolderMapper.selectObjs(queryWrapper);
+        List<Long> dimensionFolderIds = (List) dimensionFolderMapper.selectObjs(queryWrapper);
         if (!CollectionUtils.isEmpty(dimensionFolderIds)) {
             //获取维度文件夹下维度表
             QueryWrapper<DimensionPO> dimensionPOQueryWrapper = new QueryWrapper<>();
@@ -268,13 +268,13 @@ public class BusinessAreaImpl
         //查看事实表与共享维度是否存在关联
         QueryWrapper<FactPO> factPOQueryWrapper = new QueryWrapper<>();
         factPOQueryWrapper.select("id").lambda().ne(FactPO::getBusinessId, id);
-        List<Integer> factIds = (List) factMapper.selectObjs(factPOQueryWrapper);
+        List<Long> factIds = (List) factMapper.selectObjs(factPOQueryWrapper);
         if (!CollectionUtils.isEmpty(factIds) && !CollectionUtils.isEmpty(dimensionIds)) {
             QueryWrapper<FactAttributePO> factAttributePOQueryWrapper = new QueryWrapper<>();
             factAttributePOQueryWrapper.select("associate_dimension_id")
                     .in("fact_id", factIds)
                     .in("associate_dimension_id", dimensionIds);
-            List<Integer> factDimensionId = (List) factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+            List<Long> factDimensionId = (List) factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
             if (!CollectionUtils.isEmpty(factDimensionId)) {
                 idArray.addAll(factDimensionId);
             }
@@ -339,7 +339,7 @@ public class BusinessAreaImpl
         return vo;
     }
 
-    private PgsqlDelTableDTO delDwDorisTable(List<Integer> idArray,long businessAreaId)
+    private PgsqlDelTableDTO delDwDorisTable(List<Long> idArray,long businessAreaId)
     {
         PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
         dto.delApp=true;
