@@ -130,7 +130,8 @@ public class DimensionImpl implements IDimension {
                 }
             }
             //拼接删除niFi参数
-            //DataModelVO vo = niFiDelProcess(model.businessId, id);
+            DataModelVO vo = niFiDelProcess(model.businessId, id);
+            publishTaskClient.deleteNifiFlow(vo);
             //拼接删除DW/Doris库中维度表
             PgsqlDelTableDTO dto = delDwDorisTable(model.dimensionTabName);
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);

@@ -216,8 +216,9 @@ public class BusinessAreaImpl
             //删除业务过程和事实表
             delBusinessProcessFact(id);
             //删除niFi流程--拼接参数
-            //DataModelVO vo = niFiDelTable(id);
-            //vo.dimensionIdList.ids.removeAll(idArray);
+            DataModelVO vo = niFiDelTable(id);
+            vo.dimensionIdList.ids.removeAll(idArray);
+            publishTaskClient.deleteNifiFlow(vo);
             //拼接删除DW/Doris库中维度事实表
             PgsqlDelTableDTO dto = delDwDorisTable(idArray, id);
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);

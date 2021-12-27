@@ -403,8 +403,8 @@ public class BuildDataModelDorisTableListener
             //创建应用组
 
             BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-            dto.name = modelMetaDataDTO.tableName;
-            dto.details = modelMetaDataDTO.tableName;
+            dto.name = modelPublishDataDTO.businessAreaName;
+            dto.details = modelPublishDataDTO.businessAreaName;
             //根据组个数，定义坐标
             int count=0;
             if(modelMetaDataDTO.groupComponentId!=null){
