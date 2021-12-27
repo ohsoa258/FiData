@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityDetailDTO;
@@ -37,7 +38,14 @@ public interface IEntity {
      * @param guid
      * @return
      */
-    EntityDetailDTO getEntity(String guid);
+    JSONObject getEntity(String guid);
+
+    /**
+     *更改实体数据
+     * @param entityData
+     * @return
+     */
+    ResultEnum updateEntity(JSONObject entityData);
 
 
 

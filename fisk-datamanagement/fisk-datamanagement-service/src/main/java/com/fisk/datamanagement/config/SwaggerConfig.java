@@ -25,6 +25,9 @@ public class SwaggerConfig {
 
     public static final String CATEGORY = "category-controller";
     public static final String LABEL = "label-controller";
+    public static final String META_DATA_ENTITY="metadata-entity-controller";
+    public static final String CLASSIFICATION="classification-controller";
+    public static final String GLOSSARY="glossary-controller";
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -37,6 +40,9 @@ public class SwaggerConfig {
                 .securitySchemes(apiKey())
                 .tags(new Tag(CATEGORY,"标签类目"))
                 .tags(new Tag(LABEL,"标签管理"))
+                .tags(new Tag(META_DATA_ENTITY,"元数据对象"))
+                .tags(new Tag(CLASSIFICATION,"业务分类"))
+                .tags(new Tag(GLOSSARY,"术语库"))
                 .securityContexts(securityContexts());
     }
 

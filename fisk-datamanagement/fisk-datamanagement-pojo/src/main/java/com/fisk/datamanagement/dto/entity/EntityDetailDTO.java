@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.dto.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 /**
@@ -7,7 +8,5 @@ import lombok.Data;
  */
 @Data
 public class EntityDetailDTO {
-
-    public String entityDetailJson;
-
+    public JSONObject entityDetailJson;
 }

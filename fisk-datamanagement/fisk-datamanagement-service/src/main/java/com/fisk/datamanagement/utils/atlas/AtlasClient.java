@@ -144,8 +144,9 @@ public class AtlasClient {
         return resultDataDTO;
     }
 
-    public String Put(String url,String parameter)
+    public ResultDataDTO<String> Put(String url,String parameter)
     {
+        ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
         CloseableHttpResponse httpResponse = null;
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String newUrl=requestIp+url;
@@ -155,12 +156,20 @@ public class AtlasClient {
         httpPut.setHeader("Content-type", "application/json");
         httpPut.setHeader("DataEncoding", "UTF-8");
         httpPut.setHeader("Authorization", getAuthorization());
+        //请求参数
+        if (parameter != null && parameter.length()>0)
+        {
+            try {
+                httpPut.setEntity(new StringEntity(parameter));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
         try {
-            httpPut.setEntity(new StringEntity(parameter));
             httpResponse = httpClient.execute(httpPut);
+            resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             HttpEntity entity = httpResponse.getEntity();
-            String result = EntityUtils.toString(entity);
-            return result;
+            resultDataDTO.data = EntityUtils.toString(entity);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -181,7 +190,7 @@ public class AtlasClient {
                 }
             }
         }
-        return null;
+        return resultDataDTO;
     }
 
     public ResultDataDTO<String> Delete(String url)
@@ -242,6 +251,7 @@ public class AtlasClient {
                 .build();
         return requestConfig;
     }
+
 
     /**
      * 获取权限

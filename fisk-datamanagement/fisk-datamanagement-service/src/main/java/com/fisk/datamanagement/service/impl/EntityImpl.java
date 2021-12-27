@@ -158,7 +158,7 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public EntityDetailDTO getEntity(String guid)
+    public JSONObject getEntity(String guid)
     {
         EntityDetailDTO dto=new EntityDetailDTO();
         ResultDataDTO<String> result = atlasClient.Get(entityByGuid + "/" + guid);
@@ -166,8 +166,15 @@ public class EntityImpl implements IEntity {
         {
             throw new FkException(result.code);
         }
-        dto.entityDetailJson=result.data;
-        return dto;
+        return JSON.parseObject(result.data);
+    }
+
+    @Override
+    public ResultEnum updateEntity(JSONObject entityData)
+    {
+        String jsonParameter=JSONArray.toJSON(entityData).toString();
+        ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
 }

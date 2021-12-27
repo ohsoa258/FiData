@@ -122,7 +122,12 @@ public enum ResultEnum {
      */
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式"),
     WORKFLOWNAME_EXISTS(9002,"管道名称已存在"),
-    DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败");
+    DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
+
+    /**
+     * 元数据
+     */
+    NO_CONTENT(204,"没有内容");
 
 
     ResultEnum(int code, String msg) {
