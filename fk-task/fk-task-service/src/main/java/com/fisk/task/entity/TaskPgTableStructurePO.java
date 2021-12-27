@@ -47,4 +47,9 @@ public class TaskPgTableStructurePO extends BasePO {
      */
     public int tableType;
 
+    /**
+     * 是否为业务主键
+     */
+    public boolean primaryKey;
+
 }

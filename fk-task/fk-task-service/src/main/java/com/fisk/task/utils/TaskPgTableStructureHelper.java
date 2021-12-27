@@ -125,6 +125,7 @@ public class TaskPgTableStructureHelper
                 po.fieldId = String.valueOf(item.fieldId);
                 po.fieldName = item.fieldEnName.toLowerCase();
                 po.fieldType = item.fieldType;
+                po.primaryKey=item.isPrimaryKey==0?false:true;
                 if ("VARCHAR".equals(item.fieldType)) {
                     po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
                 }
