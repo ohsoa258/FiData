@@ -159,6 +159,13 @@ public class BusinessAreaImpl
             List<Integer> idArray = checkIsAssociate(id);
             //删除业务域维度文件夹、维度
             idArray = idArray.stream().distinct().collect(Collectors.toList());
+
+            //删除niFi流程--拼接参数
+            DataModelVO vo = niFiDelTable(id);
+            vo.dimensionIdList.ids.removeAll(idArray);
+
+            PgsqlDelTableDTO dto = delDwDorisTable(idArray, id);
+
             if (!CollectionUtils.isEmpty(idArray)) {
                 result = true;
                 List<Integer> folder = new ArrayList<>();
@@ -189,7 +196,8 @@ public class BusinessAreaImpl
                         }
                     }
                 }
-            }else {
+            }
+            else {
                 //删除所有维度文件夹
                 QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
                 folderPOQueryWrapper.select("id").lambda().eq(DimensionFolderPO::getBusinessId,id);
@@ -215,12 +223,9 @@ public class BusinessAreaImpl
             }
             //删除业务过程和事实表
             delBusinessProcessFact(id);
-            //删除niFi流程--拼接参数
-            DataModelVO vo = niFiDelTable(id);
-            vo.dimensionIdList.ids.removeAll(idArray);
+            //删除niFi流程
             publishTaskClient.deleteNifiFlow(vo);
             //拼接删除DW/Doris库中维度事实表
-            PgsqlDelTableDTO dto = delDwDorisTable(idArray, id);
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
             if (result) {
@@ -330,6 +335,7 @@ public class BusinessAreaImpl
         factPOQueryWrapper2.select("id").lambda().eq(FactPO::getBusinessId, id);
         factTable.ids = (List) factMapper.selectObjs(factPOQueryWrapper2).stream().collect(Collectors.toList());
         vo.factIdList = factTable;
+        vo.userId=userHelper.getLoginUserInfo().id;
         return vo;
     }
 
@@ -343,11 +349,11 @@ public class BusinessAreaImpl
 
         //获取维度表名称集合
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda()
+        queryWrapper.select("dimension_tab_name").lambda()
                 .eq(DimensionPO::getBusinessId,businessAreaId);
         if (!CollectionUtils.isEmpty(idArray))
         {
-            queryWrapper.select("dimension_tab_name").notIn("id",idArray);
+            queryWrapper.notIn("id",idArray);
         }
         List<String> dimensionNameList=(List) dimensionMapper.selectObjs(queryWrapper);
         if (!CollectionUtils.isEmpty(dimensionNameList))
