@@ -1,9 +1,7 @@
 package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
@@ -53,11 +51,13 @@ public class BuildDataInputPgTableListener {
         log.info("开始保存ods版本号,参数为{}", dto);
         // 保存ods版本号
         ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(dto);
+/*
         dto.tableName = "stg_" + dto.tableName.substring(4);
         dto.createType = 4;
         log.info("开始保存stg版本号,参数为{}", dto);
         // 保存stg版本号
         taskPgTableStructureHelper.saveTableStructure(dto);
+*/
         log.info("保存版本号方法执行成功");
 
         if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
