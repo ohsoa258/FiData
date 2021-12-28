@@ -296,4 +296,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return 查询结果
      */
     ResultEntity<ComponentIdDTO> getAppNameAndTableName(DataAccessIdsDTO dto);
+
+    /**
+     * 获取最新版sql脚本的表字段集合
+     *
+     * @param dto dto
+     * @return 返回值
+     */
+    List<FieldNameDTO> getFieldList(TableAccessNonDTO dto);
 }

@@ -78,6 +78,7 @@ public enum ResultEnum {
     TABLE_IS_EXIST(5011, "物理表名已存在"),
     TASK_EXEC_FAILURE(5012, "task模块publishBuildAtlasTableTask方法执行失败"),
     SQL_EXCEPT_CLEAR(5013, "当前SQL异常清除"),
+    FTP_CONNECTION_ERROR(5014, "FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅"),
 
 
     /**

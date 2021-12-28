@@ -29,7 +29,7 @@ public class DbConnectionDTO {
     /**
      * 数据库名
      */
-    @ApiModelProperty(value = "数据库", required = true)
+    @ApiModelProperty(value = "数据库(ftp数据源没有数据库)", required = true)
     public String dbName;
 
     /**

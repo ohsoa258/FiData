@@ -450,10 +450,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public TableAccessNonDTO getData(long id) {
 
         // 查询tb_table_access数据
-        TableAccessPO modelAccess = this.query()
-                .eq("id", id)
-                .eq("del_flag", 1)
-                .one();
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("del_flag", 1).one();
+        if (modelAccess == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
         TableAccessNonDTO dto = TableAccessMap.INSTANCES.poToDtoNon(modelAccess);
 
         // 将应用名称封装进去
@@ -464,10 +464,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setAppName(modelReg.getAppName());
 
         // 查询tb_table_fields数据
-        List<TableFieldsPO> list = tableFieldsImpl.query()
-                .eq("table_access_id", id)
-                .eq("del_flag", 1)
-                .list();
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
 
         List<TableFieldsDTO> listField = new ArrayList<>();
         for (TableFieldsPO modelField : list) {
@@ -490,6 +487,41 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setTableSyncmodeDTO(sdto);
 
         return dto;
+    }
+
+    /**
+     * @return java.util.List<com.fisk.dataaccess.dto.TableFieldsDTO>
+     * @description sql语句更新后，过滤已删除的源字段
+     * @author Lock
+     * @date 2021/12/28 14:48
+     * @version v1.0
+     * @params sourceFieldList
+     * @params queryDto
+     */
+    private List<FieldNameDTO> filterSqlFieldList(List<TableFieldsDTO> sourceFieldList, OdsQueryDTO queryDto) {
+
+        OdsResultDTO resultDto = getDataAccessQueryList(queryDto);
+        // 执行sql
+        List<FieldNameDTO> fieldNameDTOList = resultDto.fieldNameDTOList;
+        List<TableFieldsDTO> dtoList = new ArrayList<>();
+        sourceFieldList.forEach(e -> {
+            TableFieldsDTO dto = new TableFieldsDTO();
+            dto.id = e.id;
+            dto.tableAccessId = e.tableAccessId;
+            dto.sourceFieldName = e.sourceFieldName;
+            dto.isPrimarykey = e.isPrimarykey;
+            dto.isRealtime = e.isRealtime;
+            dtoList.add(dto);
+        });
+        fieldNameDTOList.forEach(e -> {
+            dtoList.stream().filter(f -> f.sourceFieldName.equals(e.sourceFieldName)).forEachOrdered(f -> {
+                e.id = f.id;
+                e.tableAccessId = Math.toIntExact(f.tableAccessId);
+                e.isPrimarykey = f.isPrimarykey;
+                e.isRealtime = f.isRealtime;
+            });
+        });
+        return fieldNameDTOList;
     }
 
 
@@ -1322,8 +1354,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName))
-            {
+            if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
@@ -1366,8 +1397,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String tableName = metaData.getTableName(i) + "key";
                 if ("fi_batch_code".equals(columnName) || tableName.equals("ods_" + columnName)
                         || "fi_createtime".equals(columnName)
-                        || "fi_updatetime".equals(columnName))
-                {
+                        || "fi_updatetime".equals(columnName)) {
                     continue;
                 }
                 //获取sql查询数据集合
@@ -1389,8 +1419,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             String tableName = metaData.getTableName(i) + "key";
             if ("fi_batch_code".equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)
                     || "fi_createtime".equals(dto.fieldName)
-                    || "fi_updatetime".equals(dto.fieldName))
-            {
+                    || "fi_updatetime".equals(dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toUpperCase();
@@ -1577,6 +1606,33 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         componentIdDTO.appName = registrationPo == null ? "" : registrationPo.appName;
         componentIdDTO.tableName = accessPo == null ? "" : accessPo.tableName;
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
+    }
+
+    @Override
+    public List<FieldNameDTO> getFieldList(TableAccessNonDTO dto) {
+
+        // 查询tb_table_access数据
+        TableAccessPO modelAccess = this.query().eq("id", dto.id).one();
+        if (modelAccess == null) {
+            throw new FkException(ResultEnum.TABLE_NOT_EXIST);
+        }
+        // 将应用名称封装进去
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("id", modelAccess.getAppId()).one();
+        if (modelReg == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 查询tb_table_fields数据
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", dto.id).list();
+
+        List<TableFieldsDTO> listField = list.stream().map(TableFieldsMap.INSTANCES::poToDto).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(listField)) {
+            OdsQueryDTO queryDto = new OdsQueryDTO();
+            queryDto.appId = modelReg.id;
+            queryDto.querySql = modelAccess.sqlScript;
+            return filterSqlFieldList(listField, queryDto);
+        }
+        return null;
     }
 
     /**

@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.service.ITableAccess;
 import io.swagger.annotations.Api;
@@ -89,5 +90,16 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccessListData(appId));
     }
 
+    /**
+     * 获取最新版sql脚本的表字段集合
+     *
+     * @param dto dto
+     * @return 返回值
+     */
+    @PostMapping("/getFieldList")
+    @ApiOperation(value = "获取最新版sql脚本的表字段集合")
+    public ResultEntity<Object> getFieldList(@RequestBody TableAccessNonDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldList(dto));
+    }
 
 }

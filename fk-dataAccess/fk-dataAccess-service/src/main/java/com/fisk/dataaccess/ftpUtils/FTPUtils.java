@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.ftpUtils;
 
-import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -319,28 +318,37 @@ public class FTPUtils {
         return input;
     }
 
-    public static void main(String[] args) {
+//    public static void main(String[] args) {
+//        System.out.println("-----------------------应用启动------------------------");
+//        FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
+//        ftpClient.enterLocalPassiveMode();
+////
+////        List<String> fileList = new ArrayList<>();
+////        List<String> directoryList = new ArrayList<>();
+////
+////        List<String> list = listAllFiles(ftpClient, "/", fileList, directoryList);
+////        System.out.println("***************************************");
+////
+////        list.forEach(System.out::println);
+////
+////        closeFTPConnect(ftpClient);
+//
+//        // 获取excel内容
+//        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.xlsx");
+//        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
+//        System.out.println("*************************************");
+//        System.out.println("文件流对象: ");
+//        System.out.println(xlsx);
+//
+//        System.out.println("-----------------------应用关闭------------------------");
+//    }
+
+        public static void main(String[] args) throws Exception {
         System.out.println("-----------------------应用启动------------------------");
         FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
-        ftpClient.enterLocalPassiveMode();
-//
-//        List<String> fileList = new ArrayList<>();
-//        List<String> directoryList = new ArrayList<>();
-//
-//        List<String> list = listAllFiles(ftpClient, "/", fileList, directoryList);
-//        System.out.println("***************************************");
-//
-//        list.forEach(System.out::println);
-//
-//        closeFTPConnect(ftpClient);
-
-        // 获取excel内容
-        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.xlsx");
-        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
-        System.out.println("*************************************");
-        System.out.println("文件流对象: ");
-        System.out.println(xlsx);
-
+        System.out.println("FTP 连接是否成功：" + ftpClient.isConnected());
+        System.out.println("FTP 连接是否有效：" + ftpClient.isAvailable());
+        closeFTPConnect(ftpClient);
         System.out.println("-----------------------应用关闭------------------------");
     }
 

@@ -24,4 +24,8 @@ public class FieldNameDTO {
     public String fieldDes;
     @ApiModelProperty(value = "物理表id", required = true)
     public int tableAccessId;
+    @ApiModelProperty(value = "1是主键，0非主键", required = true)
+    public int isPrimarykey;
+    @ApiModelProperty(value = "0是实时物理表，1是非实时物理表", required = true)
+    public int isRealtime;
 }

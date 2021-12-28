@@ -1,12 +1,11 @@
 package com.fisk.dataaccess.ftpUtils;
 
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,25 +18,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import static com.fisk.common.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
+
 /**
- * @author : lock
- * @description: Excel parse util.
- * @date : 2021/12/27 10:45
+ * @author Lock
+ * @version 1.0
+ * @description
+ * @date 2021/12/28 9:59
  */
+@Slf4j
 public class ExcelUtils {
 
-
     /**
-     * logger
-     */
-    private final static Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
-
-    /**
-     * 读取Excel文件
-     *
-     * @param filePath
-     * @return
-     * @throws IOException
+     * @return org.apache.poi.ss.usermodel.Workbook
+     * @description 读取Excel文件
+     * @author Lock
+     * @date 2021/12/28 9:59
+     * @version v1.0
+     * @params filePath
      */
     private static Workbook read(String filePath) {
         if (filePath == null) {
@@ -48,52 +46,54 @@ public class ExcelUtils {
             FileInputStream inputStream = new FileInputStream(filePath);
             return readFromInputStream(inputStream, ext);
         } catch (FileNotFoundException e) {
-            logger.error("FileNotFoundException", e);
+            log.error("读取Excel文件失败，【read】方法报错：", e);
         }
         return null;
     }
 
     /**
-     * 从流中读取，上传文件可以直接获取文件流，无需暂存到服务器上
-     *
-     * @param inputStream inputStream
-     * @param ext 文件后缀名
-     * @return excel工作簿对象
+     * @return org.apache.poi.ss.usermodel.Workbook excel工作簿对象
+     * @description 从流中读取，上传文件可以直接获取文件流，无需暂存到服务器上
+     * @author Lock
+     * @date 2021/12/28 10:15
+     * @version v1.0
+     * @params inputStream 文件输入流
+     * @params ext 文件后缀名
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
-            if (".xls".equals(ext)) {
+            if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
+                // Excel 2003
                 return new HSSFWorkbook(inputStream);
             } else {
+                // Excel 2007
                 return new XSSFWorkbook(inputStream);
             }
-        } catch (FileNotFoundException e) {
-            logger.error("FileNotFoundException", e);
         } catch (IOException e) {
-            logger.error("IOException", e);
+            log.error("从流中读取excel文件失败，【readFromInputStream】方法报错，", e);
         }
         return null;
     }
 
     /**
-     * 读取Excel内容，返回list，每一行存放一个list
-     *
-     * @param wb
-     * @return
+     * @return java.util.List<java.util.List < java.lang.String>>
+     * @description 读取Excel内容，返回list，每一行存放一个list
+     * @author Lock
+     * @date 2021/12/28 10:19
+     * @version v1.0
+     * @params wb 工作簿对象
+     * @params index sheet页
      */
     private static List<List<String>> readExcelContentList(Workbook wb, int index) {
         if (wb != null) {
             List<List<String>> content = new ArrayList<>();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
             Sheet sheet = wb.getSheetAt(index);
-//            Sheet sheet1 = wb.getSheet("tb_app_registration.xlsx");
-//            int numberOfSheets = wb.getNumberOfSheets();
-//            String sheetName = wb.getSheetName(index);
-//            System.out.println("获取指定的sheet名称" + sheetName);
-//            System.out.println("numberOfSheets = " + numberOfSheets);
+            // excel行对象，0：第一行对象
             Row row = sheet.getRow(0);
-            // 所有行数
+            // 获取sheet页所有行数
             int rowNum = sheet.getLastRowNum();
+            // 获取当前行的列数
             int colNum = row.getPhysicalNumberOfCells();
             // for循环 0: 从表头开始读取  1: 从正文开始读取
             // 正文内容应该从第二行开始, 第一行为表头的标题
@@ -120,10 +120,12 @@ public class ExcelUtils {
 
 
     /**
-     * 根据Cell类型设置数据
-     *
-     * @param cell
-     * @return
+     * @description 根据Cell类型设置数据
+     * @author Lock
+     * @date 2021/12/28 10:25
+     * @version v1.0
+     * @params cell excel单元格对象
+     * @return java.lang.Object
      */
     private static Object getCellFormatValue(Cell cell) {
         Object cellvalue = "";
@@ -135,7 +137,8 @@ public class ExcelUtils {
                     // 判断当前的cell为Date, 取时间类型；数字则转字符串
                     cellvalue = DateUtil.isCellDateFormatted(cell) ? cell.getDateCellValue() : String.valueOf(cell.getNumericCellValue());
                     break;
-                case Cell.CELL_TYPE_STRING:// 如果当前Cell的Type为STRING
+                // 如果当前Cell的Type为STRING
+                case Cell.CELL_TYPE_STRING:
                     cellvalue = cell.getRichStringCellValue().getString();
                     break;
                 default:
@@ -146,21 +149,27 @@ public class ExcelUtils {
     }
 
     /**
-     * 读取Excel
-     *
-     * @param filePath Excel文件路径
-     * @return
+     * @description 读取Excel
+     * @author Lock
+     * @date 2021/12/28 10:28
+     * @version v1.0
+     * @params filePath Excel文件路径
+     * @return java.util.List<java.util.List < java.lang.String>>
      */
     public static List<List<String>> readExcel(String filePath) {
         Workbook wb = read(filePath);
-        return readExcelContentList(wb, 1);
+        // 默认获取第一个sheet页
+        return readExcelContentList(wb, 0);
     }
 
     /**
-     * 读取Excel
-     *
-     * @param inputStream Excel文件流
-     * @return excel对象
+     * @description 读取excel内容
+     * @author Lock
+     * @date 2021/12/28 10:29
+     * @version v1.0
+     * @params inputStream Excel文件流
+     * @params ext 文件后缀名
+     * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      */
     public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext) {
         Workbook workbook = readFromInputStream(inputStream, ext);
