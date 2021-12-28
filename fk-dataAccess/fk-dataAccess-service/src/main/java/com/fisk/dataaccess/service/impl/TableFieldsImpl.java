@@ -157,19 +157,20 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 保存tb_table_fields
-        boolean success = true;
-        for (TableFieldsDTO tableFieldsDTO : list) {
-            // 0: 未操作的数据  1: 新增  2: 编辑
-            int funcType = tableFieldsDTO.getFuncType();
-            if (funcType == 2) {
-                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-                success = this.updateById(modelField);
-            } else if (funcType == 1) {
-                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
-                modelField.delFlag = 1;
-                success = this.save(modelField);
-            }
-        }
+        boolean success;
+//        for (TableFieldsDTO tableFieldsDTO : list) {
+//            // 0: 未操作的数据  1: 新增  2: 编辑
+//            int funcType = tableFieldsDTO.getFuncType();
+//            if (funcType == 2) {
+//                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+//                success = this.updateById(modelField);
+//            } else if (funcType == 1) {
+//                TableFieldsPO modelField = tableFieldsDTO.toEntity(TableFieldsPO.class);
+//                modelField.delFlag = 1;
+//                success = this.save(modelField);
+//            }
+//        }
+        success = this.saveOrUpdateBatch(TableFieldsMap.INSTANCES.listDtoToPo(list));
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }

@@ -504,23 +504,32 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 执行sql
         List<FieldNameDTO> fieldNameDTOList = resultDto.fieldNameDTOList;
         List<TableFieldsDTO> dtoList = new ArrayList<>();
+        // 重新组装库中的字段属性
         sourceFieldList.forEach(e -> {
             TableFieldsDTO dto = new TableFieldsDTO();
             dto.id = e.id;
             dto.tableAccessId = e.tableAccessId;
             dto.sourceFieldName = e.sourceFieldName;
+            dto.fieldName = e.fieldName;
             dto.isPrimarykey = e.isPrimarykey;
             dto.isRealtime = e.isRealtime;
+            dto.fieldDes = e.fieldDes;
+            dto.fieldType = e.fieldType;
+            dto.fieldLength = e.fieldLength;
             dtoList.add(dto);
         });
-        fieldNameDTOList.forEach(e -> {
-            dtoList.stream().filter(f -> f.sourceFieldName.equals(e.sourceFieldName)).forEachOrdered(f -> {
-                e.id = f.id;
-                e.tableAccessId = Math.toIntExact(f.tableAccessId);
-                e.isPrimarykey = f.isPrimarykey;
-                e.isRealtime = f.isRealtime;
-            });
-        });
+        // 组装执行sql后的字段属性
+        fieldNameDTOList.forEach(e -> dtoList.stream().filter(f -> f.sourceFieldName.equals(e.sourceFieldName)).forEachOrdered(f -> {
+            e.id = f.id;
+            e.tableAccessId = Math.toIntExact(f.tableAccessId);
+            e.sourceFieldName = f.sourceFieldName;
+            e.fieldName = f.fieldName;
+            e.isPrimarykey = f.isPrimarykey;
+            e.isRealtime = f.isRealtime;
+            e.fieldDes = f.fieldDes;
+            e.fieldType = f.fieldType;
+            e.fieldLength = String.valueOf(f.fieldLength);
+        }));
         return fieldNameDTOList;
     }
 
