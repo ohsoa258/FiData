@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.sqlUtils;
+package com.fisk.dataaccess.utils.sql;
 
 import org.springframework.stereotype.Component;
 

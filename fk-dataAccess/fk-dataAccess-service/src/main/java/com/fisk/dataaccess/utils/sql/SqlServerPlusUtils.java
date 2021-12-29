@@ -1,20 +1,21 @@
-package com.fisk.dataaccess.sqlUtils;
+package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
- * @author Lock
  * <p>
  * SqlServer 获取表及表字段
+ * </p>
+ *
+ * @author Lock
  */
 @Slf4j
-public class SqlServerConUtils {
+public class SqlServerPlusUtils {
 
     private static Connection conn = null;
     private static Statement stmt = null;
@@ -43,7 +44,6 @@ public class SqlServerConUtils {
         return tableList;
     }
 
-
     /**
      * 根据tableName获取tableFields
      *
@@ -60,9 +60,9 @@ public class SqlServerConUtils {
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-                dto.fieldType = resultSet.getString("TYPE_NAME");
-                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-                dto.fieldDes = resultSet.getString("REMARKS");
+////                dto.fieldType = resultSet.getString("TYPE_NAME");
+////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+///               dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }
 
@@ -106,13 +106,73 @@ public class SqlServerConUtils {
                 tablePyhNameDTO.setFields(columnsName);
 
                 tag++;
-                tablePyhNameDTO.setTag(tag);
                 list.add(tablePyhNameDTO);
             }
 
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumns】获取表及表字段报错, ex", e);
+            return null;
+        }
+        return list;
+    }
+
+    public Map<String, String> getTablesPlus(Connection conn, String dbName) {
+//        ArrayList<Map<String, String>> tableList = null;
+        Map<String, String> tableMap = new LinkedHashMap<>();
+        try {
+            Statement stmt = conn.createStatement();
+
+            ResultSet resultSet = stmt.executeQuery("select *,RANK() over(order by tabl.field) from \n" +
+                    "(\n" +
+                    "select name, schema_name(schema_id) as field from sys.tables\n" +
+                    ") as tabl");
+//            tableList = new ArrayList<>();
+            while (resultSet.next()) {
+                // TABLE_NAME
+                String name = resultSet.getString("name");
+                // 架构名
+                String field2 = resultSet.getString("field");
+                tableMap.put(name, field2);
+            }
+        } catch (SQLException e) {
+            log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
+            return null;
+        }
+        return tableMap;
+    }
+
+    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(String url, String user, String password, String dbName) {
+
+        List<TablePyhNameDTO> list = null;
+
+        try {
+            //1.加载驱动程序
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            //2.获得数据库的连接
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+            list = new ArrayList<>();
+
+            // 获取指定数据库所有表
+            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
+
+            List<TablePyhNameDTO> finalList = list;
+
+            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+                // 根据表名获取字段
+                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
+                tablePyhNameDTO.setFields(columnsName);
+                finalList.add(tablePyhNameDTO);
+            }
+            conn.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
             return null;
         }
         return list;

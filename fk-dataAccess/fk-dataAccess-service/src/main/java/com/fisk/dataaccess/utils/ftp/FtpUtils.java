@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.ftpUtils;
+package com.fisk.dataaccess.utils.ftp;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -18,7 +18,10 @@ import java.util.List;
  * @description: Excel parse util.
  * @date : 2021/12/22 13:14
  */
-public class FTPUtils {
+public class FtpUtils {
+
+    private static final String ROOT_PATH = "/";
+
     /**
      * 连接 FTP 服务器
      *
@@ -27,48 +30,51 @@ public class FTPUtils {
      * @param username 登录用户名
      * @param password 登录密码
      * @return ftpClient ftp客户端
-     * @throws Exception 异常信息
      */
     public static FTPClient connectFtpServer(String addr, int port, String username, String password, String controlEncoding) {
         FTPClient ftpClient = new FTPClient();
         try {
-            /**设置文件传输的编码*/
+            // 设置文件传输的编码
             ftpClient.setControlEncoding(controlEncoding);
 
-            /**连接 FTP 服务器
-             * 如果连接失败，则此时抛出异常，如ftp服务器服务关闭时，抛出异常：
-             * java.net.ConnectException: Connection refused: connect*/
+            /*
+              连接 FTP 服务器
+              如果连接失败，则此时抛出异常，如ftp服务器服务关闭时，抛出异常：
+              java.net.ConnectException: Connection refused: connect
+              */
             ftpClient.connect(addr, port);
-            /**登录 FTP 服务器
-             * 1）如果传入的账号为空，则使用匿名登录，此时账号使用 "Anonymous"，密码为空即可*/
+            /*
+              登录 FTP 服务器
+              1）如果传入的账号为空，则使用匿名登录，此时账号使用 "Anonymous"，密码为空即可
+              */
             if (StringUtils.isBlank(username)) {
                 ftpClient.login("Anonymous", "");
             } else {
                 ftpClient.login(username, password);
             }
 
-            /** 设置传输的文件类型
-             * BINARY_FILE_TYPE：二进制文件类型
-             * ASCII_FILE_TYPE：ASCII传输方式，这是默认的方式
-             * ....
+            /*
+            设置传输的文件类型
+              BINARY_FILE_TYPE：二进制文件类型
+              ASCII_FILE_TYPE：ASCII传输方式，这是默认的方式
+              ....
              */
             ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
 
-            /**
-             * 确认应答状态码是否正确完成响应
-             * 凡是 2开头的 isPositiveCompletion 都会返回 true，因为它底层判断是：
-             * return (reply >= 200 && reply < 300);
+            /*
+              确认应答状态码是否正确完成响应
+              凡是 2开头的 isPositiveCompletion 都会返回 true，因为它底层判断是：
+              return (reply >= 200 && reply < 300);
              */
             int reply = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(reply)) {
-                /**
-                 * 如果 FTP 服务器响应错误 中断传输、断开连接
-                 * abort：中断文件正在进行的文件传输，成功时返回 true,否则返回 false
-                 * disconnect：断开与服务器的连接，并恢复默认参数值
+                /*
+                  如果 FTP 服务器响应错误 中断传输、断开连接
+                  abort：中断文件正在进行的文件传输，成功时返回 true,否则返回 false
+                  disconnect：断开与服务器的连接，并恢复默认参数值
                  */
                 ftpClient.abort();
                 ftpClient.disconnect();
-            } else {
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,10 +88,10 @@ public class FTPUtils {
      * 终止 ftp 传输
      * 断开 ftp 连接
      *
-     * @param ftpClient
-     * @return
+     * @param ftpClient ftpClient
+     * @return 执行结果
      */
-    public static FTPClient closeFTPConnect(FTPClient ftpClient) {
+    public static FTPClient closeFtpConnect(FTPClient ftpClient) {
         try {
             if (ftpClient != null && ftpClient.isConnected()) {
                 ftpClient.abort();
@@ -96,28 +102,19 @@ public class FTPUtils {
         }
         return ftpClient;
     }
- 
-    /*public static void main(String[] args) throws Exception {
-        System.out.println("-----------------------应用启动------------------------");
-        FTPClient ftpClient = FTPUtil.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
-        System.out.println("FTP 连接是否成功：" + ftpClient.isConnected());
-        System.out.println("FTP 连接是否有效：" + ftpClient.isAvailable());
-        closeFTPConnect(ftpClient);
-        System.out.println("-----------------------应用关闭------------------------");
-    }*/
 
     /**
      * 遍历目录下的所有文件--方式1
      *
-     * @param targetDir
+     * @param targetDir targetDir
      */
     public static Collection<File> localListFiles(File targetDir) {
         Collection<File> fileCollection = new ArrayList<>();
         if (targetDir != null && targetDir.exists() && targetDir.isDirectory()) {
-            /**
-             * targetDir：不要为 null、不要是文件、不要不存在
-             * 第二个 文件过滤 参数如果为 FalseFileFilter.FALSE ，则不会查询任何文件
-             * 第三个 目录过滤 参数如果为 FalseFileFilter.FALSE , 则只获取目标文件夹下的一级文件，而不会迭代获取子文件夹下的文件
+            /*
+              targetDir：不要为 null、不要是文件、不要不存在
+              第二个 文件过滤 参数如果为 FalseFileFilter.FALSE ，则不会查询任何文件
+              第三个 目录过滤 参数如果为 FalseFileFilter.FALSE , 则只获取目标文件夹下的一级文件，而不会迭代获取子文件夹下的文件
              */
             fileCollection = FileUtils.listFiles(targetDir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
         }
@@ -131,35 +128,35 @@ public class FTPUtils {
      * @param ftpClient        ：连接成功有效的 FTP客户端连接
      * @param remotePath       ：查询的 FTP 服务器目录，如果文件，则视为无效，使用绝对路径，如"/"、"/video"、"\\"、"\\video"
      * @param relativePathList ：返回查询结果，其中为服务器目录下的文件相对路径，如：\1.png、\docs\overview-tree.html 等
-     * @return
+     * @return 执行结果
      */
     public static List<String> loopServerPath(FTPClient ftpClient, String remotePath, List<String> relativePathList) {
-        /**如果 FTP 连接已经关闭，或者连接无效，则直接返回*/
+        /*如果 FTP 连接已经关闭，或者连接无效，则直接返回*/
         if (!ftpClient.isConnected() || !ftpClient.isAvailable()) {
             System.out.println("ftp 连接已经关闭或者连接无效......");
             return relativePathList;
         }
         try {
-            /**转移到FTP服务器根目录下的指定子目录
-             * 1)"/"：表示用户的根目录，为空时表示不变更
-             * 2)参数必须是目录，当是文件时改变路径无效
-             * */
+            /*转移到FTP服务器根目录下的指定子目录
+              1)"/"：表示用户的根目录，为空时表示不变更
+              2)参数必须是目录，当是文件时改变路径无效
+              */
             ftpClient.enterLocalPassiveMode();
             ftpClient.changeWorkingDirectory(remotePath);
-            /** listFiles：获取FtpClient连接的当前下的一级文件列表(包括子目录)
-             * 1）FTPFile[] ftpFiles = ftpClient.listFiles("/docs/info");
-             *      获取服务器指定目录下的子文件列表(包括子目录)，以 FTP 登录用户的根目录为基准，与 FTPClient 当前连接目录无关
-             * 2）FTPFile[] ftpFiles = ftpClient.listFiles("/docs/info/springmvc.txt");
-             *      获取服务器指定文件，此时如果文件存在时，则 FTPFile[] 大小为 1，就是此文件
-             * */
+            /* listFiles：获取FtpClient连接的当前下的一级文件列表(包括子目录)
+              1）FTPFile[] ftpFiles = ftpClient.listFiles("/docs/info");
+                   获取服务器指定目录下的子文件列表(包括子目录)，以 FTP 登录用户的根目录为基准，与 FTPClient 当前连接目录无关
+              2）FTPFile[] ftpFiles = ftpClient.listFiles("/docs/info/springmvc.txt");
+                   获取服务器指定文件，此时如果文件存在时，则 FTPFile[] 大小为 1，就是此文件
+              */
             FTPFile[] ftpFiles = ftpClient.listFiles();
             if (ftpFiles != null && ftpFiles.length > 0) {
                 for (FTPFile ftpFile : ftpFiles) {
                     if (ftpFile.isFile()) {
-                        String relativeRemotePath = remotePath + "/" + ftpFile.getName();
+                        String relativeRemotePath = remotePath + ROOT_PATH + ftpFile.getName();
                         relativePathList.add(relativeRemotePath);
                     } else {
-                        loopServerPath(ftpClient, remotePath + "/" + ftpFile.getName(), relativePathList);
+                        loopServerPath(ftpClient, remotePath + ROOT_PATH + ftpFile.getName(), relativePathList);
                     }
                 }
             }
@@ -171,9 +168,7 @@ public class FTPUtils {
 
     public static List<String> loopListDirectories(FTPClient ftpClient, String remotePath, List<String> relativePathList) {
 
-        /*
-            如果 FTP 连接已经关闭，或者连接无效，则直接返回
-         */
+        // 如果 FTP 连接已经关闭，或者连接无效，则直接返回
         if (!ftpClient.isConnected() || !ftpClient.isAvailable()) {
             System.out.println("ftp 连接已经关闭或者连接无效......");
             return relativePathList;
@@ -193,15 +188,16 @@ public class FTPUtils {
               2）FTPFile[] ftpFiles = ftpClient.listFiles("/docs/info/springmvc.txt");
                    获取服务器指定文件，此时如果文件存在时，则 FTPFile[] 大小为 1，就是此文件
               */
+
             // 读取根目录"/"下面的所有目录
             FTPFile[] ftpFiles = ftpClient.listDirectories();
             if (ftpFiles != null && ftpFiles.length > 0) {
                 for (FTPFile ftpFile : ftpFiles) {
                     if (ftpFile.isFile()) {
-                        String relativeRemotePath = remotePath + "/" + ftpFile.getName();
+                        String relativeRemotePath = remotePath + ROOT_PATH + ftpFile.getName();
                         relativePathList.add(relativeRemotePath);
                     } else {
-                        loopServerPath(ftpClient, remotePath + "/" + ftpFile.getName(), relativePathList);
+                        loopServerPath(ftpClient, remotePath + ROOT_PATH + ftpFile.getName(), relativePathList);
                     }
                 }
             }
@@ -223,18 +219,16 @@ public class FTPUtils {
     public static List<String> listAllFiles(FTPClient ftpClient, String remotePath, List<String> fileList, List<String> directoryList) {
         ftpClient.enterLocalPassiveMode();
         try {
-            if (remotePath.startsWith("/") && remotePath.endsWith("/")) {
+            if (remotePath.startsWith(ROOT_PATH) && remotePath.endsWith(ROOT_PATH)) {
                 // 获取所有文件
                 FTPFile[] files = ftpClient.listFiles(remotePath);
-//                FTPFile[] files1 = ftpClient.listDirectories(remotePath);
 
                 for (FTPFile file : files) {
                     if (file.isFile()) {
                         System.out.println(remotePath);
-//                        directoryList.add(remotePath);
                         fileList.add(remotePath + file.getName());
                     } else if (file.isDirectory()) {
-                        listAllFiles(ftpClient, remotePath + file.getName() + "/", fileList, directoryList);
+                        listAllFiles(ftpClient, remotePath + file.getName() + ROOT_PATH, fileList, directoryList);
                     }
                 }
             }
@@ -256,8 +250,8 @@ public class FTPUtils {
         try {
             ins = ftpClient.retrieveFileStream(fileName);
 
-            // byte []b = new byte[ins.available()];
-            // ins.read(b);
+            //// byte []b = new byte[ins.available()];
+            //// ins.read(b);
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
             String inLine = reader.readLine();
             while (inLine != null) {
@@ -311,17 +305,17 @@ public class FTPUtils {
             } catch (IOException e) {
                 System.out.println("获取文件失败" + e);
             } finally {
-                closeFTPConnect(ftpClient);
+                closeFtpConnect(ftpClient);
                 System.out.println("连接中");
             }
         }
         return input;
     }
 
-//    public static void main(String[] args) {
-//        System.out.println("-----------------------应用启动------------------------");
-//        FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
-//        ftpClient.enterLocalPassiveMode();
+////    public static void main(String[] args) {
+////        System.out.println("-----------------------应用启动------------------------");
+////        FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
+////        ftpClient.enterLocalPassiveMode();
 ////
 ////        List<String> fileList = new ArrayList<>();
 ////        List<String> directoryList = new ArrayList<>();
@@ -332,23 +326,23 @@ public class FTPUtils {
 ////        list.forEach(System.out::println);
 ////
 ////        closeFTPConnect(ftpClient);
-//
-//        // 获取excel内容
-//        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.xlsx");
-//        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
-//        System.out.println("*************************************");
-//        System.out.println("文件流对象: ");
-//        System.out.println(xlsx);
-//
-//        System.out.println("-----------------------应用关闭------------------------");
-//    }
+////
+////        // 获取excel内容
+////        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.xlsx");
+////        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
+////        System.out.println("*************************************");
+////        System.out.println("文件流对象: ");
+////        System.out.println(xlsx);
+////
+////        System.out.println("-----------------------应用关闭------------------------");
+////    }
 
-        public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         System.out.println("-----------------------应用启动------------------------");
-        FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
+        FTPClient ftpClient = FtpUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
         System.out.println("FTP 连接是否成功：" + ftpClient.isConnected());
         System.out.println("FTP 连接是否有效：" + ftpClient.isAvailable());
-        closeFTPConnect(ftpClient);
+        closeFtpConnect(ftpClient);
         System.out.println("-----------------------应用关闭------------------------");
     }
 

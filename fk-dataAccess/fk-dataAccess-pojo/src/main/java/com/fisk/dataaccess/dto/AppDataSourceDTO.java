@@ -62,6 +62,9 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "连接密码", required = true)
     public String connectPwd;
 
+    @ApiModelProperty(value = "文件后缀名(1:csv  2:xls&xlsx)", required = true)
+    public Integer fileSuffix;
+
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);
     }

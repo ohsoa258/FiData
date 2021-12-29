@@ -58,6 +58,11 @@ public class AppDataSourcePO extends BasePO {
     public String connectPwd;
 
     /**
+     * 文件后缀名(1:csv  2:xls&xlsx)
+     */
+    public Integer fileSuffix;
+
+    /**
      * 验证方式（实时） 登录账号
      */
     public String realtimeAccount;

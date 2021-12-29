@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.ftpUtils;
+package com.fisk.dataaccess.utils.ftp;
 
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import lombok.extern.slf4j.Slf4j;

@@ -1,16 +1,20 @@
 package com.fisk.dataaccess.controller;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.service.IFtp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 /**
  * @author Lock
@@ -23,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/ftp")
 public class FtpController {
 
-    @Autowired
+    @Resource
     private IFtp service;
 
     @ApiOperation("测试ftp数据源连接")
@@ -31,6 +35,12 @@ public class FtpController {
     public ResultEntity<Object> connectFtp(@RequestBody DbConnectionDTO dto) {
 
         return service.connectFtp(dto);
+    }
+
+    @ApiOperation(value = "点击文件预览内容")
+    @PostMapping("/previewContent")
+    public ResultEntity<Object> previewContent(@RequestBody OdsQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.previewContent(query));
     }
 
 }

@@ -2,6 +2,10 @@ package com.fisk.dataaccess.service;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
+import com.fisk.dataaccess.dto.ftp.ExcelDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -17,4 +21,11 @@ public interface IFtp {
      * @return 连接结果
      */
     ResultEntity<Object> connectFtp(DbConnectionDTO dto);
+
+    /**
+     * 点击文件预览内容
+     * @param query query
+     * @return 文本内容
+     */
+    List<ExcelDTO> previewContent(OdsQueryDTO query);
 }

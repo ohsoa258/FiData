@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.sqlUtils;
+package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
