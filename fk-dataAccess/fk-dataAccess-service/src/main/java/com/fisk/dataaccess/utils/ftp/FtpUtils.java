@@ -1,5 +1,9 @@
 package com.fisk.dataaccess.utils.ftp;
 
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
+import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -216,7 +220,7 @@ public class FtpUtils {
      * @param fileList   fileList
      * @return 文件列表
      */
-    public static List<String> listAllFiles(FTPClient ftpClient, String remotePath, List<String> fileList, List<String> directoryList) {
+    public static List<String> listAllFiles(FTPClient ftpClient, String remotePath, List<String> fileList) {
         ftpClient.enterLocalPassiveMode();
         try {
             if (remotePath.startsWith(ROOT_PATH) && remotePath.endsWith(ROOT_PATH)) {
@@ -228,7 +232,7 @@ public class FtpUtils {
                         System.out.println(remotePath);
                         fileList.add(remotePath + file.getName());
                     } else if (file.isDirectory()) {
-                        listAllFiles(ftpClient, remotePath + file.getName() + ROOT_PATH, fileList, directoryList);
+                        listAllFiles(ftpClient, remotePath + file.getName() + ROOT_PATH, fileList);
                     }
                 }
             }
@@ -236,6 +240,38 @@ public class FtpUtils {
             e.printStackTrace();
         }
         return fileList;
+    }
+
+
+    public static ExcelTreeDTO listFilesAndDirectorys(FTPClient ftpClient, String remotePath, ExcelTreeDTO treeDTO) {
+        ftpClient.enterLocalPassiveMode();
+        try {
+
+            // 文件
+            List<ExcelPropertyDTO> fileList = new ArrayList<>();
+            ExcelPropertyDTO filePropertyDto = new ExcelPropertyDTO();
+            // 文件夹
+            List<ExcelPropertyDTO> directoryList = new ArrayList<>();
+            ExcelPropertyDTO dirPropertyDto = new ExcelPropertyDTO();
+            // 获取所有文件
+            FTPFile[] files = ftpClient.listFiles(remotePath);
+            for (FTPFile file : files) {
+                if (file.isDirectory()) {
+//                    directoryList.add(file.getName());
+
+                } else if (file.isFile()) {
+//                    fileList.add(file.getName());
+                }
+            }
+
+            treeDTO.fileList = fileList;
+            treeDTO.directoryList = directoryList;
+
+
+        } catch (IOException e) {
+            throw new FkException(ResultEnum.LOAD_FTP_FILESYSTEM_ERROR);
+        }
+        return treeDTO;
     }
 
     /**
@@ -340,9 +376,11 @@ public class FtpUtils {
     public static void main(String[] args) throws Exception {
         System.out.println("-----------------------应用启动------------------------");
         FTPClient ftpClient = FtpUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
-        System.out.println("FTP 连接是否成功：" + ftpClient.isConnected());
-        System.out.println("FTP 连接是否有效：" + ftpClient.isAvailable());
-        closeFtpConnect(ftpClient);
+
+        ExcelTreeDTO dto = new ExcelTreeDTO();
+        listFilesAndDirectorys(ftpClient, "/Windows/two/三级/", dto);
+        System.out.println("dto = " + dto);
+
         System.out.println("-----------------------应用关闭------------------------");
     }
 

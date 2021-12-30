@@ -18,28 +18,62 @@ public class TableBusinessDTO {
     public Long accessId;
 
     /**
-     * 业务时间字段
+     * 开关(0:false  1:true)
      */
-    @ApiModelProperty(value = "业务时间字段",required = true)
+    @ApiModelProperty(value = "开关(0:flase  1:true)",required = true)
+    public Boolean otherLogic;
+
+    /**
+     * 1:每年  2:每月  3:每天
+     */
+    @ApiModelProperty(value = "1:每年  2:每月  3:每天",required = true)
+    public long businessFlag;
+
+    /**
+     * 具体日期
+     */
+    @ApiModelProperty(value = "具体日期",required = true)
+    public long businessDate;
+
+    /**
+     * 业务时间覆盖字段
+     */
+    @ApiModelProperty(value = "业务时间覆盖字段",required = true)
     public String businessTimeField;
 
     /**
-     * 1:  取上一个月数据,覆盖上一个月数据
-     * 2:  取当月数据,覆盖当月数据
-     * 3:  当月
-     * 4:  取上一年数据,覆盖上一年
-     * 5:  取当年数据,覆盖当年
+     * 1:大于  2:小于  3:等于  4:大于等于  5:小于等于
      */
-    @ApiModelProperty(value = "     * 1:  取上一个月数据,覆盖上一个月数据\n" +
-            "     * 2:  取当月数据,覆盖当月数据\n" +
-            "     * 3:  当月\n" +
-            "     * 4:  取上一年数据,覆盖上一年\n" +
-            "     * 5:  取当年数据,覆盖当年",required = true)
-    public Long businessFlag;
+    @ApiModelProperty(value = "1:大于  2:小于  3:等于  4:大于等于  5:小于等于",required = true)
+    public long businessOperator;
 
     /**
-     * 当月具体多少号
+     * 业务覆盖范围
      */
-    @ApiModelProperty(value = "当月具体多少号",required = true)
-    public Long businessDay;
+    @ApiModelProperty(value = "业务覆盖范围",required = true)
+    public long businessExtent;
+
+    /**
+     * 业务覆盖单位
+     */
+    @ApiModelProperty(value = "业务覆盖单位",required = true)
+    public long extentDateUnit;
+
+    /**
+     * 其他逻辑  1:大于  2:小于  3:等于  4:大于等于  5:小于等于
+     */
+    @ApiModelProperty(value = "其他逻辑  1:大于  2:小于  3:等于  4:大于等于  5:小于等于",required = true)
+    public long businessOperatorStandby;
+
+    /**
+     * 其他逻辑  业务覆盖范围
+     */
+    @ApiModelProperty(value = "其他逻辑  业务覆盖范围",required = true)
+    public long businessExtentStandby;
+
+    /**
+     * 其他逻辑  业务覆盖单位
+     */
+    @ApiModelProperty(value = "其他逻辑  业务覆盖单位",required = true)
+    public long extentDateUnitStandby;
 }

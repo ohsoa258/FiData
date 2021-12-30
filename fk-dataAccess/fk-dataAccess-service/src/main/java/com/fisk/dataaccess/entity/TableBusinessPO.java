@@ -16,25 +16,55 @@ public class TableBusinessPO extends BasePO {
     /**
      * tb_table_access(id)
      */
-    public Long accessId;
+    public long accessId;
 
     /**
-     * 业务时间字段
+     * 开关(0:false  1:true)
+     */
+    public Boolean otherLogic;
+
+    /**
+     * 1:每年  2:每月  3:每天
+     */
+    public long businessFlag;
+
+    /**
+     * 具体日期
+     */
+    public long businessDate;
+
+    /**
+     * 业务时间覆盖字段
      */
     public String businessTimeField;
 
     /**
-     * 1:  取上一个月数据,覆盖上一个月数据
-     * 2:  取当月数据,覆盖当月数据
-     * 3:  当月
-     * 4:  取上一年数据,覆盖上一年
-     * 5:  取当年数据,覆盖当年
+     * 1:大于  2:小于  3:等于  4:大于等于  5:小于等于
      */
-    public Long businessFlag;
+    public long businessOperator;
 
     /**
-     * 当月具体多少号
+     * 业务覆盖范围
      */
-    public Long businessDay;
+    public long businessExtent;
 
+    /**
+     * 业务覆盖单位
+     */
+    public long extentDateUnit;
+
+    /**
+     * 其他逻辑  1:大于  2:小于  3:等于  4:大于等于  5:小于等于
+     */
+    public long businessOperatorStandby;
+
+    /**
+     * 其他逻辑  业务覆盖范围
+     */
+    public long businessExtentStandby;
+
+    /**
+     * 其他逻辑  业务覆盖单位
+     */
+    public long extentDateUnitStandby;
 }

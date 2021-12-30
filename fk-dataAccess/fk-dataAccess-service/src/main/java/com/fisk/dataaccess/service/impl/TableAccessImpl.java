@@ -475,16 +475,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         dto.setList(listField);
 
-        // 查询tb_table_business
-        TableBusinessPO modelBusiness = this.businessMapper.getData(id);
-        TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
-        dto.setBusinessDTO(businessDTO);
-
         // 查询tb_table_syncmode
         TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
         TableSyncmodeDTO sdto = new TableSyncmodeDTO(modelSync);
-
         dto.setTableSyncmodeDTO(sdto);
+
+        // 只有存在业务时间覆盖时,才会给前端展示
+        if (modelSync.syncMode == 4) {
+            // 查询tb_table_business
+            TableBusinessPO modelBusiness = this.businessMapper.getData(id);
+            TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
+            dto.setBusinessDTO(businessDTO);
+        }
 
         return dto;
     }
