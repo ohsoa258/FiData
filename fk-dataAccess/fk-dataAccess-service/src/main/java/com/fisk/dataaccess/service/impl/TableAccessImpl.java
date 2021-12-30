@@ -481,7 +481,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setTableSyncmodeDTO(sdto);
 
         // 只有存在业务时间覆盖时,才会给前端展示
-        if (modelSync.syncMode == 4) {
+        if (modelSync != null && modelSync.syncMode == 4) {
             // 查询tb_table_business
             TableBusinessPO modelBusiness = this.businessMapper.getData(id);
             TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
