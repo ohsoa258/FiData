@@ -1,7 +1,7 @@
 package com.fisk.datamanagement.map;
 
-import com.fisk.datamanagement.dto.category.CategoryDTO;
-import com.fisk.datamanagement.dto.category.CategoryDataDTO;
+import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
+import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDataDTO;
 import com.fisk.datamanagement.entity.CategoryPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -13,35 +13,35 @@ import java.util.List;
  * @author JianWenYang
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface CategoryMap {
-    CategoryMap INSTANCES = Mappers.getMapper(CategoryMap.class);
+public interface LabelCategoryMap {
+    LabelCategoryMap INSTANCES = Mappers.getMapper(LabelCategoryMap.class);
 
     /**
      * dto==>po
      * @param dto
      * @return
      */
-    CategoryPO dtoToPo(CategoryDTO dto);
+    CategoryPO dtoToPo(LabelCategoryDTO dto);
 
     /**
      * po==>dto
      * @param po
      * @return
      */
-    CategoryDTO poToDto(CategoryPO po);
+    LabelCategoryDTO poToDto(CategoryPO po);
 
     /**
      * dataListPo==>Dto
      * @param po
      * @return
      */
-    List<CategoryDataDTO> dataListPoToDto(List<CategoryPO> po);
+    List<LabelCategoryDataDTO> dataListPoToDto(List<CategoryPO> po);
 
     /**
      * dataPo==>Dto
      * @param po
      * @return
      */
-    CategoryDataDTO dataPoToDto(CategoryPO po);
+    LabelCategoryDataDTO dataPoToDto(CategoryPO po);
 
 }

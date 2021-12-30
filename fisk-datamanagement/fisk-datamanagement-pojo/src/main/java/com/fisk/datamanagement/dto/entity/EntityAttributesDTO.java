@@ -36,7 +36,7 @@ public class EntityAttributesDTO {
     public String data_type;
     @ApiModelProperty(value = "添加字段：字段长度")
     public String length;
-    @ApiModelProperty(value = "所属人(可不填,后台自动获取)")
+    @ApiModelProperty(value = "所属人(后台自动获取)")
     public String owner;
     @ApiModelProperty(value = "添加数据库时,需要实例guid和typeName")
     public EntityIdAndTypeDTO instance;

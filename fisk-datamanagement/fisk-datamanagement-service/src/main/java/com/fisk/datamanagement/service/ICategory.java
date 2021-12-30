@@ -2,9 +2,6 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
-import com.fisk.datamanagement.dto.category.CategoryDataDTO;
-
-import java.util.List;
 
 /**
  * @author JianWenYang
@@ -12,38 +9,31 @@ import java.util.List;
 public interface ICategory {
 
     /**
-     * 添加标签类目
+     * 添加类别
      * @param dto
      * @return
      */
     ResultEnum addCategory(CategoryDTO dto);
 
     /**
-     * 删除标签类目
-     * @param id
+     * 删除类别
+     * @param guid
      * @return
      */
-    ResultEnum delCategory(int id);
+    ResultEnum deleteCategory(String guid);
 
     /**
-     * 更改标签类目
+     * 获取类别详情
+     * @param guid
+     * @return
+     */
+    CategoryDTO getCategory(String guid);
+
+    /**
+     * 更改类别详情
      * @param dto
      * @return
      */
     ResultEnum updateCategory(CategoryDTO dto);
-
-    /**
-     * 获取标签类目详情
-     * @param id
-     * @return
-     */
-    CategoryDTO getCategoryDetail(int id);
-
-    /**
-     * 获取类目列表
-     * @param queryName
-     * @return
-     */
-    List<CategoryDataDTO> getCategoryList(String queryName);
 
 }

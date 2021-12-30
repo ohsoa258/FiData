@@ -5,17 +5,21 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
+import com.fisk.datamanagement.vo.JsonObjectDTO;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,6 +32,8 @@ public class EntityImpl implements IEntity {
 
     @Resource
     AtlasClient atlasClient;
+    @Resource
+    UserHelper userHelper;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -110,6 +116,7 @@ public class EntityImpl implements IEntity {
                 }
                 list.add(buildChildTree(entityParentDTO, stagingDTOList));
             }
+            list.sort(Comparator.comparing(EntityTreeDTO::getName));
         }
         catch (Exception e)
         {
@@ -145,6 +152,8 @@ public class EntityImpl implements IEntity {
     @Override
     public ResultEnum addEntity(EntityDTO dto)
     {
+        //获取所属人
+        dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
@@ -175,6 +184,32 @@ public class EntityImpl implements IEntity {
         String jsonParameter=JSONArray.toJSON(entityData).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+    }
+
+    @Override
+    public JSONObject searchBasicEntity(EntityFilterDTO dto)
+    {
+        String jsonParameter=JSONArray.toJSON(dto).toString();
+        ResultDataDTO<String> result = atlasClient.Post(searchBasic, jsonParameter);
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            JSONObject msg=JSON.parseObject(result.data);
+            throw new FkException(result.code,msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
+    }
+
+    @Override
+    public JsonObjectDTO getAuditsList(String guid)
+    {
+        JsonObjectDTO data=new JsonObjectDTO();
+        ResultDataDTO<String> result = atlasClient.Get(entity + "/" + guid + "/audit");
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            throw new FkException(result.code);
+        }
+        data.resultJson=result.data;
+        return data;
     }
 
 }

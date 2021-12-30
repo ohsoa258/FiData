@@ -6,5 +6,5 @@ import com.fisk.datamanagement.entity.CategoryPO;
 /**
  * @author JianWenYang
  */
-public interface CategoryMapper extends FKBaseMapper<CategoryPO> {
+public interface LabelCategoryMapper extends FKBaseMapper<CategoryPO> {
 }

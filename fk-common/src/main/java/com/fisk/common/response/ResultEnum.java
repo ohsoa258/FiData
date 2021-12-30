@@ -130,6 +130,7 @@ public enum ResultEnum {
     /**
      * 元数据
      */
+    BAD_REQUEST(400,"错误请求"),
     NO_CONTENT(204,"没有内容");
 
 

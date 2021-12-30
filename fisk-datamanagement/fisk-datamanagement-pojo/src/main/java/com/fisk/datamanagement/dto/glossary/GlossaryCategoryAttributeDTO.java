@@ -7,7 +7,6 @@ import lombok.Data;
  */
 @Data
 public class GlossaryCategoryAttributeDTO extends GlossaryTermCategoryDTO {
-
+    public String parentCategoryGuid;
     public String categoryGuid;
-
 }

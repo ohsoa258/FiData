@@ -23,11 +23,12 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String CATEGORY = "category-controller";
+    public static final String LABEL_CATEGORY = "label-category-controller";
     public static final String LABEL = "label-controller";
     public static final String META_DATA_ENTITY="metadata-entity-controller";
     public static final String CLASSIFICATION="classification-controller";
     public static final String GLOSSARY="glossary-controller";
+    public static final String BUSINESS_META_DATA="business-meta-data-controller";
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -38,11 +39,12 @@ public class SwaggerConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
-                .tags(new Tag(CATEGORY,"标签类目"))
+                .tags(new Tag(LABEL_CATEGORY,"标签类目"))
                 .tags(new Tag(LABEL,"标签管理"))
                 .tags(new Tag(META_DATA_ENTITY,"元数据对象"))
                 .tags(new Tag(CLASSIFICATION,"业务分类"))
                 .tags(new Tag(GLOSSARY,"术语库"))
+                .tags(new Tag(BUSINESS_META_DATA,"业务元数据"))
                 .securityContexts(securityContexts());
     }
 

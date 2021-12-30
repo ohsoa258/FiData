@@ -6,6 +6,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.service.IEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,6 +55,18 @@ public class MetaDataEntityController {
     @PostMapping("/updateEntity")
     public ResultEntity<Object> updateEntity(@Validated @RequestBody JSONObject dto) {
         return ResultEntityBuild.build(service.updateEntity(dto));
+    }
+
+    @ApiOperation("根据不同条件,筛选元数据对象列表")
+    @PostMapping("/searchBasicEntity")
+    public ResultEntity<Object> searchBasicEntity(@Validated @RequestBody EntityFilterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchBasicEntity(dto));
+    }
+
+    @ApiOperation("根据guid获取实体审计列表")
+    @GetMapping("/getAuditsList/{guid}")
+    public ResultEntity<Object> getAuditsList(@PathVariable("guid") String guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAuditsList(guid));
     }
 
 }

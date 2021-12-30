@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityDetailDTO;
+import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
+import com.fisk.datamanagement.vo.JsonObjectDTO;
 
 import java.util.List;
 
@@ -47,6 +49,19 @@ public interface IEntity {
      */
     ResultEnum updateEntity(JSONObject entityData);
 
+    /**
+     * 根据不同条件,筛选元数据对象列表
+     * @param dto
+     * @return
+     */
+    JSONObject searchBasicEntity(EntityFilterDTO dto);
+
+    /**
+     * 根据实体id,获取审计列表
+     * @param guid
+     * @return
+     */
+    JsonObjectDTO getAuditsList(String guid);
 
 
 }

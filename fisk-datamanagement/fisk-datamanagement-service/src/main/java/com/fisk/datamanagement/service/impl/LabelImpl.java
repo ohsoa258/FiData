@@ -10,7 +10,7 @@ import com.fisk.datamanagement.dto.label.LabelQueryDTO;
 import com.fisk.datamanagement.entity.CategoryPO;
 import com.fisk.datamanagement.entity.LabelPO;
 import com.fisk.datamanagement.map.LabelMap;
-import com.fisk.datamanagement.mapper.CategoryMapper;
+import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.mapper.LabelMapper;
 import com.fisk.datamanagement.service.ILabel;
 import com.google.common.base.Joiner;
@@ -30,9 +30,9 @@ public class LabelImpl implements ILabel {
     @Resource
     LabelMapper mapper;
     @Resource
-    CategoryImpl category;
+    LabelCategoryImpl category;
     @Resource
-    CategoryMapper categoryMapper;
+    LabelCategoryMapper categoryMapper;
 
     @Override
     public ResultEnum addLabel(LabelDTO dto)

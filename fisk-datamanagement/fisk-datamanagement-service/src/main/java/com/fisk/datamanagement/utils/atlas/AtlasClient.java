@@ -17,6 +17,7 @@ import sun.misc.BASE64Encoder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -108,8 +109,8 @@ public class AtlasClient {
         if (parameter != null && parameter.length()>0)
         {
             try {
-                httpPost.setEntity(new StringEntity(parameter));
-            } catch (UnsupportedEncodingException e) {
+                httpPost.setEntity(new StringEntity(parameter,"UTF-8"));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -119,7 +120,10 @@ public class AtlasClient {
             resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             // 从响应对象中获取响应内容
             HttpEntity entity = httpResponse.getEntity();
-            resultDataDTO.data = EntityUtils.toString(entity);
+            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            {
+                resultDataDTO.data = EntityUtils.toString(entity);
+            }
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -169,7 +173,10 @@ public class AtlasClient {
             httpResponse = httpClient.execute(httpPut);
             resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
             HttpEntity entity = httpResponse.getEntity();
-            resultDataDTO.data = EntityUtils.toString(entity);
+            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            {
+                resultDataDTO.data = EntityUtils.toString(entity);
+            }
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -210,7 +217,10 @@ public class AtlasClient {
             httpResponse = httpClient.execute(httpDelete);
             HttpEntity entity = httpResponse.getEntity();
             resultDataDTO.code = ResultEnum.getEnum(httpResponse.getStatusLine().getStatusCode());
-            resultDataDTO.data = EntityUtils.toString(entity);
+            if (resultDataDTO.code !=ResultEnum.NO_CONTENT)
+            {
+                resultDataDTO.data = EntityUtils.toString(entity);
+            }
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -251,7 +261,6 @@ public class AtlasClient {
                 .build();
         return requestConfig;
     }
-
 
     /**
      * 获取权限
