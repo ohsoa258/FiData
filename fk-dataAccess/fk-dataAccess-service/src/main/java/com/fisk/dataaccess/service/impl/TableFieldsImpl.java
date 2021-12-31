@@ -105,7 +105,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        int businessMode = 3;
+        int businessMode = 4;
         if (syncmodeDto.syncMode == businessMode && businessDto != null) {
             success = businessImpl.save(TableBusinessMap.INSTANCES.dtoToPo(businessDto));
             if (!success) {
@@ -207,7 +207,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 ////        boolean success = true;
         TableBusinessDTO businessDto = dto.businessDTO;
         // 保存tb_table_business
-        int businessMode = 3;
+        int businessMode = 4;
         if (tableSyncmodeDTO.syncMode == businessMode && businessDto != null) {
 
             TableBusinessPO businessPo = TableBusinessMap.INSTANCES.dtoToPo(businessDto);
