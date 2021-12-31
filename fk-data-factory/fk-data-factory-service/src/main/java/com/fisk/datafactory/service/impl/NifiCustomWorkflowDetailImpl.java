@@ -108,7 +108,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 判断开始组件是否有调度参数
         List<NifiCustomWorkflowDetailPO> start = list.stream().filter(e -> componentType.equalsIgnoreCase(e.componentType)).collect(Collectors.toList());
         for (NifiCustomWorkflowDetailPO e : start) {
-            if (e.schedule == null || e.script == null) {
+            if (e.schedule == null || e.script == null || "".equals(e.script)) {
                 return ResultEntityBuild.build(ResultEnum.SCHEDULE_PARAME_NULL);
             }
         }
