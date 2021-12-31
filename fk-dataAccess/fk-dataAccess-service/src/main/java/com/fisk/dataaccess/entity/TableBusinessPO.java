@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  * @author Lock
  */
 @Data
-@TableName("tb_table_business2")
+@TableName("tb_table_business")
 @EqualsAndHashCode(callSuper = true)
 public class TableBusinessPO extends BasePO {
 
@@ -49,9 +49,9 @@ public class TableBusinessPO extends BasePO {
     public long businessRange;
 
     /**
-     * 业务覆盖单位
+     * 业务覆盖单位,Year,Month,Day,Hour
      */
-    public long rangeDateUnit;
+    public String rangeDateUnit;
 
     /**
      * 其他逻辑  1:大于  2:小于  3:等于  4:大于等于  5:小于等于
@@ -64,7 +64,7 @@ public class TableBusinessPO extends BasePO {
     public long businessRangeStandby;
 
     /**
-     * 其他逻辑  业务覆盖单位
+     * 其他逻辑  业务覆盖单位,Year,Month,Day,Hour
      */
-    public long rangeDateUnitStandby;
+    public String rangeDateUnitStandby;
 }

@@ -3,6 +3,8 @@ package com.fisk.dataaccess.service;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
+import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 
 import java.util.List;
@@ -24,8 +26,17 @@ public interface IFtp {
 
     /**
      * 点击文件预览内容
+     *
      * @param query query
      * @return 文本内容
      */
     List<ExcelDTO> previewContent(OdsQueryDTO query);
+
+    /**
+     * 加载ftp文件系统
+     *
+     * @param dto
+     * @return dto
+     */
+    ExcelTreeDTO loadFtpFileSystem(FtpPathDTO dto);
 }

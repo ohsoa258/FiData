@@ -5,6 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
+import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.service.IFtp;
 import io.swagger.annotations.Api;
@@ -41,6 +42,12 @@ public class FtpController {
     @PostMapping("/previewContent")
     public ResultEntity<Object> previewContent(@RequestBody OdsQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.previewContent(query));
+    }
+
+    @ApiOperation(value = "加载ftp文件系统")
+    @PostMapping("/loadFtpFileSystem")
+    public ResultEntity<Object> loadFtpFileSystem(@RequestBody FtpPathDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadFtpFileSystem(dto));
     }
 
 }

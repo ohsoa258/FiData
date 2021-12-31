@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
@@ -35,8 +36,11 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         dataSource.appName = po.dbName;
         if (mysqlTpye.equalsIgnoreCase(dataSource.driveType)) {
             dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(po.connectStr, po.connectAccount, po.connectPwd);
+            dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, po.connectStr, po.connectAccount, po.connectPwd,po.dbName);
+
         } else if (sqlserverTpye.equalsIgnoreCase(dataSource.driveType)) {
             dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
+            dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, po.connectStr, po.connectAccount, po.connectPwd, po.dbName);
         }
 
         return dataSource;

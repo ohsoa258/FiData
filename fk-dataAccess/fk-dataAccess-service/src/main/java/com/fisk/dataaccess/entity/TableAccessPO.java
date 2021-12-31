@@ -48,7 +48,12 @@ public class TableAccessPO extends BasePO {
     public Integer publish;
 
     /**
-     * SQL脚本
+     * SQL脚本or文件全限定名称
      */
     public String sqlScript;
+
+    /**
+     * excel sheet页名称
+     */
+    public String sheet;
 }

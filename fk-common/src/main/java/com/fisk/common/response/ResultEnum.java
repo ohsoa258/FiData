@@ -81,6 +81,7 @@ public enum ResultEnum {
     FTP_CONNECTION_ERROR(5014, "FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅"),
     FTP_CONNECTION_INVALID(5015, "当前ftp数据源信息已无效,请重新配置"),
     LOAD_FTP_FILESYSTEM_ERROR(5016, "加载ftp数据源文件系统失败"),
+    LOAD_VIEW_NAME_ERROR(5017, "获取视图名称失败"),
 
 
     /**

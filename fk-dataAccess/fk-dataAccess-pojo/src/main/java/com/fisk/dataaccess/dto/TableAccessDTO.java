@@ -66,10 +66,16 @@ public class TableAccessDTO extends BaseDTO {
     @ApiModelProperty(value = "0: 未发布  1: 发布成功  2: 发布失败", required = true)
     public Integer publish;
     /**
-     * SQL脚本
+     * SQL脚本or文件全限定名称
      */
-    @ApiModelProperty(value = "SQL脚本", required = true)
+    @ApiModelProperty(value = "SQL脚本or文件全限定名称", required = true)
     public String sqlScript;
+
+    /**
+     * excel sheet页名称
+     */
+    @ApiModelProperty(value = "excel sheet页名称", required = true)
+    public String sheet;
 
     /**
      * 表字段对象

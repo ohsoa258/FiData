@@ -6,6 +6,8 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
+import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
@@ -51,21 +53,8 @@ public class FtpImpl implements IFtp {
 
     @Override
     public List<ExcelDTO> previewContent(OdsQueryDTO query) {
+        FTPClient ftpClient = getFtpClient(query.appId);
 
-        // 查询ftp数据源配置信息
-        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", query.appId).one();
-        // 参数校验
-        if (dataSourcePo == null) {
-            throw new FkException(ResultEnum.FTP_CONNECTION_INVALID);
-        }
-        FTPClient ftpClient = FtpUtils.connectFtpServer(
-                dataSourcePo.host,
-                Integer.parseInt(dataSourcePo.port),
-                dataSourcePo.connectAccount,
-                dataSourcePo.connectPwd,
-                "utf-8");
-        // 设置被动模式，开通一个端口来传输数据
-        ftpClient.enterLocalPassiveMode();
         // 重新封装excel参数
         List<String> excelParam = encapsulationExcelParam(query.querySql);
 
@@ -74,6 +63,38 @@ public class FtpImpl implements IFtp {
 
         // 获取excel内容
         return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+    }
+
+    @Override
+    public ExcelTreeDTO loadFtpFileSystem(FtpPathDTO dto) {
+
+        // 查询ftp数据源配置信息
+        FTPClient ftpClient = getFtpClient(dto.appId);
+        // 获取当前路径的文件&文件夹
+        return FtpUtils.listFilesAndDirectorys(ftpClient, dto.fullPath);
+    }
+
+    /**
+     * @description 根据应用id连接ftp数据源,获取ftp客户端
+     * @author Lock
+     * @date 2021/12/31 10:24
+     * @version v1.0
+     * @params appId 应用id
+     * @return org.apache.commons.net.ftp.FTPClient
+     */
+    private FTPClient getFtpClient(long appId) {
+        // 查询ftp数据源配置信息
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", appId).one();
+        // 参数校验
+        if (dataSourcePo == null) {
+            throw new FkException(ResultEnum.FTP_CONNECTION_INVALID);
+        }
+        return FtpUtils.connectFtpServer(
+                dataSourcePo.host,
+                Integer.parseInt(dataSourcePo.port),
+                dataSourcePo.connectAccount,
+                dataSourcePo.connectPwd,
+                "utf-8");
     }
 
     /**

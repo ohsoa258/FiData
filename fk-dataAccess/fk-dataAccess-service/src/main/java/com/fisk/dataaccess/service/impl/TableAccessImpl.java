@@ -483,7 +483,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 只有存在业务时间覆盖时,才会给前端展示
         if (modelSync != null && modelSync.syncMode == 4) {
             // 查询tb_table_business
-            TableBusinessPO modelBusiness = this.businessMapper.getData(id);
+            QueryWrapper<TableBusinessPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(TableBusinessPO::getAccessId, id);
+            TableBusinessPO modelBusiness = businessMapper.selectOne(queryWrapper);
             TableBusinessDTO businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
             dto.setBusinessDTO(businessDTO);
         }
