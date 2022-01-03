@@ -13,7 +13,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication(scanBasePackages = {"com.fisk.chartvisual",
         "com.fisk.common.advice",
         "com.fisk.common.mdc",
-        "com.fisk.common.mybatis",
+        "com.fisk.chartvisual.config",
         "com.fisk.common.redis",
         "com.fisk.common.feign",
         "com.fisk.common.user",
