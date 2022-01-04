@@ -1588,7 +1588,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     private String converSql(String tableName, String sql) {
 
-        return null;
+        return sql;
     }
 
     @Override
