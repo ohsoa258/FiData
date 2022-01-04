@@ -87,7 +87,7 @@ public class ChartManageImpl implements IChartManageService {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        List<ChildvisualDTO> poList = this.stringSplit(dto.content, (int) model.getId());
+        List<ChildvisualDTO> poList = this.stringSplit(dto.content, Integer.parseInt(String.valueOf(model.getId())));
         if (!CollectionUtils.isEmpty(poList)){
             for (ChildvisualDTO po : poList) {
                 ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);

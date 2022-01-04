@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.entity;
 
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.entity.BaseSqlServerPO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class BaseChartProperty extends BasePO {
+public class BaseChartProperty extends BaseSqlServerPO {
     public Long fid;
     public String name;
     public String content;
