@@ -1576,7 +1576,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             assert st != null;
 
-            ResultSet rs = st.executeQuery(query.querySql);
+            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql));
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
@@ -1584,6 +1584,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         return array;
+    }
+
+    private String converSql(String tableName, String sql) {
+
+        return null;
     }
 
     @Override
@@ -1615,7 +1620,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        dto.selectSql = tableAccessPo.sqlScript;
+        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript);
+        //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
@@ -1662,6 +1668,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             OdsQueryDTO queryDto = new OdsQueryDTO();
             queryDto.appId = modelReg.id;
             queryDto.querySql = modelAccess.sqlScript;
+            queryDto.tableName = modelReg.appAbbreviation + "_" + modelAccess.tableName;
             return filterSqlFieldList(listField, queryDto);
         }
         return null;
