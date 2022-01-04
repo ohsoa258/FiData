@@ -644,6 +644,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        // 查询tb_table_syncmode
+        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
+        if (modelSync != null && modelSync.syncMode == 4) {
+            TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
+            if (modelBusiness != null) {
+                int deleteBusiness = businessMapper.deleteByIdWithFill(modelBusiness);
+                if (deleteBusiness < 0) {
+                    return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+                }
+            }
+        }
+
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", modelAccess.appId).eq("del_flag", 1).one();
 
         NifiVO vo = new NifiVO();
