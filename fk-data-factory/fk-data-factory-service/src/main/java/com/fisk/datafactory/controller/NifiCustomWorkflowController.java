@@ -64,4 +64,10 @@ public class NifiCustomWorkflowController {
     public ResultEntity<Page<NifiCustomWorkflowVO>> listData(@RequestBody NifiCustomWorkflowQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
     }
+
+    @ApiOperation("修改管道发布状态")
+    @PutMapping("/updatePublishStatus")
+    public void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto){
+        service.updatePublishStatus(dto);
+    }
 }
