@@ -851,6 +851,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String mysqlType = "mysql";
         String sqlserverType = "sqlserver";
         String postgresqlType = "postgresql";
+        // 增量
+        int syncModel = 4;
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
         // app组配置
         GroupConfig groupConfig = new GroupConfig();
@@ -895,6 +897,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         // TODO: 新增同步方式
         targetDsConfig.syncMode = modelSync.syncMode;
+        // 增量的时候,获取业务时间覆盖对象
+        if (targetDsConfig.syncMode == syncModel) {
+            TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
+            dto.businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
+        }
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         // 2.任务组配置
         taskGroupConfig.setAppName(modelAccess.getTableName());
