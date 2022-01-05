@@ -61,8 +61,16 @@ public class FtpImpl implements IFtp {
         // 获取文件输入流
         InputStream inputStream = getInputStreamByName(ftpClient, excelParam.get(0), excelParam.get(1));
 
-        // 获取excel内容
-        return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+        switch (query.fileTypeEnum) {
+            // 获取excel内容
+            case XLS_FILE:
+            case XLSX_FILE:
+                return ExcelUtils.readExcelFromInputStream(inputStream, excelParam.get(2));
+            case CSV_FILE:
+                return ExcelUtils.readCsvFromInputStream(inputStream, excelParam.get(3));
+            default:
+                return null;
+        }
     }
 
     @Override
@@ -75,12 +83,12 @@ public class FtpImpl implements IFtp {
     }
 
     /**
-     * @description 根据应用id连接ftp数据源,获取ftp客户端
+     * @return org.apache.commons.net.ftp.FTPClient
+     * @description 根据应用id连接ftp数据源, 获取ftp客户端
      * @author Lock
      * @date 2021/12/31 10:24
      * @version v1.0
      * @params appId 应用id
-     * @return org.apache.commons.net.ftp.FTPClient
      */
     private FTPClient getFtpClient(long appId) {
         // 查询ftp数据源配置信息
@@ -126,6 +134,7 @@ public class FtpImpl implements IFtp {
         param.add(fileFullName);
         // 文件后缀名
         param.add(suffixName);
+        param.add(fileName);
         return param;
     }
 }
