@@ -11,9 +11,10 @@ import com.fisk.dataaccess.dto.ftp.FtpPathDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.enums.FtpFileTypeEnum;
+import com.fisk.dataaccess.service.IFtp;
 import com.fisk.dataaccess.utils.ftp.ExcelUtils;
 import com.fisk.dataaccess.utils.ftp.FtpUtils;
-import com.fisk.dataaccess.service.IFtp;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
 
@@ -78,8 +79,12 @@ public class FtpImpl implements IFtp {
 
         // 查询ftp数据源配置信息
         FTPClient ftpClient = getFtpClient(dto.appId);
-        // 获取当前路径的文件&文件夹
-        return FtpUtils.listFilesAndDirectorys(ftpClient, dto.fullPath);
+
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("app_id", dto.appId).one();
+
+        // 数据源配置不同的文件后缀名,展示相对应的文件系统
+        FtpFileTypeEnum fileTypeEnum = FtpFileTypeEnum.getValue(dataSourcePo.fileSuffix);
+        return FtpUtils.listFilesAndDirectorys(ftpClient, dto.fullPath, fileTypeEnum.getName());
     }
 
     /**

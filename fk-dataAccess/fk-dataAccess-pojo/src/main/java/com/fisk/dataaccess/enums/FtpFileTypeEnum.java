@@ -13,9 +13,10 @@ public enum FtpFileTypeEnum implements BaseEnum {
     /**
      * 文件后缀名类型
      */
-    XLS_FILE(1, "xls"),
-    XLSX_FILE(2, "xlsx"),
-    CSV_FILE(3, "csv");
+    XLS_FILE(2, "xls"),
+    XLSX_FILE(3, "xlsx"),
+    CSV_FILE(1, "csv"),
+    OTHER_FILE(0, "其他类型");
 
     FtpFileTypeEnum(int value, String name) {
         this.name = name;
@@ -33,5 +34,16 @@ public enum FtpFileTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static FtpFileTypeEnum getValue(int value) {
+        FtpFileTypeEnum[] carTypeEnums = values();
+        for (FtpFileTypeEnum carTypeEnum : carTypeEnums) {
+            int value1 = carTypeEnum.value;
+            if (value1 == value) {
+                return carTypeEnum;
+            }
+        }
+        return FtpFileTypeEnum.OTHER_FILE;
     }
 }

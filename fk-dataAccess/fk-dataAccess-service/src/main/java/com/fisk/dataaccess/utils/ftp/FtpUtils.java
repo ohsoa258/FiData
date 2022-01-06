@@ -253,11 +253,11 @@ public class FtpUtils {
      * @author Lock
      * @date 2021/12/30 15:38
      * @version v1.0
-     * @params ftpClient
-     * @params remotePath
-     * @params treeDTO
+     * @params ftpClient ftp连接客户端
+     * @params remotePath 当前路径
+     * @params fileSuffix 文件后缀名
      */
-    public static ExcelTreeDTO listFilesAndDirectorys(FTPClient ftpClient, String remotePath) {
+    public static ExcelTreeDTO listFilesAndDirectorys(FTPClient ftpClient, String remotePath, String fileSuffix) {
         ExcelTreeDTO treeDTO = new ExcelTreeDTO();
         ftpClient.enterLocalPassiveMode();
         try {
@@ -268,7 +268,7 @@ public class FtpUtils {
             // 获取所有文件
             FTPFile[] files = ftpClient.listFiles(remotePath);
             for (FTPFile file : files) {
-                if (file.isFile()) {
+                if (file.isFile() && file.getName().contains(fileSuffix)) {
                     ExcelPropertyDTO filePropertyDto = new ExcelPropertyDTO();
                     filePropertyDto.fileName = file.getName();
                     filePropertyDto.fileFullName = remotePath + file.getName();
