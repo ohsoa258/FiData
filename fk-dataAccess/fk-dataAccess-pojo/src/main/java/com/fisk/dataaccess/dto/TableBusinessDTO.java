@@ -10,7 +10,7 @@ import lombok.Data;
 public class TableBusinessDTO {
 
     @ApiModelProperty(value = "业务域覆盖id")
-    public long id;
+    public Long id;
 
     @ApiModelProperty(value = "物理表id",required = true)
     public Long accessId;
@@ -22,7 +22,7 @@ public class TableBusinessDTO {
     public String businessTimeFlag;
 
     @ApiModelProperty(value = "具体日期",required = true)
-    public long businessDate;
+    public Long businessDate;
 
     @ApiModelProperty(value = "业务时间覆盖字段",required = true)
     public String businessTimeField;
@@ -31,7 +31,7 @@ public class TableBusinessDTO {
     public String businessOperator;
 
     @ApiModelProperty(value = "业务覆盖范围",required = true)
-    public long businessRange;
+    public Long businessRange;
 
     @ApiModelProperty(value = "业务覆盖单位,Year,Month,Day,Hour",required = true)
     public String rangeDateUnit;
@@ -40,7 +40,7 @@ public class TableBusinessDTO {
     public String businessOperatorStandby;
 
     @ApiModelProperty(value = "其他逻辑  业务覆盖范围",required = true)
-    public long businessRangeStandby;
+    public Long businessRangeStandby;
 
     @ApiModelProperty(value = "其他逻辑  业务覆盖单位,Year,Month,Day,Hour",required = true)
     public String rangeDateUnitStandby;

@@ -16,7 +16,7 @@ public class TableBusinessPO extends BasePO {
     /**
      * tb_table_access(id)
      */
-    public long accessId;
+    public Long accessId;
 
     /**
      * 模式(1:普通模式  2:高级模式)
@@ -31,7 +31,7 @@ public class TableBusinessPO extends BasePO {
     /**
      * 具体日期
      */
-    public long businessDate;
+    public Long businessDate;
 
     /**
      * 业务时间覆盖字段
@@ -46,7 +46,7 @@ public class TableBusinessPO extends BasePO {
     /**
      * 业务覆盖范围
      */
-    public long businessRange;
+    public Long businessRange;
 
     /**
      * 业务覆盖单位,(默认传Year,Month,Day,Hour)
@@ -61,7 +61,7 @@ public class TableBusinessPO extends BasePO {
     /**
      * 其他逻辑  业务覆盖范围
      */
-    public long businessRangeStandby;
+    public Long businessRangeStandby;
 
     /**
      * 其他逻辑  业务覆盖单位,Year,Month,Day,Hour
