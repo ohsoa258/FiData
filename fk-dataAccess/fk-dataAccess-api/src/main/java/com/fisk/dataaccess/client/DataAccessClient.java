@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -188,4 +189,12 @@ public interface DataAccessClient {
     @ApiOperation("根据appId和tableId 获取appName和tableName")
     @PostMapping("/dataAccessTree/getAppNameAndTableName")
     public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);
+
+    /**
+     * 获取数据接入已发布的元数据对象
+     *
+     * @return 元数据对象
+     */
+    @GetMapping("/dataAccessTree/getDataAccessMetaData")
+    public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 }
