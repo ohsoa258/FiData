@@ -20,5 +20,11 @@ public class DataAccessSourceTableDTO {
     @ApiModelProperty(value = "物理表名称")
     public String tableName;
 
+    @ApiModelProperty(value = "物理表描述")
+    public String tableDes;
+
+    /**
+     * 表字段集合
+     */
     public List<DataAccessSourceFieldDTO> list;
 }
