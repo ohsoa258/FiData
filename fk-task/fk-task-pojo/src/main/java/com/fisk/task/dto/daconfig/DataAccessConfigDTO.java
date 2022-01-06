@@ -1,5 +1,6 @@
 package com.fisk.task.dto.daconfig;
 
+import com.fisk.dataaccess.dto.TableBusinessDTO;
 import lombok.Data;
 
 /**
@@ -36,4 +37,8 @@ public class DataAccessConfigDTO {
 
     public ProcessorConfig processorConfig;
 
+    /**
+     * 增量对象
+     */
+    public TableBusinessDTO businessDTO;
 }

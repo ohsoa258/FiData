@@ -644,6 +644,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        // 查询tb_table_syncmode
+        TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
+        if (modelSync != null && modelSync.syncMode == 4) {
+            TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
+            if (modelBusiness != null) {
+                int deleteBusiness = businessMapper.deleteByIdWithFill(modelBusiness);
+                if (deleteBusiness < 0) {
+                    return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+                }
+            }
+        }
+
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", modelAccess.appId).eq("del_flag", 1).one();
 
         NifiVO vo = new NifiVO();
@@ -851,6 +863,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String mysqlType = "mysql";
         String sqlserverType = "sqlserver";
         String postgresqlType = "postgresql";
+        // 增量
+        int syncModel = 4;
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
         // app组配置
         GroupConfig groupConfig = new GroupConfig();
@@ -895,6 +909,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         // TODO: 新增同步方式
         targetDsConfig.syncMode = modelSync.syncMode;
+        // 增量的时候,获取业务时间覆盖对象
+        if (targetDsConfig.syncMode == syncModel) {
+            TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
+            dto.businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
+        }
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         // 2.任务组配置
         taskGroupConfig.setAppName(modelAccess.getTableName());
@@ -1557,7 +1576,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             assert st != null;
 
-            ResultSet rs = st.executeQuery(query.querySql);
+            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql));
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
@@ -1565,6 +1584,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         return array;
+    }
+
+    private String converSql(String tableName, String sql) {
+
+        return sql;
     }
 
     @Override
@@ -1596,7 +1620,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        dto.selectSql = tableAccessPo.sqlScript;
+        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript);
+        //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
@@ -1643,6 +1668,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             OdsQueryDTO queryDto = new OdsQueryDTO();
             queryDto.appId = modelReg.id;
             queryDto.querySql = modelAccess.sqlScript;
+            queryDto.tableName = modelReg.appAbbreviation + "_" + modelAccess.tableName;
             return filterSqlFieldList(listField, queryDto);
         }
         return null;

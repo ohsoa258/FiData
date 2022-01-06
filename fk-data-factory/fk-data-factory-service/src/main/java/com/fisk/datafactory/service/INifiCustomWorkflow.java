@@ -19,6 +19,7 @@ import java.util.List;
 public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
     /**
      * 添加管道
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -26,6 +27,7 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
 
     /**
      * 回显
+     *
      * @param id id
      * @return dto
      */
@@ -33,6 +35,7 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
 
     /**
      * 修改
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -40,6 +43,7 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
 
     /**
      * 删除
+     *
      * @param id id
      * @return 执行结果
      */
@@ -47,12 +51,14 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
 
     /**
      * 获取过滤器表字段
+     *
      * @return 字段
      */
     List<FilterFieldDTO> getColumn();
 
     /**
      * 筛选器
+     *
      * @param query 查询条件
      * @return 筛选结果
      */
@@ -64,4 +70,11 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return dto
      */
     NifiCustomWorkflowNumDTO getNum();
+
+    /**
+     * 修改管道发布状态
+     *
+     * @param dto dto
+     */
+    void updatePublishStatus(NifiCustomWorkflowDTO dto);
 }

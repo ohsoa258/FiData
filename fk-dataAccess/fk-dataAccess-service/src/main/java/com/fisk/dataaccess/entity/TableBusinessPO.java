@@ -24,9 +24,9 @@ public class TableBusinessPO extends BasePO {
     public Integer otherLogic;
 
     /**
-     * 1:每年  2:每月  3:每天
+     * 1:每年  2:每月  3:每天(传汉字)
      */
-    public long businessTimeFlag;
+    public String businessTimeFlag;
 
     /**
      * 具体日期
@@ -39,9 +39,9 @@ public class TableBusinessPO extends BasePO {
     public String businessTimeField;
 
     /**
-     * 1:大于  2:小于  3:等于  4:大于等于  5:小于等于
+     * >,>=,=,<=,<(传符号)
      */
-    public long businessOperator;
+    public String businessOperator;
 
     /**
      * 业务覆盖范围
@@ -49,14 +49,14 @@ public class TableBusinessPO extends BasePO {
     public long businessRange;
 
     /**
-     * 业务覆盖单位,Year,Month,Day,Hour
+     * 业务覆盖单位,(默认传Year,Month,Day,Hour)
      */
     public String rangeDateUnit;
 
     /**
-     * 其他逻辑  1:大于  2:小于  3:等于  4:大于等于  5:小于等于
+     * 其他逻辑  >,>=,=,<=,<(传符号)
      */
-    public long businessOperatorStandby;
+    public String businessOperatorStandby;
 
     /**
      * 其他逻辑  业务覆盖范围

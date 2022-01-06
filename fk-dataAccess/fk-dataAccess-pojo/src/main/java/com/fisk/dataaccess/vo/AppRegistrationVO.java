@@ -43,5 +43,6 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "创建时间", required = true)
     public LocalDateTime createTime;
-
+    @ApiModelProperty(value = "创建时间", required = true)
+    public String driveType;
 }

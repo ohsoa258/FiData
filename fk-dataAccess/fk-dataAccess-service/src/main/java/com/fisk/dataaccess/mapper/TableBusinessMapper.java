@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.entity.TableBusinessPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
  * @author Lock
  */
 @Mapper
-public interface TableBusinessMapper extends BaseMapper<TableBusinessPO> {
+public interface TableBusinessMapper extends FKBaseMapper<TableBusinessPO> {
 
     /**
      * 查询

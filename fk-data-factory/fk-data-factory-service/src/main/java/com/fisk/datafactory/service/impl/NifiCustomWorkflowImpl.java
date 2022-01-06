@@ -270,4 +270,13 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         dto.running = baseMapper.getNum(3);
         return dto;
     }
+
+    @Override
+    public void updatePublishStatus(NifiCustomWorkflowDTO dto) {
+        NifiCustomWorkflowPO model = baseMapper.selectById(dto.id);
+        if (model != null) {
+            model.status = dto.status;
+            baseMapper.updateById(model);
+        }
+    }
 }
