@@ -19,6 +19,7 @@ public class LogStashTest {
     public void CreateLog(){
         System.out.println(name);
         log.debug("======ELK2测试=======");
+        log.debug("======ELK2测试=======");
         log.info("======ELK2测试=======");
         log.warn("======ELK2测试=======");
         log.error("======ELK2测试=======");
