@@ -1486,6 +1486,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private static List<String> transformField(String fieldType, String fieldLength) {
 
         Integer textLength = 5000;
+        String timeType = "date";
 
         // 浮点型
         List<String> floatType = new ArrayList<>();
@@ -1498,6 +1499,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 字符型
         List<String> charType = new ArrayList<>();
         charType.add("");
+
+//        List<String> timeType = new ArrayList<>();
+//        timeType.add("datetime");
+//        timeType.add("");
+//        timeType.add("");
 
         // Number型
         // 整型
@@ -1538,6 +1544,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         } else if (Integer.parseInt(fieldLength) >= textLength) {
             fieldList.add("VARCHAR");
             fieldList.add("5000");
+        } else if (fieldType.toLowerCase().contains(timeType)) {
+            fieldList.add("TIMESTAMP");
+            fieldList.add("6");
         } else {
             fieldList.add("VARCHAR");
             fieldList.add(fieldLength);
