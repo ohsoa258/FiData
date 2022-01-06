@@ -292,6 +292,7 @@ public class BuildAtlasTableAndColumnTaskListener
         tableNifiSettingPO.tableAccessId=Integer.valueOf(buildPhysicalTableDTO.dbId);
         tableNifiSettingPO.selectSql=physicalSelect;
         tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
+        tableNifiSettingPO.syncMode=buildPhysicalTableDTO.syncMode;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();

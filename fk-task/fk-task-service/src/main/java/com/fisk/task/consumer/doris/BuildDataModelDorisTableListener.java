@@ -8,6 +8,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -20,18 +21,22 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.NifiConfigPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IDorisBuild;
@@ -101,6 +106,10 @@ public class BuildDataModelDorisTableListener
     TableNifiSettingServiceImpl tableNifiSettingService;
     @Resource
     public DataModelClient dataModelClient;
+    @Resource
+    PublishTaskController pc;
+    @Resource
+    private TBETLIncrementalMapper incrementalMapper;
     public String appParentGroupId;
     public String appGroupId;
     public String groupEntityId;
@@ -131,21 +140,62 @@ public class BuildDataModelDorisTableListener
             //生成版本号
             ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO);
             log.info("执行存储过程返回结果"+resultEnum.getCode());
-            if (resultEnum.getCode()==ResultEnum.TASK_TABLE_NOT_EXIST.getCode())
-            {
                 //生成建表语句
-                createPgdbTable2(modelPublishTableDTO);
+                List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
+                iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
+                if (resultEnum.getCode()==ResultEnum.TASK_TABLE_NOT_EXIST.getCode())
+            {
+                iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
             }
             //生成函数,并执行
-            String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
+            /*String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
             log.info("dw库生成函数:"+storedProcedure3);
-            iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);
-            //saveTableStructure(list);
+            iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);*/
+                log.info("开始执行nifi创建数据同步");
+                TBETLIncrementalPO ETLIncremental=new TBETLIncrementalPO();
+                ETLIncremental.object_name=modelPublishTableDTO.tableName;
+                ETLIncremental.enable_flag="1";
+                ETLIncremental.incremental_objectivescore_batchno=UUID.randomUUID().toString();
+                Map<String, Object> conditionHashMap = new HashMap<>();
+                conditionHashMap.put("object_name",ETLIncremental.object_name);
+                List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
+                if(tbetlIncrementalPos!=null&&tbetlIncrementalPos.size()>0){
+                    log.info("此表已有同步记录,无需重复添加");
+                }else{
+                    incrementalMapper.insert(ETLIncremental);
+                }
+                BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();
+                bfd.userId=inpData.userId;
+                bfd.appId=inpData.businessAreaId;
+                bfd.synchronousTypeEnum= SynchronousTypeEnum.PGTOPG;
+                //来源为数据接入
+                bfd.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
+                bfd.id=modelPublishTableDTO.tableId;
+                bfd.tableName=modelPublishTableDTO.tableName;
+                bfd.selectSql=modelPublishTableDTO.sqlScript;
+                bfd.synMode=1;
             if (modelPublishTableDTO.createType == 0) {
-                createNiFiFlow(inpData, modelPublishTableDTO, inpData.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.DIMENSION);
+                //类型为物理表
+                bfd.type= OlapTableEnum.DIMENSION;
             } else {
-                createNiFiFlow(inpData, modelPublishTableDTO, inpData.businessAreaName, DataClassifyEnum.DATAMODELING, OlapTableEnum.FACT);
+                //类型为物理表
+                bfd.type= OlapTableEnum.FACT;
             }
+                log.info("nifi传入参数："+JSON.toJSONString(bfd));
+                TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
+                TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+                if(one!=null){
+                    tableNifiSettingPO=one;
+                }
+                tableNifiSettingPO.appId= Math.toIntExact(bfd.appId);
+                tableNifiSettingPO.tableName=bfd.tableName;
+                tableNifiSettingPO.tableAccessId= Math.toIntExact(bfd.id);
+                tableNifiSettingPO.selectSql=bfd.selectSql;
+                tableNifiSettingPO.type=bfd.type.getValue();
+                tableNifiSettingPO.syncMode=1;
+                tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+                pc.publishBuildNifiFlowTask(bfd);
+                log.info("执行完成");
             //0维度表
             if(modelPublishTableDTO.createType==0){
                 modelPublishStatusDTO.status=1;
@@ -300,7 +350,8 @@ public class BuildDataModelDorisTableListener
         return selectSql;
     }
 
-    public void createPgdbTable2(ModelPublishTableDTO modelPublishTableDTO){
+    public List<String> createPgdbTable2(ModelPublishTableDTO modelPublishTableDTO){
+        List<String> sqlList = new ArrayList<>();
         List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
         String tableName = modelPublishTableDTO.tableName;
         String tablePk="";
@@ -315,21 +366,27 @@ public class BuildDataModelDorisTableListener
         sql.append("CREATE TABLE "+modelPublishTableDTO.tableName+" ( "+tablePk+" varchar(50), ");
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder sqlFileds1 = new StringBuilder();
+        StringBuilder stgSqlFileds = new StringBuilder();
         log.info("pg_dw建表字段信息:"+fieldList);
         fieldList.forEach((l) -> {
             if(l.fieldType.contains("INT")||l.fieldType.contains("TEXT")){
                 sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + ",");
+                stgSqlFileds.append(l.fieldEnName+" text,");
             }else if(l.fieldType.toLowerCase().contains("numeric")||l.fieldType.toLowerCase().contains("float")){
                 sqlFileds.append( ""+l.fieldEnName + " float ,");
+                stgSqlFileds.append(l.fieldEnName+" text,");
             }else{
                 sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+                stgSqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
             }
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
+                stgSqlFileds.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }
             if(l.isPrimaryKey==1){
                 pksql.append(""+l.fieldEnName+" ,");
             }
+
         });
         //如果没有业务主键,就建一个主键
         if(pksql.length()==14){
@@ -348,7 +405,10 @@ public class BuildDataModelDorisTableListener
 
         //创建表
         log.info("pg_dw建表语句"+sql1);
-        iPostgreBuild.postgreBuildTable(sql1, BusinessTypeEnum.DATAMODEL);
+        //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
+        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+stgSqlFileds.toString()+"fi_createtime varchar(50),fi_updatetime varchar(50))";
+        sqlList.add(stgTable);
+        sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();
         map.put("table_name",tableName);
         taskDwDimMapper.deleteByMap(map);
@@ -358,6 +418,7 @@ public class BuildDataModelDorisTableListener
             taskDwDimPO.tableName=tableName;
             taskDwDimPO.storedProcedureName="update"+tableName+"()";
             taskDwDimMapper.insert(taskDwDimPO);
+            return sqlList;
     }
 
     public void createNiFiFlow(ModelPublishDataDTO modelPublishDataDTO,ModelPublishTableDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){

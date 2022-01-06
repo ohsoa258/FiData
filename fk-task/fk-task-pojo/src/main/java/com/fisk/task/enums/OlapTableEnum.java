@@ -32,6 +32,34 @@ public enum OlapTableEnum implements BaseEnum {
         this.name = name;
     }
 
+    public static OlapTableEnum getNameByValue(int value){
+        switch (value){
+            /*
+            * 表类别
+            * */
+            case 0:
+                return KPI;
+            case 1:
+                return DIMENSION;
+            case 2:
+                return FACT;
+            case 3:
+                return PHYSICS;
+            case 4:
+                return CUSTOMWORKDIMENSION;
+            case 5:
+                return CUSTOMWORKDIMENSION;
+            case 6:
+                return CUSTOMWORKFACT;
+            case 7:
+                return CUSTOMWORKPHYSICS;
+            case 8:
+                return CUSTOMWORKFACTKPI;
+            default:
+                return null;
+        }
+    }
+
     private final String name;
     private final int value;
 

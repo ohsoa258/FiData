@@ -30,9 +30,13 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     public DataClassifyEnum dataClassifyEnum;
 
     /*
-    * selectsql(只有toDoris用得到)
+    * selectsql(只有toDoris,todw用得到)
     * */
     public String selectSql;
+    /*
+     * 同步方式(只有toDoris,todw用得到)
+     * */
+    public int synMode;
 
     /*
     * groupComponentId(管道,如果不为null,就子组里建立nifi流程)

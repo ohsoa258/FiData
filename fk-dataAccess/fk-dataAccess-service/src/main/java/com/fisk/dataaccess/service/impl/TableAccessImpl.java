@@ -32,6 +32,7 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
@@ -1596,7 +1597,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     private String converSql(String tableName, String sql) {
-
+        if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
+            EtlIncrementalPO etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
+            if(etlIncremental!=null&&etlIncremental.incrementalObjectivescoreEnd!=null&&etlIncremental.incrementalObjectivescoreStart!=null){
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),etlIncremental.incrementalObjectivescoreStart.toString());
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),etlIncremental.incrementalObjectivescoreEnd.toString());
+                return sql;
+            }
+        }
         return sql;
     }
 
@@ -1612,7 +1620,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
             return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
         }
-
+        TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
+        dto.syncMode=tableSyncmodePo.syncMode;
         DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
         switch (dbTypeEnum) {
             case sqlserver:
