@@ -32,6 +32,7 @@ public class DataAccessImpl implements IDataAccess {
 
     @Override
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData() {
+        String odsTableName = "ods_";
         QueryWrapper<TableAccessPO> accessQueryWrapper = new QueryWrapper<>();
         // 获取所有发布的物理表
         accessQueryWrapper.lambda().eq(TableAccessPO::getPublish, 1);
@@ -39,6 +40,7 @@ public class DataAccessImpl implements IDataAccess {
 
         // po -> dto
         List<DataAccessSourceTableDTO> tableDtoList = DataAccessMap.INSTANCES.tableListPoToDto(tablePoList);
+        tableDtoList.forEach(e -> e.tableName = odsTableName + e.tableName);
 
         // 获取物理表下的字段信息
         tableDtoList.forEach(e -> {
