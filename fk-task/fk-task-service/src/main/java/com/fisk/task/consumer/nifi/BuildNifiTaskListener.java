@@ -419,7 +419,7 @@ public class BuildNifiTaskListener {
             targetDbPoolConfig.jdbcStr = pgsqlDatamodelUrl;
             targetDbPoolConfig.targetTableName = tableName.toLowerCase();
             targetDbPoolConfig.tableFieldsList = null;
-            targetDbPoolConfig.syncMode=cfgDsConfig.syncMode;
+            targetDbPoolConfig.syncMode=buildNifiFlowDTO.synMode;
             data.groupConfig = groupConfig;
             data.cfgDsConfig = cfgDsConfig;
             data.taskGroupConfig = taskGroupConfig;
@@ -1167,7 +1167,12 @@ public class BuildNifiTaskListener {
         String executsql = "";
         config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
         String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
-        String ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
+        String ods_TableName="";
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
+             ods_TableName = config.processorConfig.targetTableName.substring(4).toLowerCase();
+        }else{
+             ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
+        }
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
         if(config.targetDsConfig.syncMode==4){

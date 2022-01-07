@@ -66,6 +66,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
@@ -1598,11 +1599,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     private String converSql(String tableName, String sql) {
         if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
-            EtlIncrementalPO etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
-            if(etlIncremental!=null&&etlIncremental.incrementalObjectivescoreEnd!=null&&etlIncremental.incrementalObjectivescoreStart!=null){
-                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),etlIncremental.incrementalObjectivescoreStart.toString());
-                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),etlIncremental.incrementalObjectivescoreEnd.toString());
-                return sql;
+            Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
+            Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getValue());
+            Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getValue());
+            if(startTime!=null){
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"'"+startTime+"'");
+            }else{
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"'0000-00-00'");
+            }
+            if(endTime!=null){
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"'"+endTime+"'");
+            }else{
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"'0000-00-00'");
             }
         }
         return sql;

@@ -469,6 +469,7 @@ public class BuildNifiCustomWorkFlow {
                 tableNifiSettingPO.selectSql = one1.selectSql;
                 tableNifiSettingPO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.workflowDetailId);
                 tableNifiSettingPO.type = OlapTableEnum.CUSTOMWORKPHYSICS.getValue();
+                tableNifiSettingPO.syncMode=one1.syncMode;
                 tableNifiSettingService.save(tableNifiSettingPO);
                 buildNifiFlowDTO.id = Long.valueOf(nifiNode.tableId);
                 buildNifiFlowDTO.appId = Long.valueOf(one1.appId);

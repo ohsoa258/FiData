@@ -5,6 +5,9 @@ import com.fisk.dataaccess.entity.EtlIncrementalPO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Date;
+import java.util.Map;
+
 /**
  * @author Lock
  */
@@ -18,5 +21,5 @@ public interface EtlIncrementalMapper extends FKBaseMapper<EtlIncrementalPO> {
      */
     @Select("select MAX(incremental_objectivescore_start) as incremental_objectivescore_start,MAX(incremental_objectivescore_end) " +
             "as incremental_objectivescore_end from tb_etl_Incremental where object_name=#{object_name} and del_flag=1 and enable_flag=2;")
-    EtlIncrementalPO getEtlIncrementalByTableName(@Param("object_name") String tableName);
+    Map<String, Date> getEtlIncrementalByTableName(@Param("object_name") String tableName);
 }
