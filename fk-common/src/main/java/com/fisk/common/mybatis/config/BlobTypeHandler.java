@@ -1,9 +1,7 @@
 package com.fisk.common.mybatis.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import javax.xml.bind.DatatypeConverter;
