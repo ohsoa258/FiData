@@ -5,9 +5,9 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.map.DataAccessMap;
+import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IDataAccess;
@@ -29,18 +29,13 @@ public class DataAccessImpl implements IDataAccess {
     TableAccessMapper tableAccessMapper;
     @Resource
     TableFieldsMapper tableFieldsMapper;
+    @Resource
+    AppRegistrationMapper appRegistrationMapper;
 
     @Override
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData() {
-        String odsTableName = "ods_";
-        QueryWrapper<TableAccessPO> accessQueryWrapper = new QueryWrapper<>();
-        // 获取所有发布的物理表
-        accessQueryWrapper.lambda().eq(TableAccessPO::getPublish, 1);
-        List<TableAccessPO> tablePoList = tableAccessMapper.selectList(accessQueryWrapper);
 
-        // po -> dto
-        List<DataAccessSourceTableDTO> tableDtoList = DataAccessMap.INSTANCES.tableListPoToDto(tablePoList);
-        tableDtoList.forEach(e -> e.tableName = odsTableName + e.tableName);
+        List<DataAccessSourceTableDTO> tableDtoList = tableAccessMapper.listTableMetaData();
 
         // 获取物理表下的字段信息
         tableDtoList.forEach(e -> {
