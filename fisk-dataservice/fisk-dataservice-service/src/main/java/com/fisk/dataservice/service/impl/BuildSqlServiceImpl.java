@@ -79,8 +79,12 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         List<IndicatorDTO> indicatorList = client.getIndicatorsLogic(indicatorFeignDTO).getData();
 
         StringBuilder str = new StringBuilder();
+        // 原子指标数量
         List<IndicatorDTO> count = indicatorList.stream().filter(e -> e != null)
                 .filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
+        // 派生指标数量
+        List<IndicatorDTO> deriveCount = indicatorList.stream().filter(e -> e != null)
+                .filter(e -> e.getType() == DERIVED_INDICATORS).collect(Collectors.toList());
 
         // 子查询别名
         AtomicInteger aliasCount = new AtomicInteger(0);
@@ -130,6 +134,13 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     StringBuilder deriveSql = buildDeriveSql(dimColumn, tableNameList, e, e.getId(), apiConfigureFieldList, escapeStr);
 
                     StringBuilder deriveStr = new StringBuilder();
+                    // 判断指标数量是否是大于2,如果大于2存在子查询,不大于2的话不存在
+                    Integer isSubQuery = 2;
+                    currentNumber.incrementAndGet();
+                    if (deriveCount.size() >= isSubQuery){
+                        deriveStr.append("(");
+                    }
+
                     deriveStr.append("SELECT ");
 
                     // 判断是否存在维度列
@@ -145,8 +156,15 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                         deriveStr.append(" WHERE b.id = 1 ");
                         deriveStr.append(" ORDER BY " + deriveDim);
                     }
+
+
+                    // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
+                    aliasField(deriveStr,isSubQuery,deriveCount.size(),
+                            aliasCount, dimColumnFieldList,
+                            escapeStr,dimColumn,currentNumber
+                            ,str);
                     return deriveStr;
-                }).collect(Collectors.joining(","));
+                }).collect(Collectors.joining(" JOIN "));
         
         return this.splicingIndicatorsSql(apiConfigureFieldList,escapeStr,atom,derive,str);
     }
