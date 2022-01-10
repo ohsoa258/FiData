@@ -32,6 +32,5 @@ public class BuildAtlasEntityDeleteTaskListener {
     @MQConsumerLog(type = TraceTypeEnum.ATLASENTITYDELETE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         AtlasEntityDeleteDTO ad= JSON.parseObject(dataInfo, AtlasEntityDeleteDTO.class);
-        BusinessResult resDel=atlas.atlasEntityDelete(ad);
     }
 }
