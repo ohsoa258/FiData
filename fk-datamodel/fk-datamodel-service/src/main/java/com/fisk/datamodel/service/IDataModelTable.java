@@ -1,7 +1,6 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
-import sun.plugin.javascript.navig.LinkArray;
 
 import java.util.List;
 
