@@ -31,11 +31,7 @@ import java.util.List;
 @Service
 public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
     @Resource
-    public BusinessLimitedMapper businessLimitedMapper;
-    @Resource
     public BusinessLimitedAttributeMapper businessLimitedAttributeMapper;
-    @Resource
-    public FactAttributeMapper factAttributeMapper;
 
     @Override
     public ResultEnum updateBusinessLimitedAttribute(BusinessLimitedAttributeDataDTO dto)

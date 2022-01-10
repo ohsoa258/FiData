@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -44,4 +46,8 @@ public class EntityAttributesDTO {
     public EntityIdAndTypeDTO db;
     @ApiModelProperty(value = "添加字段时,需要表guid和typeName")
     public EntityIdAndTypeDTO table;
+    @ApiModelProperty(value = "添加血缘时,输入参数guid和typeName")
+    public List<EntityIdAndTypeDTO> inputs;
+    @ApiModelProperty(value = "添加血缘时,输出参数guid和typeName")
+    public List<EntityIdAndTypeDTO> outputs;
 }

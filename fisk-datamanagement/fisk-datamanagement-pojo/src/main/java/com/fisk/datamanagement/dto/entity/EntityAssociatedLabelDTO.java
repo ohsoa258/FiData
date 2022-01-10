@@ -2,11 +2,16 @@ package com.fisk.datamanagement.dto.entity;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
 @Data
-public class EntityGuidDTO {
+public class EntityAssociatedLabelDTO {
+
     public String guid;
-    public String relationshipGuid;
+
+    public List<String> list;
+
 }

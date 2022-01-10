@@ -48,8 +48,6 @@ public class DerivedIndicatorsImpl
     @Resource
     FactAttributeMapper factAttributeMapper;
     @Resource
-    DimensionAttributeMapper dimensionAttributeMapper;
-    @Resource
     UserHelper userHelper;
 
     @Override

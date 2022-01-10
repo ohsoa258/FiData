@@ -46,8 +46,6 @@ public class DimensionAttributeImpl
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionFolderImpl dimensionFolder;
-    @Resource
-    TableHistoryImpl tableHistory;
 
     @Transactional(rollbackFor = Exception.class)
     @Override

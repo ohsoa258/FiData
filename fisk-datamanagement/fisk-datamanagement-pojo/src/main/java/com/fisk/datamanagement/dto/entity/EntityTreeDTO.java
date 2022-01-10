@@ -10,7 +10,8 @@ import java.util.List;
 @Data
 public class EntityTreeDTO {
     public String id;
-    public String name;
+    public String label;
     public String type;
-    public List<EntityTreeDTO> list;
+    public String parentId;
+    public List<EntityTreeDTO> children;
 }

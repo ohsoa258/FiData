@@ -6,7 +6,10 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class EntityGuidDTO {
+public class EntityAssociatedMetaDataDTO {
+
     public String guid;
-    public String relationshipGuid;
+
+    public Object attribute;
+
 }

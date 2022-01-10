@@ -11,7 +11,10 @@ public enum EntityTypeEnum implements BaseEnum {
     RDBMS_INSTANCE(1,"rdbms_instance"),
     RDBMS_DB(2,"rdbms_db"),
     RDBMS_TABLE(3,"rdbms_table"),
-    RDBMS_COLUMN(4,"rdbms_column"),
+    REPORT(4,"report"),
+    WEB_API(5,"web_api"),
+    RDBMS_COLUMN(6,"rdbms_column"),
+    PROCESS(7,"Process"),
     OTHER(-1,"other");
 
     EntityTypeEnum(int value, String name) {

@@ -2,11 +2,8 @@ package com.fisk.datamanagement.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datamanagement.dto.entity.EntityDTO;
-import com.fisk.datamanagement.dto.entity.EntityDetailDTO;
-import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
-import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
-import com.fisk.datamanagement.vo.JsonObjectDTO;
+import com.fisk.datamanagement.dto.entity.*;
+import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 
 import java.util.List;
 
@@ -61,7 +58,28 @@ public interface IEntity {
      * @param guid
      * @return
      */
-    JsonObjectDTO getAuditsList(String guid);
+    List<EntityAuditsDTO> getAuditsList(String guid);
+
+    /**
+     * 实体批量关联标签
+     * @param dto
+     * @return
+     */
+    ResultEnum entityAssociatedLabel(EntityAssociatedLabelDTO dto);
+
+    /**
+     * 实体批量关联业务元数据
+     * @param dto
+     * @return
+     */
+    ResultEnum entityAssociatedMetaData(EntityAssociatedMetaDataDTO dto);
+
+    /**
+     * 获取元数据对象血缘关系
+     * @param guid
+     * @return
+     */
+    LineAgeDTO getMetaDataKinship(String guid);
 
 
 }

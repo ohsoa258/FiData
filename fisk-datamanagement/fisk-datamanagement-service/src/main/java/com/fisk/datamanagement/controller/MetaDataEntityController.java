@@ -5,12 +5,13 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
+import com.fisk.datamanagement.dto.entity.EntityAssociatedLabelDTO;
 import com.fisk.datamanagement.service.IEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,13 +34,13 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityTreeList());
     }
 
-    @ApiOperation("添加元数据对象：实例、数据库、表、字段")
+    @ApiOperation("添加元数据对象：实例、数据库、表、字段、血缘")
     @PostMapping("/addEntity")
     public ResultEntity<Object> addEntity(@Validated @RequestBody EntityDTO dto) {
         return ResultEntityBuild.build(service.addEntity(dto));
     }
 
-    @ApiOperation("根据guid删除元数据对象")
+    @ApiOperation("根据guid删除元数据对象/血缘")
     @DeleteMapping("/deleteEntity/{guid}")
     public ResultEntity<Object> deleteEntity(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(service.deleteEntity(guid));
@@ -67,6 +68,24 @@ public class MetaDataEntityController {
     @GetMapping("/getAuditsList/{guid}")
     public ResultEntity<Object> getAuditsList(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAuditsList(guid));
+    }
+
+    @ApiOperation("实体添加标签")
+    @PostMapping("/entityAssociatedLabel")
+    public ResultEntity<Object> entityAssociatedLabel(@Validated @RequestBody EntityAssociatedLabelDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.entityAssociatedLabel(dto));
+    }
+
+    @ApiOperation("实体添加业务元数据")
+    @PostMapping("/entityAssociatedMetaData")
+    public ResultEntity<Object> entityAssociatedMetaData(@Validated @RequestBody EntityAssociatedMetaDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.entityAssociatedMetaData(dto));
+    }
+
+    @ApiOperation("根据guid获取血缘关系")
+    @GetMapping("/getMetaDataKinship/{guid}")
+    public ResultEntity<Object> getMetaDataKinship(@PathVariable("guid") String guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataKinship(guid));
     }
 
 }
