@@ -1,11 +1,8 @@
 package com.fisk.datamodel.service;
 
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
-import com.squareup.okhttp.internal.Internal;
 
 import java.util.List;
 
