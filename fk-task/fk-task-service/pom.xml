@@ -125,11 +125,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.5</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>io.github.samuel-davis</groupId>
             <artifactId>original-swagger-java-client</artifactId>
             <version>1.0.0</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
