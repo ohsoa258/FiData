@@ -955,7 +955,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             businessKeyAppend = list.stream().filter(e -> e.isPrimarykey == 1).map(e -> e.fieldName + ",").collect(Collectors.joining());
         }
 
-        dto.businessKeyAppend = businessKeyAppend.substring(0, businessKeyAppend.length() - 1);
+        if (businessKeyAppend.length() > 0) {
+            dto.businessKeyAppend = businessKeyAppend.substring(0, businessKeyAppend.length() - 1);
+        }
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;
