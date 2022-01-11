@@ -22,11 +22,11 @@ public class TableNameTest {
 
     @Test
     public void test() {
-//        System.out.println(client.getTableName(36, DataDoFieldTypeEnum.VALUE));
-        ResultEntity<TableDataDTO> year =
-                client.getTableName(155, DataDoFieldTypeEnum.COLUMN, "year");
-
-        System.out.println(year.data);
+////        System.out.println(client.getTableName(36, DataDoFieldTypeEnum.VALUE));
+//        ResultEntity<TableDataDTO> year =
+//                client.getTableName(155, DataDoFieldTypeEnum.COLUMN, "year");
+//
+//        System.out.println(year.data);
 
     }
 }

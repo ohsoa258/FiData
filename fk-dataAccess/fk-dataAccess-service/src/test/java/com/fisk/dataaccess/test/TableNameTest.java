@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.test;
 
+import com.fisk.chartvisual.dto.TableDataDTO;
+import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
@@ -9,8 +11,6 @@ import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.dataservice.dto.TableDataDTO;
-import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -76,7 +76,8 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         );
 
         // 获取所有指标
-        List<IndicatorDTO> indicatorList = client.getIndicatorsLogic(indicatorFeignDTO).getData();
+//        List<IndicatorDTO> indicatorList = client.getIndicatorsLogic(indicatorFeignDTO).getData();
+        List<IndicatorDTO> indicatorList = new ArrayList<>();
 
         StringBuilder str = new StringBuilder();
         // 原子指标数量
@@ -200,18 +201,18 @@ public class BuildSqlServiceImpl implements BuildSqlService {
             dimensionDTO.setDimensionTwo(b.getDimension());
             dimensionDTO.setFieldIdOne(id);
             dimensionDTO.setFieldIdTwo(b.getFieldId());
-            if (client.isExistAssociate(dimensionDTO).getData()) {
-                // 追加字段关联key
-                String name = b.getTableName();
-                String str1 = name.substring(0, name.indexOf("_"));
-                String filedName = name.substring(str1.length() + 1, name.length()) + "key";
-
-                String onSubQuery = b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
-                        "=" + tableName + "." + escapeStr[0] + filedName + escapeStr[1];
-                stringBuilder1.append(onSubQuery);
-            } else {
-                stringBuilder1.append("1 = 1");
-            }
+//            if (client.isExistAssociate(dimensionDTO).getData()) {
+//                // 追加字段关联key
+//                String name = b.getTableName();
+//                String str1 = name.substring(0, name.indexOf("_"));
+//                String filedName = name.substring(str1.length() + 1, name.length()) + "key";
+//
+//                String onSubQuery = b.getTableName() + "." + escapeStr[0] + filedName + escapeStr[1] +
+//                        "=" + tableName + "." + escapeStr[0] + filedName + escapeStr[1];
+//                stringBuilder1.append(onSubQuery);
+//            } else {
+//                stringBuilder1.append("1 = 1");
+//            }
             return stringBuilder1;
         }).collect(Collectors.joining(" JOIN "));
         stringBuilder.append(atr);
