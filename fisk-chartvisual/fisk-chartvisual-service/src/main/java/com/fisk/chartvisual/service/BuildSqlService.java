@@ -1,6 +1,8 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.dataservice.dto.DataDoFieldDTO;
+import com.fisk.chartvisual.vo.ChartQueryObjectVO;
+import com.fisk.chartvisual.vo.DataServiceResult;
+import com.fisk.chartvisual.dto.DataDoFieldDTO;
 
 import java.util.List;
 
@@ -15,5 +17,12 @@ public interface BuildSqlService {
      * @param apiConfigureFieldList
      * @return
      */
-    Object query(List<DataDoFieldDTO> apiConfigureFieldList);
+    Object query(List<DataDoFieldDTO> apiConfigureFieldList,Integer id);
+
+    /**
+     * 报表可视化生成Sql
+     * @param objectVO
+     * @return
+     */
+    DataServiceResult buildSql(ChartQueryObjectVO objectVO);
 }

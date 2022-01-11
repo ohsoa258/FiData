@@ -1,19 +1,19 @@
 package com.fisk.chartvisual.util.dbhelper.database;
 
+import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
+import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.BeanHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StopWatch;
-
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
-
-import static com.fisk.chartvisual.util.dbhelper.database.DatabaseConfig.*;
 
 /**
  * @author WangYan
@@ -29,28 +29,11 @@ public class DatabaseConnect {
      * @param sql 创建的sql
      * @return 查询结果
      */
-    public static List<Map<String, Object>> execQueryResultList(String sql) {
-        Connection connection = connection(url, username, password);
+    public static List<Map<String, Object>> execQueryResultList(String sql, DataSourceConPO dataSource) {
+        AbstractDbHelper db = DbHelperFactory.getDbHelper(dataSource.conType);
+        Connection connection = db.connection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
         List<Map<String, Object>> data = execQueryResultMaps(sql, connection);
         return data;
-    }
-
-    /**
-     * 连接
-     */
-    public static Connection connection(String connectionStr, String acc, String pwd) {
-        try {
-            Class.forName(driver);
-            Connection connection = DriverManager.getConnection(connectionStr,acc,pwd);
-            log.info("【connection】数据库连接成功, 连接信息【" + connectionStr + "】");
-            return connection;
-        } catch (SQLException e) {
-            log.error("【connection】数据库连接获取失败, ex", e);
-            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, e.getLocalizedMessage());
-        } catch (Exception e) {
-            log.error("【connection】" + "MySQL" + "数据库驱动加载失败, ex", e);
-            throw new FkException(ResultEnum.VISUAL_LOADDRIVER_ERROR, e.getLocalizedMessage());
-        }
     }
 
     /**

@@ -1,13 +1,20 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.fisk.chartvisual.dto.DataDoFieldDTO;
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.dto.IsDimensionDTO;
+import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
+import com.fisk.chartvisual.map.VisualizationMap;
+import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
+import com.fisk.chartvisual.vo.ChartQueryObjectVO;
+import com.fisk.chartvisual.vo.DataServiceResult;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.dataservice.dto.DataDoFieldDTO;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.dto.IndicatorFeignDTO;
-import com.fisk.dataservice.dto.IsDimensionDTO;
-import com.fisk.dataservice.enums.IndicatorTypeEnum;
+import com.fisk.chartvisual.dto.IndicatorFeignDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -20,14 +27,13 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.fisk.chartvisual.enums.FieldTypeEnum.COLUMN;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 import static com.fisk.chartvisual.util.dbhelper.database.DatabaseConnect.execQueryResultList;
 import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.AtomicHelper.aliasField;
 import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.AtomicHelper.*;
 import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.DeriveHelper.*;
-import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.COLUMN;
-import static com.fisk.dataservice.enums.DataDoFieldTypeEnum.WHERE;
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 
 /**
  * @author WangYan
@@ -38,16 +44,22 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
     @Resource
     DataModelClient client;
+    @Resource
+    BuildSqlService BuildSqlService;
+    @Resource
+    DataSourceConMapper dataSourceConMapper;
 
     public static final String ATOM_BUILDER = "b1";
     public static final String DERIVE_BUILDER = "b2";
 
     @Override
-    public Object query(List<DataDoFieldDTO> apiConfigureFieldList) {
+    public Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer id) {
         // 创建Sql
         String sql = this.buildSql(apiConfigureFieldList);
+        // 获取连接信息
+        DataSourceConPO dataSource = dataSourceConMapper.selectById(id);
         // 查询结果集
-        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql.toLowerCase());
+        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql.toLowerCase(),dataSource);
         return dataDomainDTOList;
     }
 
@@ -65,10 +77,10 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         List<DataDoFieldDTO> dimColumnFieldList = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == COLUMN)
                 .collect(Collectors.toList());
 
-        String dimWhere = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
-                .map(e -> e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] +
-                        escapeStr[2] + e.getWhere() + escapeStr[2] + e.getWhereValue())
-                .collect(Collectors.joining(" AND "));
+//        String dimWhere = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
+//                .map(e -> e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] +
+//                        escapeStr[2] + e.getWhere() + escapeStr[2] + e.getWhereValue())
+//                .collect(Collectors.joining(" AND "));
 
         // 获取指标
         IndicatorFeignDTO indicatorFeignDTO = new IndicatorFeignDTO();
@@ -373,5 +385,17 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         }
 
         return str.toString();
+    }
+
+    @Override
+    public DataServiceResult buildSql(ChartQueryObjectVO objectVO) {
+        switch (objectVO.type){
+            case DMP:
+               BuildSqlService.query(VisualizationMap.INSTANCES.voToDto(objectVO.columnDetails),objectVO.id);
+            case VIEW:
+            case MDX:
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
+import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,7 +19,7 @@ public class DataSourceConPO extends BasePO {
 
     public String conStr;
 
-    public int conType;
+    public DataSourceTypeEnum conType;
 
     public String conIp;
 

@@ -1,15 +1,15 @@
 package com.fisk.chartvisual.util.dbhelper.whitePondbuidsql;
 
-import com.fisk.dataservice.dto.DataDoFieldDTO;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.enums.IndicatorTypeEnum;
+import com.fisk.chartvisual.dto.DataDoFieldDTO;
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
 
 /**
  * @author WangYan

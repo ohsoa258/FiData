@@ -1,11 +1,11 @@
 package com.fisk.chartvisual.util.dbhelper.whitePondbuidsql;
 
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.enums.IndicatorTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.*;
 
 /**
  * @author WangYan

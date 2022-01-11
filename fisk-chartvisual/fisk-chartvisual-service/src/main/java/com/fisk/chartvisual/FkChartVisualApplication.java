@@ -19,7 +19,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.user",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client"})
+@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client","com.fisk.datamodel.client"})
 @EnableApolloConfig
 public class FkChartVisualApplication {
     public static void main(String[] args) {
