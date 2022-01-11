@@ -16,4 +16,6 @@ public class LoadDependDTO {
     public ChannelDataEnum channelDataEnum;
     @ApiModelProperty(value = "表id", required = true)
     public Long tableId;
+    @ApiModelProperty(value = "应用id",required = true)
+    public Long appId;
 }

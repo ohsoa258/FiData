@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -20,6 +21,9 @@ import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.service.ITableFields;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -57,6 +61,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserHelper userHelper;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
 
     @Override
     public Page<DataReviewVO> listData(DataReviewQueryDTO query) {
@@ -234,10 +240,33 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
     @Override
     public OperateMsgDTO loadDepend(OperateTableDTO dto) {
+        OperateMsgDTO operateMsgDTO = new OperateMsgDTO();
+        try {
+            LoadDependDTO loadDependDTO = new LoadDependDTO();
 
-
-
-        return null;
+            loadDependDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+            loadDependDTO.tableId = dto.tableId;
+            loadDependDTO.appId = dto.appId;
+            // 判断数据工厂是否有依赖
+            boolean loadDepend = dataFactoryClient.loadDepend(loadDependDTO);
+            if (loadDepend) {
+                switch (dto.operateBehaveTypeEnum) {
+                    case UPDATE_APP:
+                    case DELETE_APP:
+                        operateMsgDTO.operateBehaveMsg = "管道正在使用该应用中的表,请及时更新管道";
+                        break;
+                    case UPDATE_TABLE:
+                    case DELETE_TABLE:
+                        operateMsgDTO.operateBehaveMsg = "管道正在使用该表,请及时更新管道";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.DATA_FACTORY_FEIGN_EXCEPTION);
+        }
+        return operateMsgDTO;
     }
 
     /**

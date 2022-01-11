@@ -130,6 +130,8 @@ public enum ResultEnum {
     WORKFLOWNAME_EXISTS(9002,"管道名称已存在"),
     DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
     SCHEDULE_PARAME_NULL(9004,"请设置[开始]组件的调度参数"),
+    DATA_FACTORY_FEIGN_EXCEPTION(9005,"数据工厂feign接口异常"),
+
 
     /**
      * 元数据

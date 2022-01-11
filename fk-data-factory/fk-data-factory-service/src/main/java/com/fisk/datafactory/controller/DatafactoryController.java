@@ -1,12 +1,12 @@
 package com.fisk.datafactory.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
@@ -25,9 +25,9 @@ public class DatafactoryController {
 
     @PostMapping("/loadDepend")
     @ApiOperation(value = "判断物理表是否在管道使用")
-    public ResultEntity<Boolean> loadDepend(@RequestBody LoadDependDTO dto) {
+    public boolean loadDepend(@RequestBody LoadDependDTO dto) {
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDepend(dto));
+        return service.loadDepend(dto);
     }
 
 }

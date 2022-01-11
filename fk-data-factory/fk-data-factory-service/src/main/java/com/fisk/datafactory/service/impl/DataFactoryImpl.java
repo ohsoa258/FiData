@@ -28,8 +28,10 @@ public class DataFactoryImpl implements IDataFactory {
 
         QueryWrapper<NifiCustomWorkflowDetailPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(NifiCustomWorkflowDetailPO::getComponentType, dto.channelDataEnum.getName())
-                .eq(NifiCustomWorkflowDetailPO::getTableId, String.valueOf(dto.tableId))
-                .select(NifiCustomWorkflowDetailPO::getTableId);
+                .eq(dto.appId != null, NifiCustomWorkflowDetailPO::getAppId, String.valueOf(dto.appId))
+                .eq(dto.tableId != null, NifiCustomWorkflowDetailPO::getTableId, String.valueOf(dto.tableId))
+                .select(NifiCustomWorkflowDetailPO::getTableId)
+                .select(NifiCustomWorkflowDetailPO::getAppId);
         List<NifiCustomWorkflowDetailPO> list = nifiCustomWorkflowDetailMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return false;

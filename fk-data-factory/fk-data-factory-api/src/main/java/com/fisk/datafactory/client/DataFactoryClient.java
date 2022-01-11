@@ -42,5 +42,5 @@ public interface DataFactoryClient {
      */
     @PostMapping("/dataFactory/loadDepend")
     @ApiOperation(value = "判断物理表是否在管道使用")
-    ResultEntity<Boolean> loadDepend(@RequestBody LoadDependDTO dto);
+    boolean loadDepend(@RequestBody LoadDependDTO dto);
 }

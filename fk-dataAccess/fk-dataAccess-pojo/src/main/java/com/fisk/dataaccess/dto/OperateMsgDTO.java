@@ -13,5 +13,5 @@ import lombok.Data;
 public class OperateMsgDTO {
 
     @ApiModelProperty(value = "操作信息")
-    public String msg;
+    public String operateBehaveMsg;
 }
