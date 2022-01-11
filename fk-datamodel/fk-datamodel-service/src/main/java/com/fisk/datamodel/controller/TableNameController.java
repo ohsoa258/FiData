@@ -1,11 +1,11 @@
 package com.fisk.datamodel.controller;
 
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.dto.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.TableDataDTO;
+import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.dto.IndicatorFeignDTO;
-import com.fisk.dataservice.dto.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
-import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
