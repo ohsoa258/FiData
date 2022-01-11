@@ -41,4 +41,9 @@ public class DataAccessConfigDTO {
      * 增量对象
      */
     public TableBusinessDTO businessDTO;
+
+    /**
+     * 业务主键集合(逗号隔开)
+     */
+    public StringBuilder businessKeyAppend;
 }

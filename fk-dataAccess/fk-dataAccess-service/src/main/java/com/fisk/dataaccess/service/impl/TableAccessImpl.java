@@ -948,9 +948,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO: 2021/9/4 nifi流程需要物理表字段
         List<TableFieldsPO> list = this.tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
         List<TableFieldsDTO> fieldsDTOList = TableFieldsMap.INSTANCES.listPoToDto(list);
+        StringBuilder businessKeyAppend = new StringBuilder();
         if (list != null && !list.isEmpty()) {
             targetDsConfig.tableFieldsList = fieldsDTOList;
+            // 封装业务主键
+            list.stream().filter(e -> e.isPrimarykey == 1).map(f -> businessKeyAppend.append(f.fieldName).append(","));
         }
+
+        dto.businessKeyAppend = businessKeyAppend;
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
         dto.sourceDsConfig = sourceDsConfig;
