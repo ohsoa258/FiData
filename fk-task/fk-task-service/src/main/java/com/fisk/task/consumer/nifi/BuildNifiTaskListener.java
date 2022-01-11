@@ -1178,7 +1178,7 @@ public class BuildNifiTaskListener {
         if(config.targetDsConfig.syncMode==4){
             executsql = assemblySql(config,synchronousTypeEnum);
         }else{
-            executsql = "call public.pg_data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "')";
+            executsql = "call public.pg_data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "','"+config.businessKeyAppend+"')";
         }
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;

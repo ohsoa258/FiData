@@ -68,18 +68,14 @@ public class BuildDataInputPgTableListener {
         tableFieldsDTOS.forEach((l) -> {
             if(l.fieldType.contains("FLOAT")){
                 sqlFileds.append("" +l.fieldName + " " + " numeric ,");
-                stgSql.append("" +l.fieldName + " " + " numeric ,");
             }else if(l.fieldType.contains("INT")){
                 sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-                stgSql.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             }else if(l.fieldType.contains("TEXT")){
                 sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
-                stgSql.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
             }else{
                 sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
-                stgSql.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
             }
-
+            stgSql.append("" +l.fieldName + " text,");
             if(l.isPrimarykey==1){
                 pksql.append(l.fieldName+",");
             }
