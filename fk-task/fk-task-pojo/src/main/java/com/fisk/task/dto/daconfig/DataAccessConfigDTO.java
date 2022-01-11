@@ -45,5 +45,5 @@ public class DataAccessConfigDTO {
     /**
      * 业务主键集合(逗号隔开)
      */
-    public StringBuilder businessKeyAppend;
+    public String businessKeyAppend;
 }
