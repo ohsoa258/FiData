@@ -1604,14 +1604,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getValue());
             Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getValue());
             if(startTime!=null){
-                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"'"+startTime+"'");
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
             }else{
-                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"'0000-00-00'");
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"0000-00-00");
             }
             if(endTime!=null){
-                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"'"+endTime+"'");
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
             }else{
-                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"'0000-00-00'");
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"0000-00-00");
             }
         }
         return sql;
