@@ -28,11 +28,11 @@ public class MysqlConUtils {
      * @param password password
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, DriverTypeEnum driverTypeEnum) {
 
         List<TablePyhNameDTO> list = null;
         try {
-            Class.forName(DriverTypeEnum.MYSQL.getName());
+            Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn);

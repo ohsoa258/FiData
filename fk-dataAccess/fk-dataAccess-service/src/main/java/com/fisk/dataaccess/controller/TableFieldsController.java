@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.OperateTableDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.service.ITableFields;
@@ -59,5 +60,11 @@ public class TableFieldsController {
     @ApiOperation(value = "修改物理表字段--保存&发布")
     public ResultEntity<Object> editData(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(service.updateData(dto));
+    }
+
+    @PostMapping("/loadDepend")
+    @ApiOperation(value = "对表进行操作时,查询依赖")
+    public ResultEntity<Object> loadDepend(@RequestBody OperateTableDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDepend(dto));
     }
 }

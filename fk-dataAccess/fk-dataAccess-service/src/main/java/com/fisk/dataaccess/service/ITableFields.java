@@ -3,6 +3,8 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.OperateMsgDTO;
+import com.fisk.dataaccess.dto.OperateTableDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -44,4 +46,12 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return 执行结果
      */
     ResultEnum updateData(TableAccessNonDTO dto);
+
+    /**
+     * 对表进行操作时,查询依赖
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    OperateMsgDTO loadDepend(OperateTableDTO dto);
 }

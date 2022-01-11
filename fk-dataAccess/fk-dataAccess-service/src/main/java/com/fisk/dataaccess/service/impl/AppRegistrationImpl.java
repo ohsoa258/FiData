@@ -21,6 +21,7 @@ import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppDriveTypePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.mapper.*;
@@ -535,17 +536,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         try {
             switch (dto.driveType) {
                 case "mysql":
-                    Class.forName("com.mysql.jdbc.Driver");
+                    Class.forName(DriverTypeEnum.MYSQL.getName());
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     return ResultEntityBuild.build(ResultEnum.SUCCESS);
-
                 case "sqlserver":
                     //1.加载驱动程序
-                    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                    Class.forName(DriverTypeEnum.SQLSERVER.getName());
                     //2.获得数据库的连接
-                    conn = (Connection) DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     return ResultEntityBuild.build(ResultEnum.SUCCESS);
-
+                case "oracle":
+                    Class.forName(DriverTypeEnum.ORACLE.getName());
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    return ResultEntityBuild.build(ResultEnum.SUCCESS);
                 default:
                     return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_WARN);
             }

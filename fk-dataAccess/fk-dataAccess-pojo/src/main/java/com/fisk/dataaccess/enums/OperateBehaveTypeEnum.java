@@ -5,19 +5,19 @@ import com.fisk.common.enums.BaseEnum;
 /**
  * @author Lock
  * @version 1.0
- * @description 数据源类型
- * @date 2021/12/28 11:02
+ * @description 操作表行为枚举类
+ * @date 2022/1/10 17:14
  */
-public enum DataSourceTypeEnum implements BaseEnum {
+public enum OperateBehaveTypeEnum implements BaseEnum {
     /**
-     * 查询类型
+     * 行为类型
      */
-    MYSQL(1, "mysql"),
-    SQLSERVER(2, "sqlserver"),
-    FTP(3, "ftp"),
-    ORACLE(4,"oracle");
+    UPDATE_APP(1, "修改应用"),
+    DELETE_APP(2,"删除应用"),
+    UPDATE_TABLE(3, "修改表"),
+    DELETE_TABLE(4, "删除表");
 
-    DataSourceTypeEnum(int value, String name) {
+    OperateBehaveTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }

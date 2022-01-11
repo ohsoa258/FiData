@@ -571,7 +571,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case "mysql":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+//                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
@@ -597,15 +597,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TablePyhNameDTO> list = new ArrayList<>();
         switch (modelDataSource.driveType) {
             case "mysql":
+            case "oracle":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd, com.fisk.dataaccess.enums.DriverTypeEnum.MYSQL);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
                 break;
             default:
-                break;
+                return null;
         }
 
         return list;

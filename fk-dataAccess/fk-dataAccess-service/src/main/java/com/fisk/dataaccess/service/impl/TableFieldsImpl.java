@@ -232,6 +232,14 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
+    @Override
+    public OperateMsgDTO loadDepend(OperateTableDTO dto) {
+
+
+
+        return null;
+    }
+
     /**
      * 组装参数
      *
