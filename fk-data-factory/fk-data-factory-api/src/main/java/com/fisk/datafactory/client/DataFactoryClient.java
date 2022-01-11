@@ -1,7 +1,8 @@
-package com.fisk.datafactory;
+package com.fisk.datafactory.client;
 
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import io.swagger.annotations.ApiOperation;
@@ -32,4 +33,14 @@ public interface DataFactoryClient {
     @ApiOperation("修改管道发布状态")
     @PutMapping("/nifiCustomWorkflow/updatePublishStatus")
     void updatePublishStatus(@RequestBody NifiCustomWorkflowDTO dto);
+
+    /**
+     * 判断物理表是否在管道使用
+     *
+     * @param dto dto
+     * @return boolean
+     */
+    @PostMapping("/dataFactory/loadDepend")
+    @ApiOperation(value = "判断物理表是否在管道使用")
+    ResultEntity<Boolean> loadDepend(@RequestBody LoadDependDTO dto);
 }
