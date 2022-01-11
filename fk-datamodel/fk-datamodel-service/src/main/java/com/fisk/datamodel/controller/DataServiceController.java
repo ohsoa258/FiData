@@ -1,11 +1,11 @@
 package com.fisk.datamodel.controller;
 
+import com.fisk.chartvisual.dto.IsDimensionDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.service.IDataService;
-import com.fisk.dataservice.dto.IsDimensionDTO;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;

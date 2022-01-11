@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
+import com.fisk.chartvisual.dto.IsDimensionDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.dataservice.dto.IsDimensionDTO;
 
 import java.util.List;
 
