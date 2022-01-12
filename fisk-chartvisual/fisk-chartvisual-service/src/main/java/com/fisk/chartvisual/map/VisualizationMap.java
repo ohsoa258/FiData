@@ -1,7 +1,9 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.DataDoFieldDTO;
-import com.fisk.chartvisual.dto.FieldDataDTO;
+import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.enums.FieldTypeEnum;
+import com.fisk.chartvisual.vo.ChartQueryObjectVO;
+import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -15,10 +17,62 @@ import java.util.List;
 public interface VisualizationMap {
     VisualizationMap INSTANCES = Mappers.getMapper(VisualizationMap.class);
 
+
+    /**
+     * FieldDataDTO => DataDoFieldDTO
+     * @param columnDetails
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "columnName",target = "fieldName"),
+            @Mapping(source = "fieldTableName",target = "tableName")
+    })
+    DataDoFieldDTO dataDoField(FieldDataDTO columnDetails);
+
     /**
      * vo => dto
      * @param columnDetails
      * @return
      */
-    List<DataDoFieldDTO> voToDto(List<FieldDataDTO> columnDetails);
+    List<DataDoFieldDTO> dataDoFields(List<FieldDataDTO> columnDetails);
+
+    /**
+     * 枚举转换
+     * @param type
+     * @return
+     */
+    @ValueMappings({
+            @ValueMapping(source = "COLUMN",target = "NAME"),
+            @ValueMapping(source = "VALUE",target = "VALUE"),
+            @ValueMapping(source=MappingConstants.ANY_UNMAPPED, target=MappingConstants.NULL)
+    })
+    ColumnTypeEnum toEnum(FieldTypeEnum type);
+
+
+    /**
+     * type转换
+     * @param dto
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "fieldType",target = "columnType")
+    })
+    ColumnDetails toColumn(FieldDataDTO dto);
+
+    /**
+     * ChartQueryObjectVO => ChartQueryObject
+     * @param object
+     * @return
+     */
+    ChartQueryObject dataDoObject(ChartQueryObjectVO object);
+
+
+    @Mappings({
+            @Mapping(source = "columnName",target = "name"),
+            @Mapping(source = "columnLabel",target = "uniqueName"),
+            @Mapping(source = "fieldType",target = "dragElemType")
+    })
+    ColumnDetailsSsas dtoToColumnDetails(FieldDataDTO dto);
+
+    ChartQueryObjectSsas dataDoSsas(ChartQueryObjectVO objectVO);
 }

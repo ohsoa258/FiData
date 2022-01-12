@@ -5,13 +5,8 @@ import com.fisk.chartvisual.dto.IndicatorDTO;
 import com.fisk.chartvisual.dto.IsDimensionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
-import com.fisk.chartvisual.map.VisualizationMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
-import com.fisk.chartvisual.vo.ChartQueryObjectVO;
-import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.chartvisual.dto.IndicatorFeignDTO;
@@ -45,15 +40,13 @@ public class BuildSqlServiceImpl implements BuildSqlService {
     @Resource
     DataModelClient client;
     @Resource
-    BuildSqlService BuildSqlService;
-    @Resource
     DataSourceConMapper dataSourceConMapper;
 
     public static final String ATOM_BUILDER = "b1";
     public static final String DERIVE_BUILDER = "b2";
 
     @Override
-    public Object query(List<DataDoFieldDTO> apiConfigureFieldList, Integer id) {
+    public List<Map<String, Object>> query(List<DataDoFieldDTO> apiConfigureFieldList, Integer id) {
         // 创建Sql
         String sql = this.buildSql(apiConfigureFieldList);
         // 获取连接信息
@@ -385,17 +378,5 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         }
 
         return str.toString();
-    }
-
-    @Override
-    public DataServiceResult buildSql(ChartQueryObjectVO objectVO) {
-        switch (objectVO.type){
-            case DMP:
-               BuildSqlService.query(VisualizationMap.INSTANCES.voToDto(objectVO.columnDetails),objectVO.id);
-            case VIEW:
-            case MDX:
-            default:
-                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-        }
     }
 }

@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.service.BuildSqlService;
+import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.response.ResultEntity;
@@ -26,11 +26,11 @@ import javax.annotation.Resource;
 public class VisualizationController {
 
     @Resource
-    BuildSqlService buildSqlService;
+    VisualizationService visualizationService;
 
     @ApiOperation("可视化生成Sql")
     @PostMapping("/buildSql")
     public ResultEntity<DataServiceResult> get(@Validated @RequestBody ChartQueryObjectVO query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, buildSqlService.buildSql(query));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, visualizationService.buildSql(query));
     }
 }

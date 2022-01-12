@@ -16,7 +16,7 @@ public class FieldDataDTO {
      * 字段id
      */
     @NotNull
-    public String fieldId;
+    public Integer fieldId;
     /**
      * 字段名字
      */
@@ -26,7 +26,7 @@ public class FieldDataDTO {
     /**
      * 字段表名
      */
-    public String tableName;
+    public String fieldTableName;
     /**
      * 字段类型
      */

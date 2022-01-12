@@ -27,6 +27,7 @@ public class ChartQueryObjectVO {
      */
     @NotNull
     public StorageEngineTypeEnum type;
+    public String tableName;
 
     /**
      * 列和值
