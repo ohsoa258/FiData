@@ -32,6 +32,7 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
@@ -1588,6 +1589,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             } else if (po.driveType.equalsIgnoreCase(sqlserverDriver)) {
                 //1.加载驱动程序
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                //2.获得数据库的连接
+                Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                st.setFetchSize(10);
+            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                //1.加载驱动程序
+                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
                 //2.获得数据库的连接
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
