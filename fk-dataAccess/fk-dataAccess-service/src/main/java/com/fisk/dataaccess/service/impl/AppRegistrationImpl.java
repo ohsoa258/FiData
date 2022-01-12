@@ -561,7 +561,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             try {
                 if (conn != null) {
                     conn.close();
-                    throw new FkException(ResultEnum.SUCCESS);
                 }
             } catch (SQLException e) {
                 throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);

@@ -1,12 +1,16 @@
 package com.fisk.dataaccess.utils.sql;
 
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.DataBaseViewDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Lock
@@ -17,97 +21,180 @@ import java.util.*;
 @Slf4j
 public class OracleUtils {
 
-    private static Connection conn = null;
-    private static Statement stmt = null;
-
     /**
-     * 根据tableName获取tableFields
+     * 获取表及表字段
      *
-     * @param tableName tableName
-     * @return tableName中的表字段
+     * @param url      url
+     * @param user     user
+     * @param password password
+     * @return 查询结果
      */
-    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName) {
-        List<TableStructureDTO> colNameList = null;
-        try {
-            colNameList = new ArrayList<>();
-
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
-            while (resultSet.next()) {
-                TableStructureDTO dto = new TableStructureDTO();
-                dto.fieldName = resultSet.getString("COLUMN_NAME");
-////                dto.fieldType = resultSet.getString("TYPE_NAME");
-////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-///               dto.fieldDes = resultSet.getString("REMARKS");
-                colNameList.add(dto);
-            }
-
-        } catch (Exception e) {
-            log.error("【getColumnsName】获取表字段报错, ex", e);
-            return null;
-        }
-        return colNameList;
-    }
-
-    public Map<String, String> getTables(Connection conn, String dbName) {
-//        ArrayList<Map<String, String>> tableList = null;
-        Map<String, String> tableMap = new LinkedHashMap<>();
-        try {
-            Statement stmt = conn.createStatement();
-
-            ResultSet resultSet = stmt.executeQuery("select *,RANK() over(order by tabl.field) from \n" +
-                    "(\n" +
-                    "select name, schema_name(schema_id) as field from sys.tables\n" +
-                    ") as tabl");
-//            tableList = new ArrayList<>();
-            while (resultSet.next()) {
-                // TABLE_NAME
-                String name = resultSet.getString("name");
-                // 架构名
-                String field2 = resultSet.getString("field");
-                tableMap.put(name, field2);
-            }
-        } catch (SQLException e) {
-            log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
-            return null;
-        }
-        return tableMap;
-    }
-
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, String dbName) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, DriverTypeEnum driverTypeEnum) {
 
         List<TablePyhNameDTO> list = null;
-
         try {
-            //1.加载驱动程序
-            Class.forName(DriverTypeEnum.ORACLE.getName());
-            //2.获得数据库的连接
-            conn = DriverManager.getConnection(url, user, password);
-            stmt = conn.createStatement();
+            Class.forName(driverTypeEnum.getName());
+            Connection conn = DriverManager.getConnection(url, user, password);
+            // 获取数据库中所有表名称
+            List<String> tableNames = getTables(conn, user.toUpperCase());
+            Statement st = conn.createStatement();
+
             list = new ArrayList<>();
 
-            // 获取指定数据库所有表
-            Map<String, String> mapList = this.getTables(conn, dbName);
+            int tag = 0;
 
-            List<TablePyhNameDTO> finalList = list;
+            for (String tableName : tableNames) {
+                ResultSet rs = st.executeQuery("select * from \" + tableName + \" OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
-            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
+                List<TableStructureDTO> colNames = getColNames(rs);
 
-            while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = iterator.next();
-                // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
-                tablePyhNameDTO.setFields(columnsName);
-                finalList.add(tablePyhNameDTO);
+                tablePyhNameDTO.setTableName(tableName);
+                tablePyhNameDTO.setFields(colNames);
+
+                tag++;
+                tablePyhNameDTO.setTag(tag);
+
+                list.add(tablePyhNameDTO);
+
+                rs.close();
             }
+
+            st.close();
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
-            log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
+            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
             return null;
         }
+
         return list;
     }
 
+    /**
+     * @return java.util.List<com.fisk.dataaccess.dto.DataBaseViewDTO>
+     * @description 加载视图详情
+     * @author Lock
+     * @date 2021/12/31 17:46
+     * @version v1.0
+     * @params driverTypeEnum
+     * @params url
+     * @params user
+     * @params password
+     * @params dbName
+     */
+    public List<DataBaseViewDTO> loadViewDetails(DriverTypeEnum driverTypeEnum, String url, String user, String password, String dbName) {
+
+        List<DataBaseViewDTO> list = null;
+        try {
+            Class.forName(driverTypeEnum.getName());
+            Connection conn = DriverManager.getConnection(url, user, password);
+            // 获取数据库中所有视图名称
+            List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, user.toUpperCase());
+            Statement st = conn.createStatement();
+
+            list = new ArrayList<>();
+
+            for (String viewName : viewNameList) {
+                ResultSet resultSql = st.executeQuery("SELECT * FROM \"" + user.toUpperCase() + "\".\"" + viewName + "\" OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
+
+                List<TableStructureDTO> colNames = getColNames(resultSql);
+
+                DataBaseViewDTO dto = new DataBaseViewDTO();
+                dto.viewName = viewName;
+                dto.fields = colNames;
+                // 关闭当前结果集
+                resultSql.close();
+
+                list.add(dto);
+            }
+
+            st.close();
+            conn.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
+        }
+
+        return list;
+    }
+
+    /**
+     * 获取数据库中所有表名称
+     *
+     * @param conn conn
+     * @return 返回值
+     */
+    private List<String> getTables(Connection conn, String user) {
+        ArrayList<String> tablesList = null;
+        try {
+            DatabaseMetaData databaseMetaData = conn.getMetaData();
+            String[] types = {"TABLE"};
+            ResultSet tables = databaseMetaData.getTables(null, user, null, types);
+            tablesList = new ArrayList<>();
+            while (tables.next()) {
+                tablesList.add(tables.getString("TABLE_NAME"));
+            }
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
+        }
+        return tablesList;
+    }
+
+    /**
+     * @return java.util.List<java.lang.String>
+     * @description 获取视图名称列表
+     * @author Lock
+     * @date 2021/12/31 17:45
+     * @version v1.0
+     * @params conn
+     * @params dbName
+     */
+    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum, Connection conn, String user) {
+        ArrayList<String> viewNameList = null;
+        try {
+            DatabaseMetaData databaseMetaData = conn.getMetaData();
+            String[] types = {"VIEW"};
+
+            ResultSet rs = null;
+            rs = databaseMetaData.getTables(null, user, null, types);
+
+            viewNameList = new ArrayList<>();
+            while (rs.next()) {
+                viewNameList.add(rs.getString(3));
+            }
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.LOAD_VIEW_NAME_ERROR);
+        }
+        return viewNameList;
+    }
+
+    /**
+     * 获取表中所有字段名称
+     *
+     * @param rs rs
+     */
+    private List<TableStructureDTO> getColNames(ResultSet rs) {
+        List<TableStructureDTO> colNameList = null;
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
+
+            colNameList = new ArrayList<>();
+            for (int i = 1; i <= count; i++) {
+                TableStructureDTO tableStructureDTO = new TableStructureDTO();
+
+                // 字段名称
+                tableStructureDTO.fieldName = metaData.getColumnName(i);
+                // 字段类型
+                tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
+                // 字段长度
+                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                colNameList.add(tableStructureDTO);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
+        return colNameList;
+    }
 }

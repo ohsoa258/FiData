@@ -82,6 +82,7 @@ public enum ResultEnum {
     FTP_CONNECTION_INVALID(5015, "当前ftp数据源信息已无效,请重新配置"),
     LOAD_FTP_FILESYSTEM_ERROR(5016, "加载ftp数据源文件系统失败"),
     LOAD_VIEW_NAME_ERROR(5017, "获取视图名称失败"),
+    LOAD_VIEW_STRUCTURE_ERROR(5018, "获取视图结构失败"),
     READ_CSV_CONTENT_ERROR(5019, "读取csv内容失败"),
     READ_EXCEL_CONTENT_ERROR(5020, "读取excel内容失败"),
 

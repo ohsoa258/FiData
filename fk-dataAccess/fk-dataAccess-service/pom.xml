@@ -123,9 +123,10 @@
         <!-- oracle驱动 -->
         <dependency>
             <groupId>com.oracle</groupId>
-            <artifactId>classes12</artifactId>
-            <version>9.0.2.0.0</version>
-            <type>pom</type>
+            <artifactId>ojdbc7</artifactId>
+            <version>11.1.0.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
         </dependency>
 
         <dependency>
