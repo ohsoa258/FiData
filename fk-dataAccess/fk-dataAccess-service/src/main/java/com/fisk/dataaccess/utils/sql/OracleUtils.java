@@ -36,25 +36,17 @@ public class OracleUtils {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
-            List<String> tableNames = getTables(conn, user.toUpperCase());
+            List<String> tableNames = getTables(conn,user.toUpperCase());
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
-
-            int tag = 0;
-
             for (String tableName : tableNames) {
-                ResultSet rs = st.executeQuery("select * from \" + tableName + \" OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
+                ResultSet rs = st.executeQuery("select * from " + tableName + " OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
                 List<TableStructureDTO> colNames = getColNames(rs);
-
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(colNames);
-
-                tag++;
-                tablePyhNameDTO.setTag(tag);
-
                 list.add(tablePyhNameDTO);
 
                 rs.close();
@@ -125,7 +117,7 @@ public class OracleUtils {
      * @return 返回值
      */
     private List<String> getTables(Connection conn, String user) {
-        ArrayList<String> tablesList = null;
+        ArrayList<String> tablesList;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"TABLE"};
