@@ -36,7 +36,7 @@ public class VisualizationServiceImpl implements VisualizationService {
             case VIEW:
                 return db.query(VisualizationMap.INSTANCES.dataDoObject(objectVO));
             case MDX:
-                //db.querySsas();
+                return db.querySsas(VisualizationMap.INSTANCES.dataToObjectSsas(objectVO));
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

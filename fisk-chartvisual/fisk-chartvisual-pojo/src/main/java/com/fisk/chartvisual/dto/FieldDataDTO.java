@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import com.fisk.chartvisual.enums.DimensionTypeEnum;
 import com.fisk.chartvisual.enums.FieldTypeEnum;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import lombok.Data;
@@ -41,5 +42,5 @@ public class FieldDataDTO {
     /**
      * 是否维度 0 否  1 是维度
      */
-    public int dimension;
+    public DimensionTypeEnum dimension;
 }

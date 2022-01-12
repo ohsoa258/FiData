@@ -22,6 +22,8 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.fisk.chartvisual.enums.DimensionTypeEnum.MEASURE;
+import static com.fisk.chartvisual.enums.DimensionTypeEnum.OTHER;
 import static com.fisk.chartvisual.enums.FieldTypeEnum.COLUMN;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
@@ -62,15 +64,15 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         String[] escapeStr = getEscapeStr();
 
         // 维度的字段
-        String dimColumn = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == COLUMN)
+        String dimColumn = apiConfigureFieldList.stream().filter(e -> e.getDimension() == OTHER && e.getFieldType() == COLUMN)
                 .map(e -> e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                 .collect(Collectors.joining(","));
 
         // 维度的
-        List<DataDoFieldDTO> dimColumnFieldList = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == COLUMN)
+        List<DataDoFieldDTO> dimColumnFieldList = apiConfigureFieldList.stream().filter(e -> e.getDimension() == OTHER && e.getFieldType() == COLUMN)
                 .collect(Collectors.toList());
 
-//        String dimWhere = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == WHERE)
+//        String dimWhere = apiConfigureFieldList.stream().filter(e -> e.getDimension() == OTHER && e.getFieldType() == WHERE)
 //                .map(e -> e.getTableName() + "." + escapeStr[0] + e.getFieldName() + escapeStr[1] +
 //                        escapeStr[2] + e.getWhere() + escapeStr[2] + e.getWhereValue())
 //                .collect(Collectors.joining(" AND "));
@@ -78,7 +80,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         // 获取指标
         IndicatorFeignDTO indicatorFeignDTO = new IndicatorFeignDTO();
         indicatorFeignDTO.setIndicatorList(
-                apiConfigureFieldList.stream().filter(e -> e.getDimension() == 0)
+                apiConfigureFieldList.stream().filter(e -> e.getDimension() == MEASURE)
                         .map(e -> {
                             IndicatorDTO dto = new IndicatorDTO();
                             dto.setId(e.getFieldId());
@@ -139,7 +141,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .map(e -> {
 
                     // 派生指标别名维度列
-                    String deriveDim = apiConfigureFieldList.stream().filter(b -> b.getDimension() == 1 && b.getFieldType() == COLUMN)
+                    String deriveDim = apiConfigureFieldList.stream().filter(b -> b.getDimension() == OTHER && b.getFieldType() == COLUMN)
                             .map(b -> DERIVE + "." + escapeStr[0] + b.getFieldName() + escapeStr[1])
                             .collect(Collectors.joining(","));
 
@@ -199,7 +201,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
             DimensionTimePeriodDTO data = client.getDimensionDate(deriveId).getData();
             DataDoFieldDTO dto = new DataDoFieldDTO();
             dto.setFieldId((int) data.getFieldId());
-            dto.setDimension(1);
+            dto.setDimension(OTHER);
             dto.setTableName(data.getDimensionTabName());
             dimColumnFieldList.add(dto);
         }
@@ -210,7 +212,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
             IsDimensionDTO dimensionDTO = new IsDimensionDTO();
             dimensionDTO.setDimensionOne(0);
-            dimensionDTO.setDimensionTwo(b.getDimension());
+            dimensionDTO.setDimensionTwo(b.getDimension().getValue());
             dimensionDTO.setFieldIdOne(id);
             dimensionDTO.setFieldIdTwo(b.getFieldId());
             if (client.isExistAssociate(dimensionDTO).getData()) {
@@ -313,7 +315,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      */
     public StringBuilder deriveInquire(List<DataDoFieldDTO> apiConfigureFieldList,Integer deriveId,IndicatorDTO indicator,String[] escapeStr){
         // 派生指标别名维度列
-        String derive = apiConfigureFieldList.stream().filter(e -> e.getDimension() == 1 && e.getFieldType() == COLUMN)
+        String derive = apiConfigureFieldList.stream().filter(e -> e.getDimension() == OTHER && e.getFieldType() == COLUMN)
                 .map(e -> DERIVE_ALIAS + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
                 .collect(Collectors.joining(","));
 

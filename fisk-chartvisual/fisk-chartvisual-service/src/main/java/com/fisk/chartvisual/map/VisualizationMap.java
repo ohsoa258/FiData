@@ -67,12 +67,24 @@ public interface VisualizationMap {
     ChartQueryObject dataDoObject(ChartQueryObjectVO object);
 
 
+    /***
+     * FieldDataDTO => ColumnDetailsSsas
+     * @param dto
+     * @return
+     */
     @Mappings({
             @Mapping(source = "columnName",target = "name"),
             @Mapping(source = "columnLabel",target = "uniqueName"),
-            @Mapping(source = "fieldType",target = "dragElemType")
+            @Mapping(source = "fieldType",target = "dragElemType"),
+            @Mapping(source = "dimension",target = "dimensionType")
     })
     ColumnDetailsSsas dtoToColumnDetails(FieldDataDTO dto);
 
-    ChartQueryObjectSsas dataDoSsas(ChartQueryObjectVO objectVO);
+
+    /**
+     * ChartQueryObjectVO => ChartQueryObjectSsas
+     * @param objectVO
+     * @return
+     */
+    ChartQueryObjectSsas dataToObjectSsas(ChartQueryObjectVO objectVO);
 }
