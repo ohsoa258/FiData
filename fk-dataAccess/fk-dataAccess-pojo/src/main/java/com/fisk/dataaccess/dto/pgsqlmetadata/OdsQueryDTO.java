@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.pgsqlmetadata;
 
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.FtpFileTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,4 +22,6 @@ public class OdsQueryDTO {
     public String tableName;
     @ApiModelProperty(value = "ftp文件后缀名类型", required = true)
     public FtpFileTypeEnum fileTypeEnum;
+    @ApiModelProperty(value = "数据源类型", required = true)
+    public DataSourceTypeEnum dataSourceTypeEnum;
 }

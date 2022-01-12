@@ -1603,7 +1603,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             assert st != null;
 
-            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql));
+            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql, po.driveType));
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
@@ -1613,7 +1613,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    private String converSql(String tableName, String sql) {
+    private String converSql(String tableName, String sql, String driveType) {
         if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
             Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
             Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getValue());
@@ -1662,7 +1662,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript);
+        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType);
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
