@@ -10,6 +10,7 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.utils.EnCryptUtils;
 import com.fisk.dataservice.dto.app.AppRegisterPageDTO;
 import com.fisk.dataservice.dto.app.AppRegisterQueryDTO;
 import com.fisk.dataservice.dto.app.AppRegisterDTO;
@@ -65,7 +66,6 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Resource
     private ApiBuiltinParmManageImpl apiBuiltinParmImpl;
-
 
     @Override
     public List<FilterFieldDTO> getColumn() {
@@ -186,7 +186,13 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Override
     public ResultEnum resetPwd(AppPwdResetDTO dto) {
-       return  null;
+        AppConfigPO model = baseMapper.selectById(dto.appId);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
+        model.setAppPassword(new String(base64Encrypt));
+        return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -241,4 +247,5 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         }
         return ResultEnum.SAVE_DATA_ERROR;
     }
+
 }
