@@ -21,7 +21,7 @@ import javax.annotation.Resource;
  * @date 2022/1/10 16:26
  */
 @RestController
-@RequestMapping("/visualization")
+@RequestMapping("/visual")
 @Slf4j
 public class VisualizationController {
 
@@ -29,8 +29,8 @@ public class VisualizationController {
     VisualizationService visualizationService;
 
     @ApiOperation("可视化生成Sql")
-    @PostMapping("/buildSql")
-    public ResultEntity<DataServiceResult> get(@Validated @RequestBody ChartQueryObjectVO query) {
+    @PostMapping("/getData")
+    public ResultEntity<DataServiceResult> getData(@Validated @RequestBody ChartQueryObjectVO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, visualizationService.buildSql(query));
     }
 }
