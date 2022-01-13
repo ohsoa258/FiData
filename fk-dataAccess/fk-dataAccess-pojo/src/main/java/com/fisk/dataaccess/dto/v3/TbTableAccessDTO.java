@@ -48,6 +48,11 @@ public class TbTableAccessDTO {
     public String sqlScript;
 
     /**
+     * sheet页
+     */
+    public String sheet;
+
+    /**
      * 0: 发布;  1: 保存sql脚本
      */
     public int flag;

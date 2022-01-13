@@ -8,11 +8,11 @@ import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.mapper.*;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.dto.IndicatorFeignDTO;
-import com.fisk.dataservice.dto.TableDataDTO;
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.dto.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
-import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
+import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
-import static com.fisk.dataservice.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
+import static com.fisk.chartvisual.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 
 /**
  * @author Lock

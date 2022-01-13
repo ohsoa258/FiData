@@ -21,8 +21,6 @@ import com.fisk.task.service.INifiComponentsBuild;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.WsSessionManager;
 import com.fisk.task.utils.YamlReader;
-import fk.atlas.api.AtlasClient;
-import fk.atlas.api.model.EnttityRdbmsInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -77,16 +75,7 @@ public class TestController {
         return WsSessionManager.getOnlineCount();
     }
 
-    @PostMapping("/testAtlasBuild_Instance")
-    public void publishBuildAtlasTask(@RequestBody EnttityRdbmsInstance.entity_rdbms_instance dataDTO) {
-        //region 创建血缘关系
-        String atlas_url = YamlReader.instance.getValueByKey("atlasconstr.url").toString();
-        String atlas_username = YamlReader.instance.getValueByKey("atlasconstr.username").toString();
-        String atlas_pwd = YamlReader.instance.getValueByKey("atlasconstr.password").toString();
-        AtlasClient ac = new AtlasClient(atlas_url, atlas_username, atlas_pwd);
-        String result = ac.CreateEntity_rdbms_instance(dataDTO);
-        //endregion
-    }
+
 
     @PostMapping("/test_GetAtlasDataInfo")
     public void publishBuildAtlasTask(@RequestParam("id") long id) {

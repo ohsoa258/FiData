@@ -25,4 +25,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * 版本号和存储过程
      */
     public ModelPublishTableDTO modelPublishTableDTO;
+
+    /*
+    * 同步方式
+    * */
+    public int syncMode;
 }

@@ -14,7 +14,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
      */
     MYSQL(1, "mysql"),
     SQLSERVER(2, "sqlserver"),
-    FTP(3, "ftp");
+    FTP(3, "ftp"),
+    ORACLE(4,"oracle");
 
     DataSourceTypeEnum(int value, String name) {
         this.name = name;

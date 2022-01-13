@@ -8,8 +8,8 @@ import com.fisk.common.enums.BaseEnum;
  */
 
 public enum DimensionTypeEnum implements BaseEnum {
-    MEASURE(2,"度量"),
-    OTHER(3,"维度");
+    MEASURE(0,"度量"),
+    OTHER(1,"维度");
 
     DimensionTypeEnum(int value, String name) {
         this.name = name;

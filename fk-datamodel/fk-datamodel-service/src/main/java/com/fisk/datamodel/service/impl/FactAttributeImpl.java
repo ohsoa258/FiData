@@ -52,8 +52,6 @@ public class FactAttributeImpl
     BusinessProcessMapper businessProcessMapper;
     @Resource
     BusinessProcessImpl businessProcess;
-    @Resource
-    TableHistoryImpl tableHistory;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)

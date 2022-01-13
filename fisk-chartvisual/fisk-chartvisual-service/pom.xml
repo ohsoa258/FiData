@@ -38,13 +38,20 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>8.2.0.jre8</version>
+            <version>9.2.1.jre8</version>
         </dependency>
 
         <!--mybatis plus-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.4.3.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus</artifactId>
+            <version>3.4.3.4</version>
         </dependency>
 
         <!-- redis -->
@@ -72,10 +79,16 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- 全局工具类 -->
+        <!--  -->
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fk-task-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-dataAccess-pojo</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
@@ -95,19 +108,37 @@
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
             <version>1.2.0</version>
+<!--            <scope>system</scope>-->
+<!--            <systemPath>${project.basedir}/src/main/resources/lib/olap4j-1.2.0.jar</systemPath>-->
         </dependency>
         <dependency>
             <groupId>com.ctrip.framework.apollo</groupId>
             <artifactId>apollo-client</artifactId>
             <version>1.8.1</version>
-            <scope>compile</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/apollo-client-1.8.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ctrip.framework.apollo</groupId>
+            <artifactId>apollo-core</artifactId>
+            <version>1.8.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
         </dependency>
 
-        <!--sqlServer数据库驱动-->
+        <!-- 读取SSAS -->
         <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <version>8.2.0.jre8</version>
+            <groupId>com.olap4jXmla</groupId>
+            <artifactId>common-olap4jXmla</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/common-olap4jXmla-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-datamodel-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -117,6 +148,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
     </build>

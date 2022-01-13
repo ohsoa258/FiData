@@ -174,7 +174,7 @@ public class SqlServerTest {
             case "mysql":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+//                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd,"");

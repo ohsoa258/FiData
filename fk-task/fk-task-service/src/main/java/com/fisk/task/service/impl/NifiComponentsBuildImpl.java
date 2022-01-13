@@ -612,6 +612,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         map.put("esql-output-batch-size",executeSQLRecordDTO.outputBatchSize);
         map.put("esql-fetch-size",executeSQLRecordDTO.FetchSize);
         map.put("SQL select query",executeSQLRecordDTO.sqlSelectQuery);
+        map.put("dbf-user-logical-types","true");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
@@ -645,6 +646,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         map.put("put-db-record-statement-type",putDatabaseRecordDTO.statementType);
         map.put("put-db-record-dcbp-service",putDatabaseRecordDTO.databaseConnectionPoolingService);
         map.put("put-db-record-table-name",putDatabaseRecordDTO.TableName);
+        map.put("put-db-record-quoted-identifiers","true");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);

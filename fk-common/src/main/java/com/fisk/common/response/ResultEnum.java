@@ -82,6 +82,9 @@ public enum ResultEnum {
     FTP_CONNECTION_INVALID(5015, "当前ftp数据源信息已无效,请重新配置"),
     LOAD_FTP_FILESYSTEM_ERROR(5016, "加载ftp数据源文件系统失败"),
     LOAD_VIEW_NAME_ERROR(5017, "获取视图名称失败"),
+    LOAD_VIEW_STRUCTURE_ERROR(5018, "获取视图结构失败"),
+    READ_CSV_CONTENT_ERROR(5019, "读取csv内容失败"),
+    READ_EXCEL_CONTENT_ERROR(5020, "读取excel内容失败"),
 
 
     /**
@@ -128,6 +131,8 @@ public enum ResultEnum {
     WORKFLOWNAME_EXISTS(9002,"管道名称已存在"),
     DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
     SCHEDULE_PARAME_NULL(9004,"请设置[开始]组件的调度参数"),
+    DATA_FACTORY_FEIGN_EXCEPTION(9005,"数据工厂feign接口异常"),
+
 
     /**
      * 元数据

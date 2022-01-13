@@ -29,9 +29,6 @@ import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.IAtlasBuildInstance;
 import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
 import com.rabbitmq.client.Channel;
-import fk.atlas.api.model.EntityProcess;
-import fk.atlas.api.model.EntityRdbmsColumn;
-import fk.atlas.api.model.EntityRdbmsTable;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
@@ -292,6 +289,7 @@ public class BuildAtlasTableAndColumnTaskListener
         tableNifiSettingPO.tableAccessId=Integer.valueOf(buildPhysicalTableDTO.dbId);
         tableNifiSettingPO.selectSql=physicalSelect;
         tableNifiSettingPO.type=OlapTableEnum.PHYSICS.getValue();
+        tableNifiSettingPO.syncMode=buildPhysicalTableDTO.syncMode;
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
         log.info("开始执行nifi创建数据同步");
         BuildNifiFlowDTO bfd=new BuildNifiFlowDTO();

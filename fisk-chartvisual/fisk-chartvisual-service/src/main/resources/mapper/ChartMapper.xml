@@ -51,8 +51,8 @@
         </if>
     </select>
     <resultMap id="chartListRead" type="com.fisk.chartvisual.vo.ChartPropertyVO">
-        <result property="backgroundImage" column="background_image" typeHandler="com.fisk.common.mybatis.config.BlobTypeHandler"></result>
-        <result property="image" column="image" typeHandler="com.fisk.common.mybatis.config.BlobTypeHandler"></result>
+        <result property="backgroundImage" column="background_image" typeHandler="com.fisk.chartvisual.config.BlobTypeHandler"></result>
+        <result property="image" column="image" typeHandler="com.fisk.chartvisual.config.BlobTypeHandler"></result>
         <result property="fid" column="fid" ></result>
         <result property="name" column="name" ></result>
         <result property="content" column="content" ></result>

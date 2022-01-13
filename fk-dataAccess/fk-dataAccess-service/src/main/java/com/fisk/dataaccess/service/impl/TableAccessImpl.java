@@ -32,6 +32,8 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.dataaccess.map.AppRegistrationMap;
 import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
@@ -65,6 +67,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
@@ -569,7 +572,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case "mysql":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+//                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
@@ -595,15 +598,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TablePyhNameDTO> list = new ArrayList<>();
         switch (modelDataSource.driveType) {
             case "mysql":
+            case "oracle":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd, com.fisk.dataaccess.enums.DriverTypeEnum.MYSQL);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
                 break;
             default:
-                break;
+                return null;
         }
 
         return list;
@@ -945,8 +949,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // TODO: 2021/9/4 nifi流程需要物理表字段
         List<TableFieldsPO> list = this.tableFieldsImpl.query().eq("table_access_id", id).eq("del_flag", 1).list();
         List<TableFieldsDTO> fieldsDTOList = TableFieldsMap.INSTANCES.listPoToDto(list);
+        String businessKeyAppend = "";
         if (list != null && !list.isEmpty()) {
             targetDsConfig.tableFieldsList = fieldsDTOList;
+            // 封装业务主键
+            businessKeyAppend = list.stream().filter(e -> e.isPrimarykey == 1).map(e -> e.fieldName + ",").collect(Collectors.joining());
+        }
+
+        if (businessKeyAppend.length() > 0) {
+            dto.businessKeyAppend = businessKeyAppend.substring(0, businessKeyAppend.length() - 1);
         }
         dto.groupConfig = groupConfig;
         dto.taskGroupConfig = taskGroupConfig;
@@ -1486,6 +1497,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private static List<String> transformField(String fieldType, String fieldLength) {
 
         Integer textLength = 5000;
+        String timeType = "date";
 
         // 浮点型
         List<String> floatType = new ArrayList<>();
@@ -1498,6 +1510,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 字符型
         List<String> charType = new ArrayList<>();
         charType.add("");
+
+//        List<String> timeType = new ArrayList<>();
+//        timeType.add("datetime");
+//        timeType.add("");
+//        timeType.add("");
 
         // Number型
         // 整型
@@ -1538,6 +1555,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         } else if (Integer.parseInt(fieldLength) >= textLength) {
             fieldList.add("VARCHAR");
             fieldList.add("5000");
+        } else if (fieldType.toLowerCase().contains(timeType)) {
+            fieldList.add("TIMESTAMP");
+            fieldList.add("6");
         } else {
             fieldList.add("VARCHAR");
             fieldList.add(fieldLength);
@@ -1573,10 +1593,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
                 st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                 st.setFetchSize(10);
+            } else if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                //1.加载驱动程序
+                Class.forName(com.fisk.dataaccess.enums.DriverTypeEnum.ORACLE.getName());
+                //2.获得数据库的连接
+                Connection conn = DriverManager.getConnection(po.connectStr, po.connectAccount, po.connectPwd);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                st.setFetchSize(10);
             }
             assert st != null;
 
-            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql));
+            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql, po.driveType));
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
@@ -1586,8 +1613,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    private String converSql(String tableName, String sql) {
-
+    private String converSql(String tableName, String sql, String driveType) {
+        if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
+            Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
+            Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getValue());
+            Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getValue());
+            if(startTime!=null){
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
+            }else{
+                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"0000-00-00");
+            }
+            if(endTime!=null){
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
+            }else{
+                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"0000-00-00");
+            }
+        }
         return sql;
     }
 
@@ -1603,7 +1644,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
             return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
         }
-
+        TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
+        dto.syncMode=tableSyncmodePo.syncMode;
         DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
         switch (dbTypeEnum) {
             case sqlserver:
@@ -1620,7 +1662,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript);
+        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType);
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }

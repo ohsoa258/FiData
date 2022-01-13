@@ -23,7 +23,6 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.google.inject.internal.cglib.proxy.$FixedValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,7 +86,7 @@ public class ChartManageImpl implements IChartManageService {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        List<ChildvisualDTO> poList = this.stringSplit(dto.content, (int) model.getId());
+        List<ChildvisualDTO> poList = this.stringSplit(dto.content, Integer.parseInt(String.valueOf(model.getId())));
         if (!CollectionUtils.isEmpty(poList)){
             for (ChildvisualDTO po : poList) {
                 ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);

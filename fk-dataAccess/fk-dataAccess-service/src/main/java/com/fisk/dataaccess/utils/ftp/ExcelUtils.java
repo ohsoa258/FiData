@@ -1,5 +1,8 @@
 package com.fisk.dataaccess.utils.ftp;
 
+import com.csvreader.CsvReader;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -11,11 +14,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.fisk.common.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
@@ -30,12 +31,12 @@ import static com.fisk.common.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 public class ExcelUtils {
 
     /**
-     * @return org.apache.poi.ss.usermodel.Workbook
      * @description 读取Excel文件
      * @author Lock
      * @date 2021/12/28 9:59
      * @version v1.0
      * @params filePath
+     * @return org.apache.poi.ss.usermodel.Workbook
      */
     private static Workbook read(String filePath) {
         if (filePath == null) {
@@ -52,13 +53,13 @@ public class ExcelUtils {
     }
 
     /**
-     * @return org.apache.poi.ss.usermodel.Workbook excel工作簿对象
      * @description 从流中读取，上传文件可以直接获取文件流，无需暂存到服务器上
      * @author Lock
      * @date 2021/12/28 10:15
      * @version v1.0
      * @params inputStream 文件输入流
      * @params ext 文件后缀名
+     * @return org.apache.poi.ss.usermodel.Workbook excel工作簿对象
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
@@ -76,13 +77,13 @@ public class ExcelUtils {
     }
 
     /**
-     * @return java.util.List<java.util.List < java.lang.String>>
      * @description 读取Excel内容，返回list，每一行存放一个list
      * @author Lock
      * @date 2021/12/28 10:19
      * @version v1.0
      * @params wb 工作簿对象
      * @params index sheet页
+     * @return java.util.List<java.util.List < java.lang.String>>
      */
     private static List<List<String>> readExcelContentList(Workbook wb, int index) {
         if (wb != null) {
@@ -116,6 +117,32 @@ public class ExcelUtils {
             return content;
         }
         return null;
+    }
+
+    /**
+     * @description 读取csv内容，返回list，每一行存放一个list
+     * @author Lock
+     * @date 2022/1/5 11:18
+     * @version v1.0
+     * @params wb
+     * @params index
+     * @return java.util.List<java.util.List < java.lang.String>>
+     */
+    private static List<List<String>> readCsvContentList(InputStream inputStream) {
+        // 默认只查询十行
+        List<List<String>> content = new ArrayList<>();
+        CsvReader csvReader = new CsvReader(inputStream, Charset.forName("GBK"));
+        try {
+            while (csvReader.readRecord()) {
+                content.add(Arrays.asList(csvReader.getValues()));
+                if (content.size() >= 10) {
+                    return content;
+                }
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.READ_CSV_CONTENT_ERROR);
+        }
+        return content;
     }
 
 
@@ -172,25 +199,61 @@ public class ExcelUtils {
      * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      */
     public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext) {
-        Workbook workbook = readFromInputStream(inputStream, ext);
-        if (workbook == null) {
-            return null;
-        }
-        // 获取sheet页数量
-        int numberOfSheets = workbook.getNumberOfSheets();
-        List<ExcelDTO> listDto = new ArrayList<>();
+        List<ExcelDTO> listDto = null;
+        try {
+            Workbook workbook = readFromInputStream(inputStream, ext);
+            if (workbook == null) {
+                return null;
+            }
+            // 获取sheet页数量
+            int numberOfSheets = workbook.getNumberOfSheets();
+            listDto = new ArrayList<>();
 
-        IntStream.range(0, numberOfSheets).forEachOrdered(i -> {
-            List<List<String>> lists = readExcelContentList(workbook, i);
+            List<ExcelDTO> finalListDto = listDto;
+            IntStream.range(0, numberOfSheets).forEachOrdered(i -> {
+                // 读取Excel内容，返回list，每一行存放一个list
+                List<List<String>> lists = readExcelContentList(workbook, i);
+                ExcelDTO excelDTO = new ExcelDTO();
+                // excel预览内容
+                excelDTO.excelContent = lists;
+                // excel字段列表
+                excelDTO.excelField = lists.get(0);
+                // sheet名称
+                excelDTO.sheetName = workbook.getSheetName(i);
+                finalListDto.add(excelDTO);
+            });
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.READ_EXCEL_CONTENT_ERROR);
+        }
+        return listDto;
+    }
+
+    /**
+     * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
+     * @description 读取csv文件
+     * @author Lock
+     * @date 2022/1/5 11:15
+     * @version v1.0
+     * @params inputStream
+     * @params ext
+     */
+    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename) {
+        List<ExcelDTO> listDto = null;
+        try {
+            listDto = new ArrayList<>();
+            // 读取csv内容，返回list，每一行存放一个list
+            List<List<String>> lists = readCsvContentList(inputStream);
             ExcelDTO excelDTO = new ExcelDTO();
-            // excel预览内容
+            // csv内容
             excelDTO.excelContent = lists;
-            // excel字段列表
+            // csv没有多sheet页,本方法中莫瑞诺指定文件名为sheet名
+            excelDTO.sheetName = filename;
+            // 字段列表
             excelDTO.excelField = lists.get(0);
-            // sheet名称
-            excelDTO.sheetName = workbook.getSheetName(i);
             listDto.add(excelDTO);
-        });
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.READ_CSV_CONTENT_ERROR);
+        }
         return listDto;
     }
 }

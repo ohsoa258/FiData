@@ -11,7 +11,7 @@
 
     <select id="listDataSourceConByUserId" resultMap="DataSourceConVOMap">
         select id,
-        `name`,
+        name,
         con_str,
         con_ip,
         con_port,
@@ -39,7 +39,7 @@
 
     <select id="getDataSourceConByUserId" resultMap="DataSourceConVOMap">
         select id,
-               `name`,
+               name,
                con_str,
                con_type,
                con_dbname,

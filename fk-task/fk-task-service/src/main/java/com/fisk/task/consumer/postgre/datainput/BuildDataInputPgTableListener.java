@@ -59,10 +59,12 @@ public class BuildDataInputPgTableListener {
         taskPgTableStructureHelper.saveTableStructure(dto);
 */
         log.info("保存版本号方法执行成功");
-        StringBuilder sql = new StringBuilder();
+        StringBuilder sql = new StringBuilder("CREATE TABLE tableName ( ");
         StringBuilder sqlFileds = new StringBuilder();
-        sql.append("CREATE TABLE tableName ( " );
+        StringBuilder pksql=new StringBuilder();
+        StringBuilder stgSql = new StringBuilder("CREATE TABLE tableName ( " );
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
+        //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
             if(l.fieldType.contains("FLOAT")){
                 sqlFileds.append("" +l.fieldName + " " + " numeric ,");
@@ -73,11 +75,17 @@ public class BuildDataInputPgTableListener {
             }else{
                 sqlFileds.append("" +l.fieldName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+"),");
             }
+            stgSql.append("" +l.fieldName + " text,");
+            if(l.isPrimarykey==1){
+                pksql.append(l.fieldName+",");
+            }
+
         });
-        sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),"+ buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid() PRIMARY KEY)");
+        stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),"+ buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
+        sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),"+ buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
         sql.append(sqlFileds);
         String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-        String stg_sql2 = sql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
+        String stg_sql2 = stgSql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
         stg_sql2="DROP TABLE IF EXISTS "+"stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName+";"+stg_sql2;
         pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
         if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
@@ -86,65 +94,7 @@ public class BuildDataInputPgTableListener {
             log.info("pg：建表完成");
         }
     }
-    public void updataOrCreateTable(List<TableFieldDetailDTO> tableFieldDetailDTOS,List<TableFieldsDTO> tableFieldsDTOS){
-        if(tableFieldDetailDTOS.size()!=0){
-            List<TableFieldDetailDTO> tableFieldDetailDTOS1 = new ArrayList<>();
-            List<TableFieldsDTO> tableFieldsDTOS1 = new ArrayList<>();
-            tableFieldDetailDTOS1.addAll(tableFieldDetailDTOS);
-            tableFieldsDTOS1.addAll(tableFieldsDTOS);
-            String tableName=tableFieldDetailDTOS.get(0).tableName;
-            String tableName1="stg_"+tableName.substring(4);
-            String tablePk=tableFieldDetailDTOS.get(0).tableName;
-            tablePk=tablePk.substring(4)+"key";
-            String sql="";
-            String sql1="";
-            //库里已有的字段
-            for(int i=0;i<tableFieldDetailDTOS.size();i++){
 
-                //传过来的字段
-                for(int j=0;j<tableFieldsDTOS.size();j++){
-                    //如果库里的字段比到最后没有相同的,说明这个字段被删掉了
-                    if(Objects.equals(tableFieldDetailDTOS.get(i).columnName,tableFieldsDTOS.get(j).fieldName.toLowerCase())){
-                        tableFieldDetailDTOS1.remove(tableFieldDetailDTOS.get(i));
-                    }else if(Objects.equals(tableFieldDetailDTOS.get(i).columnName,tableFieldsDTOS.get(j).fieldName)&&!Objects.equals(tableFieldDetailDTOS.get(i).udtName,tableFieldsDTOS.get(j).fieldType)){
-                        //修改字段ALTER TABLE table_name ALTER COLUMN column_name TYPE datatype;
-                        sql="ALTER TABLE "+tableName+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType+"("+tableFieldsDTOS.get(j).fieldLength+")";
-                        sql1="ALTER TABLE "+tableName1+" ALTER COLUMN "+tableFieldDetailDTOS.get(i).columnName+" type "+tableFieldsDTOS.get(j).fieldType+"("+tableFieldsDTOS.get(j).fieldLength+")";
-                        log.info("修改字段" + sql);
-                        pg.postgreBuildTable(sql,BusinessTypeEnum.DATAINPUT);
-                        pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
-                    }
-                }
-            }
-            for (TableFieldDetailDTO tableFieldDetailDTO:tableFieldDetailDTOS1) {
-                if(Objects.equals(tableFieldDetailDTO.columnName,tablePk)){
-                    continue;
-                }else{
-                    sql="ALTER TABLE "+tableName+" DROP COLUMN "+tableFieldDetailDTO.columnName;
-                    sql1="ALTER TABLE "+tableName1+" DROP COLUMN "+tableFieldDetailDTO.columnName;
-                    log.info("删除字段" + sql);
-                    pg.postgreBuildTable(sql,BusinessTypeEnum.DATAINPUT);
-                    pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
-                }
-            }
-            for (int j=0;j<tableFieldsDTOS.size();j++) {
-                for (int i=0;i<tableFieldDetailDTOS.size();i++) {
-                    if(Objects.equals(tableFieldsDTOS.get(j).fieldName.toLowerCase(),tableFieldDetailDTOS.get(i).columnName)){
-                        tableFieldsDTOS1.remove(tableFieldsDTOS.get(j));
-                    }
-                }
-            }
-            for (TableFieldsDTO tableFieldsDTO:tableFieldsDTOS1) {
-                //添加字段ALTER TABLE table_name ADD column_name datatype;
-                sql="ALTER TABLE "+tableName+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType+"("+tableFieldsDTO.fieldLength+")";
-                sql1="ALTER TABLE "+tableName1+" add COLUMN "+tableFieldsDTO.fieldName+" "+tableFieldsDTO.fieldType+"("+tableFieldsDTO.fieldLength+")";
-                log.info("添加字段" + sql);
-                pg.postgreBuildTable(sql,BusinessTypeEnum.DATAINPUT);
-                pg.postgreBuildTable(sql1,BusinessTypeEnum.DATAINPUT);
-            }
-        }
-
-    }
 
     public void saveOrUpdate(ModelPublishTableDTO dto) {
         log.info("开始保存ods版本号,参数为{}", dto);

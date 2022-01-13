@@ -2,8 +2,10 @@ package com.fisk.dataaccess.utils.ftp;
 
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelPropertyDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +24,7 @@ import java.util.List;
  * @description: Excel parse util.
  * @date : 2021/12/22 13:14
  */
+@Slf4j
 public class FtpUtils {
 
     private static final String ROOT_PATH = "/";
@@ -83,6 +86,7 @@ public class FtpUtils {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println(">>>>>FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅*********");
+            log.error(">>>>>FTP服务器连接登录失败，请检查连接参数是否正确，或者网络是否通畅*********");
         }
         return ftpClient;
     }
@@ -102,7 +106,7 @@ public class FtpUtils {
                 ftpClient.disconnect();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("关闭ftp连接失败,{}", e.getMessage());
         }
         return ftpClient;
     }
@@ -244,16 +248,16 @@ public class FtpUtils {
 
 
     /**
+     * @return com.fisk.dataaccess.dto.ftp.ExcelTreeDTO
      * @description 获取当前路径下的文件&文件夹
      * @author Lock
      * @date 2021/12/30 15:38
      * @version v1.0
-     * @params ftpClient
-     * @params remotePath
-     * @params treeDTO
-     * @return com.fisk.dataaccess.dto.ftp.ExcelTreeDTO
+     * @params ftpClient ftp连接客户端
+     * @params remotePath 当前路径
+     * @params fileSuffix 文件后缀名
      */
-    public static ExcelTreeDTO listFilesAndDirectorys(FTPClient ftpClient, String remotePath) {
+    public static ExcelTreeDTO listFilesAndDirectorys(FTPClient ftpClient, String remotePath, String fileSuffix) {
         ExcelTreeDTO treeDTO = new ExcelTreeDTO();
         ftpClient.enterLocalPassiveMode();
         try {
@@ -264,7 +268,7 @@ public class FtpUtils {
             // 获取所有文件
             FTPFile[] files = ftpClient.listFiles(remotePath);
             for (FTPFile file : files) {
-                if (file.isFile()) {
+                if (file.isFile() && file.getName().contains(fileSuffix)) {
                     ExcelPropertyDTO filePropertyDto = new ExcelPropertyDTO();
                     filePropertyDto.fileName = file.getName();
                     filePropertyDto.fileFullName = remotePath + file.getName();
@@ -330,7 +334,7 @@ public class FtpUtils {
         InputStream input = null;
         if (ftpClient != null) {
             try {
-                // 判断是否存在该目录
+                // 判断是否存在该目录,true则切换到该目录
                 if (!ftpClient.changeWorkingDirectory(ftpPath)) {
                     System.out.println(ftpPath + "该目录不存在");
                     return input;
@@ -350,48 +354,40 @@ public class FtpUtils {
                     }
                 }
             } catch (IOException e) {
-                System.out.println("获取文件失败" + e);
+                log.error("获取文件失败,{}", e.getMessage());
             } finally {
                 closeFtpConnect(ftpClient);
-                System.out.println("连接中");
+                System.out.println("将excel文件转换成输入流,关闭ftp连接");
+                log.info("将excel文件转换成输入流,关闭ftp连接");
             }
         }
         return input;
     }
 
-////    public static void main(String[] args) {
-////        System.out.println("-----------------------应用启动------------------------");
-////        FTPClient ftpClient = FTPUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
-////        ftpClient.enterLocalPassiveMode();
-////
-////        List<String> fileList = new ArrayList<>();
-////        List<String> directoryList = new ArrayList<>();
-////
-////        List<String> list = listAllFiles(ftpClient, "/", fileList, directoryList);
-////        System.out.println("***************************************");
-////
-////        list.forEach(System.out::println);
-////
-////        closeFTPConnect(ftpClient);
-////
-////        // 获取excel内容
-////        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.xlsx");
-////        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
-////        System.out.println("*************************************");
-////        System.out.println("文件流对象: ");
-////        System.out.println(xlsx);
-////
-////        System.out.println("-----------------------应用关闭------------------------");
-////    }
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         System.out.println("-----------------------应用启动------------------------");
         FTPClient ftpClient = FtpUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
+        ftpClient.enterLocalPassiveMode();
 
-        ExcelTreeDTO excelTreeDTO = listFilesAndDirectorys(ftpClient, "/Windows/二级/三级/");
-        System.out.println("excelTreeDTO = " + excelTreeDTO);
+        // 获取excel内容
+        InputStream inputStream = getInputStreamByName(ftpClient, "/Windows/二级/", "tb_app_registration.csv");
+//        List<ExcelDTO> xlsx = ExcelUtils.readExcelFromInputStream(inputStream, ".xlsx");
+        List<ExcelDTO> xlsx = ExcelUtils.readCsvFromInputStream(inputStream, "tb_app_registration");
+        System.out.println("*************************************");
+        System.out.println("文件流对象: ");
+        System.out.println(xlsx);
 
         System.out.println("-----------------------应用关闭------------------------");
     }
+
+//    public static void main(String[] args) throws Exception {
+//        System.out.println("-----------------------应用启动------------------------");
+//        FTPClient ftpClient = FtpUtils.connectFtpServer("192.168.1.94", 21, "ftpuser", "password01!", "utf-8");
+//
+//        ExcelTreeDTO excelTreeDTO = listFilesAndDirectorys(ftpClient, "/Windows/二级/三级/");
+//        System.out.println("excelTreeDTO = " + excelTreeDTO);
+//
+//        System.out.println("-----------------------应用关闭------------------------");
+//    }
 
 }

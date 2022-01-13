@@ -13,7 +13,7 @@ import lombok.Data;
 public class BaseChartPO {
 
     @TableId(value = "id", type = IdType.AUTO)
-    public long id;
+    public Long id;
 
     @TableLogic
     private int delFlag;

@@ -6,6 +6,7 @@ import com.fisk.dataaccess.dto.TableAccessPageDTO;
 import com.fisk.dataaccess.dto.TableNameDTO;
 import com.fisk.dataaccess.dto.TableNameTreeDTO;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
+import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -147,4 +148,14 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      */
     @Select("SELECT id,table_name FROM tb_table_access where del_flag=1 ORDER BY id DESC;")
     List<TableIdAndNameDTO> listTableIdAndNames();
+
+    /**
+     * 获取发布的表信息
+     *
+     * @return
+     */
+    @Select("SELECT a.id,CONCAT('ods','_',b.app_abbreviation,'_',a.table_name) as tableName,a.table_des from tb_table_access a \n" +
+            "join tb_app_registration b on a.app_id=b.id\n" +
+            "where a.del_flag=1 and a.publish=1")
+    List<DataAccessSourceTableDTO> listTableMetaData();
 }

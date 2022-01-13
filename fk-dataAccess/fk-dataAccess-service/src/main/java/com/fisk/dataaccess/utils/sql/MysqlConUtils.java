@@ -28,11 +28,11 @@ public class MysqlConUtils {
      * @param password password
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, DriverTypeEnum driverTypeEnum) {
 
         List<TablePyhNameDTO> list = null;
         try {
-            Class.forName(DriverTypeEnum.MYSQL.getName());
+            Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn);
@@ -43,7 +43,7 @@ public class MysqlConUtils {
             int tag = 0;
 
             for (String tableName : tableNames) {
-                ResultSet rs = st.executeQuery("select * from " + tableName);
+                ResultSet rs = st.executeQuery("select * from " + tableName + " LIMIT 0,10;");
 
                 List<TableStructureDTO> colNames = getColNames(rs);
 
@@ -63,7 +63,7 @@ public class MysqlConUtils {
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumns】获取表名报错, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
 
         return list;
@@ -111,7 +111,7 @@ public class MysqlConUtils {
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumns】获取表名报错, ex", e);
-            return null;
+            throw new FkException(ResultEnum.LOAD_VIEW_STRUCTURE_ERROR);
         }
 
         return list;

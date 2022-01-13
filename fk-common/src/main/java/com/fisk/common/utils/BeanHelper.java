@@ -81,7 +81,7 @@ public class BeanHelper {
             ResultSetMetaData md = rs.getMetaData();
             int columnCount = md.getColumnCount();
             while (rs.next()) {
-                Map<String, Object> rowData = new HashMap<>();
+                Map<String, Object> rowData = new LinkedHashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
                     rowData.put(md.getColumnLabel(i), rs.getObject(i));
                 }

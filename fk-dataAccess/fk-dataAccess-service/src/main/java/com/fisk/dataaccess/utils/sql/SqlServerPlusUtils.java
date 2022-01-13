@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.utils.sql;
 
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,7 @@ public class SqlServerPlusUtils {
             }
         } catch (SQLException e) {
             log.error("【getTables】获取表名报错, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
         }
         return tableList;
     }
@@ -68,7 +70,7 @@ public class SqlServerPlusUtils {
 
         } catch (Exception e) {
             log.error("【getColumnsName】获取表字段报错, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return colNameList;
     }
@@ -112,7 +114,7 @@ public class SqlServerPlusUtils {
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumns】获取表及表字段报错, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return list;
     }
@@ -137,7 +139,7 @@ public class SqlServerPlusUtils {
             }
         } catch (SQLException e) {
             log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
         }
         return tableMap;
     }
@@ -173,11 +175,8 @@ public class SqlServerPlusUtils {
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
-            return null;
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
         return list;
     }
-
-
-
 }

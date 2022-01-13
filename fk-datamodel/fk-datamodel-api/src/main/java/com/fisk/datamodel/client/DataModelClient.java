@@ -1,15 +1,18 @@
 package com.fisk.datamodel.client;
 
+import com.fisk.chartvisual.dto.IndicatorDTO;
+import com.fisk.chartvisual.dto.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.IsDimensionDTO;
+import com.fisk.chartvisual.dto.TableDataDTO;
+import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.dataservice.dto.IndicatorDTO;
-import com.fisk.dataservice.dto.IndicatorFeignDTO;
-import com.fisk.dataservice.dto.TableDataDTO;
-import com.fisk.dataservice.dto.IsDimensionDTO;
-import com.fisk.dataservice.enums.DataDoFieldTypeEnum;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -164,5 +167,12 @@ public interface DataModelClient {
      */
     @PostMapping("/DataFactory/getAppNameAndTableName")
     ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto);
+
+    /**
+     * 获取数据建模表数据
+     * @return
+     */
+    @GetMapping("/DataManagement/getDataModelTable")
+    ResultEntity<Object> getDataModelTable();
 
 }

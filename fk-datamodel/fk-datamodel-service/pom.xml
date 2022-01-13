@@ -111,15 +111,20 @@
             <groupId>com.ctrip.framework.apollo</groupId>
             <artifactId>apollo-client</artifactId>
             <version>1.8.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/apollo-client-1.8.1.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.ctrip.framework.apollo</groupId>
             <artifactId>apollo-core</artifactId>
             <version>1.8.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
         </dependency>
+        <!-- 报表实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fisk-dataservice-pojo</artifactId>
+            <artifactId>fisk-chartvisual-pojo</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
@@ -130,6 +135,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!--把本地导入的jar包导入项目当中-->
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
     </build>

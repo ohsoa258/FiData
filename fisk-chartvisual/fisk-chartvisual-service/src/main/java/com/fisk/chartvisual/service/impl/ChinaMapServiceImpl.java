@@ -32,7 +32,7 @@ public class ChinaMapServiceImpl implements ChinaMapService {
 
         return provincialList.stream().map(e -> {
             ChinaMapDTO dto = new ChinaMapDTO();
-            dto.setId((int)e.getId());
+            dto.setId(Integer.parseInt(String.valueOf(e.getId())));
             dto.setName(e.getProvincialName());
 
 //            QueryWrapper<ProvincialAmountPO> query = new QueryWrapper<>();
