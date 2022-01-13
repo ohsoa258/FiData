@@ -126,20 +126,22 @@
             <version>1.8.1</version>
         </dependency>
         <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fk-datamodel-pojo</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.olap4j</groupId>
+            <artifactId>olap4j</artifactId>
+            <version>1.2.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
-
     <build>
-        <finalName>dataservice-visual</finalName>
+        <finalName>data-service</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <fork>true</fork>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

@@ -1,0 +1,54 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.DataSourceConMapper">
+
+    <resultMap id="DataSourceConVOMap" type="com.fisk.dataservice.vo.datasource.DataSourceConVO">
+        <id column="id" property="id"/>
+        <result property="con_type" column="conType"
+                typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+    </resultMap>
+
+    <select id="listDataSourceConByUserId" resultMap="DataSourceConVOMap">
+        select id,
+        `name`,
+        con_str,
+        con_ip,
+        con_port,
+        con_type,
+        con_cube,
+        con_dbname,
+        con_account,
+        con_password,
+        create_time
+        from tb_datasource_con
+        where del_flag = 1
+<!--        <if test="query.userId != null">-->
+<!--            and create_user = #{query.userId}-->
+<!--        </if>-->
+        <if test="query.name != null and query.name != '' ">
+            and name like concat('%', #{query.name}, '%')
+        </if>
+        <if test="query.conType != null">
+            and con_type = #{query.conType}
+        </if>
+        <if test="query.conAccount != null and query.conAccount != '' ">
+            and con_account like concat('%', #{query.conAccount}, '%')
+        </if>
+    </select>
+
+    <select id="getDataSourceConByUserId" resultMap="DataSourceConVOMap">
+        select id,
+               `name`,
+               con_str,
+               con_type,
+               con_dbname,
+               con_account,
+               con_cube,
+               con_password,
+               create_time
+        from tb_datasource_con
+        where del_flag = 1
+          and id = #{id}
+    </select>
+</mapper>

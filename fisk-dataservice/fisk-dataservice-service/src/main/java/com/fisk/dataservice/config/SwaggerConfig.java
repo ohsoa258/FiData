@@ -23,21 +23,20 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "api-controller";
-    public static final String TAG_2 = "api-field-controller";
-    public static final String TAG_3 = "applicationRegistration-controller";
-    public static final String TAG_4 = "data-source-controller";
-    public static final String TAG_5 = "systemWebIndex-controller";
+    public static final String TAG_1 = "datasource-controller";
+    public static final String TAG_2 = "appregister-controller";
+    public static final String TAG_3 = "apiregister-controller";
+    public static final String TAG_4 = "apiservice-controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataServiceApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1,"Api接口"))
-                .tags(new Tag(TAG_2,"接口服务字段配置"))
-                .tags(new Tag(TAG_3,"用户服务配置"))
-                .tags(new Tag(TAG_4,"白泽数据源接口"))
+                .tags(new Tag(TAG_1,"数据源接口"))
+                .tags(new Tag(TAG_2,"应用接口"))
+                .tags(new Tag(TAG_3,"API接口"))
+                .tags(new Tag(TAG_4,"API服务接口"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

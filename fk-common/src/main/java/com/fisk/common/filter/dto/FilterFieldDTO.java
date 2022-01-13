@@ -10,7 +10,6 @@ public class FilterFieldDTO {
     /**
      * 列名
      */
-
     public String columnName;
     /**
      * 列名描述
@@ -20,5 +19,4 @@ public class FilterFieldDTO {
      * 列名类型
      */
     public String columnType;
-
 }

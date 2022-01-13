@@ -29,9 +29,9 @@ public class FilterSqlConstants {
     /**
      * 系统管理--用户关联
      */
-    public static  final String USER_INFO_SQL=" where Field not in('id','del_flag','create_user','update_user','password','error_number','error_time')";
+    public static final String USER_INFO_SQL = " where Field not in('id','del_flag','create_user','update_user','password','error_number','error_time')";
     /**
-     * API管理--下游系统
+     * 数据服务--应用注册
      */
-    public static  final String DOWNSTREAM_SYSTEM=" where Field in('down_system_name','system_info','user_name','create_time','create_user','update_time','update_user')";
+    public static final String DS_APP_REGISTRATION_SQL = " where Field in('app_name','app_principal','app_desc','create_time','create_user')";
 }

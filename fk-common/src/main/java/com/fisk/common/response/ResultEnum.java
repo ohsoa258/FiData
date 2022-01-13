@@ -133,8 +133,14 @@ public enum ResultEnum {
      * 元数据
      */
     BAD_REQUEST(400,"错误请求"),
-    NO_CONTENT(204,"没有内容");
+    NO_CONTENT(204,"没有内容"),
 
+    /**
+     * 数据服务
+     */
+    DS_APP_NAME_EXISTS(10000,"应用名称已存在"),
+    DS_APP_ACCOUNT_EXISTS(10001,"账号已存在"),
+    DS_APP_API_EXISTS(10002, "请先禁用应用下的API接口");
 
     ResultEnum(int code, String msg) {
         this.code = code;
