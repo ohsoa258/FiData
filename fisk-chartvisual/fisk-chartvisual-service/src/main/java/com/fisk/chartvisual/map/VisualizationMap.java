@@ -60,6 +60,13 @@ public interface VisualizationMap {
     ColumnDetails toColumn(FieldDataDTO dto);
 
     /**
+     * PaginationQueryDTO => PaginationQuery
+     * @param pagination
+     * @return
+     */
+    PaginationQuery toPagination(PaginationQueryDTO pagination);
+
+    /**
      * ChartQueryObjectVO => ChartQueryObject
      * @param object
      * @return
