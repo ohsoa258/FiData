@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamanagement.dto.entity.*;
@@ -18,6 +19,7 @@ import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -39,6 +41,9 @@ public class EntityImpl implements IEntity {
     AtlasClient atlasClient;
     @Resource
     UserHelper userHelper;
+    @Resource
+    private RedisTemplate redisTemplate;
+
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -48,9 +53,30 @@ public class EntityImpl implements IEntity {
     private String entity;
     @Value("${atlas.lineage}")
     private String lineage;
+    @Value("${atlas.relationship}")
+    private String relationship;
+    @Value("${spring.metadataentity}")
+    private String metaDataEntity;
 
     @Override
     public List<EntityTreeDTO> getEntityTreeList()
+    {
+        List<EntityTreeDTO> list=new ArrayList<>();
+        Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        if (exist) {
+            String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
+            list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
+            return list;
+        }
+        list = getEntityList();
+        return list;
+    }
+
+    /**
+     * 获取元数据对象属性结构
+     * @return
+     */
+    public List<EntityTreeDTO> getEntityList()
     {
         List<EntityTreeDTO> list=new ArrayList<>();
         try {
@@ -132,6 +158,8 @@ public class EntityImpl implements IEntity {
             log.error("getEntityTreeList ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
+        String jsonString=JSONObject.toJSONString(list);
+        redisTemplate.opsForValue().set(metaDataEntity,jsonString);
         return list;
     }
 
@@ -257,6 +285,7 @@ public class EntityImpl implements IEntity {
                 dto.relations=new ArrayList<>();
                 return dto;
             }
+            //获取血缘关联实体列表
             JSONObject guidEntityMapJson = JSON.parseObject(jsonObj.getString("guidEntityMap"));
             String entityDetail = guidEntityMapJson.getString(guid);
             JSONObject entityDetailJson = JSON.parseObject(entityDetail);
@@ -279,6 +308,10 @@ public class EntityImpl implements IEntity {
             while (flat)
             {
                 ids.clear();
+                if (CollectionUtils.isEmpty(lineAgeRelationsDTOStream))
+                {
+                    flat=false;
+                }
                 for (LineAgeRelationsDTO item :lineAgeRelationsDTOStream)
                 {
                     String  jsonObj1String = guidEntityMapJson.getString(item.fromEntityId);
@@ -286,10 +319,11 @@ public class EntityImpl implements IEntity {
                     if (!jsonObj2.getString("typeName").equals(typeName)
                             && !"process".equals(jsonObj2.getString("typeName").toLowerCase()))
                     {
-                       continue;
+                        continue;
                     }
                     boolean isExist=true;
                     //判断process上一级typeName是否一致
+
                     if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
                     {
                         List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
@@ -313,9 +347,18 @@ public class EntityImpl implements IEntity {
                     {
                         continue;
                     }
-                    relations.add(item);
+                    //判断relation是否删除
+                    if (!getRelationShip(item.relationshipId)) {
+                        continue;
+                    }
                     String entityDetail1 = guidEntityMapJson.getString(item.fromEntityId);
                     JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
+                    //判断实体是否删除
+                    if ("DELETE".equals(entityDetailJson1.getString("status")))
+                    {
+                        continue;
+                    }
+                    relations.add(item);
                     jsonArrayList.add(entityDetailJson1);
                     ids.add(item.fromEntityId);
                 }
@@ -334,6 +377,10 @@ public class EntityImpl implements IEntity {
             }
             dto.guidEntityMap=jsonArrayList;
             dto.relations=relations;
+            //获取输出数据
+            LineAgeDTO outData=getOutPutData(guid,relationsDTOS,guidEntityMapJson,typeName);
+            dto.guidEntityMap.addAll(outData.guidEntityMap);
+            dto.relations.addAll(outData.relations);
             return dto;
         }
         catch (Exception e)
@@ -342,6 +389,132 @@ public class EntityImpl implements IEntity {
             log.error("getMetaDataKinship ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
+    }
+
+    /**
+     * 查询选中实体输出血缘数据
+     * @param guid
+     * @param relationsDTOS
+     * @param guidEntityMapJson
+     * @param typeName
+     * @return
+     */
+    public LineAgeDTO getOutPutData(String guid,
+                                    List<LineAgeRelationsDTO> relationsDTOS,
+                                    JSONObject guidEntityMapJson,
+                                    String typeName)
+    {
+        LineAgeDTO dto=new LineAgeDTO();
+        List<LineAgeRelationsDTO> lineAgeRelationsDTOStream = relationsDTOS.stream()
+                .filter(e -> e.fromEntityId.equals(guid))
+                .collect(Collectors.toList());
+        List<JSONObject> jsonArrayList=new ArrayList<>();
+        List<LineAgeRelationsDTO> relations=new ArrayList<>();
+        List<String> ids=new ArrayList<>();
+        boolean flat=true;
+        while (flat)
+        {
+            ids.clear();
+            if (CollectionUtils.isEmpty(lineAgeRelationsDTOStream))
+            {
+                flat=false;
+            }
+            for (LineAgeRelationsDTO item :lineAgeRelationsDTOStream)
+            {
+                String  jsonObj1String = guidEntityMapJson.getString(item.toEntityId);
+                JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
+                if (!jsonObj2.getString("typeName").equals(typeName)
+                        && !"process".equals(jsonObj2.getString("typeName").toLowerCase()))
+                {
+                    continue;
+                }
+                boolean isExist=true;
+                //判断process上一级typeName是否一致
+                if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
+                {
+                    List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
+                            .filter(e -> e.fromEntityId.equals(item.toEntityId))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isNotEmpty(higherLevelLineAge))
+                    {
+                        continue;
+                    }
+                    for (LineAgeRelationsDTO lineAge:higherLevelLineAge)
+                    {
+                        String  higher = guidEntityMapJson.getString(lineAge.toEntityId);
+                        JSONObject higherJson = JSON.parseObject(higher);
+                        if (!higherJson.getString("typeName").equals(typeName))
+                        {
+                            isExist=false;
+                        }
+                    }
+                }
+                if (!isExist)
+                {
+                    continue;
+                }
+                //判断relation是否删除
+                if (!getRelationShip(item.relationshipId)) {
+                    continue;
+                }
+                String entityDetail1 = guidEntityMapJson.getString(item.toEntityId);
+                JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
+                //判断实体是否删除
+                if ("DELETE".equals(entityDetailJson1.getString("status")))
+                {
+                    continue;
+                }
+                relations.add(item);
+                jsonArrayList.add(entityDetailJson1);
+                ids.add(item.toEntityId);
+            }
+            lineAgeRelationsDTOStream.clear();
+            if (!CollectionUtils.isNotEmpty(ids))
+            {
+                flat=false;
+            }
+            lineAgeRelationsDTOStream=relationsDTOS.stream()
+                    .filter(e->ids.contains(e.fromEntityId))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isNotEmpty(lineAgeRelationsDTOStream))
+            {
+                flat=false;
+            }
+        }
+        dto.guidEntityMap=jsonArrayList;
+        dto.relations=relations;
+        return dto;
+    }
+
+    /**
+     * 判断血缘关系是否删除
+     * @param guid
+     * @return
+     */
+    public boolean getRelationShip(String guid)
+    {
+        try {
+            ResultDataDTO<String> result = atlasClient.Get(relationship + "/guid/" + guid);
+            if (result.code != ResultEnum.REQUEST_SUCCESS)
+            {
+                return false;
+            }
+            //解析数据
+            JSONObject jsonObj = JSON.parseObject(result.data);
+            //判断是否存在血缘关系
+            String relationshipStr=jsonObj.getString("relationship");
+            JSONObject relationshipJson=JSON.parseObject(relationshipStr);
+            if (!relationshipJson.getString("status").equals("DELETED"))
+            {
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            log.error("getRelationShip ex:",e);
+        }
+        return false;
     }
 
 

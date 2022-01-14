@@ -87,10 +87,6 @@ public class LabelCategoryImpl implements ILabelCategory {
         List<LabelCategoryDataDTO> dataList=new ArrayList<>();
         QueryWrapper<CategoryPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(CategoryPO::getCategoryParentCode,"1");
-        if (StringUtils.isNotEmpty(queryName))
-        {
-            queryWrapper.lambda().like(CategoryPO::getCategoryCnName,queryName);
-        }
         //获取父节点
         List<CategoryPO> list=mapper.selectList(queryWrapper);
         if (list!=null && list.size()>0)
@@ -109,10 +105,6 @@ public class LabelCategoryImpl implements ILabelCategory {
         //如果没有第一级，则找出子级中的第一级所有数据
         if (dataList ==null || dataList.size()==0)
         {
-            if (StringUtils.isNotEmpty(queryName))
-            {
-                childrenList=childrenList.stream().filter(e->e.categoryCnName.contains(queryName)).collect(Collectors.toList());
-            }
             dataList= LabelCategoryMap.INSTANCES.dataListPoToDto(getParentCode(childrenList));
         }
         //递归获取树形结构

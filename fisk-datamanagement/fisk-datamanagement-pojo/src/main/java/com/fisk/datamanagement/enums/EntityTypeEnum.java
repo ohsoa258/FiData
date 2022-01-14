@@ -15,6 +15,7 @@ public enum EntityTypeEnum implements BaseEnum {
     WEB_API(5,"web_api"),
     RDBMS_COLUMN(6,"rdbms_column"),
     PROCESS(7,"Process"),
+    DATASET_PROCESS_INPUTS(8,"dataset_process_inputs"),
     OTHER(-1,"other");
 
     EntityTypeEnum(int value, String name) {

@@ -30,7 +30,7 @@ public class SynchronizationPgDataController {
     @ApiOperation("获取业务元数据血缘")
     @GetMapping("/getShip")
     public void getShip() {
-        ship.synchronizationPgTableKinShip();
+        ship.synchronizationKinShip();
     }
 
 }

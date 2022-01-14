@@ -56,5 +56,11 @@ public class LabelController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getLabelPageList(dto));
     }
 
+    @ApiOperation("atlas获取标签列表")
+    @GetMapping("/atlasGetLabelList")
+    public ResultEntity<Object> atlasGetLabelList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atlasGetLabel());
+    }
+
 
 }
