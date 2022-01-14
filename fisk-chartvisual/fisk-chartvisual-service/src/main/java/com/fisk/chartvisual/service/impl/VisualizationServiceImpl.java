@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * @author WangYan
@@ -63,15 +64,15 @@ public class VisualizationServiceImpl implements VisualizationService {
         }
         String fileName = "";
         String originalFilename = file.getOriginalFilename();
-        long currentTimeMillis = System.currentTimeMillis();
+        String uuid = UUID.randomUUID().toString();
         if (originalFilename.endsWith(".jpg")) {
-            fileName = String.format("%s.jpg", currentTimeMillis);
+            fileName = String.format("%s.jpg", uuid);
         } else if (originalFilename.endsWith(".png")) {
-            fileName = String.format("%s.jpg", currentTimeMillis);
+            fileName = String.format("%s.jpg", uuid);
         } else if (originalFilename.endsWith(".jpeg")) {
-            fileName = String.format("%s.jpeg", currentTimeMillis);
+            fileName = String.format("%s.jpeg", uuid);
         } else if (originalFilename.endsWith(".bmp")) {
-            fileName = String.format("%s.bmp", currentTimeMillis);
+            fileName = String.format("%s.bmp", uuid);
         } else {
             throw new FkException(ResultEnum.VISUAL_IMAGE_ERROR);
         }
@@ -83,7 +84,7 @@ public class VisualizationServiceImpl implements VisualizationService {
         }
 
         // 图片完整路径
-        String imagePath = fileP + "/" + fileName;
+        String imagePath = "/file/chartvisual/componentfile/" + fileName;
 
         // 保存到数据库
         ChartImagePO chartImage = new ChartImagePO();
