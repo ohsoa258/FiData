@@ -20,18 +20,12 @@ import com.fisk.dataservice.dto.app.AppApiParmQueryDTO;
 import com.fisk.dataservice.dto.app.AppApiSubDTO;
 import com.fisk.dataservice.dto.app.AppPwdResetDTO;
 import com.fisk.dataservice.dto.app.AppApiBuiltinParmEditDTO;
-import com.fisk.dataservice.entity.AppApiPO;
-import com.fisk.dataservice.entity.AppConfigPO;
-import com.fisk.dataservice.entity.BuiltinParmPO;
-import com.fisk.dataservice.entity.ParmConfigPO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.map.ApiBuiltinParmMap;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.map.AppApiMap;
 import com.fisk.dataservice.map.AppRegisterMap;
-import com.fisk.dataservice.mapper.ApiBuiltinParmMapper;
-import com.fisk.dataservice.mapper.ApiParmMapper;
-import com.fisk.dataservice.mapper.AppApiMapper;
-import com.fisk.dataservice.mapper.AppRegisterMapper;
+import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
@@ -57,6 +51,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Resource
     private AppApiMapper appApiMapper;
+
+    @Resource
+    private ApiRegisterMapper apiRegisterMapper;
 
     @Resource
     private ApiParmMapper apiParmMapper;
@@ -97,18 +94,24 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Override
     public ResultEnum addData(AppRegisterDTO dto) {
         QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AppConfigPO::getAppName, dto.appName).eq(AppConfigPO::getDelFlag, 1);
-        AppConfigPO data = baseMapper.selectOne(queryWrapper);
-        if (data != null) {
-            return ResultEnum.DS_APP_NAME_EXISTS;
-        }
-        queryWrapper.lambda().eq(AppConfigPO::getAppAccount, dto.appAccount).eq(AppConfigPO::getDelFlag, 1);
-
-        data = baseMapper.selectOne(queryWrapper);
-        if (data != null) {
-            return ResultEnum.DS_APP_ACCOUNT_EXISTS;
+        // and(appName = '' or appAccount = '')
+        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.appName).
+                        or().eq(AppConfigPO::getAppAccount, dto.appAccount))
+                .eq(AppConfigPO::getDelFlag, 1);
+        List<AppConfigPO> selectList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.appName)).findFirst();
+            if (appConfigOptional.isPresent()) {
+                return ResultEnum.DS_APP_NAME_EXISTS;
+            }
+            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.appAccount)).findFirst();
+            if (appConfigOptional.isPresent()) {
+                return ResultEnum.DS_APP_ACCOUNT_EXISTS;
+            }
         }
         AppConfigPO model = AppRegisterMap.INSTANCES.dtoToPo(dto);
+        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
+        model.setAppPassword(new String(base64Encrypt));
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -116,24 +119,24 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     public ResultEnum editData(AppRegisterEditDTO dto) {
         AppConfigPO model = baseMapper.selectById(dto.id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEnum.DS_APP_EXISTS;
         }
         QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(AppConfigPO::getAppName, dto.appName)
+        // and(appName = '' or appAccount = '')
+        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.appName).
+                        or().eq(AppConfigPO::getAppAccount, dto.appAccount))
                 .eq(AppConfigPO::getDelFlag, 1)
                 .ne(AppConfigPO::getId, dto.id);
-        AppConfigPO data = baseMapper.selectOne(queryWrapper);
-        if (data != null) {
-            return ResultEnum.DS_APP_NAME_EXISTS;
-        }
-        queryWrapper.lambda()
-                .eq(AppConfigPO::getAppAccount, dto.appAccount)
-                .eq(AppConfigPO::getDelFlag, 1)
-                .ne(AppConfigPO::getId, dto.id);
-        data = baseMapper.selectOne(queryWrapper);
-        if (data != null) {
-            return ResultEnum.DS_APP_ACCOUNT_EXISTS;
+        List<AppConfigPO> selectList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.appName)).findFirst();
+            if (appConfigOptional.isPresent()) {
+                return ResultEnum.DS_APP_NAME_EXISTS;
+            }
+            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.appAccount)).findFirst();
+            if (appConfigOptional.isPresent()) {
+                return ResultEnum.DS_APP_ACCOUNT_EXISTS;
+            }
         }
         AppRegisterMap.INSTANCES.editDtoToPo(dto, model);
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -143,7 +146,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     public ResultEnum deleteData(int id) {
         AppConfigPO model = baseMapper.selectById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEnum.DS_APP_EXISTS;
         }
         // 查询应用下是否存在api
         QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
@@ -152,8 +155,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         AppApiPO data = appApiMapper.selectOne(queryWrapper);
         if (data == null) {
             // 该应用下没有启用的api，可以直接删除
-            model.setDelFlag(0);
-            return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } else {
             // 应用下有已启用的api,必须先禁用api
             return ResultEnum.DS_APP_API_EXISTS;
@@ -161,12 +163,19 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     }
 
     @Override
-    public Page<AppApiSubVO> getSubscribeAll(Page<AppApiSubVO> page, AppApiSubQueryDTO dto) {
-        return appApiMapper.getSubscribeAll(page, dto);
+    public Page<AppApiSubVO> getSubscribeAll(AppApiSubQueryDTO dto) {
+        return appApiMapper.getSubscribeAll(dto.page, dto);
     }
 
     @Override
     public ResultEnum appSubscribe(AppApiSubDTO dto) {
+        ApiConfigPO apiModel = apiRegisterMapper.selectById(dto.apiId);
+        if (apiModel == null)
+            return ResultEnum.DS_API_EXISTS;
+        AppConfigPO appModel = baseMapper.selectById(dto.appId);
+        if (appModel == null)
+            return ResultEnum.DS_APP_EXISTS;
+
         // 根据应用id和APIID查询是否存在订阅记录
         QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AppApiPO::getAppId, dto.appId).eq(AppApiPO::getApiId, dto.apiId)
@@ -175,7 +184,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         AppApiPO data = appApiMapper.selectOne(queryWrapper);
         if (data != null) {
             // 存在则修改状态
-            data.setApiState(data.apiState == 1 ? 0 : 1);
+            data.setApiState(data.apiState = dto.apiState.getValue());
             return appApiMapper.updateById(data) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } else {
             // 不存在则新增
@@ -187,9 +196,11 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Override
     public ResultEnum resetPwd(AppPwdResetDTO dto) {
         AppConfigPO model = baseMapper.selectById(dto.appId);
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
+        if (model == null)
+            return ResultEnum.DS_APP_EXISTS;
+        if (dto.appPassword.isEmpty())
+            return ResultEnum.DS_APP_PWD_NOTNULL;
+
         byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
         model.setAppPassword(new String(base64Encrypt));
         return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -213,16 +224,18 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             QueryWrapper<BuiltinParmPO> builtinParmQuery = new QueryWrapper<>();
             builtinParmQuery.lambda()
                     .eq(BuiltinParmPO::getApiId, dto.apiId)
-                    .eq(BuiltinParmPO::getAppId, dto.appId);
+                    .eq(BuiltinParmPO::getAppId, dto.appId)
+                    .eq(BuiltinParmPO::getDelFlag, 1);
             List<BuiltinParmPO> builtinParmtList = apiBuiltinParmMapper.selectList(builtinParmQuery);
             if (CollectionUtils.isNotEmpty(builtinParmtList)) {
                 for (ParmConfigPO parmConfigPO : selectList) {
-                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmtList.stream().filter(item -> item.getParmId().equals(parmConfigPO.id)).findFirst();
+                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmtList.stream().filter(item -> item.getParmId()==parmConfigPO.id).findFirst();
                     if (builtinParmOptional.isPresent()) {
                         // 存在
                         BuiltinParmPO builtinParm = builtinParmOptional.get();
                         parmConfigPO.setParmValue(builtinParm.parmValue);
                         parmConfigPO.setParmDesc(builtinParm.parmDesc);
+                        parmConfigPO.setParmIsbuiltin(builtinParm.parmIsbuiltin);
                     }
                 }
             }
@@ -233,13 +246,15 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Override
     public ResultEnum setParm(AppApiBuiltinParmEditDTO dto) {
+        ApiConfigPO apiModel = apiRegisterMapper.selectById(dto.apiId);
+        if (apiModel == null)
+            return ResultEnum.DS_API_EXISTS;
+        AppConfigPO appModel = baseMapper.selectById(dto.appId);
+        if (appModel == null)
+            return ResultEnum.DS_APP_EXISTS;
+
         // 删除此应用API下的所有内置参数，再新增
-        BuiltinParmPO builtinParm = new BuiltinParmPO();
-        builtinParm.setDelFlag(0);
-        //修改条件
-        UpdateWrapper<BuiltinParmPO> builtinParmUpdateWrapper = new UpdateWrapper<>();
-        builtinParmUpdateWrapper.eq("apiId", dto.apiId).eq("appId", dto.appId);
-        apiBuiltinParmImpl.update(builtinParm, builtinParmUpdateWrapper);
+        int updateCount = apiBuiltinParmMapper.updateBySearch(dto.appId, dto.apiId);
 
         List<BuiltinParmPO> builtinParmList = ApiBuiltinParmMap.INSTANCES.listDtoToPo(dto.parmList);
         if (CollectionUtils.isNotEmpty(builtinParmList)) {

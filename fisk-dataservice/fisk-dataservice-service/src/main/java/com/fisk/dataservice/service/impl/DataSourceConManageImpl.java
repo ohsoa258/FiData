@@ -55,29 +55,30 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     CubeHelper cubeHelper;
 
     @Override
-    public Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        query.userId = userInfo.id;
-        return mapper.listDataSourceConByUserId(page, query);
+    public Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
+        //UserInfo userInfo = userHelper.getLoginUserInfo();
+        //query.userId = userInfo.id;
+        if (query!=null && query.keyword!=null && query.keyword!="")
+            query.keyword=query.keyword.toLowerCase();
+        return mapper.listDataSourceConByUserId(query.page, query);
     }
 
     @Override
     public ResultEnum saveDataSourceCon(DataSourceConDTO dto) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
+        //UserInfo userInfo = userHelper.getLoginUserInfo();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name).eq(DataSourceConPO::getCreateUser, userInfo.id);
+        queryWrapper.lambda().eq(DataSourceConPO::getName, dto.name);
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
         return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum updateDataSourceCon(DataSourceConEditDTO dto) {
-        UserInfo userInfo = userHelper.getLoginUserInfo();
+        //UserInfo userInfo = userHelper.getLoginUserInfo();
         DataSourceConPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -86,7 +87,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DataSourceConPO::getName, dto.name)
-                .eq(DataSourceConPO::getCreateUser, userInfo.id)
+                //.eq(DataSourceConPO::getCreateUser, userInfo.id)
                 .ne(DataSourceConPO::getId, dto.id);
         DataSourceConPO data = mapper.selectOne(queryWrapper);
         if (data != null) {

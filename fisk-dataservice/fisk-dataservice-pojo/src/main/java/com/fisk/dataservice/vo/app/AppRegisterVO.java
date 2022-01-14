@@ -56,13 +56,5 @@ public class AppRegisterVO
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
-
-    /**
-     * 密修改时间
-     */
-    @ApiModelProperty(value = "修改时间")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public LocalDateTime updateTime;
 }

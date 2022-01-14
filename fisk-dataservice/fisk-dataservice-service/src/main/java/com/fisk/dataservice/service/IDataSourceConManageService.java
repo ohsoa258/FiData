@@ -27,7 +27,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param query 查询参数
      * @return 查询结果
      */
-    Page<DataSourceConVO> listDataSourceCons(Page<DataSourceConVO> page, DataSourceConQuery query);
+    Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query);
 
     /**
      * 保存数据

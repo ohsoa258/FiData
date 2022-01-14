@@ -30,8 +30,8 @@ public class ApiRegisterController {
     private IApiRegisterManageService service;
 
     @ApiOperation("分页查询所有api")
-    @GetMapping("/page")
-    public ResultEntity<Page<ApiRegisterVO>> getAll(Page<ApiRegisterVO> dto) {
+    @PostMapping("/page")
+    public ResultEntity<Page<ApiRegisterVO>> getAll(@RequestBody ApiRegisterQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
     }
 
@@ -48,20 +48,20 @@ public class ApiRegisterController {
     }
 
     @ApiOperation("删除api")
-    @DeleteMapping("/delete")
-    public ResultEntity<Object> deleteData(@PathVariable("apiId") Integer apiId) {
+    @DeleteMapping("/delete/{apiId}")
+    public ResultEntity<Object> deleteData(@PathVariable("apiId") int apiId) {
         return ResultEntityBuild.build(service.deleteData(apiId));
     }
 
     @ApiOperation("查询api")
-    @GetMapping("/detail")
-    public ResultEntity<ApiRegisterDetailVO> detail(@PathVariable("apiId") Integer apiId) {
+    @GetMapping("/detail/{apiId}")
+    public ResultEntity<ApiRegisterDetailVO> detail(@PathVariable("apiId") int apiId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.detail(apiId));
     }
 
     @ApiOperation("查询api字段列表")
-    @PostMapping("/getFieldAll")
-    public ResultEntity<List<FieldConfigVO>> getFieldAll(@PathVariable("apiId") Integer apiId) {
+    @GetMapping("/getFieldAll/{apiId}")
+    public ResultEntity<List<FieldConfigVO>> getFieldAll(@PathVariable("apiId") int apiId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getFieldAll(apiId));
     }
 
@@ -72,8 +72,8 @@ public class ApiRegisterController {
     }
 
     @ApiOperation("预览")
-    @PostMapping("/preview")
-    public ResultEntity<Object> preview(@PathVariable("apiId") Integer apiId) {
+    @GetMapping("/preview/{apiId}")
+    public ResultEntity<Object> preview(@PathVariable("apiId") int apiId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.preview(apiId));
     }
 }

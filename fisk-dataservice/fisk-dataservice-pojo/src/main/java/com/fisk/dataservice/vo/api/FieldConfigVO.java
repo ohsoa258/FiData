@@ -22,7 +22,7 @@ public class FieldConfigVO
      * apiId
      */
     @ApiModelProperty(value = "apiId")
-    public Integer apiId;
+    public int apiId;
 
     /**
      * 字段名称

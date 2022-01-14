@@ -10,7 +10,10 @@
                t1.api_state,
                t2.api_code,
                t2.api_name,
-               t2.api_desc
+               t2.api_desc,
+               t1.create_time AS create_time,
+               t2.create_time AS t2create_time,
+               t3.create_time AS t3create_time
         FROM tb_app_api t1
             LEFT JOIN tb_api_config t2 ON t1.api_id=t2.id
             LEFT JOIN tb_app_config t3 ON t1.app_id=t3.id

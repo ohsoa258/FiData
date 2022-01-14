@@ -16,13 +16,5 @@ public class FieldConfigEditDTO extends FieldConfigDTO {
      * id
      */
     @ApiModelProperty(value = "id")
-    @NotNull()
-    public Integer id;
-
-    /**
-     * 字段描述
-     */
-    @ApiModelProperty()
-    @Length(min = 0, max = 255, message = "长度最多255")
-    public String fieldDesc;
+    public int id;
 }

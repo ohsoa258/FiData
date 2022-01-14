@@ -21,19 +21,23 @@
         con_account,
         con_password,
         create_time
-        from tb_datasource_con
+        from tb_datasource_config
         where del_flag = 1
-<!--        <if test="query.userId != null">-->
-<!--            and create_user = #{query.userId}-->
-<!--        </if>-->
-        <if test="query.name != null and query.name != '' ">
-            and name like concat('%', #{query.name}, '%')
-        </if>
-        <if test="query.conType != null">
-            and con_type = #{query.conType}
-        </if>
-        <if test="query.conAccount != null and query.conAccount != '' ">
-            and con_account like concat('%', #{query.conAccount}, '%')
+        <if test="query.keyword != null and query.keyword != '' ">
+            and name like concat('%', #{query.keyword}, '%')
+            or con_dbname like concat('%', #{query.keyword}, '%')
+            <if test="query.keyword =='mysql' ">
+                or con_type = 0
+            </if>
+            <if test="query.keyword =='sqlserver' ">
+                or con_type = 1
+            </if>
+            <if test="query.keyword =='cube' ">
+                or con_type = 2
+            </if>
+            <if test="query.keyword =='tabular' ">
+                or con_type = 3
+            </if>
         </if>
     </select>
 
@@ -47,7 +51,7 @@
                con_cube,
                con_password,
                create_time
-        from tb_datasource_con
+        from tb_datasource_config
         where del_flag = 1
           and id = #{id}
     </select>

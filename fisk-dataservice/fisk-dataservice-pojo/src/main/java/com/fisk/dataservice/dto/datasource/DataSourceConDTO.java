@@ -57,7 +57,7 @@ public class DataSourceConDTO
      */
     @ApiModelProperty(value = "数据库名称")
     @Length(min = 0, max = 50, message = "长度最多50")
-    public String conDbName;
+    public String conDbname;
 
     /**
      * 连接类型

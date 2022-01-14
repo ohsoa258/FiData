@@ -1,5 +1,7 @@
 package com.fisk.dataservice.dto.app;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.dataservice.vo.app.AppApiSubVO;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
@@ -23,4 +25,10 @@ public class AppApiSubQueryDTO {
      */
     @ApiModelProperty(value = "关键字")
     public String keyword;
+
+    /**
+     * 分页信息
+     */
+    @ApiModelProperty(value = "分页信息")
+    public Page<AppApiSubVO> page;
 }

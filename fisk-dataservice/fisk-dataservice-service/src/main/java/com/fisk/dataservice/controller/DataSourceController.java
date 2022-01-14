@@ -35,10 +35,10 @@ public class DataSourceController {
     @Resource
     private IDataSourceConManageService service;
 
-    @GetMapping("/page")
+    @PostMapping("/page")
     @ApiOperation("获取所有数据源连接信息")
-    public ResultEntity<Page<DataSourceConVO>> getData(Page<DataSourceConVO> page, DataSourceConQuery query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(page, query));
+    public ResultEntity<Page<DataSourceConVO>> getData(@RequestBody DataSourceConQuery query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listDataSourceCons(query));
     }
 
     @PostMapping("/add")
@@ -53,9 +53,9 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.updateDataSourceCon(dto));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{id}")
     @ApiOperation("删除数据源连接信息")
-    public ResultEntity<Object> deleteData(int id) {
+    public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteDataSourceCon(id));
     }
 
@@ -65,15 +65,15 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-    @GetMapping("/getDataDomain")
+    @GetMapping("/getDataDomain/{id}")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getDataDomain(int id) {
+    public ResultEntity<List<DataDomainVO>> getDataDomain(@PathVariable("id") int id) {
         return service.listDataDomain(id);
     }
 
-    @GetMapping("/getSSASDataStructure")
+    @GetMapping("/getSSASDataStructure/{id}")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DimensionVO>> getSSASDataStructure(int id) {
+    public ResultEntity<List<DimensionVO>> getSSASDataStructure(@PathVariable("id") int id) {
         return service.SSASDataStructure(id);
     }
 

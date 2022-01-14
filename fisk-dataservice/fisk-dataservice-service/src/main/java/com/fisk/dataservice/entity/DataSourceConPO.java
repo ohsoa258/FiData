@@ -1,5 +1,6 @@
 package com.fisk.dataservice.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class DataSourceConPO extends BasePO
     /**
      * 连接名称
      */
+    @TableField("`name`")
     public String name;
 
     /**
@@ -42,7 +44,7 @@ public class DataSourceConPO extends BasePO
     /**
      * 数据库名称
      */
-    public String conDBName;
+    public String conDbname;
 
     /**
      * 连接类型

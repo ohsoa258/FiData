@@ -1,6 +1,9 @@
 package com.fisk.dataservice.dto.datasource;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.enums.DataSourceTypeEnum;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * @author dick
@@ -10,19 +13,14 @@ import com.fisk.dataservice.enums.DataSourceTypeEnum;
  */
 public class DataSourceConQuery {
     /**
-     * 连接名称
+     * 关键字
      */
-    public String name;
+    @ApiModelProperty(value = "关键字")
+    public String keyword;
+
     /**
-     * 连接类型
+     * 分页对象
      */
-    public DataSourceTypeEnum conType;
-    /**
-     * 账号
-     */
-    public String conAccount;
-    /**
-     * 用户Id
-     */
-    public Long userId;
+    @ApiModelProperty(value = "分页对象")
+    public Page<DataSourceConVO> page;
 }

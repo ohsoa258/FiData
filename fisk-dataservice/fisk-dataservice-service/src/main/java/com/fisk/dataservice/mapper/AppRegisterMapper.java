@@ -7,6 +7,9 @@ import com.fisk.dataservice.entity.AppConfigPO;
 import com.fisk.dataservice.vo.app.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * 应用注册mapper

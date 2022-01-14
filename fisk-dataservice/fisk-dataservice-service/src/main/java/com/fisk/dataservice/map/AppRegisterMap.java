@@ -28,7 +28,9 @@ public interface AppRegisterMap {
      * @param po target
      */
     @Mappings({
-            @Mapping(target = "id", ignore = true) // 添加了ignore，表示不会对该属性做映射
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "appAccount", ignore = true),
+            @Mapping(target = "appPassword", ignore = true)// 添加了ignore，表示不会对该属性做映射
     })
     void editDtoToPo(AppRegisterEditDTO dto, @MappingTarget AppConfigPO po);
 }

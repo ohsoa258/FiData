@@ -65,7 +65,7 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @param dto dto
      * @return api订阅列表
      */
-    Page<AppApiSubVO> getSubscribeAll(Page<AppApiSubVO> page, AppApiSubQueryDTO dto);
+    Page<AppApiSubVO> getSubscribeAll(AppApiSubQueryDTO dto);
 
     /**
      * 应用订阅api

@@ -16,22 +16,22 @@ public class BuiltinParmPO extends BasePO {
     /**
      * API Id
      */
-    public String apiId;
+    public int apiId;
 
     /**
      * 应用Id
      */
-    public String appId;
+    public int appId;
 
     /**
      * 应用Id
      */
-    public String parmId;
+    public int parmId;
 
     /**
      * 是否是内置参数 1是、0否
      */
-    public Integer parmIsBuiltin;
+    public int parmIsbuiltin;
 
     /**
      * 内置参数描述

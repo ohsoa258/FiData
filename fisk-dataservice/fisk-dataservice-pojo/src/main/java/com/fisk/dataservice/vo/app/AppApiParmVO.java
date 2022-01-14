@@ -38,5 +38,5 @@ public class AppApiParmVO
      * 是否是内置参数 1是、0否
      */
     @ApiModelProperty(value = "是否是内置参数 1是、0否")
-    public Integer parmIsBuiltin;
+    public int parmIsbuiltin;
 }

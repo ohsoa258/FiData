@@ -16,6 +16,12 @@ import javax.validation.constraints.NotNull;
 public class FieldConfigDTO
 {
     /**
+     * apiId
+     */
+    @ApiModelProperty(value = "apiId")
+    public int apiId;
+
+    /**
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
@@ -24,10 +30,23 @@ public class FieldConfigDTO
     public String fieldName;
 
     /**
+     * 字段描述
+     */
+    @ApiModelProperty()
+    @Length(min = 0, max = 255, message = "长度最多255")
+    public String fieldDesc;
+
+    /**
      * 字段类型
      */
     @ApiModelProperty(value = "字段类型")
     @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String fieldType;
+
+    /**
+     * 字段排序
+     */
+    @ApiModelProperty(value = "字段排序")
+    public int fieldSort;
 }

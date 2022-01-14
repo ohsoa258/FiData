@@ -145,7 +145,10 @@ public enum ResultEnum {
      */
     DS_APP_NAME_EXISTS(10000,"应用名称已存在"),
     DS_APP_ACCOUNT_EXISTS(10001,"账号已存在"),
-    DS_APP_API_EXISTS(10002, "请先禁用应用下的API接口");
+    DS_APP_API_EXISTS(10002, "请先禁用应用下的API接口"),
+    DS_APP_EXISTS(10003, "应用不存在，请刷新页面"),
+    DS_API_EXISTS(10004, "API不存在，请刷新页面"),
+    DS_APP_PWD_NOTNULL(10005, "应用密码不能为null");
 
     ResultEnum(int code, String msg) {
         this.code = code;

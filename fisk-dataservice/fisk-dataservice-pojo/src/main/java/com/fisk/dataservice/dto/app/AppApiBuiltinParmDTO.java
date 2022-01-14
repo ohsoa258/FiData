@@ -13,25 +13,28 @@ import javax.validation.constraints.NotNull;
  */
 public class AppApiBuiltinParmDTO {
     /**
-     * id
+     * API Id
      */
-    @ApiModelProperty(value = "id")
-    @NotNull()
-    public int id;
+    @ApiModelProperty(value = "apiId")
+    public int apiId;
+
+    /**
+     * 应用Id
+     */
+    @ApiModelProperty(value = "应用id")
+    public int appId;
 
     /**
      * parmId
      */
     @ApiModelProperty(value = "parmId")
-    @NotNull()
-    public Integer parmId;
+    public int parmId;
 
     /**
      * 是否是内置参数 1是、0否
      */
     @ApiModelProperty(value = "是否是内置参数 1是、0否")
-    @NotNull()
-    public Integer parmIsBuiltin;
+    public int parmIsbuiltin;
 
     /**
      * 参数描述
