@@ -148,7 +148,9 @@ public enum ResultEnum {
     DS_APP_API_EXISTS(10002, "请先禁用应用下的API接口"),
     DS_APP_EXISTS(10003, "应用不存在，请刷新页面"),
     DS_API_EXISTS(10004, "API不存在，请刷新页面"),
-    DS_APP_PWD_NOTNULL(10005, "应用密码不能为null");
+    DS_APP_PWD_NOTNULL(10005, "应用密码不能为null"),
+    DS_DATASOURCE_CON_WARN(10006, "当前驱动类型尚未开发"),
+    DS_DATASOURCE_CON_ERROR(10007, "连接失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

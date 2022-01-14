@@ -7,6 +7,10 @@ import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * 数据源连接mapper
@@ -30,4 +34,11 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      * @return 数据对象
      */
     DataSourceConVO getDataSourceConByUserId(int id);
+
+    /**
+     * 根据应用id查询应用信息
+     * @return 查询结果
+     */
+    @Select("SELECT id,`name` FROM tb_datasource_config  WHERE del_flag=1;")
+    List<DataSourceConVO> getAll();
 }

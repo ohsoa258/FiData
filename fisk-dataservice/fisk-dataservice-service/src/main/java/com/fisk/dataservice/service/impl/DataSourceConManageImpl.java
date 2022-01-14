@@ -3,43 +3,35 @@ package com.fisk.dataservice.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.dataservice.dto.datasource.*;
-import com.fisk.dataservice.entity.CubePO;
-import com.fisk.dataservice.entity.DataSourceConPO;
-import com.fisk.dataservice.enums.DimensionTypeEnum;
-import com.fisk.dataservice.map.DataSourceConMap;
-import com.fisk.dataservice.map.SSASMap;
-import com.fisk.dataservice.mapper.DataSourceConMapper;
-import com.fisk.dataservice.service.IDataManageService;
-import com.fisk.dataservice.service.IDataSourceConManageService;
-import com.fisk.dataservice.utils.CubeHelper;
-import com.fisk.dataservice.utils.DbHelper;
-import com.fisk.dataservice.utils.DbHelperFactory;
-import com.fisk.dataservice.utils.buildsql.IBuildSqlCommand;
-import com.fisk.dataservice.vo.datasource.DataDomainVO;
-import com.fisk.dataservice.vo.datasource.DataSourceConVO;
-import com.fisk.dataservice.vo.datasource.DimensionVO;
+import com.fisk.common.datadriven.sqlUtils.MysqlConUtils;
+import com.fisk.common.datadriven.sqlUtils.SqlServerPlusUtils;
 import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.enums.task.nifi.DriverTypeEnum;
+import com.fisk.common.exception.FkException;
+import com.fisk.dataservice.dto.datasource.*;
+import com.fisk.dataservice.entity.AppConfigPO;
+import com.fisk.dataservice.entity.DataSourceConPO;
+import com.fisk.dataservice.map.DataSourceConMap;
+import com.fisk.dataservice.mapper.AppRegisterMapper;
+import com.fisk.dataservice.mapper.DataSourceConMapper;
+import com.fisk.dataservice.service.IDataSourceConManageService;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.dataservice.vo.datasource.DataSourceVO;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
-
 import javax.annotation.Resource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
-import static com.fisk.common.constants.SSASConstant.Measures_Name;
-import static com.fisk.common.constants.SSASConstant.Measures_UniqueName;
 
 /**
  * 数据源接口实现类
+ *
  * @author dick
  */
 @Service
@@ -47,19 +39,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     DataSourceConMapper mapper;
-    @Resource
-    IDataManageService dataManageService;
+
     @Resource
     UserHelper userHelper;
+
     @Resource
-    CubeHelper cubeHelper;
+    AppRegisterMapper appRegisterMapper;
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
         //UserInfo userInfo = userHelper.getLoginUserInfo();
         //query.userId = userInfo.id;
-        if (query!=null && query.keyword!=null && query.keyword!="")
-            query.keyword=query.keyword.toLowerCase();
+        if (query != null && query.keyword != null && query.keyword != "")
+            query.keyword = query.keyword.toLowerCase();
         return mapper.listDataSourceConByUserId(query.page, query);
     }
 
@@ -94,7 +86,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.NAME_EXISTS;
         }
 
-        DataSourceConMap.INSTANCES.editDtoToPo(dto,model);
+        DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -107,90 +99,76 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @SneakyThrows
     @Override
     public ResultEnum testConnection(TestConnectionDTO dto) {
-        if (dto.conType == DataSourceTypeEnum.TABULAR || dto.conType == DataSourceTypeEnum.CUBE) {
-            CubeHelper cubeHelper=new CubeHelper();
-            return cubeHelper.connection(dto.conStr, dto.conAccount, dto.conPassword)
-                    ?
-                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
-        } else {
-            return dataManageService.testConnection(dto.conType, dto.conStr, dto.conAccount, dto.conPassword)
-                    ?
-                    ResultEnum.SUCCESS : ResultEnum.VISUAL_CONNECTION_ERROR;
-        }
-    }
-
-    @Override
-    public ResultEntity<List<DataDomainVO>> listDataDomain(int id) {
-        //获取连接信息
-        DataSourceConVO model = mapper.getDataSourceConByUserId(id);
-        if (model == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        }
-        //创建连接
-        IBuildSqlCommand command = DbHelperFactory.getSqlBuilder(model.conType);
-        List<DataDomainDTO> data = DbHelper.execQueryResultList(command.buildDataDomainQuery(model.conDbname), model, DataDomainDTO.class);
-        if (data != null) {
-            //格式化结果。根据表名称/描述字段分组，获取每个表的字段信息 + "#" + StringUtils.defaultString(o.getTableDetails())
-            List<DataDomainVO> res = data.stream()
-                    .collect(Collectors.collectingAndThen(
-                            Collectors.toCollection(
-                                    () -> new TreeSet<>(
-                                            Comparator.comparing(DataDomainDTO::getTableName))),
-                            ArrayList::new)
-                    )
-                    .stream()
-                    .map(e ->
-                            new DataDomainVO() {{
-                                name = e.tableName;
-                                details = e.tableDetails;
-                                children = data.stream()
-                                        .filter(c -> c.tableName.equals(e.tableName))
-                                        .map(item -> new DataDomainVO(item.columnName, item.columnDetails))
-                                        .collect(Collectors.toList());
-                            }})
-                    .collect(Collectors.toList());
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, res);
-        }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
-    }
-
-    @Override
-    public ResultEntity<List<DimensionVO>> SSASDataStructure(int id) {
-        //获取连接信息
-        List<DimensionVO> dimensionVOList = new ArrayList<>();
-        DataSourceConVO model = mapper.getDataSourceConByUserId(id);
-        if (model == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        } else {
-            cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
+        Connection conn = null;
+        try {
+            switch (dto.conType) {
+                case MYSQL:
+                    Class.forName(DataSourceTypeEnum.MYSQL.getName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
+                case SQLSERVER:
+                    //1.加载驱动程序
+                    Class.forName(DataSourceTypeEnum.SQLSERVER.getName());
+                    //2.获得数据库的连接
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
+                default:
+                    return ResultEnum.DS_DATASOURCE_CON_WARN;
+            }
+        } catch (Exception e) {
+            if (conn != null) {
+                conn.close();
+            }
+            return ResultEnum.DS_DATASOURCE_CON_ERROR;
+        } finally {
             try {
-                CubePO modelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
-                //度量
-                DimensionVO dimensionVO_Mea = new DimensionVO();
-                dimensionVO_Mea.name = Measures_Name;
-                dimensionVO_Mea.uniqueName = Measures_UniqueName;
-                dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
-                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(modelStructure.measures);
-                dimensionVOList.add(dimensionVO_Mea);
-                //维度
-                modelStructure.dimensions.forEach(d -> {
-                    DimensionVO dimensionVO_Dim = new DimensionVO();
-                    dimensionVO_Dim.name = d.name;
-                    dimensionVO_Dim.uniqueName = d.uniqueName;
-                    dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;
-                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
-                    dimensionVOList.add(dimensionVO_Dim);
-                });
-
-            } catch (Exception e) {
-                log.error("获取SSAS数据结构出错，错误信息:",e);
-                return ResultEntityBuild.build(ResultEnum.ERROR);
-            }finally {
-                cubeHelper.closeConnection();
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                throw new FkException(ResultEnum.DS_DATASOURCE_CON_ERROR);
             }
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dimensionVOList);
     }
+
+    @Override
+    public List<DataSourceConVO> getAll() {
+        return mapper.getAll();
+    }
+
+    @Override
+    public DataSourceVO getMeta(int datasourceId) {
+        DataSourceVO dataSource = new DataSourceVO();
+        DataSourceConPO conPo = mapper.selectById(datasourceId);
+        if (conPo == null)
+            return dataSource;
+        MysqlConUtils mysqlConUtils = new MysqlConUtils();
+        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+
+        switch (DataSourceTypeEnum.values()[conPo.conType])
+        {
+            case MYSQL:
+                // 表结构
+                dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
+                //视图结构
+                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                break;
+            case SQLSERVER:
+                // 表结构
+                dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                // 视图结构
+                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                break;
+        }
+        dataSource.id = (int) conPo.id;
+        dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
+        dataSource.name = conPo.name;
+        dataSource.conDbname = conPo.conDbname;
+
+        return dataSource;
+    }
+
 }

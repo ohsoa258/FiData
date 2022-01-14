@@ -3,8 +3,13 @@ package com.fisk.dataservice.map;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.entity.DataSourceConPO;
+import com.fisk.dataservice.entity.ParmConfigPO;
+import com.fisk.dataservice.vo.app.AppApiParmVO;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author dick

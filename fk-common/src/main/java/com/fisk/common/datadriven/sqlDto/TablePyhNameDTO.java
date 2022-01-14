@@ -1,8 +1,7 @@
-package com.fisk.dataaccess.dto;
+package com.fisk.common.datadriven.sqlDto;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
-import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,10 +23,16 @@ import java.util.stream.Collectors;
 public class TablePyhNameDTO extends BaseDTO {
 
     /**
-     * 表名
+     * 非实时应用所属下的表名
      */
     @ApiModelProperty(value = "非实时应用所属下的表名", required = true)
     public String tableName;
+
+    /**
+     * 返回给前端的唯一标记
+     */
+    @ApiModelProperty(value = "返回给前端的唯一标记", required = true)
+    public int tag;
 
     /**
      * 表字段

@@ -9,10 +9,9 @@ import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
-import com.fisk.dataservice.vo.datasource.DataDomainVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.service.IDataSourceConManageService;
-import com.fisk.dataservice.vo.datasource.DimensionVO;
+import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -65,16 +64,15 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-    @GetMapping("/getDataDomain/{id}")
-    @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getDataDomain(@PathVariable("id") int id) {
-        return service.listDataDomain(id);
+    @GetMapping("/getAll")
+    @ApiOperation("获取所有数据源连接信息")
+    public ResultEntity<List<DataSourceConVO>> getAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
     }
 
-    @GetMapping("/getSSASDataStructure/{id}")
-    @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DimensionVO>> getSSASDataStructure(@PathVariable("id") int id) {
-        return service.SSASDataStructure(id);
+    @GetMapping("/getTableAll/{id}")
+    @ApiOperation("获取全部表字段信息")
+    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(id));
     }
-
 }

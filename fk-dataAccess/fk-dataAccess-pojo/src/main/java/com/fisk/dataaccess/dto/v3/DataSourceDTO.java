@@ -18,7 +18,7 @@ public class DataSourceDTO {
      */
     public String driveType;
     /**
-     * 数据库名
+     * 应用名称
      */
     public String appName;
     /**

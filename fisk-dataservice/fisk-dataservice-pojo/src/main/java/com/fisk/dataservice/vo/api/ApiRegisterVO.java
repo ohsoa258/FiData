@@ -32,6 +32,12 @@ public class ApiRegisterVO {
     public String tableName;
 
     /**
+     * 数据源id
+     */
+    @ApiModelProperty(value = "数据源id")
+    public String datasourceId;
+
+    /**
      * api标识code
      */
     @ApiModelProperty(value = "api标识code")

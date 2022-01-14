@@ -2,16 +2,14 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
-import com.fisk.dataservice.vo.datasource.DataDomainVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataservice.vo.datasource.DimensionVO;
+import com.fisk.dataservice.vo.datasource.DataSourceVO;
 
 import java.util.List;
 
@@ -23,7 +21,6 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
 
     /**
      * 获取权限内所有的数据源
-     * @param page 分页对象
      * @param query 查询参数
      * @return 查询结果
      */
@@ -58,16 +55,15 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     ResultEnum testConnection(TestConnectionDTO dto);
 
     /**
-     * 获取数据域连接下的所有数据源
-     * @param id 数据源连接地址
-     * @return 数据源下的数据域
+     * 获取全部数据源
+     * @return 查询结果
      */
-    ResultEntity<List<DataDomainVO>> listDataDomain(int id);
+    List<DataSourceConVO> getAll();
 
     /**
-     *获取Tabular或Cube下的数据结构
-     * @param id 数据源连接地址
-     * @return Tabular或Cube下的数据结构
+     * 获取数据源下的表
+     * @param datasourceId 数据源id
+     * @return 查询结果
      */
-    ResultEntity<List<DimensionVO>> SSASDataStructure(int id);
+    DataSourceVO getMeta(int datasourceId);
 }

@@ -34,7 +34,7 @@ public class DataSourceConPO extends BasePO
     /**
      * 端口
      */
-    public Integer conPort;
+    public int conPort;
 
     /**
      * 模型
@@ -49,7 +49,7 @@ public class DataSourceConPO extends BasePO
     /**
      * 连接类型
      */
-    public Integer conType;
+    public int conType;
 
     /**
      * 账号
