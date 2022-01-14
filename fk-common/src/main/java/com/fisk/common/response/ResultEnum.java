@@ -45,6 +45,7 @@ public enum ResultEnum {
     VISUAL_LOADDRIVER_ERROR(2001, "数据库驱动加载失败"),
     VISUAL_PARAMTER_ERROR(2002, "缺少参数"),
     VISUAL_QUERY_ERROR(2003, "查询失败"),
+    VISUAL_IMAGE_ERROR(2003, "图片格式不正确！，使用.jpg/.png/.bpm/.jpeg后缀的图片"),
 
     /**
      * 授权中心

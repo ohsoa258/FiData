@@ -9,10 +9,8 @@ import com.fisk.common.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+ import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 
@@ -28,9 +26,16 @@ public class VisualizationController {
     @Resource
     VisualizationService visualizationService;
 
-    @ApiOperation("可视化生成Sql")
+    @ApiOperation("可视化获取图表数据")
     @PostMapping("/getData")
     public ResultEntity<DataServiceResult> getData(@Validated @RequestBody ChartQueryObjectVO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, visualizationService.buildSql(query));
+    }
+
+    @ApiOperation("图片上传到服务器")
+    @PostMapping("/upload")
+    @ResponseBody
+    public ResultEntity<String> upload(@RequestParam("filesName") MultipartFile file) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, visualizationService.upload(file));
     }
 }
