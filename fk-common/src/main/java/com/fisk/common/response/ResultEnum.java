@@ -150,7 +150,9 @@ public enum ResultEnum {
     DS_API_EXISTS(10004, "API不存在，请刷新页面"),
     DS_APP_PWD_NOTNULL(10005, "应用密码不能为null"),
     DS_DATASOURCE_CON_WARN(10006, "当前驱动类型尚未开发"),
-    DS_DATASOURCE_CON_ERROR(10007, "连接失败");
+    DS_DATASOURCE_CON_ERROR(10007, "连接失败"),
+    DS_DATASOURCE_EXISTS(10008, "数据源不存在，请刷新页面"),
+    DS_API_PV_QUERY_ERROR(10009, "查询失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

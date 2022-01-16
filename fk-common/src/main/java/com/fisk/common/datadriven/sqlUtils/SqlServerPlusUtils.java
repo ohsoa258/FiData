@@ -62,9 +62,9 @@ public class SqlServerPlusUtils {
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-////                dto.fieldType = resultSet.getString("TYPE_NAME");
-////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-///               dto.fieldDes = resultSet.getString("REMARKS");
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+                //dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }
 

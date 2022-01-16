@@ -195,6 +195,7 @@ public class MysqlConUtils {
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+
                 colNameList.add(tableStructureDTO);
             }
             rs.close();

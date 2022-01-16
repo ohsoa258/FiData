@@ -16,15 +16,15 @@ public class AppApiPO extends BasePO{
     /**
      * 应用id
      */
-    public Integer appId;
+    public int appId;
 
     /**
      * API id
      */
-    public Integer apiId;
+    public int apiId;
 
     /**
      * API 状态 1启用、0禁用
      */
-    public Integer apiState;
+    public int apiState;
 }

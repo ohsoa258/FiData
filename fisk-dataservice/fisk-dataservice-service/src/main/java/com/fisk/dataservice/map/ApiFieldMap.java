@@ -1,5 +1,6 @@
 package com.fisk.dataservice.map;
 
+import com.fisk.dataservice.dto.api.FieldConfigDTO;
 import com.fisk.dataservice.dto.api.FieldConfigEditDTO;
 import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
@@ -32,4 +33,12 @@ public interface ApiFieldMap {
      * @return target
      */
     List<FieldConfigPO> listDtoToPo(List<FieldConfigEditDTO> list);
+
+    /**
+     * list集合 dto -> po
+     *
+     * @param list source
+     * @return target
+     */
+    List<FieldConfigPO> listDtoToPo_Add(List<FieldConfigDTO> list);
 }

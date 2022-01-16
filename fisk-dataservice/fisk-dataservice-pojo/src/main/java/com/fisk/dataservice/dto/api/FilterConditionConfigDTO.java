@@ -16,6 +16,12 @@ import javax.validation.constraints.NotNull;
 public class FilterConditionConfigDTO
 {
     /**
+     * apiId
+     */
+    @ApiModelProperty(value = "apiId")
+    public int apiId;
+
+    /**
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
@@ -25,6 +31,13 @@ public class FilterConditionConfigDTO
 
     /**
      * 运算符
+     * LIKE - 包含
+     * EQU - 等于
+     * NEQ - 不等于
+     * LSS - 小于
+     * LEQ - 小于或等于
+     * GTR - 大于
+     * GEQ - 大于或等于
      */
     @ApiModelProperty(value = "运算符")
     @NotNull()

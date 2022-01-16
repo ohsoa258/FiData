@@ -37,6 +37,12 @@ public class FieldConfigVO
     public String fieldType;
 
     /**
+     * 字段排序
+     */
+    @ApiModelProperty(value = "字段排序")
+    public String fieldSort;
+
+    /**
      * 字段描述
      */
     @ApiModelProperty(value = "字段描述")

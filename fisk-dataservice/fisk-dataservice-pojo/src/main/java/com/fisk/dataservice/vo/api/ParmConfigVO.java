@@ -22,7 +22,7 @@ public class ParmConfigVO
      * apiId
      */
     @ApiModelProperty(value = "apiId")
-    public Integer apiId;
+    public int apiId;
 
     /**
      * 参数名称

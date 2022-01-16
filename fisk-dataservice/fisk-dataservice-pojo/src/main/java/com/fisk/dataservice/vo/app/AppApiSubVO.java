@@ -1,6 +1,5 @@
 package com.fisk.dataservice.vo.app;
 
-import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 
@@ -21,19 +20,19 @@ public class AppApiSubVO {
      * 应用id
      */
     @ApiModelProperty(value = "应用id")
-    public Integer appId;
+    public int appId;
 
     /**
      * API id
      */
     @ApiModelProperty(value = "API id")
-    public Integer apiId;
+    public int apiId;
 
     /**
      * API 状态 1启用、0禁用
      */
     @ApiModelProperty(value = "apiState")
-    public ApiStateTypeEnum apiState;
+    public int apiState;
 
     /**
      * api名称

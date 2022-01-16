@@ -31,7 +31,7 @@ public class ApiRegisterController {
 
     @ApiOperation("分页查询所有api")
     @PostMapping("/page")
-    public ResultEntity<Page<ApiRegisterVO>> getAll(@RequestBody ApiRegisterQueryDTO dto) {
+    public ResultEntity<Page<ApiConfigVO>> getAll(@RequestBody ApiRegisterQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
     }
 
@@ -72,8 +72,8 @@ public class ApiRegisterController {
     }
 
     @ApiOperation("预览")
-    @GetMapping("/preview/{apiId}")
-    public ResultEntity<Object> preview(@PathVariable("apiId") int apiId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.preview(apiId));
+    @PostMapping("/preview")
+    public ResultEntity<ApiPreviewVO> preview(@RequestBody ApiPreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.preview(dto));
     }
 }

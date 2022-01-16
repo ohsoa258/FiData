@@ -1,7 +1,7 @@
 package com.fisk.dataservice.dto.api;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.dataservice.vo.api.ApiRegisterVO;
+import com.fisk.dataservice.vo.api.ApiConfigVO;
 import io.swagger.annotations.ApiModelProperty;
 
 
@@ -22,5 +22,5 @@ public class ApiRegisterQueryDTO {
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")
-    public Page<ApiRegisterVO> page;
+    public Page<ApiConfigVO> page;
 }

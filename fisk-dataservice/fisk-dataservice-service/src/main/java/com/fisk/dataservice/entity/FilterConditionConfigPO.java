@@ -17,7 +17,7 @@ public class FilterConditionConfigPO extends BasePO
     /**
      * API Id
      */
-    public String apiId;
+    public int apiId;
 
     /**
      * 字段名称

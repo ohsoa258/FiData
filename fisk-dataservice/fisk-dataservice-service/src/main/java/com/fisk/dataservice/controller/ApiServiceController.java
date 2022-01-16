@@ -39,6 +39,7 @@ public class ApiServiceController {
     @PostMapping("/getData")
     public ResultEntity<Object> getData(HttpServletRequest request)
     {
+        // 可以分页，
         String token = request.getHeader("token");
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(token));
     }

@@ -7,24 +7,26 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.*;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 /**
  * api注册接口
+ *
  * @author dick
  */
 public interface IApiRegisterManageService extends IService<ApiConfigPO> {
 
     /**
      * 分页查询
+     *
      * @return 应用列表
      */
-    Page<ApiRegisterVO> getAll(ApiRegisterQueryDTO query);
+    Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query);
 
     /**
      * 添加数据
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -32,6 +34,7 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
 
     /**
      * 编辑数据
+     *
      * @param dto dto
      * @return 执行结果
      */
@@ -39,36 +42,41 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
 
     /**
      * 删除数据
+     *
      * @param apiId apiId
      * @return 执行结果
      */
-    ResultEnum deleteData(Integer apiId);
+    ResultEnum deleteData(int apiId);
 
     /**
      * 查询api信息
+     *
      * @param apiId apiId
      * @return api详情
      */
-    ApiRegisterDetailVO detail(Integer apiId);
+    ApiRegisterDetailVO detail(int apiId);
 
     /**
      * 查询api字段列表
+     *
      * @param apiId apiId
      * @return api字段列表
      */
-    List<FieldConfigVO> getFieldAll(Integer apiId);
+    List<FieldConfigVO> getFieldAll(int apiId);
 
     /**
      * 设置字段属性
+     *
      * @param dto 字段信息
      * @return 执行结果
      */
-    ResultEnum  setField( List<FieldConfigEditDTO> dto);
+    ResultEnum setField(List<FieldConfigEditDTO> dto);
 
     /**
      * 预览
-     * @param appId apiId
+     *
+     * @param dto 请求参数
      * @return 预览结果
      */
-    ResultEntity<Object> preview(Integer appId);
+    ApiPreviewVO preview(ApiPreviewDTO dto);
 }

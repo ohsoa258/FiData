@@ -1,6 +1,5 @@
 package com.fisk.dataservice.dto.api;
 
-import com.fisk.dataservice.enums.ApiTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -36,20 +35,28 @@ public class ApiConfigDTO
      * 表名
      */
     @ApiModelProperty(value = "表名")
+    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String tableName;
+
+    /**
+     * sql语句
+     */
+    @ApiModelProperty(value = "sql语句")
+    @NotNull()
+    @Length(min = 0, max = 5000, message = "长度最多5000")
+    public String createSql;
+
 
     /**
      * api类型 1 sql、2 自定义sql
      */
     @ApiModelProperty(value = "api类型 1 sql、2 自定义sql")
-    @NotNull
-    public ApiTypeEnum apiType;
+    public int apiType;
 
     /**
      * 数据源id
      */
     @ApiModelProperty(value = "数据源id")
-    @NotNull()
-    public Integer datasourceId;
+    public int datasourceId;
 }

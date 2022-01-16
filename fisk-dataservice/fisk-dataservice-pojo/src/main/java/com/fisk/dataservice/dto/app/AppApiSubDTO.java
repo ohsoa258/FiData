@@ -1,6 +1,5 @@
 package com.fisk.dataservice.dto.app;
 
-import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -32,6 +31,6 @@ public class AppApiSubDTO {
      * API状态 1启用、0禁用
      */
     @ApiModelProperty(value = "apiState")
-    @NotNull
-    public ApiStateTypeEnum apiState;
+    @NotNull()
+    public Integer apiState;
 }

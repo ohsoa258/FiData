@@ -16,6 +16,12 @@ import javax.validation.constraints.NotNull;
 public class ParmConfigDTO
 {
     /**
+     * apiId
+     */
+    @ApiModelProperty(value = "apiId")
+    public int apiId;
+
+    /**
      * 参数名称
      */
     @ApiModelProperty(value = "参数名称")

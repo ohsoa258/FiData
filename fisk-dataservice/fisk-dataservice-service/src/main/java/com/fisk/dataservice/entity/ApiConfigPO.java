@@ -32,12 +32,12 @@ public class ApiConfigPO extends BasePO
     /**
      * api类型 1 sql、2 自定义sql
      */
-    public Integer apiType;
+    public int apiType;
 
     /**
      * 数据源id
      */
-    public Integer datasourceId;
+    public int datasourceId;
 
     /**
      * 表名称

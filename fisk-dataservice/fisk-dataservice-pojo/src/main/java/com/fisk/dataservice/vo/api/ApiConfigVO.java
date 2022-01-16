@@ -1,18 +1,14 @@
 package com.fisk.dataservice.vo.api;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.dataservice.enums.ApiTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
-
-import java.time.LocalDateTime;
 
 /**
  * @author dick
  * @version v1.0
- * @description api列表 VO
+ * @description api VO
  * @date 2022/1/10 17:51
  */
-public class ApiRegisterVO {
+public class ApiConfigVO {
     /**
      * Id
      */
@@ -35,7 +31,7 @@ public class ApiRegisterVO {
      * 数据源id
      */
     @ApiModelProperty(value = "数据源id")
-    public String datasourceId;
+    public int datasourceId;
 
     /**
      * api标识code
@@ -48,4 +44,16 @@ public class ApiRegisterVO {
      */
     @ApiModelProperty(value = "api描述")
     public String apiDesc;
+
+    /**
+     * api类型 1 sql、2 自定义sql
+     */
+    @ApiModelProperty(value = "api类型 1 sql、2 自定义sql")
+    public int apiType;
+
+    /**
+     * sql语句
+     */
+    @ApiModelProperty(value = "sql语句")
+    public String createSql;
 }

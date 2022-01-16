@@ -106,12 +106,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         try {
             switch (dto.conType) {
                 case MYSQL:
-                    Class.forName(DataSourceTypeEnum.MYSQL.getName());
+                    Class.forName(DataSourceTypeEnum.MYSQL.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 case SQLSERVER:
                     //1.加载驱动程序
-                    Class.forName(DataSourceTypeEnum.SQLSERVER.getName());
+                    Class.forName(DataSourceTypeEnum.SQLSERVER.getDriverName());
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
@@ -154,13 +154,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 // 表结构
                 dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
                 //视图结构
-                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
             case SQLSERVER:
                 // 表结构
                 dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 // 视图结构
-                dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
         }
         dataSource.id = (int) conPo.id;

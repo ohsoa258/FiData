@@ -18,8 +18,10 @@ import org.apache.ibatis.annotations.Update;
 public interface ApiBuiltinParmMapper extends FKBaseMapper<BuiltinParmPO>
 {
     /**
-     * 根据应用id查询应用信息
-     * @return 查询结果
+     * 根据apiId和appId修改字段有效性标记
+     * @param appId 应用id
+     * @param apiId apiId
+     * @return 操作结果
      */
     @Update("UPDATE tb_builtin_parm SET del_flag=0 WHERE app_id=#{appId} AND api_id=#{apiId} AND del_flag=1;")
     int updateBySearch(@Param("appId") int appId,@Param("apiId") int apiId);

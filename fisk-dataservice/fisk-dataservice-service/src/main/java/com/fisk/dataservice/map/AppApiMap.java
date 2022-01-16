@@ -19,8 +19,5 @@ public interface AppApiMap {
      * @param dto source
      * @return target
      */
-    @Mappings({
-            @Mapping(source = "apiState.value", target = "apiState")
-    })
     AppApiPO dtoToPo(AppApiSubDTO dto);
 }

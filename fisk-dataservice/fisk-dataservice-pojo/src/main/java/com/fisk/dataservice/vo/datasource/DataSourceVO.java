@@ -48,6 +48,6 @@ public class DataSourceVO
     /**
      * 视图
      */
-    @ApiModelProperty(value = "视图")
-    public List<DataBaseViewDTO> viewDtoList;
+    //@ApiModelProperty(value = "视图")
+    //public List<DataBaseViewDTO> viewDtoList;
 }

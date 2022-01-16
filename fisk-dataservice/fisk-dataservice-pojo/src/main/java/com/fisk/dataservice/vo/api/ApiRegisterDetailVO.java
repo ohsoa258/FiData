@@ -15,7 +15,7 @@ public class ApiRegisterDetailVO {
      * api信息
      */
     @ApiModelProperty(value = "api信息")
-    public ApiRegisterVO apiVO;
+    public ApiConfigVO apiVO;
 
     /**
      * 字段列表

@@ -8,34 +8,26 @@ import java.util.List;
 /**
  * @author dick
  * @version v1.0
- * @description api DTO
- * @date 2022/1/6 14:51
+ * @description api预览
+ * @date 2022/1/16 12:49
  */
-public class ApiRegisterDTO
-{
+public class ApiPreviewDTO {
     /**
      * api信息
      */
     @ApiModelProperty(value = "api信息")
     @NotNull()
-    public ApiConfigDTO apiDTO;
-
-    /**
-     * 字段列表
-     */
-    @ApiModelProperty(value = "字段列表")
-    @NotNull()
-    public List<FieldConfigDTO> fieldDTO;
+    public ApiConfigEditDTO apiDTO;
 
     /**
      * 条件列表
      */
     @ApiModelProperty(value = "条件列表")
-    public List<FilterConditionConfigDTO> whereDTO;
+    public List<FilterConditionConfigEditDTO> whereDTO;
 
     /**
      * 参数列表
      */
     @ApiModelProperty(value = "参数列表")
-    public List<ParmConfigDTO> parmDTO;
+    public List<ParmConfigEditDTO> parmDTO;
 }

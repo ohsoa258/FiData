@@ -8,6 +8,7 @@ import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * 应用api mapper

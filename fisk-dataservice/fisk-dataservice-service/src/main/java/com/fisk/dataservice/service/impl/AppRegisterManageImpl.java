@@ -184,7 +184,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         AppApiPO data = appApiMapper.selectOne(queryWrapper);
         if (data != null) {
             // 存在则修改状态
-            data.setApiState(data.apiState = dto.apiState.getValue());
+            data.setApiState(data.apiState = dto.apiState);
             return appApiMapper.updateById(data) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } else {
             // 不存在则新增
@@ -239,7 +239,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     }
                 }
             }
-            appApiParmList = ApiParmMap.INSTANCES.listPoToVo(selectList);
+            appApiParmList = ApiParmMap.INSTANCES.listPoToAppApiParmVo(selectList);
         }
         return appApiParmList;
     }
