@@ -19,6 +19,16 @@ public class TableAccessPO extends BasePO {
     public Long appId;
 
     /**
+     * apiId
+     */
+    public Long apiId;
+
+    /**
+     * 父id
+     */
+    public Integer pid;
+
+    /**
      * 添加数据时atlas生成
      */
     public String atlasTableId;

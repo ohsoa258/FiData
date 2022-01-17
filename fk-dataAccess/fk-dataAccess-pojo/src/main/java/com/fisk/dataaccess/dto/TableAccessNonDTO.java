@@ -31,6 +31,11 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "应用id", required = true)
     public long appId;
 
+    @ApiModelProperty(value = "apiId", required = true)
+    public Long apiId;
+
+    @ApiModelProperty(value = "父id", required = true)
+    public Integer pid;
     /**
      * 应用名称
      */
