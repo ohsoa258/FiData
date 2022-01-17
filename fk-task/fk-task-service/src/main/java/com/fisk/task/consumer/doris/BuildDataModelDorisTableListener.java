@@ -403,7 +403,7 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句"+sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+stgSqlFileds.toString()+"fi_createtime varchar(50),fi_updatetime varchar(50),enableflag varchar(50))";
+        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+stgSqlFileds.toString()+"fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50))";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();
