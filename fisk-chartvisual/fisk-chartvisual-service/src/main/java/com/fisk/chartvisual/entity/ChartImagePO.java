@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BaseSqlServerPO;
+import com.fisk.common.entity.BasePO;
 import lombok.Data;
 
 /**
@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @TableName("tb_chart_image")
 @Data
-public class ChartImagePO extends BaseSqlServerPO {
+public class ChartImagePO extends BasePO {
 
     private String imagePath;
 }

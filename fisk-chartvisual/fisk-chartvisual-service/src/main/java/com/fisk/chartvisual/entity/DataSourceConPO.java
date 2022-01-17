@@ -2,7 +2,6 @@ package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
-import com.fisk.common.entity.BaseSqlServerPO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("tb_datasource_con")
-public class DataSourceConPO extends BaseSqlServerPO {
+public class DataSourceConPO extends BasePO {
 
     public String name;
 

@@ -35,7 +35,7 @@ public class VisualizationController {
     @ApiOperation("图片上传到服务器")
     @PostMapping("/upload")
     @ResponseBody
-    public ResultEntity<String> upload(@RequestParam("filesName") MultipartFile file) {
+    public ResultEntity<String> upload(@RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, visualizationService.upload(file));
     }
 }

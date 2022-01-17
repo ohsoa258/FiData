@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import lombok.Data;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * @author gy
@@ -17,7 +17,7 @@ public class ChartPropertyVO {
     public String content;
     public String details;
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public Timestamp createTime;
+    public LocalDateTime createTime;
     public ChartQueryTypeEnum chartType;
     public String image;
     public String backgroundImage;
