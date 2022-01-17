@@ -7,6 +7,7 @@ import com.davis.client.model.ProcessorRunStatusEntity;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.FuncNameEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.*;
 import com.fisk.common.exception.FkException;
@@ -1326,11 +1327,7 @@ public class BuildNifiTaskListener {
         }
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
-        if(config.targetDsConfig.syncMode==4){
-            executsql = assemblySql(config,synchronousTypeEnum);
-        }else{
-            executsql = "call public.pg_data_stg_to_ods ('" + stg_TableName + "','" + ods_TableName + "','" + syncMode + "','"+config.businessKeyAppend+"')";
-        }
+        executsql = assemblySql(config,synchronousTypeEnum,FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql;
@@ -1341,39 +1338,56 @@ public class BuildNifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    private String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum){
+    private String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum,String funcName){
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
-        String sql="call public.pg_data_stg_to_ods_ymd('";
+        String sql="call public."+funcName+"('";
         if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
             sql+= "stg_"+targetTableName+"'";
             sql+=",'"+config.processorConfig.targetTableName+"'";
         }else{
-            sql+= targetTableName+"'";
-            sql+=",'ods_"+targetTableName.substring(4)+"'";
+            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
+                sql += "stg_" + targetTableName + "'";
+                sql += ",'ods_" + targetTableName + "'";
+            } else {
+                sql += targetTableName + "'";
+                sql += ",'ods_" + targetTableName.substring(4) + "'";
+            }
+
         }
-        //模式
-        sql+=","+business.otherLogic;
-        //年月日
-        sql+=",'"+business.businessTimeFlag+"'";
-        //具体日期
-        sql+=","+business.businessDate;
-        //业务时间覆盖字段
-        sql+=",'"+business.businessTimeField+"'";
-        //businessOperator
-        String businessOperator = business.businessOperator;
-        sql+=",'"+businessOperator+"'";
-        //业务覆盖范围
-        sql+=","+business.businessRange;
-        //业务覆盖单位
-        sql+=",'"+business.rangeDateUnit+"'";
-        //其他逻辑,逻辑符号
-        String businessOperatorStandby = business.businessOperatorStandby;
-        sql+=",'"+businessOperatorStandby+"'";
-        //其他逻辑  业务覆盖范围
-        sql+=","+business.businessRangeStandby;
-        //其他逻辑  业务覆盖单位
-        sql+=",'"+business.rangeDateUnitStandby+"')";
+        //同步方式
+        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+        sql+=",'"+syncMode+"'";
+        //主键
+        sql+=config.businessKeyAppend==null?",''":",'"+config.businessKeyAppend+"'";
+
+
+        if (business == null) {
+            sql+=",0,'',0,'','',0,'','',0,'')";
+        } else {
+            //模式
+            sql += "," + business.otherLogic;
+            //年月日
+            sql += (business.businessTimeFlag == null ? ",''" : ",'" + business.businessTimeFlag) + "'";
+            //具体日期
+            sql += "," + business.businessDate;
+            //业务时间覆盖字段
+            sql += (business.businessTimeField == null ? ",''" : ",'" + business.businessTimeField) + "'";
+            //businessOperator
+            String businessOperator = business.businessOperator;
+            sql += (businessOperator == null ? ",''" : ",'" + businessOperator) + "'";
+            //业务覆盖范围
+            sql += "," + business.businessRange;
+            //业务覆盖单位
+            sql += (business.rangeDateUnit == null ? ",''" : ",'" + business.rangeDateUnit) + "'";
+            //其他逻辑,逻辑符号
+            String businessOperatorStandby = business.businessOperatorStandby;
+            sql += (businessOperatorStandby == null ? ",''" : ",'" + businessOperatorStandby) + "'";
+            //其他逻辑  业务覆盖范围
+            sql += "," + business.businessRangeStandby;
+            //其他逻辑  业务覆盖单位
+            sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
+        }
         return sql;
     }
 
@@ -1533,7 +1547,7 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "Execute Delete SQL in the data target";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "TRUNCATE table " + "stg_" + config.processorConfig.targetTableName;
+        querySqlDto.querySql = assemblySql(config,synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName());;
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         }
