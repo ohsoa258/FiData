@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDropQueryDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.service.IFactAttribute;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -85,5 +86,12 @@ public class FactAttributeController {
     public ResultEntity<Object> getFactAttributeSourceId(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeSourceId(id));
     }
+
+    @ApiOperation("根据事实id获取事实字段及其关联详情(nifi)")
+    @GetMapping("/selectAttributeList")
+    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId) {
+        return service.selectAttributeList(factId);
+    }
+
 
 }

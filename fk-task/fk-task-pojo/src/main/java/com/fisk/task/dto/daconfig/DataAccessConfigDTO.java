@@ -1,7 +1,10 @@
 package com.fisk.task.dto.daconfig;
 
 import com.fisk.dataaccess.dto.TableBusinessDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 数据接入配置项
@@ -46,4 +49,9 @@ public class DataAccessConfigDTO {
      * 业务主键集合(逗号隔开)
      */
     public String businessKeyAppend;
+
+    /*
+    * 建模字段详情list
+    * */
+    public List<ModelPublishFieldDTO> modelPublishFieldDTOList;
 }

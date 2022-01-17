@@ -1616,17 +1616,22 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String converSql(String tableName, String sql, String driveType) {
         if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
             Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
-            Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getValue());
-            Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getValue());
-            if(startTime!=null){
-                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
-            }else{
-                sql=sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(),"0000-00-00");
-            }
-            if(endTime!=null){
-                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
-            }else{
-                sql=sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(),"0000-00-00");
+            if (etlIncremental != null) {
+                Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
+                Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
+                if (startTime != null) {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
+                } else {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                }
+                if (endTime != null) {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
+                } else {
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
+                }
+            } else {
+                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
             }
         }
         return sql;

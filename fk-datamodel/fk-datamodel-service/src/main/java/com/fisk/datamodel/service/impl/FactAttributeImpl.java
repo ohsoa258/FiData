@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
@@ -26,6 +27,7 @@ import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.FactAttributeMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import net.bytebuddy.implementation.bytecode.Throw;
 import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +56,10 @@ public class FactAttributeImpl
     BusinessProcessMapper businessProcessMapper;
     @Resource
     BusinessProcessImpl businessProcess;
+    @Resource
+    DimensionAttributeMapper dimensionAttributeMapper;
+    @Resource
+    DimensionMapper dimensionMapper;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -267,6 +275,38 @@ public class FactAttributeImpl
         List<FactAttributePO> list=mapper.selectList(queryWrapper);
         data.attributeDTO= FactAttributeMap.INSTANCES.poListsToDtoList(list);
         return data;
+    }
+
+    @Override
+    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(Integer factId){
+        Map<String, Object> conditionHashMap = new HashMap<>();
+        List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
+        conditionHashMap.put("fact_id",factId);
+        conditionHashMap.put("del_flag",1);
+        List<FactAttributePO> factAttributePOS = mapper.selectByMap(conditionHashMap);
+        for (FactAttributePO attributePO:factAttributePOS)
+        {
+            ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+            fieldDTO.fieldId=attributePO.id;
+            fieldDTO.fieldEnName=attributePO.factFieldEnName;
+            fieldDTO.fieldType=attributePO.factFieldType;
+            fieldDTO.fieldLength=attributePO.factFieldLength;
+            fieldDTO.attributeType=attributePO.attributeType;
+            fieldDTO.sourceFieldName=attributePO.sourceFieldName;
+            fieldDTO.associateDimensionId=attributePO.associateDimensionId;
+            fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+            //判断是否关联维度
+            if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+            {
+                DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.associateDimensionId);
+                fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
+                DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
+                fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+            }
+            fieldList.add(fieldDTO);
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fieldList);
     }
 
 }

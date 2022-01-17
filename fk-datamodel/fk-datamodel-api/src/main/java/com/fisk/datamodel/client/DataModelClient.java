@@ -12,6 +12,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -174,5 +175,20 @@ public interface DataModelClient {
      */
     @GetMapping("/DataManagement/getDataModelTable")
     ResultEntity<Object> getDataModelTable();
+
+    /*
+    *根据维度id获取维度字段及其关联详情(nifi)
+    * @return
+    * */
+    @GetMapping("/attribute/selectDimensionAttributeList")
+    ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId);
+
+
+    /*
+     *根据事实id获取事实字段及其关联详情(nifi)
+     * @return
+     * */
+    @GetMapping("/factAttribute/selectAttributeList")
+    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId);
 
 }

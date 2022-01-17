@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeUpdateDTO;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -83,5 +84,11 @@ public class DimensionAttributeController {
     public ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
     }*/
+
+    @GetMapping("/selectDimensionAttributeList")
+    @ApiOperation("根据维度id获取维度字段及其关联详情(nifi)")
+    public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId) {
+        return service.selectDimensionAttributeList(dimensionId);
+    }
 
 }

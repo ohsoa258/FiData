@@ -15,12 +15,15 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableBusinessDTO;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.*;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -53,6 +56,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -103,6 +107,8 @@ public class BuildNifiTaskListener {
     INifiComponentsBuild componentsBuild;
     @Resource
     DataAccessClient client;
+    @Resource
+    DataModelClient dataModelClient;
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
@@ -211,12 +217,14 @@ public class BuildNifiTaskListener {
             }
             ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
-            // 创建input_port(任务)   (后期入库)
-            tableInputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
-                    groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_INPUT_PORT_COMPONENT);
-            // 创建output_port(任务)   (后期入库)
-            tableOutputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
-                    groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_OUTPUT_PORT_COMPONENT);
+            if(dto.nifiCustomWorkflowId!=null&&dto.nifiCustomWorkflowId!=""){
+                // 创建input_port(任务)   (后期入库)
+                tableInputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
+                        groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_INPUT_PORT_COMPONENT);
+                // 创建output_port(任务)   (后期入库)
+                tableOutputPortId = buildPortComponent(configDTO.taskGroupConfig.appName, groupEntity.getId(),
+                        groupEntity.getPosition().getX(), groupEntity.getPosition().getY(), PortComponentEnum.TASK_OUTPUT_PORT_COMPONENT);
+            }
 
             groupEntityId = groupEntity.getId();
             taskGroupEntityId = taskGroupEntity.getId();
@@ -284,6 +292,7 @@ public class BuildNifiTaskListener {
         TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
         ProcessorConfig processorConfig = new ProcessorConfig();
         ResultEntity<DataAccessConfigDTO> res = new ResultEntity<>();
+        ResultEntity<List<ModelPublishFieldDTO>> fieldDetails=new ResultEntity<>();
         if (synchronousTypeEnum == SynchronousTypeEnum.TOPGODS) {
             res = client.dataAccessConfig(id, appId);
             if (res.code != ResultEnum.SUCCESS.getCode()) {
@@ -292,6 +301,13 @@ public class BuildNifiTaskListener {
             if (res.data != null) {
                 data = res.data;
             }
+        }else if(synchronousTypeEnum == SynchronousTypeEnum.PGTOPG){
+            if(Objects.equals(type,OlapTableEnum.DIMENSION)||Objects.equals(type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+                 fieldDetails = dataModelClient.selectDimensionAttributeList(Math.toIntExact(id));
+            }else if(Objects.equals(type,OlapTableEnum.FACT)||Objects.equals(type,OlapTableEnum.CUSTOMWORKFACT)){
+                 fieldDetails = dataModelClient.selectAttributeList(Math.toIntExact(id));
+            }
+
         }
         //拿出来
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
@@ -351,6 +367,7 @@ public class BuildNifiTaskListener {
             targetDbPoolConfig.user = pgsqlDatainputUsername;
             targetDbPoolConfig.password = pgsqlDatainputPassword;
             targetDbPoolConfig.jdbcStr = pgsqlDatainputUrl;
+            targetDbPoolConfig.tableFieldsList=res.data.targetDsConfig.tableFieldsList;
             TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
             if (buildNifiFlowDTO.workflowDetailId != null) {
                 tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", appId).eq("nifi_custom_workflow_detail_id", buildNifiFlowDTO.workflowDetailId).eq("table_access_id", id).eq("type", type.getValue()).one();
@@ -424,6 +441,7 @@ public class BuildNifiTaskListener {
             data.cfgDsConfig = cfgDsConfig;
             data.taskGroupConfig = taskGroupConfig;
             data.processorConfig = processorConfig;
+            data.modelPublishFieldDTOList=fieldDetails.data;
         }
 
         if (!data.groupConfig.newApp && data.targetDsConfig != null) {
@@ -746,32 +764,35 @@ public class BuildNifiTaskListener {
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
         //调度组件,在数据接入的时候调一次
         ProcessorEntity dispatchProcessor=new ProcessorEntity();
+        String inputPortId = "";
         if(dto.groupStructureId==null){
             dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId);
             componentConnector(groupId, dispatchProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }
-        PositionDTO position = queryField.getComponent().getPosition();
 
-        // TODO 创建input_port(组)   (后期入库)
-        String inputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, position.getX(), position.getY(),
-                PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
+        if(dto.groupStructureId!=null){
+            //  创建input_port(组)
+            PositionDTO position = queryField.getComponent().getPosition();
+            inputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, position.getX(), position.getY(),
+                    PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
+        }
 
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件
-        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 2);
-        tableNifiSettingPO.convertDataToJsonProcessorId = jsonRes.getId();
+        //ProcessorEntity jsonRes = convertJsonProcessor(groupId, 2);
+        //tableNifiSettingPO.convertDataToJsonProcessorId = jsonRes.getId();
         //连接器
-        componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //字段转换nifi变量
-        ProcessorEntity evaluateJson = evaluateJsonPathProcessor(groupId);
-        tableNifiSettingPO.setIncrementProcessorId = evaluateJson.getId();
+        //ProcessorEntity evaluateJson = evaluateJsonPathProcessor(groupId);
+        //tableNifiSettingPO.setIncrementProcessorId = evaluateJson.getId();
         //连接器
-        componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建log
         ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, config.processorConfig.targetTableName);
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
-        componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
+        componentConnector(groupId, queryField.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建执行删除组件
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum);
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
@@ -780,9 +801,9 @@ public class BuildNifiTaskListener {
         //执行查询组件
         ProcessorEntity executeSQLRecord = new ProcessorEntity();
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
-            executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto.groupStructureId, targetDbPoolId, tableNifiSettingPO);
+            executeSQLRecord = createExecuteSQLRecordDoris( config, groupId, dto, targetDbPoolId);
         } else {
-            executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto.groupStructureId, sourceDbPoolId, tableNifiSettingPO);
+            executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
         }
 
         tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
@@ -795,11 +816,15 @@ public class BuildNifiTaskListener {
         //pg2doris不需要调用存储过程
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
+            //字段映射转换
+            ProcessorEntity updateField = createUpdateField(appGroupId, config, groupId, dto,tableNifiSettingPO);
+            tableNifiSettingPO.updateFieldProcessorId=updateField.getId();
+            componentConnector(groupId, executeSQLRecord.getId(), updateField.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //数据入库
-            ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto.groupStructureId, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
+            ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
             tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
             //连接器
-            componentConnector(groupId, executeSQLRecord.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            componentConnector(groupId, updateField.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //合并流文件组件
             ProcessorEntity mergeRes = mergeContentProcessor(groupId);
             tableNifiSettingPO.mergeContentProcessorId = mergeRes.getId();
@@ -816,7 +841,7 @@ public class BuildNifiTaskListener {
             //连接器
             componentConnector(groupId, processorEntity1.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //转json
-            ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 11);
+            ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 10);
             tableNifiSettingPO.convertNumbersToJsonProcessorId = numberToJsonRes.getId();
             //连接器
             componentConnector(groupId, queryNumbers.getId(), numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -838,6 +863,7 @@ public class BuildNifiTaskListener {
             res.add(evaluateJsons);
             res.add(putDatabaseRecord);
             res.add(processorEntity);
+            res.add(updateField);
         }
 
         ProcessorEntity processor = null;
@@ -853,50 +879,52 @@ public class BuildNifiTaskListener {
             log.error("获取任务组的组件失败,【返回信息为：】,{}", processor);
         }
 
-        // TODO 创建output_port(组)   (后期入库)
-        String outputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, processorX, processorY,
-                PortComponentEnum.COMPONENT_OUTPUT_PORT_COMPONENT);
+        if(dto.groupStructureId!=null) {
 
-        // 创建input_port connection(组)
-        String componentInputPortConnectionId = buildPortConnection(groupId,
-                groupId, queryField.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
-                groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
+            // TODO 创建output_port(组)   (后期入库)
+            String outputPortId = buildPortComponent(config.taskGroupConfig.appName, groupId, processorX, processorY,
+                    PortComponentEnum.COMPONENT_OUTPUT_PORT_COMPONENT);
 
-        // 创建input_port connection(任务)
-        String taskInputPortConnectionId = buildPortConnection(groupEntityId,
-                taskGroupEntityId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                groupEntityId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
-                0, PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
+            // 创建input_port connection(组)
+            String componentInputPortConnectionId = buildPortConnection(groupId,
+                    groupId, queryField.getId(), ConnectableDTO.TypeEnum.PROCESSOR,
+                    groupId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                    0, PortComponentEnum.COMPONENT_INPUT_PORT_CONNECTION);
 
-        // 创建input_port connection(应用)
+            // 创建input_port connection(任务)
+            String taskInputPortConnectionId = buildPortConnection(groupEntityId,
+                    taskGroupEntityId, inputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                    groupEntityId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
+                    0, PortComponentEnum.TASK_INPUT_PORT_CONNECTION);
+
+            // 创建input_port connection(应用)
 //        String appInputPortConnectionId = buildPortConnection(appParentGroupId,
 //                appGroupId, tableInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
 //                appParentGroupId, appInputPortId, ConnectableDTO.TypeEnum.INPUT_PORT,
 //                0, PortComponentEnum.APP_INPUT_PORT_CONNECTION);
 
-        // 创建output_port connection(组)
-        String componentOutputPortConnectionId = "";
-        if (isLastId) {
-            componentOutputPortConnectionId = buildPortConnection(groupId,
-                    groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                    groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
-                    3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
-        } else {
-            componentOutputPortConnectionId = buildPortConnection(groupId,
-                    groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                    groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
-                    3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
-        }
+            // 创建output_port connection(组)
+            String componentOutputPortConnectionId = "";
+            if (isLastId) {
+                componentOutputPortConnectionId = buildPortConnection(groupId,
+                        groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                        groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
+                        3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+            } else {
+                componentOutputPortConnectionId = buildPortConnection(groupId,
+                        groupId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                        groupId, lastId, ConnectableDTO.TypeEnum.PROCESSOR,
+                        3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
+            }
 
 
-        // 创建output connection(任务)
-        String taskOutputPortConnectionId = buildPortConnection(groupEntityId,
-                groupEntityId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                taskGroupEntityId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
-                2, PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
+            // 创建output connection(任务)
+            String taskOutputPortConnectionId = buildPortConnection(groupEntityId,
+                    groupEntityId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                    taskGroupEntityId, outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
+                    2, PortComponentEnum.TASK_OUTPUT_PORT_CONNECTION);
 
-        // 创建output connection(应用)
+            // 创建output connection(应用)
 //        String appOutputPortConnectionId = buildPortConnection(appParentGroupId,
 //                appParentGroupId, appOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
 //                appGroupId, tableOutputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
@@ -906,10 +934,11 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.processorOutputPortConnectId = componentOutputPortConnectionId;
         tableNifiSettingPO.tableInputPortConnectId = taskInputPortConnectionId;
         tableNifiSettingPO.tableOutputPortConnectId = taskOutputPortConnectionId;
+        tableNifiSettingPO.processorOutputPortId = outputPortId;
+        }
         tableNifiSettingPO.tableInputPortId = tableInputPortId;
         tableNifiSettingPO.tableOutputPortId = tableOutputPortId;
         tableNifiSettingPO.processorInputPortId = inputPortId;
-        tableNifiSettingPO.processorOutputPortId = outputPortId;
         tableNifiSettingPO.nifiCustomWorkflowDetailId = dto.workflowDetailId;
         tableNifiSettingPO.selectSql = config.processorConfig.sourceExecSqlQuery;
         tableNifiSettingPO.type = dto.type.getValue();
@@ -917,8 +946,8 @@ public class BuildNifiTaskListener {
         appNifiSettingPO.nifiCustomWorkflowId = dto.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
         res.add(queryField);
-        res.add(jsonRes);
-        res.add(evaluateJson);
+        //res.add(jsonRes);
+        //res.add(evaluateJson);
         res.add(logProcessor);
         res.add(delSqlRes);
         res.add(executeSQLRecord);
@@ -931,8 +960,20 @@ public class BuildNifiTaskListener {
         return res;
     }
 
-    private ProcessorEntity createExecuteSQLRecord(String appGroupId, DataAccessConfigDTO config, String groupId, String groupStructureId, String sourceDbPoolId, TableNifiSettingPO tableNifiSettingPO) {
-        BaseProcessorDTO data = new BaseProcessorDTO();
+    private String buildSchemaArchitecture(List<String> tableFieldsList,String schemaName){
+        String architecture="{\"namespace\": \"nifi\",\"name\": \""+schemaName+"\",\"type\": \"record\",\"fields\": [";
+        for (String tableFieldsDTO:tableFieldsList) {
+            if(tableFieldsDTO!=null&&tableFieldsDTO!=""){
+                architecture+="{ \"name\": \""+tableFieldsDTO+"\",\"type\": [\"null\",\"string\"] },";
+            }
+        }
+        architecture=architecture.substring(0,architecture.length()-1)+"]}";
+        return architecture;
+    }
+
+    private ProcessorEntity createExecuteSQLRecord(String appGroupId, DataAccessConfigDTO config, String groupId,BuildNifiFlowDTO dto , String sourceDbPoolId, TableNifiSettingPO tableNifiSettingPO) {
+        BuildAvroRecordSetWriterServiceDTO data = new BuildAvroRecordSetWriterServiceDTO();
+        String groupStructureId=dto.groupStructureId;
         data.details = "AvroRecordSetWriter";
         data.name = "AvroRecordSetWriter";
         if (groupStructureId != null) {
@@ -941,6 +982,17 @@ public class BuildNifiTaskListener {
             data.groupId = appGroupId;
         }
         String id = "";
+        List<String> sourceFieldName=new ArrayList<>();
+        //--------------------------------------------
+        if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
+            sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)
+        ||Objects.equals(dto.type,OlapTableEnum.DIMENSION)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+            sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        }
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        data.schemaArchitecture=schemaArchitecture;
+        //--------------------------------------------
         //创建buildAvroRecordSetWriterService
         BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(data);
         if (controllerServiceEntityBusinessResult.success) {
@@ -960,14 +1012,93 @@ public class BuildNifiTaskListener {
         executeSQLRecordDTO.databaseConnectionPoolingService = sourceDbPoolId;
         executeSQLRecordDTO.sqlSelectQuery = config.processorConfig.sourceExecSqlQuery;
         executeSQLRecordDTO.recordwriter = id;
-        executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
+        executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildExecuteSQLRecordProcess(executeSQLRecordDTO);
         verifyProcessorResult(res);
         return res.data;
     }
 
-    private ProcessorEntity createPutDatabaseRecord(String appGroupId, DataAccessConfigDTO config, String groupId, String groupStructureId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, TableNifiSettingPO tableNifiSettingPO) {
-        BaseProcessorDTO data = new BaseProcessorDTO();
+    private ProcessorEntity createExecuteSQLRecordDoris(DataAccessConfigDTO config,String groupId,BuildNifiFlowDTO dto,String targetDbPoolId){
+        BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO=new BuildCallDbProcedureProcessorDTO();
+        buildCallDbProcedureProcessorDTO.haveNextOne = false;
+        buildCallDbProcedureProcessorDTO.dbConnectionId=targetDbPoolId;
+        buildCallDbProcedureProcessorDTO.executsql=config.processorConfig.sourceExecSqlQuery;
+        buildCallDbProcedureProcessorDTO.details="executeSql";
+        buildCallDbProcedureProcessorDTO.name="executeSql";
+        buildCallDbProcedureProcessorDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(buildCallDbProcedureProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    private ProcessorEntity createUpdateField(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto,TableNifiSettingPO tableNifiSettingPO){
+        //两个控制器服务,和一个组件,先把配置搞出来
+        BuildUpdateRecordDTO buildUpdateRecordDTO = new BuildUpdateRecordDTO();
+        String groupStructureId=dto.groupStructureId;
+        BuildAvroRecordSetWriterServiceDTO buildAvroRecordSetWriterServiceDTO = new BuildAvroRecordSetWriterServiceDTO();
+        buildAvroRecordSetWriterServiceDTO.details="AvroRecordSetWriterServiceTransition";
+        buildAvroRecordSetWriterServiceDTO.name="AvroRecordSetWriterServiceTransition";
+        if (groupStructureId != null) {
+            buildAvroRecordSetWriterServiceDTO.groupId = groupStructureId;
+        } else {
+            buildAvroRecordSetWriterServiceDTO.groupId = appGroupId;
+        }
+        List<String> sourceFieldName=new ArrayList<>();
+        if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
+            sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)
+                ||Objects.equals(dto.type,OlapTableEnum.DIMENSION)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+            sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.fieldEnName).collect(Collectors.toList());
+        }
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        buildAvroRecordSetWriterServiceDTO.schemaArchitecture=schemaArchitecture;
+        BusinessResult<ControllerServiceEntity> avroRecordSetWriterService = componentsBuild.buildAvroRecordSetWriterService(buildAvroRecordSetWriterServiceDTO);
+        tableNifiSettingPO.convertAvroRecordSetWriterId=avroRecordSetWriterService.data.getId();
+        //--------------------------------------
+        BuildAvroReaderServiceDTO buildAvroReaderServiceDTO = new BuildAvroReaderServiceDTO();
+        buildAvroReaderServiceDTO.details = "PutDatabaseRecordTransition";
+        buildAvroReaderServiceDTO.name = "PutDatabaseRecordTransition";
+        if (groupStructureId != null) {
+            buildAvroReaderServiceDTO.groupId = groupStructureId;
+        } else {
+            buildAvroReaderServiceDTO.groupId = appGroupId;
+        }
+        if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
+            sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)
+                ||Objects.equals(dto.type,OlapTableEnum.DIMENSION)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+            sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        }
+        schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        buildAvroReaderServiceDTO.schemaText=schemaArchitecture;
+        BusinessResult<ControllerServiceEntity> avroReaderService = componentsBuild.buildAvroReaderService(buildAvroReaderServiceDTO);
+        tableNifiSettingPO.convertPutDatabaseRecordId=avroReaderService.data.getId();
+        //--------------------------------------
+        buildUpdateRecordDTO.groupId=groupId;
+        buildUpdateRecordDTO.details="UpdateRecord";
+        buildUpdateRecordDTO.name="UpdateRecord";
+        List<TableFieldsDTO> tableFieldsList = config.targetDsConfig.tableFieldsList;
+        Map<String, String> buildParameter = new HashMap<>();
+        for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
+            if(!Objects.equals(tableFieldsDTO.fieldName,tableFieldsDTO.sourceFieldName)){
+                buildParameter.put("/"+tableFieldsDTO.fieldName,"/"+tableFieldsDTO.sourceFieldName);
+            }
+        }
+        if(buildParameter.size()!=0){
+            buildUpdateRecordDTO.filedMap=buildParameter;
+        }
+        buildUpdateRecordDTO.recordReader=avroReaderService.data.getId();
+        buildUpdateRecordDTO.recordWriter=avroRecordSetWriterService.data.getId();
+        buildUpdateRecordDTO.replacementValueStrategy="record-path-value";
+        buildUpdateRecordDTO.positionDTO=NifiPositionHelper.buildYPositionDTO(5);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildUpdateRecord(buildUpdateRecordDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    private ProcessorEntity createPutDatabaseRecord(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, TableNifiSettingPO tableNifiSettingPO) {
+        BuildAvroReaderServiceDTO data = new BuildAvroReaderServiceDTO();
+        String groupStructureId=dto.groupStructureId;
         data.details = "PutDatabaseRecord";
         data.name = "PutDatabaseRecord";
         if (groupStructureId != null) {
@@ -975,6 +1106,15 @@ public class BuildNifiTaskListener {
         } else {
             data.groupId = appGroupId;
         }
+        List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
+            sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)
+                ||Objects.equals(dto.type,OlapTableEnum.DIMENSION)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+            sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.fieldEnName).collect(Collectors.toList());
+        }
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        data.schemaText=schemaArchitecture;
 
         String id = "";
         //创建buildAvroReaderService
@@ -1000,7 +1140,7 @@ public class BuildNifiTaskListener {
         }
         putDatabaseRecordDTO.concurrentTasks = ConcurrentTasks;
         putDatabaseRecordDTO.synchronousTypeEnum = synchronousTypeEnum;
-        putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
+        putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
         verifyProcessorResult(res);
         return res.data;
@@ -1031,7 +1171,7 @@ public class BuildNifiTaskListener {
         dto.name = "Merge Content";
         dto.details = "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
 
         BusinessResult<ProcessorEntity> res = componentsBuild.buildMergeContentProcess(dto);
         verifyProcessorResult(res);
@@ -1097,7 +1237,7 @@ public class BuildNifiTaskListener {
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = dbPoolId;
         putSqlDto.sqlStatement = buildLogSql(tableName);
-        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
 
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
         verifyProcessorResult(putSqlRes);
@@ -1183,7 +1323,7 @@ public class BuildNifiTaskListener {
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql;
-        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
         callDbProcedureProcessorDTO.haveNextOne = true;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1242,7 +1382,7 @@ public class BuildNifiTaskListener {
             querySqlDto.querySql = "select count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time,min(fi_createtime) as start_time from " + config.processorConfig.targetTableName;
         }
         querySqlDto.dbConnectionId = targetDbPoolId;
-        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -1282,7 +1422,7 @@ public class BuildNifiTaskListener {
         executsql += config.targetDsConfig.targetTableName.toLowerCase() + "','${" + NifiConstants.AttrConstants.NUMBERS + "}',2,'${" + NifiConstants.AttrConstants.START_TIME + "}','${" + NifiConstants.AttrConstants.END_TIME + "}')";
         callDbProcedureProcessorDTO.dbConnectionId = config.cfgDsConfig.componentId;
         callDbProcedureProcessorDTO.executsql = executsql1;
-        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
+        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = false;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1338,7 +1478,7 @@ public class BuildNifiTaskListener {
         strings.add(NifiConstants.AttrConstants.END_TIME);
         strings.add(NifiConstants.AttrConstants.START_TIME);
         dto.selfDefinedParameter = strings;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -1387,7 +1527,7 @@ public class BuildNifiTaskListener {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         }
         querySqlDto.dbConnectionId = targetDbPoolId;
-        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(5);
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;

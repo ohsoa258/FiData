@@ -7,8 +7,8 @@ public enum SystemVariableTypeEnum {
     /**
      * 查询类型
      */
-    START_TIME("@start_time","上次同步开始时间"),
-    END_TIME("@end_time","上次同步结束时间");
+    START_TIME("@start_time","incremental_objectivescore_start"),
+    END_TIME("@end_time","incremental_objectivescore_end");
 
     SystemVariableTypeEnum(String value, String name) {
         this.name = name;

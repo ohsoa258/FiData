@@ -160,11 +160,11 @@ public class PublishTaskController {
 
     /**
      * doris创建表BUILD_DORIS_TABLE
-     * @param dimensionAttributeAddDTOS
+     * @param modelPublishDataDTO
      * @return
      */
     @PostMapping("/atlasDorisTable")
-    @ApiOperation(value = "doris创建表")
+    @ApiOperation(value = "dmp_dw创建表")
     public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO){
         return service.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,

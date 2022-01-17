@@ -1,10 +1,12 @@
 package com.fisk.datamodel.service;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 
 import java.util.List;
 
@@ -73,5 +75,12 @@ public interface IFactAttribute {
      * @return
      */
     FactAttributeDetailDTO getFactAttributeDataList(int factId);
+
+    /**
+     *根据事实id,获取事实表字段列表与关联详情
+     * @param factId
+     * @return
+     */
+    ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(Integer factId);
 
 }

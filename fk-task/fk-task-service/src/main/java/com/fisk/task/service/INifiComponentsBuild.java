@@ -219,9 +219,11 @@ public interface INifiComponentsBuild {
 
     BusinessResult<ProcessorEntity> buildPutDatabaseRecordProcess(PutDatabaseRecordDTO putDatabaseRecordDTO);
 
-    BusinessResult<ControllerServiceEntity> buildAvroReaderService(BaseProcessorDTO data);
+    BusinessResult<ControllerServiceEntity> buildAvroReaderService(BuildAvroReaderServiceDTO data);
 
-    BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BaseProcessorDTO data);
+    BusinessResult<ProcessorEntity> buildUpdateRecord(BuildUpdateRecordDTO buildUpdateRecordDTO);
+
+    BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BuildAvroRecordSetWriterServiceDTO data);
 
     /*
      * 更新组件配置

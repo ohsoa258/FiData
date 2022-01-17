@@ -377,21 +377,18 @@ public class BuildDataModelDorisTableListener
                 stgSqlFileds.append(l.fieldEnName+" text,");
             }else{
                 sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
-                stgSqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
+                stgSqlFileds.append(l.fieldEnName+" text,");
             }
             if(Objects.nonNull(l.associateDimensionName)){
                 sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
                 stgSqlFileds.append(l.associateDimensionName.substring(4)+"key varchar(50),");
             }
-            if(l.isPrimaryKey==1){
+            /*if(l.isPrimaryKey==1){
                 pksql.append(""+l.fieldEnName+" ,");
-            }
+            }*/
 
         });
-        //如果没有业务主键,就建一个主键
-        if(pksql.length()==14){
-            pksql.append(tablePk+",");
-        }
+        pksql.append(tablePk+",");
         String sql1 = sql.toString();
         String sql2 = sqlFileds.toString();
         sql2+="fi_createtime varchar(50),fi_updatetime varchar(50),";
@@ -406,7 +403,7 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句"+sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+stgSqlFileds.toString()+"fi_createtime varchar(50),fi_updatetime varchar(50))";
+        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+stgSqlFileds.toString()+"fi_createtime varchar(50),fi_updatetime varchar(50),enableflag varchar(50))";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();

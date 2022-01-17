@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
@@ -20,14 +22,14 @@ import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimensionAttribute;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -119,6 +121,40 @@ public class DimensionAttributeImpl
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return ResultEnum.SUCCESS;
+    }
+
+
+    @Override
+    public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(Integer dimensionId){
+        Map<String, Object> conditionHashMap = new HashMap<>();
+        List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
+        conditionHashMap.put("dimension_id",dimensionId);
+        conditionHashMap.put("del_flag",1);
+        List<DimensionAttributePO> dimensionAttributePOS = attributeMapper.selectByMap(conditionHashMap);
+        for (DimensionAttributePO attributePO:dimensionAttributePOS)
+        {
+            ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+            fieldDTO.fieldId=attributePO.id;
+            fieldDTO.fieldEnName=attributePO.dimensionFieldEnName;
+            fieldDTO.fieldType=attributePO.dimensionFieldType;
+            fieldDTO.fieldLength=attributePO.dimensionFieldLength;
+            fieldDTO.attributeType=attributePO.attributeType;
+            fieldDTO.isPrimaryKey=attributePO.isPrimaryKey;
+            fieldDTO.sourceFieldName=attributePO.sourceFieldName;
+            fieldDTO.associateDimensionId=attributePO.associateDimensionId;
+            fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+            //判断是否关联维度
+            if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+            {
+                DimensionPO dimensionPO=mapper.selectById(attributePO.associateDimensionId);
+                fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+                fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
+                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(attributePO.associateDimensionFieldId);
+                fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+            }
+            fieldList.add(fieldDTO);
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fieldList);
     }
 
     @Override

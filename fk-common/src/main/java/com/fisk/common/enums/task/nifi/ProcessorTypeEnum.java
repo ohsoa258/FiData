@@ -24,7 +24,8 @@ public enum ProcessorTypeEnum implements BaseEnum {
     ExecuteSQLRecord(10,"org.apache.nifi.processors.standard.ExecuteSQLRecord"),
     PutDatabaseRecord(11,"org.apache.nifi.processors.standard.PutDatabaseRecord"),
     NOTIFY(12,"org.apache.nifi.processors.standard.Notify"),
-    WAIT(13,"org.apache.nifi.processors.standard.Wait");
+    WAIT(13,"org.apache.nifi.processors.standard.Wait"),
+    UPDATERECORD(14,"org.apache.nifi.processors.standard.UpdateRecord");
 
 
     ProcessorTypeEnum(int value, String name) {
