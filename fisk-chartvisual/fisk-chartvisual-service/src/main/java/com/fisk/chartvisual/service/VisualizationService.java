@@ -2,6 +2,7 @@ package com.fisk.chartvisual.service;
 
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author WangYan
@@ -15,4 +16,11 @@ public interface VisualizationService {
      * @return
      */
     DataServiceResult buildSql(ChartQueryObjectVO objectVO);
+
+    /**
+     * 将图片上传到服务器
+     * @param file
+     * @return
+     */
+    String upload(MultipartFile file);
 }

@@ -22,7 +22,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     CUBE(2,"CUBE","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver");
+    TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+
+    SQLSERVER_WINDOWS(4, "SQLSERVER_WINDOWS", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;

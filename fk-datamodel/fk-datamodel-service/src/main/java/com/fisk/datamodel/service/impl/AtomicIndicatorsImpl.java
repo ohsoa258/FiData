@@ -162,10 +162,11 @@ public class AtomicIndicatorsImpl
             while (matcher.find()) {
                 System.out.println(matcher.group(1));
                 String name=matcher.group(1);
+                String newName=name.replace("@","");
                 //根据中括号的名称与业务域获取指标id
                 QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper = new QueryWrapper<>();
                 indicatorsPOQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,po.businessId)
-                        .eq(IndicatorsPO::getIndicatorsName,name);
+                        .eq(IndicatorsPO::getIndicatorsName,newName);
                 IndicatorsPO selectById=mapper.selectOne(indicatorsPOQueryWrapper);
                 if (selectById==null)
                 {

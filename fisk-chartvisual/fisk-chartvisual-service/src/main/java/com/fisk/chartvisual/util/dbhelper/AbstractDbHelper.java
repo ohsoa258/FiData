@@ -124,6 +124,7 @@ public abstract class AbstractDbHelper {
     private Connection getConnectionByType(String connectionStr, String acc, String pwd) throws Exception {
         switch (type) {
             case SQLSERVER:
+            case SQLSERVER_WINDOWS:
                 return DriverManager.getConnection(connectionStr);
             case MYSQL:
                 return DriverManager.getConnection(connectionStr, acc, pwd);

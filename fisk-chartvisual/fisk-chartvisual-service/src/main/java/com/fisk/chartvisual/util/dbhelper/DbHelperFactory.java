@@ -15,6 +15,7 @@ public class DbHelperFactory {
     public static AbstractDbHelper getDbHelper(DataSourceTypeEnum type){
         switch (type){
             case SQLSERVER:
+            case SQLSERVER_WINDOWS:
                 return new SqlServerHelper();
             case MYSQL:
                 return new MySqlHelper();
@@ -26,6 +27,7 @@ public class DbHelperFactory {
     public static IBuildSqlCommand getSqlBuilder(DataSourceTypeEnum type){
         switch (type){
             case SQLSERVER:
+            case SQLSERVER_WINDOWS:
                 return new BuildSqlServerCommandImpl();
             case MYSQL:
                 return new BuildMySqlCommandImpl();

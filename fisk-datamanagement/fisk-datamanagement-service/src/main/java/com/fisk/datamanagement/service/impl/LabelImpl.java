@@ -105,4 +105,13 @@ public class LabelImpl implements ILabel {
         return mapper.queryPageList(dto.dto,categoryIds);
     }
 
+    @Override
+    public List<String> atlasGetLabel()
+    {
+        QueryWrapper<LabelPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("label_en_name").orderByDesc("create_time");
+        List<String> list=(List)mapper.selectObjs(queryWrapper);
+        return list;
+    }
+
 }

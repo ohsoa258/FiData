@@ -36,8 +36,6 @@ public class DataAreaImpl extends ServiceImpl<DataAreaMapper, DataAreaPO> implem
     @Resource
     GenerateCondition generateCondition;
     @Resource
-    GetMetadata getMetadata;
-    @Resource
     private BusinessAreaMapper businessAreaMapper;
     @Resource
     private BusinessAreaImpl businessAreaImpl;

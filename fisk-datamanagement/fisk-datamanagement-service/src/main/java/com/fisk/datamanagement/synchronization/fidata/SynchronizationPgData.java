@@ -18,6 +18,7 @@ import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
+import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
@@ -48,6 +49,8 @@ public class SynchronizationPgData {
     DataAccessClient dataAccessClient;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
+    @Resource
+    EntityImpl entityImpl;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -78,6 +81,8 @@ public class SynchronizationPgData {
             synchronizationDb();
             synchronizationOds();
             synchronizationDw();
+            //同步redis中数据
+            entityImpl.getEntityList();
         }
         catch (Exception e)
         {
@@ -94,7 +99,6 @@ public class SynchronizationPgData {
         try {
             QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.lambda()
-                    .eq(MetadataMapAtlasPO::getQualifiedName,fiDataName)
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
             MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
             //判断实例是否已存在
@@ -167,7 +171,7 @@ public class SynchronizationPgData {
                     {
                         String guid = addMetadataMapAtlas(addResult,
                                 EntityTypeEnum.RDBMS_DB,
-                                db,
+                                dbQualifiedName,
                                 0,
                                 0,
                                 0,

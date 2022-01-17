@@ -37,7 +37,7 @@ public class ChartQueryObjectVO {
     /**
      * 分页
      */
-    public PaginationQuery pagination;
+    public PaginationQueryDTO pagination;
 
     /**
      * 图表和图形(白泽数据源接口目前没有用到)
