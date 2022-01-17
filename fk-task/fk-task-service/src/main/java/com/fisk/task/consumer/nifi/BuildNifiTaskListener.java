@@ -1034,6 +1034,8 @@ public class BuildNifiTaskListener {
     private ProcessorEntity createUpdateField(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto,TableNifiSettingPO tableNifiSettingPO){
         //两个控制器服务,和一个组件,先把配置搞出来
         BuildUpdateRecordDTO buildUpdateRecordDTO = new BuildUpdateRecordDTO();
+        List<TableFieldsDTO> tableFieldsList=new ArrayList<>();
+        Map<String, String> buildParameter = new HashMap<>();
         String groupStructureId=dto.groupStructureId;
         BuildAvroRecordSetWriterServiceDTO buildAvroRecordSetWriterServiceDTO = new BuildAvroRecordSetWriterServiceDTO();
         buildAvroRecordSetWriterServiceDTO.details="AvroRecordSetWriterServiceTransition";
@@ -1063,10 +1065,24 @@ public class BuildNifiTaskListener {
         } else {
             buildAvroReaderServiceDTO.groupId = appGroupId;
         }
-        if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
+        if (Objects.equals(dto.type, OlapTableEnum.PHYSICS) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKPHYSICS)) {
             sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
-        }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)
-                ||Objects.equals(dto.type,OlapTableEnum.DIMENSION)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKDIMENSION)){
+            tableFieldsList = config.targetDsConfig.tableFieldsList;
+            for (TableFieldsDTO tableFieldsDTO : tableFieldsList) {
+                if (!Objects.equals(tableFieldsDTO.fieldName, tableFieldsDTO.sourceFieldName)) {
+                    buildParameter.put("/" + tableFieldsDTO.fieldName, "/" + tableFieldsDTO.sourceFieldName);
+                }
+            }
+            buildParameter.put("/" + tableFieldsList.get(0).fieldName, "/" + tableFieldsList.get(0).sourceFieldName);
+        } else if (Objects.equals(dto.type, OlapTableEnum.FACT) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKFACT)
+                || Objects.equals(dto.type, OlapTableEnum.DIMENSION) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
+            List<ModelPublishFieldDTO> modelPublishFieldDTOS = config.modelPublishFieldDTOList;
+            for (ModelPublishFieldDTO modelPublishFieldDTO : modelPublishFieldDTOS) {
+                if (!Objects.equals(modelPublishFieldDTO.fieldEnName, modelPublishFieldDTO.sourceFieldName)) {
+                    buildParameter.put("/" + modelPublishFieldDTO.fieldEnName, "/" + modelPublishFieldDTO.sourceFieldName);
+                }
+            }
+            buildParameter.put("/" + modelPublishFieldDTOS.get(0).fieldEnName, "/" + modelPublishFieldDTOS.get(0).sourceFieldName);
             sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
         }
         schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
@@ -1077,14 +1093,9 @@ public class BuildNifiTaskListener {
         buildUpdateRecordDTO.groupId=groupId;
         buildUpdateRecordDTO.details="UpdateRecord";
         buildUpdateRecordDTO.name="UpdateRecord";
-        List<TableFieldsDTO> tableFieldsList = config.targetDsConfig.tableFieldsList;
-        Map<String, String> buildParameter = new HashMap<>();
-        for (TableFieldsDTO tableFieldsDTO:tableFieldsList) {
-            if(!Objects.equals(tableFieldsDTO.fieldName,tableFieldsDTO.sourceFieldName)){
-                buildParameter.put("/"+tableFieldsDTO.fieldName,"/"+tableFieldsDTO.sourceFieldName);
-            }
-        }
+
         if(buildParameter.size()!=0){
+            //至少有一个属性
             buildUpdateRecordDTO.filedMap=buildParameter;
         }
         buildUpdateRecordDTO.recordReader=avroReaderService.data.getId();
@@ -1106,7 +1117,7 @@ public class BuildNifiTaskListener {
         } else {
             data.groupId = appGroupId;
         }
-        List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        List<String> sourceFieldName = new ArrayList<>();
         if(Objects.equals(dto.type,OlapTableEnum.PHYSICS)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKPHYSICS)){
             sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.fieldName).collect(Collectors.toList());
         }else if(Objects.equals(dto.type,OlapTableEnum.FACT)||Objects.equals(dto.type,OlapTableEnum.CUSTOMWORKFACT)

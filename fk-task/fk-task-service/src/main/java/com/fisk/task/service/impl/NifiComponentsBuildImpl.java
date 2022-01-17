@@ -231,7 +231,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         map.put("record-reader",buildUpdateRecordDTO.recordReader);
         map.put("record-writer",buildUpdateRecordDTO.recordWriter);
         map.put("replacement-value-strategy","record-path-value");
-        map.putAll(buildUpdateRecordDTO.filedMap);
+        if (buildUpdateRecordDTO.filedMap != null && buildUpdateRecordDTO.filedMap.size() > 0) {
+            map.putAll(buildUpdateRecordDTO.filedMap);
+        }
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);
