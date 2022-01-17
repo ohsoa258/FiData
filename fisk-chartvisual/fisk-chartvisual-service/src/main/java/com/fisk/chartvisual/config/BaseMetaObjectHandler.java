@@ -8,9 +8,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author gy
@@ -28,9 +26,7 @@ public class BaseMetaObjectHandler implements MetaObjectHandler {
      */
     @Override
     public void insertFill(MetaObject metaObject) {
-        Date date = new Date();
-        Timestamp timestamp = new Timestamp(date.getTime());
-        this.setFieldValByName("createTime", timestamp , metaObject);
+        this.setFieldValByName("createTime", LocalDateTime.now(), metaObject);
         this.setFieldValByName("delFlag", Integer.parseInt(SqlConstants.NOT_DEL), metaObject);
         if (userHelper != null) {
             UserInfo user = userHelper.getLoginUserInfo();
@@ -47,9 +43,7 @@ public class BaseMetaObjectHandler implements MetaObjectHandler {
      */
     @Override
     public void updateFill(MetaObject metaObject) {
-        Date date = new Date();
-        Timestamp timestamp = new Timestamp(date.getTime());
-        this.setFieldValByName("updateTime", timestamp, metaObject);
+        this.setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
         if (userHelper != null) {
             UserInfo user = userHelper.getLoginUserInfo();
             if(user != null && user.id != null){
