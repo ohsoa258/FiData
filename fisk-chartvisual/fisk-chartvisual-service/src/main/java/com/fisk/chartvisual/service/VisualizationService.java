@@ -1,7 +1,9 @@
 package com.fisk.chartvisual.service;
 
+import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
+import com.fisk.common.response.ResultEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -23,4 +25,11 @@ public interface VisualizationService {
      * @return
      */
     String upload(MultipartFile file);
+
+    /**
+     * 获取白泽、视图、CUDB数据源
+     * @param dto
+     * @return
+     */
+    ResultEntity<Object> listDataDomain(DataSourceDTO dto);
 }

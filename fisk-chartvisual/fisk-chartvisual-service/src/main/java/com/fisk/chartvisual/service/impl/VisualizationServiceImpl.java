@@ -1,15 +1,19 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.entity.ChartImagePO;
 import com.fisk.chartvisual.map.VisualizationMap;
 import com.fisk.chartvisual.mapper.ChartImageMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
 import com.fisk.chartvisual.service.IDataService;
+import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.client.DataModelClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +36,10 @@ public class VisualizationServiceImpl implements VisualizationService {
     IDataService db;
     @Resource
     ChartImageMapper chartImageMapper;
+    @Resource
+    DataModelClient client;
+    @Resource
+    private IDataSourceConManageService service;
 
     @Value("${file.uploadurl}")
     private String uploadPath;
@@ -91,5 +99,19 @@ public class VisualizationServiceImpl implements VisualizationService {
         chartImage.setImagePath(imagePath);
         chartImageMapper.insert(chartImage);
         return imagePath;
+    }
+
+    @Override
+    public ResultEntity<Object> listDataDomain(DataSourceDTO dto) {
+        switch (dto.getType()){
+            case DMP:
+                return client.getAll();
+            case VIEW:
+                return service.listDataDomain(dto.getId());
+            case MDX:
+                return service.SSASDataStructure(dto.getId());
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
     }
 }

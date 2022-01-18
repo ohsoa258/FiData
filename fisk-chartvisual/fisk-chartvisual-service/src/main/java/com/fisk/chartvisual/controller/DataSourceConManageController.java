@@ -64,13 +64,13 @@ public class DataSourceConManageController {
 
     @GetMapping("/getDataDomain")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getDataDomain(int id) {
+    public ResultEntity<Object> getDataDomain(int id) {
         return service.listDataDomain(id);
     }
 
     @GetMapping("/getSSASDataStructure")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DimensionVO>> getSSASDataStructure(int id) {
+    public ResultEntity<Object> getSSASDataStructure(int id) {
         return service.SSASDataStructure(id);
     }
 }

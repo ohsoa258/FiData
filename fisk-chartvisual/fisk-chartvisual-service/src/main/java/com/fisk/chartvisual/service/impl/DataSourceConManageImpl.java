@@ -127,7 +127,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<List<DataDomainVO>> listDataDomain(int id) {
+    public ResultEntity<Object> listDataDomain(int id) {
         //获取连接信息
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if (model == null) {
@@ -163,7 +163,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<List<DimensionVO>> SSASDataStructure(int id) {
+    public ResultEntity<Object> SSASDataStructure(int id) {
         //获取连接信息
         List<DimensionVO> dimensionVOList = new ArrayList<>();
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);

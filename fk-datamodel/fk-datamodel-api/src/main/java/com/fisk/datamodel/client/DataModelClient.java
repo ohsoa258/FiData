@@ -176,6 +176,13 @@ public interface DataModelClient {
     @GetMapping("/DataManagement/getDataModelTable")
     ResultEntity<Object> getDataModelTable();
 
+    /**
+     * 获取白泽数据源
+     * @return
+     */
+    @GetMapping("/Datamation/getAll")
+    ResultEntity<Object> getAll();
+
     /*
     *根据维度id获取维度字段及其关联详情(nifi)
     * @return

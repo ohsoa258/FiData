@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.controller;
 
+import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
@@ -37,5 +38,11 @@ public class VisualizationController {
     @ResponseBody
     public ResultEntity<String> upload(@RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, visualizationService.upload(file));
+    }
+
+    @ApiOperation("可视化获取数据源")
+    @PostMapping("/getDataDomain")
+    public ResultEntity<Object> getData(@RequestBody DataSourceDTO dto) {
+        return visualizationService.listDataDomain(dto);
     }
 }
