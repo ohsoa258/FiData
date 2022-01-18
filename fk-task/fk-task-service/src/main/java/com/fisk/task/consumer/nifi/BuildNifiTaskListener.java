@@ -1318,13 +1318,6 @@ public class BuildNifiTaskListener {
         callDbProcedureProcessorDTO.groupId = groupId;
         String executsql = "";
         config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
-        String stg_TableName = config.processorConfig.targetTableName.toLowerCase();
-        String ods_TableName="";
-        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
-             ods_TableName = config.processorConfig.targetTableName.substring(4).toLowerCase();
-        }else{
-             ods_TableName = config.processorConfig.targetTableName.replaceAll("stg_", "ods_").toLowerCase();
-        }
         String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
         log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
         executsql = assemblySql(config,synchronousTypeEnum,FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
@@ -1343,8 +1336,13 @@ public class BuildNifiTaskListener {
         String targetTableName = config.processorConfig.targetTableName;
         String sql="call public."+funcName+"('";
         if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
-            sql+= "stg_"+targetTableName+"'";
-            sql+=",'"+config.processorConfig.targetTableName+"'";
+            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
+                sql += "stg_" + targetTableName + "'";
+                sql += ",'" + targetTableName + "'";
+            } else {
+                sql+= targetTableName+"'";
+                sql+=",'"+config.processorConfig.targetTableName.substring(4)+"'";
+            }
         }else{
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";

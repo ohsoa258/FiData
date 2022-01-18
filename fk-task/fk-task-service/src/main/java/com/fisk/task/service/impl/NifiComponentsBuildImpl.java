@@ -301,7 +301,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         //组件属性
         Map<String, String> map = new HashMap<>(5);
-        map.put("Max Bin Age","30 sec");
+        map.put("Max Bin Age","3 sec");
         map.put("Minimum Group Size","1 GB");
         map.put("Attribute Strategy","Keep All Unique Attributes");
 
