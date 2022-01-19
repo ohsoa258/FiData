@@ -56,7 +56,7 @@ public class ApiRegisterController {
     @ApiOperation("查询api")
     @GetMapping("/detail/{apiId}")
     public ResultEntity<ApiRegisterDetailVO> detail(@PathVariable("apiId") int apiId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.detail(apiId));
+        return service.detail(apiId);
     }
 
     @ApiOperation("查询api字段列表")

@@ -30,7 +30,7 @@ public class AppRegisterController {
     @Resource
     private IAppRegisterManageService service;
 
-    @ApiOperation(value = "获取下游系统过滤字段")
+    @ApiOperation(value = "应用过滤字段")
     @GetMapping("/getColumn")
     public ResultEntity<Object> getBusinessColumn() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
@@ -68,7 +68,7 @@ public class AppRegisterController {
 
     @ApiOperation("应用订阅api")
     @PostMapping("/appSubscribe")
-    public ResultEntity<Object> appSubscribe(@Validated @RequestBody AppApiSubDTO dto) {
+    public ResultEntity<Object> appSubscribe(@Validated @RequestBody AppApiSubSaveDTO dto) {
         return ResultEntityBuild.build(service.appSubscribe(dto));
     }
 

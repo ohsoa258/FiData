@@ -52,7 +52,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         //query.userId = userInfo.id;
         if (query != null && query.keyword != null && query.keyword != "")
             query.keyword = query.keyword.toLowerCase();
-        return mapper.listDataSourceConByUserId(query.page, query);
+        return mapper.listDataSourceCon(query.page, query);
     }
 
     @Override

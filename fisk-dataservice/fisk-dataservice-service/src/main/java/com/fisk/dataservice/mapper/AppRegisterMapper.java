@@ -5,6 +5,7 @@ import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;
 import com.fisk.dataservice.vo.app.*;
+import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -31,8 +32,16 @@ public interface AppRegisterMapper extends FKBaseMapper<AppConfigPO> {
     /**
      * 应用列表分页功能
      *
-     * @param page  分页对象
+     * @param page 分页对象
      * @return 查询结果
      */
     Page<AppRegisterVO> getAll(Page<AppRegisterVO> page);
+
+    /**
+     * 根据应用账号查询应用信息
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT id,app_name,app_name,app_desc,app_password,app_principal FROM tb_app_config WHERE app_account=#{appAccount} AND del_flag=1;")
+    AppConfigPO getByAppAccount(@Param("appAccount") String appAccount);
 }

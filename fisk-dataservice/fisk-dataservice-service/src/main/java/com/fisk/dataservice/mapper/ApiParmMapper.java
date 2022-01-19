@@ -1,13 +1,12 @@
 package com.fisk.dataservice.mapper;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.dataservice.dto.app.AppApiSubQueryDTO;
-import com.fisk.dataservice.entity.AppApiPO;
 import com.fisk.dataservice.entity.ParmConfigPO;
-import com.fisk.dataservice.vo.app.AppApiSubVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * api参数 mapper
@@ -15,7 +14,12 @@ import org.apache.ibatis.annotations.Param;
  * @author dick
  */
 @Mapper
-public interface ApiParmMapper extends FKBaseMapper<ParmConfigPO>
-{
-
+public interface ApiParmMapper extends FKBaseMapper<ParmConfigPO> {
+    /**
+     * 根据apiId查询参数信息
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT id,api_id,parm_name,parm_value,parm_desc FROM tb_parm_config WHERE api_id=#{apiId} AND del_flag=1;")
+    List<ParmConfigPO> getListByApiId(@Param("apiId") int apiId);
 }

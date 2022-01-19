@@ -54,7 +54,7 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @param apiId apiId
      * @return api详情
      */
-    ApiRegisterDetailVO detail(int apiId);
+    ResultEntity <ApiRegisterDetailVO> detail(int apiId);
 
     /**
      * 查询api字段列表

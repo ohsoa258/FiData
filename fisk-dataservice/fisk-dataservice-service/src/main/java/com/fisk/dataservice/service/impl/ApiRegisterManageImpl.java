@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.utils.Dto.SqlParmDto;
@@ -23,10 +25,7 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.map.ApiRegisterMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
-import com.fisk.dataservice.vo.api.ApiPreviewVO;
-import com.fisk.dataservice.vo.api.ApiRegisterDetailVO;
-import com.fisk.dataservice.vo.api.ApiConfigVO;
-import com.fisk.dataservice.vo.api.FieldConfigVO;
+import com.fisk.dataservice.vo.api.*;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +88,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
-        apiConfigPO.setCreateUser("lijiawen"); //userHelper.getLoginUserInfo().getId();
+        //apiConfigPO.setCreateUser("lijiawen");
+        apiConfigPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
         isInsert = baseMapper.insertOne(apiConfigPO) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
@@ -210,13 +210,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     }
 
     @Override
-    public ApiRegisterDetailVO detail(int apiId) {
+    public ResultEntity<ApiRegisterDetailVO> detail(int apiId) {
         ApiRegisterDetailVO apiRegisterDetailVO = new ApiRegisterDetailVO();
 
-        // 第一步：查询API信息
+        // 第一步：查询API信息,selectById仅查询有效的
         ApiConfigPO model = baseMapper.selectById(apiId);
         if (model == null)
-            return apiRegisterDetailVO;
+            return ResultEntityBuild.buildData(ResultEnum.DS_API_EXISTS, apiRegisterDetailVO);
         apiRegisterDetailVO.apiVO = ApiRegisterMap.INSTANCES.poToVo(model);
 
         // 第二步：查询字段信息
@@ -248,7 +248,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (CollectionUtils.isNotEmpty(parmConfigPOS)) {
             apiRegisterDetailVO.parmVO = ApiParmMap.INSTANCES.listPoToVo(parmConfigPOS);
         }
-        return apiRegisterDetailVO;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, apiRegisterDetailVO);
     }
 
     @Override
@@ -278,17 +278,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     public ApiPreviewVO preview(ApiPreviewDTO dto) {
         ApiPreviewVO apiPreviewVO = new ApiPreviewVO();
         String sql = dto.apiDTO.getCreateSql();
+        int apiId = dto.apiDTO.getId();
 
-        // 第一步：拼接过滤条件
-        if (CollectionUtils.isNotEmpty(dto.whereDTO)
-                && dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
-            List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
-            String s = SqlParmUtils.SqlWhere(sqlWhereDtos);
-            if (s != null && s.length() > 0)
-                sql += s;
-        }
-
-        // 第二步：拼接参数条件
+        // 第一步：拼接参数条件
         if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
             List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.parmDTO);
             String s = SqlParmUtils.SqlParm(sqlParmDtos, sql);
@@ -296,9 +288,18 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 sql = s;
         }
 
-        if (dto.apiDTO.getTableName()==null || dto.apiDTO.getTableName().isEmpty())
+        if (dto.apiDTO.getTableName() == null || dto.apiDTO.getTableName().isEmpty())
             dto.apiDTO.setTableName("tb_api_preview_temp");
         sql = String.format("SELECT * FROM (%s) AS %s WHERE 1=1 ", sql, dto.apiDTO.getTableName());
+
+        // 第二步：拼接过滤条件
+        if (CollectionUtils.isNotEmpty(dto.whereDTO)
+                && dto.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()) {
+            List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listDtoToSqlWhereDto(dto.whereDTO);
+            String s = SqlParmUtils.SqlWhere(sqlWhereDtos);
+            if (s != null && s.length() > 0)
+                sql += s;
+        }
 
         // 第三步：查询数据源信息
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
@@ -325,15 +326,17 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(rs);
+            apiPreviewVO = resultSetToJsonArray(rs, apiId);
             rs.close();
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
         }
+
         return apiPreviewVO;
     }
 
-    public static ApiPreviewVO resultSetToJsonArray(ResultSet rs) throws SQLException, JSONException {
+    public static ApiPreviewVO resultSetToJsonArray(ResultSet rs, int apiId)
+            throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
 
         JSONArray array = new JSONArray();
@@ -354,19 +357,24 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             array.add(jsonObj);
         }
 
-        //获取列名
+        //获取列名、描述
         for (int i = 1; i <= columnCount; i++) {
             FieldConfigVO fieldConfigVO = new FieldConfigVO();
             // 源字段
             fieldConfigVO.fieldName = metaData.getColumnLabel(i);
             fieldConfigVO.fieldType = metaData.getColumnTypeName(i).toUpperCase();
+            fieldConfigVO.fieldSort = i;
+            if (apiId != 0)
+                fieldConfigVO.apiId = apiId;
+            //if (data.tableName == null || data.tableName.isEmpty())
+            //  data.tableName = metaData.getTableName(i);
             if (fieldConfigVO.fieldType.contains("INT2")
                     || fieldConfigVO.fieldType.contains("INT4")
                     || fieldConfigVO.fieldType.contains("INT8")) {
                 fieldConfigVO.fieldType = "INT";
             }
 
-            // 转换表字段类型和长度
+            // 转换表字段类型
             List<String> list = transformField(fieldConfigVO.fieldType);
             fieldConfigVO.fieldType = list.get(0);
 
@@ -398,6 +406,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         // 字符型
         List<String> charType = new ArrayList<>();
         charType.add("");
+
+        // 双字符型
+        List<String> ncharType = new ArrayList<>();
+        charType.add("nvarchar");
 
         // 整型
         List<String> integerType = new ArrayList<>();
@@ -431,6 +443,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             fieldList.add("FLOAT");
         } else if (fieldType.toLowerCase().contains(timeType)) {
             fieldList.add("TIMESTAMP");
+        } else if (ncharType.contains(fieldType.toLowerCase())) {
+            fieldList.add("NVARCHAR");
         } else {
             fieldList.add("VARCHAR");
         }
@@ -457,4 +471,67 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         return conn;
     }
 
+    /**
+     * 查询表字段信息
+     *
+     * @param conn       连接
+     * @param driverType 数据库类型
+     * @param tableNames 查询的表
+     * @return statement
+     */
+    private List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceTypeEnum driverType, List<String> tableNames) {
+        List<FieldInfoVO> fieldlist = new ArrayList<>();
+        if (CollectionUtils.isEmpty(tableNames))
+            return fieldlist;
+        String sql = "";
+        switch (driverType) {
+            case MYSQL:
+                sql = "SELECT\n" +
+                        "    TABLE_NAME AS originalTableName,\n" +
+                        "    COLUMN_NAME AS originalFieldName,\n" +
+                        "    COLUMN_COMMENT AS originalFieldDesc\n" +
+                        "FROM\n" +
+                        "    information_schema.`COLUMNS`\n" +
+                        "  WHERE\n" +
+                        "    TABLE_SCHEMA IN ?";
+                break;
+            case SQLSERVER:
+                sql = "SELECT\n" +
+                        "d.name AS originalTableName,\n" +
+                        "a.name AS originalFieldName,\n" +
+                        "isnull(g.[value],'') AS originalFieldDesc\n" +
+                        "FROM   syscolumns   a\n" +
+                        "left   join   systypes   b   on   a.xusertype=b.xusertype\n" +
+                        "inner   join   sysobjects   d   on   a.id=d.id     and   d.xtype='U'   and     d.name<>'dtproperties'\n" +
+                        "left   join   syscomments   e   on   a.cdefault=e.id\n" +
+                        "left   join   sys.extended_properties   g   on   a.id=g.major_id   and   a.colid=g.minor_id\n" +
+                        "left   join   sys.extended_properties   f   on   d.id=f.major_id   and   f.minor_id=0\n" +
+                        "where  d.name IN ?";
+                break;
+        }
+        if (sql == null || sql.isEmpty())
+            return fieldlist;
+        try {
+            String instr = "(\'" + String.join("\',\'", tableNames) + "\'）";
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+            preparedStatement.setString(1, instr);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                FieldInfoVO fieldInfoVO = new FieldInfoVO();
+                fieldInfoVO.originalTableName = resultSet.getString("originalTableName");
+                fieldInfoVO.originalFieldName = resultSet.getString("originalFieldName");
+                fieldInfoVO.originalFieldDesc = resultSet.getString("originalFieldDesc");
+                if (fieldInfoVO.originalTableName != null
+                        && fieldInfoVO.originalTableName.length() > 0
+                        && fieldInfoVO.originalFieldName != null
+                        && fieldInfoVO.originalFieldName.length() > 0
+                        && fieldInfoVO.originalFieldDesc != null
+                        && fieldInfoVO.originalFieldDesc.length() > 0)
+                    fieldlist.add(fieldInfoVO);
+            }
+        } catch (Exception ex) {
+            throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
+        }
+        return fieldlist;
+    }
 }

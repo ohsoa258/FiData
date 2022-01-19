@@ -9,6 +9,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 /**
  * api内置参数 mapper
  *
@@ -25,4 +27,12 @@ public interface ApiBuiltinParmMapper extends FKBaseMapper<BuiltinParmPO>
      */
     @Update("UPDATE tb_builtin_parm SET del_flag=0 WHERE app_id=#{appId} AND api_id=#{apiId} AND del_flag=1;")
     int updateBySearch(@Param("appId") int appId,@Param("apiId") int apiId);
+
+    /**
+     * 根据apiId查询内置参数信息
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT id,api_id,app_id,parm_id,parm_isbuiltin,parm_value,parm_desc FROM tb_builtin_parm WHERE app_id=#{appId} AND api_id=#{apiId} AND parm_id IN #{parmIdStr} AND del_flag=1;")
+    List<BuiltinParmPO> getListBy(@Param("appId") int appId,@Param("apiId") int apiId,@Param("parmIdStr") String parmIdStr);
 }

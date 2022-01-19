@@ -4,8 +4,10 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
+import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.service.IApiServiceManageService;
+import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -37,10 +39,8 @@ public class ApiServiceController {
 
     @ApiOperation("获取数据")
     @PostMapping("/getData")
-    public ResultEntity<Object> getData(HttpServletRequest request)
+    public ResultEntity<ResponseVO> getData(@RequestBody RequstDTO dto)
     {
-        // 可以分页，
-        String token = request.getHeader("token");
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(token));
+        return service.getData(dto);
     }
 }

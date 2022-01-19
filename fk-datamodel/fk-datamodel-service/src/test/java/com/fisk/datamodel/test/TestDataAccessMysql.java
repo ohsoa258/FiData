@@ -103,7 +103,7 @@ public class TestDataAccessMysql {
 //                tablePyhNameDTO.setFields(colNames);
 
                 tag++;
-                tablePyhNameDTO.setTag(tag);
+                //tablePyhNameDTO.setTag(tag);
 
                 list.add(tablePyhNameDTO);
 

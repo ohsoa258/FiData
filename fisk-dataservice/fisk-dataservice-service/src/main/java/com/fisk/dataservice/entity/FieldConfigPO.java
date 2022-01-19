@@ -32,7 +32,7 @@ public class FieldConfigPO extends BasePO
     /**
      * 字段排序
      */
-    public Integer fieldSort;
+    public int fieldSort;
 
     /**
      * 字段描述

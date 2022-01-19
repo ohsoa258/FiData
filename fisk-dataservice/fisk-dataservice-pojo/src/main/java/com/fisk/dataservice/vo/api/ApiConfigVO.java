@@ -2,6 +2,8 @@ package com.fisk.dataservice.vo.api;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.time.LocalDateTime;
+
 /**
  * @author dick
  * @version v1.0
@@ -56,4 +58,17 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "sql语句")
     public String createSql;
+
+    /**
+     * 创建时间
+     */
+    @ApiModelProperty(value = "创建时间")
+    public LocalDateTime createTime;
+
+    /**
+     * 创建人
+     */
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
+
 }

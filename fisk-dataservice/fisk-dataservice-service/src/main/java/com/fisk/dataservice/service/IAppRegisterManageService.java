@@ -72,7 +72,7 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum appSubscribe(AppApiSubDTO dto);
+    ResultEnum appSubscribe(AppApiSubSaveDTO dto);
 
     /**
      * 重置应用密码

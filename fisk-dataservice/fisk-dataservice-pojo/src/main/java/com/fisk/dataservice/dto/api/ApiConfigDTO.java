@@ -35,7 +35,6 @@ public class ApiConfigDTO
      * 表名
      */
     @ApiModelProperty(value = "表名")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String tableName;
 

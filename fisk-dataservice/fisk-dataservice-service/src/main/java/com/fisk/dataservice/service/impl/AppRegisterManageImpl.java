@@ -6,20 +6,13 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.EnCryptUtils;
-import com.fisk.dataservice.dto.app.AppRegisterPageDTO;
-import com.fisk.dataservice.dto.app.AppRegisterQueryDTO;
-import com.fisk.dataservice.dto.app.AppRegisterDTO;
-import com.fisk.dataservice.dto.app.AppRegisterEditDTO;
-import com.fisk.dataservice.dto.app.AppApiSubQueryDTO;
-import com.fisk.dataservice.dto.app.AppApiParmQueryDTO;
-import com.fisk.dataservice.dto.app.AppApiSubDTO;
-import com.fisk.dataservice.dto.app.AppPwdResetDTO;
-import com.fisk.dataservice.dto.app.AppApiBuiltinParmEditDTO;
+import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.map.ApiBuiltinParmMap;
 import com.fisk.dataservice.map.ApiParmMap;
@@ -31,6 +24,7 @@ import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -168,29 +162,31 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     }
 
     @Override
-    public ResultEnum appSubscribe(AppApiSubDTO dto) {
-        ApiConfigPO apiModel = apiRegisterMapper.selectById(dto.apiId);
-        if (apiModel == null)
-            return ResultEnum.DS_API_EXISTS;
-        AppConfigPO appModel = baseMapper.selectById(dto.appId);
-        if (appModel == null)
-            return ResultEnum.DS_APP_EXISTS;
-
-        // 根据应用id和APIID查询是否存在订阅记录
-        QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AppApiPO::getAppId, dto.appId).eq(AppApiPO::getApiId, dto.apiId)
-                .eq(AppApiPO::getDelFlag, 1);
-        ;
-        AppApiPO data = appApiMapper.selectOne(queryWrapper);
-        if (data != null) {
-            // 存在则修改状态
-            data.setApiState(data.apiState = dto.apiState);
-            return appApiMapper.updateById(data) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        } else {
-            // 不存在则新增
-            AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
-            return appApiMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum appSubscribe(AppApiSubSaveDTO saveDTO) {
+        try {
+            for (AppApiSubDTO dto : saveDTO.dto) {
+                // 根据应用id和APIID查询是否存在订阅记录
+                QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(AppApiPO::getAppId, dto.appId).eq(AppApiPO::getApiId, dto.apiId)
+                        .eq(AppApiPO::getDelFlag, 1);
+                AppApiPO data = appApiMapper.selectOne(queryWrapper);
+                if (data != null) {
+                    // 存在则修改状态，如果是api列表订阅保存，数据如果存在不做任何操作
+                    if (saveDTO.saveType == 1)
+                        continue;
+                    data.setApiState(data.apiState = dto.apiState);
+                    appApiMapper.updateById(data);
+                } else {
+                    // 不存在则新增
+                    AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
+                    appApiMapper.insert(model);
+                }
+            }
+        } catch (Exception ex) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -226,10 +222,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     .eq(BuiltinParmPO::getApiId, dto.apiId)
                     .eq(BuiltinParmPO::getAppId, dto.appId)
                     .eq(BuiltinParmPO::getDelFlag, 1);
-            List<BuiltinParmPO> builtinParmtList = apiBuiltinParmMapper.selectList(builtinParmQuery);
-            if (CollectionUtils.isNotEmpty(builtinParmtList)) {
+            List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.selectList(builtinParmQuery);
+            if (CollectionUtils.isNotEmpty(builtinParmList)) {
                 for (ParmConfigPO parmConfigPO : selectList) {
-                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmtList.stream().filter(item -> item.getParmId()==parmConfigPO.id).findFirst();
+                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == parmConfigPO.id).findFirst();
                     if (builtinParmOptional.isPresent()) {
                         // 存在
                         BuiltinParmPO builtinParm = builtinParmOptional.get();

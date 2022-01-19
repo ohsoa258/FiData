@@ -40,7 +40,7 @@ public class FieldConfigVO
      * 字段排序
      */
     @ApiModelProperty(value = "字段排序")
-    public String fieldSort;
+    public int fieldSort;
 
     /**
      * 字段描述
