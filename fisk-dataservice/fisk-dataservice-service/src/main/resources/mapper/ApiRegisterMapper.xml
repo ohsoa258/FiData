@@ -1,0 +1,23 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.ApiRegisterMapper">
+    <select id="getAll" resultType="com.fisk.dataservice.vo.api.ApiConfigVO">
+        select id,
+        api_name,
+        api_code,
+        api_desc,
+        api_type,
+        datasource_id,
+        table_name,
+        create_sql,
+        create_time,
+        create_user
+        from tb_api_config
+        where del_flag=1
+        <if test="query.keyword !=null and query.keyword.length()>0 ">
+            and (api_name like concat('%', #{query.keyword}, '%')
+            or api_desc like concat('%', #{query.keyword}, '%'))
+        </if>
+    </select>
+</mapper>

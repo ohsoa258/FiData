@@ -24,16 +24,10 @@ import java.util.stream.Collectors;
 public class TablePyhNameDTO extends BaseDTO {
 
     /**
-     * 非实时应用所属下的表名
+     * 表名
      */
     @ApiModelProperty(value = "非实时应用所属下的表名", required = true)
     public String tableName;
-
-    /**
-     * 返回给前端的唯一标记
-     */
-    @ApiModelProperty(value = "返回给前端的唯一标记", required = true)
-    public int tag;
 
     /**
      * 表字段
