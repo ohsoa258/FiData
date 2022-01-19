@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service;
 
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.datamodel.dto.DataDomain.AreaBusinessNameDTO;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public interface DataDomainService {
      * @param
      * @return
      */
-    Object getDataDomain();
+    List<DataDomainVO> getDataDomain();
 
     /**
      * 获取维度
