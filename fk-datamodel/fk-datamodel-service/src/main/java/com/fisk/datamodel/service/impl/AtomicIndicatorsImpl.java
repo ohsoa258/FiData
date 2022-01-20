@@ -109,15 +109,16 @@ public class AtomicIndicatorsImpl
             while (matcher.find()) {
                 System.out.println(matcher.group(1));
                 String derivedId=matcher.group(1);
+                String name=derivedId.replace("@","");
                 //根据中括号的id获取指标名称
-                IndicatorsPO selectByName=mapper.selectById(Integer.parseInt(derivedId));
+                IndicatorsPO selectByName=mapper.selectById(Integer.parseInt(name));
                 if (selectByName==null)
                 {
                     exit=true;
                     break;
                 }
                 //替换中括号中的值
-                formula=formula.replace(derivedId,String.valueOf(selectByName.indicatorsName));
+                formula=formula.replace(derivedId,"@"+String.valueOf(selectByName.indicatorsName));
             }
             data.indicatorsFormula=formula;
         }
@@ -149,6 +150,7 @@ public class AtomicIndicatorsImpl
         po.businessLimitedId=dto.businessLimitedId;
         po.timePeriod=dto.timePeriod;
         po.derivedIndicatorsType=dto.derivedIndicatorsType;
+        po.indicatorsFormula=dto.indicatorsFormula;
         //判断是否为公式指标
         if (dto.derivedIndicatorsType== DerivedIndicatorsEnum.BASED_FORMULA.getValue())
         {
@@ -174,7 +176,7 @@ public class AtomicIndicatorsImpl
                     break;
                 }
                 //替换中括号中的值
-                formula=formula.replace(name,String.valueOf(selectById.id));
+                formula=formula.replace(name,"@"+String.valueOf(selectById.id));
             }
             if (exit)
             {
@@ -249,6 +251,7 @@ public class AtomicIndicatorsImpl
                 AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
                 dto.attributeType=2;
                 dto.dimensionTableName=item.dimensionTabName;
+                dto.id=item.id;
                 data.add(dto);
             }
         }
@@ -279,6 +282,7 @@ public class AtomicIndicatorsImpl
                         dto.factFieldName=po.factFieldEnName;
                         dto.factFieldType=po.factFieldType;
                         dto.factFieldLength=po.factFieldLength;
+                        dto.id=po.id;
                         data.add(dto);
                     }
                 }
@@ -306,6 +310,7 @@ public class AtomicIndicatorsImpl
             dto.aggregatedField=factAttributePO.factFieldEnName;
             dto.factFieldType=factAttributePO.factFieldType;
             dto.factFieldLength=factAttributePO.factFieldLength;
+            dto.id=item.id;
             data.add(dto);
         }
         return data;

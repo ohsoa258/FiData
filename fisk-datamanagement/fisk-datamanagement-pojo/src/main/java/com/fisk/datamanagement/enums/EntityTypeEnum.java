@@ -16,6 +16,7 @@ public enum EntityTypeEnum implements BaseEnum {
     RDBMS_COLUMN(6,"rdbms_column"),
     PROCESS(7,"Process"),
     DATASET_PROCESS_INPUTS(8,"dataset_process_inputs"),
+    DELETED(9,"DELETED"),
     OTHER(-1,"other");
 
     EntityTypeEnum(int value, String name) {

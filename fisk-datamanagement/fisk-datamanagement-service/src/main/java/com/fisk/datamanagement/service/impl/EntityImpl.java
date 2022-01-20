@@ -18,6 +18,7 @@ import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.platform.commons.util.PackageUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,10 @@ public class EntityImpl implements IEntity {
     private String lineage;
     @Value("${atlas.relationship}")
     private String relationship;
+    @Value("${atlas.searchQuick}")
+    private String searchQuick;
+    @Value("${atlas.searchSuggestions}")
+    private String searchSuggestions;
     @Value("${spring.metadataentity}")
     private String metaDataEntity;
 
@@ -89,7 +94,7 @@ public class EntityImpl implements IEntity {
             JSONArray array = jsonObj.getJSONArray("entities");
             for (int i = 0; i < array.size(); i++)
             {
-                if ("DELETED".equals(array.getJSONObject(i).getString("status")))
+                if (EntityTypeEnum.DELETED.getName().equals(array.getJSONObject(i).getString("status")))
                 {
                     continue;
                 }
@@ -118,7 +123,7 @@ public class EntityImpl implements IEntity {
                     String value = guidEntityMap.getString(key);
                     JSONObject jsonValue = JSON.parseObject(value);
                     //过滤已删除数据
-                    if ("DELETED".equals(jsonValue.getString("status")))
+                    if (EntityTypeEnum.DELETED.getName().equals(jsonValue.getString("status")))
                     {
                         continue;
                     }
@@ -504,7 +509,7 @@ public class EntityImpl implements IEntity {
             //判断是否存在血缘关系
             String relationshipStr=jsonObj.getString("relationship");
             JSONObject relationshipJson=JSON.parseObject(relationshipStr);
-            if (!relationshipJson.getString("status").equals("DELETED"))
+            if (!relationshipJson.getString("status").equals(EntityTypeEnum.DELETED.getName()))
             {
                 return true;
             }
@@ -515,6 +520,30 @@ public class EntityImpl implements IEntity {
             log.error("getRelationShip ex:",e);
         }
         return false;
+    }
+
+    @Override
+    public JSONObject searchQuick(String query,int limit,int offset)
+    {
+        ResultDataDTO<String> result = atlasClient.Get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            JSONObject msg=JSON.parseObject(result.data);
+            throw new FkException(result.code,msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
+    }
+
+    @Override
+    public JSONObject searchSuggestions(String prefixString)
+    {
+        ResultDataDTO<String> result = atlasClient.Get(searchSuggestions + "?prefixString=" + prefixString);
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            JSONObject msg=JSON.parseObject(result.data);
+            throw new FkException(result.code,msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
     }
 
 

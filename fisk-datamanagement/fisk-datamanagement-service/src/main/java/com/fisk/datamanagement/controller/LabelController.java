@@ -21,7 +21,6 @@ import javax.annotation.Resource;
 @Api(tags = {SwaggerConfig.LABEL})
 @RestController
 @RequestMapping("/Label")
-@Slf4j
 public class LabelController {
     @Resource
     ILabel service;

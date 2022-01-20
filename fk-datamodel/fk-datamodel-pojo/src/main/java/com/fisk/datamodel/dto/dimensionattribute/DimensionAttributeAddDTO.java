@@ -1,6 +1,7 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 
@@ -27,4 +28,6 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     public String remark;
     public List<DimensionAttributeDTO> list;
+
+    public SyncModeDTO syncModeDTO;
 }

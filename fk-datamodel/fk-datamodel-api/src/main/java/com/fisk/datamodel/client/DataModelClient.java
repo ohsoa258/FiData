@@ -172,10 +172,11 @@ public interface DataModelClient {
 
     /**
      * 获取数据建模表数据
+     * @param publishStatus
      * @return
      */
-    @GetMapping("/DataManagement/getDataModelTable")
-    ResultEntity<Object> getDataModelTable();
+    @GetMapping("/DataManagement/getDataModelTable/{publishStatus}")
+    ResultEntity<Object> getDataModelTable(@PathVariable("publishStatus") int publishStatus);
 
     /**
      * 获取白泽数据源

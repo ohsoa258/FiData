@@ -9,15 +9,15 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
-import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
-import com.fisk.datamodel.entity.FactAttributePO;
+import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.dto.dimensionattribute.*;
-import com.fisk.datamodel.entity.DimensionPO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
-import com.fisk.datamodel.entity.FactPO;
-import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.SyncModeEnum;
+import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
+import com.fisk.datamodel.map.SyncModeMap;
+import com.fisk.datamodel.map.TableBusinessMap;
 import com.fisk.datamodel.mapper.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 public class DimensionAttributeImpl
         extends ServiceImpl<DimensionAttributeMapper, DimensionAttributePO>
         implements IDimensionAttribute {
-
     @Resource
     DimensionMapper mapper;
     @Resource
@@ -48,41 +47,42 @@ public class DimensionAttributeImpl
     FactAttributeMapper factAttributeMapper;
     @Resource
     DimensionFolderImpl dimensionFolder;
+    @Resource
+    SyncModeImpl syncMode;
+    @Resource
+    TableBusinessImpl tableBusiness;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto)
     {
-        //根据维度id,删除所有字段数据
-        /*QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
-        if (list !=null && list.size()>0)
-        {
-            for (DimensionAttributePO item:list)
-            {
-                int flat=attributeMapper.deleteByIdWithFill(item);
-                if (flat==0)
-                {
-                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-                }
-            }
-        }
-        //批量添加维度字段数据
-        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(dto);
-        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-        if (!this.saveBatch(poList))
-        {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }*/
-
         //判断是否存在
         DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
         if (dimensionPO==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        //添加增量配置
+        SyncModePO syncModePO = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
+        boolean syncMode = this.syncMode.saveOrUpdate(syncModePO);
+        boolean tableBusiness=true;
+        if (dto.syncModeDTO.syncMode== SyncModeEnum.CUSTOM_OVERRIDE.getValue())
+        {
+            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dto.syncModeDTO.syncTableId)
+                    .eq(SyncModePO::getTableType,dto.syncModeDTO.tableType);
+            SyncModePO po=this.syncMode.getOne(syncModePOQueryWrapper);
+            if (po==null)
+            {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            dto.syncModeDTO.syncTableBusinessDTO.syncId=(int)po.id;
+            tableBusiness= this.tableBusiness.saveOrUpdate(TableBusinessMap.INSTANCES.dtoToPo(dto.syncModeDTO.syncTableBusinessDTO));
+        }
+        if (!syncMode || !tableBusiness)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
         //删除维度字段属性
         List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());
         if (ids!=null && ids.size()>0)
@@ -120,7 +120,7 @@ public class DimensionAttributeImpl
             queryDTO.remark=dto.remark;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
-        return ResultEnum.SUCCESS;
+        return result==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
 
@@ -197,11 +197,35 @@ public class DimensionAttributeImpl
         {
             return data;
         }
+        //获取sql脚本
         data.sqlScript=dimensionPO.sqlScript;
+        //获取表字段详情
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         data.attributeDTOList=DimensionAttributeMap.INSTANCES.poListToDtoList(list);
+        //获取增量配置信息
+        QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+        syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dimensionPO.id)
+                .eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION);
+        SyncModePO syncModePO=syncMode.getOne(syncModePOQueryWrapper);
+        if(syncModePO==null)
+        {
+            return data;
+        }
+        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePO);
+        if (syncModePO.syncMode!= SyncModeEnum.CUSTOM_OVERRIDE.getValue())
+        {
+            return data;
+        }
+        QueryWrapper<TableBusinessPO> tableBusinessPOQueryWrapper=new QueryWrapper<>();
+        tableBusinessPOQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePO.id);
+        TableBusinessPO tableBusinessPO=tableBusiness.getOne(tableBusinessPOQueryWrapper);
+        if (tableBusinessPO==null)
+        {
+            return data;
+        }
+        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPO);
         return data;
     }
 

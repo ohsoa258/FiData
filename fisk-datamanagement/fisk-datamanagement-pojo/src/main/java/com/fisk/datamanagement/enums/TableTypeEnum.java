@@ -1,21 +1,18 @@
-package com.fisk.datamodel.enums;
+package com.fisk.datamanagement.enums;
 
 import com.fisk.common.enums.BaseEnum;
 
 /**
  * @author JianWenYang
  */
-public enum SyncModeEnum implements BaseEnum {
+public enum TableTypeEnum implements BaseEnum {
 
-    FULL_AMOUNT(1,"追加"),
+    DW_DIMENSION(1,"dw_dimension"),
+    DW_FACT(2,"dw_fact"),
+    DORIS_DIMENSION(3,"doris_dimension"),
+    DORIS_FACT(4,"doris_fact");
 
-    INCREMENTAL(2,"全量覆盖"),
-
-    TIME_COVER(3,"业务主键覆盖"),
-
-    CUSTOM_OVERRIDE(4,"业务时间覆盖");
-
-    SyncModeEnum(int value, String name) {
+    TableTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }

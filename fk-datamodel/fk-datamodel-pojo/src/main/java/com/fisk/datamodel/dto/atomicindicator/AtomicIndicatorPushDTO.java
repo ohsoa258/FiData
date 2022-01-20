@@ -42,4 +42,6 @@ public class AtomicIndicatorPushDTO {
      */
     public String aggregationLogic;
 
+    public long id;
+
 }

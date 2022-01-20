@@ -48,5 +48,9 @@ public class MetadataMapAtlasPO extends BasePO {
      * 数据库名称类型:1ods,2dw
      */
     public int dbNameType;
+    /**
+     * 指标字段类型:1退化维度,2关联维度,3指标
+     */
+    public int attributeType;
 
 }

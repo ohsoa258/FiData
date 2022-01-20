@@ -88,4 +88,16 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataKinship(guid));
     }
 
+    @ApiOperation("首页文本框查询Entity")
+    @GetMapping("/searchQuick")
+    public ResultEntity<Object> searchQuick(String query,int limit,int offset) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchQuick(query,limit,offset));
+    }
+
+    @ApiOperation("首页文本框查询Suggestions")
+    @GetMapping("/searchSuggestions")
+    public ResultEntity<Object> searchSuggestions(String prefixString) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchSuggestions(prefixString));
+    }
+
 }
