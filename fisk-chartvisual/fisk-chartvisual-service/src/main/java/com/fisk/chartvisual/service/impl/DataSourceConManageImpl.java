@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
-import com.fisk.chartvisual.enums.DimensionTypeEnum;
+import com.fisk.chartvisual.enums.NodeTypeEnum;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.chartvisual.map.SSASMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
@@ -15,11 +15,9 @@ import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.util.dbhelper.CubeHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
-import com.fisk.chartvisual.util.dbhelper.TabularHelper;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.chartvisual.vo.DimensionVO;
 import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
@@ -177,7 +175,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 DataDomainVO dimensionVO_Mea = new DataDomainVO();
                 dimensionVO_Mea.name = Measures_Name;
                 dimensionVO_Mea.uniqueName = Measures_UniqueName;
-                dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
+                dimensionVO_Mea.dimensionType = NodeTypeEnum.MEASURE;
                 dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(modelStructure.measures);
                 dimensionVOList.add(dimensionVO_Mea);
                 //维度
@@ -185,7 +183,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     DataDomainVO dimensionVO_Dim = new DataDomainVO();
                     dimensionVO_Dim.name = d.name;
                     dimensionVO_Dim.uniqueName = d.uniqueName;
-                    dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;
+                    dimensionVO_Dim.dimensionType = NodeTypeEnum.OTHER;
                     dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
                     dimensionVOList.add(dimensionVO_Dim);
                 });

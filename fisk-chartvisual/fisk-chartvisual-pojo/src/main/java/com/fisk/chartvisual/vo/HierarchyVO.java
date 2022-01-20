@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.vo;
 
-import com.fisk.chartvisual.enums.DimensionTypeEnum;
+import com.fisk.chartvisual.enums.NodeTypeEnum;
 import lombok.Data;
 
 /**
@@ -10,5 +10,5 @@ import lombok.Data;
 public class HierarchyVO {
     public String name;
     public String uniqueName;
-    public DimensionTypeEnum dimensionType;
+    public NodeTypeEnum dimensionType;
 }

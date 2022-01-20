@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.entity;
 
-import com.fisk.chartvisual.enums.DimensionTypeEnum;
+import com.fisk.chartvisual.enums.NodeTypeEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -14,6 +14,6 @@ import java.util.List;
 public class HierarchyPO {
     public String name;
     public String uniqueName;
-    public DimensionTypeEnum dimensionTypeEnum;
+    public NodeTypeEnum dimensionTypeEnum;
     public List<MemberPO> members;
 }

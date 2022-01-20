@@ -22,8 +22,8 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.fisk.chartvisual.enums.DimensionTypeEnum.MEASURE;
-import static com.fisk.chartvisual.enums.DimensionTypeEnum.OTHER;
+import static com.fisk.chartvisual.enums.NodeTypeEnum.MEASURE;
+import static com.fisk.chartvisual.enums.NodeTypeEnum.OTHER;
 import static com.fisk.chartvisual.enums.FieldTypeEnum.COLUMN;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.DERIVED_INDICATORS;

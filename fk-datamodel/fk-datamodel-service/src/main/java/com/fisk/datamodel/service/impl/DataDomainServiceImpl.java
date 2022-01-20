@@ -11,9 +11,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.fisk.chartvisual.enums.NodeTypeEnum.*;
 
 /**
  * @author WangYan
@@ -48,94 +52,136 @@ public class DataDomainServiceImpl implements DataDomainService {
             return null;
         }
 
-        List<DataDomainVO> res = businessAreaList.stream().filter(Objects::nonNull)
+        return businessAreaList.stream().filter(Objects::nonNull)
                 .map(e -> {
                     DataDomainVO dataDomain = new DataDomainVO();
                     dataDomain.setId(e.getId());
                     dataDomain.setName(e.getBusinessName());
-
-                    List<DimensionPO> dimensionList = this.dimension(e.getId());
-                    if (CollectionUtils.isNotEmpty(dimensionList)) {
-                        // 二级维度和三级维度字段
-                        dataDomain.setChildren(
-                                // 维度
-                                dimensionList.stream().filter(Objects::nonNull)
-                                        .map(item -> {
-                                            DataDomainVO dataDomain1 = new DataDomainVO();
-                                            dataDomain1.setId(item.getId());
-                                            dataDomain1.setName(item.getDimensionTabName());
-                                            dataDomain1.setDimension(1);
-
-                                            List<DimensionAttributePO> dimensionAttributeList = this.dimensionField(item.getId());
-                                            if (CollectionUtils.isNotEmpty(dimensionAttributeList)) {
-                                                dataDomain1.setChildren1(
-                                                        // 维度字段
-                                                        dimensionAttributeList.stream().filter(Objects::nonNull)
-                                                                .map(it -> new DataDomainVO(it.getId(), it.getDimensionFieldEnName(), 1))
-                                                                .collect(Collectors.toList())
-                                                );
-                                            }
-
-                                            return dataDomain1;
-                                        }).collect(Collectors.toList()));
-                    }
-
-
-                    List<BusinessProcessPO> processList = this.businessProcess(e.getId());
-                    if (CollectionUtils.isNotEmpty(processList)) {
-                        // 二级业务过程和三级事实 四级原子和派生
-                        dataDomain.setChildren1(
-                                // 二级业务过程
-                                processList.stream().filter(Objects::nonNull)
-                                        .map(item -> {
-                                            DataDomainVO dataDomain1 = new DataDomainVO();
-                                            dataDomain1.setId(item.getId());
-                                            dataDomain1.setName(item.getBusinessProcessEnName());
-                                            dataDomain1.setDimension(0);
-
-                                            List<FactPO> factList = this.fact(item.getId());
-                                            if (CollectionUtils.isNotEmpty(factList)) {
-                                                dataDomain1.setChildren(
-                                                        // 三级事实
-                                                        factList.stream().filter(Objects::nonNull)
-                                                                .map(it -> {
-                                                                    DataDomainVO dataDomain2 = new DataDomainVO();
-                                                                    dataDomain2.setId(it.getId());
-                                                                    dataDomain2.setName(it.getFactTabName());
-                                                                    dataDomain2.setDimension(0);
-
-                                                                    List<IndicatorsPO> indicatorsList = this.atomicIndicators(it.getId());
-                                                                    if (CollectionUtils.isNotEmpty(indicatorsList)) {
-                                                                        dataDomain2.setChildren(
-                                                                                // 四级原子
-                                                                                indicatorsList.stream().filter(Objects::nonNull)
-                                                                                        .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), 0))
-                                                                                        .collect(Collectors.toList()));
-                                                                    }
-
-                                                                    List<IndicatorsPO> derivedList = this.derivedIndicators(it.getId());
-                                                                    if (CollectionUtils.isNotEmpty(derivedList)) {
-                                                                        dataDomain2.setChildren1(
-                                                                                // 四级派生
-                                                                                derivedList.stream().filter(Objects::nonNull)
-                                                                                        .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), 0))
-                                                                                        .collect(Collectors.toList()));
-                                                                    }
-
-
-                                                                    return dataDomain2;
-                                                                }).collect(Collectors.toList()));
-                                            }
-
-
-                                            return dataDomain1;
-                                        }).collect(Collectors.toList()));
-                    }
+                    dataDomain.setDimensionType(BUSINESS_DOMAIN);
+                    dataDomain.setChildren(this.dataDomainMerge(this.spliceDimension(e.getId()),this.splicingBusinessProcess(e.getId())));
 
                     return dataDomain;
                 }).collect(Collectors.toList());
+    }
 
-        return res.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    /**
+     * 二级维度和业务过程合并
+     * @param dimensionList
+     * @param businessProcessList
+     * @return
+     */
+    public List<DataDomainVO> dataDomainMerge(List<DataDomainVO> dimensionList,List<DataDomainVO> businessProcessList){
+        List<DataDomainVO> domainList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(dimensionList)){
+            domainList.addAll(dimensionList);
+        }
+
+        if (CollectionUtils.isNotEmpty(businessProcessList)){
+            domainList.addAll(businessProcessList);
+        }
+        return domainList;
+    }
+
+    /**
+     * 四级原子和派生指标合并
+     * @param factId
+     * @return
+     */
+    public List<DataDomainVO> indicatorMerge(Long factId){
+        List<DataDomainVO> dataDomainList = new ArrayList<>();
+        List<IndicatorsPO> indicatorsList = this.atomicIndicators(factId);
+        if (CollectionUtils.isNotEmpty(indicatorsList)) {
+                    // 四级原子
+            List<DataDomainVO> atomList = indicatorsList.stream().filter(Objects::nonNull)
+                    .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), ATOMIC_METRICS))
+                    .collect(Collectors.toList());
+            dataDomainList.addAll(atomList);
+        }
+
+        List<IndicatorsPO> derivedList = this.derivedIndicators(factId);
+        if (CollectionUtils.isNotEmpty(derivedList)) {
+                    // 四级派生
+            List<DataDomainVO> deriveList = derivedList.stream().filter(Objects::nonNull)
+                    .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), DERIVED_METRICS))
+                    .collect(Collectors.toList());
+            dataDomainList.addAll(deriveList);
+        }
+
+        return dataDomainList;
+    }
+
+    /**
+     * 拼接二级维度三级维度字段
+     * @param businessId
+     * @return
+     */
+    public List<DataDomainVO> spliceDimension(Long businessId){
+        List<DimensionPO> dimensionList = this.dimension(businessId);
+        if (CollectionUtils.isNotEmpty(dimensionList)) {
+            // 二级维度和三级维度字段
+            // 维度
+            return dimensionList.stream().filter(Objects::nonNull)
+                    .map(item -> {
+                        DataDomainVO dataDomain1 = new DataDomainVO();
+                        dataDomain1.setId(item.getId());
+                        dataDomain1.setName(item.getDimensionTabName());
+                        dataDomain1.setDimensionType(OTHER);
+
+                        List<DimensionAttributePO> dimensionAttributeList = this.dimensionField(item.getId());
+                        if (CollectionUtils.isNotEmpty(dimensionAttributeList)) {
+                            dataDomain1.setChildren(
+                                    // 维度字段
+                                    dimensionAttributeList.stream().filter(Objects::nonNull)
+                                            .map(it -> new DataDomainVO(it.getId(), it.getDimensionFieldEnName(), DIMENSION_FIELD))
+                                            .collect(Collectors.toList())
+                            );
+                        }
+
+                        return dataDomain1;
+                    }).collect(Collectors.toList());
+        }
+
+        return null;
+    }
+
+    /**
+     * 拼接业务过程二级,事实表三级,原子指标和派生指标四级
+     * @param businessId
+     * @return
+     */
+    public List<DataDomainVO> splicingBusinessProcess(Long businessId){
+        List<BusinessProcessPO> processList = this.businessProcess(businessId);
+        if (CollectionUtils.isNotEmpty(processList)) {
+            // 二级业务过程和三级事实 四级原子和派生
+            // 二级业务过程
+            return processList.stream().filter(Objects::nonNull)
+                    .map(item -> {
+                        DataDomainVO dataDomain1 = new DataDomainVO();
+                        dataDomain1.setId(item.getId());
+                        dataDomain1.setName(item.getBusinessProcessEnName());
+                        dataDomain1.setDimensionType(BUSINESS_PROCESS);
+
+                        List<FactPO> factList = this.fact(item.getId());
+                        if (CollectionUtils.isNotEmpty(factList)) {
+                            dataDomain1.setChildren(
+                                    // 三级事实
+                                    factList.stream().filter(Objects::nonNull)
+                                            .map(it -> {
+                                                DataDomainVO dataDomain2 = new DataDomainVO();
+                                                dataDomain2.setId(it.getId());
+                                                dataDomain2.setName(it.getFactTabName());
+                                                dataDomain2.setDimensionType(FACT);
+                                                dataDomain2.setChildren(this.indicatorMerge(it.getId()));
+                                                return dataDomain2;
+                                            }).collect(Collectors.toList()));
+                        }
+
+
+                        return dataDomain1;
+                    }).collect(Collectors.toList());
+        }
+
+        return null;
     }
 
     /**

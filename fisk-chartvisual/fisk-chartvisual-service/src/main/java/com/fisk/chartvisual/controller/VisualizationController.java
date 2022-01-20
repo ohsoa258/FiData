@@ -43,8 +43,8 @@ public class VisualizationController {
     }
 
     @ApiOperation("可视化获取数据源")
-    @PostMapping("/getDataDomain")
-    public ResultEntity<List<DataDomainVO>> getData(@RequestBody DataSourceDTO dto) {
+    @PostMapping("/getDataSource")
+    public ResultEntity<List<DataDomainVO>> getDataSource(@RequestBody DataSourceDTO dto) {
         return visualizationService.listDataDomain(dto);
     }
 }

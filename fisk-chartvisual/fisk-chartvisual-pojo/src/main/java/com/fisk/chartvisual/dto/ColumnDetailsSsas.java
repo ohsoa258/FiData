@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.dto;
 
-import com.fisk.chartvisual.enums.DimensionTypeEnum;
+import com.fisk.chartvisual.enums.NodeTypeEnum;
 import com.fisk.chartvisual.enums.DragElemTypeEnum;
 
 /**
@@ -9,6 +9,6 @@ import com.fisk.chartvisual.enums.DragElemTypeEnum;
 public class ColumnDetailsSsas {
     public String name;
     public String uniqueName;
-    public DimensionTypeEnum dimensionType;
+    public NodeTypeEnum dimensionType;
     public DragElemTypeEnum dragElemType;
 }

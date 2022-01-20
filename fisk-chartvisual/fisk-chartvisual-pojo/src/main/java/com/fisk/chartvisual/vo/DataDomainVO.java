@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.vo;
 
-import com.fisk.chartvisual.enums.DimensionTypeEnum;
+import com.fisk.chartvisual.enums.NodeTypeEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -14,14 +14,9 @@ public class DataDomainVO {
     public Long id;
     public String name;
     public String uniqueName;
-    public DimensionTypeEnum dimensionType;
+    public NodeTypeEnum dimensionType;
     public String details;
-    /**
-     * 是否维度 0 否  1 是维度
-     */
-    public int dimension;
     public List<DataDomainVO> children;
-    public List<DataDomainVO> children1;
 
     public DataDomainVO(){
 
@@ -32,9 +27,9 @@ public class DataDomainVO {
         this.details = details;
     }
 
-    public DataDomainVO(Long id, String name, int dimension) {
+    public DataDomainVO(Long id, String name, NodeTypeEnum dimensionType) {
         this.id = id;
         this.name = name;
-        this.dimension = dimension;
+        this.dimensionType = dimensionType;
     }
 }
