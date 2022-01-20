@@ -379,10 +379,6 @@ public class BuildDataModelDorisTableListener
                 sqlFileds.append( ""+l.fieldEnName + " " + l.fieldType.toLowerCase() + "("+l.fieldLength+") ,");
                 stgSqlFileds.append(l.fieldEnName+" text,");
             }
-            if(Objects.nonNull(l.associateDimensionName)){
-                sqlFileds1.append(l.associateDimensionName.substring(4)+"key varchar(50),");
-                stgSqlFileds.append(l.associateDimensionName.substring(4)+"key varchar(50),");
-            }
             /*if(l.isPrimaryKey==1){
                 pksql.append(""+l.fieldEnName+" ,");
             }*/
@@ -390,7 +386,8 @@ public class BuildDataModelDorisTableListener
         });
         pksql.append(tablePk+",");
         String sql1 = sql.toString();
-        String sql2 = sqlFileds.toString();
+        String associatedKey = associatedConditions(fieldList);
+        String sql2 = sqlFileds.toString() + associatedKey;
         sql2+="fi_createtime varchar(50),fi_updatetime varchar(50),";
         String sql3 = sqlFileds1.toString();
         String sql4 = pksql.toString();
@@ -403,7 +400,7 @@ public class BuildDataModelDorisTableListener
         //创建表
         log.info("pg_dw建表语句"+sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable ="DROP TABLE IF EXISTS stg_"+tableName+"; CREATE TABLE stg_"+tableName+" ("+tablePk+" varchar(50) NOT NULL DEFAULT sys_guid(),"+stgSqlFileds.toString()+"fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50))";
+        String stgTable = "DROP TABLE IF EXISTS stg_" + tableName + "; CREATE TABLE stg_" + tableName + " (" + tablePk + " varchar(50) NOT NULL DEFAULT sys_guid()," + stgSqlFileds.toString() + associatedKey + "fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50))";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         HashMap<String, Object> map = new HashMap<>();
@@ -416,6 +413,20 @@ public class BuildDataModelDorisTableListener
             taskDwDimPO.storedProcedureName="update"+tableName+"()";
             taskDwDimMapper.insert(taskDwDimPO);
             return sqlList;
+    }
+
+    public String associatedConditions(List<ModelPublishFieldDTO> fieldList) {
+        String filed = "";
+        List<ModelPublishFieldDTO> collect1 = fieldList.stream().filter(e -> e.associateDimensionName != null).collect(Collectors.toList());
+        List<ModelPublishFieldDTO> modelPublishFieldDTOS = collect1.stream().collect(Collectors.collectingAndThen(
+                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ModelPublishFieldDTO::getAssociateDimensionName))), ArrayList::new));
+        modelPublishFieldDTOS.removeAll(Collections.singleton(null));
+        if (modelPublishFieldDTOS.size() != 0) {
+            for (ModelPublishFieldDTO modelPublishFieldDTO : modelPublishFieldDTOS) {
+                filed += modelPublishFieldDTO.associateDimensionName.substring(4) + "key varchar(50),";
+            }
+        }
+        return filed;
     }
 
     public void createNiFiFlow(ModelPublishDataDTO modelPublishDataDTO,ModelPublishTableDTO modelMetaDataDTO,String businessAreaName,DataClassifyEnum dataClassifyEnum,OlapTableEnum olapTableEnum){

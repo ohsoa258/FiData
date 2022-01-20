@@ -56,4 +56,16 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     * 最大单位大组id
     * */
     public String groupStructureId;
+
+    /*
+     * 查询范围开始时间
+     * */
+    public String queryStartTime;
+
+    /*
+     * 查询范围结束时间
+     * */
+    public String queryEndTime;
+
+
 }
