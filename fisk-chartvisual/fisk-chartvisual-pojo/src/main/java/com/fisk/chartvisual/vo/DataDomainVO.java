@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.vo;
 
+import com.fisk.chartvisual.enums.DimensionTypeEnum;
 import lombok.Data;
 
 import java.util.List;
@@ -12,6 +13,8 @@ public class DataDomainVO {
 
     public Long id;
     public String name;
+    public String uniqueName;
+    public DimensionTypeEnum dimensionType;
     public String details;
     /**
      * 是否维度 0 否  1 是维度

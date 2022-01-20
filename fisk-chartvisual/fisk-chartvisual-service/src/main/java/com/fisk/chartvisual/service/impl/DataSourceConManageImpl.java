@@ -127,7 +127,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<Object> listDataDomain(int id) {
+    public ResultEntity<List<DataDomainVO>> listDataDomain(int id) {
         //获取连接信息
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if (model == null) {
@@ -163,9 +163,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<Object> SSASDataStructure(int id) {
+    public ResultEntity<List<DataDomainVO>> SSASDataStructure(int id) {
         //获取连接信息
-        List<DimensionVO> dimensionVOList = new ArrayList<>();
+        List<DataDomainVO> dimensionVOList = new ArrayList<>();
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
         if (model == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
@@ -174,7 +174,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             try {
                 CubePO modelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
                 //度量
-                DimensionVO dimensionVO_Mea = new DimensionVO();
+                DataDomainVO dimensionVO_Mea = new DataDomainVO();
                 dimensionVO_Mea.name = Measures_Name;
                 dimensionVO_Mea.uniqueName = Measures_UniqueName;
                 dimensionVO_Mea.dimensionType = DimensionTypeEnum.MEASURE;
@@ -182,7 +182,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 dimensionVOList.add(dimensionVO_Mea);
                 //维度
                 modelStructure.dimensions.forEach(d -> {
-                    DimensionVO dimensionVO_Dim = new DimensionVO();
+                    DataDomainVO dimensionVO_Dim = new DataDomainVO();
                     dimensionVO_Dim.name = d.name;
                     dimensionVO_Dim.uniqueName = d.uniqueName;
                     dimensionVO_Dim.dimensionType = DimensionTypeEnum.OTHER;

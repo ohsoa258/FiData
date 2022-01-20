@@ -5,6 +5,7 @@ import com.fisk.chartvisual.dto.IndicatorFeignDTO;
 import com.fisk.chartvisual.dto.IsDimensionDTO;
 import com.fisk.chartvisual.dto.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -181,7 +182,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/Datamation/getAll")
-    ResultEntity<Object> getAll();
+    ResultEntity<List<DataDomainVO>> getAll();
 
     /*
     *根据维度id获取维度字段及其关联详情(nifi)

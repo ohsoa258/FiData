@@ -3,6 +3,7 @@ package com.fisk.chartvisual.controller;
 import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author WangYan
@@ -42,7 +44,7 @@ public class VisualizationController {
 
     @ApiOperation("可视化获取数据源")
     @PostMapping("/getDataDomain")
-    public ResultEntity<Object> getData(@RequestBody DataSourceDTO dto) {
+    public ResultEntity<List<DataDomainVO>> getData(@RequestBody DataSourceDTO dto) {
         return visualizationService.listDataDomain(dto);
     }
 }

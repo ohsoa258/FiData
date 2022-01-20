@@ -63,12 +63,12 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param id 数据源连接地址
      * @return 数据源下的数据域
      */
-    ResultEntity<Object> listDataDomain(int id);
+    ResultEntity<List<DataDomainVO>> listDataDomain(int id);
 
     /**
      *获取Tabular或Cube下的数据结构
      * @param id 数据源连接地址
      * @return Tabular或Cube下的数据结构
      */
-    ResultEntity<Object> SSASDataStructure(int id);
+    ResultEntity<List<DataDomainVO>> SSASDataStructure(int id);
 }
