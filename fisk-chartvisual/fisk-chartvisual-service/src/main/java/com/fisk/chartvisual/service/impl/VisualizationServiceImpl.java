@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.entity.ChartImagePO;
 import com.fisk.chartvisual.map.VisualizationMap;
@@ -55,7 +56,9 @@ public class VisualizationServiceImpl implements VisualizationService {
                 dataServiceResult.setData(BuildSqlService.query(VisualizationMap.INSTANCES.dataDoFields(objectVO.columnDetails), objectVO.id));
                 return dataServiceResult;
             case VIEW:
-                return db.query(VisualizationMap.INSTANCES.dataDoObject(objectVO));
+                ChartQueryObject object = VisualizationMap.INSTANCES.dataDoObject(objectVO);
+                object.setTableName(objectVO.columnDetails.get(1).fieldTableName);
+                return db.query(object);
             case MDX:
                 return db.querySsas(VisualizationMap.INSTANCES.dataToObjectSsas(objectVO));
             default:

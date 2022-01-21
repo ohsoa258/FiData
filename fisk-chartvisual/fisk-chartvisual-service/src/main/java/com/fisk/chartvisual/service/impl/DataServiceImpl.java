@@ -1,10 +1,7 @@
 package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
@@ -25,8 +22,12 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import static com.fisk.chartvisual.enums.DragElemTypeEnum.COLUMN;
+import static com.fisk.chartvisual.enums.DragElemTypeEnum.ROW;
 
 /**
  * @author gy
@@ -83,6 +84,30 @@ public class DataServiceImpl extends ServiceImpl<DataSourceConMapper, DataSource
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public DataServiceResult querySsas(ChartQueryObjectSsas query) {
+        switch (query.graphicType){
+            default:
+                List<ColumnDetailsSsas> columnDetailsSsas = new ArrayList<>();
+                List<ColumnDetailsSsas> columnList = query.columnDetails.stream().filter(e -> e.dragElemType == COLUMN)
+                        .map(e -> new ColumnDetailsSsas() {{
+                            name = e.name;
+                            uniqueName = e.uniqueName;
+                            dimensionType = e.dimensionType;
+                            dragElemType = ROW;
+                        }}).collect(Collectors.toList());
+                columnDetailsSsas.addAll(columnList);
+
+                List<ColumnDetailsSsas> noColumnList = query.columnDetails.stream().filter(e -> e.dragElemType != COLUMN)
+                        .map(e -> new ColumnDetailsSsas() {{
+                            name = e.name;
+                            uniqueName = e.uniqueName;
+                            dimensionType = e.dimensionType;
+                            dragElemType = e.dragElemType;
+                        }}).collect(Collectors.toList());
+                columnDetailsSsas.addAll(noColumnList);
+
+                query.columnDetails(columnDetailsSsas);
+        }
+
         DataSourceConVO model = getDataSourceCon(query.id);
         cubeHelper.connection(model.conStr, model.conAccount, model.conPassword);
         return  cubeHelper.getData(query,model.conCube);
