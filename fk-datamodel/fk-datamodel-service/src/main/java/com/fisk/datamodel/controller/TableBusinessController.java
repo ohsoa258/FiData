@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.service.ITableBusiness;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,7 +25,7 @@ public class TableBusinessController {
 
     @ApiOperation("获取表增量配置信息")
     @GetMapping("/getTableBusiness")
-    public ResultEntity<Object> getTableBusiness(@RequestParam("tableId") int tableId,@RequestParam("tableType") int tableType) {
+    public ResultEntity<GetTableBusinessDTO> getTableBusiness(@RequestParam("tableId") int tableId, @RequestParam("tableType") int tableType) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableBusiness(tableId,tableType));
     }
 }

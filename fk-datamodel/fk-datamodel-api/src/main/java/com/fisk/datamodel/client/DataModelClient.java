@@ -13,6 +13,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -192,7 +193,7 @@ public interface DataModelClient {
      * @return
      */
     @GetMapping("/TableBusiness/getTableBusiness")
-    ResultEntity<Object> getTableBusiness(@RequestParam("tableId") int tableId,@RequestParam("tableType") int tableType);
+    ResultEntity<GetTableBusinessDTO> getTableBusiness(@RequestParam("tableId") int tableId, @RequestParam("tableType") int tableType);
 
     /**
     *根据维度id获取维度字段及其关联详情(nifi)

@@ -21,6 +21,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.*;
@@ -49,6 +50,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
@@ -295,6 +297,7 @@ public class BuildNifiTaskListener {
         TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
         ProcessorConfig processorConfig = new ProcessorConfig();
         ResultEntity<DataAccessConfigDTO> res = new ResultEntity<>();
+        GetTableBusinessDTO getTableBusinessDTO=new GetTableBusinessDTO();
         ResultEntity<List<ModelPublishFieldDTO>> fieldDetails=new ResultEntity<>();
         if (synchronousTypeEnum == SynchronousTypeEnum.TOPGODS) {
             res = client.dataAccessConfig(id, appId);
@@ -310,9 +313,10 @@ public class BuildNifiTaskListener {
             }else if(Objects.equals(type,OlapTableEnum.FACT)||Objects.equals(type,OlapTableEnum.CUSTOMWORKFACT)){
                  fieldDetails = dataModelClient.selectAttributeList(Math.toIntExact(id));
             }
-            //来一个添加增量方式的接口
-
-
+            //添加增量方式的接口
+            int tableType=Objects.equals(type,OlapTableEnum.DIMENSION)||Objects.equals(type,OlapTableEnum.CUSTOMWORKDIMENSION)?0:1;
+            ResultEntity<GetTableBusinessDTO> tableBusiness = dataModelClient.getTableBusiness(Math.toIntExact(id), tableType);
+            getTableBusinessDTO = tableBusiness.data;
         }
         //拿出来
         AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
@@ -447,6 +451,14 @@ public class BuildNifiTaskListener {
             data.taskGroupConfig = taskGroupConfig;
             data.processorConfig = processorConfig;
             data.modelPublishFieldDTOList=fieldDetails.data;
+            if(getTableBusinessDTO!=null){
+                //data.businessDTO=getTableBusinessDTO.details;
+                TableBusinessDTO tableBusinessDTO = new TableBusinessDTO();
+                BeanUtils.copyProperties(getTableBusinessDTO.details,tableBusinessDTO);
+                tableBusinessDTO.accessId= Long.valueOf(getTableBusinessDTO.details.syncId);
+                data.businessDTO=tableBusinessDTO;
+            }
+
         }
 
         if (!data.groupConfig.newApp && data.targetDsConfig != null) {

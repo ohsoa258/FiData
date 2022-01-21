@@ -27,7 +27,7 @@ public class SyncTableBusinessDTO {
     /**
      * 具体日期
      */
-    public int businessDate;
+    public Long businessDate;
 
     /**
      * 业务时间覆盖字段
@@ -42,7 +42,7 @@ public class SyncTableBusinessDTO {
     /**
      * 业务覆盖范围
      */
-    public int businessRange;
+    public Long businessRange;
 
     /**
      * 业务覆盖单位,(默认传Year,Month,Day,Hour)
@@ -57,7 +57,7 @@ public class SyncTableBusinessDTO {
     /**
      * 其他逻辑  业务覆盖范围
      */
-    public int businessRangeStandby;
+    public Long businessRangeStandby;
 
     /**
      * 其他逻辑  业务覆盖单位,Year,Month,Day,Hour
