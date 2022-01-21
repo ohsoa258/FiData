@@ -613,13 +613,13 @@ public class SynchronizationPgKinShip {
                 ProcessRelationshipAttributesPutDTO inputDTO=new ProcessRelationshipAttributesPutDTO();
                 inputDTO.guid=item.guid;
                 inputDTO.typeName=EntityTypeEnum.RDBMS_TABLE.getName();
-                inputDTO.entityStatus="ACTIVE";
+                inputDTO.entityStatus=EntityTypeEnum.ACTIVE.getName();
                 //表名
                 inputDTO.displayText=first.get().tableName;
                 inputDTO.relationshipType=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
                 //生成的relationShip
                 inputDTO.relationshipGuid=relationShipGuid;
-                inputDTO.relationshipStatus="ACTIVE";
+                inputDTO.relationshipStatus=EntityTypeEnum.ACTIVE.getName();
                 ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
                 attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
                 inputDTO.relationshipAttributes=attributesDTO;

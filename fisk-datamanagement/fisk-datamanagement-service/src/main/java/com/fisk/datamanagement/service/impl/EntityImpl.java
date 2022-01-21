@@ -328,7 +328,6 @@ public class EntityImpl implements IEntity {
                     }
                     boolean isExist=true;
                     //判断process上一级typeName是否一致
-
                     if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
                     {
                         List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
@@ -359,7 +358,7 @@ public class EntityImpl implements IEntity {
                     String entityDetail1 = guidEntityMapJson.getString(item.fromEntityId);
                     JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
                     //判断实体是否删除
-                    if ("DELETE".equals(entityDetailJson1.getString("status")))
+                    if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
                     {
                         continue;
                     }
@@ -465,7 +464,7 @@ public class EntityImpl implements IEntity {
                 String entityDetail1 = guidEntityMapJson.getString(item.toEntityId);
                 JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
                 //判断实体是否删除
-                if ("DELETE".equals(entityDetailJson1.getString("status")))
+                if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
                 {
                     continue;
                 }

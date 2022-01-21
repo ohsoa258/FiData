@@ -15,19 +15,14 @@ import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
-import com.fisk.datamodel.entity.BusinessAreaPO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
-import com.fisk.datamodel.entity.DimensionFolderPO;
-import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.DimensionFolderMap;
 import com.fisk.datamodel.map.DimensionMap;
-import com.fisk.datamodel.mapper.BusinessAreaMapper;
-import com.fisk.datamodel.mapper.DimensionAttributeMapper;
-import com.fisk.datamodel.mapper.DimensionFolderMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimensionFolder;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -66,6 +61,8 @@ public class DimensionFolderImpl
     DimensionImpl dimensionImpl;
     @Resource
     DataAccessClient dataAccessClient;
+    @Resource
+    SyncModeMapper syncModeMapper;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto)
@@ -314,6 +311,10 @@ public class DimensionFolderImpl
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
+            //获取表增量配置信息
+            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
+            List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
             for (DimensionPO item:dimensionPOList)
@@ -327,7 +328,12 @@ public class DimensionFolderImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
-                pushDto.synMode=1;
+                //获取维度表同步方式
+                Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                if (!first.isPresent())
+                {
+                    pushDto.synMode=first.get().syncMode;
+                }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
                 List<DimensionAttributePO> attributePOList=dimensionAttributePOList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());

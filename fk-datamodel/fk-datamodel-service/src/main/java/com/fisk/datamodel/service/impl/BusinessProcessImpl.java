@@ -22,6 +22,7 @@ import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.map.BusinessProcessMap;
 import com.fisk.datamodel.map.FactAttributeMap;
@@ -76,6 +77,8 @@ public class BusinessProcessImpl
     FactImpl factImpl;
     @Resource
     DataAccessClient dataAccessClient;
+    @Resource
+    SyncModeMapper syncModeMapper;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -204,6 +207,10 @@ public class BusinessProcessImpl
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> factList=new ArrayList<>();
+            //获取表增量配置信息
+            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, TableHistoryTypeEnum.TABLE_FACT.getValue());
+            List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
             for (FactPO item:factPOList)
@@ -217,7 +224,12 @@ public class BusinessProcessImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
-                pushDto.synMode=1;
+                //获取事实表同步方式
+                Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                if (!first.isPresent())
+                {
+                    pushDto.synMode=first.get().syncMode;
+                }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
                 List<FactAttributePO> attributePOList=factAttributePOList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());

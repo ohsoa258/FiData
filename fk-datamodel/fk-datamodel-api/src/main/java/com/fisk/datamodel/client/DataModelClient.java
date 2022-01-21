@@ -185,16 +185,27 @@ public interface DataModelClient {
     @GetMapping("/Datamation/getAll")
     ResultEntity<List<DataDomainVO>> getAll();
 
-    /*
+    /**
+     * 获取表增量配置信息
+     * @param tableId
+     * @param tableType
+     * @return
+     */
+    @GetMapping("/TableBusiness/getTableBusiness")
+    ResultEntity<Object> getTableBusiness(@RequestParam("tableId") int tableId,@RequestParam("tableType") int tableType);
+
+    /**
     *根据维度id获取维度字段及其关联详情(nifi)
+    * @param dimensionId
     * @return
     * */
     @GetMapping("/attribute/selectDimensionAttributeList")
     ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId);
 
 
-    /*
+    /**
      *根据事实id获取事实字段及其关联详情(nifi)
+     * @param factId
      * @return
      * */
     @GetMapping("/factAttribute/selectAttributeList")
