@@ -310,6 +310,8 @@ public class BuildNifiTaskListener {
             }else if(Objects.equals(type,OlapTableEnum.FACT)||Objects.equals(type,OlapTableEnum.CUSTOMWORKFACT)){
                  fieldDetails = dataModelClient.selectAttributeList(Math.toIntExact(id));
             }
+            //来一个添加增量方式的接口
+
 
         }
         //拿出来

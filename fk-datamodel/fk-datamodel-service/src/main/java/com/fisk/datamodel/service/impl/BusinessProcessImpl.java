@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -33,10 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +74,8 @@ public class BusinessProcessImpl
     TableHistoryImpl tableHistory;
     @Resource
     FactImpl factImpl;
+    @Resource
+    DataAccessClient dataAccessClient;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto)
@@ -210,7 +212,12 @@ public class BusinessProcessImpl
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.factTabName;
                 pushDto.createType=CreateTypeEnum.CREATE_FACT.getValue();
-                pushDto.sqlScript=item.sqlScript;
+                ResultEntity<Map<String, String>> converMap = dataAccessClient.converSql(pushDto.tableName, item.sqlScript, null);
+                Map<String, String> data1 = converMap.data;
+                pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
+                pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+                pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+                pushDto.synMode=1;
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
                 List<FactAttributePO> attributePOList=factAttributePOList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());

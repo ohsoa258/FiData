@@ -1333,6 +1333,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
             Statement st = conn.createStatement();
+            Map<String, String> converSql = converSql(query.tableName, query.querySql, null);
+            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             ResultSet rSet = st.executeQuery(getTotalSql);
@@ -1614,7 +1616,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    private Map<String, String> converSql(String tableName, String sql, String driveType) {
+    @Override
+    public Map<String, String> converSql(String tableName, String sql, String driveType) {
         Map<String, String> paramMap = new HashMap<>();
         if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
             Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
@@ -1643,7 +1646,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         }
         paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);
-        return paramMap;
+        return  paramMap;
     }
 
     @Override

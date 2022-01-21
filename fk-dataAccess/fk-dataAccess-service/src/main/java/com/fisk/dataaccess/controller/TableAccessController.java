@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lock
@@ -100,6 +101,20 @@ public class TableAccessController {
     @ApiOperation(value = "获取最新版sql脚本的表字段集合")
     public ResultEntity<Object> getFieldList(@RequestBody TableAccessNonDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldList(dto));
+    }
+
+    /**
+     * 拼接sql替换时间
+     *
+     * @param tableName tableName
+     * @param sql sql
+     * @param driveType driveType
+     * @return 返回值
+     */
+    @GetMapping("/converSql")
+    public ResultEntity<Map<String, String>> converSql(
+            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam("driveType") String driveType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.converSql(tableName,sql, driveType));
     }
 
 }

@@ -173,7 +173,10 @@ public class BuildDataModelDorisTableListener
                 bfd.id=modelPublishTableDTO.tableId;
                 bfd.tableName=modelPublishTableDTO.tableName;
                 bfd.selectSql=modelPublishTableDTO.sqlScript;
-                bfd.synMode=1;
+                //同步方式
+                bfd.synMode=modelPublishTableDTO.synMode;
+                bfd.queryStartTime = modelPublishTableDTO.queryStartTime;
+                bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
             if (modelPublishTableDTO.createType == 0) {
                 //类型为物理表
                 bfd.type= OlapTableEnum.DIMENSION;
