@@ -875,7 +875,7 @@ public class BuildNifiTaskListener {
             //连接器
             componentConnector(groupId, numberToJsonRes.getId(), evaluateJsons.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //更新日志
-            ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId);
+            ProcessorEntity processorEntity = CallDbLogProcedure(config, groupId,cfgDbPoolId);
             tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
             //连接器
             componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -1359,7 +1359,15 @@ public class BuildNifiTaskListener {
     private String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum,String funcName){
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
-        String sql="call public."+funcName+"('";
+        String sql="";
+        if(Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())){
+            sql+="DROP TABLE IF EXISTS temp_json;CREATE TEMP TABLE temp_json(\n" +
+                    "\t\t\t\"associatedimensionname\" VARCHAR(255),\n" +
+                    "\t\t\t\"relevancy\" VARCHAR(255),\n" +
+                    "\t\t\t\"id\" VARCHAR(255)\n" +
+                    "\t\t\t);";
+        }
+        sql+="call public."+funcName+"('";
         if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
                 sql += "stg_" + targetTableName + "'";
@@ -1472,7 +1480,7 @@ public class BuildNifiTaskListener {
         return querySqlRes.data;
     }
 
-    private ProcessorEntity CallDbLogProcedure(DataAccessConfigDTO config, String groupId) {
+    private ProcessorEntity CallDbLogProcedure(DataAccessConfigDTO config, String groupId,String cfgDbPoolId) {
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbLogProcedure";
         callDbProcedureProcessorDTO.details = "CallDbLogProcedure";
@@ -1484,7 +1492,7 @@ public class BuildNifiTaskListener {
         executsql1+="update tb_etl_Incremental l1 INNER JOIN tb_etl_Incremental l2 on l1.id=l2.id set l1.incremental_objectivescore_end='${"+NifiConstants.AttrConstants.START_TIME+
                 "}' ,l1.incremental_objectivescore_start=ifnull(l2.incremental_objectivescore_end,'1970-01-01 00:00:00'), l1.enable_flag=2 "+
                 "where l1.object_name = '"+config.targetDsConfig.targetTableName+"' ;";
-        callDbProcedureProcessorDTO.dbConnectionId = config.cfgDsConfig.componentId;
+        callDbProcedureProcessorDTO.dbConnectionId = cfgDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql1;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(16);
         callDbProcedureProcessorDTO.haveNextOne = false;
