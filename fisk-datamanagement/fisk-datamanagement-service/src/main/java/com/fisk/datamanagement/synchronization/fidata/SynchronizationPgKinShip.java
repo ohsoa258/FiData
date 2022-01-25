@@ -447,6 +447,7 @@ public class SynchronizationPgKinShip {
             queryWrapper1.lambda()
                     .eq(MetadataMapAtlasPO::getDataType,dorisType)
                     .eq(MetadataMapAtlasPO::getTableId,id)
+                    .eq(MetadataMapAtlasPO::getType,dto.type)
                     .eq(MetadataMapAtlasPO::getColumnId,0);
             MetadataMapAtlasPO mapAtlasPO=metadataMapAtlasMapper.selectOne(queryWrapper1);
             if (mapAtlasPO==null)
