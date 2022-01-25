@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -103,15 +104,15 @@ public class JsonUtils {
         JSONObject json = JSON.parseObject(JSONSTR);
 
         // 封装数据库存储的数据结构
-//        List<ApiTableDTO> apiTableDtoList = getApiTableDtoList01();
-        List<ApiTableDTO02> apiTableDtoList = getApiTableDtoList02();
+        List<ApiTableDTO> apiTableDtoList = getApiTableDtoList01();
+//        List<ApiTableDTO02> apiTableDtoList = getApiTableDtoList02();
 
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
         // 获取目标表
         List<JsonTableData> targetTable = getTargetTable(tableNameList);
         // 获取Json的schema信息
 //        List<JsonSchema> schemas = getJsonSchema(apiTableDtoList);
-        List<JsonSchema> schemas = getJsonSchema02(apiTableDtoList);
+        List<JsonSchema> schemas = test01(apiTableDtoList);
         try {
             // json根节点处理
             rootNodeHandler(schemas, json, targetTable);
@@ -382,9 +383,8 @@ public class JsonUtils {
     private static List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList) {
         List<JsonSchema> root = new ArrayList<>();
 
-        List<JsonSchema> dataSchema = new ArrayList<>();
-        for (int i = 0; i < apiTableDtoList.size(); i++) {
-            ApiTableDTO tableDto = apiTableDtoList.get(i);
+        for (ApiTableDTO tableDto : apiTableDtoList) {
+            List<JsonSchema> dataSchema = new ArrayList<>();
 
             // 判断是否父级
             if (tableDto.pid) {
@@ -406,8 +406,9 @@ public class JsonUtils {
             }
 
             if (!CollectionUtils.isEmpty(tableDto.childTableName)) {
+                List<JsonSchema> childJsonSchema = new ArrayList<>();
                 for (String child : tableDto.childTableName) {
-                    List<JsonSchema> childJsonSchema = new ArrayList<>();
+
                     dataSchema.add(JsonSchema.builder()
                             .name(child)
                             .type(JsonSchema.TypeEnum.ARRAY)
@@ -415,49 +416,63 @@ public class JsonUtils {
                             .children(childJsonSchema)
                             .build());
                 }
+                dataSchema = childJsonSchema;
             }
-
         }
-
-//        for (ApiTableDTO tableDto : apiTableDtoList) {
-//            List<JsonSchema> dataSchema = new ArrayList<>();
-//
-//            // 判断是否父级
-//            if (tableDto.pid) {
-//                JsonSchema jsonSchema = JsonSchema.builder()
-//                        .name("data")
-//                        .type(JsonSchema.TypeEnum.ARRAY)
-//                        .children(dataSchema)
-//                        .build();
-//                root.add(jsonSchema);
-//            }
-//
-//            for (TableFieldsDTO fieldsDto : tableDto.list) {
-//
-//                dataSchema.add(JsonSchema.builder()
-//                        .name(fieldsDto.fieldName)
-//                        .type(converFieldType(fieldsDto.fieldType))
-//                        .targetTableName(tableDto.tableName)
-//                        .build());
-//            }
-//
-//            if (!CollectionUtils.isEmpty(tableDto.childTableName)) {
-//                List<JsonSchema> childJsonSchema = new ArrayList<>();
-//                for (String child : tableDto.childTableName) {
-//
-//                    dataSchema.add(JsonSchema.builder()
-//                            .name(child)
-//                            .type(JsonSchema.TypeEnum.ARRAY)
-//                            .targetTableName(tableDto.tableName)
-//                            .children(childJsonSchema)
-//                            .build());
-//                }
-//                dataSchema = childJsonSchema;
-//            }
-//        }
 
         return root;
     }
+
+
+    private static List<JsonSchema> test01(List<ApiTableDTO> apiTableDtoList) {
+        List<JsonSchema> root = new ArrayList<>();
+        List<Map> list = new ArrayList<>();
+        try {
+            for (ApiTableDTO apiTableDTO : apiTableDtoList) {
+//            for (int i = 0; i < apiTableDtoList.size(); i++) {
+//                ApiTableDTO apiTableDTO = apiTableDtoList.get(i);
+                List<JsonSchema> dataSchema = test02(apiTableDTO);
+
+                // 当前为父级
+                if (apiTableDTO.pid) {
+                    JsonSchema jsonSchema = JsonSchema.builder()
+                            .name("data")
+                            .type(JsonSchema.TypeEnum.ARRAY)
+                            .children(dataSchema)
+                            .build();
+                    root.add(jsonSchema);
+                    // 非父级,但存在子级
+                } else if (!CollectionUtils.isEmpty(apiTableDTO.childTableName)) {
+
+                }
+
+            }
+        } catch (Exception e) {
+            return root;
+        }
+        return root;
+    }
+
+    /**
+     * 封装所有参数
+     *
+     * @param tableDto tableDto
+     * @return
+     */
+    private static List<JsonSchema> test02(ApiTableDTO tableDto) {
+        List<JsonSchema> dataSchema = new ArrayList<>();
+
+        for (TableFieldsDTO fieldsDto : tableDto.list) {
+
+            dataSchema.add(JsonSchema.builder()
+                    .name(fieldsDto.fieldName)
+                    .type(converFieldType(fieldsDto.fieldType))
+                    .targetTableName(tableDto.tableName)
+                    .build());
+        }
+        return dataSchema;
+    }
+
 
     private static List<JsonSchema> getJsonSchema02(List<ApiTableDTO02> apiTableDtoList) {
         List<JsonSchema> root = new ArrayList<>();

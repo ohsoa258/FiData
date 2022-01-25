@@ -675,7 +675,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-        vo.appAtlasId = registrationPo.atlasInstanceId;
+//        vo.appAtlasId = registrationPo.atlasInstanceId;
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
         log.info("删除的物理表信息,{}", vo);
@@ -696,7 +696,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         dto = new AtlasEntityDbTableColumnDTO();
-        dto.dbId = modelDataSource.getAtlasDbId();
+//        dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型(改为枚举类型)
@@ -754,7 +754,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
+//            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
 
             columns.add(atlasEntityColumnDTO);
         }
@@ -773,13 +773,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelReg == null || modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        dto.appId = modelReg.atlasInstanceId;
-        dto.atlasTableId = modelDataSource.atlasDbId;
+//        dto.appId = modelReg.atlasInstanceId;
+//        dto.atlasTableId = modelDataSource.atlasDbId;
         // 查询tb_table_access
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
-        dto.tableId = modelAccess.atlasTableId;
+//        dto.tableId = modelAccess.atlasTableId;
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
-        atlasDTO.dbId = modelDataSource.getAtlasDbId();
+//        atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型
@@ -837,7 +837,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelAccess == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        modelAccess.atlasTableId = dto.atlasTableId;
+//        modelAccess.atlasTableId = dto.atlasTableId;
         boolean update = this.updateById(modelAccess);
         if (!update) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -851,7 +851,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 return ResultEnum.DATA_NOTEXISTS;
             }
             // 回写的字段GUID
-            modelFields.atlasFieldId = columnDTO.getGuid();
+//            modelFields.atlasFieldId = columnDTO.getGuid();
             // 更新tb_table_fields表数据
             updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {

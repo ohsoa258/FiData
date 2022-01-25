@@ -31,7 +31,7 @@ public class TableAccessPO extends BasePO {
     /**
      * 添加数据时atlas生成
      */
-    public String atlasTableId;
+//    public String atlasTableId;
 
     /**
      * 物理表名
