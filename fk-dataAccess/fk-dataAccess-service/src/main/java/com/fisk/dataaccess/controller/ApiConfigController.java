@@ -66,4 +66,11 @@ public class ApiConfigController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.generateApi(id));
     }
+
+//    @PostMapping("/parseApiJson")
+//    @ApiOperation(value = "解析json")
+//    public ResultEntity<List<GenerateApiDTO>> parseApiJson(@RequestBody ){
+//
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.generateApi(id));
+//    }
 }

@@ -1,11 +1,11 @@
 package com.fisk.dataaccess.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.GenerateApiDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
@@ -15,10 +15,9 @@ import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -113,22 +112,62 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         // 3.根据表结构生成data实例
         for (TableAccessNonDTO e : accessDtoList) {
-            if (e.pid == 0) {
-                GenerateApiDTO apiDto = new GenerateApiDTO();
-                try {
-                    Object object = JSONObject.parseObject((InputStream) e.list, Object.class);
-                    apiDto.data.add(object);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            GenerateApiDTO apiDto = new GenerateApiDTO();
 
-                apiDtoList.add(apiDto);
+            apiDto.tableIdentity = e.id;
+            apiDto.fieldList = getFieldList(e);
+
+            List<TableAccessNonDTO> list = new ArrayList<>();
+            List<TableAccessPO> pid = tableAccessImpl.query().eq("pid", e.id).list();
+            for (TableAccessPO f : pid) {
+                list.add(tableAccessImpl.getData(f.id));
             }
+
+//            if (!CollectionUtils.isEmpty(list) && e.pid == 0) {
+//                // 4.根据表层级关系生成最终的参数
+//                bulidChildTree(apiDto, list);
+//                apiDtoList.add(apiDto);
+//            } else if (CollectionUtils.isEmpty(list) && e.pid == 0) {
+//                apiDtoList.add(apiDto);
+//            }
+
+
         }
-
-        // 4.根据表层级关系生成最终的参数
-
         return apiDtoList;
     }
 
+    /*
+     * @description 获取父子级关系
+     * @author Lock
+     * @date 2022/1/18 10:05
+     * @version v1.0
+     * @params dto
+     * @params dtoLost
+     * @return com.fisk.dataaccess.dto.api.GenerateApiDTO
+     */
+    private GenerateApiDTO bulidChildTree(GenerateApiDTO dto, List<TableAccessNonDTO> dtoLost) {
+        List<GenerateApiDTO> list = new ArrayList<>();
+
+        for (TableAccessNonDTO e : dtoLost) {
+//            if (dto.tableIdentity.equals(e.pid)) {
+//
+//                GenerateApiDTO generateApiDTO = new GenerateApiDTO();
+//                generateApiDTO.tableIdentity = e.id;
+//                generateApiDTO.fieldList = getFieldList(e);
+//                list.add(generateApiDTO);
+//            }
+        }
+
+        dto.data = list;
+        return dto;
+    }
+
+    private List<String> getFieldList(TableAccessNonDTO dto) {
+        List<String> fieldList = null;
+        List<TableFieldsDTO> list = dto.list;
+        if (!CollectionUtils.isEmpty(list)) {
+            fieldList = list.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        }
+        return fieldList;
+    }
 }
