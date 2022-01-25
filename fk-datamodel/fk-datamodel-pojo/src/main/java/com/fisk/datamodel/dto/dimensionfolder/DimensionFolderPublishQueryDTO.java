@@ -15,4 +15,8 @@ public class DimensionFolderPublishQueryDTO {
      * 发布备注
      */
     public String remark;
+    /**
+     * 增量配置
+     */
+    public int syncMode;
 }

@@ -298,7 +298,6 @@ public class DimensionFolderImpl
                     throw new FkException(ResultEnum.PUBLISH_FAILURE);
                 }
             }
-
             //获取维度字段数据
             QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
             //获取维度id集合
@@ -323,16 +322,22 @@ public class DimensionFolderImpl
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.dimensionTabName;
                 pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
-                ResultEntity<Map<String, String>> converMap = dataAccessClient.converSql(pushDto.tableName, item.sqlScript, null);
+                ResultEntity<Map<String, String>> converMap = dataAccessClient.converSql(pushDto.tableName, item.sqlScript, "");
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
                 //获取维度表同步方式
-                Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
-                if (!first.isPresent())
+                if (dto.syncMode !=0)
                 {
-                    pushDto.synMode=first.get().syncMode;
+                    pushDto.synMode=dto.syncMode;
+                }
+                else {
+                    Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                    if (!first.isPresent())
+                    {
+                        pushDto.synMode=first.get().syncMode;
+                    }
                 }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();

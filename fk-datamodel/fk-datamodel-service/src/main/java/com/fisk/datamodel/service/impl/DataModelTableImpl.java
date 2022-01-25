@@ -5,7 +5,7 @@ import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.DimensionAttributeEnum;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.mapper.*;
@@ -80,7 +80,7 @@ public class DataModelTableImpl implements IDataModelTable {
                 SourceTableDTO dto=new SourceTableDTO();
                 dto.id=dimensionPO.id;
                 dto.tableName=dimensionPO.dimensionTabName;
-                dto.type= publishStatus==1?1:3;
+                dto.type= publishStatus==DataModelTableTypeEnum.DW_DIMENSION.getValue()?DataModelTableTypeEnum.DW_DIMENSION.getValue():DataModelTableTypeEnum.DORIS_DIMENSION.getValue();
                 dto.tableDes=dimensionPO.dimensionDesc==null?dimensionPO.dimensionTabName:dimensionPO.dimensionDesc;
                 dto.sqlScript=dimensionPO.sqlScript;
                 List<SourceFieldDTO> fieldDTOS=new ArrayList<>();
@@ -200,7 +200,7 @@ public class DataModelTableImpl implements IDataModelTable {
             SourceTableDTO dto=new SourceTableDTO();
             dto.id=item.id;
             dto.tableName=item.factTabName;
-            dto.type= 4;
+            dto.type= DataModelTableTypeEnum.DORIS_FACT.getValue();
             dto.tableDes=item.factTableDesc==null?item.factTabName:item.factTableDesc;
             dto.sqlScript=item.sqlScript;
             List<AtomicIndicatorPushDTO> atomicIndicator = atomicIndicators.getAtomicIndicator((int) item.id);

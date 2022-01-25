@@ -27,6 +27,7 @@ import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -115,19 +116,20 @@ public class SynchronizationPgData {
                 String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null);
                 if (addResult!="")
                 {
-                    //向MetadataMapAtlas表添加数据
-                    String guid = addMetadataMapAtlas(addResult,
-                            EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            "",
-                            0);
-                    log.info("add entity instance name:",fiDataName+",guid:"+guid);
                     return;
                 }
+                //向MetadataMapAtlas表添加数据
+                String guid = addMetadataMapAtlas(addResult,
+                        EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        "",
+                        0);
+                log.info("add entity instance name:",fiDataName+",guid:"+guid);
+                return;
             }
             //存在,获取该实例详情,并判断是否需要修改
             updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);

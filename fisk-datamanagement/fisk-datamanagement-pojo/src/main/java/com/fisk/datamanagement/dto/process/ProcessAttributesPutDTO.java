@@ -10,5 +10,6 @@ import org.omg.CORBA.PUBLIC_MEMBER;
 public class ProcessAttributesPutDTO {
     public String guid;
     public String typeName;
+    public String tableName;
     public ProcessUniqueAttributesDTO uniqueAttributes;
 }

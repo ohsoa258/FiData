@@ -3,20 +3,24 @@ package com.fisk.datamanagement.synchronization.fidata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.Date;
 
 /**
  * @author JianWenYang
  */
 @Component
-//@EnableScheduling
 public class SynchronizationSchedule implements SchedulingConfigurer {
+
+    @Resource
+    SynchronizationPgData synchronizationPgData;
+    @Resource
+    SynchronizationPgKinShip synchronizationPgKinShip;
 
     @Value("${spring.schedule}")
     private String cron;
@@ -34,7 +38,10 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                 // 业务逻辑
                if (enabled)
                {
-                   System.out.printf(cron);
+                   //同步元数据对象
+                   synchronizationPgData.synchronizationPgData();
+                   //同步元数据对象血缘
+                   synchronizationPgKinShip.synchronizationKinShip();
                }
             }
         };

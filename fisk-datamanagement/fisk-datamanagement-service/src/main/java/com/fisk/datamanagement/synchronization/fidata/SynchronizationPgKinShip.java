@@ -83,7 +83,6 @@ public class SynchronizationPgKinShip {
         synchronizationPgTableKinShip();
         //同步dw表与doris血缘
         synchronizationDorisTableKinShip();
-
     }
 
     /**

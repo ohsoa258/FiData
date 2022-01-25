@@ -209,5 +209,5 @@ public interface DataAccessClient {
      */
     @GetMapping("/v3/tableAccess/converSql")
     public ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam("driveType") String driveType);
+            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
 }
