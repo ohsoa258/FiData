@@ -114,7 +114,7 @@ public class SynchronizationPgData {
             if (po ==null)
             {
                 String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null);
-                if (addResult!="")
+                if (addResult=="")
                 {
                     return;
                 }

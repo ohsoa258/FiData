@@ -312,7 +312,7 @@ public class DimensionFolderImpl
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
             List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
@@ -334,7 +334,7 @@ public class DimensionFolderImpl
                 }
                 else {
                     Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
-                    if (!first.isPresent())
+                    if (first.isPresent())
                     {
                         pushDto.synMode=first.get().syncMode;
                     }

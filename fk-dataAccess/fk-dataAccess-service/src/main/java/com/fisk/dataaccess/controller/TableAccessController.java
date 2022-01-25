@@ -113,7 +113,7 @@ public class TableAccessController {
      */
     @GetMapping("/converSql")
     public ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam("driveType") String driveType) {
+            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.converSql(tableName,sql, driveType));
     }
 

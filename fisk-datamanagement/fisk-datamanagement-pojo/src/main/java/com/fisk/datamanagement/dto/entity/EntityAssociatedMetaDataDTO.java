@@ -10,6 +10,6 @@ public class EntityAssociatedMetaDataDTO {
 
     public String guid;
 
-    public Object attribute;
+    public Object testBusinessMetaData;
 
 }

@@ -184,7 +184,7 @@ public class BusinessProcessImpl
             List<FactPO> factPOList=factMapper.selectList(queryWrapper);
             if (factPOList==null || factPOList.size()==0)
             {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
+                throw new FkException(ResultEnum.PUBLISH_FAILURE,"事实表为空");
             }
             //更改发布状态
             for (FactPO item:factPOList)
@@ -209,7 +209,7 @@ public class BusinessProcessImpl
             List<ModelPublishTableDTO> factList=new ArrayList<>();
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, TableHistoryTypeEnum.TABLE_FACT.getValue());
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT.getValue());
             List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
@@ -231,7 +231,7 @@ public class BusinessProcessImpl
                 }
                 else {
                     Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
-                    if (!first.isPresent())
+                    if (first.isPresent())
                     {
                         pushDto.synMode=first.get().syncMode;
                     }

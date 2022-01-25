@@ -78,9 +78,9 @@ public class SynchronizationPgKinShip {
     public void synchronizationKinShip()
     {
         //同步库血缘
-        synchronizationDbKinShip();
+        //synchronizationDbKinShip();
         //同步ods表与dw血缘
-        synchronizationPgTableKinShip();
+        //synchronizationPgTableKinShip();
         //同步dw表与doris血缘
         synchronizationDorisTableKinShip();
     }

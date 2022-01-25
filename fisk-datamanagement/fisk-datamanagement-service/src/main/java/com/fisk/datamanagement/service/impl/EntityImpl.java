@@ -15,6 +15,7 @@ import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,8 @@ public class EntityImpl implements IEntity {
     UserHelper userHelper;
     @Resource
     private RedisTemplate redisTemplate;
-
+    @Resource
+    SynchronizationPgData synchronizationPgData;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -195,9 +197,16 @@ public class EntityImpl implements IEntity {
     public ResultEnum addEntity(EntityDTO dto)
     {
         //获取所属人
-        dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
+        //dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        Thread t1 = new Thread(new Runnable(){
+            @Override
+            public void run() {
+                synchronizationPgData.synchronizationPgData();
+            }
+        });
+        t1.start();
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -264,7 +273,7 @@ public class EntityImpl implements IEntity {
     @Override
     public ResultEnum entityAssociatedMetaData(EntityAssociatedMetaDataDTO dto)
     {
-        String jsonParameter=JSONArray.toJSON(dto.attribute).toString();
+        String jsonParameter=JSONArray.toJSON(dto.testBusinessMetaData).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }
