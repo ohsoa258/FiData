@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.api.*;
@@ -23,6 +24,13 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @return 应用列表
      */
     Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query);
+
+    /**
+     * 分页查询所有api订阅
+     *
+     * @return 应用列表
+     */
+    PageDTO<ApiSubVO> getApiSubAll(ApiSubQueryDTO query);
 
     /**
      * 添加数据

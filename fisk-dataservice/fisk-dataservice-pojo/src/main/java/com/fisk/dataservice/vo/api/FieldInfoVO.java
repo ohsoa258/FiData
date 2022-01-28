@@ -21,4 +21,9 @@ public class FieldInfoVO {
      * 字段描述
      */
     public String originalFieldDesc;
+
+    /**
+     * 架构名称
+     */
+    public String originalFramework;
 }

@@ -5,6 +5,7 @@ import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author dick
@@ -56,15 +57,16 @@ public class SqlParmUtils {
      *
      * @param list   参数集合
      * @param repSql 替换的sql
+     * @param symbol 符号
      * @return String
      */
-    public static String SqlParm(List<SqlParmDto> list, String repSql) {
+    public static String SqlParm(List<SqlParmDto> list, String repSql, String symbol) {
         String sql = repSql;
         if (CollectionUtils.isEmpty(list) || sql == null || sql.isEmpty())
             return sql;
         for (SqlParmDto item : list) {
-            String targetKey = String.format("{%s}", item.parmName);
-            String replacement = "'" + item.parmValue + "'";
+            String targetKey = String.format("%s%s", symbol, item.parmName);
+            String replacement = item.parmValue;
             sql = sql.replace(targetKey, replacement);
         }
         return sql;

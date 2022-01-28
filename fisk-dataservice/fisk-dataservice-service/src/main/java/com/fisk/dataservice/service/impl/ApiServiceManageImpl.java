@@ -15,6 +15,7 @@ import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
+import com.fisk.dataservice.enums.ApiTypeEnum;
 import com.fisk.dataservice.enums.DataSourceTypeEnum;
 import com.fisk.dataservice.map.ApiFilterConditionMap;
 import com.fisk.dataservice.map.ApiParmMap;
@@ -104,7 +105,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
 
         String sql = apiInfo.createSql;
-        // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准
+        // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
         List<ParmConfigPO> parmList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.id));
         if (CollectionUtils.isNotEmpty(parmList)) {
             if (CollectionUtils.isNotEmpty(dto.parmList)) {
@@ -132,22 +133,22 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
         }
 
-        // 第七步：替换SQL中的参数
-        List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listPoToSqlParmDto(parmList);
-        String s = SqlParmUtils.SqlParm(sqlParmDtos, sql);
-        if (s != null && s.length() > 0)
-            sql = s;
-
-        // 第八步：拼接过滤条件
+        // 第七步：拼接过滤条件
         List<FilterConditionConfigPO> filterConditionConfigPOList = apiFilterConditionMapper.getListByApiId(Math.toIntExact(apiInfo.id));
-        if (CollectionUtils.isNotEmpty(filterConditionConfigPOList))
-        {
-            sql = String.format("SELECT * FROM (%s) AS %s WHERE 1=1 ", sql, apiInfo.getTableName());
+        if (apiInfo.apiType == ApiTypeEnum.SQL.getValue()
+                && CollectionUtils.isNotEmpty(filterConditionConfigPOList)) {
+            sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, apiInfo.getTableName());
             List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listPoToSqlWhereDto(filterConditionConfigPOList);
             String s1 = SqlParmUtils.SqlWhere(sqlWhereDtos);
             if (s1 != null && s1.length() > 0)
                 sql += s1;
         }
+
+        // 第八步：替换SQL中的参数
+        List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listPoToSqlParmDto(parmList);
+        String s = SqlParmUtils.SqlParm(sqlParmDtos, sql, "@");
+        if (s != null && s.length() > 0)
+            sql = s;
 
         // 第九步：判断数据源类型，加载数据库驱动，执行查询SQL
         try {

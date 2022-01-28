@@ -1,6 +1,5 @@
 package com.fisk.dataservice.vo.datasource;
 
-import com.fisk.common.datadriven.sqlDto.DataBaseViewDTO;
 import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
 import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;

@@ -146,8 +146,8 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(AppApiPO::getAppId, id).eq(AppApiPO::getApiState, 1)
                 .eq(AppApiPO::getDelFlag, 1);
-        AppApiPO data = appApiMapper.selectOne(queryWrapper);
-        if (data == null) {
+        List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(appApiPOS)) {
             // 该应用下没有启用的api，可以直接删除
             return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         } else {

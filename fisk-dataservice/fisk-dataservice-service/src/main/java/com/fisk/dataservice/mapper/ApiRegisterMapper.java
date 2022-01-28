@@ -7,6 +7,8 @@ import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 /**
  * api注册mapper
  *
@@ -38,4 +40,11 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      */
     @Select("SELECT id,api_code,api_name,api_code,api_type,datasource_id,create_sql FROM tb_api_config WHERE api_code=#{apiCode} AND del_flag=1;")
     ApiConfigPO getByApiCode(@Param("apiCode") String apiCode);
+
+    /**
+     * 查询所有API信息
+     *
+     * @return 查询结果
+     */
+    List<ApiConfigPO> getList(@Param("keyword") String keyword);
 }

@@ -1,6 +1,7 @@
 package com.fisk.dataservice.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.dto.PageDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -33,6 +34,12 @@ public class ApiRegisterController {
     @PostMapping("/page")
     public ResultEntity<Page<ApiConfigVO>> getAll(@RequestBody ApiRegisterQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
+    }
+
+    @ApiOperation("分页查询所有api订阅")
+    @PostMapping("/getApiSubAll")
+    public ResultEntity<PageDTO<ApiSubVO>> getApiSubAll(@RequestBody ApiSubQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiSubAll(dto));
     }
 
     @ApiOperation("添加api")

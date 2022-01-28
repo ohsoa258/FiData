@@ -4,8 +4,11 @@ import com.fisk.dataservice.dto.api.ApiConfigDTO;
 import com.fisk.dataservice.dto.api.ApiConfigEditDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
+import com.fisk.dataservice.vo.api.ApiSubVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -38,4 +41,12 @@ public interface ApiRegisterMap {
      * @return target
      */
     ApiConfigVO poToVo(ApiConfigPO po);
+
+    /**
+     * list po => ApiSubVO
+     *
+     * @param po source
+     * @return target
+     */
+    List<ApiSubVO> poToApiSubVO(List<ApiConfigPO> po);
 }

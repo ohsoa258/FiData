@@ -140,7 +140,7 @@ public class SqlServerTest {
 //            tablePyhNameDTO.setFields(columnsName);
 
             tag++;
-            tablePyhNameDTO.setTag(tag);
+            //tablePyhNameDTO.setTag(tag);
             list.add(tablePyhNameDTO);
         }
 

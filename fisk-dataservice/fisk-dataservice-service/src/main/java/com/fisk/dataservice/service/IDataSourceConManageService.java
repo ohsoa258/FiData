@@ -11,6 +11,7 @@ import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -65,5 +66,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param datasourceId 数据源id
      * @return 查询结果
      */
-    DataSourceVO getMeta(int datasourceId);
+    DataSourceVO getMeta(int datasourceId) throws SQLException;
 }

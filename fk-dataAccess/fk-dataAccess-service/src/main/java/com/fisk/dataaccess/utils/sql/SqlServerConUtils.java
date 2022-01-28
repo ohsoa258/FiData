@@ -108,7 +108,7 @@ public class SqlServerConUtils {
                 tablePyhNameDTO.setFields(columnsName);
 
                 tag++;
-                tablePyhNameDTO.setTag(tag);
+                //tablePyhNameDTO.setTag(tag);
                 list.add(tablePyhNameDTO);
             }
 

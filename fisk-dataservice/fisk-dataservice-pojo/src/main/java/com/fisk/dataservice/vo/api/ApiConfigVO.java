@@ -1,6 +1,7 @@
 package com.fisk.dataservice.vo.api;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
  * @description api VO
  * @date 2022/1/10 17:51
  */
+@Data
 public class ApiConfigVO {
     /**
      * Id
@@ -70,5 +72,4 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "创建人")
     public String createUser;
-
 }

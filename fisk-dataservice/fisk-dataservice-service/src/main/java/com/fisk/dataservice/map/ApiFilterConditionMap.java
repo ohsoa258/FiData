@@ -43,7 +43,7 @@ public interface ApiFilterConditionMap {
      * @param list source
      * @return target
      */
-    List<SqlWhereDto> listDtoToSqlWhereDto(List<FilterConditionConfigEditDTO> list);
+    List<SqlWhereDto> listDtoToSqlWhereDto(List<FilterConditionConfigDTO> list);
 
     /**
      * list集合 po -> SqlWhereDto

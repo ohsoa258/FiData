@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ public class DataSourceController {
 
     @GetMapping("/getTableAll/{id}")
     @ApiOperation("获取全部表字段信息")
-    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) {
+    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) throws SQLException {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(id));
     }
 }

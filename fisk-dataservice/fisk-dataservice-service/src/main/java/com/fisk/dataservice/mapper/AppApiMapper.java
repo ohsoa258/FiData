@@ -12,6 +12,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 /**
  * 应用api mapper
  *
@@ -28,4 +30,12 @@ public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
      */
     @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND api_id=#{apiId} AND del_flag=1;")
     AppApiPO getSubscribeBy(@Param("appId") int appId, @Param("apiId") int apiId);
+
+    /**
+     * 根据应用id查询此应用下所有的api
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND del_flag=1;")
+    List<AppApiPO> getSubscribeListByAppId(@Param("appId") int appId);
 }

@@ -33,7 +33,7 @@ public class FieldConfigDTO
     /**
      * 字段描述
      */
-    @ApiModelProperty()
+    @ApiModelProperty(value = "字段描述")
     @Length(min = 0, max = 255, message = "长度最多255")
     public String fieldDesc;
 

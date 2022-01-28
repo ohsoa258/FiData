@@ -58,7 +58,7 @@ public interface ApiParmMap {
      * @param list source
      * @return target
      */
-    List<SqlParmDto> listDtoToSqlParmDto(List<ParmConfigEditDTO> list);
+    List<SqlParmDto> listDtoToSqlParmDto(List<ParmConfigDTO> list);
 
     /**
      * list集合 po -> SqlParmDto

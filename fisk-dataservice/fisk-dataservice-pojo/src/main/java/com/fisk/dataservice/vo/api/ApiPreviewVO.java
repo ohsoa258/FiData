@@ -14,12 +14,6 @@ import java.util.List;
 public class ApiPreviewVO
 {
     /**
-     * 表名称
-     */
-    //@ApiModelProperty(value = "表名称")
-    //public String tableName;
-
-    /**
      * 查询数据集
      */
     @ApiModelProperty(value = "查询数据集")
