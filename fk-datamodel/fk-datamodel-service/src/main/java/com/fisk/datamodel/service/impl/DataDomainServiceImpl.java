@@ -1,20 +1,23 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.datamodel.dto.DataDomain.*;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.DataDomainService;
-import com.fisk.datamodel.vo.DataDomainVO;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
+import javax.annotation.Resource;;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.fisk.chartvisual.enums.NodeTypeEnum.*;
 
 /**
  * @author WangYan
@@ -43,140 +46,152 @@ public class DataDomainServiceImpl implements DataDomainService {
     private IndicatorsMapper indicatorsMapper;
 
     @Override
-    public Object getDataDomain() {
+    public List<DataDomainVO> getDataDomain() {
         List<BusinessAreaPO> businessAreaList = businessMapper.selectList(null);
         if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
-        DataDomainVO dataDomain = new DataDomainVO();
-        List<AreaBusinessDTO> areaBusinessList = new ArrayList<>();
-        for (BusinessAreaPO businessArea : businessAreaList) {
-            AreaBusinessDTO area = new AreaBusinessDTO();
-            area.setBusinessName(businessArea.getBusinessName());
-            QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda()
-                    .eq(BusinessAreaPO::getBusinessName, businessArea.getBusinessName())
-                    .select(BusinessAreaPO::getId);
-            BusinessAreaPO areaBusiness = businessMapper.selectOne(queryWrapper);
-            if (areaBusiness == null) {
-                return null;
-            }
+        return businessAreaList.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    DataDomainVO dataDomain = new DataDomainVO();
+                    dataDomain.setId(e.getId());
+                    dataDomain.setName(e.getBusinessName());
+                    dataDomain.setDimensionType(BUSINESS_DOMAIN);
+                    dataDomain.setChildren(this.dataDomainMerge(this.spliceDimension(e.getId()),this.splicingBusinessProcess(e.getId())));
 
-            area.setBusinessId(areaBusiness.getId());
-            // 查询二级维度
-            List<DimensionPO> dimensionList = this.dimension(areaBusiness.getId());
-
-            // 查询二级业务过程
-            List<BusinessProcessPO> businessProcessList = this.businessProcess(areaBusiness.getId());
-
-            // 查询三级维度字段表
-            List<Long> longList = this.dimensionIds(dimensionList);
-
-            // 查询业务过程ids
-            List<Long> businessIds = businessIds(businessProcessList);
-
-            // 拼接维度二级三级
-            this.splicingDimensionList(dimensionList, longList, area);
-            // 拼接业务过程二级,事实表三级,原子指标和派生指标四级
-            this.splicingBusinessProcessList(businessProcessList, area, businessIds);
-
-            areaBusinessList.add(area);
-        }
-        dataDomain.setAreaBusinessList(areaBusinessList);
-
-        return dataDomain;
+                    return dataDomain;
+                }).collect(Collectors.toList());
     }
 
     /**
-     * 拼接维度二级,维度字段三级
-     *
-     * @param dimensionList dimensionList二级维度PO数据
-     * @param longList      二级维度ids
-     * @param area          拼接的对象
+     * 二级维度和业务过程合并
+     * @param dimensionList
+     * @param businessProcessList
+     * @return
      */
-    public void splicingDimensionList(List<DimensionPO> dimensionList, List<Long> longList, AreaBusinessDTO area) {
-        if (CollectionUtils.isEmpty(dimensionList)) {
-            return;
+    public List<DataDomainVO> dataDomainMerge(List<DataDomainVO> dimensionList,List<DataDomainVO> businessProcessList){
+        List<DataDomainVO> domainList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(dimensionList)){
+            domainList.addAll(dimensionList);
         }
 
-        List<DimensionDTO> dimensionDTOList = new ArrayList<>();
-        // 遍历二级维度查询出的数据
-        for (DimensionPO dimension : dimensionList) {
-            // 每一个二级维度
-            DimensionDTO dto = new DimensionDTO();
-            dto.setDimensionId(dimension.getId());
-            dto.setDimensionTabName(dimension.getDimensionTabName());
-            dto.setDimension(1);
-
-            // 每一个二级对应多个三级
-            List<DimensionAttributeDTO> dimensionAttributeDTOList = new ArrayList<>();
-            List<DimensionAttributePO> dimensionAttributeList = this.dimensionField(dimension.getId());
-            if (CollectionUtils.isEmpty(dimensionAttributeList)){
-                return;
-            }
-
-            for (DimensionAttributePO dimensionAttribute : dimensionAttributeList) {
-                DimensionAttributeDTO dimensionAttributeDTO = new DimensionAttributeDTO();
-                dimensionAttributeDTO.setDimensionAttributeId(dimensionAttribute.getId());
-                dimensionAttributeDTO.setDimensionFieldCnName(dimensionAttribute.getDimensionFieldEnName());
-                dimensionAttributeDTO.setDimension(1);
-                dimensionAttributeDTOList.add(dimensionAttributeDTO);
-            }
-            dto.setDimensionAttributeList(dimensionAttributeDTOList);
-
-
-            dimensionDTOList.add(dto);
+        if (CollectionUtils.isNotEmpty(businessProcessList)){
+            domainList.addAll(businessProcessList);
         }
-        area.setDimensionList(dimensionDTOList);
+        return domainList;
     }
 
     /**
-     * 拼接业务过程二级,原子指标和派生指标三级
-     *
-     * @param businessProcessList businessProcessList二级维度PO数据
-     * @param area
-     * @param businessIds
+     * 四级原子和派生指标合并
+     * @param factId
+     * @return
      */
-    public void splicingBusinessProcessList(List<BusinessProcessPO> businessProcessList,
-                                            AreaBusinessDTO area,
-                                            List<Long> businessIds) {
-        if(CollectionUtils.isEmpty(businessProcessList)){
-            return;
+    public List<DataDomainVO> indicatorMerge(Long factId){
+        List<DataDomainVO> dataDomainList = new ArrayList<>();
+        List<IndicatorsPO> indicatorsList = this.atomicIndicators(factId);
+        if (CollectionUtils.isNotEmpty(indicatorsList)) {
+                    // 四级原子
+            List<DataDomainVO> atomList = indicatorsList.stream().filter(Objects::nonNull)
+                    .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), ATOMIC_METRICS))
+                    .collect(Collectors.toList());
+            dataDomainList.addAll(atomList);
         }
 
-        List<BusinessProcessDTO> businessProcessDTOList = new ArrayList<>();
-        for (BusinessProcessPO businessProcess : businessProcessList) {
-            // 每一个二级业务过程
-            BusinessProcessDTO dto = new BusinessProcessDTO();
-            dto.setBusinessProcessId(businessProcess.getId());
-            dto.setBusinessProcessCnName(businessProcess.getBusinessProcessEnName());
-            dto.setDimension(0);
-
-            List<FactDTO> factList = new ArrayList<>();
-            if (CollectionUtils.isEmpty(businessIds)){
-                return;
-            }
-
-            for (Long businessId : businessIds) {
-                this.fact(businessId, factList);
-            }
-
-            dto.setFactList(factList);
-            businessProcessDTOList.add(dto);
+        List<IndicatorsPO> derivedList = this.derivedIndicators(factId);
+        if (CollectionUtils.isNotEmpty(derivedList)) {
+                    // 四级派生
+            List<DataDomainVO> deriveList = derivedList.stream().filter(Objects::nonNull)
+                    .map(iter -> new DataDomainVO(iter.getId(), iter.getIndicatorsName(), DERIVED_METRICS))
+                    .collect(Collectors.toList());
+            dataDomainList.addAll(deriveList);
         }
-        area.setBusinessProcessList(businessProcessDTOList);
+
+        return dataDomainList;
     }
 
     /**
-     * 拼接事实表FactDTO 三级
-     *
+     * 拼接二级维度三级维度字段
      * @param businessId
-     * @param factList
+     * @return
      */
-    public void fact(Long businessId, List<FactDTO> factList) {
+    public List<DataDomainVO> spliceDimension(Long businessId){
+        List<DimensionPO> dimensionList = this.dimension(businessId);
+        if (CollectionUtils.isNotEmpty(dimensionList)) {
+            // 二级维度和三级维度字段
+            // 维度
+            return dimensionList.stream().filter(Objects::nonNull)
+                    .map(item -> {
+                        DataDomainVO dataDomain1 = new DataDomainVO();
+                        dataDomain1.setId(item.getId());
+                        dataDomain1.setName(item.getDimensionTabName());
+                        dataDomain1.setDimensionType(OTHER);
+
+                        List<DimensionAttributePO> dimensionAttributeList = this.dimensionField(item.getId());
+                        if (CollectionUtils.isNotEmpty(dimensionAttributeList)) {
+                            dataDomain1.setChildren(
+                                    // 维度字段
+                                    dimensionAttributeList.stream().filter(Objects::nonNull)
+                                            .map(it -> new DataDomainVO(it.getId(), it.getDimensionFieldEnName(), DIMENSION_FIELD))
+                                            .collect(Collectors.toList())
+                            );
+                        }
+
+                        return dataDomain1;
+                    }).collect(Collectors.toList());
+        }
+
+        return null;
+    }
+
+    /**
+     * 拼接业务过程二级,事实表三级,原子指标和派生指标四级
+     * @param businessId
+     * @return
+     */
+    public List<DataDomainVO> splicingBusinessProcess(Long businessId){
+        List<BusinessProcessPO> processList = this.businessProcess(businessId);
+        if (CollectionUtils.isNotEmpty(processList)) {
+            // 二级业务过程和三级事实 四级原子和派生
+            // 二级业务过程
+            return processList.stream().filter(Objects::nonNull)
+                    .map(item -> {
+                        DataDomainVO dataDomain1 = new DataDomainVO();
+                        dataDomain1.setId(item.getId());
+                        dataDomain1.setName(item.getBusinessProcessEnName());
+                        dataDomain1.setDimensionType(BUSINESS_PROCESS);
+
+                        List<FactPO> factList = this.fact(item.getId());
+                        if (CollectionUtils.isNotEmpty(factList)) {
+                            dataDomain1.setChildren(
+                                    // 三级事实
+                                    factList.stream().filter(Objects::nonNull)
+                                            .map(it -> {
+                                                DataDomainVO dataDomain2 = new DataDomainVO();
+                                                dataDomain2.setId(it.getId());
+                                                dataDomain2.setName(it.getFactTabName());
+                                                dataDomain2.setDimensionType(FACT);
+                                                dataDomain2.setChildren(this.indicatorMerge(it.getId()));
+                                                return dataDomain2;
+                                            }).collect(Collectors.toList()));
+                        }
+
+
+                        return dataDomain1;
+                    }).collect(Collectors.toList());
+        }
+
+        return null;
+    }
+
+    /**
+     * 根据业务域id查询事实表
+     * @param businessId
+     * @return
+     */
+    public List<FactPO> fact(Long businessId) {
         if (businessId == 0 || businessId == null) {
-            return;
+            return null;
         }
 
         QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
@@ -185,36 +200,20 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .select(FactPO::getId, FactPO::getFactTabName);
         List<FactPO> fact = factMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(fact)) {
-            return;
+            return null;
         }
 
-        for (FactPO factPO : fact) {
-            List<AtomicIndicatorsDTO> atomicIndicatorsList = new ArrayList<>();
-            List<DerivedIndicatorsDTO> derivedIndicatorsList = new ArrayList<>();
-            // 拼接原子指标DTO 四级
-            this.atomicIndicators(factPO.getId(), atomicIndicatorsList);
-            // 拼接派生指标DTO 四级
-            this.derivedIndicators(factPO.getId(), derivedIndicatorsList);
-
-            FactDTO dto = new FactDTO();
-            dto.setFactId(factPO.getId());
-            dto.setFactTabName(factPO.getFactTabName());
-            dto.setAtomicIndicatorsList(atomicIndicatorsList);
-            dto.setDerivedIndicatorsList(derivedIndicatorsList);
-            dto.setDimension(0);
-            factList.add(dto);
-        }
+        return fact;
     }
 
     /**
-     * 拼接原子指标DTO
-     *
+     * 根据事实表id查询原子指标
      * @param processId
-     * @param atomicIndicatorsList
+     * @return
      */
-    public void atomicIndicators(Long processId, List<AtomicIndicatorsDTO> atomicIndicatorsList) {
+    public List<IndicatorsPO> atomicIndicators(Long processId) {
         if (processId == 0 || processId == null) {
-            return;
+            return null;
         }
 
         QueryWrapper<IndicatorsPO> queryWrapper = new QueryWrapper<>();
@@ -224,27 +223,20 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .select(IndicatorsPO::getIndicatorsName, IndicatorsPO::getId);
         List<IndicatorsPO> atomicIndicators = indicatorsMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(atomicIndicators)) {
-            return;
+            return null;
         }
 
-        for (IndicatorsPO atomicIndicator : atomicIndicators) {
-            AtomicIndicatorsDTO indicators = new AtomicIndicatorsDTO();
-            indicators.setIndicatorsId(atomicIndicator.getId());
-            indicators.setIndicatorsName(atomicIndicator.getIndicatorsName());
-            indicators.setDimension(0);
-            atomicIndicatorsList.add(indicators);
-        }
+        return atomicIndicators;
     }
 
     /**
-     * 拼接派生指标DTO
-     *
+     * 根据事实表id查询派生指标
      * @param processId
-     * @param derivedIndicatorsList
+     * @return
      */
-    public void derivedIndicators(Long processId, List<DerivedIndicatorsDTO> derivedIndicatorsList) {
+    public List<IndicatorsPO> derivedIndicators(Long processId) {
         if (processId == 0 || processId == null) {
-            return;
+            return null;
         }
 
         QueryWrapper<IndicatorsPO> queryWrapper = new QueryWrapper<>();
@@ -253,16 +245,10 @@ public class DataDomainServiceImpl implements DataDomainService {
                 .eq(IndicatorsPO::getIndicatorsType, 1);
         List<IndicatorsPO> derivedIndicators = indicatorsMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(derivedIndicators)) {
-            return;
+            return null;
         }
 
-        for (IndicatorsPO derivedIndicator : derivedIndicators) {
-            DerivedIndicatorsDTO indicators = new DerivedIndicatorsDTO();
-            indicators.setIndicatorsId(derivedIndicator.getId());
-            indicators.setDerivedName(derivedIndicator.getIndicatorsName());
-            indicators.setDimension(0);
-            derivedIndicatorsList.add(indicators);
-        }
+        return derivedIndicators;
     }
 
     /**
@@ -312,43 +298,6 @@ public class DataDomainServiceImpl implements DataDomainService {
     }
 
     /**
-     * 查询二级维度id
-     *
-     * @param dimensionList
-     * @return
-     */
-    public List<Long> dimensionIds(List<DimensionPO> dimensionList) {
-        if (dimensionList == null) {
-            return null;
-        }
-
-        List<Long> ids = new ArrayList<>();
-        for (DimensionPO dimension : dimensionList) {
-            ids.add(dimension.getId());
-        }
-        return ids;
-    }
-
-    /**
-     * 查询业务过程id
-     *
-     * @param businessProcessList
-     * @return
-     */
-    public List<Long> businessIds(List<BusinessProcessPO> businessProcessList) {
-        if (CollectionUtils.isEmpty(businessProcessList)) {
-            return null;
-        }
-
-        // 业务过程id
-        List<Long> businessIds = new ArrayList<>();
-        for (BusinessProcessPO businessProcess : businessProcessList) {
-            businessIds.add(businessProcess.getId());
-        }
-        return businessIds;
-    }
-
-    /**
      * 查询三级维度字段
      *
      * @param dimensionId
@@ -371,11 +320,10 @@ public class DataDomainServiceImpl implements DataDomainService {
     }
 
 
-
     @Override
-    public Object getDimension(){
+    public Object getDimension() {
         List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
-        if (CollectionUtils.isEmpty(businessAreaList)){
+        if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
@@ -444,27 +392,28 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     /**
      * 根据业务域id查询维度表
+     *
      * @param businessId
      * @return
      */
-    public List<DimensionPO> getDimension(Long businessId){
+    public List<DimensionPO> getDimension(Long businessId) {
         QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DimensionPO::getBusinessId,businessId)
-                .select(DimensionPO::getId,DimensionPO::getDimensionCnName);
+                .eq(DimensionPO::getBusinessId, businessId)
+                .select(DimensionPO::getId, DimensionPO::getDimensionCnName);
 
         List<DimensionPO> dimensionList = dimensionMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(dimensionList)){
+        if (CollectionUtils.isEmpty(dimensionList)) {
             return null;
-        }else {
+        } else {
             return dimensionList;
         }
     }
 
     @Override
-    public List<AreaBusinessNameDTO> getBusiness(){
+    public List<AreaBusinessNameDTO> getBusiness() {
         List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
-        if (CollectionUtils.isEmpty(businessAreaList)){
+        if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
@@ -475,7 +424,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                     businessName.setBusinessName(e.getBusinessName());
 
                     List<BusinessProcessPO> businessProcessList = this.queryBusinessProcess(e.getId());
-                    if (CollectionUtils.isEmpty(businessProcessList)){
+                    if (CollectionUtils.isEmpty(businessProcessList)) {
                         return null;
                     }
 
@@ -487,7 +436,7 @@ public class DataDomainServiceImpl implements DataDomainService {
                                 businessProcessName.setBusinessProcessCnName(a.getBusinessProcessCnName());
 
                                 List<FactPO> factList = this.queryFact(a.getId());
-                                if (CollectionUtils.isEmpty(factList)){
+                                if (CollectionUtils.isEmpty(factList)) {
                                     return null;
                                 }
 
@@ -514,36 +463,38 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     /**
      * 根据业务域id查询业务过程
+     *
      * @param businessId 业务域Id
      * @return
      */
-    public List<BusinessProcessPO> queryBusinessProcess(Long businessId){
+    public List<BusinessProcessPO> queryBusinessProcess(Long businessId) {
         QueryWrapper<BusinessProcessPO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(BusinessProcessPO::getBusinessId,businessId)
-                .select(BusinessProcessPO::getId,BusinessProcessPO::getBusinessProcessCnName);;
+                .eq(BusinessProcessPO::getBusinessId, businessId)
+                .select(BusinessProcessPO::getId, BusinessProcessPO::getBusinessProcessCnName);
         List<BusinessProcessPO> businessProcessList = businessProcessMapper.selectList(query);
-        if (CollectionUtils.isEmpty(businessProcessList)){
+        if (CollectionUtils.isEmpty(businessProcessList)) {
             return null;
-        }else {
+        } else {
             return businessProcessList;
         }
     }
 
     /**
      * 根据业务过程id查询事实表
+     *
      * @param businessProcessId 业务过程id
      * @return
      */
-    public List<FactPO> queryFact(Long businessProcessId){
+    public List<FactPO> queryFact(Long businessProcessId) {
         QueryWrapper<FactPO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(FactPO::getBusinessProcessId,businessProcessId)
-                .select(FactPO::getId,FactPO::getFactTableEnName);
+                .eq(FactPO::getBusinessProcessId, businessProcessId)
+                .select(FactPO::getId, FactPO::getFactTableEnName);
         List<FactPO> factList = factMapper.selectList(query);
-        if (CollectionUtils.isEmpty(factList)){
+        if (CollectionUtils.isEmpty(factList)) {
             return null;
-        }else {
+        } else {
             return factList;
         }
     }
@@ -551,7 +502,7 @@ public class DataDomainServiceImpl implements DataDomainService {
     @Override
     public Object getAreaBusiness() {
         List<BusinessAreaPO> businessAreaList = this.selectBusinessArea();
-        if (CollectionUtils.isEmpty(businessAreaList)){
+        if (CollectionUtils.isEmpty(businessAreaList)) {
             return null;
         }
 
@@ -566,12 +517,13 @@ public class DataDomainServiceImpl implements DataDomainService {
 
     /**
      * 查询业务域
+     *
      * @return
      */
-    public List<BusinessAreaPO> selectBusinessArea(){
+    public List<BusinessAreaPO> selectBusinessArea() {
         QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .select(BusinessAreaPO::getId,BusinessAreaPO::getBusinessName);
+                .select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
 
         List<BusinessAreaPO> businessAreaList = businessMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(businessAreaList)) {

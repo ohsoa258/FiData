@@ -25,7 +25,9 @@ public enum ProcessorTypeEnum implements BaseEnum {
     PutDatabaseRecord(11,"org.apache.nifi.processors.standard.PutDatabaseRecord"),
     NOTIFY(12,"org.apache.nifi.processors.standard.Notify"),
     WAIT(13,"org.apache.nifi.processors.standard.Wait"),
-    UPDATERECORD(14,"org.apache.nifi.processors.standard.UpdateRecord");
+    UPDATERECORD(14,"org.apache.nifi.processors.standard.UpdateRecord"),
+    ConsumeKafka(15,"org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_2_6"),
+    PublishKafka(16,"org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6");
 
 
     ProcessorTypeEnum(int value, String name) {

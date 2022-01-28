@@ -675,7 +675,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         vo.appId = String.valueOf(modelAccess.appId);
         vo.userId = userInfo.id;
-        vo.appAtlasId = registrationPo.atlasInstanceId;
+//        vo.appAtlasId = registrationPo.atlasInstanceId;
         vo.tableList = voList;
         vo.tableIdList = tableIdList;
         log.info("删除的物理表信息,{}", vo);
@@ -696,7 +696,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         dto = new AtlasEntityDbTableColumnDTO();
-        dto.dbId = modelDataSource.getAtlasDbId();
+//        dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型(改为枚举类型)
@@ -754,7 +754,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
+//            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
 
             columns.add(atlasEntityColumnDTO);
         }
@@ -773,13 +773,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelReg == null || modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        dto.appId = modelReg.atlasInstanceId;
-        dto.atlasTableId = modelDataSource.atlasDbId;
+//        dto.appId = modelReg.atlasInstanceId;
+//        dto.atlasTableId = modelDataSource.atlasDbId;
         // 查询tb_table_access
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
-        dto.tableId = modelAccess.atlasTableId;
+//        dto.tableId = modelAccess.atlasTableId;
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
-        atlasDTO.dbId = modelDataSource.getAtlasDbId();
+//        atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型
@@ -837,7 +837,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelAccess == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        modelAccess.atlasTableId = dto.atlasTableId;
+//        modelAccess.atlasTableId = dto.atlasTableId;
         boolean update = this.updateById(modelAccess);
         if (!update) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -851,7 +851,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 return ResultEnum.DATA_NOTEXISTS;
             }
             // 回写的字段GUID
-            modelFields.atlasFieldId = columnDTO.getGuid();
+//            modelFields.atlasFieldId = columnDTO.getGuid();
             // 更新tb_table_fields表数据
             updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {
@@ -1333,6 +1333,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
             Statement st = conn.createStatement();
+            Map<String, String> converSql = converSql(query.tableName, query.querySql, null);
+            query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
             ResultSet rSet = st.executeQuery(getTotalSql);
@@ -1602,8 +1604,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 st.setFetchSize(10);
             }
             assert st != null;
-
-            ResultSet rs = st.executeQuery(converSql(query.tableName, query.querySql, po.driveType));
+            Map<String, String> converSql = converSql(query.tableName, query.querySql, po.driveType);
+            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            ResultSet rs = st.executeQuery(sql);
             //获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
@@ -1613,28 +1616,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    private String converSql(String tableName, String sql, String driveType) {
+    @Override
+    public Map<String, String> converSql(String tableName, String sql, String driveType) {
+        Map<String, String> paramMap = new HashMap<>();
         if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
             Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
             if (etlIncremental != null) {
                 Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
                 Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
                 if (startTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'"+startTime+"'");
+                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
+                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
                 }
                 if (endTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'"+endTime+"'");
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
                 }
             } else {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
+                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
+                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
+                paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
+                paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
             }
         }
-        return sql;
+        paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);
+        return  paramMap;
     }
 
     @Override
@@ -1667,7 +1679,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        dto.selectSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType);
+        Map<String, String> converSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType);
+        String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+        dto.selectSql = sql;
+        dto.queryStartTime=converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+        dto.queryEndTime=converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }

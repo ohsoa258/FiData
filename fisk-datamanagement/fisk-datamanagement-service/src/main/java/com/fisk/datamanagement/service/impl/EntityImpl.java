@@ -15,9 +15,11 @@ import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.platform.commons.util.PackageUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -43,7 +45,8 @@ public class EntityImpl implements IEntity {
     UserHelper userHelper;
     @Resource
     private RedisTemplate redisTemplate;
-
+    @Resource
+    SynchronizationPgData synchronizationPgData;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -55,6 +58,10 @@ public class EntityImpl implements IEntity {
     private String lineage;
     @Value("${atlas.relationship}")
     private String relationship;
+    @Value("${atlas.searchQuick}")
+    private String searchQuick;
+    @Value("${atlas.searchSuggestions}")
+    private String searchSuggestions;
     @Value("${spring.metadataentity}")
     private String metaDataEntity;
 
@@ -89,7 +96,7 @@ public class EntityImpl implements IEntity {
             JSONArray array = jsonObj.getJSONArray("entities");
             for (int i = 0; i < array.size(); i++)
             {
-                if ("DELETED".equals(array.getJSONObject(i).getString("status")))
+                if (EntityTypeEnum.DELETED.getName().equals(array.getJSONObject(i).getString("status")))
                 {
                     continue;
                 }
@@ -118,7 +125,7 @@ public class EntityImpl implements IEntity {
                     String value = guidEntityMap.getString(key);
                     JSONObject jsonValue = JSON.parseObject(value);
                     //过滤已删除数据
-                    if ("DELETED".equals(jsonValue.getString("status")))
+                    if (EntityTypeEnum.DELETED.getName().equals(jsonValue.getString("status")))
                     {
                         continue;
                     }
@@ -190,9 +197,16 @@ public class EntityImpl implements IEntity {
     public ResultEnum addEntity(EntityDTO dto)
     {
         //获取所属人
-        dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
+        //dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        Thread t1 = new Thread(new Runnable(){
+            @Override
+            public void run() {
+                synchronizationPgData.synchronizationPgData();
+            }
+        });
+        t1.start();
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -259,7 +273,7 @@ public class EntityImpl implements IEntity {
     @Override
     public ResultEnum entityAssociatedMetaData(EntityAssociatedMetaDataDTO dto)
     {
-        String jsonParameter=JSONArray.toJSON(dto.attribute).toString();
+        String jsonParameter=JSONArray.toJSON(dto.testBusinessMetaData).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }
@@ -323,7 +337,6 @@ public class EntityImpl implements IEntity {
                     }
                     boolean isExist=true;
                     //判断process上一级typeName是否一致
-
                     if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
                     {
                         List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
@@ -354,7 +367,7 @@ public class EntityImpl implements IEntity {
                     String entityDetail1 = guidEntityMapJson.getString(item.fromEntityId);
                     JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
                     //判断实体是否删除
-                    if ("DELETE".equals(entityDetailJson1.getString("status")))
+                    if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
                     {
                         continue;
                     }
@@ -460,7 +473,7 @@ public class EntityImpl implements IEntity {
                 String entityDetail1 = guidEntityMapJson.getString(item.toEntityId);
                 JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
                 //判断实体是否删除
-                if ("DELETE".equals(entityDetailJson1.getString("status")))
+                if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
                 {
                     continue;
                 }
@@ -504,7 +517,7 @@ public class EntityImpl implements IEntity {
             //判断是否存在血缘关系
             String relationshipStr=jsonObj.getString("relationship");
             JSONObject relationshipJson=JSON.parseObject(relationshipStr);
-            if (!relationshipJson.getString("status").equals("DELETED"))
+            if (!relationshipJson.getString("status").equals(EntityTypeEnum.DELETED.getName()))
             {
                 return true;
             }
@@ -515,6 +528,30 @@ public class EntityImpl implements IEntity {
             log.error("getRelationShip ex:",e);
         }
         return false;
+    }
+
+    @Override
+    public JSONObject searchQuick(String query,int limit,int offset)
+    {
+        ResultDataDTO<String> result = atlasClient.Get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            JSONObject msg=JSON.parseObject(result.data);
+            throw new FkException(result.code,msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
+    }
+
+    @Override
+    public JSONObject searchSuggestions(String prefixString)
+    {
+        ResultDataDTO<String> result = atlasClient.Get(searchSuggestions + "?prefixString=" + prefixString);
+        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        {
+            JSONObject msg=JSON.parseObject(result.data);
+            throw new FkException(result.code,msg.getString("errorMessage"));
+        }
+        return JSON.parseObject(result.data);
     }
 
 

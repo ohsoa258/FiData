@@ -42,6 +42,7 @@ public class SwaggerConfig {
     public static final String DATAFACTORY="datafactory--controller";
     public static final String TABLE_HISTORY="table-history--controller";
     public static final String DATA_MANAGEMENT="data-management-controller";
+    public static final String TABLE_BUSINESS="table-business-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -72,6 +73,7 @@ public class SwaggerConfig {
                 .tags(new Tag(DATAFACTORY,"数据工厂-管道组件表id"))
                 .tags(new Tag(TABLE_HISTORY,"表发布历史"))
                 .tags(new Tag(DATA_MANAGEMENT,"数据治理"))
+                .tags(new Tag(TABLE_BUSINESS,"表增量配置"))
                 .securityContexts(securityContexts());
     }
 

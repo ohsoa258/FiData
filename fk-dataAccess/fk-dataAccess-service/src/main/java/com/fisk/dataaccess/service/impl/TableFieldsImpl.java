@@ -308,7 +308,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.dbId = String.valueOf(accessId);
             data.userId = userInfo.id;
 
-            // 版本号入库、调用存储存储过程
+            // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;

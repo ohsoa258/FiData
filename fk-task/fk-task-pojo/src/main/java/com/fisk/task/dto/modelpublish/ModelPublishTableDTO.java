@@ -19,5 +19,22 @@ public class ModelPublishTableDTO {
     public List<ModelPublishFieldDTO> fieldList;
     public String groupComponentId;
     public String nifiCustomWorkflowDetailId;
+
+    /*
+     * 查询范围开始时间
+     * */
+    public String queryStartTime;
+
+    /*
+     * 查询范围结束时间
+     * */
+    public String queryEndTime;
+
+    /*
+    * 同步方式
+    * */
+    public Integer synMode;
+
+
     public String groupStructureId;
 }

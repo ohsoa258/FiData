@@ -1,20 +1,22 @@
-package com.fisk.chartvisual.enums;
+package com.fisk.datamanagement.enums;
 
 import com.fisk.common.enums.BaseEnum;
 
 /**
- * 维度类型
- * @author JinXingWang
+ * @author JianWenYang
  */
+public enum TableTypeEnum implements BaseEnum {
 
-public enum DimensionTypeEnum implements BaseEnum {
-    MEASURE(0,"度量"),
-    OTHER(1,"维度");
+    DW_DIMENSION(1,"dw_dimension"),
+    DW_FACT(2,"dw_fact"),
+    DORIS_DIMENSION(3,"doris_dimension"),
+    DORIS_FACT(4,"doris_fact");
 
-    DimensionTypeEnum(int value, String name) {
+    TableTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
+
     private final int value;
     private final String name;
 
@@ -27,4 +29,5 @@ public enum DimensionTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
 }

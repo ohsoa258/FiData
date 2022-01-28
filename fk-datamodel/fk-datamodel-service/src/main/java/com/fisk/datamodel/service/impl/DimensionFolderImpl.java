@@ -3,8 +3,11 @@ package com.fisk.datamodel.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
@@ -12,19 +15,14 @@ import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
-import com.fisk.datamodel.entity.BusinessAreaPO;
-import com.fisk.datamodel.entity.DimensionAttributePO;
-import com.fisk.datamodel.entity.DimensionFolderPO;
-import com.fisk.datamodel.entity.DimensionPO;
+import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.DimensionFolderMap;
 import com.fisk.datamodel.map.DimensionMap;
-import com.fisk.datamodel.mapper.BusinessAreaMapper;
-import com.fisk.datamodel.mapper.DimensionAttributeMapper;
-import com.fisk.datamodel.mapper.DimensionFolderMapper;
-import com.fisk.datamodel.mapper.DimensionMapper;
+import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDimensionFolder;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -34,10 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +59,10 @@ public class DimensionFolderImpl
     PublishTaskClient publishTaskClient;
     @Resource
     DimensionImpl dimensionImpl;
+    @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
+    SyncModeMapper syncModeMapper;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto)
@@ -299,7 +298,6 @@ public class DimensionFolderImpl
                     throw new FkException(ResultEnum.PUBLISH_FAILURE);
                 }
             }
-
             //获取维度字段数据
             QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
             //获取维度id集合
@@ -312,6 +310,10 @@ public class DimensionFolderImpl
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
+            //获取表增量配置信息
+            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
+            List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
             for (DimensionPO item:dimensionPOList)
@@ -320,7 +322,23 @@ public class DimensionFolderImpl
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.dimensionTabName;
                 pushDto.createType=CreateTypeEnum.CREATE_DIMENSION.getValue();
-                pushDto.sqlScript=item.sqlScript;
+                ResultEntity<Map<String, String>> converMap = dataAccessClient.converSql(pushDto.tableName, item.sqlScript, "");
+                Map<String, String> data1 = converMap.data;
+                pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
+                pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+                pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
+                //获取维度表同步方式
+                if (dto.syncMode !=0)
+                {
+                    pushDto.synMode=dto.syncMode;
+                }
+                else {
+                    Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                    if (first.isPresent())
+                    {
+                        pushDto.synMode=first.get().syncMode;
+                    }
+                }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
                 List<DimensionAttributePO> attributePOList=dimensionAttributePOList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());

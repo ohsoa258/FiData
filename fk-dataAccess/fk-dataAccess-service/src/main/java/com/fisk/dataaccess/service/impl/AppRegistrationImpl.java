@@ -258,7 +258,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
 
         // atlas实例id
-        String atlasInstanceId = model.atlasInstanceId;
+//        String atlasInstanceId = model.atlasInstanceId;
 
         // 1.删除tb_app_registration表数据
         int deleteReg = mapper.deleteByIdWithFill(model);
@@ -289,12 +289,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
-            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
+//            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
 
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-                tableVO.tableAtlasId = po.atlasTableId;
+//                tableVO.tableAtlasId = po.atlasTableId;
                 tableVO.tableName = po.tableName;
                 tableList.add(tableVO);
             }
@@ -319,7 +319,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.appId = String.valueOf(model.id);
         vo.tableIdList = tableIdList;
         // atlas应用id
-        vo.appAtlasId = atlasInstanceId;
+//        vo.appAtlasId = atlasInstanceId;
         // atlas物理表信息
         vo.tableList = tableList;
 
@@ -472,7 +472,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (modelReg == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        modelReg.atlasInstanceId = atlasInstanceId;
+//        modelReg.atlasInstanceId = atlasInstanceId;
         // 保存tb_app_registration
         boolean update = this.updateById(modelReg);
         if (!update) {
@@ -486,7 +486,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (modelData == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        modelData.atlasDbId = atlasDbId;
+//        modelData.atlasDbId = atlasDbId;
         // 保存tb_app_datasource
         boolean updateById = appDataSourceImpl.updateById(modelData);
 

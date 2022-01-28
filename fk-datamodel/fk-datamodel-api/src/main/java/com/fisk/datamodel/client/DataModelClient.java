@@ -5,6 +5,7 @@ import com.fisk.chartvisual.dto.IndicatorFeignDTO;
 import com.fisk.chartvisual.dto.IsDimensionDTO;
 import com.fisk.chartvisual.dto.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -12,6 +13,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -171,28 +173,40 @@ public interface DataModelClient {
 
     /**
      * 获取数据建模表数据
+     * @param publishStatus
      * @return
      */
-    @GetMapping("/DataManagement/getDataModelTable")
-    ResultEntity<Object> getDataModelTable();
+    @GetMapping("/DataManagement/getDataModelTable/{publishStatus}")
+    ResultEntity<Object> getDataModelTable(@PathVariable("publishStatus") int publishStatus);
 
     /**
      * 获取白泽数据源
      * @return
      */
     @GetMapping("/Datamation/getAll")
-    ResultEntity<Object> getAll();
+    ResultEntity<List<DataDomainVO>> getAll();
 
-    /*
+    /**
+     * 获取表增量配置信息
+     * @param tableId
+     * @param tableType
+     * @return
+     */
+    @GetMapping("/TableBusiness/getTableBusiness")
+    ResultEntity<GetTableBusinessDTO> getTableBusiness(@RequestParam("tableId") int tableId, @RequestParam("tableType") int tableType);
+
+    /**
     *根据维度id获取维度字段及其关联详情(nifi)
+    * @param dimensionId
     * @return
     * */
     @GetMapping("/attribute/selectDimensionAttributeList")
     ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(@RequestParam("dimensionId") int dimensionId);
 
 
-    /*
+    /**
      *根据事实id获取事实字段及其关联详情(nifi)
+     * @param factId
      * @return
      * */
     @GetMapping("/factAttribute/selectAttributeList")

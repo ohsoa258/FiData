@@ -18,11 +18,9 @@ public class GraphicsFactory {
                 return new BuildTableMdx();
             case MATRIX:
                 return new BuildMatrixMdx();
-            case PIE:
-            case LINE:
-            case BAR:
-            default:
+            case DEFAULT:
                 return new BuildLinePieMdx();
         }
+         return null;
      }
 }

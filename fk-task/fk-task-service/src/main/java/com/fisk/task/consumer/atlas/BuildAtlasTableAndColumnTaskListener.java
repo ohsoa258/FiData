@@ -302,6 +302,8 @@ public class BuildAtlasTableAndColumnTaskListener
         bfd.type= OlapTableEnum.PHYSICS;
         //来源为数据接入
         bfd.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
+        bfd.queryStartTime=buildPhysicalTableDTO.queryStartTime;
+        bfd.queryEndTime=buildPhysicalTableDTO.queryEndTime;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

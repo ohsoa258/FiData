@@ -432,6 +432,69 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ProcessorEntity> buildConsumeKafkaProcessor(BuildConsumeKafkaProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoEnd = new ArrayList<>();
+        autoEnd.add(AutoEndBranchTypeEnum.FAILURE.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("bootstrap.servers", data.KafkaBrokers);
+        map.put("topic", data.TopicNames);
+        map.put("group.id", data.GroupID);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(autoEnd);
+        config.setComments(data.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.ConsumeKafka.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ProcessorEntity> buildPublishKafkaProcessor(BuildPublishKafkaProcessorDTO data) {
+        //流程分支，是否自动结束
+        List<String> autoEnd = new ArrayList<>();
+        autoEnd.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        autoEnd.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("bootstrap.servers", data.KafkaBrokers);
+        map.put("kafka-key", data.KafkaKey);
+        map.put("topic", data.TopicName);
+        map.put("use-transactions", data.UseTransactions);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(autoEnd);
+        config.setComments(data.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.PublishKafka.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessorEntity> buildConvertToJsonProcess(BuildConvertToJsonProcessorDTO data) {
         //流程分支，是否自动结束
         List<String> autoRes = new ArrayList<>();
@@ -1270,6 +1333,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 outputportConnectIds.add(tableNifiSettingPO.tableOutputPortConnectId);
                 //组件
                 ProcessIds.add(tableNifiSettingPO.dispatchComponentId);
+                ProcessIds.add(tableNifiSettingPO.publishKafkaProcessorId);
+                ProcessIds.add(tableNifiSettingPO.consumeKafkaProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryIncrementProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertDataToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setIncrementProcessorId);
@@ -1278,7 +1343,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessIds.add(tableNifiSettingPO.executeSqlRecordProcessorId);
                 ProcessIds.add(tableNifiSettingPO.updateFieldProcessorId);
                 ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
-                ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
+                //ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
                 ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);

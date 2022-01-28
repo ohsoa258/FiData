@@ -1,5 +1,6 @@
 package com.fisk.datamodel.controller;
 
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -29,7 +30,7 @@ public class DataDomainController {
 
     @ApiOperation("获取数据域")
     @GetMapping("/getAll")
-    public ResultEntity<Object> getAll() {
+    public ResultEntity<List<DataDomainVO>> getAll() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, domainService.getDataDomain());
     }
 

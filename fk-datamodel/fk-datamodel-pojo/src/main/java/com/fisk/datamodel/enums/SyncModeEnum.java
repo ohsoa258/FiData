@@ -7,13 +7,13 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum SyncModeEnum implements BaseEnum {
 
-    FULL_AMOUNT(1,"全量"),
+    FULL_AMOUNT(1,"追加"),
 
-    INCREMENTAL(2,"增量"),
+    INCREMENTAL(2,"全量覆盖"),
 
-    TIME_COVER(3,"业务时间覆盖"),
+    TIME_COVER(3,"业务主键覆盖"),
 
-    CUSTOM_OVERRIDE(4,"自定义覆盖");
+    CUSTOM_OVERRIDE(4,"业务时间覆盖");
 
     SyncModeEnum(int value, String name) {
         this.name = name;

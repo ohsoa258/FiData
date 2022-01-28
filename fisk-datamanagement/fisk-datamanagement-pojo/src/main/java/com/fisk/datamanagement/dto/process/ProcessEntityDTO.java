@@ -12,6 +12,8 @@ import lombok.Data;
 
     public String guid;
 
+    public String status;
+
     public ProcessAttributesDTO attributes;
 
     public ProcessRelationshipAttributesDTO relationshipAttributes;

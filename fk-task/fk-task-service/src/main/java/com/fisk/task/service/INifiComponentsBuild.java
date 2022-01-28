@@ -108,6 +108,22 @@ public interface INifiComponentsBuild {
     BusinessResult<ProcessorEntity> buildExecuteSqlProcess(BuildExecuteSqlProcessorDTO data, List<String> autoEnd);
 
     /**
+     * 创建ConsumeKafka组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildConsumeKafkaProcessor(BuildConsumeKafkaProcessorDTO data);
+
+    /**
+     * 创建PublishKafka组件
+     *
+     * @param data dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildPublishKafkaProcessor(BuildPublishKafkaProcessorDTO data);
+
+    /**
      * 创建ConvertToJson组件
      *
      * @param data dto

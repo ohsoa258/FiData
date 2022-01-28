@@ -20,4 +20,8 @@ public class ChartQueryObjectSsas {
     public ChartDrillDown chartDrillDown;
     public InteractiveTypeEnum interactiveType;
     public GraphicTypeEnum graphicType;
+
+    public void columnDetails(List<ColumnDetailsSsas> columnDetailsSsas) {
+        this.columnDetails = columnDetailsSsas;
+    }
 }

@@ -3,6 +3,7 @@ package com.fisk.chartvisual.map;
 import com.fisk.chartvisual.entity.DimensionPO;
 import com.fisk.chartvisual.entity.HierarchyPO;
 import com.fisk.chartvisual.entity.MeasurePO;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DimensionVO;
 import com.fisk.chartvisual.vo.HierarchyVO;
 import jdk.nashorn.internal.ir.annotations.Ignore;
@@ -28,7 +29,7 @@ public interface SSASMap {
      * @param po 层级
      * @return 层级vo
      */
-    List<HierarchyVO> hierarchiesPoToVo(List<HierarchyPO> po);
+    List<DataDomainVO> hierarchiesPoToVo(List<HierarchyPO> po);
 
 
     /**
@@ -36,7 +37,7 @@ public interface SSASMap {
      * @param po 度量
      * @return VO 层级vo
      */
-    List<HierarchyVO> measurePoToVo(List<MeasurePO> po);
+    List<DataDomainVO> measurePoToVo(List<MeasurePO> po);
 
     /**
      * 维度 PO 转VO

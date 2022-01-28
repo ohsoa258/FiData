@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.factattribute;
 
+import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -16,4 +17,5 @@ public class FactAttributeAddDTO {
      */
     public String remark;
     public List<FactAttributeDTO> list;
+    public SyncModeDTO syncModeDTO;
 }

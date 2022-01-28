@@ -30,4 +30,16 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     * 同步方式
     * */
     public int syncMode;
+
+    /*
+    * 查询范围开始时间
+    * */
+    public String queryStartTime;
+
+    /*
+    * 查询范围结束时间
+    * */
+    public String queryEndTime;
+
+
 }

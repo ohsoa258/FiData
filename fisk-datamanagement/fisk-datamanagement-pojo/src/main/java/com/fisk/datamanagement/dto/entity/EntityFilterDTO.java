@@ -33,4 +33,6 @@ public class EntityFilterDTO {
     public String classification;
     @ApiModelProperty(value = "筛选术语下实体数据,默认值为null,值为获取qualifiedName参数的值")
     public String termName;
+    @ApiModelProperty(value = "根据suggestions值,筛选")
+    public String query;
 }

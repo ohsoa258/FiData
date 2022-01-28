@@ -27,6 +27,7 @@ import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -73,14 +74,22 @@ public class SynchronizationPgData {
     private String ods;
     @Value("${fidata.database.dw}")
     private String dw;
+    @Value("${fidata.database.doris}")
+    private String doris;
 
     public void synchronizationPgData()
     {
         try {
+            //同步实例
             synchronizationInstance();
+            //同步库
             synchronizationDb();
+            //同步ods
             synchronizationOds();
+            //同步dw
             synchronizationDw();
+            //同步doris
+            synchronizationDoris();
             //同步redis中数据
             entityImpl.getEntityList();
         }
@@ -105,20 +114,22 @@ public class SynchronizationPgData {
             if (po ==null)
             {
                 String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null);
-                if (addResult!="")
+                if (addResult=="")
                 {
-                    //向MetadataMapAtlas表添加数据
-                    String guid = addMetadataMapAtlas(addResult,
-                            EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            "");
-                    log.info("add entity instance name:",fiDataName+",guid:"+guid);
                     return;
                 }
+                //向MetadataMapAtlas表添加数据
+                String guid = addMetadataMapAtlas(addResult,
+                        EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        "",
+                        0);
+                log.info("add entity instance name:",fiDataName+",guid:"+guid);
+                return;
             }
             //存在,获取该实例详情,并判断是否需要修改
             updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);
@@ -148,6 +159,7 @@ public class SynchronizationPgData {
             List<String> dbList=new ArrayList<>();
             dbList.add(ods);
             dbList.add(dw);
+            dbList.add(doris);
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_DB.getValue());
             List<MetadataMapAtlasPO> mapAtlasDbPOS=metadataMapAtlasMapper.selectList(queryWrapper1);
@@ -177,7 +189,8 @@ public class SynchronizationPgData {
                                 0,
                                 0,
                                 finalIndex,
-                                instancePo.atlasGuid);
+                                instancePo.atlasGuid,
+                                0);
                         log.info("add entity db name:",db+",guid:"+guid);
                     }
                 }
@@ -210,14 +223,16 @@ public class SynchronizationPgData {
             list.add(dto);
         }
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,1);
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_INPUT.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
         if (po==null)
         {
             return;
         }
+        //同步ods元数据对象
         synchronizationData(list,po.qualifiedName, DataTypeEnum.DATA_INPUT.getValue());
-        //delSynchronization(list,DataTypeEnum.DATA_INPUT.getValue());
+        //删除ods中不存在的元数据对象
+        delSynchronization(list,DataTypeEnum.DATA_INPUT.getValue());
     }
 
     /**
@@ -225,21 +240,44 @@ public class SynchronizationPgData {
      */
     public void synchronizationDw()
     {
-        ResultEntity<Object> result = client.getDataModelTable();
+        ResultEntity<Object> result = client.getDataModelTable(1);
         if (result.code!=ResultEnum.SUCCESS.getCode())
         {
             return;
         }
         List<SourceTableDTO> list=JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,2);
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_MODEL.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
         if (po==null)
         {
             return;
         }
+        //同步dw元数据对象
         synchronizationData(list,po.qualifiedName,DataTypeEnum.DATA_MODEL.getValue());
-        //delSynchronization(list,DataTypeEnum.DATA_MODEL.getValue());
+        //删除dw中不存在的元数据对象
+        delSynchronization(list,DataTypeEnum.DATA_MODEL.getValue());
+    }
+
+    public void synchronizationDoris()
+    {
+        ResultEntity<Object> result = client.getDataModelTable(2);
+        if (result.code!=ResultEnum.SUCCESS.getCode())
+        {
+            return;
+        }
+        List<SourceTableDTO> list=JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
+        QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_DORIS.getValue());
+        MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
+        if (po==null)
+        {
+            return;
+        }
+        //同步doris元数据对象
+        synchronizationData(list,po.qualifiedName,DataTypeEnum.DATA_DORIS.getValue());
+        //删除doris中不存在的元数据对象
+        //delSynchronization(list,DataTypeEnum.DATA_DORIS.getValue());
     }
 
     public void synchronizationData(List<SourceTableDTO> list, String dbName, int dataType)
@@ -257,6 +295,7 @@ public class SynchronizationPgData {
             {
                 return;
             }
+            //list=list.stream().filter(e->"dim_Vendor".equals(e.tableName)).collect(Collectors.toList());
             for (SourceTableDTO dto:list)
             {
                 QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
@@ -281,7 +320,8 @@ public class SynchronizationPgData {
                             0,
                             dto.type,
                             0,
-                            dbPO.atlasGuid);
+                            dbPO.atlasGuid,
+                            0);
                     log.info("add entity table name:",dto.tableName+",guid:"+tableGuid);
                     if (CollectionUtils.isEmpty(dto.fieldList))
                     {
@@ -303,7 +343,8 @@ public class SynchronizationPgData {
                                     fieldDTO.id,
                                     dto.type,
                                     0,
-                                    tableGuid);
+                                    tableGuid,
+                                    fieldDTO.attributeType);
                             log.info("add entity column name:",fieldDTO.fieldName+",guid:"+columnGuid);
                         }
                     }
@@ -338,7 +379,8 @@ public class SynchronizationPgData {
                                         field.id,
                                         dto.type,
                                         0,
-                                        po.atlasGuid);
+                                        po.atlasGuid,
+                                        field.attributeType);
                                 log.info("add entity column name:",field.fieldName+",guid:"+columnGuid);
                             }
                         }
@@ -383,16 +425,18 @@ public class SynchronizationPgData {
         //atlas删除表元数据对象
         if (!CollectionUtils.isEmpty(poIdList))
         {
+            //删除atlas表数据
             List<MetadataMapAtlasPO> delList=poList.stream()
                     .filter(e->poIdList.contains(e.tableId))
                     .collect(Collectors.toList());
             for (MetadataMapAtlasPO item:delList )
             {
                 ResultDataDTO<String> delAtlas = atlasClient.Delete(entityByGuid + "/" + item.atlasGuid);
-                if (delAtlas.code !=ResultEnum.NO_CONTENT)
+                if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
                 }
+                //删除Metadata配置表数据
                 UpdateMetadataMapAtlasDTO dto=new UpdateMetadataMapAtlasDTO();
                 dto.id=item.tableId;
                 dto.dataType=dataType;
@@ -400,33 +444,34 @@ public class SynchronizationPgData {
                 metadataMapAtlasMapper.delBatchMetadataMapAtlas(dto);
             }
         }
-
+        //删除atlas字段数据
         QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.lambda().eq(MetadataMapAtlasPO::getDataType,dataType);
+        queryWrapper1.lambda().eq(MetadataMapAtlasPO::getDataType,dataType)
+                .ne(MetadataMapAtlasPO::getColumnId,0);
         List<MetadataMapAtlasPO> dwMetadataList=metadataMapAtlasMapper.selectList(queryWrapper1);
         //atlas删除字段元数据对象
         for (SourceTableDTO dto:list)
         {
             //获取字段集合
-            List<Integer> tableList=(List)dwMetadataList.stream()
+            List<Integer> columnList=(List)dwMetadataList.stream()
                     .filter(e->e.tableId==dto.id && e.tableType==dto.type).map(e->e.getColumnId()).collect(Collectors.toList());
             //获取配置表字段集合
             List<Integer> fieldIdList=(List)dto.fieldList.stream()
                     .map(e->e.getId())
                     .collect(Collectors.toList());
-            //取交集,获取已删除字段集合
-            tableList.removeAll(fieldIdList);
-            if (CollectionUtils.isEmpty(tableList))
+            //取差集,获取已删除字段集合
+            columnList.removeAll(fieldIdList);
+            if (CollectionUtils.isEmpty(columnList))
             {
                 continue;
             }
-            List<MetadataMapAtlasPO> delList=dwMetadataList.stream()
-                    .filter(e->tableList.contains(e.columnId) && e.tableType==dto.type)
+            List<MetadataMapAtlasPO> delColumnList=dwMetadataList.stream()
+                    .filter(e->columnList.contains(e.columnId) && e.tableType==dto.type)
                     .collect(Collectors.toList());
-            for (MetadataMapAtlasPO mapAtlasPO:delList)
+            for (MetadataMapAtlasPO mapAtlasPO:delColumnList)
             {
                 ResultDataDTO<String> delAtlas = atlasClient.Delete(entityByGuid + "/" + mapAtlasPO.atlasGuid);
-                if (delAtlas.code !=ResultEnum.NO_CONTENT)
+                if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
                 }
@@ -576,18 +621,19 @@ public class SynchronizationPgData {
                 break;
             case RDBMS_TABLE:
                 if (!dto.tableName.equals(attribute.getString("name"))
+                        || !po.qualifiedName.equals(attribute.getString("qualifiedName"))
                         || !dto.tableDes.equals(attribute.getString("description")))
                 {
                     attribute.put("name",dto.tableName);
                     attribute.put("qualifiedName",qualifiedName);
                     attribute.put("description",dto.tableDes);
-                    po.qualifiedName=fiDataName;
+                    po.qualifiedName=qualifiedName;
                     change=true;
                 }
                 break;
             case RDBMS_COLUMN:
                 if (!fieldDTO.fieldName.equals(attribute.getString("name"))
-                        || !qualifiedName.equals(attribute.getString("qualifiedName"))
+                        || !po.qualifiedName.equals(attribute.getString("qualifiedName"))
                         //|| !field.fieldDes.equals(attribute1.getString("description"))
                         || !fieldDTO.equals(attribute.getString("length"))
                         || !fieldDTO.fieldType.equals(attribute.getString("data_type")))
@@ -639,7 +685,8 @@ public class SynchronizationPgData {
                                     long columnId,
                                     int tableType,
                                     int dbNameType,
-                                    String parentGuid)
+                                    String parentGuid,
+                                      int attributeType)
     {
         try {
             JSONObject jsonObj = JSON.parseObject(jsonStr);
@@ -655,6 +702,7 @@ public class SynchronizationPgData {
             metadataMapAtlasPO.tableId=tableId;
             metadataMapAtlasPO.tableType=tableType;
             metadataMapAtlasPO.dbNameType=dbNameType;
+            metadataMapAtlasPO.attributeType=attributeType;
             int flat = metadataMapAtlasMapper.insert(metadataMapAtlasPO);
             return flat>0?metadataMapAtlasPO.atlasGuid:"";
         }

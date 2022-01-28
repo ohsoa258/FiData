@@ -19,12 +19,11 @@ import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.entity.*;
-import com.fisk.datamodel.enums.CreateTypeEnum;
-import com.fisk.datamodel.enums.DimensionAttributeEnum;
-import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.DimensionAttributeMap;
 import com.fisk.datamodel.map.FactAttributeMap;
+import com.fisk.datamodel.map.SyncModeMap;
+import com.fisk.datamodel.map.TableBusinessMap;
 import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IFactAttribute;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -60,6 +59,10 @@ public class FactAttributeImpl
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
     DimensionMapper dimensionMapper;
+    @Resource
+    SyncModeImpl syncMode;
+    @Resource
+    TableBusinessImpl tableBusiness;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -75,6 +78,27 @@ public class FactAttributeImpl
         if (factPO==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+        //添加增量配置
+        SyncModePO syncModePO = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
+        boolean syncMode = this.syncMode.saveOrUpdate(syncModePO);
+        boolean tableBusiness=true;
+        if (dto.syncModeDTO.syncMode== SyncModeEnum.CUSTOM_OVERRIDE.getValue())
+        {
+            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dto.syncModeDTO.syncTableId)
+                    .eq(SyncModePO::getTableType,dto.syncModeDTO.tableType);
+            SyncModePO po=this.syncMode.getOne(syncModePOQueryWrapper);
+            if (po==null)
+            {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            dto.syncModeDTO.syncTableBusinessDTO.syncId=(int)po.id;
+            tableBusiness= this.tableBusiness.saveOrUpdate(TableBusinessMap.INSTANCES.dtoToPo(dto.syncModeDTO.syncTableBusinessDTO));
+        }
+        if (!syncMode || !tableBusiness)
+        {
+            return ResultEnum.SAVE_DATA_ERROR;
         }
         //删除维度字段属性
         List<Integer> ids=(List)dto.list.stream().filter(e->e.id!=0)
@@ -115,6 +139,7 @@ public class FactAttributeImpl
             queryDTO.factIds=dimensionIds;
             queryDTO.businessAreaId=factPO.businessId;
             queryDTO.remark=dto.remark;
+            queryDTO.syncMode=dto.syncModeDTO.syncMode;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;
@@ -274,6 +299,28 @@ public class FactAttributeImpl
         queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
         List<FactAttributePO> list=mapper.selectList(queryWrapper);
         data.attributeDTO= FactAttributeMap.INSTANCES.poListsToDtoList(list);
+        //获取增量配置信息
+        QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
+        syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,po.id)
+                .eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT);
+        SyncModePO syncModePO=syncMode.getOne(syncModePOQueryWrapper);
+        if(syncModePO==null)
+        {
+            return data;
+        }
+        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePO);
+        if (syncModePO.syncMode!= SyncModeEnum.CUSTOM_OVERRIDE.getValue())
+        {
+            return data;
+        }
+        QueryWrapper<TableBusinessPO> tableBusinessPOQueryWrapper=new QueryWrapper<>();
+        tableBusinessPOQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePO.id);
+        TableBusinessPO tableBusinessPO=tableBusiness.getOne(tableBusinessPOQueryWrapper);
+        if (tableBusinessPO==null)
+        {
+            return data;
+        }
+        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPO);
         return data;
     }
 

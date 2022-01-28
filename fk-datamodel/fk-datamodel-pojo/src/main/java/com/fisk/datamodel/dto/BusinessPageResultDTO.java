@@ -44,6 +44,10 @@ public class BusinessPageResultDTO {
      */
     public int numberPositionPublishNumber;
     /**
+     * 分析建模总数量
+     */
+    public int analysisNumber;
+    /**
      * 分析建模发布成功数量
      */
     public int analysisPublishNumber;

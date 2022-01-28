@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.entity.ChartImagePO;
 import com.fisk.chartvisual.map.VisualizationMap;
@@ -9,6 +10,7 @@ import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
+import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -53,7 +56,9 @@ public class VisualizationServiceImpl implements VisualizationService {
                 dataServiceResult.setData(BuildSqlService.query(VisualizationMap.INSTANCES.dataDoFields(objectVO.columnDetails), objectVO.id));
                 return dataServiceResult;
             case VIEW:
-                return db.query(VisualizationMap.INSTANCES.dataDoObject(objectVO));
+                ChartQueryObject object = VisualizationMap.INSTANCES.dataDoObject(objectVO);
+                object.setTableName(objectVO.columnDetails.get(1).fieldTableName);
+                return db.query(object);
             case MDX:
                 return db.querySsas(VisualizationMap.INSTANCES.dataToObjectSsas(objectVO));
             default:
@@ -102,7 +107,7 @@ public class VisualizationServiceImpl implements VisualizationService {
     }
 
     @Override
-    public ResultEntity<Object> listDataDomain(DataSourceDTO dto) {
+    public ResultEntity<List<DataDomainVO>> listDataDomain(DataSourceDTO dto) {
         switch (dto.getType()){
             case DMP:
                 return client.getAll();

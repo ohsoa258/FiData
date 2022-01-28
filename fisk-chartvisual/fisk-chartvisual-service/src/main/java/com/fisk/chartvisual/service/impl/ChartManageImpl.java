@@ -312,7 +312,7 @@ public class ChartManageImpl implements IChartManageService {
                 if (chart == null) {
                     return ResultEnum.DATA_NOTEXISTS;
                 }
-                res = chartMapper.deleteByIdWithFill(chart);
+                res = chartMapper.deleteById(chart);
 
                 // 删除报表组件
                 QueryWrapper<ChartChildvisualPO> query = new QueryWrapper<>();

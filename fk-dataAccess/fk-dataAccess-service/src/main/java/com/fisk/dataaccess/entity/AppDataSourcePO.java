@@ -40,7 +40,7 @@ public class AppDataSourcePO extends BasePO {
     /**
      * 添加数据时后台生成
      */
-    public String atlasDbId;
+//    public String atlasDbId;
 
     /**
      * 数据源连接字符串

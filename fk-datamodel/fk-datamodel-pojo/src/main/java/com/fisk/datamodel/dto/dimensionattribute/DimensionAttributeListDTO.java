@@ -1,6 +1,7 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -16,5 +17,7 @@ public class DimensionAttributeListDTO {
     public String sqlScript;
 
     public List<DimensionAttributeDTO> attributeDTOList;
+
+    public SyncModeDTO syncModeDTO;
 
 }
