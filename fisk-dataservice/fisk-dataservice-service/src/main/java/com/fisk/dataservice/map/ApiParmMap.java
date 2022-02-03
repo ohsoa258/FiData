@@ -6,6 +6,7 @@ import com.fisk.dataservice.dto.api.ParmConfigEditDTO;
 import com.fisk.dataservice.entity.ParmConfigPO;
 import com.fisk.dataservice.vo.api.ParmConfigVO;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
+import org.apache.ibatis.annotations.Param;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

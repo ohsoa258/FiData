@@ -48,4 +48,24 @@
         ORDER BY
         api.create_time DESC
     </select>
+    <select id="getListByIds" resultType="com.fisk.dataservice.entity.ApiConfigPO">
+        SELECT
+        id,
+        api_code,
+        api_name,
+        api_desc,
+        api_type,
+        datasource_id,
+        create_sql
+        FROM
+        tb_api_config
+        WHERE
+        del_flag = 1
+        <if test="null != apiIds and apiIds.size > 0">
+            AND  id IN
+            <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
 </mapper>

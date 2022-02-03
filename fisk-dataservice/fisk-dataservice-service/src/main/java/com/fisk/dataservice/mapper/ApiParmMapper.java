@@ -22,4 +22,11 @@ public interface ApiParmMapper extends FKBaseMapper<ParmConfigPO> {
      */
     @Select("SELECT id,api_id,parm_name,parm_value,parm_desc FROM tb_parm_config WHERE api_id=#{apiId} AND del_flag=1;")
     List<ParmConfigPO> getListByApiId(@Param("apiId") int apiId);
+
+    /**
+     * 根据apiId查询参数信息
+     *
+     * @return 查询结果
+     */
+    List<ParmConfigPO> getListByApiIds(@Param("apiIds") List<Integer> apiIds);
 }

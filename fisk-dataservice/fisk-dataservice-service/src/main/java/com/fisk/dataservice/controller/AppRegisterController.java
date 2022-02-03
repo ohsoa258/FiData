@@ -10,6 +10,7 @@ import com.fisk.dataservice.vo.app.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,9 +80,15 @@ public class AppRegisterController {
     }
 
     @ApiOperation("生成文档")
-    @PostMapping("/createDoc/{appId}")
-    public ResultEntity<Object> createDoc(@PathVariable("id") int appId) {
-        return ResultEntityBuild.build(service.createDoc(appId));
+    @PostMapping("/createDoc")
+    public ResultEntity<String> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto) {
+        return service.createDoc(dto);
+    }
+
+    @ApiOperation(value = "下载文档")
+    @GetMapping("/downloadDoc/{fileName}")
+    public ResponseEntity downloadDoc(@PathVariable("fileName") String fileName) {
+        return service.downloadDoc(fileName);
     }
 
     @ApiOperation("查询应用API参数")

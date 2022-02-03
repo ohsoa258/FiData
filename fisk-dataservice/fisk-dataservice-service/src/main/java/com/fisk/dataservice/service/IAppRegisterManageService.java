@@ -3,14 +3,17 @@ package com.fisk.dataservice.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
+import org.springframework.http.ResponseEntity;
 
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -83,10 +86,17 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
 
     /**
      * 生成文档
-     * @param appId 应用id
+     * @param dto dto
      * @return 执行结果
      */
-    ResultEnum createDoc(Integer appId);
+    ResultEntity<String> createDoc(CreateAppApiDocDTO dto);
+
+    /**
+     * 下载文档
+     * @param fileName 文件路径
+     * @return 执行结果
+     */
+    ResponseEntity downloadDoc(String fileName);
 
     /**
      * 查询内置参数

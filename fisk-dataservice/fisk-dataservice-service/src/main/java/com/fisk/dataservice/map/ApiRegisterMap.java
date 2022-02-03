@@ -5,6 +5,7 @@ import com.fisk.dataservice.dto.api.ApiConfigEditDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
 import com.fisk.dataservice.vo.api.ApiSubVO;
+import org.apache.ibatis.annotations.Param;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 

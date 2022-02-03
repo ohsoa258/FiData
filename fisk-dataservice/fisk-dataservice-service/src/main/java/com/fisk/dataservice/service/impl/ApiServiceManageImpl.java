@@ -119,8 +119,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 });
             }
             List<Long> collect = parmList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
-            String instr = String.join(",", (CharSequence) collect);
-            List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), instr);
+            List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);
             if (CollectionUtils.isNotEmpty(builtinParmList)) {
                 parmList.forEach(e -> {
                     Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();

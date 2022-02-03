@@ -4,6 +4,7 @@ import com.fisk.dataservice.dto.api.FieldConfigDTO;
 import com.fisk.dataservice.dto.api.FieldConfigEditDTO;
 import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
+import org.apache.ibatis.annotations.Param;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

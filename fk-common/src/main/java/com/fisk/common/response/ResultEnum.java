@@ -159,7 +159,10 @@ public enum ResultEnum {
     DS_APISERVICE_APP_NOTSUB(10012, "未订阅此API"),
     DS_APISERVICE_APP_NOTENABLE(10013, "未启用此API"),
     DS_APISERVICE_DATASOURCE_EXISTS(10014, "API数据源不存在"),
-    DS_APISERVICE_QUERY_ERROR(10015, "查询失败");
+    DS_APISERVICE_QUERY_ERROR(10015, "查询失败"),
+    DS_APPAPIDOC_EXISTS(10016, "请勾选需要生成PDF的API"),
+    DS_APPAPIDOC_DISABLE(10017, "请先启用API"),
+    DS_API_FIELD_EXISTS(10018, "字段信息为空，请检查API配置");
 
     ResultEnum(int code, String msg) {
         this.code = code;

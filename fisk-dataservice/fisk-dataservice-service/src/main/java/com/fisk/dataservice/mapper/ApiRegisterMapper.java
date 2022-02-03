@@ -47,4 +47,12 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      * @return 查询结果
      */
     List<ApiConfigPO> getList(@Param("keyword") String keyword);
+
+
+    /**
+     * 根据id集合批量查询
+     *
+     * @return 查询结果
+     */
+    List<ApiConfigPO> getListByIds(@Param("apiIds") List<Integer> apiIds);
 }
