@@ -26,5 +26,5 @@ public interface IApiServiceManageService {
      * @param dto 请求参数
      * @return 数据
      */
-    ResultEntity<ResponseVO> getData(RequstDTO dto);
+    ResultEntity<Object> getData(RequstDTO dto);
 }

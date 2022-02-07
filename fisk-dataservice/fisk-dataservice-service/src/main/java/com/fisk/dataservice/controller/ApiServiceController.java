@@ -39,7 +39,7 @@ public class ApiServiceController {
 
     @ApiOperation("获取数据")
     @PostMapping("/getData")
-    public ResultEntity<ResponseVO> getData(@RequestBody RequstDTO dto)
+    public ResultEntity<Object> getData(@RequestBody RequstDTO dto)
     {
         return service.getData(dto);
     }

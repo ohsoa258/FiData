@@ -206,7 +206,7 @@
             <p style="font-weight: bold;">1.2.&nbsp;&nbsp;读者对象</p>
         </div>
         <div>
-            <p style="text-indent: 2em;font-size: 12px">${readers}。</p>
+            <p style="text-indent: 2em;font-size: 12px">${readers}</p>
         </div>
     </div>
     <div>

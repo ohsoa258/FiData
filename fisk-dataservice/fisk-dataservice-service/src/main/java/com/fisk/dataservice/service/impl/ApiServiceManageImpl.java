@@ -70,8 +70,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     }
 
     @Override
-    public ResultEntity<ResponseVO> getData(RequstDTO dto) {
-        ResponseVO responseVO = new ResponseVO();
+    public ResultEntity<Object> getData(RequstDTO dto) {
+        JSONArray array = new JSONArray();
+//        ResponseVO responseVO = new ResponseVO();
         String appAccount = "IMC_test";
 
         // 第一步：验证当前请求是否合法，解析token
@@ -85,24 +86,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         // 第二步：验证当前应用（下游系统）是否有效
         AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
         if (appInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, responseVO);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, array);
 
         // 第三步：验证当前请求的API是否有效
         ApiConfigPO apiInfo = apiRegisterMapper.getByApiCode(dto.apiCode);
         if (apiInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, array);
 
         // 第四步：验证当前请求的API是否具备访问权限
         AppApiPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
         if (subscribeBy == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, responseVO);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, array);
         if (subscribeBy.apiState == ApiStateTypeEnum.Disable.getValue())
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, responseVO);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, array);
 
         // 第五步：验证数据源是否有效
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
         if (dataSourceConPO == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, array);
 
         String sql = apiInfo.createSql;
         // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
@@ -162,7 +163,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
 
-            JSONArray array = new JSONArray();
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             while (rs.next()) {
@@ -177,11 +177,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 array.add(jsonObj);
             }
             rs.close();
-            responseVO.dataArray = array;
+//            responseVO.dataArray = array;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR);
         }
-        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, responseVO);
+        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, array);
     }
 
     /**
