@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -81,15 +82,15 @@ public class AppRegisterController {
 
     @ApiOperation("生成文档")
     @PostMapping("/createDoc")
-    public ResultEntity<String> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto) {
-        return service.createDoc(dto);
+    public ResultEntity<String> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto, HttpServletResponse response) {
+        return service.createDoc(dto,response);
     }
 
-    @ApiOperation(value = "下载文档")
-    @GetMapping("/downloadDoc/{fileName}")
-    public ResponseEntity downloadDoc(@PathVariable("fileName") String fileName) {
-        return service.downloadDoc(fileName);
-    }
+//    @ApiOperation(value = "下载文档")
+//    @GetMapping("/downloadDoc/{fileName}")
+//    public ResponseEntity downloadDoc(@PathVariable("fileName") String fileName) {
+//        return service.downloadDoc(fileName);
+//    }
 
     @ApiOperation("查询应用API参数")
     @PostMapping("/getParmAll")

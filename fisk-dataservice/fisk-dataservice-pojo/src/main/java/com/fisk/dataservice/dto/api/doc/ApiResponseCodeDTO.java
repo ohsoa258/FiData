@@ -23,5 +23,10 @@ public class ApiResponseCodeDTO {
     /**
      * 描述
      */
-    public  String desc;
+    public String desc;
+
+    /**
+     * 行样式
+     */
+    public String trStyle;
 }

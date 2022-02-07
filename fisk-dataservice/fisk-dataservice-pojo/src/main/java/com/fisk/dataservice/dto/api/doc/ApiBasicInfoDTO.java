@@ -86,16 +86,6 @@ public class ApiBasicInfoDTO {
     public String apiRequestCatalogue;
 
     /**
-     * API返回参数
-     */
-    public List<ApiResponseDTO> apiResponseDTOS;
-
-    /**
-     * API返回参数 目录
-     */
-    public String apiResponseCatalogue;
-
-    /**
      * API返回参数json示例
      */
     public String apiResponseExamples;
@@ -104,4 +94,14 @@ public class ApiBasicInfoDTO {
      * API返回参数json示例 目录
      */
     public String apiResponseExamplesCatalogue;
+
+    /**
+     * API返回参数
+     */
+    public List<ApiResponseDTO> apiResponseDTOS;
+
+    /**
+     * API返回参数 目录
+     */
+    public String apiResponseCatalogue;
 }

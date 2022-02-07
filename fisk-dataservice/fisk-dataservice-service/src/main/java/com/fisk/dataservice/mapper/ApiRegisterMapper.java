@@ -38,7 +38,7 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      *
      * @return 查询结果
      */
-    @Select("SELECT id,api_code,api_name,api_code,api_type,datasource_id,create_sql FROM tb_api_config WHERE api_code=#{apiCode} AND del_flag=1;")
+    @Select("SELECT id,api_code,api_name,api_code,api_type,datasource_id,table_name,create_sql FROM tb_api_config WHERE api_code=#{apiCode} AND del_flag=1;")
     ApiConfigPO getByApiCode(@Param("apiCode") String apiCode);
 
     /**

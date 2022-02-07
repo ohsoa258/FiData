@@ -13,6 +13,7 @@ import com.fisk.dataservice.vo.app.AppRegisterVO;
 import org.springframework.http.ResponseEntity;
 
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
@@ -89,14 +90,14 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEntity<String> createDoc(CreateAppApiDocDTO dto);
+    ResultEntity<String> createDoc(CreateAppApiDocDTO dto, HttpServletResponse response);
 
     /**
      * 下载文档
      * @param fileName 文件路径
      * @return 执行结果
      */
-    ResponseEntity downloadDoc(String fileName);
+//    ResponseEntity downloadDoc(String fileName);
 
     /**
      * 查询内置参数

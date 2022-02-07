@@ -72,15 +72,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     @Override
     public ResultEntity<ResponseVO> getData(RequstDTO dto) {
         ResponseVO responseVO = new ResponseVO();
-        String appAccount = "";
+        String appAccount = "IMC_test";
 
         // 第一步：验证当前请求是否合法，解析token
-        String token = "";
-        if (token == null || token.isEmpty())
-            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
-        appAccount = "DDS_lijiawen";
-        if (appAccount == null || appAccount.isEmpty())
-            return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
+//        String token = "";
+//        if (token == null || token.isEmpty())
+//            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
+//        appAccount = "DDS_lijiawen";
+//        if (appAccount == null || appAccount.isEmpty())
+//            return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
 
         // 第二步：验证当前应用（下游系统）是否有效
         AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
@@ -165,7 +165,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             JSONArray array = new JSONArray();
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
-            List<FieldConfigVO> fieldConfigVOS = new ArrayList<>();
             while (rs.next()) {
                 JSONObject jsonObj = new JSONObject();
                 // 遍历每一列
@@ -182,7 +181,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR);
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, responseVO);
+        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, responseVO);
     }
 
     /**

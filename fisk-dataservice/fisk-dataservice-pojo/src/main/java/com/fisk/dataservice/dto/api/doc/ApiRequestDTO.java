@@ -29,4 +29,9 @@ public class ApiRequestDTO {
      * 参数描述
      */
     public String  parmDesc;
+
+    /**
+     * 行样式
+     */
+    public String  trStyle;
 }

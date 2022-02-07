@@ -33,11 +33,6 @@ public class ApiDocDTO {
     public  String isuDate;
 
     /**
-     * 页尾名称
-     */
-    public  String footerName;
-
-    /**
      * 文档目的
      */
     public  String docPurpose;
@@ -70,7 +65,7 @@ public class ApiDocDTO {
     /**
      * 文档目录
      */
-    public List<String> docCatalogue;
+    public List<ApiCatalogueDTO> apiCatalogueDTOS;
 
     /**
      * API基础信息

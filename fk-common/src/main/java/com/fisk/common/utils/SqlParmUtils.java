@@ -27,25 +27,25 @@ public class SqlParmUtils {
         for (SqlWhereDto item : list) {
             switch (item.operator) {
                 case "LIKE":
-                    sql += String.format(" AND %s like '%s'", item.fieldName, "%" + item.fieldValue + "%");
+                    sql += String.format(" AND %s like %s", item.fieldName, "%" + item.fieldValue + "%");
                     break;
                 case "EQU":
-                    sql += String.format(" AND %s = '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s = %s", item.fieldName, item.fieldValue);
                     break;
                 case "NEQ":
-                    sql += String.format(" AND %s != '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s != %s", item.fieldName, item.fieldValue);
                     break;
                 case "LSS":
-                    sql += String.format(" AND %s < '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s < %s", item.fieldName, item.fieldValue);
                     break;
                 case "LEQ":
-                    sql += String.format(" AND %s <= '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s <= %s", item.fieldName, item.fieldValue);
                     break;
                 case "GTR":
-                    sql += String.format(" AND %s > '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s > %s", item.fieldName, item.fieldValue);
                     break;
                 case "GEQ":
-                    sql += String.format(" AND %s >= '%s'", item.fieldName, item.fieldValue);
+                    sql += String.format(" AND %s >= %s", item.fieldName, item.fieldValue);
                     break;
             }
         }
@@ -66,7 +66,7 @@ public class SqlParmUtils {
             return sql;
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = item.parmValue;
+            String replacement = "'" + item.parmValue + "'";
             sql = sql.replace(targetKey, replacement);
         }
         return sql;

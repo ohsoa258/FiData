@@ -29,4 +29,9 @@ public class ApiContactsDTO {
      * 联系方式，邮箱地址
      */
     public String mailbox;
+
+    /**
+     * 行样式
+     */
+    public String trStyle;
 }

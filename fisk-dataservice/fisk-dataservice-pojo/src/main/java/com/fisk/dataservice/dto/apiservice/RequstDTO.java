@@ -3,6 +3,7 @@ package com.fisk.dataservice.dto.apiservice;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +17,7 @@ public class RequstDTO {
      * 请求参数
      */
     @ApiModelProperty(value = "请求参数")
-    public Map<String, Object> parmList;
+    public HashMap<String, Object> parmList;
 
     /**
      * API标识

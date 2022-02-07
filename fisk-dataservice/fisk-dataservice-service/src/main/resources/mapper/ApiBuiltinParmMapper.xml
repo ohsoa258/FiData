@@ -16,6 +16,7 @@
         WHERE app_id = #{appId}
         AND api_id=#{apiId}
         AND del_flag=1
+        AND parm_isbuiltin=1
         <if test="null != parmIds and parmIds.size > 0">
             AND parm_id IN
             <foreach item="item" index="index" collection="parmIds" open="(" separator="," close=")">
@@ -36,6 +37,7 @@
         tb_builtin_parm
         WHERE app_id = #{appId}
         AND del_flag=1
+        AND parm_isbuiltin=1
         <if test="null != apiIds and apiIds.size > 0">
             AND api_id IN
             <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
