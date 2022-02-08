@@ -16,11 +16,10 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
 import com.fisk.common.utils.SqlParmUtils;
-import com.fisk.dataservice.dto.app.AppApiSubDTO;
-import com.fisk.dataservice.enums.DataSourceTypeEnum;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiTypeEnum;
+import com.fisk.dataservice.enums.DataSourceTypeEnum;
 import com.fisk.dataservice.map.ApiFieldMap;
 import com.fisk.dataservice.map.ApiFilterConditionMap;
 import com.fisk.dataservice.map.ApiParmMap;
@@ -82,9 +81,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
-            ResultEntity<UserDTO> userListByIds = userClient.getUserListByIds(userIds);
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (userListByIds != null) {
-                List<UserDTO> userDTOS = Collections.singletonList(userListByIds.getData());
+                List<UserDTO> userDTOS = userListByIds.getData();
                 if (CollectionUtils.isNotEmpty(userDTOS)) {
                     all.getRecords().forEach(e -> {
                         Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
@@ -109,7 +108,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
             List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
             List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
-            ResultEntity<UserDTO> userListByIds = userClient.getUserListByIds(userIds);
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
                     Optional<AppApiPO> first = subscribeListByAppId.stream().filter(item -> item.getApiId() == e.id).findFirst();
@@ -119,7 +118,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 });
             }
             if (userListByIds != null) {
-                List<UserDTO> userDTOS = Collections.singletonList(userListByIds.getData());
+                List<UserDTO> userDTOS = userListByIds.getData();
                 if (CollectionUtils.isNotEmpty(userDTOS)) {
                     apiSubVOS.forEach(e -> {
                         Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();

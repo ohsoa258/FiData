@@ -4,6 +4,8 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -39,7 +41,7 @@ public interface UserClient {
     ResultEntity<Object> getServiceRegistryList();
 
 
-    @GetMapping("/info/getUserListByIds")
-    ResultEntity<UserDTO> getUserListByIds(@RequestParam("ids") List<Long> ids);
+    @PostMapping("/info/getUserListByIds")
+    ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids);
 
 }

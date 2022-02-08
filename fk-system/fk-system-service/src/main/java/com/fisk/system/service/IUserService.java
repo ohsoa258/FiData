@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.system.dto.*;
+import com.fisk.system.dto.ChangePasswordDTO;
+import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.dto.userinfo.UserQueryDTO;
 import com.fisk.system.dto.userinfo.UserValidDTO;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -129,6 +129,6 @@ public interface IUserService {
      * @param ids
      * @return 用户列表
      */
-    List<UserDTO> getUserListByIds(List<Long> ids);
+    ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids);
 
 }

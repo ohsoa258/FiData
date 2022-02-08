@@ -9,10 +9,15 @@ import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.dto.MetaDataConfigDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
-import com.fisk.system.dto.*;
+import com.fisk.system.dto.ChangePasswordDTO;
+import com.fisk.system.dto.GetConfigDTO;
+import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.userinfo.*;
 import com.fisk.system.entity.RoleUserAssignmentPO;
 import com.fisk.system.entity.UserPO;
@@ -304,12 +309,12 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserDTO> getUserListByIds(List<Long> ids) {
+    public ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids) {
         List<UserDTO> userDTOS = new ArrayList<>();
         if (CollectionUtils.isEmpty(ids))
-            return userDTOS;
+            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDTOS);
         userDTOS = mapper.getUserListByIds(ids);
-        return userDTOS;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDTOS);
     }
 
 }

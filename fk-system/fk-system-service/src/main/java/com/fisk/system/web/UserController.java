@@ -134,8 +134,8 @@ public class UserController {
 
     @PostMapping("/getUserListByIds")
     @ApiOperation("批量查询用户信息")
-    public ResultEntity<Object> getUserListByIds(@Validated @RequestBody List<Long> ids) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserListByIds(ids));
+    public ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids) {
+        return service.getUserListByIds(ids);
     }
 
 }
