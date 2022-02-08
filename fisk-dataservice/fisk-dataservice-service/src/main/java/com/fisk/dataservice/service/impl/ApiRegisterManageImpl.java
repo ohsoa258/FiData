@@ -457,6 +457,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 //            List<String> list = transformField(fieldConfigVO.fieldType);
 //            fieldConfigVO.fieldType = list.get(0);
             fieldConfigVO.fieldType = fieldConfigVO.fieldType.toLowerCase();
+            // 读取不到类型，默认字符串类型
+            if (fieldConfigVO.fieldType == null ||
+                    fieldConfigVO.fieldType == "")
+                fieldConfigVO.fieldType = "varchar";
 
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
