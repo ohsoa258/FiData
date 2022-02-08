@@ -29,6 +29,7 @@ import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +74,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Autowired
     private ConfigUtil configUtil;
+
+    @Value("${dataservice.pdf.path}")
+    private String templatePath;
 
     @Override
     public List<FilterFieldDTO> getColumn() {
@@ -273,7 +277,6 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        } else {
 //            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_ERROR, saveFilePath);
 //        }
-        String templatePath = configUtil.getPdf_templatePath();
         String outputFileName = "APIServiceDoc" + v + ".pdf";
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
                 templatePath, outputFileName, "菲斯科白泽接口文档", docDTO, response);
@@ -387,7 +390,8 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "    \"footerName\":\"菲斯科白泽接口文档\",\n" +
                 "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于下游系统对接白泽接口。\",\n" +
                 "    \"readers\":\"预期读者包括需要从白泽获取数据的下游系统。\",\n" +
-                "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码为UTF-8。\",\n" +
+                "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
+                "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。apiCode为私密信息，不在文档中体现，请在订阅API时自行保存。\",\n" +
                 "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
                 "    \"uatAddress\":\"https://uatHost/{apiaddress}。\",\n" +
                 "    \"prdAddress\":\"https://prdHost/{apiaddress}。\",\n" +
@@ -462,6 +466,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "            \"apiContentTypeCatalogue\":\"2.4.4\",\n" +
                 "            \"apiHeader\":\"无\",\n" +
                 "            \"apiHeaderCatalogue\":\"2.4.5.\",\n" +
+                "            \"apiRequestExamplesCatalogue\":\"2.4.6.\",\n" +
                 "            \"apiRequestDTOS\":[\n" +
                 "                {\n" +
                 "                    \"parmName\":\"useraccount\",\n" +
@@ -476,9 +481,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "                    \"parmDesc\":\"应用密码\"\n" +
                 "                }\n" +
                 "            ],\n" +
-                "            \"apiRequestCatalogue\":\"2.4.6.\",\n" +
+                "            \"apiRequestCatalogue\":\"2.4.7.\",\n" +
                 "            \"apiResponseExamples\":\"\",\n" +
-                "            \"apiResponseExamplesCatalogue\":\"2.4.7.\",\n" +
+                "            \"apiResponseExamplesCatalogue\":\"2.4.8.\",\n" +
                 "            \"apiResponseDTOS\":[\n" +
                 "                {\n" +
                 "                    \"parmName\":\"msg\",\n" +
@@ -496,7 +501,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "                    \"parmDesc\":\"token（调用成功后返回）\"\n" +
                 "                }\n" +
                 "            ],\n" +
-                "            \"apiResponseCatalogue\":\"2.4.8.\"\n" +
+                "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
                 "        }\n" +
                 "    ],\n" +
                 "    \"apiContactsDTOS\":[\n" +
@@ -553,11 +558,15 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "    ]\n" +
                 "}";
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
+                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
+                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
+                "}";
         apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
                 "&nbsp;&nbsp; \"code\": 200,\n" +
                 "&nbsp;&nbsp; \"token\": \"xxx\", --%s\n" +
                 "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
-                "}", "2.4.8");
+                "}", "2.4.9");
         BigDecimal catalogueIndex = new BigDecimal("2.4");
         List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
         for (int i = 0; i < apiList.size(); i++) {
@@ -607,6 +616,14 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 }
             }
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
+            apiBasicInfoDTO.apiRequestExamples=String.format("{\n" +
+                    " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
+                    " &nbsp;&nbsp;\"parmList\": {      --HashMap\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"parm1\": \"value\" --%s\n" +
+                    " &nbsp;&nbsp;},\n" +
+                    " &nbsp;&nbsp;\"current\": null,\n" +
+                    " &nbsp;&nbsp;\"size\": null\n" +
+                    "}", addIndex + ".7");
             /* 设置API请求参数 end */
 
             /* 设置API返回参数 start */
@@ -628,10 +645,16 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             }
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
             apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
-                    "&nbsp;&nbsp; \"code\": 200,\n" +
-                    "&nbsp;&nbsp; \"data\": [], --%s\n" +
-                    "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
-                    "}", addIndex + ".8");
+                    " &nbsp;&nbsp;\"code\":200,\n" +
+                    " &nbsp;&nbsp;\"data\":{\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"current\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"size\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"total\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"page\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
+                    " &nbsp;&nbsp;},\n" +
+                    " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +
+                    "}", addIndex + ".9");;
             /* 设置API返回参数 end */
 
             /* 设置API目录 start */
@@ -641,9 +664,10 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             apiBasicInfoDTO.apiRequestTypeCatalogue = addIndex + ".3";
             apiBasicInfoDTO.apiContentTypeCatalogue = addIndex + ".4";
             apiBasicInfoDTO.apiHeaderCatalogue = addIndex + ".5";
-            apiBasicInfoDTO.apiRequestCatalogue = addIndex + ".6";
-            apiBasicInfoDTO.apiResponseExamplesCatalogue = addIndex + ".7";
-            apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".8";
+            apiBasicInfoDTO.apiRequestExamplesCatalogue = addIndex + ".6";
+            apiBasicInfoDTO.apiRequestCatalogue = addIndex + ".7";
+            apiBasicInfoDTO.apiResponseExamplesCatalogue = addIndex + ".8";
+            apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
             /* 设置API目录 end */
 
             apiBasicInfoDTOS.add(apiBasicInfoDTO);

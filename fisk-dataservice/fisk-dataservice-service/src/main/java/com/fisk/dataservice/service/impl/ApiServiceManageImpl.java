@@ -22,6 +22,7 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 
+import com.fisk.dataservice.vo.api.ApiSubVO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.lang.reflect.Array;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -71,8 +69,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Override
     public ResultEntity<Object> getData(RequstDTO dto) {
-        JSONArray array = new JSONArray();
-//        ResponseVO responseVO = new ResponseVO();
+        ResponseVO responseVO = new ResponseVO();
         String appAccount = "IMC_test";
 
         // 第一步：验证当前请求是否合法，解析token
@@ -86,24 +83,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         // 第二步：验证当前应用（下游系统）是否有效
         AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
         if (appInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, array);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, responseVO);
 
         // 第三步：验证当前请求的API是否有效
         ApiConfigPO apiInfo = apiRegisterMapper.getByApiCode(dto.apiCode);
         if (apiInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, array);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
 
         // 第四步：验证当前请求的API是否具备访问权限
         AppApiPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
         if (subscribeBy == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, array);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, responseVO);
         if (subscribeBy.apiState == ApiStateTypeEnum.Disable.getValue())
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, array);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, responseVO);
 
         // 第五步：验证数据源是否有效
         DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
         if (dataSourceConPO == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, array);
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
 
         String sql = apiInfo.createSql;
         // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
@@ -154,15 +151,49 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         try {
             Statement st = null;
             Connection conn = null;
+            DataSourceTypeEnum typeEnum = DataSourceTypeEnum.MYSQL;
             if (dataSourceConPO.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
             } else if (dataSourceConPO.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
+                typeEnum = DataSourceTypeEnum.SQLSERVER;
             }
+//            if (apiInfo.apiType == ApiTypeEnum.SQL.getValue() && dto.current > 0 && dto.size > 0) {
+//                String sqlCountStr = String.format("select count(*) from (%s) as t", sql);
+//                PreparedStatement preparedStatement = conn.prepareStatement(sqlCountStr);
+//                ResultSet resultSet = preparedStatement.executeQuery();
+//                resultSet.next();
+//                int rowsCount = resultSet.getInt(1);
+//                int pageCount = (int) Math.ceil(1.0 * rowsCount / dto.size);//算出总共需要多少页
+//                resultSet.close();
+//                if (typeEnum == DataSourceTypeEnum.MYSQL) {
+//                    sql = String.format("select * from (%s) as t limit %s,%s", sql, (dto.current - 1) * dto.size, dto.size);
+//                } else if (typeEnum == DataSourceTypeEnum.SQLSERVER) {
+////                    sql = String.format("SELECT\n" +
+////                            "\t* \n" +
+////                            "FROM\n" +
+////                            "\t( SELECT *, ROW_NUMBER ( ) OVER ( %s ) AS RowNumBerId FROM ( %s ) AS t ) AS b \n" +
+////                            "WHERE\n" +
+////                            "\tRowNumBerId BETWEEN %s \n" +
+////                            "\tAND %s", apiInfo.createSql, sql, (dto.current - 1) * dto.size + 1, dto.current * dto.size);
+////                    适用SQL Server 2012及以上版本
+//                    sql = String.format("SELECT\n" +
+//                            "\t* \n" +
+//                            "FROM\n" +
+//                            "\t(%s) \n" +
+//                            "ORDER BY\n" +
+//                            "\t%s\n" +
+//                            "\toffset %s row FETCH NEXT %s ROWS ONLY", sql, apiInfo.createSql, (dto.current - 1) * dto.size, dto.size);
+//                }
+//                responseVO.current = dto.current;
+//                responseVO.size = dto.size;
+//                responseVO.total = rowsCount;
+//                responseVO.page = pageCount;
+//            }
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
-
+            JSONArray array = new JSONArray();
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             while (rs.next()) {
@@ -177,11 +208,21 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 array.add(jsonObj);
             }
             rs.close();
-//            responseVO.dataArray = array;
+            List<Object> collect = array;
+            if (dto.current != null && dto.size != null) {
+                int rowsCount = array.stream().toArray().length;
+                responseVO.current = dto.current;
+                responseVO.size = dto.size;
+                responseVO.total = rowsCount;
+                responseVO.page = (int) Math.ceil(1.0 * rowsCount / dto.size);
+                dto.current = dto.current - 1;
+                collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+            }
+            responseVO.dataArray = collect;
         } catch (Exception e) {
             throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR);
         }
-        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, array);
+        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, responseVO);
     }
 
     /**

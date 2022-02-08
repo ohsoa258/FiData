@@ -76,6 +76,16 @@ public class ApiBasicInfoDTO {
     public String apiHeaderCatalogue;
 
     /**
+     * API请求参数json示例
+     */
+    public String apiRequestExamples;
+
+    /**
+     * API请求参数json示例 目录
+     */
+    public String apiRequestExamplesCatalogue;
+
+    /**
      * API请求参数
      */
     public List<ApiRequestDTO> apiRequestDTOS;

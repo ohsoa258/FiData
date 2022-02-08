@@ -10,6 +10,7 @@ import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -39,7 +40,7 @@ public class ApiServiceController {
 
     @ApiOperation("获取数据")
     @PostMapping("/getData")
-    public ResultEntity<Object> getData(@RequestBody RequstDTO dto)
+    public ResultEntity<Object> getData(@Validated @RequestBody RequstDTO dto)
     {
         return service.getData(dto);
     }

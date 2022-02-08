@@ -2,6 +2,7 @@ package com.fisk.dataservice.dto.apiservice;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,4 +26,16 @@ public class RequstDTO {
     @ApiModelProperty(value = "API标识")
     @NotNull()
     public String apiCode;
+
+    /**
+     * 当前页，起始页为第一页
+     */
+    @ApiModelProperty(value = "当前页")
+    public Integer current;
+
+    /**
+     * 每页大小,最大500
+     */
+    @ApiModelProperty(value = "size")
+    public Integer size;
 }

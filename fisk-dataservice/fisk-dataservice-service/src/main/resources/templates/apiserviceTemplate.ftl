@@ -310,6 +310,7 @@
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">${standard}</p>
+            <p style="font-size: 12px">${standard_query}</p>
         </div>
     </div>
     <div>
@@ -375,6 +376,15 @@
             </div>
             <div>
                 <p style="text-indent: 3em;font-size: 12px">${apiBasicItem.apiHeader}</p>
+            </div>
+        </div>
+        <div>
+            <div>
+                <p style="font-weight: bold;">${apiBasicItem.apiRequestExamplesCatalogue}&nbsp;&nbsp;请求示例</p>
+            </div>
+            <div style="width: 100%;padding: 20px;">
+                <pre id="out_pre_req"
+                     style="word-wrap: break-word; white-space: pre-wrap;">${apiBasicItem.apiRequestExamples}</pre>
             </div>
         </div>
         <div>
@@ -465,7 +475,7 @@
                 <p style="font-weight: bold;">${apiBasicItem.apiResponseExamplesCatalogue}&nbsp;&nbsp;返回示例</p>
             </div>
             <div style="width: 100%;padding: 20px;">
-                <pre id="out_pre"
+                <pre id="out_pre_rep"
                      style="word-wrap: break-word; white-space: pre-wrap;">${apiBasicItem.apiResponseExamples}</pre>
             </div>
         </div>

@@ -25,42 +25,47 @@ public class ApiDocDTO {
     /**
      * 发行公司
      */
-    public  String isuCompany;
+    public String isuCompany;
 
     /**
      * 发行日期
      */
-    public  String isuDate;
+    public String isuDate;
 
     /**
      * 文档目的
      */
-    public  String docPurpose;
+    public String docPurpose;
 
     /**
      * 读者对象
      */
-    public  String readers;
+    public String readers;
 
     /**
      * 接口对接规范
      */
-    public  String standard;
+    public String standard;
+
+    /**
+     * 接口对接规范_查询
+     */
+    public String standard_query;
 
     /**
      * 登录授权规范
      */
-    public  String authStandard;
+    public String authStandard;
 
     /**
      * 测试环境
      */
-    public  String uatAddress;
+    public String uatAddress;
 
     /**
      * 正式环境
      */
-    public  String prdAddress;
+    public String prdAddress;
 
     /**
      * 文档目录
@@ -70,12 +75,12 @@ public class ApiDocDTO {
     /**
      * API基础信息
      */
-    public  List<ApiBasicInfoDTO> apiBasicInfoDTOS;
+    public List<ApiBasicInfoDTO> apiBasicInfoDTOS;
 
     /**
      * 联系人
      */
-    public  List<ApiContactsDTO> apiContactsDTOS;
+    public List<ApiContactsDTO> apiContactsDTOS;
 
     /**
      * API版本
@@ -85,5 +90,5 @@ public class ApiDocDTO {
     /**
      * API返回代码示例
      */
-    public  List<ApiResponseCodeDTO> apiResponseCodeDTOS;
+    public List<ApiResponseCodeDTO> apiResponseCodeDTOS;
 }

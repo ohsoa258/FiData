@@ -68,6 +68,7 @@ public class FreeMarkerUtil {
         try {
             Template template = getConfiguration(templateFilePath).getTemplate(templateFileName);
             StringWriter writer = new StringWriter();
+            // 如果data中某个属性值为null，则会触发异常，解决方案为：模板中使用此属性时加上感叹号，例如：name!
             template.process(data, writer);
             writer.flush();
             return writer.toString();
