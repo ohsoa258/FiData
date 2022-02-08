@@ -223,15 +223,14 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     }
 
     @Override
-    public ResultEntity<String> createDoc(CreateAppApiDocDTO dto, HttpServletResponse response) {
+    public ResultEnum createDoc(CreateAppApiDocDTO dto, HttpServletResponse response) {
 //        try {
-        String fileName = null;
         // 第一步：检验请求参数
         if (dto == null || CollectionUtils.isEmpty(dto.appApiDto))
-            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_EXISTS, fileName);
+            return ResultEnum.DS_APPAPIDOC_EXISTS;
         List<AppApiSubDTO> collect = dto.appApiDto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect))
-            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_DISABLE, fileName);
+            return ResultEnum.DS_APPAPIDOC_DISABLE;
         // PS：APP和API是否有效在订阅列表页已验证有效性,此处不做重复验证。
 
         List<Integer> apiIdList = dto.appApiDto.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
@@ -239,7 +238,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         // 第二步：查询需要生成的API接口
         List<ApiConfigPO> apiList = apiRegisterMapper.getListByIds(apiIdList);
         if (CollectionUtils.isEmpty(apiList))
-            return ResultEntityBuild.buildData(ResultEnum.DS_API_EXISTS, fileName);
+            return ResultEnum.DS_API_EXISTS;
 
         // 第三步：查询API接口的请求参数
         List<Long> parmIdList = null;
@@ -256,7 +255,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         // 第五步：查询API接口的返回参数
         List<FieldConfigPO> fieldList = apiFieldMapper.getListByApiIds(apiIdList);
         if (CollectionUtils.isEmpty(fieldList))
-            return ResultEntityBuild.buildData(ResultEnum.DS_API_FIELD_EXISTS, fileName);
+            return ResultEnum.DS_API_FIELD_EXISTS;
 
         // 第六步：API信息转换为文档实体
         final ApiDocDTO docDTO = createDocDTO(apiList, parmList, builtinParmList, fieldList);
@@ -277,9 +276,9 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        } else {
 //            return ResultEntityBuild.buildData(ResultEnum.DS_APPAPIDOC_ERROR, saveFilePath);
 //        }
-        String outputFileName = "APIServiceDoc" + v + ".pdf";
+        String fileName = "APIServiceDoc" + v + ".pdf";
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, outputFileName, "菲斯科白泽接口文档", docDTO, response);
+                templatePath, fileName, "菲斯科白泽接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -289,7 +288,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        } catch (Exception ex) {
 //            return ResultEntityBuild.buildData(ResultEnum.SAVE_DATA_ERROR, ex.getMessage());
 //        }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
+        return ResultEnum.SUCCESS;
     }
 
 //    @Override

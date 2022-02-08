@@ -82,8 +82,8 @@ public class AppRegisterController {
 
     @ApiOperation("生成文档")
     @PostMapping("/createDoc")
-    public ResultEntity<String> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto, HttpServletResponse response) {
-        return service.createDoc(dto,response);
+    public ResultEntity<Object> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto, HttpServletResponse response) {
+        return ResultEntityBuild.build(service.createDoc(dto,response));
     }
 
 //    @ApiOperation(value = "下载文档")

@@ -90,7 +90,7 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEntity<String> createDoc(CreateAppApiDocDTO dto, HttpServletResponse response);
+    ResultEnum createDoc(CreateAppApiDocDTO dto, HttpServletResponse response);
 
     /**
      * 下载文档
