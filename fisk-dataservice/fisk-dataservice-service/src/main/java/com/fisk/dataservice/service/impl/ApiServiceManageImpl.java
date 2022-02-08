@@ -202,7 +202,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnLabel(i);
                     //获取sql查询数据集合
-                    String value = rs.getString(columnName);
+                    Object value = rs.getObject(columnName);
                     jsonObj.put(columnName, value);
                 }
                 array.add(jsonObj);
