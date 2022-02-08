@@ -382,6 +382,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                                    List<FieldConfigPO> fieldList) {
         ApiDocDTO apiDocDTO = new ApiDocDTO();
 
+        // API文档基础信息
         String jsonResult = "{\n" +
                 "    \"title\":\"MDM主数据API接口文档\",\n" +
                 "    \"docVersion\":\"文档版本 V1.0\",\n" +
