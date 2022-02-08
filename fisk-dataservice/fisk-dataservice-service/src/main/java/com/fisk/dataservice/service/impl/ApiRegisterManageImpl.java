@@ -454,8 +454,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             }
 
             // 转换表字段类型
-            List<String> list = transformField(fieldConfigVO.fieldType);
-            fieldConfigVO.fieldType = list.get(0);
+//            List<String> list = transformField(fieldConfigVO.fieldType);
+//            fieldConfigVO.fieldType = list.get(0);
+            fieldConfigVO.fieldType = fieldConfigVO.fieldType.toLowerCase();
 
             // 获取表字段描述
             if (CollectionUtils.isNotEmpty(tableFieldList)) {
