@@ -19,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -35,8 +36,7 @@ public class UserController {
 
     @PostMapping("/page")
     @ApiOperation("用户列表")
-    public ResultEntity<Object> getUserList(@RequestBody UserQueryDTO query)
-    {
+    public ResultEntity<Object> getUserList(@RequestBody UserQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listUserData(query));
     }
 
@@ -50,8 +50,7 @@ public class UserController {
      */
     @PostMapping("/register")
     @ApiOperation("添加用户")
-    public ResultEntity<Object> register(@Validated @RequestBody UserDTO dto)
-    {
+    public ResultEntity<Object> register(@Validated @RequestBody UserDTO dto) {
         return ResultEntityBuild.build(service.register(dto));
     }
 
@@ -59,16 +58,16 @@ public class UserController {
      * 根据用户名和密码查询用户
      *
      * @param userAccount userAccount
-     * @param password password
+     * @param password    password
      * @return 用户实体 为null说明不存在
      */
     @GetMapping
     public ResultEntity<Object> queryUser(
             @RequestParam("userAccount") String userAccount,
-            @RequestParam("password") String password)
-    {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryUser(userAccount,password));
+            @RequestParam("password") String password) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryUser(userAccount, password));
     }
+
     /**
      * 编辑用户保存
      *
@@ -83,8 +82,7 @@ public class UserController {
 
     @ApiOperation("删除用户")
     @DeleteMapping("/deleteUser/{id}")
-    public ResultEntity<Object> deleteUser(@PathVariable("id") int id)
-    {
+    public ResultEntity<Object> deleteUser(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteUser(id));
     }
 
@@ -112,7 +110,7 @@ public class UserController {
 
     @ApiOperation("获取登录人信息")
     @GetMapping("/getCurrentUserInfo")
-    public  ResultEntity<Object> getCurrentUserInfo(){
+    public ResultEntity<Object> getCurrentUserInfo() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCurrentUserInfo());
     }
 
@@ -132,6 +130,12 @@ public class UserController {
     @ApiOperation("用户修改个人密码")
     public ResultEntity<Object> updatePassword(@Validated @RequestBody ChangePasswordDTO dto) {
         return ResultEntityBuild.build(service.updatePassword(dto));
+    }
+
+    @PostMapping("/getUserListByIds")
+    @ApiOperation("批量查询用户信息")
+    public ResultEntity<Object> getUserListByIds(@Validated @RequestBody List<Long> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUserListByIds(ids));
     }
 
 }

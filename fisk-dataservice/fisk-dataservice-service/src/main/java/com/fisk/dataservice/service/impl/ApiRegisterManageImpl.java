@@ -16,6 +16,7 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
 import com.fisk.common.utils.SqlParmUtils;
+import com.fisk.dataservice.dto.app.AppApiSubDTO;
 import com.fisk.dataservice.enums.DataSourceTypeEnum;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.entity.*;
@@ -27,6 +28,8 @@ import com.fisk.dataservice.map.ApiRegisterMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,9 +74,30 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Resource
     UserHelper userHelper;
 
+    @Resource
+    private UserClient userClient;
+
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
-        return baseMapper.getAll(query.page, query);
+        Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
+            ResultEntity<UserDTO> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds != null) {
+                List<UserDTO> userDTOS = Collections.singletonList(userListByIds.getData());
+                if (CollectionUtils.isNotEmpty(userDTOS)) {
+                    all.getRecords().forEach(e -> {
+                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
+                        if (first.isPresent()) {
+                            UserDTO userDTO = first.get();
+                            if (userDTO != null)
+                                e.createUser = userDTO.userAccount;
+                        }
+                    });
+                }
+            }
+        }
+        return all;
     }
 
     @Override
@@ -84,6 +108,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
             List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
+            List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
+            ResultEntity<UserDTO> userListByIds = userClient.getUserListByIds(userIds);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
                     Optional<AppApiPO> first = subscribeListByAppId.stream().filter(item -> item.getApiId() == e.id).findFirst();
@@ -91,6 +117,19 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                         e.apiSubState = 1;
                     }
                 });
+            }
+            if (userListByIds != null) {
+                List<UserDTO> userDTOS = Collections.singletonList(userListByIds.getData());
+                if (CollectionUtils.isNotEmpty(userDTOS)) {
+                    apiSubVOS.forEach(e -> {
+                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
+                        if (first.isPresent()) {
+                            UserDTO userDTO = first.get();
+                            if (userDTO != null)
+                                e.createUser = userDTO.userAccount;
+                        }
+                    });
+                }
             }
             pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
             dto.current = dto.current - 1;

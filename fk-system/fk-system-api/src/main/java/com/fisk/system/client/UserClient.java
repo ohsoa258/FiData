@@ -6,6 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 /**
  * @author Lock
  *
@@ -35,5 +37,9 @@ public interface UserClient {
      */
     @GetMapping("/attribute/getServiceRegistryList")
     ResultEntity<Object> getServiceRegistryList();
+
+
+    @GetMapping("/info/getUserListByIds")
+    ResultEntity<UserDTO> getUserListByIds(@RequestParam("ids") List<Long> ids);
 
 }

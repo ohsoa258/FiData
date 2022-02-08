@@ -2,12 +2,15 @@ package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.system.dto.*;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.dto.userinfo.UserQueryDTO;
 import com.fisk.system.dto.userinfo.UserValidDTO;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -26,6 +29,7 @@ public interface IUserService {
 
     /**
      * 添加用户
+     *
      * @param dto dto
      * @param dto
      * @return 返回值
@@ -67,6 +71,7 @@ public interface IUserService {
 
     /**
      * 用户列表
+     *
      * @param query
      * @return
      */
@@ -82,12 +87,14 @@ public interface IUserService {
 
     /**
      * 获取当前登录人信息
+     *
      * @return 登录用户名
      */
     UserInfoCurrentDTO getCurrentUserInfo();
 
     /**
      * 修改用户密码
+     *
      * @param dto
      * @return 返回值
      */
@@ -95,12 +102,14 @@ public interface IUserService {
 
     /**
      * 获取用户表相关字段
+     *
      * @return
      */
     List<FilterFieldDTO> getUserInfoColumn();
 
     /**
      * 设置用户是否有效
+     *
      * @param dto
      * @return
      */
@@ -108,9 +117,18 @@ public interface IUserService {
 
     /**
      * 用户更改密码
+     *
      * @param dto
      * @return
      */
     ResultEnum updatePassword(ChangePasswordDTO dto);
+
+    /**
+     * 批量查询用户信息
+     *
+     * @param ids
+     * @return 用户列表
+     */
+    List<UserDTO> getUserListByIds(List<Long> ids);
 
 }

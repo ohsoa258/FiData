@@ -16,9 +16,18 @@ public interface UserMapper extends FKBaseMapper<UserPO> {
 
     /**
      * 获取用户列表
+     *
      * @param page
      * @param dto
      * @return
      */
-    Page<UserDTO> userList(Page<UserDTO> page, @Param("query")UserPageDTO dto);
+    Page<UserDTO> userList(Page<UserDTO> page, @Param("query") UserPageDTO dto);
+
+    /**
+     * 批量查询用户信息
+     *
+     * @param ids
+     * @return 用户列表
+     */
+    List<UserDTO> getUserListByIds(@Param("ids") List<Long> ids);
 }

@@ -20,7 +20,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.filter",
         "com.fisk.common.actuators"})
 @MapperScan("com.fisk.dataservice.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client","com.fisk.datamodel.client"})
+@EnableFeignClients(basePackages = {
+        "com.fisk.auth.client",
+        "com.fisk.task.client",
+        "com.fisk.datamodel.client",
+        "com.fisk.system.client"
+})
 @EnableApolloConfig
 public class FkDataServiceApplication {
     public static void main(String[] args) {
