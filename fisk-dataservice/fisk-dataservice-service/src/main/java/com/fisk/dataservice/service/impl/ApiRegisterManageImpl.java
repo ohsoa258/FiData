@@ -80,7 +80,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
+            List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (userListByIds != null) {
                 List<UserDTO> userDTOS = userListByIds.getData();
@@ -107,8 +107,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
             List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
-            List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
                     Optional<AppApiPO> first = subscribeListByAppId.stream().filter(item -> item.getApiId() == e.id).findFirst();
@@ -117,6 +115,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                     }
                 });
             }
+            pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
+            dto.current = dto.current - 1;
+            apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+            List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
             if (userListByIds != null) {
                 List<UserDTO> userDTOS = userListByIds.getData();
                 if (CollectionUtils.isNotEmpty(userDTOS)) {
@@ -130,9 +133,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                     });
                 }
             }
-            pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
-            dto.current = dto.current - 1;
-            apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
         }
         pageDTO.setItems(apiSubVOS);
         return pageDTO;
