@@ -450,7 +450,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (fieldConfigVO.fieldType.contains("INT2")
                     || fieldConfigVO.fieldType.contains("INT4")
                     || fieldConfigVO.fieldType.contains("INT8")) {
-                fieldConfigVO.fieldType = "INT";
+                fieldConfigVO.fieldType = "INT".toLowerCase();
             }
 
             // 转换表字段类型
@@ -524,18 +524,18 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         List<String> fieldList = new LinkedList<>();
 
         if (integerType.contains(fieldType.toLowerCase())) {
-            fieldList.add("INT");
+            fieldList.add("INT".toLowerCase());
         } else if (textTpye.contains(fieldType.toLowerCase())) {
-            fieldList.add("TEXT");
+            fieldList.add("TEXT".toLowerCase());
         } else if (accurateType.contains(fieldType.toLowerCase())
                 || otherType.contains(fieldType.toLowerCase())) {
-            fieldList.add("FLOAT");
+            fieldList.add("FLOAT".toLowerCase());
         } else if (fieldType.toLowerCase().contains(timeType)) {
-            fieldList.add("TIMESTAMP");
+            fieldList.add("TIMESTAMP".toLowerCase());
         } else if (ncharType.contains(fieldType.toLowerCase())) {
-            fieldList.add("NVARCHAR");
+            fieldList.add("NVARCHAR".toLowerCase());
         } else {
-            fieldList.add("VARCHAR");
+            fieldList.add("VARCHAR".toLowerCase());
         }
         return fieldList;
     }
