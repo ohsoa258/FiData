@@ -101,7 +101,7 @@ public interface INifiComponentsBuild {
     /**
      * 创建ExecuteSQL组件
      *
-     * @param data dto
+     * @param data    dto
      * @param autoEnd auto end
      * @return Processor组件
      */
@@ -157,6 +157,7 @@ public interface INifiComponentsBuild {
 
     /**
      * 创建EvaluateJsonPath组件
+     *
      * @param dto dto
      * @return Processor组件
      */
@@ -168,7 +169,7 @@ public interface INifiComponentsBuild {
      * @param groupId  组id
      * @param sourceId 源组件的id
      * @param targetId 目标组件的id
-     * @param type 自动结束的流程
+     * @param type     自动结束的流程
      * @return 连接entity
      */
     BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);
@@ -176,7 +177,7 @@ public interface INifiComponentsBuild {
     /**
      * 查询所有的分组
      *
-     * @param groupId  组id
+     * @param groupId 组id
      * @return 所有的分组
      */
     BusinessResult<ProcessGroupsVO> getAllGroups(String groupId);
@@ -184,33 +185,37 @@ public interface INifiComponentsBuild {
     /**
      * 查询分组个数
      *
-     * @param groupId  组id
+     * @param groupId 组id
      * @return 所有的分组
      */
     int getGroupCount(String groupId);
 
     /**
      * Processor组件状态设置为开启
+     *
      * @param groupId 组id
-     * @param entity 需要设置的组件
+     * @param entity  需要设置的组件
      * @return 设置结果
      */
     List<ProcessorEntity> enabledProcessor(String groupId, ProcessorEntity... entity);
 
     /**
      * Processor组件状态设置为开启
+     *
      * @param groupId 组id
-     * @param entity 需要设置的组件
+     * @param entity  需要设置的组件
      * @return 设置结果
      */
     List<ProcessorEntity> enabledProcessor(String groupId, List<ProcessorEntity> entity);
 
     /**
      * 查询组件
+     *
      * @param id 组件id
      * @return 组件entity
      */
     ProcessorEntity getProcessor(String id);
+
     /**
      * 创建splitjson组件
      *
@@ -218,59 +223,125 @@ public interface INifiComponentsBuild {
      * @return Processor组件
      */
     BusinessResult<ProcessorEntity> buildSplitJsonProcess(BuildSplitJsonProcessorDTO data);
-    /*
-    * 调用存储过程
-    * */
-    BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
-    /*
-    * 定义insert语句values参数
-    * */
-    BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO config,BuildProcessEvaluateJsonPathDTO buildProcessEvaluateJsonPathDTO);
-    /*
-    * 拼装insert语句
-    * */
-    BusinessResult<ProcessorEntity> buildAssembleSqlProcess(DataAccessConfigDTO config,BuildReplaceTextProcessorDTO data);
 
+    /**
+     * 调用存储过程
+     *
+     * @param dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
+
+    /**
+     * 定义insert语句values参数
+     *
+     * @param config                          config
+     * @param buildProcessEvaluateJsonPathDTO buildProcessEvaluateJsonPathDTO
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO config, BuildProcessEvaluateJsonPathDTO buildProcessEvaluateJsonPathDTO);
+
+    /**
+     * 拼装insert语句
+     *
+     * @param config config
+     * @param data   data
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildAssembleSqlProcess(DataAccessConfigDTO config, BuildReplaceTextProcessorDTO data);
+
+    /**
+     * ExecuteSQLRecordProcess
+     *
+     * @param executeSQLRecordDTO executeSQLRecordDTO
+     * @return Processor组件
+     */
     BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcess(ExecuteSQLRecordDTO executeSQLRecordDTO);
 
+    /**
+     * buildPutDatabaseRecordProcess
+     *
+     * @param putDatabaseRecordDTO putDatabaseRecordDTO
+     * @return Processor组件
+     */
     BusinessResult<ProcessorEntity> buildPutDatabaseRecordProcess(PutDatabaseRecordDTO putDatabaseRecordDTO);
 
+    /**
+     * buildAvroReaderService
+     *
+     * @param data data
+     * @return 控制器服务
+     */
     BusinessResult<ControllerServiceEntity> buildAvroReaderService(BuildAvroReaderServiceDTO data);
 
+    /**
+     * buildUpdateRecord
+     *
+     * @param buildUpdateRecordDTO buildUpdateRecordDTO
+     * @return Processor组件
+     */
     BusinessResult<ProcessorEntity> buildUpdateRecord(BuildUpdateRecordDTO buildUpdateRecordDTO);
 
+    /**
+     * buildAvroRecordSetWriterService
+     *
+     * @param data data
+     * @return 控制器服务
+     */
     BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BuildAvroRecordSetWriterServiceDTO data);
 
-    /*
+    /**
      * 更新组件配置
-     * */
+     *
+     * @param groupId  groupId
+     * @param entities entities
+     * @return Processor组件集合
+     */
     List<ProcessorEntity> updateProcessorConfig(String groupId, List<ProcessorEntity> entities);
-    /*
+
+    /**
      * 停止组件
-     * */
-     List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities);
+     *
+     * @param groupId  groupId
+     * @param entities entities
+     * @return Processor组件集合
+     */
+    List<ProcessorEntity> stopProcessor(String groupId, List<ProcessorEntity> entities);
 
-     /*
+    /**
      * 修改组件调度
-     * */
-     ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod);
+     *
+     * @param groupId            groupId
+     * @param ProcessorId        ProcessorId
+     * @param schedulingStrategy schedulingStrategy
+     * @param schedulingPeriod   schedulingPeriod
+     * @return ResultEnum
+     */
+    ResultEnum modifyScheduling(String groupId, String ProcessorId, String schedulingStrategy, String schedulingPeriod);
 
-    /*
+    /**
      * 清空nifi组件队列
-     * */
-     ResultEnum emptyNifiConnectionQueue(String groupId);
+     *
+     * @param groupId groupId
+     * @return ResultEnum
+     */
+    ResultEnum emptyNifiConnectionQueue(String groupId);
 
-
-    /*
+    /**
      * 修改控制器服务状态
-     * */
-     ResultEnum controllerServicesRunStatus(String controllerServicesId);
+     *
+     * @param controllerServicesId controllerServicesId
+     * @return ResultEnum
+     */
+    ResultEnum controllerServicesRunStatus(String controllerServicesId);
 
-
-    /*
+    /**
      * 删除nifi流程
-     * */
-     ResultEnum deleteNifiFlow(DataModelVO dataModelVO);
+     *
+     * @param dataModelVO dataModelVO
+     * @return ResultEnum
+     */
+    ResultEnum deleteNifiFlow(DataModelVO dataModelVO);
 
     /**
      * 创建input port组件
@@ -290,6 +361,7 @@ public interface INifiComponentsBuild {
 
     /**
      * 创建input_port连接
+     *
      * @param buildConnectDTO buildConnectDTO
      * @return 执行结果
      */
@@ -303,48 +375,78 @@ public interface INifiComponentsBuild {
      */
     ConnectionEntity buildOutPortPortConnections(BuildConnectDTO buildConnectDTO);
 
-    /*
-    * 删除input组件
-    * */
+    /**
+     * 删除input组件
+     *
+     * @param portEntities portEntities
+     * @return ResultEnum
+     */
     ResultEnum deleteNifiInputProcessor(List<PortEntity> portEntities);
 
-    /*
-    * 删除output组件
-    * */
+    /**
+     * 删除output组件
+     *
+     * @param portEntities portEntities
+     * @return ResultEnum
+     */
     ResultEnum deleteNifiOutputProcessor(List<PortEntity> portEntities);
 
-    /*
-    * 修改output 组件状态
-    * */
-    ResultEnum updateOutputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
+    /**
+     * 修改output 组件状态
+     *
+     * @param portEntities        portEntities
+     * @param portRunStatusEntity portRunStatusEntity
+     * @return ResultEnum
+     */
+    ResultEnum updateOutputStatus(List<PortEntity> portEntities, PortRunStatusEntity portRunStatusEntity);
 
     /**
-     *修改input组件状态
+     * 修改input组件状态
+     *
+     * @param portEntities        portEntities
+     * @param portRunStatusEntity portRunStatusEntity
+     * @return ResultEnum
      */
-    ResultEnum updateInputStatus(List<PortEntity> portEntities,PortRunStatusEntity portRunStatusEntity);
-    /*
-    * 创建RedisConnectionPoolService控制器服务
-    * */
+    ResultEnum updateInputStatus(List<PortEntity> portEntities, PortRunStatusEntity portRunStatusEntity);
+
+    /**
+     * 创建RedisConnectionPoolService控制器服务
+     *
+     * @param controllerServiceEntity controllerServiceEntity
+     * @return ControllerServiceEntity 控制器服务
+     */
     BusinessResult<ControllerServiceEntity> createRedisConnectionPoolService(BuildRedisConnectionPoolServiceDTO controllerServiceEntity);
 
-    /*
-     * 创建RedisConnectionPoolService控制器服务
-     * */
+    /**
+     * 创建RedisDistributedMapCacheClientService控制器服务
+     *
+     * @param controllerServiceEntity controllerServiceEntity
+     * @return ControllerServiceEntity 控制器服务
+     */
     BusinessResult<ControllerServiceEntity> createRedisDistributedMapCacheClientService(BuildRedisDistributedMapCacheClientServiceDTO controllerServiceEntity);
 
-    /*
-    * 创建notify组件
-    * */
+    /**
+     * 创建notify组件
+     *
+     * @param buildNotifyProcessorDTO buildNotifyProcessorDTO
+     * @return ProcessorEntity
+     */
     BusinessResult<ProcessorEntity> createNotifyProcessor(BuildNotifyProcessorDTO buildNotifyProcessorDTO);
 
-    /*
-    * 创建wait组件
-    * */
+    /**
+     * 创建wait组件
+     *
+     * @param buildWaitProcessorDTO buildWaitProcessorDTO
+     * @return ProcessorEntity
+     */
     BusinessResult<ProcessorEntity> createWaitProcessor(BuildWaitProcessorDTO buildWaitProcessorDTO);
 
-    /*
-    * 创建漏斗
-    * */
+    /**
+     * 创建漏斗
+     *
+     * @param funnelDTO funnelDTO
+     * @return FunnelEntity
+     */
     BusinessResult<FunnelEntity> createFunnel(FunnelDTO funnelDTO);
 
 
