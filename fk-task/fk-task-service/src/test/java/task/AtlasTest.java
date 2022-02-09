@@ -9,9 +9,9 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.service.IAtlasBuildInstance;
-import com.fisk.task.service.IBuildTaskService;
-import com.fisk.task.service.IDorisBuild;
+import com.fisk.task.service.atlas.IAtlasBuildInstance;
+import com.fisk.task.service.task.IBuildTaskService;
+import com.fisk.task.service.doris.IDorisBuild;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +21,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**

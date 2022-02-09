@@ -67,5 +67,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      * */
     public String queryEndTime;
 
+    /*
+    * 应用名称(pgtopg)
+    * */
+    public String appName;
+
 
 }

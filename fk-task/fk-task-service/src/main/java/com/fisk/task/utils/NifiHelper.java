@@ -5,14 +5,24 @@ import com.davis.client.api.*;
 import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.RevisionDTO;
 import com.fisk.common.constants.NifiConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 /**
  * @author gy
  */
+@Slf4j
+@Component
 public class NifiHelper {
+    public static String basePath;
+    @Value("${nifi.basePath}")
+    public static void setBasePath(String basePath) {
+        NifiHelper.basePath = basePath;
+    }
 
     /**
      * 获取process组的api操作类
@@ -56,7 +66,7 @@ public class NifiHelper {
      */
     public static ApiClient getApiClient() {
         ApiClient apiClient = new ApiClient();
-        apiClient.setBasePath(NifiConstants.ApiConstants.BASE_PATH);
+        apiClient.setBasePath(basePath);
         return apiClient;
     }
 

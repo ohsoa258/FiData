@@ -8,7 +8,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IDorisBuild;
+import com.fisk.task.service.doris.IDorisBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;

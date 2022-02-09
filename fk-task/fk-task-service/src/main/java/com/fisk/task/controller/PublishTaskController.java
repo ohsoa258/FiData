@@ -11,7 +11,7 @@ import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
-import com.fisk.task.service.IBuildTaskService;
+import com.fisk.task.service.task.IBuildTaskService;
 import com.google.gson.Gson;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;

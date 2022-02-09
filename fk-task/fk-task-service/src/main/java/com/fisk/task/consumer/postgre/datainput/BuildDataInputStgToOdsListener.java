@@ -10,7 +10,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IPostgreBuild;
+import com.fisk.task.service.nifi.IPostgreBuild;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;

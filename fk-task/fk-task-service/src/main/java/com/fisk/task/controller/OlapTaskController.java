@@ -4,11 +4,9 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
-import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
-import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.entity.OlapPO;
-import com.fisk.task.service.IBuildTaskService;
-import com.fisk.task.service.IOlap;
+import com.fisk.task.service.task.IBuildTaskService;
+import com.fisk.task.service.nifi.IOlap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

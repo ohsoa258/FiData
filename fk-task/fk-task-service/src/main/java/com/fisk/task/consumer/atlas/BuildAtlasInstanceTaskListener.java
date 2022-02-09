@@ -2,7 +2,6 @@ package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -10,7 +9,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IAtlasBuildInstance;
+import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -20,9 +19,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author: DennyHui

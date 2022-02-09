@@ -7,7 +7,7 @@ import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLLogMapper;
-import com.fisk.task.service.IDorisIncrementalService;
+import com.fisk.task.service.doris.IDorisIncrementalService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;

@@ -8,23 +8,17 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
-import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.datamodel.vo.DataModelTableVO;
-import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.controller.PublishTaskController;
-import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
-import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IDorisBuild;
-import com.fisk.task.service.INifiComponentsBuild;
-import com.fisk.task.service.IOlap;
+import com.fisk.task.service.doris.IDorisBuild;
+import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.service.nifi.IOlap;
 import com.rabbitmq.client.Channel;
-import jdk.nashorn.internal.parser.JSONParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
@@ -32,9 +26,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Description: 创建模型

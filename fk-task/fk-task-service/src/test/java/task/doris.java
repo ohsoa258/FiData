@@ -5,7 +5,7 @@ import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.mapper.TBETLLogMapper;
-import com.fisk.task.service.IDorisIncrementalService;
+import com.fisk.task.service.doris.IDorisIncrementalService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

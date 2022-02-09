@@ -12,7 +12,6 @@ import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
@@ -39,13 +38,13 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
-import com.fisk.task.service.IDorisBuild;
-import com.fisk.task.service.INifiComponentsBuild;
-import com.fisk.task.service.IPostgreBuild;
-import com.fisk.task.service.ITaskDwDim;
-import com.fisk.task.service.impl.AppNifiSettingServiceImpl;
-import com.fisk.task.service.impl.NifiConfigServiceImpl;
-import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.doris.IDorisBuild;
+import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.service.nifi.IPostgreBuild;
+import com.fisk.task.service.nifi.ITaskDwDim;
+import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
+import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
@@ -177,6 +176,7 @@ public class BuildDataModelDorisTableListener
                 bfd.synMode=modelPublishTableDTO.synMode;
                 bfd.queryStartTime = modelPublishTableDTO.queryStartTime;
                 bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
+                bfd.appName = inpData.businessAreaName;
             if (modelPublishTableDTO.createType == 0) {
                 //类型为物理表
                 bfd.type= OlapTableEnum.DIMENSION;

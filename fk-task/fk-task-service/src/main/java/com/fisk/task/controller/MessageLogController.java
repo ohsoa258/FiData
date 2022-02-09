@@ -5,7 +5,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.task.dto.MessageLogQuery;
-import com.fisk.task.service.IWsMessageService;
+import com.fisk.task.service.task.IWsMessageService;
 import com.fisk.task.vo.WsMessageLogVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

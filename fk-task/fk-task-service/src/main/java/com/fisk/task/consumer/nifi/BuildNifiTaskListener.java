@@ -31,17 +31,15 @@ import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.NifiConfigPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.task.entity.TBETLIncrementalPO;
-import com.fisk.task.enums.BusinessOperatorEnum;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
-import com.fisk.task.service.INifiComponentsBuild;
-import com.fisk.task.service.impl.AppNifiSettingServiceImpl;
-import com.fisk.task.service.impl.NifiConfigServiceImpl;
-import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
+import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.rabbitmq.client.Channel;
@@ -52,12 +50,10 @@ import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -429,7 +425,7 @@ public class BuildNifiTaskListener {
             } else {
                 groupConfig.newApp = true;
             }
-            groupConfig.appName = tableName;
+            groupConfig.appName = buildNifiFlowDTO.appName;
             groupConfig.appDetails = tableName;
             cfgDsConfig.componentId = nifiConfigPO.componentId;
             taskGroupConfig.appName = tableName;
@@ -451,7 +447,7 @@ public class BuildNifiTaskListener {
             data.taskGroupConfig = taskGroupConfig;
             data.processorConfig = processorConfig;
             data.modelPublishFieldDTOList=fieldDetails.data;
-            if(getTableBusinessDTO!=null){
+            if(getTableBusinessDTO!=null&&getTableBusinessDTO.details!=null){
                 //data.businessDTO=getTableBusinessDTO.details;
                 TableBusinessDTO tableBusinessDTO = new TableBusinessDTO();
                 BeanUtils.copyProperties(getTableBusinessDTO.details,tableBusinessDTO);
@@ -1360,13 +1356,6 @@ public class BuildNifiTaskListener {
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
         String sql="";
-        if(Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())){
-            sql+="DROP TABLE IF EXISTS temp_json;CREATE TEMP TABLE temp_json(\n" +
-                    "\t\t\t\"associatedimensionname\" VARCHAR(255),\n" +
-                    "\t\t\t\"relevancy\" VARCHAR(255),\n" +
-                    "\t\t\t\"id\" VARCHAR(255)\n" +
-                    "\t\t\t);";
-        }
         sql+="call public."+funcName+"('";
         if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
             if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {

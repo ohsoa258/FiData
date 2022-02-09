@@ -2,11 +2,10 @@ package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.service.IAtlasBuildInstance;
+import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;

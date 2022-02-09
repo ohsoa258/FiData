@@ -5,8 +5,8 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
-import com.fisk.task.service.INifiComponentsBuild;
-import com.fisk.task.service.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
