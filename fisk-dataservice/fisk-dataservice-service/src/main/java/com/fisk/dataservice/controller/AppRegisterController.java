@@ -32,6 +32,12 @@ public class AppRegisterController {
     @Resource
     private IAppRegisterManageService service;
 
+    @ApiOperation(value = "查询下游系统总数")
+    @GetMapping("/getAppCount")
+    public ResultEntity<Object> getAppCount() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppCount());
+    }
+
     @ApiOperation(value = "应用过滤字段")
     @GetMapping("/getColumn")
     public ResultEntity<Object> getBusinessColumn() {

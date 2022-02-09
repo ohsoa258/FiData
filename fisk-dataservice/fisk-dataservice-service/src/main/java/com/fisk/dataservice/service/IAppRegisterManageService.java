@@ -24,6 +24,12 @@ import java.util.List;
 public interface IAppRegisterManageService extends IService<AppConfigPO> {
 
     /**
+     * 查询下游系统总数
+     * @return 字段
+     */
+    Integer getAppCount();
+
+    /**
      * 获取过滤器表字段
      * @return 字段
      */

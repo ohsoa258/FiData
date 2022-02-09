@@ -72,11 +72,21 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Resource
     private ApiFieldMapper apiFieldMapper;
 
-    @Autowired
-    private ConfigUtil configUtil;
+//    @Autowired
+//    private ConfigUtil configUtil;
 
     @Value("${dataservice.pdf.path}")
     private String templatePath;
+
+    @Override
+    public Integer getAppCount() {
+        QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AppConfigPO::getDelFlag, 1);
+        Integer appCount = baseMapper.selectCount(queryWrapper);
+        if (appCount == null)
+            appCount = 0;
+        return appCount;
+    }
 
     @Override
     public List<FilterFieldDTO> getColumn() {
@@ -231,6 +241,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         List<AppApiSubDTO> collect = dto.appApiDto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect))
             return ResultEnum.DS_APPAPIDOC_DISABLE;
+        dto.appApiDto = collect;
         // PS：APP和API是否有效在订阅列表页已验证有效性,此处不做重复验证。
 
         List<Integer> apiIdList = dto.appApiDto.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
@@ -616,7 +627,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 }
             }
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
-            apiBasicInfoDTO.apiRequestExamples=String.format("{\n" +
+            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
                     " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
                     " &nbsp;&nbsp;\"parmList\": {      --HashMap\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"parm1\": \"value\" --%s\n" +
@@ -654,7 +665,8 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +
-                    "}", addIndex + ".9");;
+                    "}", addIndex + ".9");
+            ;
             /* 设置API返回参数 end */
 
             /* 设置API目录 start */

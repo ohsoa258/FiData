@@ -391,7 +391,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto);
             rs.close();
         } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
+            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR,e.getMessage());
         }
         return apiPreviewVO;
     }
