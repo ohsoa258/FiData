@@ -32,10 +32,15 @@ public class Home {
 
         // 获取目标表
         List<JsonTableData> targetTable = getTargetTable(tableNameList);
+        System.out.println("json = " + data);
+        targetTable.forEach(System.out::println);
         // 获取Json的schema信息
         List<JsonSchema> schemas = getJsonSchema();
+//        schemas.forEach(System.out::println);
         // json根节点处理
         rootNodeHandler(schemas, data, targetTable);
+        targetTable.forEach(System.out::println);
+        int a = 1 / 0;
         return targetTable;
     }
 

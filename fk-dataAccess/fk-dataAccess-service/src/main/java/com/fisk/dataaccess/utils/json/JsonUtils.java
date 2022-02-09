@@ -14,12 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,11 +32,11 @@ public class JsonUtils {
             "\t\t\"name\": \"张三\",\n" +
             "\t\t\"age\": 16,\n" +
             "\t\t\"createTime\": \"2022-1-22 12:00:00\",\n" +
-            "\t\t\"role\": [{\n" +
+            "\t\t\"tb_role\": [{\n" +
             "\t\t\t\"userId\": 1,\n" +
             "\t\t\t\"roleId\": 1,\n" +
             "\t\t\t\"roleName\": \"role1\",\n" +
-            "\t\t\t\"menus\": [{\n" +
+            "\t\t\t\"tb_menu\": [{\n" +
             "\t\t\t\t\"roleId\": 1,\n" +
             "\t\t\t\t\"menuName\": \"menu1\",\n" +
             "\t\t\t\t\"menuSrc\": \"/menu1\"\n" +
@@ -58,7 +53,7 @@ public class JsonUtils {
             "\t\t\t\"userId\": 1,\n" +
             "\t\t\t\"roleId\": 2,\n" +
             "\t\t\t\"roleName\": \"role2\",\n" +
-            "\t\t\t\"menus\": [{\n" +
+            "\t\t\t\"tb_menu\": [{\n" +
             "\t\t\t\t\"roleId\": 2,\n" +
             "\t\t\t\t\"menuName\": \"menu21\",\n" +
             "\t\t\t\t\"menuSrc\": \"/menu21\"\n" +
@@ -81,7 +76,7 @@ public class JsonUtils {
             "\t\t\"name\": \"李四\",\n" +
             "\t\t\"age\": 17,\n" +
             "\t\t\"createTime\": \"2022-1-22 12:30:00\",\n" +
-            "\t\t\"role\": [{\n" +
+            "\t\t\"tb_role\": [{\n" +
             "\t\t\t\"userId\": 2,\n" +
             "\t\t\t\"roleId\": 4,\n" +
             "\t\t\t\"roleName\": \"role4\"\n" +
@@ -100,8 +95,9 @@ public class JsonUtils {
 
     public static void main(String[] args) {
         // 测试时间
-        Instant inst1 = Instant.now();
+//        Instant inst1 = Instant.now();
         JSONObject json = JSON.parseObject(JSONSTR);
+        System.out.println("json = " + json);
 
         // 封装数据库存储的数据结构
         List<ApiTableDTO> apiTableDtoList = getApiTableDtoList01();
@@ -110,9 +106,12 @@ public class JsonUtils {
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
         // 获取目标表
         List<JsonTableData> targetTable = getTargetTable(tableNameList);
+        targetTable.forEach(System.out::println);
         // 获取Json的schema信息
 //        List<JsonSchema> schemas = getJsonSchema(apiTableDtoList);
         List<JsonSchema> schemas = test01(apiTableDtoList);
+//        schemas.forEach(System.out::println);
+        System.out.println("====================");
         try {
             // json根节点处理
             rootNodeHandler(schemas, json, targetTable);
@@ -123,9 +122,9 @@ public class JsonUtils {
             // ods_abbreviationName_tableName
             pgsqlUtils.executeBatchPgsql("", targetTable);
 
-            Instant inst2 = Instant.now();
-            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
-            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
+//            Instant inst2 = Instant.now();
+//            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
+//            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
         } catch (Exception e) {
             System.out.println("执行失败");
         }
@@ -164,7 +163,7 @@ public class JsonUtils {
         apiTableDTO1.list = fieldsDTOS1;
         List<String> ch = new ArrayList<>();
         ch.add("tb_role");
-        ch.add("tb_menu");
+//        ch.add("tb_menu");
         apiTableDTO1.childTableName = ch;
 
 
@@ -426,35 +425,44 @@ public class JsonUtils {
 
     private static List<JsonSchema> test01(List<ApiTableDTO> apiTableDtoList) {
         List<JsonSchema> root = new ArrayList<>();
-        List<Map> list = new ArrayList<>();
         try {
+            Map<String, List<JsonSchema>> map = test03(apiTableDtoList);
+            System.out.println("map = " + map);
             for (ApiTableDTO apiTableDTO : apiTableDtoList) {
-//            for (int i = 0; i < apiTableDtoList.size(); i++) {
-//                ApiTableDTO apiTableDTO = apiTableDtoList.get(i);
-                List<JsonSchema> dataSchema = test02(apiTableDTO);
-
+//                List<JsonSchema> dataSchema = test02(apiTableDTO);
+                List<JsonSchema> mySchema = map.get(apiTableDTO.tableName);
                 // 当前为父级
                 if (apiTableDTO.pid) {
                     JsonSchema jsonSchema = JsonSchema.builder()
                             .name("data")
                             .type(JsonSchema.TypeEnum.ARRAY)
-                            .children(dataSchema)
+                            .children(mySchema)
                             .build();
                     root.add(jsonSchema);
-                    // 非父级,但存在子级
-                } else if (!CollectionUtils.isEmpty(apiTableDTO.childTableName)) {
-
                 }
-
+                // 存在子级
+                if (!CollectionUtils.isEmpty(apiTableDTO.childTableName)) {
+                    for (String childTableName : apiTableDTO.childTableName) {
+                        List<JsonSchema> jsonSchemas = map.get(childTableName);
+                        mySchema.add(JsonSchema.builder()
+                                .name(childTableName)
+                                .type(JsonSchema.TypeEnum.ARRAY)
+                                .targetTableName(apiTableDTO.tableName)
+                                .children(jsonSchemas)
+                                .build());
+                    }
+                }
             }
-        } catch (Exception e) {
             return root;
+        } catch (Exception e) {
+            System.out.println("封装节点参数有误");
+//            return root;
         }
-        return root;
+        return null;
     }
 
     /**
-     * 封装所有参数
+     * 封装表字段
      *
      * @param tableDto tableDto
      * @return
@@ -471,6 +479,23 @@ public class JsonUtils {
                     .build());
         }
         return dataSchema;
+    }
+
+    /**
+     * 封装所有参数
+     *
+     * @param apiTableDtoList tableDto
+     * @return
+     */
+    private static Map<String, List<JsonSchema>> test03(List<ApiTableDTO> apiTableDtoList) {
+        Map<String, List<JsonSchema>> map = new HashMap();
+
+        for (ApiTableDTO apiTableDTO : apiTableDtoList) {
+            List<JsonSchema> dataSchema = test02(apiTableDTO);
+            map.put(apiTableDTO.tableName, dataSchema);
+        }
+
+        return map;
     }
 
 
