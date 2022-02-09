@@ -1611,7 +1611,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e.getMessage());
         }
         return array;
     }
