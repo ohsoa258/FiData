@@ -231,7 +231,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 } else {
                     // 未勾选状态，不做任何操作
                     if (saveDTO.saveType == 1
-                            && data.apiState == ApiStateTypeEnum.Disable.getValue())
+                            && dto.apiState == ApiStateTypeEnum.Disable.getValue())
                         continue;
                     // 不存在则新增
                     AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
