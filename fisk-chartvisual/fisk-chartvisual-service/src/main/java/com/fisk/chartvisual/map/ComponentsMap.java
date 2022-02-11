@@ -1,7 +1,9 @@
 package com.fisk.chartvisual.map;
 
 import com.fisk.chartvisual.dto.ComponentsClassDTO;
+import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
 import com.fisk.chartvisual.dto.ComponentsDTO;
+import com.fisk.chartvisual.dto.ComponentsEditDTO;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
 import org.mapstruct.Mapper;
@@ -46,4 +48,25 @@ public interface ComponentsMap {
             @Mapping(source = "uploadAddress",target = "path")
     })
     ComponentsPO compDtoToPo(ComponentsDTO dto, String uploadAddress);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    ComponentsPO compEditDtoToPo(ComponentsEditDTO dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    ComponentsClassPO compClassEditDtoToPo(ComponentsClassEditDTO dto);
+
+    /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    ComponentsDTO poToDto(ComponentsPO po);
 }

@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ComponentsClassDTO;
+import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
 import com.fisk.chartvisual.dto.ComponentsDTO;
-import com.fisk.chartvisual.entity.ComponentsPO;
+import com.fisk.chartvisual.dto.ComponentsEditDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,18 +18,17 @@ import java.util.List;
 public interface ComponentsService {
 
     /**
-     * 分页查询所有组件
-     * @param page
+     * 查询所有菜单
      * @return
      */
-    ResultEntity<Page<ComponentsPO>> listData(Page<ComponentsPO> page);
+    List<ComponentsClassDTO> listData();
 
     /**
      * 根据组件id查询菜单
      * @param id
      * @return
      */
-    ResultEntity<List<ComponentsClassDTO>> selectClassById(Integer id);
+    ResultEntity<ComponentsDTO> selectClassById(Integer id);
 
     /**
      * 保存菜单
@@ -53,4 +52,32 @@ public interface ComponentsService {
      * @return
      */
     ResultEnum downloadFile(Integer id, HttpServletResponse response);
+
+    /**
+     * 修改组件
+     * @param dto
+     * @return
+     */
+    ResultEnum updateComponents(ComponentsEditDTO dto);
+
+    /**
+     * 根据id删除组件
+     * @param id
+     * @return
+     */
+    ResultEnum deleteComponents(Integer id);
+
+    /**
+     * 修改菜单
+     * @param dto
+     * @return
+     */
+    ResultEnum updateComponentsClass(ComponentsClassEditDTO dto);
+
+    /**
+     * 根据id删除菜单
+     * @param id
+     * @return
+     */
+    ResultEnum deleteComponentsClass(Integer id);
 }
