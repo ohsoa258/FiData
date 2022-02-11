@@ -32,6 +32,7 @@ public class SwaggerConfig {
     public static final String TAG_7 = "datasource-controller";
     public static final String TAG_8 = "systemWebIndex-controller";
     public static final String FTP = "ftp-controller";
+    public static final String TABLE_HISTORY = "table-history--controller";
 
     @Bean
     public Docket createRestApi() {
@@ -47,6 +48,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_7,"数据源"))
                 .tags(new Tag(TAG_8,"首页API"))
                 .tags(new Tag(FTP,"FTP数据源"))
+                .tags(new Tag(TABLE_HISTORY,"表发布历史"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
