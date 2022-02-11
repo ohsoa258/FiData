@@ -42,11 +42,11 @@ public enum ResultEnum {
      * 报表可视化服务，错误码从2000开始
      */
     VISUAL_CONNECTION_ERROR(2001, "数据源连接失败"),
-    VISUAL_LOADDRIVER_ERROR(2001, "数据库驱动加载失败"),
-    VISUAL_PARAMTER_ERROR(2002, "缺少参数"),
-    VISUAL_QUERY_ERROR(2003, "查询失败"),
-    VISUAL_IMAGE_ERROR(2003, "图片格式不正确！，请使用.jpg/.png/.bpm/.jpeg后缀的图片"),
-    VISUAL_FOLDER_ERROR(2003, "压缩包格式不正确！，请使用.zip后缀的压缩包"),
+    VISUAL_LOADDRIVER_ERROR(2002, "数据库驱动加载失败"),
+    VISUAL_PARAMTER_ERROR(2003, "缺少参数"),
+    VISUAL_QUERY_ERROR(2004, "查询失败"),
+    VISUAL_IMAGE_ERROR(2005, "图片格式不正确！，请使用.jpg/.png/.bpm/.jpeg后缀的图片"),
+    VISUAL_FOLDER_ERROR(2006, "压缩包格式不正确！，请使用.zip后缀的压缩包"),
 
     /**
      * 授权中心

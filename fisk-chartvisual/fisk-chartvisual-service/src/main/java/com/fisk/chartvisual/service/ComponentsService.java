@@ -8,6 +8,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -44,4 +45,12 @@ public interface ComponentsService {
      * @return
      */
     String saveComponents(ComponentsDTO dto,MultipartFile file);
+
+    /**
+     * 组件压缩包下载
+     * @param id
+     * @param response
+     * @return
+     */
+    ResultEnum downloadFile(Integer id, HttpServletResponse response);
 }

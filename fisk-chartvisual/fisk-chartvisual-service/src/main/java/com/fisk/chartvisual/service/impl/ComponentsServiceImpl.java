@@ -11,6 +11,7 @@ import com.fisk.chartvisual.map.ComponentsMap;
 import com.fisk.chartvisual.mapper.ComponentsClassMapper;
 import com.fisk.chartvisual.mapper.ComponentsMapper;
 import com.fisk.chartvisual.service.ComponentsService;
+import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipHelper;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipUtils;
 import com.fisk.common.response.ResultEntity;
@@ -21,14 +22,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.ZipOutputStream;
 
 import static com.fisk.chartvisual.util.dbhelper.zip.ZipHelper.isZip;
+import static com.fisk.chartvisual.util.dbhelper.zip.ZipUtils.compress;
 
 /**
  * @author WangYan
@@ -94,6 +98,58 @@ public class ComponentsServiceImpl implements ComponentsService {
         return uploadAddress;
     }
 
+    @Override
+    public ResultEnum downloadFile(Integer id, HttpServletResponse response) {
+        ComponentsPO components = componentsMapper.selectById(id);
+        if (components == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 源文件的路径
+        String zipName = components.getPath().substring(10);
+        String sourcePath = uploadPath + zipName;
+
+        try {
+            zip(sourcePath,response,zipName);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 文件夹压缩为zip文件
+     * @param sourceFileName 源文件的路径
+     * @param response 响应对象
+     * @param zipName 压缩包名
+     */
+    public static void zip(String sourceFileName, HttpServletResponse response,String zipName){
+        ZipOutputStream out = null;
+        BufferedOutputStream bos = null;
+        try {
+            //将zip以流的形式输出到前台
+            response.setHeader("content-type", "application/octet-stream");
+            response.setCharacterEncoding("utf-8");
+            // 设置浏览器响应头对应的Content-disposition
+            //参数中 testZip 为压缩包文件名，尾部的.zip 为文件后缀
+            response.setHeader("Content-disposition",
+                    "attachment;filename=" + new String(zipName.getBytes("gbk"), "iso8859-1")+".zip");
+            //创建zip输出流
+            out = new ZipOutputStream(response.getOutputStream());
+            //创建缓冲输出流
+            bos = new BufferedOutputStream(out);
+            File sourceFile = new File(sourceFileName);
+            //调用压缩函数
+            compress(out, bos, sourceFile, sourceFile.getName());
+            out.flush();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            IOCloseUtil.close(bos, out);
+        }
+    }
 
     /**
      * 将zip压缩文件上传到服务器并解压
@@ -108,7 +164,7 @@ public class ComponentsServiceImpl implements ComponentsService {
             if (!file.exists()) {
                 file.mkdir();
             }
-            String uuid = UUID.randomUUID().toString();
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             //获取文件名（包括后缀）
             String filename = zipFile.getOriginalFilename();
             String pathName = uploadPath + uuid + "-" + filename;

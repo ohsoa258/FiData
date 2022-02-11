@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * 组件管理
@@ -25,10 +26,16 @@ public class ComponentsController {
     ComponentsService componentsService;
 
 
-    @ApiOperation("保存组件")
+    @ApiOperation("保存组件并上传服务器")
     @PostMapping("/upload")
     @ResponseBody
     public ResultEntity<String> upload( ComponentsDTO dto,@RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponents(dto,file));
+    }
+
+    @ApiOperation(value = "打包文件并下载zip文件")
+    @GetMapping(value = "/downloadZip")
+    public ResultEntity<ResultEnum> downloadZip(Integer id,HttpServletResponse response) {
+        return ResultEntityBuild.build(componentsService.downloadFile(id,response));
     }
 }
