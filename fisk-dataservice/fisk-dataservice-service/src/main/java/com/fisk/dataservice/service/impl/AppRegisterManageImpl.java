@@ -195,6 +195,22 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum appSubscribe(AppApiSubSaveDTO saveDTO) {
         try {
+            if (saveDTO.saveType == 1) {
+                // 需要删除订阅的API,验证这些API是否已经启用，启用则返回提示
+                List<AppApiSubDTO> collect = saveDTO.dto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Disable.getValue()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(collect)) {
+                    List<Integer> collect1 = collect.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
+                    QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda().
+                            in(AppApiPO::getApiId, collect1)
+                            .eq(AppApiPO::getAppId, collect.get(0).appId)
+                            .eq(AppApiPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                            .eq(AppApiPO::getDelFlag, 1);
+                    List<AppApiPO> appApiPOS = appApiMapper.selectList(queryWrapper);
+                    if (CollectionUtils.isNotEmpty(appApiPOS))
+                        return ResultEnum.DS_APP_SUBAPI_ENABLE;
+                }
+            }
             for (AppApiSubDTO dto : saveDTO.dto) {
                 // 根据应用id和APIID查询是否存在订阅记录
                 QueryWrapper<AppApiPO> queryWrapper = new QueryWrapper<>();
@@ -202,12 +218,21 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                         .eq(AppApiPO::getDelFlag, 1);
                 AppApiPO data = appApiMapper.selectOne(queryWrapper);
                 if (data != null) {
-                    // 存在则修改状态，如果是api列表订阅保存，数据如果存在不做任何操作
-                    if (saveDTO.saveType == 1)
-                        continue;
-                    data.setApiState(data.apiState = dto.apiState);
-                    appApiMapper.updateById(data);
+                    if (saveDTO.saveType == 1) {
+                        // 存在&取消订阅，删除该订阅记录
+                        if (dto.apiState == ApiStateTypeEnum.Disable.getValue()) {
+                            appApiMapper.deleteByIdWithFill(data);
+                        }
+                    } else if (saveDTO.saveType == 2) {
+                        // 存在则修改状态
+                        data.setApiState(data.apiState = dto.apiState);
+                        appApiMapper.updateById(data);
+                    }
                 } else {
+                    // 未勾选状态，不做任何操作
+                    if (saveDTO.saveType == 1
+                            && data.apiState == ApiStateTypeEnum.Disable.getValue())
+                        continue;
                     // 不存在则新增
                     AppApiPO model = AppApiMap.INSTANCES.dtoToPo(dto);
                     appApiMapper.insert(model);
