@@ -54,5 +54,5 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      *
      * @return 查询结果
      */
-    List<ApiConfigPO> getListByIds(@Param("apiIds") List<Integer> apiIds);
+    List<ApiConfigPO> getListByAppApiIds(@Param("apiIds") List<Integer> apiIds, @Param("appId") Integer appId);
 }

@@ -242,13 +242,12 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         if (CollectionUtils.isEmpty(collect))
             return ResultEnum.DS_APPAPIDOC_DISABLE;
         dto.appApiDto = collect;
-        // PS：APP和API是否有效在订阅列表页已验证有效性,此处不做重复验证。
-
         List<Integer> apiIdList = dto.appApiDto.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
 
         // 第二步：查询需要生成的API接口
-        List<ApiConfigPO> apiList = apiRegisterMapper.getListByIds(apiIdList);
-        if (CollectionUtils.isEmpty(apiList))
+        List<ApiConfigPO> apiList = apiRegisterMapper.getListByAppApiIds(apiIdList, dto.appId);
+        if (CollectionUtils.isEmpty(apiList)
+                || apiList.size() != apiIdList.size())
             return ResultEnum.DS_API_EXISTS;
 
         // 第三步：查询API接口的请求参数
@@ -394,7 +393,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
         // API文档基础信息
         String jsonResult = "{\n" +
-                "    \"title\":\"MDM主数据API接口文档\",\n" +
+                "    \"title\":\"白泽API接口文档\",\n" +
                 "    \"docVersion\":\"文档版本 V1.0\",\n" +
                 "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
                 "    \"isuDate\":\"发布日期：20220101\",\n" +
@@ -519,8 +518,8 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                 "        {\n" +
                 "            \"category\":\"接口负责人\",\n" +
                 "            \"company\":\"菲斯科\",\n" +
-                "            \"fullName\":\"李家温\",\n" +
-                "            \"mailbox\":\"dick@fisksoft.com\",\n" +
+                "            \"fullName\":\"徐阳辉\",\n" +
+                "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
                 "            \"trStyle\":\"background-color: #fff\"\n" +
                 "        },\n" +
                 "        {\n" +
@@ -617,7 +616,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                             ApiRequestDTO apiRequestDTO = new ApiRequestDTO();
                             apiRequestDTO.parmName = e.parmName;
                             apiRequestDTO.isRequired = "是";
-                            apiRequestDTO.parmType = "String";
+                            apiRequestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
                             apiRequestDTO.parmDesc = e.parmDesc;
                             apiRequestDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                             apiRequestDTOS.add(apiRequestDTO);

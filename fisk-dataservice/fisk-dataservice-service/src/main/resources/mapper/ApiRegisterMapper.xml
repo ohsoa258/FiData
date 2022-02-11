@@ -48,24 +48,31 @@
         ORDER BY
         api.create_time DESC
     </select>
-    <select id="getListByIds" resultType="com.fisk.dataservice.entity.ApiConfigPO">
+    <select id="getListByAppApiIds" resultType="com.fisk.dataservice.entity.ApiConfigPO">
         SELECT
-        id,
-        api_code,
-        api_name,
-        api_desc,
-        api_type,
-        datasource_id,
-        create_sql
+        api.id,
+        api.api_code,
+        api.api_name,
+        api.api_desc,
+        api.api_type,
+        api.datasource_id,
+        api.create_sql
         FROM
-        tb_api_config
+        tb_api_config api
+        LEFT JOIN tb_app_api appapi ON api.id = appapi.api_id
         WHERE
-        del_flag = 1
+        api.del_flag = 1
+        AND appapi.del_flag = 1
+        <if test="appId !=null">
+            AND appapi.app_id = #{appId}
+        </if>
         <if test="null != apiIds and apiIds.size > 0">
-            AND  id IN
+            AND api.id IN
             <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
                 #{item}
             </foreach>
         </if>
+        ORDER BY
+        appapi.create_time DESC
     </select>
 </mapper>

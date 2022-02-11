@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author gy
+ * @author dick
  */
 @Configuration
 @EnableSwagger2
