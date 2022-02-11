@@ -105,11 +105,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private NifiConfigMapper nifiConfigMapper;
     @Resource
     private NifiConfigImpl nifiConfigImpl;
-    @Value("${spring.datasource.url}")
+    @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
     private String jdbcStr;
-    @Value("${spring.datasource.username}")
+    @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
     private String user;
-    @Value("${spring.datasource.password}")
+    @Value("${spring.datasource.dynamic.datasource.taskdb.password}")
     private String password;
     @Resource
     private GenerateCondition generateCondition;
@@ -975,40 +975,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public BuildNifiFlowDTO createPgToDorisConfig(String tableName, String selectSql) {
-        //添五张表tb_app_registration  tb_app_datasource   tb_table_access  tb_nifi_setting; tb_etl_Incremental
-        BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
-        AppRegistrationPO appRegistrationPo = new AppRegistrationPO();
-        AppDataSourcePO appDataSourcePo = new AppDataSourcePO();
-        TableAccessPO tableAccessPo = new TableAccessPO();
-        TableSyncmodePO tableSyncmodePo = new TableSyncmodePO();
-        appRegistrationPo.appName = "postgerToDoris";
-        appRegistrationPo.appDes = "postgerToDoris";
-        appRegistrationPo.appType = 1;
-        appRegistrationPo.delFlag = 1;
-        //后面加上AppRegistrationPO.id
-        appDataSourcePo.appId = appRegistrationPo.id;
-        //ConnectStr   driveType   ConnectAccount   ConnectPwd
-        appDataSourcePo.driveType = "postgresql";
-        appDataSourcePo.connectAccount = pgsqlDatamodelUsername;
-        appDataSourcePo.connectPwd = pgsqlDatamodelPassword;
-        appDataSourcePo.connectStr = pgsqlDatamodelUrl;
-        //后续补上AppRegistrationPO.id
-        tableAccessPo.appId = appRegistrationPo.id;
-        tableAccessPo.isRealtime = 1;
-        tableAccessPo.tableName = tableName;
-        tableAccessPo.delFlag = 1;
-        //可能都要返回id
-        insertTableAccessPo(tableAccessPo);
-        tableSyncmodePo.syncMode = 1;
-        //tableAccess.id
-        tableSyncmodePo.id = tableAccessPo.id;
-        EtlIncrementalPO etlIncrementalPo = new EtlIncrementalPO();
-        etlIncrementalPo.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
-        etlIncrementalMapper.insert(etlIncrementalPo);
-        buildNifiFlowDTO.appId = appRegistrationPo.id;
-        buildNifiFlowDTO.id = tableAccessPo.id;
-        buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
-        return buildNifiFlowDTO;
+        return null;
     }
 
     @Override
@@ -1333,7 +1300,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Class.forName("org.postgresql.Driver");
             Connection conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlDatamodelPassword);
             Statement st = conn.createStatement();
-            Map<String, String> converSql = converSql(query.tableName, query.querySql, null);
+            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, "").data;
             query.querySql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             //获取总条数
             String getTotalSql = "select count(*) as total from(" + query.querySql + ") as tab";
@@ -1604,7 +1571,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 st.setFetchSize(10);
             }
             assert st != null;
-            Map<String, String> converSql = converSql(query.tableName, query.querySql, po.driveType);
+            Map<String, String> converSql = publishTaskClient.converSql(query.tableName, query.querySql, po.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
@@ -1616,38 +1583,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return array;
     }
 
-    @Override
-    public Map<String, String> converSql(String tableName, String sql, String driveType) {
-        Map<String, String> paramMap = new HashMap<>();
-        if(sql.contains(SystemVariableTypeEnum.START_TIME.getValue())||sql.contains(SystemVariableTypeEnum.END_TIME.getValue())){
-            Map<String, Date> etlIncremental = etlIncrementalMapper.getEtlIncrementalByTableName(tableName);
-            if (etlIncremental != null) {
-                Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
-                Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
-                if (startTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'"+startTime+"'");
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
-                } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
-                }
-                if (endTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'"+endTime+"'");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
-                } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
-                }
-            } else {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
-                paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
-                paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
-            }
-        }
-        paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);
-        return  paramMap;
-    }
 
     @Override
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
@@ -1679,7 +1614,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        Map<String, String> converSql = converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType);
+        Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
         String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
         dto.selectSql = sql;
         dto.queryStartTime=converSql.get(SystemVariableTypeEnum.START_TIME.getValue());

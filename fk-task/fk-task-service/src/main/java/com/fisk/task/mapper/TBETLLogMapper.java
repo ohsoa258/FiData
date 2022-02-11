@@ -11,22 +11,5 @@ import org.apache.ibatis.annotations.Param;
  * Description:
  */
 public interface TBETLLogMapper extends BaseMapper<TBETLlogPO> {
-    /**
-     * 获取本次导入条数
-     * @param dbname
-     * @param code
-     * @return
-     */
-    @DS("dorisdb")
-    Integer getThisTimeStgRows(@Param("tablename") String dbname,@Param("code") String code);
 
-    /**
-     * stg to ods
-     * @param ods_tablename
-     * @param stg_tablename
-     * @param code
-     * @return
-     */
-    @DS("dorisdb")
-    Integer stgToOds(@Param("ods_tablename") String ods_tablename,@Param("stg_tablename") String stg_tablename,@Param("fk_doris_increment_code") String code);
 }

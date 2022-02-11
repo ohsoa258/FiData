@@ -18,6 +18,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.IOlap;
+import com.fisk.task.service.task.ITBETLIncremental;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -50,6 +51,8 @@ public class BuildModelTaskListener {
     IDorisBuild doris;
     @Resource
     INifiComponentsBuild iNifiComponentsBuild;
+    @Resource
+    private ITBETLIncremental itbetlIncremental;
 
     @RabbitHandler
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
@@ -85,8 +88,9 @@ public class BuildModelTaskListener {
                 doris.dorisBuildTable("DROP TABLE IF EXISTS " + olapPO.tableName);
                 doris.dorisBuildTable(olapPO.createTableSql);
                 log.info("Doris建表结束,开始创建nifi配置");
-                ResultEntity<Object> pgToDorisConfig = dataAccessClient.createPgToDorisConfig(olapPO.tableName, olapPO.selectDataSql);
-                BuildNifiFlowDTO buildNifiFlowDTO = JSON.parseObject(JSON.toJSONString(pgToDorisConfig.data), BuildNifiFlowDTO.class);
+                //添加etl日志,加kpi,区分指标与事实维度
+                itbetlIncremental.addEtlIncremental(olapPO.tableName + OlapTableEnum.KPI.getName());
+                BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
                 log.info("nifi配置结束,开始创建nifi流程");
                 buildNifiFlowDTO.userId=data.userId;
                 buildNifiFlowDTO.appId=olapPO.businessAreaId;

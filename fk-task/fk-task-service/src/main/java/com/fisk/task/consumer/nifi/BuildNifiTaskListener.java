@@ -688,7 +688,7 @@ public class BuildNifiTaskListener {
      */
     private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
         //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId,new BuildNifiFlowDTO());
         //创建数据转换json组件
         ProcessorEntity jsonRes = convertJsonProcessor(groupId, 2);
         //连接器
@@ -774,7 +774,7 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.type = dto.type.getValue();
         tableNifiSettingPO.tableName = config.targetDsConfig.targetTableName;
         //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId);
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId,dto);
         //接受消息ConsumeKafka
         ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
         componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -1623,12 +1623,15 @@ public class BuildNifiTaskListener {
      * @param cfgDbPoolId 增量配置库连接池id
      * @return 组件对象
      */
-    private ProcessorEntity queryIncrementFieldProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId) {
+    private ProcessorEntity queryIncrementFieldProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId,BuildNifiFlowDTO dto) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query Increment Field";
         querySqlDto.details = "Query Increment Field in the data source";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName);
+        if(Objects.equals(dto.type,OlapTableEnum.KPI)){
+            querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName+OlapTableEnum.KPI.getName());
+        }
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;
