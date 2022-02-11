@@ -199,15 +199,5 @@ public interface DataAccessClient {
     @GetMapping("/dataAccessTree/getDataAccessMetaData")
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 
-    /**
-     * 拼接sql替换时间
-     *
-     * @param tableName tableName
-     * @param sql sql
-     * @param driveType driveType
-     * @return 返回值
-     */
-    @GetMapping("/v3/tableAccess/converSql")
-    public ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
+
 }

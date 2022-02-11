@@ -31,6 +31,7 @@ import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +62,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     private DataAccessClient dataAccessClient;
     @Resource
     private DataModelClient dataModelClient;
+    @Resource
+    PublishTaskClient publishTaskClient;
 
 
     @Override
@@ -221,6 +224,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         try {
             if (CollectionUtils.isNotEmpty(list)) {
                 List<Integer> collect = list.stream().map(e -> detailMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+                publishTaskClient.deleteTableTopicByComponentId(collect);
             }
         } catch (Exception e) {
             return ResultEnum.SAVE_DATA_ERROR;

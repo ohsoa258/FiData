@@ -305,13 +305,4 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<FieldNameDTO> getFieldList(TableAccessNonDTO dto);
 
-    /**
-     * 替换参数,拼接sql
-     *
-     * @param tableName tableName
-     * @param sql sql
-     * @param driveType driveType
-     * @return 返回值
-     */
-    Map<String, String> converSql(String tableName, String sql, String driveType);
 }

@@ -20,6 +20,7 @@ import com.fisk.datafactory.service.INifiComponent;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiCustomWorkFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -50,6 +51,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     UserHelper userHelper;
     @Resource
     NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
+    @Resource
+    PublishTaskClient publishTaskClient;
+
 
     @Override
     public NifiCustomWorkflowDetailDTO addData(NifiCustomWorkflowDetailDTO dto) {
@@ -404,6 +408,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        //删除topic_name
+        List<Integer> ids = new ArrayList<>();
+        ids.add(Math.toIntExact(id));
+        publishTaskClient.deleteTableTopicByComponentId(ids);
 
         // TODO 修改inport&outport
 

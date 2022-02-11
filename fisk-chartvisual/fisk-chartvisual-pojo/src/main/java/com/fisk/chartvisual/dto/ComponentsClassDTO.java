@@ -2,6 +2,8 @@ package com.fisk.chartvisual.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author WangYan
  * @date 2022/2/9 15:32
@@ -9,8 +11,18 @@ import lombok.Data;
 @Data
 public class ComponentsClassDTO {
 
-    private Long id;
+    private Integer id;
     private Integer pid;
     private String name;
     private String icon;
+    private List<ComponentsClassDTO> children;
+
+    public ComponentsClassDTO(Integer id,Integer pid, String name, String icon) {
+        this.pid = pid;
+        this.name = name;
+        this.icon = icon;
+    }
+
+    public ComponentsClassDTO() {
+    }
 }

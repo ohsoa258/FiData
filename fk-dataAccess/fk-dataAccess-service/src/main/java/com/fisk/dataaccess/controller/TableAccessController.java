@@ -103,18 +103,5 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldList(dto));
     }
 
-    /**
-     * 拼接sql替换时间
-     *
-     * @param tableName tableName
-     * @param sql sql
-     * @param driveType driveType
-     * @return 返回值
-     */
-    @GetMapping("/converSql")
-    public ResultEntity<Map<String, String>> converSql(
-            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.converSql(tableName,sql, driveType));
-    }
 
 }

@@ -15,7 +15,6 @@ import java.util.Date;
  * Description:
  */
 @Data
-@DS("datainputdb")
 @TableName("tb_etl_Incremental")
 public class TBETLIncrementalPO implements Serializable {
     @TableId(type = IdType.AUTO)

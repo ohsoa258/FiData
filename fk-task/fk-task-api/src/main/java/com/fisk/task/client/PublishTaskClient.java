@@ -13,9 +13,13 @@ import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 发送任务
@@ -52,15 +56,19 @@ public interface PublishTaskClient {
 
     @PostMapping("/publishTask/atlasBuildTableAndColumn")
     ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto);
+
     /**
      * 元数据删除
+     *
      * @param entityId
      * @return
      */
     @PostMapping("/publishTask/atlasEntityDelete")
     ResultEntity<Object> publishBuildAtlasEntityDeleteTask(@RequestBody String entityId);
+
     /**
      * doris创建表BUILD_DATAMODEL_DORIS_TABLE
+     *
      * @param modelPublishDataDTO
      * @return
      */
@@ -70,6 +78,7 @@ public interface PublishTaskClient {
 
     /**
      * 建模
+     *
      * @param buildCreateModelTaskDto
      * @return
      */
@@ -77,7 +86,7 @@ public interface PublishTaskClient {
     ResultEntity<Object> publishOlapCreateModel(@RequestBody BusinessAreaGetDataDTO buildCreateModelTaskDto);
 
     @PostMapping("/olapTask/selectByName")
-    ResultEntity<Object> selectByName(@RequestParam("tableName")String tableName);
+    ResultEntity<Object> selectByName(@RequestParam("tableName") String tableName);
 
     /**
      * pgsql 删除表
@@ -88,28 +97,66 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/deletePgsqlTable")
     public ResultEntity<Object> publishBuildDeletePgsqlTableTask(@RequestBody PgsqlDelTableDTO delTable);
 
-    /*
-    * 修改调度
-    *
-    * */
+    /**
+     * 修改调度
+     *
+     * @param groupId
+     * @param ProcessorId
+     * @param schedulingStrategy
+     * @param schedulingPeriod
+     * @return
+     */
     @PostMapping("/nifi/modifyScheduling")
-    public ResultEntity<Object> modifyScheduling(@RequestParam("groupId")String groupId, @RequestParam("ProcessorId")String ProcessorId,@RequestParam("schedulingStrategy") String schedulingStrategy,@RequestParam("schedulingPeriod") String schedulingPeriod);
+    public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod);
 
-    /*
-    * 删除nifi流程
-    * */
+
+    /**
+     * 删除nifi流程
+     *
+     * @param dataModelVO
+     * @return
+     */
     @PostMapping("/nifi/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO);
 
-    /*
-    * getTableNifiSetting
-    * */
+
+    /**
+     * getTableNifiSetting
+     *
+     * @param dto
+     * @return TableNifiSettingPO
+     */
     @PostMapping("/nifi/getTableNifiSetting")
     public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto);
 
-    /*
+    /**
      * publishBuildNifiCustomWorkFlowTask
-     * */
+     *
+     * @param nifiCustomWorkListDTO
+     * @return
+     */
     @PostMapping("/publishTask/NifiCustomWorkFlow")
     public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
+
+    /**
+     * deleteTableTopicByComponentId
+     *
+     * @param ids
+     * @return
+     */
+    @PostMapping("/TableTopic/deleteTableTopicByComponentId")
+    public ResultEntity<Object> deleteTableTopicByComponentId(@RequestParam("ids") List<Integer> ids);
+
+    /**
+     * 拼接sql替换时间
+     *
+     * @param tableName tableName
+     * @param sql       sql
+     * @param driveType driveType
+     * @return 返回值
+     */
+    @GetMapping("/TBETLIncremental/converSql")
+    ResultEntity<Map<String, String>> converSql(
+            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
+
 }

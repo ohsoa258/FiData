@@ -3,8 +3,6 @@ package task;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
-import com.fisk.task.entity.TBETLlogPO;
-import com.fisk.task.mapper.TBETLLogMapper;
 import com.fisk.task.service.doris.IDorisIncrementalService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,8 +26,6 @@ import java.util.Map;
 public class doris {
 
     @Resource
-    private TBETLLogMapper logMapper;
-    @Resource
     private JdbcTemplate template;
     @Resource
     private IDorisIncrementalService doris;
@@ -45,9 +41,7 @@ public class doris {
     @DS("datainputdb")
     @Test
     public void dorisQuery() {
-        List<TBETLlogPO> loglist = logMapper.selectList(null);
-        //Assert.assertEquals(5, userList.size());
-        loglist.forEach(System.out::println);
+
     }
 
 

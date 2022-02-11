@@ -6,7 +6,6 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
-import com.fisk.task.mapper.TBETLLogMapper;
 import com.fisk.task.service.doris.IDorisIncrementalService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,8 @@ public class BuildDorisIncrementalTaskListener  {
     @Resource
     private IDorisIncrementalService doris;
 
-    @Resource
-    TBETLLogMapper etlmapper;
+
+
 
 
     @RabbitHandler
@@ -41,6 +40,6 @@ public class BuildDorisIncrementalTaskListener  {
         log.info("执行更新数据导入log状态");
         log.info("dataInfo:" + dataInfo);
         UpdateLogAndImportDataDTO inpData = JSON.parseObject(dataInfo, UpdateLogAndImportDataDTO.class);
-        doris.updateNifiLogsAndImportOdsData(inpData);
+        //doris.updateNifiLogsAndImportOdsData(inpData);
     }
 }

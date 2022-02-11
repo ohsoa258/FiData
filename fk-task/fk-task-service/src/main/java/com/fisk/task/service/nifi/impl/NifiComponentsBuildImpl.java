@@ -23,8 +23,10 @@ import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.AppNifiSettingPO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.service.pipeline.impl.TableTopicImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     TableNifiSettingServiceImpl tableNifiSettingService;
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
+    @Resource
+    TableTopicImpl tableTopic;
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -1310,6 +1314,11 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 List<String> inputportConnectIds = new ArrayList<>();
                 List<String> outputportConnectIds = new ArrayList<>();
                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
+                //删除topic_name
+                TableTopicDTO topicDTO = new TableTopicDTO();
+                topicDTO.tableId=tableNifiSettingPO.tableAccessId;
+                topicDTO.tableType=tableNifiSettingPO.type;
+                tableTopic.deleteTableTopicByTableId(topicDTO);
                 if(tableNifiSettingPO==null){
                     continue;
                 }
