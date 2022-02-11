@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 发送任务
  *
@@ -112,4 +115,20 @@ public interface PublishTaskClient {
      * */
     @PostMapping("/publishTask/NifiCustomWorkFlow")
     public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
+
+    @PostMapping("/TableTopic/deleteTableTopicByComponentId")
+    public ResultEntity<Object> deleteTableTopicByComponentId(@RequestParam("ids") List<Integer> ids);
+
+    /**
+     * 拼接sql替换时间
+     *
+     * @param tableName tableName
+     * @param sql sql
+     * @param driveType driveType
+     * @return 返回值
+     */
+    @GetMapping("/TBETLIncremental/converSql")
+    ResultEntity<Map<String, String>> converSql(
+            @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
+
 }

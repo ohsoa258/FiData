@@ -7,6 +7,7 @@ import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.enums.task.TopicTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.exception.FkException;
@@ -33,10 +34,7 @@ import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.NifiComponentsBuildImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
-import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
-import com.fisk.task.service.pipeline.impl.NifiSchedulingComponentImpl;
-import com.fisk.task.service.pipeline.impl.NotifyConfigurationImpl;
-import com.fisk.task.service.pipeline.impl.PipelineConfigurationImpl;
+import com.fisk.task.service.pipeline.impl.*;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.google.gson.Gson;
@@ -50,6 +48,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -88,6 +87,8 @@ public class BuildNifiCustomWorkFlow {
     OlapMapper olapMapper;
     @Resource
     NifiComponentsBuildImpl nifiComponentsBuild;
+    @Resource
+    TableTopicImpl tableTopic;
 
 
     @RabbitHandler
@@ -673,7 +674,7 @@ public class BuildNifiCustomWorkFlow {
             //2.拼装参数,三类nifi流程,3.调用方法生成流程
             if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAACCESS)) {
                 TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.PHYSICS.getValue()).eq("del_flag", 1).one();
-                updateTopicNames(one1.consumeKafkaProcessorId, TopicName);
+                updateTopicNames(one1.consumeKafkaProcessorId, TopicName,one1.tableAccessId,one1.type,nifiNode.workflowDetailId);
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELING)) {
                 TableNifiSettingPO one1 = new TableNifiSettingPO();
                 if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKDIMENSION)) {
@@ -681,7 +682,7 @@ public class BuildNifiCustomWorkFlow {
                 } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKFACT)) {
                     one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.FACT.getValue()).eq("del_flag", 1).one();
                 }
-                updateTopicNames(one1.consumeKafkaProcessorId, TopicName);
+                updateTopicNames(one1.consumeKafkaProcessorId, TopicName,one1.tableAccessId,one1.type,nifiNode.workflowDetailId);
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                     Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
                 BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
@@ -703,14 +704,25 @@ public class BuildNifiCustomWorkFlow {
                 }
                 log.info("表类别:" + nifiNode.type + "表id:" + nifiNode.tableId + "表信息" + olapPO);
                 TableNifiSettingPO one1 = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
-                updateTopicNames(one1.consumeKafkaProcessorId, TopicName);
+                updateTopicNames(one1.consumeKafkaProcessorId, TopicName,one1.tableAccessId,one1.type,nifiNode.workflowDetailId);
             }
         }
     }
 
-    public void updateTopicNames(String processorId, String TopicName) {
+    public void updateTopicNames(String processorId, String TopicName,int tableId,int tableType,Long workflowDetailId) {
         //停止   修改   启动
         try {
+            //更新topic_name并使用
+            TableTopicDTO topicDTO = new TableTopicDTO();
+            topicDTO.tableType = tableType;
+            topicDTO.tableId = tableId;
+            topicDTO.componentId = Math.toIntExact(workflowDetailId);
+            topicDTO.topicName = TopicName;
+            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+            tableTopic.updateTableTopicByComponentId(topicDTO);
+            List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
+            String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
+            //------------------------------------------------------
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             String id = processor.getId();
             List<ProcessorEntity> processorEntities = new ArrayList<>();
@@ -718,8 +730,8 @@ public class BuildNifiCustomWorkFlow {
             componentsBuild.stopProcessor(processor.getComponent().getParentGroupId(), processorEntities);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             Map<String, String> properties = processor.getComponent().getConfig().getProperties();
-            String topic = properties.get("topic");
-            properties.put("topic", topic + "," + TopicName);
+            //String topic = properties.get("topic");
+            properties.put("topic", consumerTopicName);
             processor.getComponent().getConfig().setProperties(properties);
             NifiHelper.getProcessorsApi().updateProcessor(id, processor);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);

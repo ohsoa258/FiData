@@ -27,10 +27,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.dto.task.AppNifiSettingPO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.NifiConfigPO;
-import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
@@ -38,6 +35,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
@@ -118,6 +116,8 @@ public class BuildNifiTaskListener {
     TableNifiSettingServiceImpl tableNifiSettingService;
     @Resource
     private TBETLIncrementalMapper incrementalMapper;
+    @Resource
+    private ITableTopicService tableTopicService;
 
     @Resource
     RestTemplate httpClient;
@@ -698,7 +698,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建log
-        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, new BuildNifiFlowDTO());
+        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, new BuildNifiFlowDTO(),new DataAccessConfigDTO());
         //连接器
         componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         //创建执行删除组件
@@ -809,7 +809,7 @@ public class BuildNifiTaskListener {
         //连接器
         componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //创建log
-        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, dto);
+        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, dto,config);
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
         componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -1263,13 +1263,13 @@ public class BuildNifiTaskListener {
      * @param tableName 表明
      * @return 组件对象
      */
-    private ProcessorEntity putLogProcessor(String groupId, String dbPoolId,BuildNifiFlowDTO dto) {
+    private ProcessorEntity putLogProcessor(String groupId, String dbPoolId,BuildNifiFlowDTO dto,DataAccessConfigDTO config) {
         BuildPutSqlProcessorDTO putSqlDto = new BuildPutSqlProcessorDTO();
         putSqlDto.name = "Put Log to Config Db";
         putSqlDto.details = "Put Log to Config Db";
         putSqlDto.groupId = groupId;
         putSqlDto.dbConnectionId = dbPoolId;
-        putSqlDto.sqlStatement = buildLogSql(dto);
+        putSqlDto.sqlStatement = buildLogSql(dto,config.processorConfig.sourceExecSqlQuery);
         putSqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
 
         BusinessResult<ProcessorEntity> putSqlRes = componentsBuild.buildPutSqlProcess(putSqlDto);
@@ -1650,7 +1650,7 @@ public class BuildNifiTaskListener {
         buildConsumeKafkaProcessorDTO.details = "ConsumeKafka";
         buildConsumeKafkaProcessorDTO.groupId = groupId;
         //管道id
-        buildConsumeKafkaProcessorDTO.GroupID = "dmp.nifi.datafactory.pipline";
+        buildConsumeKafkaProcessorDTO.GroupID = "dmp.nifi.datafactory.pipeline"+UUID.randomUUID();
         buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         buildConsumeKafkaProcessorDTO.KafkaBrokers = KafkaBrokers;
         String targetTableName = configDTO.processorConfig.targetTableName;
@@ -1665,9 +1665,9 @@ public class BuildNifiTaskListener {
     /**
      * createPublishKafkaProcessor
      *
-     * @param config      数据接入配置
+     * @param configDTO      数据接入配置
      * @param groupId     组id
-     * @param cfgDbPoolId 增量配置库连接池id
+     * @param dto
      * @return 组件对象
      */
     public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId) {
@@ -1682,7 +1682,15 @@ public class BuildNifiTaskListener {
         String targetTableName = configDTO.processorConfig.targetTableName;
         String[] s = targetTableName.split("_");
         String s1 = targetTableName.replaceFirst(s[0] + "_", "");
-        buildPublishKafkaProcessorDTO.TopicName = "dmp.datafactory.nifi." + s[0] + "." + s1;
+
+        //更新topic
+        TableTopicDTO tableTopicDTO = new TableTopicDTO();
+        tableTopicDTO.tableId = Math.toIntExact(dto.id);
+        tableTopicDTO.tableType = dto.type.getValue();
+        tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1;
+        tableTopicService.updateTableTopic(tableTopicDTO);
+        List<TableTopicDTO> tableTopicList = tableTopicService.getTableTopicList(tableTopicDTO);
+        buildPublishKafkaProcessorDTO.TopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -1778,11 +1786,16 @@ public class BuildNifiTaskListener {
      *
      * @return sql
      */
-    private String buildLogSql(BuildNifiFlowDTO dto) {
+    private String buildLogSql(BuildNifiFlowDTO dto,String selectSql) {
         String filedValues="";
         filedValues+=dto.queryStartTime==null?",'0000-01-01 00:00:00'":(",'"+dto.queryStartTime+"'");
         filedValues+=dto.queryEndTime==null?",now()":(",'"+dto.queryEndTime+"'");
-        filedValues+=",'"+dto.selectSql+"'";
+        if(dto.selectSql!=null&&dto.selectSql!=""){
+            filedValues+=",'"+dto.selectSql+"'";
+        }else{
+            filedValues+=",'"+selectSql+"'";
+        }
+
         return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql) " +
                 "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1"+filedValues+")";
     }
