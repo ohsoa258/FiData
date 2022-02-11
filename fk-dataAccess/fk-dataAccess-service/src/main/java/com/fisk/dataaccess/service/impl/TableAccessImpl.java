@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.constants.FilterSqlConstants;
-import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.exception.FkException;
@@ -67,7 +66,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
@@ -117,8 +115,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GetMetadata getMetadata;
     @Resource
     private TableSyncmodeImpl tableSyncmodeImpl;
-    @Resource
-    private EtlIncrementalMapper etlIncrementalMapper;
     @Value("${pgsql-datamodel.url}")
     public String pgsqlDatamodelUrl;
     @Value("${pgsql-datamodel.username}")
