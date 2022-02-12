@@ -4,13 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
 import com.fisk.common.exception.FkException;
-import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamanagement.dto.entity.*;
-import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
@@ -19,7 +16,6 @@ import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.platform.commons.util.PackageUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,7 +26,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author JianWenYang
@@ -68,7 +63,7 @@ public class EntityImpl implements IEntity {
     @Override
     public List<EntityTreeDTO> getEntityTreeList()
     {
-        List<EntityTreeDTO> list=new ArrayList<>();
+        List<EntityTreeDTO> list;
         Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist) {
             String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
@@ -197,16 +192,10 @@ public class EntityImpl implements IEntity {
     public ResultEnum addEntity(EntityDTO dto)
     {
         //获取所属人
-        //dto.entity.attributes.owner=userHelper.getLoginUserInfo().id.toString();
+        dto.entity.attributes.owner=userHelper.getLoginUserInfo().username;
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
-        Thread t1 = new Thread(new Runnable(){
-            @Override
-            public void run() {
-                synchronizationPgData.synchronizationPgData();
-            }
-        });
-        t1.start();
+        updateRedis();
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -214,6 +203,7 @@ public class EntityImpl implements IEntity {
     public ResultEnum deleteEntity(String guid)
     {
         ResultDataDTO<String> result = atlasClient.Delete(entityByGuid + "/" + guid);
+        updateRedis();
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }
 
@@ -233,7 +223,21 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(entityData).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        updateRedis();
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+    }
+
+    /**
+     * entity操作后,更新Redis数据
+     */
+    public void updateRedis(){
+        Thread t1 = new Thread(new Runnable(){
+            @Override
+            public void run() {
+                getEntityList();
+            }
+        });
+        t1.start();
     }
 
     @Override
@@ -273,7 +277,7 @@ public class EntityImpl implements IEntity {
     @Override
     public ResultEnum entityAssociatedMetaData(EntityAssociatedMetaDataDTO dto)
     {
-        String jsonParameter=JSONArray.toJSON(dto.testBusinessMetaData).toString();
+        String jsonParameter=JSONArray.toJSON(dto.businessMetaDataAttribute).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }

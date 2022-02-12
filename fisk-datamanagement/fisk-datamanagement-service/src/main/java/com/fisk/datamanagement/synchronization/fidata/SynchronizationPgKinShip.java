@@ -10,7 +10,6 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.datamanagement.dto.druid.FieldStructureDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
@@ -29,7 +28,7 @@ import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
-import com.fisk.task.enums.DbTypeEnum;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -78,9 +77,9 @@ public class SynchronizationPgKinShip {
     public void synchronizationKinShip()
     {
         //同步库血缘
-        //synchronizationDbKinShip();
+        synchronizationDbKinShip();
         //同步ods表与dw血缘
-        //synchronizationPgTableKinShip();
+        synchronizationPgTableKinShip();
         //同步dw表与doris血缘
         synchronizationDorisTableKinShip();
     }
@@ -123,7 +122,8 @@ public class SynchronizationPgKinShip {
         JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
         JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
         JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
-        int dbType=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?DataTypeEnum.DATA_INPUT.getValue():DataTypeEnum.DATA_DORIS.getValue();
+        int dbType=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?DataTypeEnum.DATA_INPUT.getValue():DataTypeEnum.DATA_MODEL.getValue();
+        String name=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?dw:doris;
         //条数为0,则添加process
         if (relationShipAttribute.size()==0)
         {
@@ -137,7 +137,7 @@ public class SynchronizationPgKinShip {
             dto.guid=po1.get().atlasGuid;
             dto.typeName=EntityTypeEnum.RDBMS_DB.getName();
             list.add(dto);
-            addProcess(EntityTypeEnum.PROCESS,dw,list,po.atlasGuid,0);
+            addProcess(EntityTypeEnum.PROCESS,name,list,po.atlasGuid,0);
         }
     }
 
@@ -165,7 +165,6 @@ public class SynchronizationPgKinShip {
             }
             //过滤sql脚本为空的数据
             list=list.stream().filter(e-> Objects.nonNull(e.sqlScript)).collect(Collectors.toList());
-            //list=list.stream().filter(e->"fact_User_Info".equals(e.tableName)).collect(Collectors.toList());
             //获取ods表结构
             ResultEntity<List<DataAccessSourceTableDTO>> odsResult = dataAccessClient.getDataAccessMetaData();
             if (result.code!=ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data))
@@ -224,7 +223,7 @@ public class SynchronizationPgKinShip {
                     }
                 }
                 //同步字段
-                //synchronizationPgColumnKinShip(item);
+                synchronizationPgColumnKinShip(item);
             }
         }
         catch (Exception e)
@@ -234,6 +233,10 @@ public class SynchronizationPgKinShip {
         }
     }
 
+    /**
+     * 同步ods表字段与dw表字段血缘关系
+     * @param dto
+     */
     public void synchronizationPgColumnKinShip(SourceTableDTO dto)
     {
         //获取接入数据
@@ -246,10 +249,10 @@ public class SynchronizationPgKinShip {
         for (SourceFieldDTO field:dto.fieldList)
         {
             //获取该表集合
-            Optional<DataAccessSourceTableDTO> sourceTable = list.stream().filter(e -> field.sourceTable.equals(e.tableName.toLowerCase())).findFirst();
+            Optional<DataAccessSourceTableDTO> sourceTable = list.stream().filter(e ->e.tableName.toLowerCase().equals(field.sourceTable)).findFirst();
             if (!sourceTable.isPresent())
             {
-                return;
+                continue;
             }
             QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.lambda().eq(MetadataMapAtlasPO::getColumnId,field.id)
@@ -264,7 +267,7 @@ public class SynchronizationPgKinShip {
             ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + po.atlasGuid);
             if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
             {
-                return;
+                continue;
             }
             JSONObject jsonObj = JSON.parseObject(getDetail.data);
             JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
@@ -273,7 +276,7 @@ public class SynchronizationPgKinShip {
             //条数为0,则添加process
             if (relationShipAttribute.size()==0)
             {
-                addProcess(EntityTypeEnum.RDBMS_COLUMN,"",inputColumnList,po.atlasGuid,(int)field.id);
+                addProcess(EntityTypeEnum.RDBMS_COLUMN,dto.sqlScript,inputColumnList,po.atlasGuid,(int)field.id);
             }else {
                 List<SourceTableDTO> dtoList=new ArrayList<>();
                 dtoList.add(dto);
@@ -285,12 +288,11 @@ public class SynchronizationPgKinShip {
                             dtoList,
                             EntityTypeEnum.RDBMS_COLUMN,
                             (int)field.id,
-                            "",
+                            dto.sqlScript,
                             po.atlasGuid
                     );
                 }
             }
-
         }
     }
 
@@ -316,6 +318,7 @@ public class SynchronizationPgKinShip {
         dto1.guid=po1.atlasGuid;
         dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
         list.add(dto1);
+        //关联维度,添加维度血缘关联
         if (field.associatedDim)
         {
             QueryWrapper<MetadataMapAtlasPO> queryWrapper2=new QueryWrapper<>();
@@ -349,6 +352,7 @@ public class SynchronizationPgKinShip {
             }
             //序列化
             List<SourceTableDTO> list= JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
+            //list=list.stream().filter(e->e.tableName.equals("fact_User_Info")).collect(Collectors.toList());
             //获取数据建模MetadataMapAtlas配置表数据
             QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.lambda().eq(MetadataMapAtlasPO::getDataType, DataTypeEnum.DATA_DORIS);
@@ -358,7 +362,6 @@ public class SynchronizationPgKinShip {
             {
                 return;
             }
-            //list=list.stream().filter(e->"fact_SalesOrder".equals(e.tableName)).collect(Collectors.toList());
             for (SourceTableDTO item:list)
             {
                 //根据guid,获取配置表信息
@@ -366,6 +369,7 @@ public class SynchronizationPgKinShip {
                         e.tableId == item.id
                         && e.columnId==0
                         && e.tableType==item.type
+                        && e.type==EntityTypeEnum.RDBMS_TABLE.getValue()
                 ).findFirst();
                 if (!data.isPresent())
                 {
@@ -402,6 +406,8 @@ public class SynchronizationPgKinShip {
                         );
                     }
                 }
+                //同步字段血缘
+                synchronizationDorisColumnKinShip(item);
             }
         }
         catch (Exception e)
@@ -418,6 +424,7 @@ public class SynchronizationPgKinShip {
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableId,dto.id)
                 .eq(MetadataMapAtlasPO::getColumnId,0)
                 .eq(MetadataMapAtlasPO::getDataType,DataTypeEnum.DATA_MODEL)
+                .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                 .eq(MetadataMapAtlasPO::getTableType,tableType);
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
         if (po==null)
@@ -448,6 +455,7 @@ public class SynchronizationPgKinShip {
                     .eq(MetadataMapAtlasPO::getDataType,dorisType)
                     .eq(MetadataMapAtlasPO::getTableId,id)
                     .eq(MetadataMapAtlasPO::getType,dto.type)
+                    .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                     .eq(MetadataMapAtlasPO::getColumnId,0);
             MetadataMapAtlasPO mapAtlasPO=metadataMapAtlasMapper.selectOne(queryWrapper1);
             if (mapAtlasPO==null)
@@ -458,6 +466,188 @@ public class SynchronizationPgKinShip {
             field.guid=mapAtlasPO.atlasGuid;
             field.typeName=EntityTypeEnum.RDBMS_TABLE.getName();
             list.add(field);
+        }
+        return list;
+    }
+
+    /**
+     * 同步dw表字段与doris表字段血缘关系
+     */
+    public void synchronizationDorisColumnKinShip(SourceTableDTO dto)
+    {
+        //获取dw库表结构
+        ResultEntity<Object> result = client.getDataModelTable(1);
+        if (result.code!= ResultEnum.SUCCESS.getCode())
+        {
+            return;
+        }
+        //序列化
+        List<SourceTableDTO> list= JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
+        //获取该表集合
+        Optional<SourceTableDTO> sourceTable = list.stream().filter(e -> e.tableName.equals(dto.tableName)).findFirst();
+        if (!sourceTable.isPresent())
+        {
+            return;
+        }
+        for (SourceFieldDTO field:dto.fieldList)
+        {
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
+            if (field.id==0)
+            {
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getColumnId,0)
+                        .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_COLUMN.getValue())
+                        .eq(MetadataMapAtlasPO::getTableType,dto.type)
+                        .eq(MetadataMapAtlasPO::getTableId,dto.id);
+            }
+            else {
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getColumnId,field.id)
+                        .eq(MetadataMapAtlasPO::getTableId,dto.id)
+                        .eq(MetadataMapAtlasPO::getTableType,dto.type);
+            }
+            MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
+            if (po==null)
+            {
+                continue;
+            }
+            List<EntityIdAndTypeDTO> inputColumnList = getDorisProcessInput(sourceTable, field);
+            if (CollectionUtils.isEmpty(inputColumnList))
+            {
+                continue;
+            }
+            //获取实体详情
+            ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + po.atlasGuid);
+            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            {
+                continue;
+            }
+            JSONObject jsonObj = JSON.parseObject(getDetail.data);
+            JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
+            JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
+            JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
+            String processName=dto.sqlScript;
+            if (field.attributeType== FactAttributeEnum.MEASURE.getValue())
+            {
+                processName=field.calculationLogic;
+            }
+            //条数为0,则添加process
+            if (relationShipAttribute.size()==0)
+            {
+                addProcess(EntityTypeEnum.RDBMS_COLUMN,processName,inputColumnList,po.atlasGuid,(int)field.id);
+            }else {
+                List<SourceTableDTO> dtoList=new ArrayList<>();
+                dtoList.add(dto);
+                for (int i=0;i<relationShipAttribute.size();i++)
+                {
+                    updateProcess(
+                            relationShipAttribute.getJSONObject(i).getString("guid"),
+                            inputColumnList,
+                            dtoList,
+                            EntityTypeEnum.RDBMS_COLUMN,
+                            (int)field.id,
+                            processName,
+                            po.atlasGuid
+                    );
+                }
+            }
+        }
+    }
+
+    public List<EntityIdAndTypeDTO> getDorisProcessInput(Optional<SourceTableDTO> sourceTable,SourceFieldDTO field)
+    {
+        List<EntityIdAndTypeDTO> list=new ArrayList<>();
+        //退化维度
+        if (field.attributeType==FactAttributeEnum.DEGENERATION_DIMENSION.getValue())
+        {
+            Optional<SourceFieldDTO> SourceField = sourceTable.get().fieldList.stream()
+                    .filter(e -> field.fieldName.equals(e.fieldName)).findFirst();
+            if (!SourceField.isPresent())
+            {
+                return list;
+            }
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
+            //判断是否为维度key
+            if (SourceField.get().id==0)
+            {
+                queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId,0)
+                        .eq(MetadataMapAtlasPO::getTableType,sourceTable.get().type)
+                        .eq(MetadataMapAtlasPO::getTableId,sourceTable.get().id)
+                        .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_COLUMN);
+            }
+            else {
+                queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId,SourceField.get().id)
+                        .eq(MetadataMapAtlasPO::getTableId,sourceTable.get().id)
+                        .eq(MetadataMapAtlasPO::getDataType, DataTypeEnum.DATA_MODEL);
+            }
+            MetadataMapAtlasPO po1=metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1==null)
+            {
+                return list;
+            }
+            EntityIdAndTypeDTO dto1=new EntityIdAndTypeDTO();
+            dto1.guid=po1.atlasGuid;
+            dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
+            list.add(dto1);
+        }
+        //关联维度
+        else if (field.attributeType==FactAttributeEnum.DIMENSION_KEY.getValue())
+        {
+            //截取关联维度表名称
+            String tableName="dim_"+field.fieldName.replace("_key","");
+            //获取dw库表结构
+            ResultEntity<Object> result = client.getDataModelTable(1);
+            if (result.code!= ResultEnum.SUCCESS.getCode())
+            {
+                return list;
+            }
+            //序列化
+            List<SourceTableDTO> data= JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
+            Optional<SourceTableDTO> dimensionTable = data.stream().filter(e -> e.tableName.equals(tableName)).findFirst();
+            if (!dimensionTable.isPresent())
+            {
+                return list;
+            }
+            Optional<SourceFieldDTO> dimensionField = dimensionTable.get().fieldList.stream().filter(e -> e.id == field.associatedDimId).findFirst();
+            if (!dimensionField.isPresent())
+            {
+                return list;
+            }
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.lambda()
+                    .eq(MetadataMapAtlasPO::getTableId,field.id)
+                    .eq(MetadataMapAtlasPO::getColumnId,0)
+                    .eq(MetadataMapAtlasPO::getTableType,TableTypeEnum.DORIS_DIMENSION.getValue())
+                    .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_COLUMN.getValue());
+            MetadataMapAtlasPO po1=metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1==null)
+            {
+                return list;
+            }
+            EntityIdAndTypeDTO dto1=new EntityIdAndTypeDTO();
+            dto1.guid=po1.atlasGuid;
+            dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
+            list.add(dto1);
+        }
+        //原子指标
+        else {
+            Optional<SourceFieldDTO> SourceField = sourceTable.get().fieldList.stream()
+                    .filter(e -> field.sourceField.equals(e.fieldName.toLowerCase())).findFirst();
+            if (!SourceField.isPresent())
+            {
+                return list;
+            }
+            QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
+            queryWrapper1.lambda().eq(MetadataMapAtlasPO::getColumnId,SourceField.get().id)
+                    .eq(MetadataMapAtlasPO::getTableType,TableTypeEnum.DW_FACT)
+                    .eq(MetadataMapAtlasPO::getDataType, DataTypeEnum.DATA_MODEL);
+            MetadataMapAtlasPO po1=metadataMapAtlasMapper.selectOne(queryWrapper1);
+            if (po1==null)
+            {
+                return list;
+            }
+            EntityIdAndTypeDTO dto1=new EntityIdAndTypeDTO();
+            dto1.guid=po1.atlasGuid;
+            dto1.typeName=EntityTypeEnum.RDBMS_COLUMN.getName();
+            list.add(dto1);
         }
         return list;
     }
@@ -529,6 +719,7 @@ public class SynchronizationPgKinShip {
                 0,
                 0,
                 dto.guid,
+                "",
                 0);
     }
 
@@ -636,11 +827,12 @@ public class SynchronizationPgKinShip {
                         .stream()
                         .filter(e->!ids.contains(e.guid))
                         .collect(Collectors.toList());
-                dto.entity.relationshipAttributes.inputs=dto.entity.relationshipAttributes.inputs
+                dto.entity.relationshipAttributes.inputs =dto.entity.relationshipAttributes.inputs
                         .stream()
                         .filter(e->!ids.contains(e.guid))
                         .collect(Collectors.toList());
             }
+            dto.entity.attributes.name=sqlScript;
             //修改process
             String jsonParameter= JSONArray.toJSON(dto).toString();
             //调用atlas修改实例
@@ -738,6 +930,7 @@ public class SynchronizationPgKinShip {
         {
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getDataType,DataTypeEnum.DATA_MODEL)
+                    .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                     .eq(MetadataMapAtlasPO::getTableId,id)
                     .eq(MetadataMapAtlasPO::getTableType,1)
                     .eq(MetadataMapAtlasPO::getColumnId,0);

@@ -249,12 +249,13 @@ public class AtomicIndicatorsImpl
             for (DimensionPO item:dimensionPOList)
             {
                 AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                dto.attributeType=2;
+                dto.attributeType=FactAttributeEnum.DIMENSION_KEY.getValue();
                 dto.dimensionTableName=item.dimensionTabName;
                 dto.id=item.id;
                 data.add(dto);
             }
         }
+
         //获取事实表中的退化维度
         QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper<>();
         factAttributePOQueryWrapper.select("id").lambda()
@@ -278,7 +279,7 @@ public class AtomicIndicatorsImpl
                     for (FactAttributePO po:factAttributePOS)
                     {
                         AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-                        dto.attributeType=1;
+                        dto.attributeType=FactAttributeEnum.DEGENERATION_DIMENSION.getValue();;
                         dto.factFieldName=po.factFieldEnName;
                         dto.factFieldType=po.factFieldType;
                         dto.factFieldLength=po.factFieldLength;
@@ -298,7 +299,7 @@ public class AtomicIndicatorsImpl
         for (IndicatorsPO item:indicatorsPO)
         {
             AtomicIndicatorPushDTO dto=new AtomicIndicatorPushDTO();
-            dto.attributeType=3;
+            dto.attributeType=FactAttributeEnum.MEASURE.getValue();;
             dto.atomicIndicatorName=item.indicatorsName;
             dto.aggregationLogic=item.calculationLogic;
             //获取聚合字段
