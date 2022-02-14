@@ -151,53 +151,6 @@ public class BuildNifiCustomWorkFlow {
             //清空队列
             nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
             //获取大组的控制器服务   includeancestorgroups includedescendantgroups
-            ControllerServicesEntity controllerServicesFromGroup = NifiHelper.getFlowApi().getControllerServicesFromGroup(appComponentId, true, true);
-            List<ControllerServiceEntity> controllerServices = controllerServicesFromGroup.getControllerServices();
-            //nifi全局配置服务不受删除管道影响
-            NifiConfigPO cfgNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
-            NifiConfigPO pgOdsNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID.getName()).one();
-            NifiConfigPO pdDwNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID.getName()).one();
-            NifiConfigPO dorisOlapNifiConfigPo = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID.getName()).one();
-            String componentId = cfgNifiConfigPo.componentId;
-            String pgOdsComponentId = "";
-            String pdDwComponentId = "";
-            String dorisOlapComponentId = "";
-            if(pgOdsNifiConfigPo!=null){
-                pgOdsComponentId=pgOdsNifiConfigPo.componentId;
-            }
-            if(pdDwNifiConfigPo!=null){
-                pdDwComponentId=pdDwNifiConfigPo.componentId;
-            }
-            if(dorisOlapNifiConfigPo!=null){
-                dorisOlapComponentId=dorisOlapNifiConfigPo.componentId;
-            }
-
-            for (ControllerServiceEntity controllerServiceEntity : controllerServices) {
-                //保留配置库服务
-                if (Objects.equals(controllerServiceEntity.getId(), componentId)||
-                        Objects.equals(controllerServiceEntity.getId(), pgOdsComponentId)||
-                        Objects.equals(controllerServiceEntity.getId(), pdDwComponentId)||
-                        Objects.equals(controllerServiceEntity.getId(), dorisOlapComponentId)) {
-                   continue;
-                }
-                //除去被关联的服务
-                if (!Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
-                    nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
-                }
-            }
-            for (ControllerServiceEntity controllerServiceEntity : controllerServices) {
-                //保留配置库服务
-                if (Objects.equals(controllerServiceEntity.getId(), componentId)||
-                        Objects.equals(controllerServiceEntity.getId(), pgOdsComponentId)||
-                        Objects.equals(controllerServiceEntity.getId(), pdDwComponentId)||
-                        Objects.equals(controllerServiceEntity.getId(), dorisOlapComponentId)) {
-                    continue;
-                }
-                //删除服务
-                if (Objects.equals(controllerServiceEntity.getComponent().getType(), ControllerServiceTypeEnum.REDISCONNECTIONPOOL.getName())) {
-                    nifiComponentsBuild.controllerServicesRunStatus(controllerServiceEntity.getId());
-                }
-            }
             ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
             NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
 
@@ -707,6 +660,18 @@ public class BuildNifiCustomWorkFlow {
                 updateTopicNames(one1.consumeKafkaProcessorId, TopicName,one1.tableAccessId,one1.type,nifiNode.workflowDetailId);
             }
         }
+        //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
+        try {
+            ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+            scheduleComponentsEntity.setId(groupStructure);
+            scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+            NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
+            NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+        } catch (ApiException e) {
+            log.error("组id:"+groupStructure+"停止失败"+e.getMessage());
+        }
     }
 
     public void updateTopicNames(String processorId, String TopicName,int tableId,int tableType,Long workflowDetailId) {
@@ -718,7 +683,6 @@ public class BuildNifiCustomWorkFlow {
             topicDTO.tableId = tableId;
             topicDTO.componentId = Math.toIntExact(workflowDetailId);
             topicDTO.topicName = TopicName;
-            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
             tableTopic.updateTableTopicByComponentId(topicDTO);
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
             String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
@@ -733,6 +697,7 @@ public class BuildNifiCustomWorkFlow {
             //String topic = properties.get("topic");
             properties.put("topic", consumerTopicName);
             processor.getComponent().getConfig().setProperties(properties);
+            log.debug("组件详情:"+JSON.toJSONString(processor));
             NifiHelper.getProcessorsApi().updateProcessor(id, processor);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             componentsBuild.enabledProcessor(processor.getId(), processor);
