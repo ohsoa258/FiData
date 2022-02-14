@@ -32,23 +32,25 @@ public class SwaggerConfig {
     public static final String TAG_7 = "datasource-controller";
     public static final String TAG_8 = "systemWebIndex-controller";
     public static final String FTP = "ftp-controller";
-    public static final String TABLE_HISTORY = "table-history--controller";
+    public static final String TABLE_HISTORY = "table-history-controller";
+    public static final String API_CONFIG = "api-config-controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataAccessApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1,"应用注册"))
-                .tags(new Tag(TAG_2,"物理表"))
-                .tags(new Tag(TAG_3,"应用注册tree"))
-                .tags(new Tag(TAG_4,"数据查看"))
-                .tags(new Tag(TAG_5,"表字段"))
-                .tags(new Tag(TAG_6,"物理表单表CRUD"))
-                .tags(new Tag(TAG_7,"数据源"))
-                .tags(new Tag(TAG_8,"首页API"))
-                .tags(new Tag(FTP,"FTP数据源"))
-                .tags(new Tag(TABLE_HISTORY,"表发布历史"))
+                .tags(new Tag(TAG_1, "应用注册"))
+                .tags(new Tag(TAG_2, "物理表"))
+                .tags(new Tag(TAG_3, "应用注册tree"))
+                .tags(new Tag(TAG_4, "数据查看"))
+                .tags(new Tag(TAG_5, "表字段"))
+                .tags(new Tag(TAG_6, "物理表单表CRUD"))
+                .tags(new Tag(TAG_7, "数据源"))
+                .tags(new Tag(TAG_8, "首页API"))
+                .tags(new Tag(FTP, "FTP数据源"))
+                .tags(new Tag(TABLE_HISTORY, "表发布历史"))
+                .tags(new Tag(API_CONFIG, "实时api配置"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

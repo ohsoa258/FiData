@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ApiConfigPO extends BasePO {
 
+    public Long appId;
     /**
      * api名称
      */
