@@ -196,6 +196,22 @@ public class EntityImpl implements IEntity {
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         updateRedis();
+        //添加redis
+        if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName())
+        || dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_DB.getName()))
+        {
+            try {
+                //解析数据
+                JSONObject jsonObj = JSON.parseObject(result.data);
+                JSONObject mutatedEntities= JSON.parseObject(jsonObj.getString("mutatedEntities"));
+                JSONArray jsonArray=mutatedEntities.getJSONArray("CREATE");
+                setRedis(jsonArray.getJSONObject(0).getString("guid"));
+            }
+            catch (Exception e)
+            {
+                log.error("parsing data failure:"+e);
+            }
+        }
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -204,12 +220,22 @@ public class EntityImpl implements IEntity {
     {
         ResultDataDTO<String> result = atlasClient.Delete(entityByGuid + "/" + guid);
         updateRedis();
+        Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        if (exist)
+        {
+            redisTemplate.delete("metaDataEntityData:"+guid);
+        }
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }
 
     @Override
     public JSONObject getEntity(String guid)
     {
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+guid);
+        if (exist) {
+            String data = redisTemplate.opsForValue().get("metaDataEntityData:"+guid).toString();
+            return JSON.parseObject(data);
+        }
         ResultDataDTO<String> result = atlasClient.Get(entityByGuid + "/" + guid);
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
@@ -558,5 +584,14 @@ public class EntityImpl implements IEntity {
         return JSON.parseObject(result.data);
     }
 
+    public void setRedis(String guid)
+    {
+        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + guid);
+        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        {
+            return;
+        }
+        redisTemplate.opsForValue().set("metaDataEntityData:"+guid,getDetail.data);
+    }
 
 }

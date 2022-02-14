@@ -27,6 +27,7 @@ import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -53,6 +54,8 @@ public class SynchronizationPgData {
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
     EntityImpl entityImpl;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -111,6 +114,7 @@ public class SynchronizationPgData {
             queryWrapper.lambda()
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
             MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
+            String instanceGuid=po.atlasGuid;
             //判断实例是否已存在
             if (po ==null)
             {
@@ -120,7 +124,7 @@ public class SynchronizationPgData {
                     return;
                 }
                 //向MetadataMapAtlas表添加数据
-                String guid = addMetadataMapAtlas(addResult,
+                instanceGuid = addMetadataMapAtlas(addResult,
                         EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
                         0,
                         0,
@@ -130,11 +134,13 @@ public class SynchronizationPgData {
                         "",
                         "",
                         0);
-                log.info("add entity instance name:",fiDataName+",guid:"+guid);
+                log.info("add entity instance name:",fiDataName+",guid:"+instanceGuid);
                 return;
             }
             //存在,获取该实例详情,并判断是否需要修改
             updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);
+            //数据添加redis
+            setRedis(instanceGuid);
         }
         catch (Exception e)
         {
@@ -172,18 +178,20 @@ public class SynchronizationPgData {
                 String dbQualifiedName=instancePo.qualifiedName+"_"+db;
                 index+=1;
                 int finalIndex = index;
+                String dbGuid="";
                 List<MetadataMapAtlasPO> dbPo=mapAtlasDbPOS.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
                 //存在,判断是否修改
-                if (!CollectionUtils.isEmpty(dbPo) && !dbPo.get(0).qualifiedName.equals(dbQualifiedName))
+                if (!CollectionUtils.isEmpty(dbPo))
                 {
+                    dbGuid=dbPo.get(0).atlasGuid;
                     updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),db,dbQualifiedName,null,null);
                 }
                 else {
                     String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo, db,null,null);
                     if (addResult !="")
                     {
-                        String guid = addMetadataMapAtlas(addResult,
+                        dbGuid = addMetadataMapAtlas(addResult,
                                 EntityTypeEnum.RDBMS_DB,
                                 dbQualifiedName,
                                 0,
@@ -194,9 +202,11 @@ public class SynchronizationPgData {
                                 instancePo.atlasGuid,
                                 "",
                                 0);
-                        log.info("add entity db name:",db+",guid:"+guid);
+                        log.info("add entity db name:",db+",guid:"+dbGuid);
                     }
                 }
+                //数据添加redis
+                setRedis(dbGuid);
             }
         }
         catch (Exception e)
@@ -733,6 +743,16 @@ public class SynchronizationPgData {
         {
             return "";
         }
+    }
+
+    public void setRedis(String guid)
+    {
+        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + guid);
+        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        {
+            return;
+        }
+        redisTemplate.opsForValue().set("metaDataEntityData:"+guid,getDetail.data);
     }
 
 }
