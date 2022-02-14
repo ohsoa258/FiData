@@ -29,11 +29,6 @@ public class TableAccessPO extends BasePO {
 //    public Integer pid;
 
     /**
-     * 添加数据时atlas生成
-     */
-//    public String atlasTableId;
-
-    /**
      * 物理表名
      */
     public String tableName;

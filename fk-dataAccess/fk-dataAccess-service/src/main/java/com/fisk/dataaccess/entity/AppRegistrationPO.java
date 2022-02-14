@@ -17,25 +17,6 @@ public class AppRegistrationPO extends BasePO {
 
     @TableId(value = "id", type = IdType.AUTO)
     public long id;
-    /**
-     * 调用atlas时,返回给应用注册的
-     */
-//    public String atlasInstanceId;
-
-    /**
-     * 组件id
-     */
-//    public String componentId;
-
-    /**
-     * targetDbPoolComponentId
-     */
-//    public String targetDbPoolComponentId;
-
-    /**
-     * sourceDbPoolComponentId
-     */
-//    public String sourceDbPoolComponentId;
 
     /**
      * 应用名称
@@ -66,17 +47,4 @@ public class AppRegistrationPO extends BasePO {
      * 应用负责人邮箱
      */
     public String appPrincipalEmail;
-
-//    /**
-//     * 同步方式
-//     */
-//    public String syncMode;
-//    /**
-//     * 表达式
-//     */
-//    public String expression;
-//    /**
-//     * 日志
-//     */
-//    public String msg;
 }
