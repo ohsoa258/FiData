@@ -136,7 +136,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -233,7 +233,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         }
 
         // 发布
-        publish(success, model.appId, model.id, model.tableName, dto.flag);
+        publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -299,7 +299,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
      * @param tableName 物理表tableName
      * @param flag      0: 保存;  1: 发布
      */
-    private void publish(boolean success, long appId, long accessId, String tableName, int flag) {
+    private void publish(boolean success, long appId, long accessId, String tableName, int flag, boolean openTransmission) {
         if (success && flag == 1) {
             UserInfo userInfo = userHelper.getLoginUserInfo();
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appId);
@@ -307,6 +307,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             data.appId = String.valueOf(appId);
             data.dbId = String.valueOf(accessId);
             data.userId = userInfo.id;
+            data.openTransmission = openTransmission;
 
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();

@@ -41,5 +41,5 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     * */
     public String queryEndTime;
 
-
+    public boolean openTransmission;
 }
