@@ -309,6 +309,7 @@ public class DimensionFolderImpl
             data.businessAreaId=businessAreaPO.getId();
             data.businessAreaName=businessAreaPO.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
+            data.openTransmission=dto.openTransmission;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();

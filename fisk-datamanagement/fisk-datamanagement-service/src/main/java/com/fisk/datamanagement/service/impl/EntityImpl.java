@@ -297,6 +297,7 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(dto.list).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/labels", jsonParameter);
+
         return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
     }
 

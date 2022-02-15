@@ -11,6 +11,10 @@ import java.util.List;
  */
 @Data
 public class ModelPublishDataDTO extends MQBaseDTO {
+    /**
+     * 是否同步
+     */
+    public boolean openTransmission;
     public long businessAreaId;
     public String businessAreaName;
     public List<ModelPublishTableDTO> dimensionList;

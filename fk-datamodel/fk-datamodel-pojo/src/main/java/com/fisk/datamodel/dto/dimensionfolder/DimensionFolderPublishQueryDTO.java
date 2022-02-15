@@ -19,4 +19,8 @@ public class DimensionFolderPublishQueryDTO {
      * 增量配置
      */
     public int syncMode;
+    /**
+     * 是否同步
+     */
+    public boolean openTransmission;
 }

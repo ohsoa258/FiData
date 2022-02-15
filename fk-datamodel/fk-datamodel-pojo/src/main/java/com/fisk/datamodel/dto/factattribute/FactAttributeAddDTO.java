@@ -18,4 +18,8 @@ public class FactAttributeAddDTO {
     public String remark;
     public List<FactAttributeDTO> list;
     public SyncModeDTO syncModeDTO;
+    /**
+     * 是否同步
+     */
+    public boolean openTransmission;
 }

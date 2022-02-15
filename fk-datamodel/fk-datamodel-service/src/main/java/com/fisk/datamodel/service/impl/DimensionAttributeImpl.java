@@ -119,6 +119,7 @@ public class DimensionAttributeImpl
             queryDTO.businessAreaId=dimensionPO.businessId;
             queryDTO.remark=dto.remark;
             queryDTO.syncMode=dto.syncModeDTO.syncMode;
+            queryDTO.openTransmission=dto.openTransmission;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return result==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
