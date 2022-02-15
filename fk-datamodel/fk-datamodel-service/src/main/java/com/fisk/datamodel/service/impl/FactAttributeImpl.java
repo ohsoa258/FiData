@@ -140,6 +140,7 @@ public class FactAttributeImpl
             queryDTO.businessAreaId=factPO.businessId;
             queryDTO.remark=dto.remark;
             queryDTO.syncMode=dto.syncModeDTO.syncMode;
+            queryDTO.openTransmission=dto.openTransmission;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;

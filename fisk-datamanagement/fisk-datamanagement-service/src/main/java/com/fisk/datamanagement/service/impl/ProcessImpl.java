@@ -14,7 +14,6 @@ import com.fisk.datamanagement.service.IProcess;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgKinShip;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
-import org.omg.PortableServer.LIFESPAN_POLICY_ID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -60,7 +59,7 @@ public class ProcessImpl implements IProcess {
                 .map(e->e.getGuid()).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(delInputGuidList))
         {
-            dto.entity.relationshipAttributes.inputs=dto.entity.relationshipAttributes.inputs.stream()
+            dto.entity.relationshipAttributes.inputs =dto.entity.relationshipAttributes.inputs.stream()
                     .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
             dto.entity.attributes.inputs=dto.entity.attributes.inputs
                     .stream()
@@ -74,14 +73,14 @@ public class ProcessImpl implements IProcess {
                 .map(e->e.getGuid()).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(delOutGuidList))
         {
-            dto.entity.relationshipAttributes.outputs=dto.entity.relationshipAttributes.outputs.stream()
+            dto.entity.relationshipAttributes.outputs =dto.entity.relationshipAttributes.outputs.stream()
                     .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
             dto.entity.attributes.outputs=dto.entity.attributes.outputs
                     .stream()
                     .filter(e->!delInputGuidList.contains(e.guid)).collect(Collectors.toList());
+
         }
         //获取process输出血缘
-
         return dto;
     }
 
@@ -145,52 +144,76 @@ public class ProcessImpl implements IProcess {
     @Override
     public ResultEnum updateProcess(ProcessDTO dto)
     {
-        //判断input输入guid
+        //判断input输入是否添加
         List<String> inputGuid=dto.entity.attributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
-        List<String> outGuid=dto.entity.relationshipAttributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
+        List<String> relationInputGuid=dto.entity.relationshipAttributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
         //获取差集
-        inputGuid.removeAll(outGuid);
+        inputGuid.removeAll(relationInputGuid);
         if (!CollectionUtils.isEmpty(inputGuid))
         {
-            //循环添加input参数
-            for (String guid:inputGuid)
-            {
-                //获取新增input限定名称信息
-                Optional<ProcessAttributesPutDTO> first = dto.entity.attributes.inputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
-                if (!first.isPresent())
-                {
-                    continue;
-                }
-                //添加血缘关系连线
-                String relationShipGuid = synchronizationPgKinShip.addRelationShip(dto.entity.guid,
-                        dto.entity.attributes.qualifiedName,
-                        guid,
-                        first.get().uniqueAttributes.qualifiedName);
-                if (relationShipGuid=="")
-                {
-                    continue;
-                }
-                ProcessRelationshipAttributesPutDTO inputDTO=new ProcessRelationshipAttributesPutDTO();
-                inputDTO.guid=guid;
-                inputDTO.typeName=first.get().typeName;
-                inputDTO.entityStatus=EntityTypeEnum.ACTIVE.getName();
-                //表、字段名称
-                inputDTO.displayText=first.get().tableName;
-                inputDTO.relationshipType=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
-                //生成的relationShip
-                inputDTO.relationshipGuid=relationShipGuid;
-                inputDTO.relationshipStatus=EntityTypeEnum.ACTIVE.getName();
-                ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
-                attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
-                inputDTO.relationshipAttributes=attributesDTO;
-                dto.entity.relationshipAttributes.inputs.add(inputDTO);
-            }
+            dto=editProcessParameter(dto,1,inputGuid);
+        }
+        //判断input输入是否添加
+        List<String> outGuid=dto.entity.attributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
+        List<String> relationOutGuid=dto.entity.relationshipAttributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
+        //获取差集
+        outGuid.removeAll(relationOutGuid);
+        if (!CollectionUtils.isEmpty(outGuid))
+        {
+            dto=editProcessParameter(dto,2,outGuid);
         }
         //修改process
         String jsonParameter= JSONArray.toJSON(dto).toString();
         //调用atlas修改实例
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    public ProcessDTO editProcessParameter(ProcessDTO dto,int parameterType,List<String> guidList){
+        for (String guid:guidList)
+        {
+            //获取新增input限定名称信息
+            Optional<ProcessAttributesPutDTO> first = null;
+            if (parameterType==1)
+            {
+                first=dto.entity.attributes.inputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
+            }else {
+                first=dto.entity.attributes.outputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
+            }
+            if (!first.isPresent())
+            {
+                continue;
+            }
+            //添加血缘关系连线
+            String relationShipGuid = synchronizationPgKinShip.addRelationShip(dto.entity.guid,
+                    dto.entity.attributes.qualifiedName,
+                    guid,
+                    first.get().uniqueAttributes.qualifiedName);
+            if (relationShipGuid=="")
+            {
+                continue;
+            }
+            ProcessRelationshipAttributesPutDTO inputDTO=new ProcessRelationshipAttributesPutDTO();
+            inputDTO.guid=guid;
+            inputDTO.typeName=first.get().typeName;
+            inputDTO.entityStatus=EntityTypeEnum.ACTIVE.getName();
+            //表、字段名称
+            inputDTO.displayText=first.get().tableName;
+            inputDTO.relationshipType=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
+            //生成的relationShip
+            inputDTO.relationshipGuid=relationShipGuid;
+            inputDTO.relationshipStatus=EntityTypeEnum.ACTIVE.getName();
+            ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
+            attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
+            inputDTO.relationshipAttributes=attributesDTO;
+            if (parameterType==1)
+            {
+                dto.entity.relationshipAttributes.inputs.add(inputDTO);
+            }else {
+                dto.entity.relationshipAttributes.outputs.add(inputDTO);
+            }
+        }
+        return dto;
     }
 
 }

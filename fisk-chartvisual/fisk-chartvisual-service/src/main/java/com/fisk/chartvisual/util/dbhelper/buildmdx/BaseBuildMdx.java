@@ -269,7 +269,7 @@ public class BaseBuildMdx    {
                 if(member.isAll()){
                     isCurrentAll=true;
                 }else {
-                    map.put("name",member.getName());
+                    map.put(member.getLevel().getName(),member.getName());
                 }
             }
             if (isCurrentAll){

@@ -22,11 +22,6 @@ public class TableFieldsPO extends BasePO {
     public Long tableAccessId;
 
     /**
-     * 添加数据时后台生成
-     */
-//    public String atlasFieldId;
-
-    /**
      * 源字段
      */
     public String sourceFieldName;

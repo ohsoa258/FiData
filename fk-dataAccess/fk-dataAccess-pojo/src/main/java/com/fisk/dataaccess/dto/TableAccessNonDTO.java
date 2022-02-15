@@ -103,6 +103,9 @@ public class TableAccessNonDTO extends BaseDTO {
      */
     public int flag;
 
+    @ApiModelProperty(value = "发布时,是否立即同步数据", required = true)
+    public boolean openTransmission;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }

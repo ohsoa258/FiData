@@ -24,8 +24,10 @@ import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -52,6 +54,8 @@ public class SynchronizationPgData {
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
     EntityImpl entityImpl;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -110,6 +114,7 @@ public class SynchronizationPgData {
             queryWrapper.lambda()
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
             MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
+            String instanceGuid=po.atlasGuid;
             //判断实例是否已存在
             if (po ==null)
             {
@@ -119,7 +124,7 @@ public class SynchronizationPgData {
                     return;
                 }
                 //向MetadataMapAtlas表添加数据
-                String guid = addMetadataMapAtlas(addResult,
+                instanceGuid = addMetadataMapAtlas(addResult,
                         EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
                         0,
                         0,
@@ -127,12 +132,15 @@ public class SynchronizationPgData {
                         0,
                         0,
                         "",
+                        "",
                         0);
-                log.info("add entity instance name:",fiDataName+",guid:"+guid);
+                log.info("add entity instance name:",fiDataName+",guid:"+instanceGuid);
                 return;
             }
             //存在,获取该实例详情,并判断是否需要修改
             updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);
+            //数据添加redis
+            setRedis(instanceGuid);
         }
         catch (Exception e)
         {
@@ -170,18 +178,20 @@ public class SynchronizationPgData {
                 String dbQualifiedName=instancePo.qualifiedName+"_"+db;
                 index+=1;
                 int finalIndex = index;
+                String dbGuid="";
                 List<MetadataMapAtlasPO> dbPo=mapAtlasDbPOS.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
                 //存在,判断是否修改
-                if (!CollectionUtils.isEmpty(dbPo) && !dbPo.get(0).qualifiedName.equals(dbQualifiedName))
+                if (!CollectionUtils.isEmpty(dbPo))
                 {
+                    dbGuid=dbPo.get(0).atlasGuid;
                     updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),db,dbQualifiedName,null,null);
                 }
                 else {
                     String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo, db,null,null);
                     if (addResult !="")
                     {
-                        String guid = addMetadataMapAtlas(addResult,
+                        dbGuid = addMetadataMapAtlas(addResult,
                                 EntityTypeEnum.RDBMS_DB,
                                 dbQualifiedName,
                                 0,
@@ -190,10 +200,13 @@ public class SynchronizationPgData {
                                 0,
                                 finalIndex,
                                 instancePo.atlasGuid,
+                                "",
                                 0);
-                        log.info("add entity db name:",db+",guid:"+guid);
+                        log.info("add entity db name:",db+",guid:"+dbGuid);
                     }
                 }
+                //数据添加redis
+                setRedis(dbGuid);
             }
         }
         catch (Exception e)
@@ -246,6 +259,7 @@ public class SynchronizationPgData {
             return;
         }
         List<SourceTableDTO> list=JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
+        //list=list.stream().filter(e->e.tableName.equals("fact_UserTest")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_MODEL.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
@@ -259,6 +273,9 @@ public class SynchronizationPgData {
         delSynchronization(list,DataTypeEnum.DATA_MODEL.getValue());
     }
 
+    /**
+     * 同步doris
+     */
     public void synchronizationDoris()
     {
         ResultEntity<Object> result = client.getDataModelTable(2);
@@ -277,7 +294,7 @@ public class SynchronizationPgData {
         //同步doris元数据对象
         synchronizationData(list,po.qualifiedName,DataTypeEnum.DATA_DORIS.getValue());
         //删除doris中不存在的元数据对象
-        //delSynchronization(list,DataTypeEnum.DATA_DORIS.getValue());
+        delSynchronization(list,DataTypeEnum.DATA_DORIS.getValue());
     }
 
     public void synchronizationData(List<SourceTableDTO> list, String dbName, int dataType)
@@ -295,13 +312,13 @@ public class SynchronizationPgData {
             {
                 return;
             }
-            //list=list.stream().filter(e->"dim_Vendor".equals(e.tableName)).collect(Collectors.toList());
             for (SourceTableDTO dto:list)
             {
                 QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
                 queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableId,dto.id)
                         .eq(MetadataMapAtlasPO::getColumnId,0)
                         .eq(MetadataMapAtlasPO::getDataType,dataType)
+                        .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                         .eq(MetadataMapAtlasPO::getTableType,dto.type);
                 MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
                 String qualifiedName=dbPO.qualifiedName+"_"+dto.tableName;
@@ -321,6 +338,7 @@ public class SynchronizationPgData {
                             dto.type,
                             0,
                             dbPO.atlasGuid,
+                            "",
                             0);
                     log.info("add entity table name:",dto.tableName+",guid:"+tableGuid);
                     if (CollectionUtils.isEmpty(dto.fieldList))
@@ -333,6 +351,11 @@ public class SynchronizationPgData {
 
                         String fieldQualifiedName=qualifiedName+"_"+fieldDTO.fieldName;
                         String addColumnResult = addEntity(EntityTypeEnum.RDBMS_COLUMN, po, fieldDTO.fieldName, null, fieldDTO);
+                        String dimensionKey="";
+                        if (fieldDTO.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue())
+                        {
+                            dimensionKey=fieldDTO.fieldName;
+                        }
                         if (addColumnResult !="")
                         {
                             String columnGuid=addMetadataMapAtlas(addColumnResult,
@@ -344,6 +367,7 @@ public class SynchronizationPgData {
                                     dto.type,
                                     0,
                                     tableGuid,
+                                    dimensionKey,
                                     fieldDTO.attributeType);
                             log.info("add entity column name:",fieldDTO.fieldName+",guid:"+columnGuid);
                         }
@@ -362,8 +386,14 @@ public class SynchronizationPgData {
                         queryWrapper1.lambda()
                                 .eq(MetadataMapAtlasPO::getTableId,dto.id)
                                 .eq(MetadataMapAtlasPO::getColumnId,field.id)
+                                .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_COLUMN)
                                 .eq(MetadataMapAtlasPO::getTableType,dto.type);
                         MetadataMapAtlasPO fieldData=metadataMapAtlasMapper.selectOne(queryWrapper1);
+                        String dimensionKey="";
+                        if (field.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue())
+                        {
+                            fieldData.dimensionKey=field.fieldName;
+                        }
                         //不存在,则添加
                         if (fieldData==null)
                         {
@@ -380,6 +410,7 @@ public class SynchronizationPgData {
                                         dto.type,
                                         0,
                                         po.atlasGuid,
+                                        dimensionKey,
                                         field.attributeType);
                                 log.info("add entity column name:",field.fieldName+",guid:"+columnGuid);
                             }
@@ -686,6 +717,7 @@ public class SynchronizationPgData {
                                     int tableType,
                                     int dbNameType,
                                     String parentGuid,
+                                      String dimensionKey,
                                       int attributeType)
     {
         try {
@@ -703,6 +735,7 @@ public class SynchronizationPgData {
             metadataMapAtlasPO.tableType=tableType;
             metadataMapAtlasPO.dbNameType=dbNameType;
             metadataMapAtlasPO.attributeType=attributeType;
+            metadataMapAtlasPO.dimensionKey=dimensionKey;
             int flat = metadataMapAtlasMapper.insert(metadataMapAtlasPO);
             return flat>0?metadataMapAtlasPO.atlasGuid:"";
         }
@@ -710,6 +743,16 @@ public class SynchronizationPgData {
         {
             return "";
         }
+    }
+
+    public void setRedis(String guid)
+    {
+        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + guid);
+        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        {
+            return;
+        }
+        redisTemplate.opsForValue().set("metaDataEntityData:"+guid,getDetail.data);
     }
 
 }

@@ -12,6 +12,7 @@ import com.fisk.dataaccess.entity.ApiConfigPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.map.ApiConfigMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
+import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Resource
     private TableAccessImpl tableAccessImpl;
     @Resource
+    private TableAccessMapper tableAccessMapper;
+    @Resource
     private TableFieldsImpl tableFieldImpl;
 
     @Override
@@ -44,7 +47,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         }
 
         // po -> dto
-        return ApiConfigMap.INSTANCES.poToDto(po);
+        ApiConfigDTO apiConfigDTO = ApiConfigMap.INSTANCES.poToDto(po);
+        // 根据api_id查询物理表集合
+        List<TableAccessPO> poList = getListTableAccessByApiId(id);
+        // 根据table_id查询出表详情,并赋值给apiConfigDTO
+        poList.stream().map(tableAccessPO -> tableAccessImpl.getData(tableAccessPO.id)).forEachOrdered(dto -> apiConfigDTO.list.add(dto));
+        return apiConfigDTO;
     }
 
     @Override
@@ -64,6 +72,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         //保存
         return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum addApiDetail(ApiConfigDTO dto) {
+
+        if (!CollectionUtils.isEmpty(dto.list)) {
+            dto.list.forEach(e->tableFieldImpl.addData(e));
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -88,6 +106,31 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
+    public ResultEnum editApiDetail(ApiConfigDTO dto) {
+        if (!CollectionUtils.isEmpty(dto.list)) {
+            dto.list.forEach(e->tableFieldImpl.updateData(e));
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 保存or发布api的物理表
+     *
+     * @return void
+     * @description 保存or发布api的物理表
+     * @author Lock
+     * @date 2022/2/15 11:26
+     * @version v1.0
+     * @params dto
+     */
+    private void savaOrPublishApiDetail(ApiConfigDTO dto) {
+        if (!CollectionUtils.isEmpty(dto.list)) {
+            dto.list.forEach(e -> tableFieldImpl.addData(e));
+        }
+    }
+
+    @Override
     public ResultEnum deleteData(long id) {
         // 参数校验
         ApiConfigPO model = this.getById(id);
@@ -95,8 +138,31 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        // 执行删除
+        // 根据api_id查询物理表集合
+        List<TableAccessPO> poList = getListTableAccessByApiId(id);
+        // 删除api下所有物理表
+        poList.forEach(e -> tableAccessImpl.deleteData(e.id));
+
+        // 删除api
         return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 根据api_id查询物理表集合
+     *
+     * @return java.util.List<com.fisk.dataaccess.entity.TableAccessPO>
+     * @description 根据api_id查询物理表集合
+     * @author Lock
+     * @date 2022/2/15 10:30
+     * @version v1.0
+     * @params id api_id
+     */
+    private List<TableAccessPO> getListTableAccessByApiId(long id) {
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableAccessPO::getApiId, id)
+                // 只查询table_id
+                .select(TableAccessPO::getId);
+        return tableAccessMapper.selectList(queryWrapper);
     }
 
     @Override

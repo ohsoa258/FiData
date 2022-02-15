@@ -48,5 +48,9 @@ public class SourceFieldDTO {
      * 来源字段
      */
     public String sourceField;
+    /**
+     * 聚合逻辑
+     */
+    public String calculationLogic;
 
 }

@@ -90,6 +90,15 @@ public class DataModelTableImpl implements IDataModelTable {
                 {
                     continue;
                 }
+                //创建维度表主键key
+                SourceFieldDTO dimensionKey=new SourceFieldDTO();
+                String newFieldName=dimensionPO.dimensionTabName.substring(4);
+                dimensionKey.fieldName=newFieldName+"_key";
+                dimensionKey.fieldType="NVARCHAR";
+                dimensionKey.fieldLength=255;
+                dimensionKey.fieldDes="";
+                fieldDTOS.add(dimensionKey);
+
                 for (DimensionAttributePO attributePO:attributePOS)
                 {
                     SourceFieldDTO field=new SourceFieldDTO();
@@ -106,11 +115,23 @@ public class DataModelTableImpl implements IDataModelTable {
                         field.associatedDim=true;
                         field.associatedDimId=attributePO.associateDimensionId;
                         DimensionPO dimensionPO1=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        field.associatedDimName=dimensionPO1==null?"":dimensionPO1.dimensionTabName;
+                        if (dimensionPO1==null)
+                        {
+                            continue;
+                        }
+                        field.associatedDimName=dimensionPO1.dimensionTabName;
                         //查询关联维度字段
                         DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
                         field.associatedDimAttributeId=attributePO.associateDimensionFieldId;
                         field.associatedDimAttributeName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+
+                        SourceFieldDTO associatedField=new SourceFieldDTO();
+                        associatedField.id=attributePO.associateDimensionId;
+                        associatedField.fieldName=newFieldName+"_key";
+                        associatedField.fieldType="NVARCHAR";
+                        associatedField.fieldLength=255;
+                        associatedField.fieldDes=dimensionPO1.dimensionDesc;
+                        fieldDTOS.add(associatedField);
                     }
                     fieldDTOS.add(field);
                 }
@@ -168,11 +189,25 @@ public class DataModelTableImpl implements IDataModelTable {
                         field.associatedDim=true;
                         field.associatedDimId=attributePO.associateDimensionId;
                         DimensionPO dimensionPO1=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        field.associatedDimName=dimensionPO1==null?"":dimensionPO1.dimensionTabName;
+                        if (dimensionPO1==null)
+                        {
+                            continue;
+                        }
+                        field.associatedDimName=dimensionPO1.dimensionTabName;
                         //查询关联维度字段
                         DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
                         field.associatedDimAttributeId=attributePO.associateDimensionFieldId;
                         field.associatedDimAttributeName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+
+                        SourceFieldDTO associatedField=new SourceFieldDTO();
+                        associatedField.id=attributePO.associateDimensionId;
+                        String newFieldName=dimensionPO1.dimensionTabName.substring(4);
+                        associatedField.fieldName=newFieldName+"_key";
+                        associatedField.fieldType="NVARCHAR";
+                        associatedField.fieldLength=255;
+                        associatedField.fieldDes=dimensionPO1.dimensionDesc;
+                        associatedField.attributeType=FactAttributeEnum.DIMENSION_KEY.getValue();
+                        fieldDTOS.add(associatedField);
                     }
                     fieldDTOS.add(field);
                 }
@@ -216,21 +251,26 @@ public class DataModelTableImpl implements IDataModelTable {
                 field.id=atomic.id;
                 switch (atomic.attributeType)
                 {
-                    case 1:
+                    case 0:
                         field.fieldName=atomic.factFieldName;
                         field.fieldType=atomic.factFieldType;
                         field.fieldLength=atomic.factFieldLength;
                         break;
-                    case 2:
-                        field.fieldName=atomic.dimensionTableName+"_key";
+                    case 1:
+                        field.fieldName=atomic.dimensionTableName.substring(4)+"_key";
                         field.fieldType="NVARCHAR";
                         field.fieldLength=255;
-                        field.associatedDimId=(int)atomic.id;
                         break;
-                    case 3:
+                    case 2:
                         field.fieldName=atomic.atomicIndicatorName;
                         field.fieldType="BIGINT";
                         field.fieldLength=0;
+                        //聚合逻辑
+                        field.calculationLogic=atomic.aggregationLogic;
+                        //聚合字段
+                        field.sourceField=atomic.aggregatedField;
+                    default:
+                        break;
                 }
                 field.fieldDes=atomic.factFieldName;
                 fieldDTOS.add(field);

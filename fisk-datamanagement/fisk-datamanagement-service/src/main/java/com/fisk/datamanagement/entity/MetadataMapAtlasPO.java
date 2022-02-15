@@ -52,5 +52,9 @@ public class MetadataMapAtlasPO extends BasePO {
      * 指标字段类型:1退化维度,2关联维度,3指标
      */
     public int attributeType;
+    /**
+     * 维度key
+     */
+    public String dimensionKey;
 
 }

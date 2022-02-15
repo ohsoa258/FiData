@@ -32,12 +32,28 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     ResultEnum addData(ApiConfigDTO dto);
 
     /**
+     * 添加api下的物理表--保存or发布
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum addApiDetail(ApiConfigDTO dto);
+
+    /**
      * 修改
      *
      * @param dto dto
      * @return 执行结果
      */
     ResultEnum editData(ApiConfigDTO dto);
+
+    /**
+     * 修改api下的物理表--保存or发布
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editApiDetail(ApiConfigDTO dto);
 
     /**
      * 删除

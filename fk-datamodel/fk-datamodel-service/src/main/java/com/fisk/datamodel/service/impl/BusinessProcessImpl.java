@@ -264,6 +264,7 @@ public class BusinessProcessImpl
                 pushDto.fieldList=fieldList;
                 factList.add(pushDto);
                 data.dimensionList=factList;
+                data.openTransmission=dto.openTransmission;
                 //发送消息
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
             }

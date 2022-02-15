@@ -3,9 +3,11 @@ package com.fisk.dataaccess.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.GenerateApiDTO;
 import com.fisk.dataaccess.service.IApiConfig;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +20,9 @@ import java.util.List;
  * @email feihongz@fisksoft.com.cn
  * @date 2022-01-17 14:45:02
  */
+@Api(tags = SwaggerConfig.API_CONFIG)
 @RestController
-@RequestMapping("/apiconfig")
+@RequestMapping("/apiConfig")
 public class ApiConfigController {
 
     @Resource
@@ -33,21 +36,35 @@ public class ApiConfigController {
     }
 
     @PostMapping("/add")
-    @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody ApiConfigDTO apiConfig){
+    @ApiOperation(value = "添加api")
+    public ResultEntity<Object> addData(@RequestBody ApiConfigDTO dto){
 
-        return ResultEntityBuild.build(service.addData(apiConfig));
+        return ResultEntityBuild.build(service.addData(dto));
+    }
+
+    @PostMapping("/addApiDetail")
+    @ApiOperation(value = "添加api下的物理表--保存or发布")
+    public ResultEntity<Object> addApiDetail(@RequestBody ApiConfigDTO dto){
+
+        return ResultEntityBuild.build(service.addApiDetail(dto));
     }
 
     @PutMapping("/edit")
-    @ApiOperation(value = "修改")
+    @ApiOperation(value = "修改api")
     public ResultEntity<Object> editData(@RequestBody ApiConfigDTO dto){
 
         return ResultEntityBuild.build(service.editData(dto));
     }
 
+    @PutMapping("/editApiDetail")
+    @ApiOperation(value = "修改api下的物理表--保存or发布")
+    public ResultEntity<Object> editApiDetail(@RequestBody ApiConfigDTO dto){
+
+        return ResultEntityBuild.build(service.editApiDetail(dto));
+    }
+
     @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除")
+    @ApiOperation(value = "删除api")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteData(id));

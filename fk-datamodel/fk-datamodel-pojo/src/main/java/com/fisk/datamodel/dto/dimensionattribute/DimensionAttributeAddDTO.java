@@ -30,4 +30,8 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
     public List<DimensionAttributeDTO> list;
 
     public SyncModeDTO syncModeDTO;
+    /**
+     * 是否同步
+     */
+    public boolean openTransmission;
 }
