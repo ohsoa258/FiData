@@ -10,8 +10,6 @@ import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.dataservice.dto.datasource.*;
-import com.fisk.dataservice.entity.AppConfigPO;
-import com.fisk.dataservice.entity.BuiltinParmPO;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.mapper.AppRegisterMapper;

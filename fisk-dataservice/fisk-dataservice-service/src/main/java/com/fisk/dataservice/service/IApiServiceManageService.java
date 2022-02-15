@@ -3,10 +3,6 @@ package com.fisk.dataservice.service;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
-import com.fisk.dataservice.vo.apiservice.ResponseVO;
-
-
-import java.util.List;
 
 /**
  * api服务接口

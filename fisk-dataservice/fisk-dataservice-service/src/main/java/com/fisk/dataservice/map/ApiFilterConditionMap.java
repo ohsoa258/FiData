@@ -2,8 +2,6 @@ package com.fisk.dataservice.map;
 
 import com.fisk.common.utils.Dto.SqlWhereDto;
 import com.fisk.dataservice.dto.api.FilterConditionConfigDTO;
-import com.fisk.dataservice.dto.api.FilterConditionConfigEditDTO;
-import com.fisk.dataservice.dto.api.ParmConfigEditDTO;
 import com.fisk.dataservice.entity.FilterConditionConfigPO;
 import com.fisk.dataservice.vo.api.FilterConditionConfigVO;
 import org.mapstruct.Mapper;

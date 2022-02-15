@@ -10,7 +10,6 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
 import com.fisk.common.utils.SqlParmUtils;
-import com.fisk.dataservice.dto.apiservice.RequestDataDTO;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
@@ -22,13 +21,10 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 
-import com.fisk.dataservice.vo.api.ApiSubVO;
-import com.fisk.dataservice.vo.api.FieldConfigVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.lang.reflect.Array;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;

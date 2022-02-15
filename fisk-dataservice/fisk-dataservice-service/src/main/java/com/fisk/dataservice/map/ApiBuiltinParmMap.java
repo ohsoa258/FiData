@@ -2,7 +2,6 @@ package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.app.AppApiBuiltinParmDTO;
 import com.fisk.dataservice.entity.BuiltinParmPO;
-import org.apache.ibatis.annotations.Param;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

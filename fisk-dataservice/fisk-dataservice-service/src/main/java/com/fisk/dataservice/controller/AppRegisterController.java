@@ -10,7 +10,6 @@ import com.fisk.dataservice.vo.app.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
