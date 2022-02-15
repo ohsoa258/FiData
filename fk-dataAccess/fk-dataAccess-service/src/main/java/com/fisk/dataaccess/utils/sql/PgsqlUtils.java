@@ -79,6 +79,7 @@ public class PgsqlUtils {
         /*JSONObject json = JSON.parseObject(jsonStr);
         // TODO 调用JsonUtils获取表对象集合
         List<JsonTableData> res = home.get(json);*/
+        int countSql = 0;
         try {
             for (JsonTableData re : res) {
                 String tableName = re.table;
@@ -98,11 +99,13 @@ public class PgsqlUtils {
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
                     inserSql = insertSqlIndex + insertSqlLast;
-                    System.out.println(inserSql);
+//                    System.out.println(inserSql);
+                    countSql++;
                     statement.addBatch(inserSql);
                 }
                 statement.executeBatch();
             }
+            System.out.println("本次添加的sql个数为: " + countSql);
             // 提交要执行的批处理，防止 JDBC 执行事务处理
             con.commit();
             statement.close();
