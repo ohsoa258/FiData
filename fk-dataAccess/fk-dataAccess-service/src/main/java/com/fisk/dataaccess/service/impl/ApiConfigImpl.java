@@ -147,6 +147,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public List<ApiConfigDTO> getApiListData(long appId) {
+
+        List<ApiConfigPO> list = this.query().eq("app_id", appId).list();
+
+        return ApiConfigMap.INSTANCES.listPoToDto(list);
+    }
+
     /**
      * 根据api_id查询物理表集合
      *

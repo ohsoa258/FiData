@@ -64,6 +64,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     ResultEnum deleteData(long id);
 
     /**
+     * 根据appId获取api列表
+     *
+     * @param appId appId
+     * @return list
+     */
+    List<ApiConfigDTO> getApiListData(long appId);
+
+    /**
      * 根据apiId生成api文档
      *
      * @param id id
