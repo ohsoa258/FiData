@@ -1,7 +1,10 @@
 package com.fisk.dataaccess.dto.api;
 
+import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author lock
@@ -32,4 +35,8 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "api描述", required = true)
     public String apiDes;
 
+    @ApiModelProperty(value = "0: 保存;   1: 保存&发布", required = true)
+    public int flag;
+
+    public List<TableAccessNonDTO> list;
 }

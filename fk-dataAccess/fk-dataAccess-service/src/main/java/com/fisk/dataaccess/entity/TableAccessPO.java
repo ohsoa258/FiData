@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
@@ -13,20 +15,24 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_table_access")
 public class TableAccessPO extends BasePO {
 
+    @TableId(value = "id", type = IdType.AUTO)
+    public long id;
+
+    /**
+     * 父id
+     */
+    public int pid;
+
     /**
      * tb_app_registration表id
      */
     public Long appId;
 
-//    /**
-//     * apiId
-//     */
-//    public Long apiId;
-//
-//    /**
-//     * 父id
-//     */
-//    public Integer pid;
+    /**
+     * apiId
+     */
+    public Long apiId;
+
 
     /**
      * 物理表名
