@@ -37,6 +37,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -61,6 +62,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
     TableTopicImpl tableTopic;
+    @Value("${nifi.basePath}")
+    public String basePath;
+
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -871,7 +875,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public BusinessResult<ProcessGroupsVO> getAllGroups(String groupId) {
         try {
             groupId = StringUtils.isEmpty(groupId) ? NifiConstants.ApiConstants.ROOT_NODE : groupId;
-            String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.ALL_GROUP_RUN_STATUS.replace("{id}", groupId);
+            String url = basePath + NifiConstants.ApiConstants.ALL_GROUP_RUN_STATUS.replace("{id}", groupId);
             ResponseEntity<ProcessGroupsVO> res = httpClient.exchange(url, HttpMethod.GET, null, ProcessGroupsVO.class);
             if (res.getStatusCode() == HttpStatus.OK) {
                 return BusinessResult.of(true, "查询成功", res.getBody());
@@ -923,7 +927,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
                 HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
 
-                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                String url = basePath + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
                     ProcessorEntity newEntity = getProcessor(item.getId());
@@ -960,7 +964,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
                 HttpEntity<ProcessorRunStatusEntity> request = new HttpEntity<>(dto, headers);
 
-                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
+                String url = basePath + NifiConstants.ApiConstants.PROCESSOR_RUN_STATUS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
                     ProcessorEntity newEntity = getProcessor(item.getId());
@@ -991,7 +995,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 }
                 HttpEntity<ProcessorEntity> request = new HttpEntity<>(entity, headers);
 
-                String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.PUTPROCESS.replace("{id}", item.getId());
+                String url = basePath + NifiConstants.ApiConstants.PUTPROCESS.replace("{id}", item.getId());
                 ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.PUT, request, String.class);
                 if (response.getStatusCode() == HttpStatus.OK) {
                     ProcessorEntity newEntity = getProcessor(item.getId());
@@ -1071,7 +1075,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     * */
     @Override
     public ResultEnum emptyNifiConnectionQueue(String groupId) {
-            String url = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
+            String url = basePath + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
             ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.POST, null, String.class);
             return ResultEnum.SUCCESS;
     }
@@ -1157,7 +1161,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             controllerServiceRunStatusEntity.setDisconnectedNodeAcknowledged(false);
             controllerServiceRunStatusEntity.setState(ControllerServiceRunStatusEntity.StateEnum.DISABLED);
             HttpEntity<ControllerServiceRunStatusEntity> request = new HttpEntity<>(controllerServiceRunStatusEntity, headers);
-            String url1 = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CONTROLLER_SERVICES_RUN_STATUS.replace("{id}", controllerServicesId);
+            String url1 = basePath + NifiConstants.ApiConstants.CONTROLLER_SERVICES_RUN_STATUS.replace("{id}", controllerServicesId);
             ResponseEntity<String> response1 = httpClient.exchange(url1, HttpMethod.PUT, request, String.class);
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
@@ -1404,7 +1408,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         component.setPosition(positionDTO);
         body.setComponent(component);
 
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        String uri = basePath + NifiConstants.ApiConstants.CREATE_INPUT_PORT.replace("{id}", buildPortDTO.componentId);
         return sendHttpRequest(body, uri);
     }
 
@@ -1438,7 +1442,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         component.setPosition(positionDTO);
         body.setComponent(component);
 
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
+        String uri = basePath + NifiConstants.ApiConstants.CREATE_OUTPUT_PORT.replace("{id}", buildPortDTO.componentId);
         return sendHttpRequest(body, uri);
     }
 
@@ -1483,7 +1487,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         body.setComponent(component);
         body.setDestinationType(ConnectionEntity.DestinationTypeEnum.INPUT_PORT);
 
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+        String uri = basePath + NifiConstants.ApiConstants
                 .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
 
         // 发送请求
@@ -1545,7 +1549,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         body.setDisconnectedNodeAcknowledged(false);
         body.setComponent(component);
 
-        String uri = NifiConstants.ApiConstants.BASE_PATH + NifiConstants.ApiConstants
+        String uri = basePath + NifiConstants.ApiConstants
                 .CREATE_CONNECTIONS.replace("{id}", buildConnectDTO.fatherComponentId);
 
         return sendHttpRequest(body, uri);

@@ -20,6 +20,10 @@ public class BlobTypeHandler extends BaseTypeHandler<String> {
     @Override
     public String getNullableResult(ResultSet rs, String columnName) throws SQLException {
         Blob blob = rs.getBlob(columnName);
+        if (blob == null){
+            return null;
+        }
+
         String base64Binary = DatatypeConverter.printBase64Binary(blob.getBytes(1, (int) blob.length()));
         if (blob == null) {
             return "";
@@ -33,6 +37,10 @@ public class BlobTypeHandler extends BaseTypeHandler<String> {
     @Override
     public String getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
         Blob blob = rs.getBlob(columnIndex);
+        if (blob == null){
+            return null;
+        }
+
         String base64Binary = DatatypeConverter.printBase64Binary(blob.getBytes(1, (int) blob.length()));
         if (blob == null) {
             return "";
@@ -47,6 +55,10 @@ public class BlobTypeHandler extends BaseTypeHandler<String> {
     @Override
     public String getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
         Blob blob = cs.getBlob(columnIndex);
+        if (blob == null){
+            return null;
+        }
+
         String base64Binary = DatatypeConverter.printBase64Binary(blob.getBytes(1, (int) blob.length()));
         if (blob == null) {
             return "";

@@ -70,6 +70,20 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.deleteData(id));
     }
 
+    /**
+     * 根据appId获取api列表
+     *
+     * @param appId appId
+     * @return 返回值
+     */
+    @GetMapping("/getList/{appId}")
+    @ApiOperation(value = "根据appId获取api列表")
+    public ResultEntity<List<ApiConfigDTO>> getApiListData(
+            @PathVariable("appId") long appId) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiListData(appId));
+    }
+
     @PutMapping("/configTable")
     @ApiOperation(value = "配置表")
     public ResultEntity<Object> configTable(@RequestBody ApiConfigDTO dto){
@@ -83,11 +97,4 @@ public class ApiConfigController {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.generateApi(id));
     }
-
-//    @PostMapping("/parseApiJson")
-//    @ApiOperation(value = "解析json")
-//    public ResultEntity<List<GenerateApiDTO>> parseApiJson(@RequestBody ){
-//
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.generateApi(id));
-//    }
 }

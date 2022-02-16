@@ -177,6 +177,7 @@ public class BuildDataModelDorisTableListener
                 bfd.queryStartTime = modelPublishTableDTO.queryStartTime;
                 bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
                 bfd.appName = inpData.businessAreaName;
+                bfd.openTransmission=inpData.openTransmission;
             if (modelPublishTableDTO.createType == 0) {
                 //类型为物理表
                 bfd.type= OlapTableEnum.DIMENSION;

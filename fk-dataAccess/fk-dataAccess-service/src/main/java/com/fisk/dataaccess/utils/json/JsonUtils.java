@@ -3,6 +3,8 @@ package com.fisk.dataaccess.utils.json;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO02;
@@ -14,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,104 +31,3042 @@ import java.util.stream.Collectors;
 public class JsonUtils {
 
     private static final String JSONSTR = "{\n" +
-            "\t\"data\": [{\n" +
-            "\t\t\"id\": 1,\n" +
-            "\t\t\"name\": \"张三\",\n" +
-            "\t\t\"age\": 16,\n" +
-            "\t\t\"createTime\": \"2022-1-22 12:00:00\",\n" +
-            "\t\t\"tb_role\": [{\n" +
-            "\t\t\t\"userId\": 1,\n" +
-            "\t\t\t\"roleId\": 1,\n" +
-            "\t\t\t\"roleName\": \"role1\",\n" +
-            "\t\t\t\"tb_menu\": [{\n" +
-            "\t\t\t\t\"roleId\": 1,\n" +
-            "\t\t\t\t\"menuName\": \"menu1\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu1\"\n" +
-            "\t\t\t}, {\n" +
-            "\t\t\t\t\"roleId\": 1,\n" +
-            "\t\t\t\t\"menuName\": \"menu2\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu2\"\n" +
-            "\t\t\t}, {\n" +
-            "\t\t\t\t\"roleId\": 1,\n" +
-            "\t\t\t\t\"menuName\": \"menu3\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu3\"\n" +
-            "\t\t\t}]\n" +
-            "\t\t}, {\n" +
-            "\t\t\t\"userId\": 1,\n" +
-            "\t\t\t\"roleId\": 2,\n" +
-            "\t\t\t\"roleName\": \"role2\",\n" +
-            "\t\t\t\"tb_menu\": [{\n" +
-            "\t\t\t\t\"roleId\": 2,\n" +
-            "\t\t\t\t\"menuName\": \"menu21\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu21\"\n" +
-            "\t\t\t}, {\n" +
-            "\t\t\t\t\"roleId\": 2,\n" +
-            "\t\t\t\t\"menuName\": \"menu22\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu22\"\n" +
-            "\t\t\t}, {\n" +
-            "\t\t\t\t\"roleId\": 2,\n" +
-            "\t\t\t\t\"menuName\": \"menu23\",\n" +
-            "\t\t\t\t\"menuSrc\": \"/menu23\"\n" +
-            "\t\t\t}]\n" +
-            "\t\t}, {\n" +
-            "\t\t\t\"userId\": 1,\n" +
-            "\t\t\t\"roleId\": 3,\n" +
-            "\t\t\t\"roleName\": \"role3\"\n" +
-            "\t\t}]\n" +
-            "\t}, {\n" +
-            "\t\t\"id\": 2,\n" +
-            "\t\t\"name\": \"李四\",\n" +
-            "\t\t\"age\": 17,\n" +
-            "\t\t\"createTime\": \"2022-1-22 12:30:00\",\n" +
-            "\t\t\"tb_role\": [{\n" +
-            "\t\t\t\"userId\": 2,\n" +
-            "\t\t\t\"roleId\": 4,\n" +
-            "\t\t\t\"roleName\": \"role4\"\n" +
-            "\t\t}, {\n" +
-            "\t\t\t\"userId\": 2,\n" +
-            "\t\t\t\"roleId\": 5,\n" +
-            "\t\t\t\"roleName\": \"role5\"\n" +
-            "\t\t}, {\n" +
-            "\t\t\t\"userId\": 2,\n" +
-            "\t\t\t\"roleId\": 6,\n" +
-            "\t\t\t\"roleName\": \"role6\"\n" +
-            "\t\t}]\n" +
-            "\t}]\n" +
+            "  \"data\": [\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:00:00\",\n" +
+            "      \"name\": \"张三\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 1,\n" +
+            "          \"roleName\": \"role1\",\n" +
+            "          \"tb_menu\": [\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu1\",\n" +
+            "              \"roleId\": 1,\n" +
+            "              \"menuName\": \"menu1\"\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu2\",\n" +
+            "              \"roleId\": 1,\n" +
+            "              \"menuName\": \"menu2\"\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu3\",\n" +
+            "              \"roleId\": 1,\n" +
+            "              \"menuName\": \"menu3\"\n" +
+            "            }\n" +
+            "          ],\n" +
+            "          \"userId\": 1\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 2,\n" +
+            "          \"roleName\": \"role2\",\n" +
+            "          \"tb_menu\": [\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu21\",\n" +
+            "              \"roleId\": 2,\n" +
+            "              \"menuName\": \"menu21\"\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu22\",\n" +
+            "              \"roleId\": 2,\n" +
+            "              \"menuName\": \"menu22\"\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"menuSrc\": \"/menu23\",\n" +
+            "              \"roleId\": 2,\n" +
+            "              \"menuName\": \"menu23\"\n" +
+            "            }\n" +
+            "          ],\n" +
+            "          \"userId\": 1\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 3,\n" +
+            "          \"roleName\": \"role3\",\n" +
+            "          \"userId\": 1\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 1,\n" +
+            "      \"age\": 16\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"createTime\": \"2022-1-22 12:30:00\",\n" +
+            "      \"name\": \"李四\",\n" +
+            "      \"tb_role\": [\n" +
+            "        {\n" +
+            "          \"roleId\": 4,\n" +
+            "          \"roleName\": \"role4\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 5,\n" +
+            "          \"roleName\": \"role5\",\n" +
+            "          \"userId\": 2\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"roleId\": 6,\n" +
+            "          \"roleName\": \"role6\",\n" +
+            "          \"userId\": 2\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"id\": 2,\n" +
+            "      \"age\": 17\n" +
+            "    }\n" +
+            "  ]\n" +
             "}";
 
 
     public static void main(String[] args) {
         // 测试时间
-//        Instant inst1 = Instant.now();
+        Instant inst1 = Instant.now();
         JSONObject json = JSON.parseObject(JSONSTR);
         System.out.println("json = " + json);
 
         // 封装数据库存储的数据结构
         List<ApiTableDTO> apiTableDtoList = getApiTableDtoList01();
-//        List<ApiTableDTO02> apiTableDtoList = getApiTableDtoList02();
 
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
         // 获取目标表
         List<JsonTableData> targetTable = getTargetTable(tableNameList);
         targetTable.forEach(System.out::println);
         // 获取Json的schema信息
-//        List<JsonSchema> schemas = getJsonSchema(apiTableDtoList);
-        List<JsonSchema> schemas = test01(apiTableDtoList);
+        List<JsonSchema> schemas = getJsonSchema(apiTableDtoList);
 //        schemas.forEach(System.out::println);
-        System.out.println("====================");
+//        System.out.println("====================");
         try {
             // json根节点处理
             rootNodeHandler(schemas, json, targetTable);
-            targetTable.forEach(System.out::println);
+//            targetTable.forEach(System.out::println);
 
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // ods_abbreviationName_tableName
             pgsqlUtils.executeBatchPgsql("", targetTable);
 
-//            Instant inst2 = Instant.now();
+            Instant inst2 = Instant.now();
 //            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
-//            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
+            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
         } catch (Exception e) {
             System.out.println("执行失败");
         }
@@ -381,52 +3323,8 @@ public class JsonUtils {
      */
     private static List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList) {
         List<JsonSchema> root = new ArrayList<>();
-
-        for (ApiTableDTO tableDto : apiTableDtoList) {
-            List<JsonSchema> dataSchema = new ArrayList<>();
-
-            // 判断是否父级
-            if (tableDto.pid) {
-                JsonSchema jsonSchema = JsonSchema.builder()
-                        .name("data")
-                        .type(JsonSchema.TypeEnum.ARRAY)
-                        .children(dataSchema)
-                        .build();
-                root.add(jsonSchema);
-            }
-
-            for (TableFieldsDTO fieldsDto : tableDto.list) {
-
-                dataSchema.add(JsonSchema.builder()
-                        .name(fieldsDto.fieldName)
-                        .type(converFieldType(fieldsDto.fieldType))
-                        .targetTableName(tableDto.tableName)
-                        .build());
-            }
-
-            if (!CollectionUtils.isEmpty(tableDto.childTableName)) {
-                List<JsonSchema> childJsonSchema = new ArrayList<>();
-                for (String child : tableDto.childTableName) {
-
-                    dataSchema.add(JsonSchema.builder()
-                            .name(child)
-                            .type(JsonSchema.TypeEnum.ARRAY)
-                            .targetTableName(tableDto.tableName)
-                            .children(childJsonSchema)
-                            .build());
-                }
-                dataSchema = childJsonSchema;
-            }
-        }
-
-        return root;
-    }
-
-
-    private static List<JsonSchema> test01(List<ApiTableDTO> apiTableDtoList) {
-        List<JsonSchema> root = new ArrayList<>();
         try {
-            Map<String, List<JsonSchema>> map = test03(apiTableDtoList);
+            Map<String, List<JsonSchema>> map = getSchemaDetail(apiTableDtoList);
             System.out.println("map = " + map);
             for (ApiTableDTO apiTableDTO : apiTableDtoList) {
 //                List<JsonSchema> dataSchema = test02(apiTableDTO);
@@ -456,18 +3354,22 @@ public class JsonUtils {
             return root;
         } catch (Exception e) {
             System.out.println("封装节点参数有误");
-//            return root;
+            log.error("【getTables】获取表名报错, ex", e);
+            throw new FkException(ResultEnum.PARSE_JSONSCHEMA_ERROR);
         }
-        return null;
     }
 
     /**
      * 封装表字段
      *
-     * @param tableDto tableDto
-     * @return
+     * @return java.util.List<com.fisk.dataaccess.dto.json.JsonSchema>
+     * @description 封装表字段
+     * @author Lock
+     * @date 2022/2/15 17:40
+     * @version v1.0
+     * @params tableDto
      */
-    private static List<JsonSchema> test02(ApiTableDTO tableDto) {
+    private static List<JsonSchema> getSchemaField(ApiTableDTO tableDto) {
         List<JsonSchema> dataSchema = new ArrayList<>();
 
         for (TableFieldsDTO fieldsDto : tableDto.list) {
@@ -484,71 +3386,22 @@ public class JsonUtils {
     /**
      * 封装所有参数
      *
-     * @param apiTableDtoList tableDto
-     * @return
+     * @return java.util.Map<java.lang.String, java.util.List < com.fisk.dataaccess.dto.json.JsonSchema>>
+     * @description 封装所有参数
+     * @author Lock
+     * @date 2022/2/15 17:41
+     * @version v1.0
+     * @params apiTableDtoList
      */
-    private static Map<String, List<JsonSchema>> test03(List<ApiTableDTO> apiTableDtoList) {
+    private static Map<String, List<JsonSchema>> getSchemaDetail(List<ApiTableDTO> apiTableDtoList) {
         Map<String, List<JsonSchema>> map = new HashMap();
 
         for (ApiTableDTO apiTableDTO : apiTableDtoList) {
-            List<JsonSchema> dataSchema = test02(apiTableDTO);
+            List<JsonSchema> dataSchema = getSchemaField(apiTableDTO);
             map.put(apiTableDTO.tableName, dataSchema);
         }
 
         return map;
-    }
-
-
-    private static List<JsonSchema> getJsonSchema02(List<ApiTableDTO02> apiTableDtoList) {
-        List<JsonSchema> root = new ArrayList<>();
-
-        for (ApiTableDTO02 tableDto : apiTableDtoList) {
-            List<JsonSchema> dataSchema = new ArrayList<>();
-
-            // 判断是否父级
-            if (tableDto.pid) {
-                JsonSchema jsonSchema = JsonSchema.builder()
-                        .name("data")
-                        .type(JsonSchema.TypeEnum.ARRAY)
-                        .children(dataSchema)
-                        .build();
-                root.add(jsonSchema);
-            }
-
-            for (TableFieldsDTO fieldsDto : tableDto.list) {
-
-                dataSchema.add(JsonSchema.builder()
-                        .name(fieldsDto.fieldName)
-                        .type(converFieldType(fieldsDto.fieldType))
-                        .targetTableName(tableDto.tableName)
-                        .build());
-            }
-
-            for (ApiTableDTO02 dto02 : tableDto.childTable) {
-
-                List<JsonSchema> ch = new ArrayList<>();
-
-                dataSchema.add(JsonSchema.builder()
-                        .name(dto02.tableName)
-                        .type(JsonSchema.TypeEnum.ARRAY)
-                        .targetTableName(tableDto.tableName)
-                        .children(ch)
-                        .build());
-
-                for (TableFieldsDTO fieldsDto : dto02.list) {
-
-                    ch.add(JsonSchema.builder()
-                            .name(fieldsDto.fieldName)
-                            .type(converFieldType(fieldsDto.fieldType))
-                            .targetTableName(tableDto.tableName)
-                            .build());
-                }
-
-            }
-
-        }
-
-        return root;
     }
 
     /**

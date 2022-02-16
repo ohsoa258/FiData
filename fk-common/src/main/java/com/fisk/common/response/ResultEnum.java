@@ -87,6 +87,7 @@ public enum ResultEnum {
     LOAD_VIEW_STRUCTURE_ERROR(5018, "获取视图结构失败"),
     READ_CSV_CONTENT_ERROR(5019, "读取csv内容失败"),
     READ_EXCEL_CONTENT_ERROR(5020, "读取excel内容失败"),
+    PARSE_JSONSCHEMA_ERROR(5021, "解析Json的schema信息失败"),
 
 
     /**

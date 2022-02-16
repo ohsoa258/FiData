@@ -51,7 +51,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 根据api_id查询物理表集合
         List<TableAccessPO> poList = getListTableAccessByApiId(id);
         // 根据table_id查询出表详情,并赋值给apiConfigDTO
-        poList.stream().map(tableAccessPO -> tableAccessImpl.getData(tableAccessPO.id)).forEachOrdered(dto -> apiConfigDTO.list.add(dto));
+        apiConfigDTO.list = poList.stream().map(tableAccessPO -> tableAccessImpl.getData(tableAccessPO.id)).collect(Collectors.toList());
         return apiConfigDTO;
     }
 
@@ -145,6 +145,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         // 删除api
         return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<ApiConfigDTO> getApiListData(long appId) {
+
+        List<ApiConfigPO> list = this.query().eq("app_id", appId).list();
+
+        return ApiConfigMap.INSTANCES.listPoToDto(list);
     }
 
     /**

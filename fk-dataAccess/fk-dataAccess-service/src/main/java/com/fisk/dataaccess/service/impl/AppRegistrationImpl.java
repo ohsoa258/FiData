@@ -17,10 +17,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.common.user.UserInfo;
 import com.fisk.dataaccess.dto.*;
-import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppDriveTypePO;
-import com.fisk.dataaccess.entity.AppRegistrationPO;
-import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
@@ -80,6 +77,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private TableFieldsMapper tableFieldsMapper;
     @Resource
     private TableFieldsImpl tableFieldsImpl;
+    @Resource
+    private ApiConfigMapper apiConfigMapper;
 
     /**
      * 添加应用
@@ -276,13 +275,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
+        // 删除应用下的api(api是新增的功能,在改动最少代码的情况下,只删除api)
+        QueryWrapper<ApiConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ApiConfigPO::getAppId, model.id);
+        List<ApiConfigPO> apiConfigPoList = apiConfigMapper.selectList(queryWrapper);
+        if (!CollectionUtils.isEmpty(apiConfigPoList)) {
+            apiConfigPoList.forEach(e -> apiConfigMapper.deleteByIdWithFill(e));
+        }
+
+        // 删除应用下的物理表
         List<TableAccessPO> accessList = tableAccessImpl.query()
                 .eq("app_id", model.id)
                 .eq("del_flag", 1)
                 .list();
-
         List<Long> tableIdList = new ArrayList<>();
-
         NifiVO vo = new NifiVO();
         List<TableListVO> tableList = new ArrayList<>();
 
