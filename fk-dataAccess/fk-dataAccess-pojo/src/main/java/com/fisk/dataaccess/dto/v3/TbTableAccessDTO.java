@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.dto.v3;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -8,6 +9,9 @@ import lombok.Data;
 @Data
 public class TbTableAccessDTO {
     public long id;
+
+    @ApiModelProperty(value = "父id", required = true)
+    public int pid;
 
     /**
      * tb_app_registration表id
