@@ -18,6 +18,7 @@ public class ComponentsClassDTO {
     private List<ComponentsClassDTO> children;
 
     public ComponentsClassDTO(Integer id,Integer pid, String name, String icon) {
+        this.id = id;
         this.pid = pid;
         this.name = name;
         this.icon = icon;
