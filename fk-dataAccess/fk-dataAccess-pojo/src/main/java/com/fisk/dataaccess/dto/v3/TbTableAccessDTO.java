@@ -18,6 +18,9 @@ public class TbTableAccessDTO {
      */
     public Long appId;
 
+    @ApiModelProperty(value = "实时api主键", required = true)
+    public Long apiId;
+
     /**
      * 应用名称
      */
