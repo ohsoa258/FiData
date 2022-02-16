@@ -72,5 +72,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     * */
     public String appName;
 
+    /**
+     * 是否同步
+     */
+    public Boolean openTransmission;
+
 
 }

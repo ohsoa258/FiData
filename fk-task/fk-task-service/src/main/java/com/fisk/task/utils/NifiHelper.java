@@ -20,7 +20,7 @@ import java.util.UUID;
 public class NifiHelper {
     public static String basePath;
     @Value("${nifi.basePath}")
-    public static void setBasePath(String basePath) {
+    public void setBasePath(String basePath) {
         NifiHelper.basePath = basePath;
     }
 

@@ -232,27 +232,28 @@ public class BuildNifiTaskListener {
 
             //5. 创建组件
             List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
-            //6. 启动组件
-            enabledProcessor(taskGroupEntity.getId(), processors);
+
+            enabledProcessor(taskGroupEntity.getId(), processors.subList(0,processors.size()-1));
             //7. 如果是接入,同步一次,然后把调度组件停掉
-            if(dto.groupStructureId==null){
-                ProcessorEntity processorEntity = processors.get(processors.size()-1);
+            if (dto.groupStructureId == null && dto.openTransmission) {
+                enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
+                ProcessorEntity processorEntity = processors.get(processors.size() - 1);
                 ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
                 processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
                 processorRunStatusEntity.setRevision(processorEntity.getRevision());
                 processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
-                NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(),processorRunStatusEntity);
+                NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
             }
             //7. 回写id
-            savaNifiConfig(cfgDbPool.getId(),ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
+            savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
             if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.TOPGODS.getName())) {
-                savaNifiConfig(dbPool.get(1).getId(),ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
-            }else if(Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())){
-                savaNifiConfig(dbPool.get(1).getId(),ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
-                savaNifiConfig(dbPool.get(0).getId(),ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
+                savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
+            } else if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTOPG.getName())) {
+                savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
+                savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_ODS_DB_POOL_COMPONENT_ID);
             } else if (Objects.equals(dto.synchronousTypeEnum.getName(), SynchronousTypeEnum.PGTODORIS.getName())) {
-                savaNifiConfig(dbPool.get(1).getId(),ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID);
-                savaNifiConfig(dbPool.get(0).getId(),ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
+                savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID);
+                savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
             }
 
         } catch (Exception e) {
@@ -1352,7 +1353,7 @@ public class BuildNifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    private String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum,String funcName){
+    public String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum,String funcName){
         TableBusinessDTO business = config.businessDTO;
         String targetTableName = config.processorConfig.targetTableName;
         String sql="";
