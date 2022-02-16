@@ -38,4 +38,23 @@ public interface AppApiMapper extends FKBaseMapper<AppApiPO> {
      */
     @Select("SELECT id,api_id,app_id,api_state FROM tb_app_api WHERE app_id=#{appId} AND del_flag=1;")
     List<AppApiPO> getSubscribeListByAppId(@Param("appId") int appId);
+
+    /**
+     * 根据应用id查询此应用下所有的已启用的&有效的&API为有效的api
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT\n" +
+            "\tt1.id,\n" +
+            "\tt1.api_id,\n" +
+            "\tt1.app_id,\n" +
+            "\tt1.api_state \n" +
+            "FROM\n" +
+            "\ttb_app_api t1\n" +
+            "\tLEFT JOIN tb_api_config t2 ON t1.api_id = t2.id \n" +
+            "WHERE\n" +
+            "\tt1.app_id = #{appId} \n" +
+            "\tAND t1.del_flag = 1 \n" +
+            "\tAND t2.del_flag = 1 ")
+    List<AppApiPO> getSubscribeListBy(@Param("appId") int appId);
 }

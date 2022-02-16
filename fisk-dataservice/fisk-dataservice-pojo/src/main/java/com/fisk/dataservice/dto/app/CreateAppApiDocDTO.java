@@ -23,7 +23,7 @@ public class CreateAppApiDocDTO
     /**
      * 应用api信息
      */
-    @ApiModelProperty(value = "应用api信息")
-    @NotNull()
-    public List<AppApiSubDTO> appApiDto;
+//    @ApiModelProperty(value = "应用api信息")
+//    @NotNull()
+//    public List<AppApiSubDTO> appApiDto;
 }

@@ -25,6 +25,7 @@ import com.fisk.dataservice.utils.pdf.exception.PDFException;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -257,19 +258,23 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
     public ResultEnum createDoc(CreateAppApiDocDTO dto, HttpServletResponse response) {
 //        try {
         // 第一步：检验请求参数
-        if (dto == null || CollectionUtils.isEmpty(dto.appApiDto))
+        if (dto == null)
+            return ResultEnum.ERROR;
+//        List<AppApiSubDTO> collect = dto.appApiDto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
+//        if (CollectionUtils.isEmpty(collect))
+//            return ResultEnum.DS_APPAPIDOC_DISABLE;
+//        dto.appApiDto = collect;
+        List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListBy(dto.appId);
+        if (CollectionUtils.isEmpty(subscribeListByAppId))
             return ResultEnum.DS_APPAPIDOC_EXISTS;
-        List<AppApiSubDTO> collect = dto.appApiDto.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(collect))
+        List<Integer> apiIdList = subscribeListByAppId.stream().filter(item -> item.apiState == ApiStateTypeEnum.Enable.getValue()).map(AppApiPO::getApiId).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(apiIdList))
             return ResultEnum.DS_APPAPIDOC_DISABLE;
-        dto.appApiDto = collect;
-        List<Integer> apiIdList = dto.appApiDto.stream().map(AppApiSubDTO::getApiId).collect(Collectors.toList());
-
-        // 第二步：查询需要生成的API接口
+        // 第二步：查询需要生成的API接口，在第一步查询时已验证API有效性
         List<ApiConfigPO> apiList = apiRegisterMapper.getListByAppApiIds(apiIdList, dto.appId);
-        if (CollectionUtils.isEmpty(apiList)
-                || apiList.size() != apiIdList.size())
-            return ResultEnum.DS_API_EXISTS;
+//        if (CollectionUtils.isEmpty(apiList)
+//                || apiList.size() != apiIdList.size())
+//            return ResultEnum.DS_API_EXISTS;
 
         // 第三步：查询API接口的请求参数
         List<Long> parmIdList = null;
@@ -309,7 +314,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        }
         String fileName = "APIServiceDoc" + v + ".pdf";
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "菲斯科白泽接口文档", docDTO, response);
+                templatePath, fileName, "菲斯科FiData接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -414,7 +419,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
         // API文档基础信息
         String jsonResult = "{\n" +
-                "    \"title\":\"白泽API接口文档\",\n" +
+                "    \"title\":\"FiData API接口文档\",\n" +
                 "    \"docVersion\":\"文档版本 V1.0\",\n" +
                 "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
                 "    \"isuDate\":\"发布日期：20220101\",\n" +
