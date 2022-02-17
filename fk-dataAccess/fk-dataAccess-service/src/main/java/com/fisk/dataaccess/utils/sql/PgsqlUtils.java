@@ -66,9 +66,9 @@ public class PgsqlUtils {
      * @date 2022/1/21 17:24
      * @version v1.0
      * @params jsonStr json字符串
-     * @params abbreviationName 应用简称
+     * @params tablePrefixName pg中的物理表名
      */
-    public void executeBatchPgsql(String abbreviationName, List<JsonTableData> res) throws Exception {
+    public void executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
@@ -88,7 +88,7 @@ public class PgsqlUtils {
                     String insertSqlIndex = "insert into ";
                     String insertSqlLast = "(";
                     String inserSql = "";
-                    insertSqlIndex = insertSqlIndex + tableName + "(";
+                    insertSqlIndex = insertSqlIndex + tablePrefixName + tableName + "(";
                     JSONObject object = (JSONObject) datum;
                     Iterator<Map.Entry<String, Object>> iter = object.entrySet().iterator();
                     while (iter.hasNext()) {

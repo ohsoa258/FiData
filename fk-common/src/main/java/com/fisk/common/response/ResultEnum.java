@@ -88,6 +88,9 @@ public enum ResultEnum {
     READ_CSV_CONTENT_ERROR(5019, "读取csv内容失败"),
     READ_EXCEL_CONTENT_ERROR(5020, "读取excel内容失败"),
     PARSE_JSONSCHEMA_ERROR(5021, "解析Json的schema信息失败"),
+    RECEIVE_DATA_NULL(5022, "本次并未接收到数据"),
+    PUSH_DATA_ERROR(5023, "推送数据失败,请联系管理员"),
+    PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
 
 
     /**

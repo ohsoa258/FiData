@@ -17,19 +17,13 @@ public class ApiTableDTO {
     @ApiModelProperty(value = "api下的表")
     public String tableName;
 
-    public Boolean pid;
-
-    public String fatherTableName;
+    @ApiModelProperty(value = "根节点")
+    public int pid;
 
     /**
      * 表字段集合
      */
     public List<TableFieldsDTO> list;
-
-    /**
-     * 预留待使用
-     */
-    public List<JsonSchema> jsonSchemaList;
 
     @ApiModelProperty(value = "子级表名")
     public List<String> childTableName;
