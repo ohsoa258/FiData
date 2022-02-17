@@ -14,7 +14,9 @@ public enum  serverModuleTypeEnum implements BaseEnum {
 
     DATA_DISPATCH("数据调度",2),
 
-    DATA_SERVICE("Api服务",3);
+    DATA_SERVICE("Api服务",3),
+
+    DATA_MANAGEMENT("数据治理",4);
 
     private final String name;
     private final int value;

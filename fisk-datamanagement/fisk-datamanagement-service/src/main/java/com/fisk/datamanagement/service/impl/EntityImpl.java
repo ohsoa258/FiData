@@ -193,6 +193,10 @@ public class EntityImpl implements IEntity {
     {
         //获取所属人
         dto.entity.attributes.owner=userHelper.getLoginUserInfo().username;
+        if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName()))
+        {
+            dto.entity.attributes.comment=dto.entity.attributes.userName+"&"+dto.entity.attributes.password;
+        }
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         updateRedis();

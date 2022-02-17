@@ -145,6 +145,7 @@ public enum ResultEnum {
      */
     BAD_REQUEST(400,"错误请求"),
     NO_CONTENT(204,"没有内容"),
+    NOT_SUPPORT(205,"暂不支持该类型数据查询"),
 
     /**
      * 数据服务
