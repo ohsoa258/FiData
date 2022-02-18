@@ -1202,11 +1202,16 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 }
                 //清空队列
                 this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
-                //禁用2个控制器服务
+                //禁用2个控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
                 for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 4)) {
                     if (controllerServicesId != null) {
+                        //禁用
                         this.controllerServicesRunStatus(controllerServicesId);
-                        //禁用并删除
+                        }
+                }
+                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 4)) {
+                    if (controllerServicesId != null) {
+                        //删除
                         ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
                         NifiHelper.getControllerServicesApi().removeControllerService(controllerServicesId,controllerService.getRevision().getVersion().toString(),"",false);
                     }
