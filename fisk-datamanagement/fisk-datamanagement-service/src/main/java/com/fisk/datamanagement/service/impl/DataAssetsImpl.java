@@ -7,12 +7,9 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
 import com.fisk.datamanagement.service.IDataAssets;
-import com.google.inject.internal.cglib.core.$Signature;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
