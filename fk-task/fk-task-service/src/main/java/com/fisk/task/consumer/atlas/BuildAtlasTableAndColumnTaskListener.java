@@ -297,6 +297,7 @@ public class BuildAtlasTableAndColumnTaskListener
         bfd.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
         bfd.queryStartTime=buildPhysicalTableDTO.queryStartTime;
         bfd.queryEndTime=buildPhysicalTableDTO.queryEndTime;
+        bfd.openTransmission=buildPhysicalTableDTO.openTransmission;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

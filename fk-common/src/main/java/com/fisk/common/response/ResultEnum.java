@@ -37,6 +37,7 @@ public enum ResultEnum {
     NOTFOUND_REQUEST(1013, "未找到请求"),
     NIFI_NOT_FIND_DATA(1014, "nifi查不到数据"),
     LOGIN_ACCOUNT_DISABLED(1015,"该登录账号已被禁用"),
+    TOKEN_EXCEPTION(1016,"该登录账号仅用于推送数据,无权访问其他服务"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -88,6 +89,9 @@ public enum ResultEnum {
     READ_CSV_CONTENT_ERROR(5019, "读取csv内容失败"),
     READ_EXCEL_CONTENT_ERROR(5020, "读取excel内容失败"),
     PARSE_JSONSCHEMA_ERROR(5021, "解析Json的schema信息失败"),
+    RECEIVE_DATA_NULL(5022, "本次并未接收到数据"),
+    PUSH_DATA_ERROR(5023, "推送数据失败,请联系管理员"),
+    PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
 
 
     /**
@@ -142,6 +146,7 @@ public enum ResultEnum {
      */
     BAD_REQUEST(400,"错误请求"),
     NO_CONTENT(204,"没有内容"),
+    NOT_SUPPORT(205,"暂不支持该类型数据查询"),
 
     /**
      * 数据服务

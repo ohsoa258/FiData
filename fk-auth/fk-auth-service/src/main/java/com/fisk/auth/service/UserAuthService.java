@@ -25,4 +25,12 @@ public interface UserAuthService {
      * @param response 响应数据，写cookie用
      */
     void logout(HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 获取token
+     *
+     * @param dto dto
+     * @return 获取token结果
+     */
+    ResultEntity<String> getToken(UserAuthDTO dto);
 }

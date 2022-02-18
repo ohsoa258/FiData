@@ -51,4 +51,11 @@ public class UserAuthController {
         userAuthService.logout(request, response);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/getToken")
+    public ResultEntity<String> getToken(
+            @RequestBody UserAuthDTO dto) {
+
+        return userAuthService.getToken(dto);
+    }
 }

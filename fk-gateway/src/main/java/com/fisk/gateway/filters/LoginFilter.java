@@ -79,6 +79,16 @@ public class LoginFilter implements GlobalFilter, Ordered {
             // 设置报表永久token
             if (userInfo.getId() == 102) {
                 return chain.filter(exchange);
+                // 推送数据的请求路径判断
+            } else if (userInfo.getId() >= -200000 && userInfo.getId() <= -100000) {
+                ResultEntity<Boolean> result = authClient.pushDataPathIsExists(request.getPath().value());
+                if (result.code == ResultEnum.SUCCESS.getCode() && result.data) {
+                    return chain.filter(exchange);
+                    // 当前请求路径不在推送数据的白名单中
+                } else if (result.code == ResultEnum.SUCCESS.getCode()&& !result.data) {
+                    log.error("远程调用失败，方法名：【auth-service:pushDataPathIsExists】");
+                    return buildResult(response, exchange, ResultEnum.TOKEN_EXCEPTION.getMsg());
+                }
             } else {
                 // 3.3.刷新jwt
                 jwtUtils.refreshJwt(userInfo.getId());

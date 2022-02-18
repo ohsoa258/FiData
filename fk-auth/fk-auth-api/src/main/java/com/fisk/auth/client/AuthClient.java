@@ -31,4 +31,12 @@ public interface AuthClient {
     @GetMapping("/client/pathIsExists")
     ResultEntity<Boolean> pathIsExists(@RequestParam("path") String path);
 
+    /**
+     * 判断请求路径是否在白名单内
+     *
+     * @param path 请求地址
+     * @return 返回结果
+     */
+    @GetMapping("/client/pushDataPathIsExists")
+    public ResultEntity<Boolean> pushDataPathIsExists(@RequestParam("path") String path);
 }

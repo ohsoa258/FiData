@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.GenerateApiDTO;
+import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
 import java.util.List;
@@ -78,5 +79,13 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return list
      */
     List<GenerateApiDTO> generateApi(long id);
+
+    /**
+     * 推送数据
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum pushData(ReceiveDataDTO dto);
 }
 

@@ -92,6 +92,17 @@ public class UserAuthServiceImpl implements UserAuthService {
         redis.del(RedisKeyBuild.buildLoginUserInfo(userDetail.getId()));
     }
 
+    @Override
+    public ResultEntity<String> getToken(UserAuthDTO dto) {
+        UserDetail userDetail = UserDetail.of(dto.getTemporaryId(), dto.getUserAccount());
+        // 生成jwt: token
+        String token = SystemConstants.AUTH_TOKEN_HEADER + jwtUtils.createJwt(userDetail);
+        UserInfo userInfo = UserInfo.of(dto.getTemporaryId(), dto.getUserAccount(), token);
+        // 一个小时有效期
+        redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
+    }
+
     private void writeCookie(HttpServletResponse response, String token) {
         // cookie的作用域
         Cookie cookie = new Cookie(COOKIE_NAME, token);

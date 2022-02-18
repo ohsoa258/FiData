@@ -74,6 +74,10 @@ public class SynchronizationPgData {
     private String fiDataProtocol;
     @Value("${fidata.database.rdbmstype}")
     private String fiDataRdbmsType;
+    @Value("${fidata.database.username}")
+    private String fiDataUserName;
+    @Value("${fidata.database.password}")
+    private String fiDataPassword;
     @Value("${fidata.database.ods}")
     private String ods;
     @Value("${fidata.database.dw}")
@@ -549,7 +553,7 @@ public class SynchronizationPgData {
                 attributesDTO.protocol=fiDataProtocol;
                 attributesDTO.rdbms_type=fiDataRdbmsType;
                 attributesDTO.description=fiDataName;
-                attributesDTO.comment=fiDataName;
+                attributesDTO.comment=fiDataUserName+"&"+fiDataPassword;
                 break;
             case RDBMS_DB:
                 attributesDTO.qualifiedName=po.qualifiedName+"_"+name;
