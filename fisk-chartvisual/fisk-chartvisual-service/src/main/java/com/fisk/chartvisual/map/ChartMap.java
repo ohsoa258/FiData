@@ -31,7 +31,7 @@ public interface ChartMap {
     @Mappings({
             @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
             @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte"),
-            @Mapping(target = "content",source = "content",qualifiedByName="publicSplit")
+            //@Mapping(target = "content",source = "content",qualifiedByName="publicSplit")
     })
     ChartPO dtoToPo(ReleaseChart dto);
 
