@@ -1,11 +1,11 @@
 package com.fisk.auth.web;
 
 import com.fisk.auth.service.ClientInfoService;
+import com.fisk.auth.service.IAuthenticatePushDataListService;
 import com.fisk.auth.service.IAuthenticateWhiteListService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +26,8 @@ public class ClientController {
     private ClientInfoService clientInfoService;
     @Resource
     private IAuthenticateWhiteListService service;
+    @Resource
+    private IAuthenticatePushDataListService pushDataListService;
 
     @GetMapping("/key")
     public ResponseEntity<String> getSecretKey(
@@ -45,8 +47,18 @@ public class ClientController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.pathIsExists(path));
     }
 
+    @GetMapping("/pushDataPathIsExists")
+    public ResultEntity<Boolean> pushDataPathIsExists(String path) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, pushDataListService.pushDataPathIsExists(path));
+    }
+
     @GetMapping("/refreshWhiteList")
     public ResultEntity<Object> refreshWhiteList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDataToRedis(null));
+    }
+
+    @GetMapping("/refreshPushDataList")
+    public ResultEntity<Object> refreshPushDataList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, pushDataListService.loadPushDataListToRedis(null));
     }
 }

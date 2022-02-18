@@ -37,6 +37,7 @@ public enum ResultEnum {
     NOTFOUND_REQUEST(1013, "未找到请求"),
     NIFI_NOT_FIND_DATA(1014, "nifi查不到数据"),
     LOGIN_ACCOUNT_DISABLED(1015,"该登录账号已被禁用"),
+    TOKEN_EXCEPTION(1016,"该登录账号仅用于推送数据,无权访问其他服务"),
 
     /**
      * 报表可视化服务，错误码从2000开始
