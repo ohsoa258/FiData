@@ -46,11 +46,6 @@ public class DataAssetsImpl implements IDataAssets {
             String url="";
             //获取账号密码
             String[] comments = attributes.getString("comment").split("&");
-            /*rdbmsType="doris";
-            String userName="root";//comments[0];
-            String password="Password01!";//comments[1];
-            String hostname="192.168.11.134";//attributes.getString("hostname");
-            String port="9030";//attributes.getString("port");*/
             String userName=comments[0];
             String password=comments[1];
             String hostname=attributes.getString("hostname");
@@ -66,8 +61,8 @@ public class DataAssetsImpl implements IDataAssets {
                     url="jdbc:sqlserver://"+hostname+":"+port+";DatabaseName="+dto.dbName;
                     break;
                 case "oracle":
-                    driver="oracle.jdbc.driver.OracleDriver";
-                    url="jdbc:oracle:thin:@ " +hostname+":"+port+":"+dto.dbName;
+                    driver="oracle.jdbc.OracleDriver";
+                    url="jdbc:oracle:thin:@" +hostname+":"+port+":"+"ORCLCDB";
                     break;
                 case "postgresql":
                     driver="org.postgresql.Driver";
@@ -96,27 +91,34 @@ public class DataAssetsImpl implements IDataAssets {
                 sql="select * from "+dto.tableName+condition;
             }else {
                 //获取总条数
-                String getTotalSql = "select count(*) as total from " + dto.tableName + " as tab "+condition+" ";
+                String getTotalSql = "select count(*) as totalNum from " + dto.tableName+condition;
                 ResultSet rSet = st.executeQuery(getTotalSql);
                 int rowCount = 0;
                 if (rSet.next()) {
-                    rowCount = rSet.getInt("total");
+                    rowCount = rSet.getInt("totalNum");
                 }
                 rSet.close();
                 data.total=rowCount;
                 //分页获取数据
                 int offset = (dto.pageIndex - 1) * dto.pageSize;
+                int skipCount=dto.pageIndex*dto.pageSize;
                 sql = "select * from "+ dto.tableName+condition+" order by "+dto.columnName+ " limit " + dto.pageSize + " offset " + offset;
                 switch (rdbmsType)
                 {
                     case "mysql":
                     case "sqlserver":
-                        sql="select top "+dto.pageSize+" * from (select row_number() over(order by " +dto.columnName+"asc"
-                                +") as rownumber,* from "+dto.tableName+") temp_row "+condition+" and rownumber>"+offset;
+                        sql="select top "+dto.pageSize+" * from (select row_number() over(order by "
+                                +dto.columnName+" asc "
+                                +") as rownumber,* from "
+                                +dto.tableName+") temp_row "+condition
+                                +" and rownumber>"+offset;
                         break;
                     case "oracle":
-                        sql="select * from (select rownum as rowno, t.* from "+dto.tableName +condition
-                                +" and rownum <= "+offset +")table_alias where table_alias.rowno >= "+dto.pageIndex;
+                        sql="select * from ( select rownum, t.* from "+dto.tableName
+                                +" t "
+                                +condition
+                                +" and rownum <= "+skipCount
+                                +" ) table_alias where table_alias.\"ROWNUM\" >= "+offset+"";
                     case "postgresql":
                     case "doris":
                     default:
