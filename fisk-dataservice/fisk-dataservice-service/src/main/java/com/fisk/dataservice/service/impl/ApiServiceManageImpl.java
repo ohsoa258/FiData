@@ -3,12 +3,16 @@ package com.fisk.dataservice.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
+import com.fisk.common.user.UserInfo;
 import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
+import com.fisk.common.utils.EnCryptUtils;
 import com.fisk.common.utils.SqlParmUtils;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
@@ -23,8 +27,11 @@ import com.fisk.dataservice.service.IApiServiceManageService;
 
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,23 +65,41 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     @Resource
     private ApiFilterConditionMapper apiFilterConditionMapper;
 
+    @Resource
+    private UserHelper userHelper;
+
     @Override
     public ResultEntity<Object> getToken(TokenDTO dto) {
-        return null;
+        String token = null;
+        // 第一步：验证账号密码是否有效
+        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
+        String pwd = new String(base64Encrypt);
+        AppConfigPO byAppInfo = appRegisterMapper.getByAppInfo(dto.appAccount, pwd);
+        if (byAppInfo == null)
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS, token);
+        // 第二步：调用授权接口，根据账号密码生成token
+        Long uniqueId = byAppInfo.id + 100000;
+        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, token);
     }
 
     @Override
     public ResultEntity<Object> getData(RequstDTO dto) {
         ResponseVO responseVO = new ResponseVO();
-        String appAccount = "IMC_test";
+        String appAccount = "";//"IMC_test";
 
         // 第一步：验证当前请求是否合法，解析token
-//        String token = "";
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//        String token  = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
 //        if (token == null || token.isEmpty())
 //            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
-//        appAccount = "DDS_lijiawen";
-//        if (appAccount == null || appAccount.isEmpty())
-//            return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
+//        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        if (userInfo == null)
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
+
+        appAccount = userInfo.username;
+        if (appAccount == null || appAccount.isEmpty())
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
 
         // 第二步：验证当前应用（下游系统）是否有效
         AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
