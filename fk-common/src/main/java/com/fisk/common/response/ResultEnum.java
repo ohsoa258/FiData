@@ -171,7 +171,8 @@ public enum ResultEnum {
     DS_APPAPIDOC_DISABLE(10017, "请先启用API"),
     DS_API_FIELD_EXISTS(10018, "字段信息为空，请检查API配置"),
     DS_APPAPIDOC_ERROR(10019, "pdf文档生成失败"),
-    DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已订阅的API，请先解除订阅");
+    DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已订阅的API，请先解除订阅"),
+    DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对");
 
     ResultEnum(int code, String msg) {
         this.code = code;

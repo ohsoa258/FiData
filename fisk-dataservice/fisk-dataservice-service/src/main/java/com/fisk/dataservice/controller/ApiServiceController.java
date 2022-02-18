@@ -32,7 +32,7 @@ public class ApiServiceController {
     @PostMapping("/getToken")
     public ResultEntity<Object> getToken(@RequestBody TokenDTO dto)
     {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getToken(dto));
+        return service.getToken(dto);
     }
 
     @ApiOperation("获取数据")

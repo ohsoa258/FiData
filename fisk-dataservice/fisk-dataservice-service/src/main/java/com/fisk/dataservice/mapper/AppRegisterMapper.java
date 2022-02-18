@@ -44,4 +44,12 @@ public interface AppRegisterMapper extends FKBaseMapper<AppConfigPO> {
      */
     @Select("SELECT id,app_name,app_name,app_desc,app_password,app_principal FROM tb_app_config WHERE app_account=#{appAccount} AND del_flag=1;")
     AppConfigPO getByAppAccount(@Param("appAccount") String appAccount);
+
+    /**
+     * 根据应用账号密码查询应用信息
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT id,app_name,app_name,app_desc,app_password,app_principal FROM tb_app_config WHERE app_account=#{appAccount} AND app_password=#{appPassword} AND del_flag=1;")
+    AppConfigPO getByAppInfo(@Param("appAccount") String appAccount, @Param("appPassword") String appPassword);
 }
