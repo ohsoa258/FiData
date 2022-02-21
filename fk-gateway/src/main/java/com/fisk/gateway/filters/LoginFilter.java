@@ -80,7 +80,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
             if (userInfo.getId() == 102) {
                 return chain.filter(exchange);
                 // 推送数据的请求路径判断
-            } else if (userInfo.getId() >= -200000 && userInfo.getId() <= -100000) {
+            } else if (userInfo.getId() >= 100000 && userInfo.getId() <= 300000) {
                 ResultEntity<Boolean> result = authClient.pushDataPathIsExists(request.getPath().value());
                 if (result.code == ResultEnum.SUCCESS.getCode() && result.data) {
                     return chain.filter(exchange);

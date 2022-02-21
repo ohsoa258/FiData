@@ -1,8 +1,11 @@
 package com.fisk.auth.client;
 
+import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.response.ResultEntity;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -39,4 +42,13 @@ public interface AuthClient {
      */
     @GetMapping("/client/pushDataPathIsExists")
     public ResultEntity<Boolean> pushDataPathIsExists(@RequestParam("path") String path);
+
+    /**
+     * 获取token
+     *
+     * @param dto dto
+     * @return 获取token结果
+     */
+    @PostMapping("/user/getToken")
+    ResultEntity<String> getToken(@RequestBody UserAuthDTO dto);
 }
