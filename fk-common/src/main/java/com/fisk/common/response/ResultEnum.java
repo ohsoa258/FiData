@@ -93,6 +93,7 @@ public enum ResultEnum {
     RECEIVE_DATA_NULL(5022, "本次并未接收到数据"),
     PUSH_DATA_ERROR(5023, "推送数据失败,请联系管理员"),
     PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
+    REALTIME_ACCOUNT_OR_PWD_ERROR(5024, "请输入正确的账号或密码"),
 
 
     /**
