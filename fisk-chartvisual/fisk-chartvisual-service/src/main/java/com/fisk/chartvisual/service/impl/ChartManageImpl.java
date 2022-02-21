@@ -86,7 +86,7 @@ public class ChartManageImpl implements IChartManageService {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        /*List<ChildvisualDTO> poList = this.stringSplit(dto.content, Integer.parseInt(String.valueOf(model.getId())));
+        List<ChildvisualDTO> poList = stringSplit(dto.content, Integer.parseInt(String.valueOf(model.getId())));
         if (!CollectionUtils.isEmpty(poList)){
             for (ChildvisualDTO po : poList) {
                 ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);
@@ -95,7 +95,7 @@ public class ChartManageImpl implements IChartManageService {
                     return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
                 }
             }
-        }*/
+        }
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.id);
     }
@@ -105,7 +105,7 @@ public class ChartManageImpl implements IChartManageService {
      * @param context
      * @return
      */
-    public List<ChildvisualDTO> stringSplit(String context,Integer chartId){
+    public static List<ChildvisualDTO> stringSplit(String context,Integer chartId){
         List<ChildvisualDTO> dtoList = new ArrayList<>();
         JSONObject jsonObject = JSONObject.parseObject(context);
         JSONArray jsonArray = jsonObject.getJSONArray("listChar");
@@ -154,8 +154,8 @@ public class ChartManageImpl implements IChartManageService {
                 return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
                 ChartPO chartPO = chartMapper.selectById((id));
-                /*String content = this.assemblySplicing(id);
-                chartPO.setContent(content);*/
+                String content = this.assemblySplicing(id);
+                chartPO.setContent(content);
                 return ChartMap.INSTANCES.poToVo(chartPO);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

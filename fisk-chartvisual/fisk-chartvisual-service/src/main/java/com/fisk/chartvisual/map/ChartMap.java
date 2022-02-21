@@ -31,9 +31,20 @@ public interface ChartMap {
     @Mappings({
             @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
             @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte"),
-            //@Mapping(target = "content",source = "content",qualifiedByName="publicSplit")
+            @Mapping(target = "content",source = "content",qualifiedByName="publicSplit")
     })
     ChartPO dtoToPo(ReleaseChart dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    @Mappings({
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
+    })
+    ChartPO chartDtoToPo(ReleaseChart dto);
 
     /**
      * 发布草稿，draftPo => chartPo
