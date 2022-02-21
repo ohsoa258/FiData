@@ -12,6 +12,7 @@ import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Nifi组件创建
@@ -448,6 +449,14 @@ public interface INifiComponentsBuild {
      * @return FunnelEntity
      */
     BusinessResult<FunnelEntity> createFunnel(FunnelDTO funnelDTO);
+
+    /**
+     * 创建nifi全局变量
+     *
+     * @param variable 配置信息
+     * @return
+     */
+    void buildNifiGlobalVariable(Map<String, String> variable);
 
 
 }

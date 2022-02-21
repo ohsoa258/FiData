@@ -589,7 +589,7 @@ public class BuildNifiTaskListener {
         BusinessResult<ControllerServiceEntity> sourceRes = new BusinessResult<>(true, "控制器服务创建成功");
         if (config.groupConfig.newApp||Objects.equals(buildNifiFlowDTO.dataClassifyEnum, DataClassifyEnum.CUSTOMWORKDATAACCESS) ||
                 Objects.equals(buildNifiFlowDTO.dataClassifyEnum, DataClassifyEnum.DATAMODELKPL)) {
-            BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, NifiConstants.ApiConstants.ROOT_NODE, DbPoolTypeEnum.TARGET);
+            BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, NifiConstants.ApiConstants.ROOT_NODE, DbPoolTypeEnum.TARGET,synchronousTypeEnum);
             if (nifiConfigPo != null) {
                 ControllerServiceEntity data = new ControllerServiceEntity();
                 data.setId(nifiConfigPo.componentId);
@@ -603,7 +603,7 @@ public class BuildNifiTaskListener {
                 data.setId(nifiSourceConfigPo.componentId);
                 sourceRes.data = data;
             }else{
-                BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE);
+                BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE,synchronousTypeEnum);
                 sourceRes = componentsBuild.buildDbControllerService(sourceDto);
             }
             if (targetRes.success && sourceRes.success) {
@@ -634,30 +634,58 @@ public class BuildNifiTaskListener {
      * @param type    数据源类型
      * @return dto
      */
-    private BuildDbControllerServiceDTO buildDbControllerServiceDTO(DataAccessConfigDTO config, String groupId, DbPoolTypeEnum type) {
+    private BuildDbControllerServiceDTO buildDbControllerServiceDTO(DataAccessConfigDTO config, String groupId, DbPoolTypeEnum type,SynchronousTypeEnum synchronousTypeEnum) {
         DataSourceConfig dsConfig;
         String name;
+        BuildDbControllerServiceDTO dto = new BuildDbControllerServiceDTO();
+        HashMap<String, String> configMap = new HashMap<>();
         switch (type) {
             case SOURCE:
                 dsConfig = config.sourceDsConfig;
                 name = "Source Data DB Connection";
+                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
+                    dto.conUrl = ComponentIdTypeEnum.PG_DW_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.PG_DW_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.PG_DW_DB_POOL_PASSWORD.getName();
+                } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                    dto.conUrl = ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName();
+                }
                 break;
             case TARGET:
                 dsConfig = config.targetDsConfig;
                 name = "Target Data DB Connection";
+                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                    dto.conUrl = ComponentIdTypeEnum.PG_ODS_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.PG_ODS_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.PG_ODS_DB_POOL_PASSWORD.getName();
+                } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
+                    dto.conUrl = ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_PASSWORD.getName();
+                }else if(Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)){
+                    dto.conUrl = ComponentIdTypeEnum.PG_DW_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.PG_DW_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.PG_DW_DB_POOL_PASSWORD.getName();
+                }
                 break;
             case CONFIG:
                 dsConfig = config.cfgDsConfig;
                 name = "Config Data DB Connection";
+                    dto.conUrl = ComponentIdTypeEnum.CFG_DB_POOL_URL.getName();
+                    dto.user = ComponentIdTypeEnum.CFG_DB_POOL_USERNAME.getName();
+                    dto.pwd = ComponentIdTypeEnum.CFG_DB_POOL_PASSWORD.getName();
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
-        BuildDbControllerServiceDTO dto = new BuildDbControllerServiceDTO();
-        dto.conUrl = dsConfig.jdbcStr;
+
+        configMap.put("${"+dto.pwd+"}",dsConfig.password);
+        configMap.put("${"+dto.user+"}",dsConfig.user);
+        configMap.put("${"+dto.conUrl+"}",dsConfig.jdbcStr);
+        componentsBuild.buildNifiGlobalVariable(configMap);
         dto.driverName = dsConfig.type.getName();
-        dto.user = dsConfig.user;
-        dto.pwd = dsConfig.password;
         dto.enabled = true;
         dto.groupId = groupId;
         dto.name = name;
@@ -1462,7 +1490,7 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "Query numbers Field";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
+        querySqlDto.querySql = "select "+dto.id+" as table_id, "+dto.type.getValue()+" as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -1538,6 +1566,8 @@ public class BuildNifiTaskListener {
         List<String> strings = new ArrayList<>();
         strings.add(NifiConstants.AttrConstants.NUMBERS);
         strings.add(NifiConstants.AttrConstants.END_TIME);
+        strings.add(NifiConstants.AttrConstants.TABLE_TYPE);
+        strings.add(NifiConstants.AttrConstants.TABLE_ID);
         dto.selfDefinedParameter = strings;
         dto.positionDTO = NifiPositionHelper.buildYPositionDTO(15);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
@@ -1656,7 +1686,10 @@ public class BuildNifiTaskListener {
         //管道id
         buildConsumeKafkaProcessorDTO.GroupID = "dmp.nifi.datafactory.pipeline"+UUID.randomUUID();
         buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
-        buildConsumeKafkaProcessorDTO.KafkaBrokers = KafkaBrokers;
+        Map<String, String> variable = new HashMap<>();
+        variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+        componentsBuild.buildNifiGlobalVariable(variable);
+        buildConsumeKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
         String targetTableName = configDTO.processorConfig.targetTableName;
         String[] s = targetTableName.split("_");
         String s1 = targetTableName.replaceFirst(s[0] + "_", "");
@@ -1676,7 +1709,10 @@ public class BuildNifiTaskListener {
      */
     public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId) {
         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
-        buildPublishKafkaProcessorDTO.KafkaBrokers = KafkaBrokers;
+        Map<String, String> variable = new HashMap<>();
+        variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+        componentsBuild.buildNifiGlobalVariable(variable);
+        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
         buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
         buildPublishKafkaProcessorDTO.groupId = groupId;
         buildPublishKafkaProcessorDTO.name = "PublishKafka";
@@ -1819,7 +1855,7 @@ public class BuildNifiTaskListener {
             }
             return cfgRes;
         } else {
-            BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.CONFIG);
+            BuildDbControllerServiceDTO targetDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.CONFIG,null);
             BusinessResult<ControllerServiceEntity> targetRes = componentsBuild.buildDbControllerService(targetDto);
             if (targetRes.success) {
                 return targetRes.data;

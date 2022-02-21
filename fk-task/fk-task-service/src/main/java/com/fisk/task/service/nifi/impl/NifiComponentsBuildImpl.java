@@ -1737,6 +1737,51 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     }
 
+    @Override
+    public void buildNifiGlobalVariable(Map<String, String> variable) {
+        try {
+            VariableRegistryEntity variableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
+            VariableRegistryDTO variableRegistry1 = variableRegistry.getVariableRegistry();
+            List<VariableEntity> variables = variableRegistry1.getVariables();
+            Iterator<Map.Entry<String, String>> externalStructureMap = variable.entrySet().iterator();
+
+            while (externalStructureMap.hasNext()) {
+                Map.Entry<String, String> next = externalStructureMap.next();
+                String key = next.getKey();
+                Boolean existent = false;
+                for (int i = 0; i < variables.size(); i++) {
+                    //判断有没有再保存创建
+                    VariableDTO variable1 = variables.get(i).getVariable();
+                    String name = variable1.getName();
+                    if (Objects.equals(key, name)) {
+                        existent = true;
+                    }
+                }
+                if (!existent) {
+                    VariableRegistryEntity variableRegistryEntity = new VariableRegistryEntity();
+                    VariableRegistryDTO variableRegistry2 = new VariableRegistryDTO();
+                    List<VariableEntity> variables1 = new ArrayList<>();
+                    VariableEntity variableEntity = new VariableEntity();
+                    VariableDTO variable1 = new VariableDTO();
+                    variable1.setName(key);
+                    variable1.setValue(variable.get(key));
+                    variableEntity.setVariable(variable1);
+                    variables1.add(variableEntity);
+                    variableRegistry2.setVariables(variables1);
+                    variableRegistry2.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
+                    variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
+                    variableRegistryEntity.setVariableRegistry(variableRegistry2);
+                    RevisionDTO processGroupRevision = variableRegistry.getProcessGroupRevision();
+                    variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
+                    System.out.println(JSON.toJSONString(variableRegistryEntity));
+                    NifiHelper.getProcessGroupsApi().updateVariableRegistry(variableRegistry.getVariableRegistry().getProcessGroupId(), variableRegistryEntity);
+                }
+            }
+        } catch (ApiException e) {
+            log.error("查询全局变量失败." + e.getResponseBody());
+        }
+    }
+
     /*
      *创建notify组件
      * */
