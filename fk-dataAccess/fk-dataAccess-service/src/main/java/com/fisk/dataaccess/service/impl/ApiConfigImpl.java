@@ -4,7 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.auth.client.AuthClient;
+import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.common.constants.RedisTokenKey;
 import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
@@ -15,6 +20,7 @@ import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.entity.ApiConfigPO;
+import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.map.ApiConfigMap;
@@ -23,6 +29,7 @@ import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
+import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +46,7 @@ import java.util.stream.Collectors;
  * @email feihongz@fisksoft.com.cn
  * @date 2022-01-17 14:45:02
  */
+@Slf4j
 @Service
 public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> implements IApiConfig {
 
@@ -50,6 +58,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private TableFieldsImpl tableFieldImpl;
     @Resource
     private AppRegistrationImpl appRegistrationImpl;
+    @Resource
+    private AuthClient authClient;
+    @Resource
+    private AppDataSourceImpl appDataSourceImpl;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -229,6 +241,25 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEnum.PUSH_DATA_ERROR;
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEntity<String> getToken(UserAuthDTO dto) {
+
+        // 根据账号名称查询对应的app_id下
+        AppDataSourcePO dataSourcePO = appDataSourceImpl.query().eq("realtime_account", dto.getUserAccount()).one();
+        if (!dataSourcePO.realtimeAccount.equals(dto.getUserAccount()) || !dataSourcePO.realtimePwd.equals(dto.getPassword())) {
+            return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR, ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR.getMsg());
+        }
+        dto.setTemporaryId(RedisTokenKey.DATA_ACCESS_TOKEN + dataSourcePO.id);
+
+        ResultEntity<String> result = authClient.getToken(dto);
+        if (result.code == ResultEnum.SUCCESS.getCode()) {
+            return result;
+        } else {
+            log.error("远程调用失败,方法名: 【auth-service:getToken】");
+            return ResultEntityBuild.build(ResultEnum.GET_TOKEN_ERROR);
+        }
     }
 
     private List<ApiTableDTO> getApiTableDtoList(List<TableAccessPO> accessPOList) {

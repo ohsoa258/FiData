@@ -94,6 +94,7 @@ public enum ResultEnum {
     PUSH_DATA_ERROR(5023, "推送数据失败,请联系管理员"),
     PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
     REALTIME_ACCOUNT_OR_PWD_ERROR(5024, "请输入正确的账号或密码"),
+    REALTIME_ACCOUNT_ISEXIST(5025, "当前账号已存在,请重新输入"),
 
 
     /**
@@ -141,6 +142,9 @@ public enum ResultEnum {
     DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
     SCHEDULE_PARAME_NULL(9004,"请设置[开始]组件的调度参数"),
     DATA_FACTORY_FEIGN_EXCEPTION(9005,"数据工厂feign接口异常"),
+    CUSTOMWORKFLOW_NOT_EXISTS(9006,"当前管道已删除,请检查参数"),
+    CUSTOMWORKFLOWDETAIL_NOT_EXISTS(9007,"当前管道下不存在组件,请检查参数"),
+    FLOW_TABLE_NOT_EXISTS(9008,"当前管道下不存在组件,请检查参数"),
 
 
     /**

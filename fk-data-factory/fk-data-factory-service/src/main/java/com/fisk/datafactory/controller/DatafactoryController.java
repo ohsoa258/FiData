@@ -1,8 +1,12 @@
 package com.fisk.datafactory.controller;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.service.IDataFactory;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,4 +34,10 @@ public class DatafactoryController {
         return service.loadDepend(dto);
     }
 
+    @PostMapping("/getNIfiPortHierarchy")
+    @ApiOperation(value = "获取管道层级关系")
+    public ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto) {
+
+        return service.getNIfiPortHierarchy(dto);
+    }
 }

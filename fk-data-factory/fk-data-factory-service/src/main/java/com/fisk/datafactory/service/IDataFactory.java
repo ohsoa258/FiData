@@ -1,6 +1,9 @@
 package com.fisk.datafactory.service;
 
+import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 
 /**
  * @author Lock
@@ -16,4 +19,12 @@ public interface IDataFactory {
      * @return boolean
      */
     boolean loadDepend(LoadDependDTO dto);
+
+    /**
+     * 获取当前组件的层级关系
+     *
+     * @param dto dto
+     * @return 查询结果
+     */
+    ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(NifiGetPortHierarchyDTO dto);
 }

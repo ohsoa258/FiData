@@ -20,6 +20,10 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class AppDataSourceDTO extends BaseDTO {
 
+    public Long id;
+
+    public Long appId;
+
     /**
      * 驱动类型
      */
@@ -64,6 +68,12 @@ public class AppDataSourceDTO extends BaseDTO {
 
     @ApiModelProperty(value = "文件后缀名(1:csv  2:xls&xlsx)", required = true)
     public Integer fileSuffix;
+
+    @ApiModelProperty(value = "验证方式（实时） 登录账号")
+    public String realtimeAccount;
+
+    @ApiModelProperty(value = "验证方式（实时） 登录密码")
+    public String realtimePwd;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);
