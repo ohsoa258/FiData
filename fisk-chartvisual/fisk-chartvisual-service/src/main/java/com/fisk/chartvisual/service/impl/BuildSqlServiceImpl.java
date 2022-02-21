@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -54,7 +51,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         // 获取连接信息
         DataSourceConPO dataSource = dataSourceConMapper.selectById(id);
         // 查询结果集
-        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql.toLowerCase(),dataSource);
+        List<Map<String, Object>> dataDomainDTOList = execQueryResultList(sql.toLowerCase(), dataSource);
         return dataDomainDTOList;
     }
 
@@ -99,7 +96,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
         // 派生指标数量
         List<IndicatorDTO> deriveCount = indicatorList.stream().filter(e -> e != null)
-                .filter(e -> e.getType() == DERIVED_INDICATORS).collect(Collectors.toList());
+                .filter(e -> e.getType() == DERIVED_INDICATORS && !e.getTimePeriod().equals("上一期")).collect(Collectors.toList());
 
         // 子查询别名
         AtomicInteger aliasCount = new AtomicInteger(0);
@@ -110,6 +107,13 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         TreeSet<DataDoFieldDTO> tableNameSet = dimColumnFieldList.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(c -> c.getTableName()))));
         List<DataDoFieldDTO> tableNameList = tableNameSet.stream().collect(Collectors.toList());
 
+        // 是否计算上一期
+        String last_issue_DeriveName = null;
+        if (!CollectionUtils.isEmpty(indicatorList)) {
+            Optional<IndicatorDTO> optional = indicatorList.stream().filter(item -> item.getTimePeriod().equals("上一期")).findFirst();
+            if (optional.isPresent())
+                last_issue_DeriveName = optional.get().getDeriveName();
+        }
         // 拼接原子指标
         String atom = indicatorList.stream()
                 .filter(e -> e.getType() == ATOMIC_INDICATORS)
@@ -119,26 +123,32 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     Integer isSubQuery = 2;
                     currentNumber.incrementAndGet();
                     StringBuilder stringBuilder = new StringBuilder();
-                    if (count.size() >= isSubQuery){
+                    if (count.size() >= isSubQuery) {
                         stringBuilder.append("(");
                     }
 
                     // 追加基础原子指标sql
-                    StringBuilder stringBuilder1 = this.buildAtomSql(dimColumn, tableNameList, e, escapeStr,e.getType(),null);
+                    StringBuilder stringBuilder1 = this.buildAtomSql(dimColumn, tableNameList, e, escapeStr, e.getType(), null);
                     stringBuilder.append(stringBuilder1);
 
                     // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
-                    aliasField(stringBuilder,isSubQuery,count.size(),
+                    aliasField(stringBuilder, isSubQuery, count.size(),
                             aliasCount, dimColumnFieldList,
-                            escapeStr,dimColumn,currentNumber
-                            ,str);
+                            escapeStr, dimColumn, currentNumber
+                            , str);
                     return stringBuilder.toString();
                 }).collect(Collectors.joining(" JOIN "));
 
         // 拼接派生指标
+        String finalLast_issue_DeriveName = last_issue_DeriveName;
         String derive = indicatorList.stream()
                 .filter(e -> e.getType() == DERIVED_INDICATORS)
                 .map(e -> {
+                    StringBuilder deriveStr = new StringBuilder();
+
+                    // 派生指标如果为上一期，跳过
+                    if (e.getTimePeriod().equals("上一期"))
+                        return null;
 
                     // 派生指标别名维度列
                     String deriveDim = apiConfigureFieldList.stream().filter(b -> b.getDimension() == OTHER && b.getFieldType() == COLUMN)
@@ -148,56 +158,65 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     // 派生指标sql生成
                     StringBuilder deriveSql = buildDeriveSql(dimColumn, tableNameList, e, e.getId(), apiConfigureFieldList, escapeStr);
 
-                    StringBuilder deriveStr = new StringBuilder();
                     // 判断指标数量是否是大于2,如果大于2存在子查询,不大于2的话不存在
                     Integer isSubQuery = 2;
                     currentNumber.incrementAndGet();
-                    if (deriveCount.size() >= isSubQuery){
+                    if (deriveCount.size() >= isSubQuery) {
                         deriveStr.append("(");
                     }
 
                     deriveStr.append("SELECT ");
 
                     // 判断是否存在维度列
-                    if (StringUtils.isNotBlank(deriveDim)){
+                    if (StringUtils.isNotBlank(deriveDim)) {
                         deriveStr.append(deriveDim + ",");
                     }
 
-                    deriveStr.append( DERIVE + "." + e.getDeriveName());
+                    deriveStr.append(DERIVE + "." + e.getDeriveName());
+                    // 判断是否需要计算上一期
+
+                    if (finalLast_issue_DeriveName != null) {
+                        deriveStr.append(",");
+                        deriveStr.append("lag(" + DERIVE + "." + e.getDeriveName() + ",1,0) ");
+                        deriveStr.append("over (order by " + deriveDim + ") ");
+                        deriveStr.append("as '" + e.getDeriveName()+"_"+finalLast_issue_DeriveName + "' ");
+                    }
                     deriveStr.append(" FROM (" + deriveSql + ")" + " AS " + DERIVE);
 
                     // ORDER BY
-                    if (StringUtils.isNotBlank(deriveDim)){
+                    if (StringUtils.isNotBlank(deriveDim)) {
                         deriveStr.append(" WHERE b.id = 1 ");
                         deriveStr.append(" ORDER BY " + deriveDim);
                     }
 
-
                     // 存在子查询的情况,进行最外层 SELECT 别名.字段追加 还有分组和排序
-                    aliasField(deriveStr,isSubQuery,deriveCount.size(),
+                    aliasField(deriveStr, isSubQuery, deriveCount.size(),
                             aliasCount, dimColumnFieldList,
-                            escapeStr,dimColumn,currentNumber
-                            ,str);
+                            escapeStr, dimColumn, currentNumber
+                            , str);
                     return deriveStr;
                 }).collect(Collectors.joining(" JOIN "));
-        
-        return this.splicingIndicatorsSql(apiConfigureFieldList,escapeStr,atom,derive,str);
+        if (finalLast_issue_DeriveName != null)
+            derive = derive.replace("null JOIN ", "");
+
+        return this.splicingIndicatorsSql(apiConfigureFieldList, escapeStr, atom, derive, str);
     }
 
     /**
      * JOIN ON 字符串拼接
+     *
      * @param dimColumnFieldList
      * @param escapeStr
      * @param id
      * @param tableName
      * @return
      */
-    public void joinString(List<DataDoFieldDTO> dimColumnFieldList,String[] escapeStr,Integer id,String tableName
-            ,StringBuilder stringBuilder
-            ,Integer deriveId
-            ,IndicatorTypeEnum type){
+    public void joinString(List<DataDoFieldDTO> dimColumnFieldList, String[] escapeStr, Integer id, String tableName
+            , StringBuilder stringBuilder
+            , Integer deriveId
+            , IndicatorTypeEnum type) {
         // 派生指标一定存在时间周期关系
-        if (CollectionUtils.isEmpty(dimColumnFieldList) && type == DERIVED_INDICATORS){
+        if (CollectionUtils.isEmpty(dimColumnFieldList) && type == DERIVED_INDICATORS) {
             DimensionTimePeriodDTO data = client.getDimensionDate(deriveId).getData();
             DataDoFieldDTO dto = new DataDoFieldDTO();
             dto.setFieldId((int) data.getFieldId());
@@ -247,6 +266,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
     /**
      * 生成基础原子指标sql
+     *
      * @param dimColumn
      * @param tableNameList
      * @param dto
@@ -255,23 +275,24 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      */
     public StringBuilder buildAtomSql(String dimColumn, List<DataDoFieldDTO> tableNameList, IndicatorDTO dto, String[] escapeStr
             , IndicatorTypeEnum type
-            , Integer deriveId){
+            , Integer deriveId) {
         StringBuilder stringBuilder = new StringBuilder();
         // SELECT
-        subQuery(dimColumn,dto,escapeStr,stringBuilder);
+        subQuery(dimColumn, dto, escapeStr, stringBuilder);
         // 查询出子表之间的关系进行JOIN ON
-        this.joinString(tableNameList, escapeStr, dto.getId(), dto.getTableName(),stringBuilder,deriveId,type);
+        this.joinString(tableNameList, escapeStr, dto.getId(), dto.getTableName(), stringBuilder, deriveId, type);
         // 筛选器
-        filter(stringBuilder,dto,type);
+        filter(stringBuilder, dto, type);
         // 分组和排序
-        sqlSort(dimColumn,stringBuilder,type);
+        sqlSort(dimColumn, stringBuilder, type);
         // 判断如果是派生之指标,就变成子查询
-        isDerive(stringBuilder,type);
+        isDerive(stringBuilder, type);
         return stringBuilder;
     }
 
     /**
      * 派生指标sql生成
+     *
      * @param dimColumn
      * @param tableNameList
      * @param indicator
@@ -280,10 +301,10 @@ public class BuildSqlServiceImpl implements BuildSqlService {
      * @param escapeStr
      * @return
      */
-    public StringBuilder buildDeriveSql(String dimColumn,List<DataDoFieldDTO> tableNameList,IndicatorDTO indicator
-            ,Integer deriveId
-            ,List<DataDoFieldDTO> apiConfigureFieldList
-            ,String[] escapeStr){
+    public StringBuilder buildDeriveSql(String dimColumn, List<DataDoFieldDTO> tableNameList, IndicatorDTO indicator
+            , Integer deriveId
+            , List<DataDoFieldDTO> apiConfigureFieldList
+            , String[] escapeStr) {
         DimensionTimePeriodDTO dto = client.getDimensionDate(deriveId).getData();
         StringBuilder deriveStr = new StringBuilder();
         deriveStr.append("SELECT ");
@@ -293,11 +314,11 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
         // 追加基础原子指标sql
         StringBuilder dimColumns = new StringBuilder();
-        if (StringUtils.isNotBlank(dimColumn)){
+        if (StringUtils.isNotBlank(dimColumn)) {
             dimColumns.append(dimColumn + ",");
         }
         dimColumns.append(dto.getDimensionTabName() + "." + dto.getDimensionAttributeField());
-        StringBuilder stringBuilder1 = this.buildAtomSql(dimColumns.toString(), tableNameList, indicator, escapeStr,indicator.getType(),deriveId);
+        StringBuilder stringBuilder1 = this.buildAtomSql(dimColumns.toString(), tableNameList, indicator, escapeStr, indicator.getType(), deriveId);
 
         // 追加dateKey
         deriveStr.append(DERIVE_ALIAS + "." + dto.getDimensionAttributeField() + ",");
@@ -308,12 +329,13 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
     /**
      * 派生指标查询
+     *
      * @param apiConfigureFieldList
      * @param deriveId
      * @param indicator
      * @param escapeStr
      */
-    public StringBuilder deriveInquire(List<DataDoFieldDTO> apiConfigureFieldList,Integer deriveId,IndicatorDTO indicator,String[] escapeStr){
+    public StringBuilder deriveInquire(List<DataDoFieldDTO> apiConfigureFieldList, Integer deriveId, IndicatorDTO indicator, String[] escapeStr) {
         // 派生指标别名维度列
         String derive = apiConfigureFieldList.stream().filter(e -> e.getDimension() == OTHER && e.getFieldType() == COLUMN)
                 .map(e -> DERIVE_ALIAS + "." + escapeStr[0] + e.getFieldName() + escapeStr[1])
@@ -325,7 +347,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         StringBuilder deriveOver = deriveOver(indicator, derive, dto);
 
         StringBuilder stringBuilder = new StringBuilder();
-        if (StringUtils.isNotBlank(derive)){
+        if (StringUtils.isNotBlank(derive)) {
             stringBuilder.append(derive + ",");
         }
         stringBuilder.append(aggregation + deriveOver);
@@ -335,27 +357,28 @@ public class BuildSqlServiceImpl implements BuildSqlService {
 
     /**
      * 派生和原子指标sql拼接
+     *
      * @param apiConfigureFieldList
      * @param escapeStr
      * @param atom
      * @param derive
      * @return
      */
-    public String splicingIndicatorsSql(List<DataDoFieldDTO> apiConfigureFieldList,String[] escapeStr
-            , String atom,String derive,StringBuilder str){
+    public String splicingIndicatorsSql(List<DataDoFieldDTO> apiConfigureFieldList, String[] escapeStr
+            , String atom, String derive, StringBuilder str) {
 
         // 原子指标和派生指标同时存在
-        if (StringUtils.isNotBlank(atom) && StringUtils.isNotBlank(derive)){
+        if (StringUtils.isNotBlank(atom) && StringUtils.isNotBlank(derive)) {
             // 原子
             StringBuilder atomBuilder = new StringBuilder(atom);
-            atomBuilder.insert(0,"(");
-            atomBuilder.insert(atom.length() +1,")" + " AS " + ATOM_BUILDER);
+            atomBuilder.insert(0, "(");
+            atomBuilder.insert(atom.length() + 1, ")" + " AS " + ATOM_BUILDER);
             System.out.println(atomBuilder.toString().toLowerCase());
 
             // 派生
             StringBuilder deriveBuilder = new StringBuilder(derive);
-            deriveBuilder.insert(0,"(");
-            deriveBuilder.insert(derive.length() +1,")" + " AS " + DERIVE_BUILDER);
+            deriveBuilder.insert(0, "(");
+            deriveBuilder.insert(derive.length() + 1, ")" + " AS " + DERIVE_BUILDER);
             System.out.println(deriveBuilder.toString().toLowerCase());
 
             // 维度列
@@ -367,15 +390,15 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     }).collect(Collectors.joining(" AND "));
 
             str.append("SELECT * FROM " + atomBuilder + " JOIN " + deriveBuilder);
-            if (StringUtils.isNotBlank(collect)){
+            if (StringUtils.isNotBlank(collect)) {
                 str.append(" ON " + collect);
             }
             return str.toString();
         }
 
-        if (StringUtils.isEmpty(atom)){
+        if (StringUtils.isEmpty(atom)) {
             str.append(derive);
-        }else {
+        } else {
             str.append(atom);
         }
 
