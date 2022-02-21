@@ -5,6 +5,7 @@ import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.Payload;
 import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.utils.JwtUtils;
+import com.fisk.common.constants.RedisTokenKey;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -80,7 +81,8 @@ public class LoginFilter implements GlobalFilter, Ordered {
             if (userInfo.getId() == 102) {
                 return chain.filter(exchange);
                 // 推送数据的请求路径判断
-            } else if (userInfo.getId() >= 100000 && userInfo.getId() <= 300000) {
+                // 200928
+            } else if (userInfo.getId() >= RedisTokenKey.DATA_ACCESS_TOKEN && userInfo.getId() <= RedisTokenKey.TOKEN_MAX) {
                 ResultEntity<Boolean> result = authClient.pushDataPathIsExists(request.getPath().value());
                 if (result.code == ResultEnum.SUCCESS.getCode() && result.data) {
                     return chain.filter(exchange);

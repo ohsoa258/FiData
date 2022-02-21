@@ -15,4 +15,9 @@ public class RedisTokenKey {
      * 数据接入token累加值
      */
     public static final Long DATA_ACCESS_TOKEN = 200000L;
+
+    /**
+     * token累加值最大不超过300000
+     */
+    public static final Long TOKEN_MAX = 300000L;
 }
