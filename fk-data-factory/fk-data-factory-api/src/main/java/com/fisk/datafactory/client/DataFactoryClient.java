@@ -3,10 +3,13 @@ package com.fisk.datafactory.client;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
+import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,4 +46,8 @@ public interface DataFactoryClient {
     @PostMapping("/dataFactory/loadDepend")
     @ApiOperation(value = "判断物理表是否在管道使用")
     boolean loadDepend(@RequestBody LoadDependDTO dto);
+
+    @PostMapping("/dataFactory/getNIfiPortHierarchy")
+    @ApiOperation(value = "获取管道层级关系")
+    ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
 }

@@ -38,6 +38,9 @@ public class NifiCustomWorkflowDetailPO extends BasePO {
     public String metadataObj;
     public Integer schedule;
     public String script;
+    /**
+     * 左边指右边,左:outport,右:inport
+     */
     public String inport;
     public String outport;
     public Boolean flag;
