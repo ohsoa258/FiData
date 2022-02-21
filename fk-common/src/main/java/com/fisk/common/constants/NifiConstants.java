@@ -47,6 +47,8 @@ public class NifiConstants {
         public static final String CREATE_TIME="createtime";
         public static final String START_TIME="start_time";
         public static final String END_TIME="end_time";
+        public static final String TABLE_ID="table_id";
+        public static final String TABLE_TYPE="table_type";
         public static final String FI_BATCH_CODE="fi_batch_code";
 
         public static final int POSITION_X_MAX = 5;
