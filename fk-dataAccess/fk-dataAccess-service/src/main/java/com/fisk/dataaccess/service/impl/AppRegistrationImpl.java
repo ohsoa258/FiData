@@ -117,7 +117,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
-        AppDataSourcePO modelDataSource = appRegistrationDTO.getAppDatasourceDTO().toEntity(AppDataSourcePO.class);
+        //
+        List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList();
+        AppDataSourceDTO datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
+        // 当前为实时应用
+        if (po.appType == 0 && realtimeAccountList.contains(datasourceDTO.realtimeAccount)) {
+            return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+        }
+
+        AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(datasourceDTO);
         // 保存tb_app_datasource数据
         modelDataSource.setAppId(po.getId());
         modelDataSource.setCreateUser(String.valueOf(userId));
@@ -223,16 +231,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 2.1dto->po
         AppDataSourceDTO appDatasourceDTO = dto.getAppDatasourceDTO();
+        AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(appDatasourceDTO);
 
-        AppDataSourcePO modelDataSource = appDatasourceDTO.toEntity(AppDataSourcePO.class);
+        // 实时应用
+        if (po.appType == 0) {
+            QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+            wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount);
+            AppDataSourcePO appDataSourcePO = appDataSourceMapper.selectOne(wrapper);
+            if (appDataSourcePO != null && appDataSourcePO.id != appDatasourceDTO.id) {
+                return ResultEnum.REALTIME_ACCOUNT_ISEXIST;
+            }
+        }
 
         // 2.2修改数据
-        long appDataSid = appDataSourceImpl.query()
-                .eq("app_id", id)
-                .one()
-                .getId();
+        long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
         modelDataSource.setId(appDataSid);
-
         modelDataSource.setAppId(id);
         // 更新人
         modelDataSource.updateUser = String.valueOf(userId);
@@ -563,7 +576,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 conn.close();
             }
             return ResultEntityBuild.build(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
-        }finally {
+        } finally {
             try {
                 if (conn != null) {
                     conn.close();

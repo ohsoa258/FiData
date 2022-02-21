@@ -1,6 +1,8 @@
 package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.GenerateApiDTO;
@@ -87,5 +89,13 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return 执行结果
      */
     ResultEnum pushData(ReceiveDataDTO dto);
+
+    /**
+     * 获取实时api的临时token
+     *
+     * @param dto dto
+     * @return 获取token结果
+     */
+    ResultEntity<String> getToken(UserAuthDTO dto);
 }
 

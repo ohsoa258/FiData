@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.controller;
 
+import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
@@ -103,5 +104,11 @@ public class ApiConfigController {
     @ApiOperation(value = "推送api数据")
     public ResultEntity<Object> pushData(@RequestBody ReceiveDataDTO dto) {
         return ResultEntityBuild.build(service.pushData(dto));
+    }
+
+    @PostMapping("/getToken")
+    @ApiOperation(value = "获取实时api的临时token")
+    public ResultEntity<String> getToken(@RequestBody UserAuthDTO dto) {
+        return service.getToken(dto);
     }
 }

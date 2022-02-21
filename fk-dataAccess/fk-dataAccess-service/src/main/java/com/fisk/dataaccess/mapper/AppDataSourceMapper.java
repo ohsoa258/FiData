@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * @author Lock
  */
@@ -22,4 +24,10 @@ public interface AppDataSourceMapper extends FKBaseMapper<AppDataSourcePO> {
     @Select("SELECT id,drive_type FROM tb_app_datasource WHERE del_flag = 1 AND app_id = #{app_id};")
     DataSourceDTO getDataSource(@Param("app_id") long appId);
 
+    /**
+     * 获取所有实时应用的
+     * @return
+     */
+    @Select("SELECT realtime_account FROM tb_app_datasource WHERE del_flag=1;")
+    List<String> getRealtimeAccountList();
 }
