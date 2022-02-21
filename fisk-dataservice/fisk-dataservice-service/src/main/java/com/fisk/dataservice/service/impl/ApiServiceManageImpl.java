@@ -3,6 +3,8 @@ package com.fisk.dataservice.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.auth.client.AuthClient;
+import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
@@ -68,6 +70,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     @Resource
     private UserHelper userHelper;
 
+    @Resource
+    private AuthClient authClient;
+
     @Override
     public ResultEntity<Object> getToken(TokenDTO dto) {
         String token = null;
@@ -79,6 +84,13 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS, token);
         // 第二步：调用授权接口，根据账号密码生成token
         Long uniqueId = byAppInfo.id + 100000;
+        UserAuthDTO userAuthDTO = new UserAuthDTO();
+        userAuthDTO.setUserAccount(byAppInfo.appAccount);
+        userAuthDTO.setPassword(byAppInfo.appPassword);
+        userAuthDTO.setTemporaryId(uniqueId);
+        ResultEntity<String> tokenEntity = authClient.getToken(userAuthDTO);
+        if (tokenEntity.code == 0 && !tokenEntity.data.isEmpty())
+            token = tokenEntity.data;
         return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, token);
     }
 
