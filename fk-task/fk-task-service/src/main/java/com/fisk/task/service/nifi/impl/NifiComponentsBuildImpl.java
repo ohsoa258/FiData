@@ -1741,8 +1741,8 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
     public void buildNifiGlobalVariable(Map<String, String> variable) {
         try {
             VariableRegistryEntity variableRegistry = NifiHelper.getProcessGroupsApi().getVariableRegistry(NifiConstants.ApiConstants.ROOT_NODE, true);
-            VariableRegistryDTO variableRegistry1 = variableRegistry.getVariableRegistry();
-            List<VariableEntity> variables = variableRegistry1.getVariables();
+            VariableRegistryDTO registry = variableRegistry.getVariableRegistry();
+            List<VariableEntity> variables = registry.getVariables();
             Iterator<Map.Entry<String, String>> externalStructureMap = variable.entrySet().iterator();
 
             while (externalStructureMap.hasNext()) {
@@ -1751,26 +1751,26 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 Boolean existent = false;
                 for (int i = 0; i < variables.size(); i++) {
                     //判断有没有再保存创建
-                    VariableDTO variable1 = variables.get(i).getVariable();
-                    String name = variable1.getName();
+                    VariableDTO variableDTO = variables.get(i).getVariable();
+                    String name = variableDTO.getName();
                     if (Objects.equals(key, name)) {
                         existent = true;
                     }
                 }
                 if (!existent) {
                     VariableRegistryEntity variableRegistryEntity = new VariableRegistryEntity();
-                    VariableRegistryDTO variableRegistry2 = new VariableRegistryDTO();
-                    List<VariableEntity> variables1 = new ArrayList<>();
+                    VariableRegistryDTO registryDTO = new VariableRegistryDTO();
+                    List<VariableEntity> variableEntities = new ArrayList<>();
                     VariableEntity variableEntity = new VariableEntity();
-                    VariableDTO variable1 = new VariableDTO();
-                    variable1.setName(key);
-                    variable1.setValue(variable.get(key));
-                    variableEntity.setVariable(variable1);
-                    variables1.add(variableEntity);
-                    variableRegistry2.setVariables(variables1);
-                    variableRegistry2.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
+                    VariableDTO variableDTO = new VariableDTO();
+                    variableDTO.setName(key);
+                    variableDTO.setValue(variable.get(key));
+                    variableEntity.setVariable(variableDTO);
+                    variableEntities.add(variableEntity);
+                    registryDTO.setVariables(variableEntities);
+                    registryDTO.setProcessGroupId(variableRegistry.getVariableRegistry().getProcessGroupId());
                     variableRegistryEntity.setDisconnectedNodeAcknowledged(null);
-                    variableRegistryEntity.setVariableRegistry(variableRegistry2);
+                    variableRegistryEntity.setVariableRegistry(registryDTO);
                     RevisionDTO processGroupRevision = variableRegistry.getProcessGroupRevision();
                     variableRegistryEntity.setProcessGroupRevision(processGroupRevision);
                     System.out.println(JSON.toJSONString(variableRegistryEntity));
