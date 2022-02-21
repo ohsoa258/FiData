@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.common.constants.RedisTokenKey;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
@@ -83,7 +84,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         if (byAppInfo == null)
             return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS, token);
         // 第二步：调用授权接口，根据账号密码生成token
-        Long uniqueId = byAppInfo.id + 100000;
+        Long uniqueId = byAppInfo.id + RedisTokenKey.DATA_SERVICE_TOKEN;
         UserAuthDTO userAuthDTO = new UserAuthDTO();
         userAuthDTO.setUserAccount(byAppInfo.appAccount);
         userAuthDTO.setPassword(byAppInfo.appPassword);
