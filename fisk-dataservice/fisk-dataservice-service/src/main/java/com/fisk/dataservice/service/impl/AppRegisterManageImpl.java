@@ -10,8 +10,9 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.method.GenerateCondition;
 import com.fisk.common.filter.method.GetMetadata;
-import com.fisk.dataservice.utils.pdf.component.PDFHeaderFooter;
-import com.fisk.dataservice.utils.pdf.component.PDFKit;
+import com.fisk.common.pdf.component.PDFHeaderFooter;
+import com.fisk.common.pdf.component.PDFKit;
+import com.fisk.common.pdf.exception.PDFException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.utils.EnCryptUtils;
 import com.fisk.dataservice.dto.api.doc.*;
@@ -21,7 +22,6 @@ import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
-import com.fisk.dataservice.utils.pdf.exception.PDFException;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
@@ -36,6 +36,8 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.fisk.common.constants.ApiConstants.DATASERVICE_APIBASICINFO;
 
 /**
  * 应用接口实现类
@@ -418,189 +420,15 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         ApiDocDTO apiDocDTO = new ApiDocDTO();
 
         // API文档基础信息
-        String jsonResult = "{\n" +
-                "    \"title\":\"FiData API接口文档\",\n" +
-                "    \"docVersion\":\"文档版本 V1.0\",\n" +
-                "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
-                "    \"isuDate\":\"发布日期：20220101\",\n" +
-                "    \"footerName\":\"菲斯科白泽接口文档\",\n" +
-                "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于下游系统对接白泽接口。\",\n" +
-                "    \"readers\":\"预期读者包括需要从白泽获取数据的下游系统。\",\n" +
-                "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
-                "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。apiCode为私密信息，不在文档中体现，请在订阅API时自行保存。\",\n" +
-                "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
-                "    \"uatAddress\":\"https://uatHost/{apiaddress}。\",\n" +
-                "    \"prdAddress\":\"https://prdHost/{apiaddress}。\",\n" +
-                "    \"apiCatalogueDTOS\":[\n" +
-                "        {\n" +
-                "            \"grade\":1,\n" +
-                "            \"catalogueIndex\":\"\",\n" +
-                "            \"catalogueName\":\"目录\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":2,\n" +
-                "            \"catalogueIndex\":\"1.\",\n" +
-                "            \"catalogueName\":\"文档概述\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"1.1.\",\n" +
-                "            \"catalogueName\":\"文档目的\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"1.2.\",\n" +
-                "            \"catalogueName\":\"读者对象\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"1.3.\",\n" +
-                "            \"catalogueName\":\"相关联系人\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":2,\n" +
-                "            \"catalogueIndex\":\"2.\",\n" +
-                "            \"catalogueName\":\"Restful API接口\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"2.1.\",\n" +
-                "            \"catalogueName\":\"接口对接规范\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"2.2.\",\n" +
-                "            \"catalogueName\":\"登录授权\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"2.3.\",\n" +
-                "            \"catalogueName\":\"环境信息\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":3,\n" +
-                "            \"catalogueIndex\":\"2.4.\",\n" +
-                "            \"catalogueName\":\"获取Token接口\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"grade\":2,\n" +
-                "            \"catalogueIndex\":\"3.\",\n" +
-                "            \"catalogueName\":\"API返回代码示例\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"apiBasicInfoDTOS\":[\n" +
-                "        {\n" +
-                "            \"apiName\":\"获取Token接口\",\n" +
-                "            \"apiNameCatalogue\":\"2.4.\",\n" +
-                "            \"apiAddress\":\"/api/getToken\",\n" +
-                "            \"apiAddressCatalogue\":\"2.4.1.\",\n" +
-                "            \"apiDesc\":\"获取身份凭证，后续请求中将此凭证作为身份标识传给业务接口，业务接口将验证身份凭证是否合法，合法则返回业务数据。\",\n" +
-                "            \"apiDescCatalogue\":\"2.4.2.\",\n" +
-                "            \"apiRequestType\":\"POST\",\n" +
-                "            \"apiRequestTypeCatalogue\":\"2.4.3.\",\n" +
-                "            \"apiContentType\":\"application/json\",\n" +
-                "            \"apiContentTypeCatalogue\":\"2.4.4\",\n" +
-                "            \"apiHeader\":\"无\",\n" +
-                "            \"apiHeaderCatalogue\":\"2.4.5.\",\n" +
-                "            \"apiRequestExamplesCatalogue\":\"2.4.6.\",\n" +
-                "            \"apiRequestDTOS\":[\n" +
-                "                {\n" +
-                "                    \"parmName\":\"useraccount\",\n" +
-                "                    \"isRequired\":\"是\",\n" +
-                "                    \"parmType\":\"string\",\n" +
-                "                    \"parmDesc\":\"应用账号\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"parmName\":\"password\",\n" +
-                "                    \"isRequired\":\"是\",\n" +
-                "                    \"parmType\":\"string\",\n" +
-                "                    \"parmDesc\":\"应用密码\"\n" +
-                "                }\n" +
-                "            ],\n" +
-                "            \"apiRequestCatalogue\":\"2.4.7.\",\n" +
-                "            \"apiResponseExamples\":\"\",\n" +
-                "            \"apiResponseExamplesCatalogue\":\"2.4.8.\",\n" +
-                "            \"apiResponseDTOS\":[\n" +
-                "                {\n" +
-                "                    \"parmName\":\"msg\",\n" +
-                "                    \"parmType\":\"string\",\n" +
-                "                    \"parmDesc\":\"调用结果描述\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"parmName\":\"code\",\n" +
-                "                    \"parmType\":\"string\",\n" +
-                "                    \"parmDesc\":\"调用结果状态\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"parmName\":\"token\",\n" +
-                "                    \"parmType\":\"string\",\n" +
-                "                    \"parmDesc\":\"token（调用成功后返回）\"\n" +
-                "                }\n" +
-                "            ],\n" +
-                "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"apiContactsDTOS\":[\n" +
-                "        {\n" +
-                "            \"category\":\"接口负责人\",\n" +
-                "            \"company\":\"菲斯科\",\n" +
-                "            \"fullName\":\"徐阳辉\",\n" +
-                "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
-                "            \"trStyle\":\"background-color: #fff\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"category\":\"接口负责人\",\n" +
-                "            \"company\":\"菲斯科\",\n" +
-                "            \"fullName\":\"李家温\",\n" +
-                "            \"mailbox\":\"dick@fisksoft.com\",\n" +
-                "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"apiVersionDTOS\":[\n" +
-                "        {\n" +
-                "            \"version\":\"0.1\",\n" +
-                "            \"startDate\":\"2022/01/01\",\n" +
-                "            \"endDate\":\"2022/01/01\",\n" +
-                "            \"modifier\":\"lijiawen\",\n" +
-                "            \"explain\":\"文档创建、编写\",\n" +
-                "            \"state\":\"初稿\"\n" +
-                "        }\n" +
-                "    ],\n" +
-                "    \"apiResponseCodeDTOS\":[\n" +
-                "        {\n" +
-                "            \"code\":\"200\",\n" +
-                "            \"type\":\"int\",\n" +
-                "            \"desc\":\"调用结果描述\",\n" +
-                "            \"trStyle\":\"background-color: #fff\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"code\":\"401\",\n" +
-                "            \"type\":\"int\",\n" +
-                "            \"desc\":\"无权限访问此API\",\n" +
-                "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"code\":\"404\",\n" +
-                "            \"type\":\"int\",\n" +
-                "            \"desc\":\"API不存在或被取消订阅\",\n" +
-                "            \"trStyle\":\"background-color: #fff\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"code\":\"500\",\n" +
-                "            \"type\":\"int\",\n" +
-                "            \"desc\":\"API服务器异常\",\n" +
-                "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}";
+        String jsonResult = DATASERVICE_APIBASICINFO;
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
-                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
-                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
+                "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
+                "&nbsp;&nbsp; \"appPassword\": \"xxx\"\n" +
                 "}";
         apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
                 "&nbsp;&nbsp; \"code\": 200,\n" +
-                "&nbsp;&nbsp; \"token\": \"xxx\", --%s\n" +
+                "&nbsp;&nbsp; \"data\": \"xxx\", --%s\n" +
                 "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
                 "}", "2.4.9");
         BigDecimal catalogueIndex = new BigDecimal("2.4");
@@ -623,7 +451,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             /* 设置API基础信息 start */
             ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
             apiBasicInfoDTO.apiName = apiConfigPO.apiName;
-            apiBasicInfoDTO.apiAddress = "/apiService/getData";
+            apiBasicInfoDTO.apiAddress = "/dataservice/apiService/getData";
             apiBasicInfoDTO.apiDesc = apiConfigPO.apiDesc;
             apiBasicInfoDTO.apiRequestType = "POST";
             apiBasicInfoDTO.apiContentType = "application/json";

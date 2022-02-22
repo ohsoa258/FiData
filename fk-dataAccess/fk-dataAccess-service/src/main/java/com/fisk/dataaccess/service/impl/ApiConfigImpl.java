@@ -408,7 +408,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     private ApiDocDTO createDocDTO() {
 
-        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.APIJSONRESULT, ApiDocDTO.class);
+        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"password\": \"xxx\"\n" +

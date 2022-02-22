@@ -166,13 +166,14 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
         // 第七步：拼接过滤条件
         List<FilterConditionConfigPO> filterConditionConfigPOList = apiFilterConditionMapper.getListByApiId(Math.toIntExact(apiInfo.id));
-        if (apiInfo.apiType == ApiTypeEnum.SQL.getValue()
-                && CollectionUtils.isNotEmpty(filterConditionConfigPOList)) {
+        if (apiInfo.apiType == ApiTypeEnum.SQL.getValue()) {
             sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, apiInfo.getTableName());
-            List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listPoToSqlWhereDto(filterConditionConfigPOList);
-            String s1 = SqlParmUtils.SqlWhere(sqlWhereDtos);
-            if (s1 != null && s1.length() > 0)
-                sql += s1;
+            if (CollectionUtils.isNotEmpty(filterConditionConfigPOList)) {
+                List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listPoToSqlWhereDto(filterConditionConfigPOList);
+                String s1 = SqlParmUtils.SqlWhere(sqlWhereDtos);
+                if (s1 != null && s1.length() > 0)
+                    sql += s1;
+            }
         }
 
         // 第八步：替换SQL中的参数
