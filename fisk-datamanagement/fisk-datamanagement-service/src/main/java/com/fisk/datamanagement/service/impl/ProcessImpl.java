@@ -11,7 +11,7 @@ import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.process.*;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IProcess;
-import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgKinShip;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +33,7 @@ public class ProcessImpl implements IProcess {
     @Resource
     AtlasClient atlasClient;
     @Resource
-    SynchronizationPgKinShip synchronizationPgKinShip;
+    SynchronizationKinShip synchronizationPgKinShip;
 
     @Value("${atlas.entity}")
     private String entity;

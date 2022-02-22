@@ -1,7 +1,7 @@
 package com.fisk.datamanagement.controller;
 
-import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgData;
-import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgKinShip;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +17,9 @@ import javax.annotation.Resource;
 public class SynchronizationPgDataController {
 
     @Resource
-    SynchronizationPgData service;
+    SynchronizationData service;
     @Resource
-    SynchronizationPgKinShip ship;
+    SynchronizationKinShip ship;
 
     @ApiOperation("获取业务元数据列表")
     @GetMapping("/getPgData")

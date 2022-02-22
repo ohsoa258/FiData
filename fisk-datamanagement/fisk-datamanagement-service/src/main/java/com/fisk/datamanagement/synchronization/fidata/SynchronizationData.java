@@ -35,6 +35,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class SynchronizationPgData {
+public class SynchronizationData {
 
     @Resource
     DataModelClient client;
@@ -78,12 +79,8 @@ public class SynchronizationPgData {
     private String fiDataUserName;
     @Value("${fidata.database.password}")
     private String fiDataPassword;
-    @Value("${fidata.database.ods}")
-    private String ods;
-    @Value("${fidata.database.dw}")
-    private String dw;
-    @Value("${fidata.database.doris}")
-    private String doris;
+    @Value("${fidata.database.db}")
+    private String db;
 
     public void synchronizationPgData()
     {
@@ -91,13 +88,13 @@ public class SynchronizationPgData {
             //同步实例
             synchronizationInstance();
             //同步库
-            synchronizationDb();
+            //synchronizationDb();
             //同步ods
-            synchronizationOds();
+            //synchronizationOds();
             //同步dw
-            synchronizationDw();
+            //synchronizationDw();
             //同步doris
-            synchronizationDoris();
+            //synchronizationDoris();
             //同步redis中数据
             entityImpl.getEntityList();
         }
@@ -117,34 +114,41 @@ public class SynchronizationPgData {
             QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.lambda()
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
-            MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
-            String instanceGuid=po.atlasGuid;
-            //判断实例是否已存在
-            if (po ==null)
+            String[] hostName = fiDataHostName.split(",");
+            for (int i=0;i<hostName.length;i++)
             {
-                String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null);
-                if (addResult=="")
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName,hostName[i]);
+                MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
+                String instanceGuid="";
+                //判断实例是否已存在
+                if (po ==null)
                 {
-                    return;
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_INSTANCE,null,"",null,null,i);
+                    if (addResult=="")
+                    {
+                        return;
+                    }
+                    //向MetadataMapAtlas表添加数据
+                    instanceGuid = addMetadataMapAtlas(addResult,
+                            EntityTypeEnum.RDBMS_INSTANCE, hostName[i],
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            "",
+                            "",
+                            0);
+                    log.info("add entity instance name:",hostName[i]+",guid:"+instanceGuid);
                 }
-                //向MetadataMapAtlas表添加数据
-                instanceGuid = addMetadataMapAtlas(addResult,
-                        EntityTypeEnum.RDBMS_INSTANCE, fiDataName,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        "",
-                        "",
-                        0);
-                log.info("add entity instance name:",fiDataName+",guid:"+instanceGuid);
-                return;
+                else {
+                    instanceGuid=po.atlasGuid;
+                    //存在,获取该实例详情,并判断是否需要修改
+                    updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);
+                }
+                //数据添加redis
+                setRedis(instanceGuid);
             }
-            //存在,获取该实例详情,并判断是否需要修改
-            updateEntity(EntityTypeEnum.RDBMS_INSTANCE,po,"","",null,null);
-            //数据添加redis
-            setRedis(instanceGuid);
         }
         catch (Exception e)
         {
@@ -163,25 +167,27 @@ public class SynchronizationPgData {
             QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.lambda()
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
-            MetadataMapAtlasPO instancePo=metadataMapAtlasMapper.selectOne(queryWrapper);
-            if (instancePo==null)
+            List<MetadataMapAtlasPO> poList = metadataMapAtlasMapper.selectList(queryWrapper);
+            if (CollectionUtils.isEmpty(poList))
             {
                 return;
             }
-            List<String> dbList=new ArrayList<>();
-            dbList.add(ods);
-            dbList.add(dw);
-            dbList.add(doris);
+            String[] instanceList=fiDataHostName.split(",");
+            String[] dbList = db.split(",");
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_DB.getValue());
             List<MetadataMapAtlasPO> mapAtlasDbPOS=metadataMapAtlasMapper.selectList(queryWrapper1);
-            //定义查询数据库名称类型,1:odw、2:dw
             int index=0;
-            for (String db:dbList)
+            for (int i=0;i<dbList.length;i++)
             {
-                String dbQualifiedName=instancePo.qualifiedName+"_"+db;
                 index+=1;
                 int finalIndex = index;
+                Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(instanceList[finalIndex])).findFirst();
+                if (instancePo.isPresent())
+                {
+                    continue;
+                }
+                String dbQualifiedName=instancePo.get().qualifiedName+"_"+db;
                 String dbGuid="";
                 List<MetadataMapAtlasPO> dbPo=mapAtlasDbPOS.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
@@ -190,9 +196,8 @@ public class SynchronizationPgData {
                 {
                     dbGuid=dbPo.get(0).atlasGuid;
                     updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),db,dbQualifiedName,null,null);
-                }
-                else {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo, db,null,null);
+                }else {
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo.get(), db,null,null,0);
                     if (addResult !="")
                     {
                         dbGuid = addMetadataMapAtlas(addResult,
@@ -203,7 +208,7 @@ public class SynchronizationPgData {
                                 0,
                                 0,
                                 finalIndex,
-                                instancePo.atlasGuid,
+                                instancePo.get().atlasGuid,
                                 "",
                                 0);
                         log.info("add entity db name:",db+",guid:"+dbGuid);
@@ -328,7 +333,7 @@ public class SynchronizationPgData {
                 String qualifiedName=dbPO.qualifiedName+"_"+dto.tableName;
                 if (po==null)
                 {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_TABLE, dbPO, dto.tableName, dto,null);
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_TABLE, dbPO, dto.tableName, dto,null,0);
                     if (addResult=="")
                     {
                         continue;
@@ -354,7 +359,7 @@ public class SynchronizationPgData {
                     {
 
                         String fieldQualifiedName=qualifiedName+"_"+fieldDTO.fieldName;
-                        String addColumnResult = addEntity(EntityTypeEnum.RDBMS_COLUMN, po, fieldDTO.fieldName, null, fieldDTO);
+                        String addColumnResult = addEntity(EntityTypeEnum.RDBMS_COLUMN, po, fieldDTO.fieldName, null, fieldDTO,0);
                         String dimensionKey="";
                         if (fieldDTO.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue())
                         {
@@ -402,7 +407,7 @@ public class SynchronizationPgData {
                         if (fieldData==null)
                         {
                             String fieldQualifiedName=po.qualifiedName+"_"+field.fieldName;
-                            String addColumnResult = addEntity(EntityTypeEnum.RDBMS_COLUMN, po, field.fieldName, null, field);
+                            String addColumnResult = addEntity(EntityTypeEnum.RDBMS_COLUMN, po, field.fieldName, null, field,0);
                             if (addColumnResult !="")
                             {
                                 String columnGuid=addMetadataMapAtlas(addColumnResult,
@@ -528,7 +533,8 @@ public class SynchronizationPgData {
                             MetadataMapAtlasPO po,
                             String name,
                             SourceTableDTO dto,
-                            SourceFieldDTO fieldDTO)
+                            SourceFieldDTO fieldDTO,
+                            int index)
     {
         //组装参数
         EntityDTO entityDTO=new EntityDTO();
@@ -542,18 +548,20 @@ public class SynchronizationPgData {
         }
         //获取类型
         EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(entityTypeEnum.getName());
+        String[] userList = fiDataUserName.split(",");
+        String[] passwordList = fiDataPassword.split(",");
         switch (typeNameEnum)
         {
             case RDBMS_INSTANCE:
-                attributesDTO.qualifiedName=fiDataName;
-                attributesDTO.hostname =fiDataHostName;
-                attributesDTO.port=fiDataPort;
-                attributesDTO.platform=fiDataPlatform;
-                attributesDTO.name=fiDataName;
-                attributesDTO.protocol=fiDataProtocol;
-                attributesDTO.rdbms_type=fiDataRdbmsType;
-                attributesDTO.description=fiDataName;
-                attributesDTO.comment=fiDataUserName+"&"+fiDataPassword;
+                attributesDTO.qualifiedName=fiDataName.split(",")[index];
+                attributesDTO.hostname =fiDataHostName.split(",")[index];
+                attributesDTO.port=fiDataPort.split(",")[index];
+                attributesDTO.platform=fiDataPlatform.split(",")[index];
+                attributesDTO.name=fiDataName.split(",")[index];
+                attributesDTO.protocol=fiDataProtocol.split(",")[index];
+                attributesDTO.rdbms_type=fiDataRdbmsType.split(",")[index];
+                attributesDTO.description=fiDataName.split(",")[index];
+                attributesDTO.comment=userList[index]+"&"+passwordList[index];
                 break;
             case RDBMS_DB:
                 attributesDTO.qualifiedName=po.qualifiedName+"_"+name;

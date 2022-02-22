@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class SynchronizationPgKinShip {
+public class SynchronizationKinShip {
 
     @Resource
     AtlasClient atlasClient;
@@ -59,7 +59,7 @@ public class SynchronizationPgKinShip {
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
-    SynchronizationPgData synchronizationPgData;
+    SynchronizationData synchronizationPgData;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -67,10 +67,8 @@ public class SynchronizationPgKinShip {
     private String entityByGuid;
     @Value("${atlas.relationship}")
     private String relationship;
-    @Value("${fidata.database.dw}")
-    private String dw;
-    @Value("${fidata.database.doris}")
-    private String doris;
+   @Value("${fidata.database.db}")
+    private String db;
 
     private String dbType=JdbcConstants.POSTGRESQL_DRIVER;
 
@@ -122,8 +120,9 @@ public class SynchronizationPgKinShip {
         JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
         JSONObject relationShip=JSON.parseObject(entityObject.getString("relationshipAttributes"));
         JSONArray relationShipAttribute=JSON.parseArray(relationShip.getString("outputFromProcesses"));
+        String[] dbList = db.split(",");
         int dbType=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?DataTypeEnum.DATA_INPUT.getValue():DataTypeEnum.DATA_MODEL.getValue();
-        String name=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?dw:doris;
+        String name=po.dbNameType==DataTypeEnum.DATA_MODEL.getValue()?dbList[1]:dbList[2];
         //条数为0,则添加process
         if (relationShipAttribute.size()==0)
         {

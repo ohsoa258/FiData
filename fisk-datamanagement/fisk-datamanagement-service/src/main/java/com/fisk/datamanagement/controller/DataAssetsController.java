@@ -21,8 +21,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author JianWenYang
@@ -37,11 +39,11 @@ public class DataAssetsController {
 
     @ApiOperation("获取表数据")
     @PostMapping("/getDataAssetsList")
-    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto)throws IOException {
+    public ResultEntity<Object> getDataAssetsList(@Validated @RequestBody DataAssetsParameterDTO dto, HttpServletResponse response)throws IOException {
         DataAssetsResultDTO result = service.getDataAssetsTableList(dto);
         if (dto.export)
         {
-            exportTable(result,dto.tableName);
+            exportTable(result,dto.tableName,response);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS,result);
@@ -53,7 +55,7 @@ public class DataAssetsController {
      * @param tableName
      * @throws IOException
      */
-    public void exportTable( DataAssetsResultDTO result,String tableName) throws IOException {
+    public void exportTable( DataAssetsResultDTO result,String tableName,HttpServletResponse response) throws IOException {
         HSSFWorkbook workbook = new HSSFWorkbook();
         HSSFSheet sheet = workbook.createSheet("sheet1");
         HSSFRow row1 = sheet.createRow(0);
@@ -71,9 +73,13 @@ public class DataAssetsController {
         }
         //将文件存到指定位置
         try {
-            FileOutputStream file = new FileOutputStream("C:\\"+tableName+".xls");
-            workbook.write(file);
-            file.close();
+            //输出Excel文件
+            OutputStream output=response.getOutputStream();
+            response.reset();
+            response.setHeader("Content-disposition", "attachment; filename="+tableName+".xls");
+            response.setContentType("application/x-xls");
+            workbook.write(output);
+            output.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

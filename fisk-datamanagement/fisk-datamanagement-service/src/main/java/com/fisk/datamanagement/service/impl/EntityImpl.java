@@ -12,7 +12,7 @@ import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
-import com.fisk.datamanagement.synchronization.fidata.SynchronizationPgData;
+import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class EntityImpl implements IEntity {
     @Resource
     private RedisTemplate redisTemplate;
     @Resource
-    SynchronizationPgData synchronizationPgData;
+    SynchronizationData synchronizationPgData;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -229,7 +229,7 @@ public class EntityImpl implements IEntity {
         {
             redisTemplate.delete("metaDataEntityData:"+guid);
         }
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
     @Override
