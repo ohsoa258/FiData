@@ -1610,11 +1610,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
-        Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
-        String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-        dto.selectSql = sql;
-        dto.queryStartTime=converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
-        dto.queryEndTime=converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+        // 非实时物理表才有sql
+        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName())) {
+            Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
+            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+            dto.selectSql = sql;
+            dto.queryStartTime=converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+            dto.queryEndTime=converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+        }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
