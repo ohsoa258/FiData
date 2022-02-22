@@ -82,7 +82,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
                 return chain.filter(exchange);
                 // 推送数据的请求路径判断
                 // 200928
-            } else if (userInfo.getId() >= RedisTokenKey.DATA_ACCESS_TOKEN && userInfo.getId() <= RedisTokenKey.TOKEN_MAX) {
+            } else if (userInfo.getId() >= RedisTokenKey.DATA_SERVICE_TOKEN && userInfo.getId() <= RedisTokenKey.TOKEN_MAX) {
                 ResultEntity<Boolean> result = authClient.pushDataPathIsExists(request.getPath().value());
                 if (result.code == ResultEnum.SUCCESS.getCode() && result.data) {
                     return chain.filter(exchange);
