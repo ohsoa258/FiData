@@ -5,10 +5,11 @@ import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.GenerateApiDTO;
+import com.fisk.dataaccess.dto.api.GenerateDocDTO;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -77,10 +78,11 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     /**
      * 根据apiId生成api文档
      *
-     * @param id id
-     * @return list
+     * @param dto      dto
+     * @param response response
+     * @return 执行结果
      */
-    List<GenerateApiDTO> generateApi(long id);
+    ResultEnum generateDoc(GenerateDocDTO dto, HttpServletResponse response);
 
     /**
      * 推送数据

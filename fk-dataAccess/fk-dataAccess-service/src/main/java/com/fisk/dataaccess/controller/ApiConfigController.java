@@ -7,13 +7,16 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.GenerateApiDTO;
+import com.fisk.dataaccess.dto.api.GenerateDocDTO;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -72,12 +75,6 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.deleteData(id));
     }
 
-    /**
-     * 根据appId获取api列表
-     *
-     * @param appId appId
-     * @return 返回值
-     */
     @GetMapping("/getList/{appId}")
     @ApiOperation(value = "根据appId获取api列表")
     public ResultEntity<List<ApiConfigDTO>> getApiListData(
@@ -86,18 +83,10 @@ public class ApiConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiListData(appId));
     }
 
-    @PutMapping("/configTable")
-    @ApiOperation(value = "配置表")
-    public ResultEntity<Object> configTable(@RequestBody ApiConfigDTO dto) {
-
-        return ResultEntityBuild.build(service.editData(dto));
-    }
-
-    @GetMapping("/generateApi/{id}")
-    @ApiOperation(value = "根据apiId生成api文档")
-    public ResultEntity<List<GenerateApiDTO>> generateApi(@PathVariable("id") long id) {
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.generateApi(id));
+    @PostMapping("/generatePDFDocument")
+    @ApiOperation(value = "生成api文档")
+    public ResultEntity<List<GenerateApiDTO>> generateDoc(@Validated @RequestBody GenerateDocDTO dto, HttpServletResponse response) {
+        return ResultEntityBuild.build(service.generateDoc(dto, response));
     }
 
     @PostMapping("/pushdata")
