@@ -1,12 +1,11 @@
 package com.fisk.dataaccess.controller;
 
-import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.GenerateApiDTO;
+import com.fisk.dataaccess.dto.api.ApiUserDTO;
 import com.fisk.dataaccess.dto.api.GenerateDocDTO;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.IApiConfig;
@@ -85,7 +84,7 @@ public class ApiConfigController {
 
     @PostMapping("/generatePDFDocument")
     @ApiOperation(value = "生成api文档")
-    public ResultEntity<List<GenerateApiDTO>> generateDoc(@Validated @RequestBody GenerateDocDTO dto, HttpServletResponse response) {
+    public ResultEntity<Object> generateDoc(@Validated @RequestBody GenerateDocDTO dto, HttpServletResponse response) {
         return ResultEntityBuild.build(service.generateDoc(dto, response));
     }
 
@@ -97,7 +96,7 @@ public class ApiConfigController {
 
     @PostMapping("/getToken")
     @ApiOperation(value = "获取实时api的临时token")
-    public ResultEntity<String> getToken(@RequestBody UserAuthDTO dto) {
+    public ResultEntity<String> getToken(@RequestBody ApiUserDTO dto) {
         return service.getToken(dto);
     }
 }

@@ -17,10 +17,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.GenerateApiDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -246,16 +243,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEntity<String> getToken(UserAuthDTO dto) {
+    public ResultEntity<String> getToken(ApiUserDTO dto) {
 
         // 根据账号名称查询对应的app_id下
-        AppDataSourcePO dataSourcePO = appDataSourceImpl.query().eq("realtime_account", dto.getUserAccount()).one();
-        if (!dataSourcePO.realtimeAccount.equals(dto.getUserAccount()) || !dataSourcePO.realtimePwd.equals(dto.getPassword())) {
+        AppDataSourcePO dataSourcePO = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).one();
+        if (!dataSourcePO.realtimeAccount.equals(dto.getUseraccount()) || !dataSourcePO.realtimePwd.equals(dto.getPassword())) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR, ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR.getMsg());
         }
-        dto.setTemporaryId(RedisTokenKey.DATA_ACCESS_TOKEN + dataSourcePO.id);
+        UserAuthDTO userAuthDTO = new UserAuthDTO();
+        userAuthDTO.setUserAccount(dto.useraccount);
+        userAuthDTO.setPassword(dto.password);
+        userAuthDTO.setTemporaryId(RedisTokenKey.DATA_ACCESS_TOKEN + dataSourcePO.id);
 
-        ResultEntity<String> result = authClient.getToken(dto);
+        ResultEntity<String> result = authClient.getToken(userAuthDTO);
         if (result.code == ResultEnum.SUCCESS.getCode()) {
             return result;
         } else {
