@@ -95,6 +95,7 @@ public enum ResultEnum {
     PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
     REALTIME_ACCOUNT_OR_PWD_ERROR(5024, "请输入正确的账号或密码"),
     REALTIME_ACCOUNT_ISEXIST(5025, "当前账号已存在,请重新输入"),
+    GENERATE_PDF_ERROR(5026, "生成PDF文档失败"),
 
 
     /**
