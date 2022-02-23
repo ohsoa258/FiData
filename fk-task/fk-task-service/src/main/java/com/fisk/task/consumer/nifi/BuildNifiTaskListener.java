@@ -9,6 +9,7 @@ import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.FuncNameEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.enums.task.TopicTypeEnum;
 import com.fisk.common.enums.task.nifi.*;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
@@ -100,8 +101,10 @@ public class BuildNifiTaskListener {
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-    @Value("${KafkaBrokers}")
+    @Value("${spring.kafka.producer.bootstrap-servers}")
     public String KafkaBrokers;
+    @Value("${nifi.pipeline.topicName}")
+    public String pipelineTopicName;
     @Resource
     INifiComponentsBuild componentsBuild;
     @Resource
@@ -815,7 +818,7 @@ public class BuildNifiTaskListener {
         if(dto.groupStructureId==null){
             dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId);
             //发送消息PublishKafka
-            publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId);
+            publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 2);
             componentConnector(groupId, dispatchProcessor.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }
 
@@ -904,6 +907,10 @@ public class BuildNifiTaskListener {
             tableNifiSettingPO.saveNumbersProcessorId = processorEntity.getId();
             //连接器
             componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
+            ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 16);
+            tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
+            //连接器
+            componentConnector(groupId, evaluateJsons.getId(), publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
             lastId = processorEntity.getId();
             //res.add(mergeRes);
             res.add(processorEntity1);
@@ -913,6 +920,7 @@ public class BuildNifiTaskListener {
             res.add(putDatabaseRecord);
             res.add(processorEntity);
             res.add(updateField);
+            res.add(publishKafkaForPipelineProcessor);
         }
 
         ProcessorEntity processor = null;
@@ -1490,7 +1498,7 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "Query numbers Field";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select "+dto.id+" as table_id, "+dto.type.getValue()+" as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
+        querySqlDto.querySql = "select '${kafka.topic}' as topic,"+dto.id+" as table_id, "+dto.type.getValue()+" as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
@@ -1694,6 +1702,9 @@ public class BuildNifiTaskListener {
         String[] s = targetTableName.split("_");
         String s1 = targetTableName.replaceFirst(s[0] + "_", "");
         buildConsumeKafkaProcessorDTO.TopicNames = "dmp.datafactory.nifi." + s[0] + "." + s1;
+        if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            buildConsumeKafkaProcessorDTO.TopicNames = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getName();
+        }
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConsumeKafkaProcessor(buildConsumeKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -1707,7 +1718,7 @@ public class BuildNifiTaskListener {
      * @param dto
      * @return 组件对象
      */
-    public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId) {
+    public ProcessorEntity createPublishKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId,int position) {
         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
         Map<String, String> variable = new HashMap<>();
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
@@ -1718,7 +1729,7 @@ public class BuildNifiTaskListener {
         buildPublishKafkaProcessorDTO.name = "PublishKafka";
         buildPublishKafkaProcessorDTO.details = "PublishKafka";
         buildPublishKafkaProcessorDTO.UseTransactions = "false";
-        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(position);
         String targetTableName = configDTO.processorConfig.targetTableName;
         String[] s = targetTableName.split("_");
         String s1 = targetTableName.replaceFirst(s[0] + "_", "");
@@ -1728,7 +1739,13 @@ public class BuildNifiTaskListener {
         tableTopicDTO.tableId = Math.toIntExact(dto.id);
         tableTopicDTO.tableType = dto.type.getValue();
         tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1;
+        tableTopicDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+        if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getName();
+        }
         tableTopicService.updateTableTopic(tableTopicDTO);
+        //查出所有topic,拼接
+        tableTopicDTO.topicType=TopicTypeEnum.NO_TYPE.getValue();
         List<TableTopicDTO> tableTopicList = tableTopicService.getTableTopicList(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
@@ -1736,6 +1753,32 @@ public class BuildNifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
+
+    /**
+     * createPublishKafkaForPipelineProcessor
+     *
+     * @param configDTO 数据接入配置
+     * @param groupId   组id
+     * @param dto
+     * @return 组件对象
+     */
+    public ProcessorEntity createPublishKafkaForPipelineProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int position) {
+        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
+        Map<String, String> variable = new HashMap<>();
+        variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+        componentsBuild.buildNifiGlobalVariable(variable);
+        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
+        buildPublishKafkaProcessorDTO.groupId = groupId;
+        buildPublishKafkaProcessorDTO.name = "PublishKafka";
+        buildPublishKafkaProcessorDTO.details = "PublishKafka";
+        buildPublishKafkaProcessorDTO.UseTransactions = pipelineTopicName;
+        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(position);
+        buildPublishKafkaProcessorDTO.TopicName = "my-topic";
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
     /**
      * 执行sql 查询增量字段组件
      *

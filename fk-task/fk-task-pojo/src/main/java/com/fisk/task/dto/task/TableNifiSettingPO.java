@@ -46,4 +46,5 @@ public class TableNifiSettingPO extends BasePO {
     public String convertPutDatabaseRecordId;
     public String consumeKafkaProcessorId;
     public String publishKafkaProcessorId;
+    public String publishKafkaPipelineProcessorId;
 }

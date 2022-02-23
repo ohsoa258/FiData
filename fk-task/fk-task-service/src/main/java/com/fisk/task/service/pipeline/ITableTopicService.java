@@ -48,4 +48,12 @@ public interface ITableTopicService {
      * @return Integer
      */
     Integer deleteTableTopicByTableId(TableTopicDTO tableTopicDTO);
+
+    /**
+     * 根据ComponentId查询tableTopicDTO
+     *
+     * @param id
+     * @return Integer
+     */
+    TableTopicDTO getTableTopicDTOByComponentId(Integer id);
 }

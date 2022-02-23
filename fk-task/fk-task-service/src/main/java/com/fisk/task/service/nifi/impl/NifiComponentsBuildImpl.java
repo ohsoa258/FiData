@@ -1366,6 +1366,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
+                ProcessIds.add(tableNifiSettingPO.publishKafkaPipelineProcessorId);
                 nifiRemoveDTO.appId=appNifiSettingPO.appComponentId;
                 nifiRemoveDTO.ProcessIds = ProcessIds;
                 nifiRemoveDTO.controllerServicesIds = controllerServicesIds;

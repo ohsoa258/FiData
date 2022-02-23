@@ -51,9 +51,12 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         HashMap<String, Object> conditionMap = new HashMap<>();
         conditionMap.put("component_id", tableTopicDTO.componentId);
         conditionMap.put("del_flag", 1);
-        List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
-        if (tableTopicDTOS != null && tableTopicDTOS.size() != 0) {
-            tableTopicDTO.id = tableTopicDTOS.get(0).id;
+        if(tableTopicDTO.topicType!=0){
+            conditionMap.put("topic_type",tableTopicDTO.topicType);
+        }
+        List<TableTopicDTO> dtoList = tableTopicMapper.selectByMap(conditionMap);
+        if (dtoList != null && dtoList.size() != 0) {
+            tableTopicDTO.id = dtoList.get(0).id;
             tableTopicMapper.updateById(tableTopicDTO);
         } else {
             tableTopicMapper.insert(tableTopicDTO);
@@ -82,6 +85,20 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         conditionMap.put("del_flag", 1);
         int i = tableTopicMapper.deleteByMap(conditionMap);
         return i;
+    }
+
+    @Override
+    public TableTopicDTO getTableTopicDTOByComponentId(Integer id) {
+        TableTopicDTO topicDTO = new TableTopicDTO();
+        HashMap<String, Object> conditionMap = new HashMap<>();
+        conditionMap.put("component_id", id);
+        conditionMap.put("del_flag", 1);
+        conditionMap.put("topic_type", TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue());
+        List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
+        if (tableTopicDTOS != null && tableTopicDTOS.size() != 0) {
+            return tableTopicDTOS.get(0);
+        }
+        return topicDTO;
     }
 
 
