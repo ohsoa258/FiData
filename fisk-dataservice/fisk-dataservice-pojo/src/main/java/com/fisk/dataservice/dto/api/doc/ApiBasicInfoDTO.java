@@ -96,6 +96,11 @@ public class ApiBasicInfoDTO {
     public String apiRequestCatalogue;
 
     /**
+     * api唯一标识
+     */
+    public String apiUnique;
+
+    /**
      * API返回参数json示例
      */
     public String apiResponseExamples;
