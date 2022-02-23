@@ -15,9 +15,9 @@ public class ApiConstants {
             "    \"title\":\"FiData一体化数据赋能平台 API接口文档\",\n" +
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
             "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
-            "    \"isuDate\":\"发布日期：20220101\",\n" +
+            "    \"isuDate\":\"发布日期：20220222\",\n" +
             "    \"footerName\":\"菲斯科FiData一体化数据赋能平台接口文档\",\n" +
-            "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于上游游系统对接FiData一体化数据赋能平台接口。\",\n" +
+            "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
             "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的上游系统。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
             "    \"standard_query\":\"暂无。\",\n" +
@@ -144,17 +144,17 @@ public class ApiConstants {
             "        {\n" +
             "            \"category\":\"接口负责人\",\n" +
             "            \"company\":\"菲斯科\",\n" +
-            "            \"fullName\":\"李家温\",\n" +
-            "            \"mailbox\":\"dick@fisksoft.com\",\n" +
+            "            \"fullName\":\"赵飞鸿\",\n" +
+            "            \"mailbox\":\"feihongz@fisksoft.com.cn\",\n" +
             "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
             "        }\n" +
             "    ],\n" +
             "    \"apiVersionDTOS\":[\n" +
             "        {\n" +
             "            \"version\":\"0.1\",\n" +
-            "            \"startDate\":\"2022/01/01\",\n" +
-            "            \"endDate\":\"2022/01/01\",\n" +
-            "            \"modifier\":\"lijiawen\",\n" +
+            "            \"startDate\":\"2022/02/22\",\n" +
+            "            \"endDate\":\"2022/02/22\",\n" +
+            "            \"modifier\":\"zhaofeihong\",\n" +
             "            \"explain\":\"文档创建、编写\",\n" +
             "            \"state\":\"初稿\"\n" +
             "        }\n" +
@@ -175,7 +175,7 @@ public class ApiConstants {
             "        {\n" +
             "            \"code\":\"404\",\n" +
             "            \"type\":\"int\",\n" +
-            "            \"desc\":\"API不存在或被取消订阅\",\n" +
+            "            \"desc\":\"API不存在\",\n" +
             "            \"trStyle\":\"background-color: #fff\"\n" +
             "        },\n" +
             "        {\n" +
