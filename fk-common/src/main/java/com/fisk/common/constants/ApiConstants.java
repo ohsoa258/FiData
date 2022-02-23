@@ -85,7 +85,7 @@ public class ApiConstants {
             "        {\n" +
             "            \"apiName\":\"获取Token接口\",\n" +
             "            \"apiNameCatalogue\":\"2.4.\",\n" +
-            "            \"apiAddress\":\"/api/getToken\",\n" +
+            "            \"apiAddress\":\"/dataAccess/apiConfig/getToken\",\n" +
             "            \"apiAddressCatalogue\":\"2.4.1.\",\n" +
             "            \"apiDesc\":\"获取身份凭证，后续请求中将此凭证作为身份标识传给业务接口，业务接口将验证身份凭证是否合法，合法则返回业务数据。\",\n" +
             "            \"apiDescCatalogue\":\"2.4.2.\",\n" +
