@@ -58,6 +58,14 @@ public interface PublishTaskClient {
     ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto);
 
     /**
+     * 创建物理表
+     * @param ArDto
+     * @return
+     */
+    @PostMapping("/publishTask/publishBuildPhysicsTableTask")
+    ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) ;
+
+    /**
      * 元数据删除
      *
      * @param entityId

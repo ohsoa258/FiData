@@ -103,6 +103,21 @@ public class PublishTaskController {
 
     }
 
+
+    /**
+     * 创建物理表
+     * @param ArDto
+     * @return
+     */
+    @PostMapping("/publishBuildPhysicsTableTask")
+    @ApiOperation(value = "在ods库中生成数据表")
+    public ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
+        return service.publishTask("数据湖表:"+ArDto.tableName+",结构处理成功",
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
+                ArDto);
+    }
+
     /**
      *pgsql stg to ods
      * @param entityId
