@@ -16,7 +16,7 @@ public class ApiConstants {
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
             "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
             "    \"isuDate\":\"发布日期：20220222\",\n" +
-            "    \"footerName\":\"菲斯科FiData一体化数据赋能平台接口文档\",\n" +
+            "    \"footerName\":\"FiData接口文档\",\n" +
             "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
             "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的上游系统。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
@@ -192,7 +192,7 @@ public class ApiConstants {
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
             "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
             "    \"isuDate\":\"发布日期：20220101\",\n" +
-            "    \"footerName\":\"菲斯科白泽接口文档\",\n" +
+            "    \"footerName\":\"FiData接口文档\",\n" +
             "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于下游系统对接白泽接口。\",\n" +
             "    \"readers\":\"预期读者包括需要从白泽获取数据的下游系统。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
