@@ -88,6 +88,16 @@ public class ApiDocDTO {
     public List<ApiVersionDTO> apiVersionDTOS;
 
     /**
+     * pushData Json格式
+     */
+    public String pushDataJson;
+
+    /**
+     * pushData List
+     */
+    public List<ApiResponseDTO> pushDataDtos;
+
+    /**
      * API返回代码示例
      */
     public List<ApiResponseCodeDTO> apiResponseCodeDTOS;

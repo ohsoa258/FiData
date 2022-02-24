@@ -11,6 +11,10 @@ import lombok.Data;
 @Data
 public class ApiResponseDTO {
     /**
+     * 表名
+     */
+    public String tableName;
+    /**
      * 参数名称
      */
     public String  parmName;
