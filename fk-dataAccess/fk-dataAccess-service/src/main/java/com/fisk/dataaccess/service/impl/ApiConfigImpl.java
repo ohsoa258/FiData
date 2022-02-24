@@ -11,13 +11,13 @@ import com.fisk.common.constants.RedisTokenKey;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.pdf.component.PDFHeaderFooter;
 import com.fisk.common.pdf.component.PDFKit;
-import com.fisk.common.pdf.exception.PDFException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.api.*;
+import com.fisk.dataaccess.dto.api.doc.doc.*;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -26,15 +26,15 @@ import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.map.ApiConfigMap;
+import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
-import com.fisk.dataservice.dto.api.doc.ApiBasicInfoDTO;
-import com.fisk.dataservice.dto.api.doc.ApiDocDTO;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,9 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -175,32 +173,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ApiConfigMap.INSTANCES.listPoToDto(list);
     }
 
-    /**
-     * 根据api_id查询物理表集合
-     *
-     * @return java.util.List<com.fisk.dataaccess.entity.TableAccessPO>
-     * @description 根据api_id查询物理表集合
-     * @author Lock
-     * @date 2022/2/15 10:30
-     * @version v1.0
-     * @params id api_id
-     */
-    private List<TableAccessPO> getListTableAccessByApiId(long id) {
-        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableAccessPO::getApiId, id)
-                // 只查询table_id
-                .select(TableAccessPO::getId);
-        return tableAccessMapper.selectList(queryWrapper);
-    }
-
     @Override
     public ResultEnum generateDoc(GenerateDocDTO dto, HttpServletResponse response) {
         if (dto == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
-
+        // api信息
+        ApiConfigDTO data = getData(dto.apiId);
         // api信息转换为文档实体
-        ApiDocDTO docDTO = createDocDTO();
+        ApiDocDTO docDTO = createDocDTO(data, dto.pushDataJson);
         // 生成pdf,返回文件名称
         PDFHeaderFooter headerFooter = new PDFHeaderFooter();
         PDFKit kit = new PDFKit();
@@ -208,13 +189,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 系统时间戳
         long timeMillis = System.currentTimeMillis();
         String fileName = "APIServiceDoc" + timeMillis + ".pdf";
+        // 生成PDF文件
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "菲斯科FiData接口文档", docDTO, response);
+                templatePath, fileName, "菲斯科FiData一体化数据赋能平台接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
         } catch (IOException ex) {
-            throw new PDFException("createDoc fail", ex);
+            throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
         }
         return ResultEnum.SUCCESS;
     }
@@ -236,6 +218,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
             pushPgSQL(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
+
+            // stg同步到ods
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
         }
@@ -332,6 +316,239 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         }
     }
 
+    /**
+     * 根据api_id查询物理表集合
+     *
+     * @return java.util.List<com.fisk.dataaccess.entity.TableAccessPO>
+     * @description 根据api_id查询物理表集合
+     * @author Lock
+     * @date 2022/2/15 10:30
+     * @version v1.0
+     * @params id api_id
+     */
+    private List<TableAccessPO> getListTableAccessByApiId(long id) {
+        QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableAccessPO::getApiId, id)
+                // 只查询table_id
+                .select(TableAccessPO::getId);
+        return tableAccessMapper.selectList(queryWrapper);
+    }
+
+    private ApiDocDTO createDocDTO(ApiConfigDTO dto,String pushDataJson) {
+
+        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
+                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
+                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
+                "}";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
+                "&nbsp;&nbsp; \"code\": 0,\n" +
+                "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" +
+                "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" +
+                "}", "2.4.9");
+        BigDecimal catalogueIndex = new BigDecimal("2.4");
+
+        // API基本信息对象
+        List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
+        List<TableAccessNonDTO> tableAccessDtoList = dto.list;
+        if (CollectionUtils.isEmpty(tableAccessDtoList)) {
+            return apiDocDTO;
+        }
+        // 没有循环
+//        for (int i = 0; i < tableAccessDtoList.size(); i++) {
+
+        TableAccessNonDTO tableAccessDto = tableAccessDtoList.get(0);
+
+        // 设置目录
+        ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
+        BigDecimal incrementIndex = new BigDecimal("0.1");
+        BigDecimal addIndex = catalogueIndex.add(incrementIndex);
+        // 目录等级
+        apiCatalogueDTO.grade = 3;
+        // 目录序号
+        apiCatalogueDTO.catalogueIndex = addIndex + ".";
+        // 目录名称
+        apiCatalogueDTO.catalogueName = dto.apiName;
+        apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 1, apiCatalogueDTO);
+        catalogueIndex = addIndex;
+
+        // 设置API基础信息
+        ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
+        apiBasicInfoDTO.apiName = dto.apiName;
+        apiBasicInfoDTO.apiAddress = "/dataAccess/apiConfig/pushdata";
+        apiBasicInfoDTO.apiDesc = dto.apiDes;
+        apiBasicInfoDTO.apiRequestType = "POST";
+        apiBasicInfoDTO.apiContentType = "application/json";
+        apiBasicInfoDTO.apiHeader = "Authorization: Bearer {token}";
+
+        apiBasicInfoDTO.apiUnique = String.valueOf(dto.id);
+
+        // 设置API请求参数
+        List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+        ApiRequestDTO apiRequestDTO1 = new ApiRequestDTO();
+        apiRequestDTO1.parmName = "apiId";
+        apiRequestDTO1.isRequired = "是";
+        apiRequestDTO1.parmType = "String";
+        apiRequestDTO1.parmDesc = "api唯一标识";
+        apiRequestDTO1.trStyle = "background-color: #fff";
+        ApiRequestDTO apiRequestDTO2 = new ApiRequestDTO();
+        apiRequestDTO2.parmName = "pushData";
+        apiRequestDTO2.isRequired = "是";
+        apiRequestDTO2.parmType = "String";
+        apiRequestDTO2.parmDesc = "json序列化数据";
+        apiRequestDTO2.trStyle = "background-color: #f8f8f8";
+        apiRequestDTOS.add(apiRequestDTO1);
+        apiRequestDTOS.add(apiRequestDTO2);
+        apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
+        apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
+                " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
+                " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
+                "}", addIndex + ".7");
+
+        // TODO 表参数详情
+        List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
+        ApiResponseDTO apiResponseDTO1 = new ApiResponseDTO();
+        apiResponseDTO1.parmName = "code";
+        apiResponseDTO1.parmType = "int";
+        apiResponseDTO1.parmDesc = "调用结果状态";
+        ApiResponseDTO apiResponseDTO2 = new ApiResponseDTO();
+        apiResponseDTO2.parmName = "msg";
+        apiResponseDTO2.parmType = "String";
+        apiResponseDTO2.parmDesc = "调用结果描述";
+        ApiResponseDTO apiResponseDTO3 = new ApiResponseDTO();
+        apiResponseDTO3.parmName = "data";
+        apiResponseDTO3.parmType = "String";
+        apiResponseDTO3.parmDesc = "返回的数据";
+        apiResponseDTOS.add(apiResponseDTO1);
+        apiResponseDTOS.add(apiResponseDTO2);
+        apiResponseDTOS.add(apiResponseDTO3);
+        apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
+
+        //设置API返回参数,即返回示例(待update)
+        apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
+                " &nbsp;&nbsp;\"code\": 0,\n" +
+                " &nbsp;&nbsp;\"msg\": \"xxx\",\n" +
+                " &nbsp;&nbsp;\"data\": null\n" +
+                "}", addIndex + ".9");
+
+        // TODO pushData json格式
+        if (StringUtils.isNotBlank(pushDataJson)) {
+
+            apiDocDTO.pushDataJson = pushDataJson;
+        } else {// 防止模板报错
+            apiDocDTO.pushDataJson = "&nbsp;&nbsp;当前api没有表";
+        }
+
+
+        // TODO pushData 字段描述
+        List<ApiResponseDTO> pushDataDtos = new ArrayList<>();
+        List<TableAccessNonDTO> list = dto.list;
+        if (!CollectionUtils.isEmpty(list)) {
+            final int[] trIndex = {1};
+            list.forEach(e -> {
+                e.list.forEach(f -> {
+                    ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+                    apiResponseDTO.tableName = e.tableName;
+                    apiResponseDTO.parmName = f.fieldName;
+                    apiResponseDTO.parmType = f.fieldType;
+                    apiResponseDTO.parmDesc = f.fieldDes;
+                    apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                    pushDataDtos.add(apiResponseDTO);
+                    trIndex[0]++;
+                });
+            });
+        } else {// 防止模板报错
+            ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.tableName = "暂无数据";
+            apiResponseDTO.parmName = "暂无数据";
+            apiResponseDTO.parmType = "暂无数据";
+            apiResponseDTO.parmDesc = "暂无数据";
+            apiResponseDTO.trStyle = "background-color: #f8f8f8";
+            pushDataDtos.add(apiResponseDTO);
+        }
+        apiDocDTO.pushDataDtos = pushDataDtos;
+
+
+        //设置API目录
+        /* 设置API目录 start */
+        apiBasicInfoDTO.apiNameCatalogue = addIndex + ".";
+        apiBasicInfoDTO.apiAddressCatalogue = addIndex + ".1";
+        apiBasicInfoDTO.apiDescCatalogue = addIndex + ".2";
+        apiBasicInfoDTO.apiRequestTypeCatalogue = addIndex + ".3";
+        apiBasicInfoDTO.apiContentTypeCatalogue = addIndex + ".4";
+        apiBasicInfoDTO.apiHeaderCatalogue = addIndex + ".5";
+        apiBasicInfoDTO.apiRequestExamplesCatalogue = addIndex + ".6";
+        apiBasicInfoDTO.apiRequestCatalogue = addIndex + ".7";
+        apiBasicInfoDTO.apiResponseExamplesCatalogue = addIndex + ".8";
+        apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
+        /* 设置API目录 end */
+
+        apiBasicInfoDTOS.add(apiBasicInfoDTO);
+
+//        }
+        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
+        return apiDocDTO;
+    }
+
+    /**
+     * 根据apiId生成json格式数据
+     *
+     * @return java.lang.String
+     * @description 根据apiId生成json格式数据
+     * @author Lock
+     * @date 2022/2/23 16:54
+     * @version v1.0
+     * @params apiId
+     */
+    private String buildJsonStr(Long apiId) {
+
+        List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(TableAccessMap.INSTANCES.listDtoNonToPo(getData(-1).list));
+        System.out.println(apiTableDtoList);
+
+        Map map = new HashMap();
+        map.put(0, apiTableDtoList.get(0));
+        map.put(3149, apiTableDtoList.get(1));
+        map.put(3150, apiTableDtoList.get(2));
+
+        for (Object o : map.entrySet()) {
+
+        }
+
+
+        return null;
+    }
+
+    /*
+     * @description 获取父子级关系
+     * @author Lock
+     * @date 2022/1/18 10:05
+     * @version v1.0
+     * @params dto
+     * @params dtoLost
+     * @return com.fisk.dataaccess.dto.api.GenerateApiDTO
+     */
+    private GenerateApiDTO bulidChildTree(GenerateApiDTO dto, List<TableAccessNonDTO> dtoLost) {
+        List<GenerateApiDTO> list = new ArrayList<>();
+
+        for (TableAccessNonDTO e : dtoLost) {
+            GenerateApiDTO generateApiDTO = new GenerateApiDTO();
+            generateApiDTO.fieldList = getFieldList(e);
+            list.add(generateApiDTO);
+        }
+
+        dto.data = list;
+        return dto;
+    }
+
+    private List<String> getFieldList(TableAccessNonDTO dto) {
+        List<String> fieldList = null;
+        List<TableFieldsDTO> list = dto.list;
+        if (!CollectionUtils.isEmpty(list)) {
+            fieldList = list.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        }
+        return fieldList;
+    }
+
     public static void main(String[] args) {
         JsonUtils jsonUtils = new JsonUtils();
         // 测试时间
@@ -361,7 +578,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // ods_abbreviationName_tableName
-            pgsqlUtils.executeBatchPgsql("", targetTable);
+            pgsqlUtils.executeBatchPgsql("stg_push_", targetTable);
 
 //            Instant inst2 = Instant.now();
 //            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
@@ -369,59 +586,5 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         } catch (Exception e) {
             System.out.println("执行失败");
         }
-    }
-
-    /*
-     * @description 获取父子级关系
-     * @author Lock
-     * @date 2022/1/18 10:05
-     * @version v1.0
-     * @params dto
-     * @params dtoLost
-     * @return com.fisk.dataaccess.dto.api.GenerateApiDTO
-     */
-    private GenerateApiDTO bulidChildTree(GenerateApiDTO dto, List<TableAccessNonDTO> dtoLost) {
-        List<GenerateApiDTO> list = new ArrayList<>();
-
-        for (TableAccessNonDTO e : dtoLost) {
-//            if (dto.tableIdentity.equals(e.pid)) {
-//
-//                GenerateApiDTO generateApiDTO = new GenerateApiDTO();
-//                generateApiDTO.tableIdentity = e.id;
-//                generateApiDTO.fieldList = getFieldList(e);
-//                list.add(generateApiDTO);
-//            }
-        }
-
-        dto.data = list;
-        return dto;
-    }
-
-    private List<String> getFieldList(TableAccessNonDTO dto) {
-        List<String> fieldList = null;
-        List<TableFieldsDTO> list = dto.list;
-        if (!CollectionUtils.isEmpty(list)) {
-            fieldList = list.stream().map(e -> e.fieldName).collect(Collectors.toList());
-        }
-        return fieldList;
-    }
-
-    private ApiDocDTO createDocDTO() {
-
-        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
-                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
-                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
-                "}";
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
-                "&nbsp;&nbsp; \"code\": 200,\n" +
-                "&nbsp;&nbsp; \"token\": \"xxx\", --%s\n" +
-                "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
-                "}", "2.4.9");
-        BigDecimal catalogueIndex = new BigDecimal("2.4");
-        List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
-
-        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
-        return apiDocDTO;
     }
 }

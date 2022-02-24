@@ -57,12 +57,21 @@ public interface TableAccessMap {
     List<TableAccessDTO> listPoToDto(List<TableAccessPO> list);
 
     /**
-     * list集合 po -> dto
+     * list集合 non po -> dto
      *
      * @param list source
      * @return target
      */
     List<TableAccessNonDTO> listPoToDtoNon(List<TableAccessPO> list);
+
+    /**
+     * list集合 non dto -> po
+     *
+     * @param list source
+     * @return target
+     */
+    List<TableAccessPO> listDtoNonToPo(List<TableAccessNonDTO> list);
+
 
     /**
      * list集合 dto -> po

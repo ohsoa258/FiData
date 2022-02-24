@@ -2,13 +2,10 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.dataaccess.controller.Home;
 import com.fisk.dataaccess.dto.json.JsonTableData;
-import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -32,8 +29,6 @@ public class PgsqlUtils {
     private String username;
     @Value("${pgsql-ods.password}")
     private String password;
-    @Resource
-    private Home home;
 
     /**
      * 创建pgsql连接驱动
@@ -45,10 +40,11 @@ public class PgsqlUtils {
      * @version v1.0
      * @params
      */
-    public Connection getConn() {
+    public static Connection getConn() {
         Connection conn = null;
         try {
-            Class.forName(DriverTypeEnum.PGSQL.getName());
+            Class.forName("org.postgresql.Driver");
+//            Class.forName(DriverTypeEnum.PGSQL.getName());
             conn = DriverManager.getConnection("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified", "postgres", "Password01!");
 //            conn = DriverManager.getConnection(pgUrl, username, password);
         } catch (ClassNotFoundException | SQLException e) {
@@ -66,7 +62,7 @@ public class PgsqlUtils {
      * @date 2022/1/21 17:24
      * @version v1.0
      * @params jsonStr json字符串
-     * @params tablePrefixName pg中的物理表名
+     * @params tablePrefixName pg中的物理表前缀名
      */
     public void executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getConn();
@@ -99,7 +95,7 @@ public class PgsqlUtils {
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
                     inserSql = insertSqlIndex + insertSqlLast;
-//                    System.out.println(inserSql);
+                    System.out.println(inserSql);
                     countSql++;
                     statement.addBatch(inserSql);
                 }

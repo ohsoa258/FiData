@@ -17,4 +17,7 @@ public class GenerateDocDTO {
     @ApiModelProperty(value = "实时apiId",required = true)
     @NotNull()
     public Long apiId;
+
+    @ApiModelProperty(value = "api下的物理表json结构")
+    public String pushDataJson;
 }

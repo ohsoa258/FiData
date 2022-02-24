@@ -317,7 +317,11 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             // 执行发布
             try {
-                publishTaskClient.publishBuildAtlasTableTask(data);
+                if (registration.appType == 0) {
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                } else if (registration.appType == 1) {
+                    publishTaskClient.publishBuildAtlasTableTask(data);
+                }
             } catch (Exception e) {
                 log.info("发布失败", e);
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
