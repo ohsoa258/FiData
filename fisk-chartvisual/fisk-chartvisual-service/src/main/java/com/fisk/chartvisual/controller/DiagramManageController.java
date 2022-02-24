@@ -1,6 +1,7 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.chartvisual.config.SwaggerConfig;
+import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.service.DiagramManageService;
@@ -41,5 +42,11 @@ public class DiagramManageController {
     @GetMapping("/get")
     public ResultEntity<ChartPropertyVO> getDataById(int id, ChartQueryTypeEnum type) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataById(id, type));
+    }
+
+    @ApiOperation("修改报表")
+    @PutMapping("/edit")
+    public ResultEntity<Object> editData(@Validated @RequestBody ChartPropertyEditDTO dto) {
+        return ResultEntityBuild.build(service.updateChart(dto));
     }
 }

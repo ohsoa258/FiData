@@ -1,15 +1,12 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.chartvisual.dto.ChildvisualDTO;
+import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
-import com.fisk.chartvisual.entity.ChartChildvisualPO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.map.ChartMap;
 import com.fisk.chartvisual.map.DraftChartMap;
-import com.fisk.chartvisual.mapper.ChartChildvisualMapper;
 import com.fisk.chartvisual.mapper.ChartMapper;
 import com.fisk.chartvisual.mapper.DraftChartMapper;
 import com.fisk.chartvisual.mapper.FolderMapper;
@@ -23,9 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
-
-import static com.fisk.chartvisual.service.impl.ChartManageImpl.stringSplit;
 
 /**
  * @author WangYan
@@ -81,5 +75,33 @@ public class DiagramManageServiceImpl implements DiagramManageService {
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
+    }
+
+    @Override
+    public ResultEnum updateChart(ChartPropertyEditDTO dto) {
+        int res = 0;
+        switch (dto.type) {
+            case DRAFT:
+                DraftChartPO draft = draftChartMapper.selectById(dto.id);
+                if (draft == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                ChartMap.INSTANCES.editDiagDtoToPo(dto, draft);
+                res = draftChartMapper.updateById(draft);
+                break;
+            case RELEASE:
+                ChartPO release = chartMapper.selectById(dto.id);
+                if (release == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                ChartMap.INSTANCES.editDiagDtoToPo(dto, release);
+                res = chartMapper.updateById(release);
+
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

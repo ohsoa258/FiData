@@ -277,7 +277,7 @@ public class ChartManageImpl implements IChartManageService {
                     }
 
                     // 保存报表组件
-                    List<ChildvisualDTO> poList = this.stringSplit(dto.content, dto.id);
+                    List<ChildvisualDTO> poList = stringSplit(dto.content, dto.id);
                     if (!CollectionUtils.isEmpty(poList)){
                         for (ChildvisualDTO po : poList) {
                             ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);

@@ -86,6 +86,18 @@ public interface ChartMap {
     void editDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 
     /**
+     * editDto => po
+     * @param dto source
+     * @param po target
+     */
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
+    })
+    void editDiagDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
+
+    /**
      * dto => po
      * @param dto
      * @return
