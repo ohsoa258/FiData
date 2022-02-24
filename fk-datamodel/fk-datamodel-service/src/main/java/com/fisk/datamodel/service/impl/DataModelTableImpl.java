@@ -93,7 +93,7 @@ public class DataModelTableImpl implements IDataModelTable {
                 //创建维度表主键key
                 SourceFieldDTO dimensionKey=new SourceFieldDTO();
                 String newFieldName=dimensionPO.dimensionTabName.substring(4);
-                dimensionKey.fieldName=newFieldName+"_key";
+                dimensionKey.fieldName=newFieldName+"key";
                 dimensionKey.fieldType="NVARCHAR";
                 dimensionKey.fieldLength=255;
                 dimensionKey.fieldDes="";
@@ -127,7 +127,7 @@ public class DataModelTableImpl implements IDataModelTable {
 
                         SourceFieldDTO associatedField=new SourceFieldDTO();
                         associatedField.id=attributePO.associateDimensionId;
-                        associatedField.fieldName=newFieldName+"_key";
+                        associatedField.fieldName=newFieldName+"key";
                         associatedField.fieldType="NVARCHAR";
                         associatedField.fieldLength=255;
                         associatedField.fieldDes=dimensionPO1.dimensionDesc;
@@ -202,7 +202,7 @@ public class DataModelTableImpl implements IDataModelTable {
                         SourceFieldDTO associatedField=new SourceFieldDTO();
                         associatedField.id=attributePO.associateDimensionId;
                         String newFieldName=dimensionPO1.dimensionTabName.substring(4);
-                        associatedField.fieldName=newFieldName+"_key";
+                        associatedField.fieldName=newFieldName+"key";
                         associatedField.fieldType="NVARCHAR";
                         associatedField.fieldLength=255;
                         associatedField.fieldDes=dimensionPO1.dimensionDesc;
@@ -257,7 +257,7 @@ public class DataModelTableImpl implements IDataModelTable {
                         field.fieldLength=atomic.factFieldLength;
                         break;
                     case 1:
-                        field.fieldName=atomic.dimensionTableName.substring(4)+"_key";
+                        field.fieldName=atomic.dimensionTableName.substring(4)+"key";
                         field.fieldType="NVARCHAR";
                         field.fieldLength=255;
                         break;

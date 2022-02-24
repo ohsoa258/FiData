@@ -15,6 +15,7 @@ import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import com.google.inject.internal.cglib.core.$Signature;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -210,6 +211,11 @@ public class EntityImpl implements IEntity {
                 JSONObject mutatedEntities= JSON.parseObject(jsonObj.getString("mutatedEntities"));
                 JSONArray jsonArray=mutatedEntities.getJSONArray("CREATE");
                 setRedis(jsonArray.getJSONObject(0).getString("guid"));
+                if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_DB.getName()))
+                {
+                    JSONArray updateAttribute=mutatedEntities.getJSONArray("UPDATE");
+                    setRedis(updateAttribute.getJSONObject(0).getString("guid"));
+                }
             }
             catch (Exception e)
             {
@@ -249,25 +255,63 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public ResultEnum updateEntity(JSONObject entityData)
+    public ResultEnum updateEntity(JSONObject dto)
     {
-        String jsonParameter=JSONArray.toJSON(entityData).toString();
+        String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
         updateRedis();
+        try {
+            JSONObject jsonObj = JSON.parseObject(jsonParameter);
+            JSONObject entityObject= JSON.parseObject(jsonObj.getString("entity"));
+            String guid = entityObject.getString("guid");
+            Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+guid);
+            if (exist)
+            {
+                setRedis(guid);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+    }
+
+    @Override
+    public EntityInstanceDTO getInstanceDetail(String guid)
+    {
+        try {
+            ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" +guid);
+            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            {
+                throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            }
+            EntityInstanceDTO data=new EntityInstanceDTO();
+            JSONObject jsonObj = JSON.parseObject(getDetail.data);
+            JSONObject entity= JSON.parseObject(jsonObj.getString("entity"));
+            JSONObject attributes=JSON.parseObject(entity.getString("attributes"));
+            JSONObject instance=JSON.parseObject(attributes.getString("instance"));
+            data.instanceGuid=instance.getString("guid");
+            return data;
+        }
+        catch (Exception e)
+        {
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        }
     }
 
     /**
      * entity操作后,更新Redis数据
      */
     public void updateRedis(){
-        Thread t1 = new Thread(new Runnable(){
+        /*Thread t1 = new Thread(new Runnable(){
             @Override
             public void run() {
                 getEntityList();
             }
         });
-        t1.start();
+        t1.start();*/
+        getEntityList();
     }
 
     @Override

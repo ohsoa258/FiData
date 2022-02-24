@@ -25,6 +25,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -88,13 +89,13 @@ public class SynchronizationData {
             //同步实例
             synchronizationInstance();
             //同步库
-            //synchronizationDb();
+            synchronizationDb();
             //同步ods
-            //synchronizationOds();
+            synchronizationOds();
             //同步dw
-            //synchronizationDw();
+            synchronizationDw();
             //同步doris
-            //synchronizationDoris();
+            synchronizationDoris();
             //同步redis中数据
             entityImpl.getEntityList();
         }
@@ -181,13 +182,14 @@ public class SynchronizationData {
             for (int i=0;i<dbList.length;i++)
             {
                 index+=1;
+                int j=i;
                 int finalIndex = index;
-                Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(instanceList[finalIndex])).findFirst();
-                if (instancePo.isPresent())
+                Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(instanceList[j])).findFirst();
+                if (!instancePo.isPresent())
                 {
                     continue;
                 }
-                String dbQualifiedName=instancePo.get().qualifiedName+"_"+db;
+                String dbQualifiedName=instancePo.get().qualifiedName+"_"+dbList[i];
                 String dbGuid="";
                 List<MetadataMapAtlasPO> dbPo=mapAtlasDbPOS.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
@@ -195,9 +197,9 @@ public class SynchronizationData {
                 if (!CollectionUtils.isEmpty(dbPo))
                 {
                     dbGuid=dbPo.get(0).atlasGuid;
-                    updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),db,dbQualifiedName,null,null);
+                    updateEntity(EntityTypeEnum.RDBMS_DB,dbPo.get(0),dbList[i],dbQualifiedName,null,null);
                 }else {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo.get(), db,null,null,0);
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_DB, instancePo.get(), dbList[i],null,null,0);
                     if (addResult !="")
                     {
                         dbGuid = addMetadataMapAtlas(addResult,
@@ -244,6 +246,7 @@ public class SynchronizationData {
             dto.fieldList=dto.fieldList.stream().distinct().collect(Collectors.toList());
             list.add(dto);
         }
+        //list=list.stream().filter(e->e.tableName.contains("timingTask_Favorite")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_INPUT.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
@@ -450,6 +453,7 @@ public class SynchronizationData {
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(MetadataMapAtlasPO::getDataType,dataType)
+                .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                 .eq(MetadataMapAtlasPO::getColumnId,0);
 
         List<MetadataMapAtlasPO> poList=metadataMapAtlasMapper.selectList(queryWrapper);
@@ -487,6 +491,7 @@ public class SynchronizationData {
         //删除atlas字段数据
         QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
         queryWrapper1.lambda().eq(MetadataMapAtlasPO::getDataType,dataType)
+                .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_COLUMN)
                 .ne(MetadataMapAtlasPO::getColumnId,0);
         List<MetadataMapAtlasPO> dwMetadataList=metadataMapAtlasMapper.selectList(queryWrapper1);
         //atlas删除字段元数据对象
@@ -548,11 +553,11 @@ public class SynchronizationData {
         }
         //获取类型
         EntityTypeEnum typeNameEnum = EntityTypeEnum.getValue(entityTypeEnum.getName());
-        String[] userList = fiDataUserName.split(",");
-        String[] passwordList = fiDataPassword.split(",");
         switch (typeNameEnum)
         {
             case RDBMS_INSTANCE:
+                String[] userList = fiDataUserName.split(",");
+                String[] passwordList = fiDataPassword.split(",");
                 attributesDTO.qualifiedName=fiDataName.split(",")[index];
                 attributesDTO.hostname =fiDataHostName.split(",")[index];
                 attributesDTO.port=fiDataPort.split(",")[index];
@@ -675,10 +680,11 @@ public class SynchronizationData {
                 }
                 break;
             case RDBMS_COLUMN:
+                String length=fieldDTO.fieldLength+"";
                 if (!fieldDTO.fieldName.equals(attribute.getString("name"))
                         || !po.qualifiedName.equals(attribute.getString("qualifiedName"))
                         //|| !field.fieldDes.equals(attribute1.getString("description"))
-                        || !fieldDTO.equals(attribute.getString("length"))
+                        || !length.equals(attribute.getString("length"))
                         || !fieldDTO.fieldType.equals(attribute.getString("data_type")))
                 {
                     attribute.put("name",fieldDTO.fieldName);
@@ -735,7 +741,15 @@ public class SynchronizationData {
         try {
             JSONObject jsonObj = JSON.parseObject(jsonStr);
             JSONObject mutatedEntities = JSON.parseObject(jsonObj.getString("mutatedEntities"));
-            JSONArray jsonArray=mutatedEntities.getJSONArray("CREATE");
+            String strMutatedEntities = mutatedEntities.toString();
+            JSONArray jsonArray;
+            if (strMutatedEntities.indexOf("CREATE")>-1)
+            {
+                 jsonArray=mutatedEntities.getJSONArray("CREATE");
+            }
+            else {
+                jsonArray=mutatedEntities.getJSONArray("UPDATE");
+            }
             MetadataMapAtlasPO metadataMapAtlasPO=new MetadataMapAtlasPO();
             metadataMapAtlasPO.atlasGuid=jsonArray.getJSONObject(0).getString("guid");
             metadataMapAtlasPO.type=entityTypeEnum.getValue();

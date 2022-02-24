@@ -5,10 +5,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.entity.EntityAssociatedMetaDataDTO;
-import com.fisk.datamanagement.dto.entity.EntityDTO;
-import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
-import com.fisk.datamanagement.dto.entity.EntityAssociatedLabelDTO;
+import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.service.IEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -98,6 +95,12 @@ public class MetaDataEntityController {
     @GetMapping("/searchSuggestions")
     public ResultEntity<Object> searchSuggestions(String prefixString) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchSuggestions(prefixString));
+    }
+
+    @ApiOperation("根据db实体id,获取实例详情")
+    @GetMapping("/getInstanceDetail/{guid}")
+    public ResultEntity<Object> getInstanceDetail(@PathVariable("guid") String guid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getInstanceDetail(guid));
     }
 
 }

@@ -41,10 +41,10 @@ public interface IEntity {
 
     /**
      *更改实体数据
-     * @param entityData
+     * @param dto
      * @return
      */
-    ResultEnum updateEntity(JSONObject entityData);
+    ResultEnum updateEntity(JSONObject dto);
 
     /**
      * 根据不同条件,筛选元数据对象列表
@@ -96,5 +96,12 @@ public interface IEntity {
      * @return
      */
     JSONObject searchSuggestions(String prefixString);
+
+    /**
+     * 获取实例详情
+     * @param guid
+     * @return
+     */
+    EntityInstanceDTO getInstanceDetail(String guid);
 
 }
