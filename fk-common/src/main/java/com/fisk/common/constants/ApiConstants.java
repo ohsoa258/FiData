@@ -115,19 +115,19 @@ public class ApiConstants {
             "            \"apiResponseExamplesCatalogue\":\"2.4.8.\",\n" +
             "            \"apiResponseDTOS\":[\n" +
             "                {\n" +
-            "                    \"parmName\":\"msg\",\n" +
-            "                    \"parmType\":\"string\",\n" +
-            "                    \"parmDesc\":\"调用结果描述\"\n" +
-            "                },\n" +
-            "                {\n" +
             "                    \"parmName\":\"code\",\n" +
-            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmType\":\"int\",\n" +
             "                    \"parmDesc\":\"调用结果状态\"\n" +
             "                },\n" +
             "                {\n" +
-            "                    \"parmName\":\"token\",\n" +
-            "                    \"parmType\":\"string\",\n" +
-            "                    \"parmDesc\":\"token（调用成功后返回）\"\n" +
+            "                    \"parmName\":\"msg\",\n" +
+            "                    \"parmType\":\"String\",\n" +
+            "                    \"parmDesc\":\"调用结果描述\"\n" +
+            "                },\n" +
+            "                {\n" +
+            "                    \"parmName\":\"data\",\n" +
+            "                    \"parmType\":\"String\",\n" +
+            "                    \"parmDesc\":\"api返回结果\"\n" +
             "                }\n" +
             "            ],\n" +
             "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
@@ -161,27 +161,45 @@ public class ApiConstants {
             "    ],\n" +
             "    \"apiResponseCodeDTOS\":[\n" +
             "        {\n" +
-            "            \"code\":\"200\",\n" +
+            "            \"code\":\"0\",\n" +
             "            \"type\":\"int\",\n" +
-            "            \"desc\":\"调用结果描述\",\n" +
-            "            \"trStyle\":\"background-color: #fff\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"code\":\"401\",\n" +
-            "            \"type\":\"int\",\n" +
-            "            \"desc\":\"无权限访问此API\",\n" +
-            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"code\":\"404\",\n" +
-            "            \"type\":\"int\",\n" +
-            "            \"desc\":\"API不存在\",\n" +
+            "            \"desc\":\"推送数据成功\",\n" +
             "            \"trStyle\":\"background-color: #fff\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"code\":\"500\",\n" +
             "            \"type\":\"int\",\n" +
             "            \"desc\":\"API服务器异常\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"1017\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"获取token失败\",\n" +
+            "            \"trStyle\":\"background-color: #fff\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5010\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"API下不存在表\",\n" +
+            "            \"trStyle\":\"background-color: #fff\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5023\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"推送数据失败\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5027\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"API唯一标识未发送,请检查请求参数\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5028\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"当前API所属应用已删除\",\n" +
             "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
             "        }\n" +
             "    ]\n" +

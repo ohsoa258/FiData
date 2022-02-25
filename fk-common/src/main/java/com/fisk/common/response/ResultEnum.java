@@ -39,6 +39,7 @@ public enum ResultEnum {
     LOGIN_ACCOUNT_DISABLED(1015,"该登录账号已被禁用"),
     TOKEN_EXCEPTION(1016,"该登录账号仅用于推送数据,无权访问其他服务"),
     GET_TOKEN_ERROR(1017,"获取token失败,请联系管理员"),
+    API_ISEMPTY(1018,"获取api对象失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -92,10 +93,12 @@ public enum ResultEnum {
     PARSE_JSONSCHEMA_ERROR(5021, "解析Json的schema信息失败"),
     RECEIVE_DATA_NULL(5022, "本次并未接收到数据"),
     PUSH_DATA_ERROR(5023, "推送数据失败,请联系管理员"),
-    PUSH_TABLEID_NULL(5023, "推送的api_id不可为空"),
     REALTIME_ACCOUNT_OR_PWD_ERROR(5024, "请输入正确的账号或密码"),
     REALTIME_ACCOUNT_ISEXIST(5025, "当前账号已存在,请重新输入"),
     GENERATE_PDF_ERROR(5026, "生成PDF文档失败"),
+    PUSH_TABLEID_NULL(5027, "推送的api_id不可为空"),
+    APP_NOT_EXIST(5028, "当前API所属应用已删除"),
+    CREATE_PG_CONNECTION(5029, "创建pgsql连接驱动失败"),
 
 
     /**
