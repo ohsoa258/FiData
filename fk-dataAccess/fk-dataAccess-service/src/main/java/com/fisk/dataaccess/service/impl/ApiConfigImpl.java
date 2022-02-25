@@ -115,6 +115,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEnum addApiDetail(ApiConfigDTO dto) {
 
+        ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
+        if (model == null) {
+            return ResultEnum.API_NOT_EXIST;
+        }
+        // 修改api
+        editData(dto);
+
         if (!CollectionUtils.isEmpty(dto.list)) {
             dto.list.forEach(e -> tableFieldImpl.addData(e));
         }
@@ -145,6 +152,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum editApiDetail(ApiConfigDTO dto) {
+
+        ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
+        if (model == null) {
+            return ResultEnum.API_NOT_EXIST;
+        }
+        // 修改api
+        editData(dto);
+
         if (!CollectionUtils.isEmpty(dto.list)) {
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
