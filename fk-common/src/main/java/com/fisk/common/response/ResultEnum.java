@@ -99,6 +99,7 @@ public enum ResultEnum {
     PUSH_TABLEID_NULL(5027, "推送的api_id不可为空"),
     APP_NOT_EXIST(5028, "当前API所属应用已删除"),
     CREATE_PG_CONNECTION(5029, "创建pgsql连接驱动失败"),
+    API_NOT_EXIST(5030, "创建pgsql连接驱动失败"),
 
 
     /**
