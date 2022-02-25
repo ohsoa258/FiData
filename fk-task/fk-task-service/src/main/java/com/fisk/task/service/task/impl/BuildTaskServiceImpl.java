@@ -12,7 +12,7 @@ import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.service.task.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+//import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,8 +26,7 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
 
     private final int dataMaxLength = 2000;
 
-    @Resource
-    RabbitTemplate rabbitTemplate;
+
 
     @Override
     public ResultEntity<Object> publishTask(String name, String exchange, String queue, MQBaseDTO data) {
@@ -46,7 +45,7 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
         data.logId = model.id;
 
         try {
-            rabbitTemplate.convertAndSend(exchange, queue, JSON.toJSONString(data));
+            //rabbitTemplate.convertAndSend(exchange, queue, JSON.toJSONString(data));
             model.taskSendOk = true;
             this.updateById(model);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);

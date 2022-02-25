@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.constants.MqConstants;
+import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.redis.RedisUtil;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -14,9 +16,17 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
+import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
+import com.fisk.task.consumer.doris.BuildDorisTaskListener;
+import com.fisk.task.consumer.nifi.BuildNifiCustomWorkFlow;
+import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
+import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
+import com.fisk.task.consumer.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,13 +67,32 @@ public class ConsumerServer {
     private String valueDeserializer;
     @Value("${spring.kafka.consumer.session.timeout.ms}")
     private String sessionTimeoutMs;
+    @Value("${nifi.pipeline.waitTime}")
+    private String waitTime;
+    @Resource
+    BuildNifiTaskListener buildNifiTaskListener;
+    @Resource
+    BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
+    @Resource
+    BuildDataModelDorisTableListener buildDataModelDorisTableListener;
+    @Resource
+    BuildDorisTaskListener buildDorisTaskListener;
+    @Resource
+    BuildNifiCustomWorkFlow buildNifiCustomWorkFlow;
+    @Resource
+    BuildDataInputDeletePgTableListener buildDataInputDeletePgTableListener;
+    @Resource
+    BuildDataInputPgTableListener buildDataInputPgTableListener;
+
+
 
     //这里只用来存放reids
-    @KafkaListener(topics = "${nifi.pipeline.topicName}", containerFactory = "batchFactory", groupId = "test1")
+    @KafkaListener(topics = "${nifi.pipeline.topicName}", containerFactory = "batchFactory", groupId = "test")
     public void consumer(List<String> arrMessage, Acknowledgment ack) {
         log.info("消费消息:start");
         log.info("消费消息 size:" + arrMessage.size());
         //每次进来存进redis里面,key-value,都是topic-name,过期时间为5分钟
+        try {
         for (String mapString : arrMessage) {
             log.info("mapString信息:" + mapString);
             if (mapString.contains("topic") && mapString.contains("table_id") && mapString.contains("table_type")) {
@@ -129,7 +158,7 @@ public class ConsumerServer {
                         Object key = redisUtil.get(topicDTO.topicName);
                         if (key == null) {
                             if (upPortList.size() == 1) {
-                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, 20L);
+                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
                             } else {
                                 redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
                             }
@@ -140,9 +169,9 @@ public class ConsumerServer {
                             if (split.length != upPortList.size()) {
                                 if (upPortList.size() - split.length <= 1) {
                                     if (topicKey.contains(topicSelf.topicName)) {
-                                        redisUtil.expire(topicDTO.topicName, 20L);
+                                        redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                     } else {
-                                        redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, 20L);
+                                        redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                     }
                                 } else {
                                     if (topicKey.contains(topicSelf.topicName)) {
@@ -152,17 +181,82 @@ public class ConsumerServer {
                                     }
                                 }
                             } else {
-                                redisUtil.expire(topicDTO.topicName, 20L);
+                                redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                             }
                         }
                     }
                 }
             }
         }
-        ack.acknowledge();
-        log.info("消费消息:end");
 
+        log.info("消费消息:end");
+        }catch (Exception e){
+            log.error("管道调度报错:"+e.getMessage());
+        }finally {
+            ack.acknowledge();
+        }
     }
+
+    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "testasd")
+    @MQConsumerLog
+    public void buildNifiTaskListener(String data, Acknowledgment ack) {
+        buildNifiTaskListener.msg(data,ack);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
+    public void buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {
+        buildAtlasTableAndColumnTaskListener.msg(data,ack);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
+    public void buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
+        buildDataModelDorisTableListener.msg(dataInfo,acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
+    public void buildDorisTaskListener(String dataInfo, Acknowledgment acke) {
+        buildDorisTaskListener.msg(dataInfo,acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public void buildNifiCustomWorkFlow(String dataInfo, Acknowledgment acke) {
+        buildNifiCustomWorkFlow.msg(dataInfo,acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
+    public void buildDataInputDeletePgTableListener(String dataInfo, Acknowledgment acke) {
+        buildDataInputDeletePgTableListener.msg(dataInfo,acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
+    public void buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
+        buildDataInputPgTableListener.msg(dataInfo,acke);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public OlapPO selectOlapPO(int id, int type) {
         HashMap<String, Object> conditionHashMap = new HashMap<>();

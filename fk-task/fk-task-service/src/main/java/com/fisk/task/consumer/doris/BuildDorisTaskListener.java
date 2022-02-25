@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -23,9 +26,7 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DORIS_FLOW)
 @Slf4j
-
 public class BuildDorisTaskListener {
 
     @Resource
@@ -33,9 +34,9 @@ public class BuildDorisTaskListener {
     @Resource
     DataAccessClient dc;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行Doris");
         log.info("dataInfo:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
@@ -130,6 +131,7 @@ public class BuildDorisTaskListener {
         log.info("【DORIS_STG】" + stg_sql);
         log.info("【DORIS_ODS】" + ods_sql);
         log.info("Doris执行结束");
+        acke.acknowledge();
     }
 
 }

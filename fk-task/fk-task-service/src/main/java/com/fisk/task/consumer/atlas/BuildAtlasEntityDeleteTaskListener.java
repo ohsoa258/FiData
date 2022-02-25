@@ -21,14 +21,13 @@ import javax.annotation.Resource;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW)
 @Slf4j
 public class BuildAtlasEntityDeleteTaskListener {
     @Resource
     IAtlasBuildInstance atlas;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.ATLASENTITYDELETE_MQ_BUILD)
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_ENTITYDELETE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.ATLASENTITYDELETE_MQ_BUILD)
     public void msg(String dataInfo, Channel channel, Message message) {
         AtlasEntityDeleteDTO ad= JSON.parseObject(dataInfo, AtlasEntityDeleteDTO.class);
     }

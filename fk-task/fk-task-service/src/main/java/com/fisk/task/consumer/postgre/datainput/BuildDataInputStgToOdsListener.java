@@ -18,6 +18,9 @@ import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -36,15 +39,14 @@ import static com.cronutils.model.CronType.QUARTZ;
  * Description:pgsql stg表的数据同步到ogs中，目前已弃用，改用存储过程实现。
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW)
 @Slf4j
 public class BuildDataInputStgToOdsListener {
     @Resource
     IPostgreBuild pg;
 
-    @RabbitHandler
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_STGTOODS_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行更新数据导入log状态");
         log.info("dataInfo:" + dataInfo);
         UpdateLogAndImportDataDTO inpData = JSON.parseObject(dataInfo, UpdateLogAndImportDataDTO.class);
@@ -72,7 +74,7 @@ public class BuildDataInputStgToOdsListener {
         };
 
 
-
+        acke.acknowledge();
         //#endregion
     }
     /**

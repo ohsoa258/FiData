@@ -54,6 +54,9 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -66,7 +69,6 @@ import java.util.stream.Collectors;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE)
 @Slf4j
 public class BuildDataModelDorisTableListener
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO>
@@ -119,9 +121,9 @@ public class BuildDataModelDorisTableListener
     public String tableOutputPortId;
 
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
+    public void msg(String dataInfo, Acknowledgment acke) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         int id=0;
         int tableType=0;
@@ -230,7 +232,7 @@ public class BuildDataModelDorisTableListener
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
         }
-
+        acke.acknowledge();
     }
 
     public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO){

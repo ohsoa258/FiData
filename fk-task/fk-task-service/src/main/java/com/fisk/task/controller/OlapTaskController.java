@@ -5,6 +5,7 @@ import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import com.fisk.task.service.nifi.IOlap;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ public class OlapTaskController {
     IBuildTaskService service;
     @Resource
     IOlap olap;
+    @Resource
+    IBuildKfkTaskService iBuildKfkTaskService;
     /**
      * 创建模型
      * @param businessAreaGetDataDTO
@@ -32,7 +35,7 @@ public class OlapTaskController {
      */
     @PostMapping("/CreateModel")
     public ResultEntity<Object> publishBuildAtomicKpiTask(@RequestBody BusinessAreaGetDataDTO businessAreaGetDataDTO){
-        return service.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CREATEMODEL_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW,
                 businessAreaGetDataDTO);

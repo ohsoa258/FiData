@@ -44,6 +44,9 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -52,7 +55,6 @@ import java.util.stream.Collectors;
 
 
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW)
 @Slf4j
 public class BuildNifiCustomWorkFlow {
 
@@ -91,9 +93,10 @@ public class BuildNifiCustomWorkFlow {
     TableTopicImpl tableTopic;
 
 
-    @RabbitHandler
-    @MQConsumerLog
-    public void msg(String data, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog
+    public void msg(String data, Acknowledgment acke) {
+        try {
         // 组里共用port,用漏斗连接共同使用,这样向外提供的连接点就只有一个
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         log.info("管道参数::" + dto);
@@ -112,8 +115,6 @@ public class BuildNifiCustomWorkFlow {
         createConnectingLine(dto);*/
 
         //启动
-        try {
-
             ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
@@ -124,7 +125,9 @@ public class BuildNifiCustomWorkFlow {
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             }
         } catch (ApiException | InterruptedException e) {
-            log.info("此组启动失败:" + groupStructure);
+            log.info("此组启动失败:" + e.getMessage());
+        }finally {
+            acke.acknowledge();
         }
 
     }
@@ -444,7 +447,7 @@ public class BuildNifiCustomWorkFlow {
                 buildNifiFlowDTO.workflowDetailId = String.valueOf(nifiNode.workflowDetailId);
                 buildNifiFlowDTO.nifiCustomWorkflowId = nifiCustomWorkListDTO.nifiCustomWorkflowId;
                 buildNifiFlowDTO.groupStructureId = groupStructure;
-                buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
+                //buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
                 //publishTaskController.publishBuildNifiFlowTask(buildNifiFlowDTO);
 
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELING)) {
@@ -482,7 +485,7 @@ public class BuildNifiCustomWorkFlow {
                 buildNifiFlowDTO.selectSql=one1.selectSql;
                 buildNifiFlowDTO.synMode=one1.syncMode;
                 buildNifiFlowDTO.type=OlapTableEnum.getNameByValue(one1.type);
-                buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
+                //buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
 
                 //-------------------------------------------------
             } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
@@ -518,7 +521,7 @@ public class BuildNifiCustomWorkFlow {
                 buildNifiFlowDTO.nifiCustomWorkflowId = nifiCustomWorkListDTO.nifiCustomWorkflowId;
                 buildNifiFlowDTO.groupStructureId = groupStructure;
                 //publishTaskController.publishBuildNifiFlowTask(buildNifiFlowDTO);
-                buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
+                //buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
                 appNifiSettingDTO.appId = String.valueOf(nifiNode.appId);
                 appNifiSettingDTO.appPid = String.valueOf(nifiNode.groupId);
                 appNifiSettingDTO.tableId = Integer.valueOf(nifiNode.tableId);

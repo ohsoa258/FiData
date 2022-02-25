@@ -30,6 +30,9 @@ import org.quartz.impl.triggers.CronTriggerImpl;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -44,7 +47,6 @@ import static com.cronutils.model.CronType.QUARTZ;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW)
 @Slf4j
 public class BuildAtlasTableAndColumnTaskListener
         extends ServiceImpl<TaskPgTableStructureMapper, TaskPgTableStructurePO>{
@@ -59,9 +61,9 @@ public class BuildAtlasTableAndColumnTaskListener
     @Resource
     private TableNifiSettingServiceImpl tableNifiSettingService;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
@@ -301,6 +303,7 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
+        acke.acknowledge();
     }
 
     private String createPhysicalTable(BuildPhysicalTableDTO buildPhysicalTableDTO){

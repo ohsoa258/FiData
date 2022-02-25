@@ -15,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -26,7 +29,6 @@ import java.text.SimpleDateFormat;
  * Description:
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW)
 @Slf4j
 public class BuildAtlasInstanceTaskListener {
 
@@ -35,9 +37,9 @@ public class BuildAtlasInstanceTaskListener {
     @Resource
     DataAccessClient dc;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("data:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
         ResultEntity<AtlasEntityDTO> queryRes = dc.getAtlasEntity(Long.parseLong(inpData.appId));
@@ -48,5 +50,6 @@ public class BuildAtlasInstanceTaskListener {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //region  创建实例
         //endregion
+        acke.acknowledge();
     }
 }

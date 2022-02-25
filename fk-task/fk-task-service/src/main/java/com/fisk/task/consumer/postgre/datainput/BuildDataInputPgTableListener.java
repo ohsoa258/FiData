@@ -18,6 +18,9 @@ import org.quartz.CronExpression;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -30,7 +33,6 @@ import java.util.*;
  * Description:在pgsql库中创建表
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW)
 @Slf4j
 public class BuildDataInputPgTableListener {
     @Resource
@@ -40,9 +42,9 @@ public class BuildDataInputPgTableListener {
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
@@ -92,6 +94,7 @@ public class BuildDataInputPgTableListener {
             log.info("【PGSTG】" + stg_sql1);
             log.info("pg：建表完成");
         }
+        acke.acknowledge();
     }
 
 

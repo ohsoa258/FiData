@@ -57,7 +57,7 @@ public class KafkaTemplateConfig {
         // acks=0 把消息发送到kafka就认为发送成功
         // acks=1 把消息发送到kafka leader分区，并且写入磁盘就认为发送成功
         // acks=all 把消息发送到kafka leader分区，并且leader分区的副本follower对消息进行了同步就任务发送成功
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.ACKS_CONFIG, "0");
         // 生产者空间不足时，send()被阻塞的时间，默认60s
         props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 6000);
         // 控制批处理大小，单位为字节

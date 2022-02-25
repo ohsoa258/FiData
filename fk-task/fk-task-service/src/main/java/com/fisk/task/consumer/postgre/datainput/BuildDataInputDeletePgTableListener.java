@@ -15,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -29,7 +32,6 @@ import java.util.Objects;
  * Description: 删除pgsql表，在数据接入删除应用和删除指定的物理表的时候触发。
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW)
 @Slf4j
 public class BuildDataInputDeletePgTableListener {
     @Resource
@@ -39,9 +41,9 @@ public class BuildDataInputDeletePgTableListener {
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    //@MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
         StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
@@ -81,6 +83,6 @@ public class BuildDataInputDeletePgTableListener {
             log.info("delsql:"+delSqlStr);
             log.info("执行pg delete table 完成");
         }
-
+        acke.acknowledge();
     }
 }
