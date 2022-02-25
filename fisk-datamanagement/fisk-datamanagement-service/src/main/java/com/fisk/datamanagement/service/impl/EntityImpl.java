@@ -16,7 +16,6 @@ import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamanagement.vo.ResultErrorDTO;
-import com.google.inject.internal.cglib.core.$Signature;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -354,7 +353,7 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(dto.businessMetaDataAttribute).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return newResultEnum(result);
     }
 
     @Override
@@ -645,19 +644,21 @@ public class EntityImpl implements IEntity {
 
     public ResultEnum newResultEnum(ResultDataDTO<String> result)
     {
+        String error="";
         if (result.code.getCode() !=ResultEnum.NO_CONTENT.getCode())
         {
             try {
                 ResultErrorDTO dto=JSONObject.parseObject(result.data,ResultErrorDTO.class);
-                String errorMessage = dto.errorMessage;
-                throw new FkException(ResultEnum.BAD_REQUEST,errorMessage);
+                error = dto.errorMessage;
             }
             catch (Exception e)
             {
                 e.printStackTrace();
+                return result.code;
             }
         }
-        return result.code;
+        throw new FkException(ResultEnum.BAD_REQUEST,error);
+
     }
 
 }
