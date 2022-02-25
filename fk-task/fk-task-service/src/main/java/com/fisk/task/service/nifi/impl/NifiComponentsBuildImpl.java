@@ -1855,10 +1855,13 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         return buildProcessor(data.groupId, entity, dto, config);
     }
+
     @Override
-    public List<String> getSqlForPgOds(DataAccessConfigDTO config){
+    public List<String> getSqlForPgOds(DataAccessConfigDTO config) {
         List<String> SqlForPgOds = new ArrayList<>();
+        String name = config.processorConfig.targetTableName;
         String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName());
+        config.processorConfig.targetTableName = name;
         String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
         SqlForPgOds.add(deleteSql);
         SqlForPgOds.add(toOdaSql);

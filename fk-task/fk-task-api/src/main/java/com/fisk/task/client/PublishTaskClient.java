@@ -168,7 +168,7 @@ public interface PublishTaskClient {
     ResultEntity<Map<String, String>> converSql(
             @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
 
-    @PostMapping("/getSqlForPgOds")
+    @PostMapping("/nifi/getSqlForPgOds")
     ResultEntity<Object> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO);
 
 }
