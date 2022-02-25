@@ -7,7 +7,6 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.olap.BuildCreateModelTaskDto;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -169,6 +168,6 @@ public interface PublishTaskClient {
             @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
 
     @PostMapping("/nifi/getSqlForPgOds")
-    ResultEntity<Object> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO);
+    ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO);
 
 }
