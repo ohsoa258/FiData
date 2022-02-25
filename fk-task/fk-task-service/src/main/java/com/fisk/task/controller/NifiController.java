@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 @RequestMapping("/nifi")
@@ -39,5 +41,14 @@ public class NifiController {
         return objectResultEntity;
 
     }
+
+    @PostMapping("/getSqlForPgOds")
+    public ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO) {
+        ResultEntity<List<String>> SqlForPgOds = new ResultEntity<>();
+        SqlForPgOds.data = iNifiComponentsBuild.getSqlForPgOds(configDTO);
+        SqlForPgOds.code = 0;
+        return SqlForPgOds;
+    }
+
 
 }

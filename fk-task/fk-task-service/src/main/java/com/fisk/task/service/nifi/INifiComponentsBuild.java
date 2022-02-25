@@ -2,6 +2,7 @@ package com.fisk.task.service.nifi;
 
 import com.davis.client.model.*;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -457,6 +458,24 @@ public interface INifiComponentsBuild {
      * @return
      */
     void buildNifiGlobalVariable(Map<String, String> variable);
+
+    /**
+     * getSqlForPgOds
+     *
+     * @param config 配置信息
+     * @return List<String>
+     */
+    List<String> getSqlForPgOds(DataAccessConfigDTO config);
+
+    /**
+     * assemblySql
+     *
+     * @param config 配置信息
+     * @param synchronousTypeEnum synchronousTypeEnum
+     * @param funcName funcName
+     * @return String
+     */
+    String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName);
 
 
 }

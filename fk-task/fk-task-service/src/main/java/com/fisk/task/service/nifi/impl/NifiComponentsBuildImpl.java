@@ -6,6 +6,7 @@ import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.task.FuncNameEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
@@ -14,10 +15,14 @@ import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.mdc.TraceType;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.dataaccess.dto.TableBusinessDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.enums.syncModeTypeEnum;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.dto.daconfig.AssociatedConditionDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
@@ -1850,5 +1855,119 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
         return buildProcessor(data.groupId, entity, dto, config);
     }
+    @Override
+    public List<String> getSqlForPgOds(DataAccessConfigDTO config){
+        List<String> SqlForPgOds = new ArrayList<>();
+        String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName());
+        String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
+        SqlForPgOds.add(deleteSql);
+        SqlForPgOds.add(toOdaSql);
+        return SqlForPgOds;
+    }
+    @Override
+    public String assemblySql(DataAccessConfigDTO config,SynchronousTypeEnum synchronousTypeEnum,String funcName){
+        TableBusinessDTO business = config.businessDTO;
+        String targetTableName = config.processorConfig.targetTableName;
+        String sql="";
+        sql+="call public."+funcName+"('";
+        if(Objects.equals(synchronousTypeEnum,SynchronousTypeEnum.PGTOPG)){
+            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
+                sql += "stg_" + targetTableName + "'";
+                sql += ",'" + targetTableName + "'";
+            } else {
+                sql+= targetTableName+"'";
+                sql+=",'"+config.processorConfig.targetTableName.substring(4)+"'";
+            }
+        }else{
+            if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())) {
+                sql += "stg_" + targetTableName + "'";
+                sql += ",'ods_" + targetTableName + "'";
+            } else {
+                sql += targetTableName + "'";
+                sql += ",'ods_" + targetTableName.substring(4) + "'";
+            }
+        }
+        //同步方式
+        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+        sql+=",'"+syncMode+"'";
+        //主键
+        sql+=config.businessKeyAppend==null?",''":",'"+config.businessKeyAppend+"'";
+        if (business == null) {
+            if(Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName())){
+                sql+=",0,'',0,'','',0,'','',0,'')";
+            }else if(Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())){
+                sql+=",0,'',0,'','',0,'','',0,'')";
+            }
+        } else {
+            //模式
+            sql += "," + business.otherLogic;
+            //年月日
+            sql += (business.businessTimeFlag == null ? ",''" : ",'" + business.businessTimeFlag) + "'";
+            //具体日期
+            sql += "," + business.businessDate;
+            //业务时间覆盖字段
+            sql += (business.businessTimeField == null ? ",''" : ",'" + business.businessTimeField) + "'";
+            //businessOperator
+            String businessOperator = business.businessOperator;
+            sql += (businessOperator == null ? ",''" : ",'" + businessOperator) + "'";
+            //业务覆盖范围
+            sql += "," + business.businessRange;
+            //业务覆盖单位
+            sql += (business.rangeDateUnit == null ? ",''" : ",'" + business.rangeDateUnit) + "'";
+            //其他逻辑,逻辑符号
+            String businessOperatorStandby = business.businessOperatorStandby;
+            sql += (businessOperatorStandby == null ? ",''" : ",'" + businessOperatorStandby) + "'";
+            //其他逻辑  业务覆盖范围
+            sql += "," + business.businessRangeStandby;
+            //其他逻辑  业务覆盖单位
+            sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
+        }
+        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
+            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                String s = associatedConditions(config);
+                sql = sql.substring(0, sql.length() - 1);
+                if (s == null && s.length() < 2) {
+                    sql += ",'')";
+                } else {
+                    sql += ",'{\"AssociatedConditionDTO\":" + s + "}')";
+                }
+            } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                sql = sql.substring(0, sql.length() - 1);
+                sql += ",'')";
+            }
+        }
+        return sql;
+    }
+
+    public String associatedConditions(DataAccessConfigDTO config){
+        List<ModelPublishFieldDTO> fieldList = config.modelPublishFieldDTOList;
+        String targetTableName = config.targetDsConfig.targetTableName;
+        List<AssociatedConditionDTO> associatedConditionDTOS = new ArrayList<>();
+        List<ModelPublishFieldDTO> collect1 = fieldList.stream().filter(e -> e.associateDimensionName != null).collect(Collectors.toList());
+        List<ModelPublishFieldDTO> modelPublishFieldDTOS = collect1.stream().collect(Collectors.collectingAndThen(
+                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ModelPublishFieldDTO::getAssociateDimensionName))), ArrayList::new));
+        modelPublishFieldDTOS.removeAll(Collections.singleton(null));
+        if(modelPublishFieldDTOS.size()!=0){
+            int i=0;
+
+            for (ModelPublishFieldDTO modelPublishFieldDTO:modelPublishFieldDTOS) {
+                AssociatedConditionDTO associatedConditionDTO = new AssociatedConditionDTO();
+                //找到每个关联表关联的所有字段
+                List<ModelPublishFieldDTO> collect = fieldList.stream().filter(e -> e.associateDimensionName != null && e.associateDimensionName.equals(modelPublishFieldDTO.associateDimensionName)).collect(Collectors.toList());
+                //拼接语句,添加外键
+                associatedConditionDTO.id= String.valueOf(i);
+                associatedConditionDTO.associateDimensionName=modelPublishFieldDTO.associateDimensionName;
+                String relevancy="";
+                for (ModelPublishFieldDTO modelPublishFieldDTO1 :collect) {
+                    relevancy+=targetTableName+"."+modelPublishFieldDTO1.fieldEnName+"="+modelPublishFieldDTO1.associateDimensionName+"."+modelPublishFieldDTO1.associateDimensionFieldName+" and ";
+                }
+                associatedConditionDTO.relevancy=relevancy.substring(0,relevancy.length()-4);
+                associatedConditionDTOS.add(associatedConditionDTO);
+                i++;
+            }
+        }
+        return JSON.toJSONString(associatedConditionDTOS);
+    }
+
 
 }
