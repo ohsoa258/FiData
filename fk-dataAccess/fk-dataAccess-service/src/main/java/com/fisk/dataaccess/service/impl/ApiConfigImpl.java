@@ -15,6 +15,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.ApiUserDTO;
 import com.fisk.dataaccess.dto.api.GenerateDocDTO;
@@ -24,16 +25,18 @@ import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.dataaccess.entity.ApiConfigPO;
-import com.fisk.dataaccess.entity.AppDataSourcePO;
-import com.fisk.dataaccess.entity.AppRegistrationPO;
-import com.fisk.dataaccess.entity.TableAccessPO;
+import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.map.ApiConfigMap;
+import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.daconfig.DataSourceConfig;
+import com.fisk.task.dto.daconfig.ProcessorConfig;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -73,6 +77,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private AuthClient authClient;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
+    @Resource
+    private TableSyncmodeImpl tableSyncmodeImpl;
+    @Resource
+    private TableBusinessImpl tableBusinessImpl;
+    @Resource
+    private PublishTaskClient publishTaskClient;
     @Value("${dataservice.pdf.path}")
     private String templatePath;
 
@@ -229,6 +239,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (dto.apiId == null) {
                 return ResultEnum.PUSH_TABLEID_NULL;
             }
+
+            // 每次推送数据前,将stg数据删除
+            pushDataStgToOds(dto.apiId,0);
+
             // 根据api_id查询所有物理表
             List<TableAccessPO> accessPOList = tableAccessImpl.query().eq("api_id", dto.apiId).list();
             if (CollectionUtils.isEmpty(accessPOList)) {
@@ -248,9 +262,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushPgSQL(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
 
             // TODO stg同步到ods(联调task)
-
-
-
+            pushDataStgToOds(dto.apiId, 1);
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
         }
@@ -353,6 +365,95 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             throw new FkException(ResultEnum.PUSH_DATA_ERROR);
+        }
+    }
+
+    /**
+     * 将数据从stg同步到ods
+     *
+     * @return void
+     * @description
+     * @author Lock
+     * @date 2022/2/25 16:41
+     * @version v1.0
+     * @params apiId apiId
+     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     */
+    private void pushDataStgToOds(Long apiId, int flag) {
+
+        // 1.根据apiId获取api所有信息
+        ApiConfigPO apiConfigPO = baseMapper.selectById(apiId);
+        if (apiConfigPO == null) {
+            throw new FkException(ResultEnum.API_NOT_EXIST);
+        }
+        // 2.根据appId获取app所有信息
+        AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPO.appId).one();
+        if (app == null) {
+            throw new FkException(ResultEnum.APP_NOT_EXIST);
+        }
+
+        // 3.根据apiId查询所有物理表详情
+        ApiConfigDTO dto = getData(apiId);
+        List<TableAccessNonDTO> tablelist = dto.list;
+        if (CollectionUtils.isEmpty(tablelist)) {
+            // 当前api下没有物理表
+            throw new FkException(ResultEnum.TABLE_NOT_EXIST);
+        }
+
+        // 4.组装参数,调用tasdk,获取推送数据所需的sql
+        for (TableAccessNonDTO e : tablelist) {
+            TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+            DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
+            // 表名
+            ProcessorConfig processorConfig = new ProcessorConfig();
+            processorConfig.targetTableName = app.appAbbreviation + "_" + e.tableName;
+            // 同步方式
+            DataSourceConfig dataSourceConfig = new DataSourceConfig();
+            dataSourceConfig.syncMode = syncmodePo.syncMode;
+            // 增量对象
+            if (syncmodePo.syncMode == 4) {
+                TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+            }
+
+            // 业务主键集合(逗号隔开)
+            List<TableFieldsDTO> fieldList = e.list;
+            if (!CollectionUtils.isEmpty(fieldList)) {
+                configDTO.businessKeyAppend = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+            }
+
+            configDTO.processorConfig = processorConfig;
+            configDTO.targetDsConfig = dataSourceConfig;
+
+            // 获取同步数据的sql并执行
+            getSynchroDataSqlAndExcute(configDTO, flag);
+        }
+    }
+
+    /**
+     * 获取同步数据的sql并执行
+     *
+     * @return void
+     * @description 获取同步数据的sql并执行
+     * @author Lock
+     * @date 2022/2/25 16:06
+     * @version v1.0
+     * @params configDTO task需要的参数
+     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     */
+    private void getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
+        try {
+            // 调用task,获取同步数据的sql
+            ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOds(configDTO);
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+                List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
+                if (!CollectionUtils.isEmpty(sqlList)) {
+                    PgsqlUtils pgsqlUtils = new PgsqlUtils();
+                    pgsqlUtils.stgToOds(sqlList, flag);
+                }
+            }
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.STG_TO_ODS_ERROR);
         }
     }
 

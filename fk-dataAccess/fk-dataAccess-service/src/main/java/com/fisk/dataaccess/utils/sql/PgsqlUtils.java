@@ -70,6 +70,34 @@ public class PgsqlUtils {
     }
 
     /**
+     * 将数据从stg同步到ods
+     *
+     * @return void
+     * @description 将数据从stg同步到ods
+     * @author Lock
+     * @date 2022/2/25 15:39
+     * @version v1.0
+     * @params sqlList sql集合
+     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     */
+    public void stgToOds(List<String> sqlList, int flag) throws SQLException {
+        Connection pgConn = getPgConn();
+        Statement statement = pgConn.createStatement();
+        try {
+            // 执行sql
+            statement.executeUpdate(sqlList.get(flag));
+
+            statement.close();
+            pgConn.close();
+        } catch (SQLException e) {
+            log.error("批量执行SQL异常: {}", e.getMessage());
+            statement.close();
+            pgConn.close();
+            throw new FkException(ResultEnum.STG_TO_ODS_ERROR);
+        }
+    }
+
+    /**
      * 批量执行pgsql
      *
      * @return void
