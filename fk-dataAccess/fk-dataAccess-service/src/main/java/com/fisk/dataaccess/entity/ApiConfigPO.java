@@ -30,4 +30,8 @@ public class ApiConfigPO extends BasePO {
      */
     public String apiDes;
 
+    /**
+     * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
+     */
+    public Integer publish;
 }

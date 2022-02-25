@@ -18,7 +18,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lock
@@ -199,5 +198,7 @@ public interface DataAccessClient {
     @GetMapping("/dataAccessTree/getDataAccessMetaData")
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 
-
+    @ApiOperation("修改api发布状态")
+    @PutMapping("/apiConfig/updateApiPublishStatus")
+    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto);
 }

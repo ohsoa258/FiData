@@ -23,6 +23,7 @@ import com.fisk.dataaccess.dto.api.doc.doc.*;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
@@ -260,6 +261,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         } else {
             log.error("远程调用失败,方法名: 【auth-service:getToken】");
             return ResultEntityBuild.build(ResultEnum.GET_TOKEN_ERROR);
+        }
+    }
+
+    @Override
+    public void updateApiPublishStatus(ModelPublishStatusDTO dto) {
+        ApiConfigPO model = baseMapper.selectById(dto.apiId);
+        if (model != null) {
+            model.publish = dto.publish;
+            baseMapper.updateById(model);
         }
     }
 

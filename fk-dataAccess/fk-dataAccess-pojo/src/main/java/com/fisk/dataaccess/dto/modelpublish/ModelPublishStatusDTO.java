@@ -8,6 +8,10 @@ import lombok.Data;
 @Data
 public class ModelPublishStatusDTO {
     /**
+     * api_id
+     */
+    public long apiId;
+    /**
      * 物理表id
      */
     public long tableId;

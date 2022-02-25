@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.ApiUserDTO;
 import com.fisk.dataaccess.dto.api.GenerateDocDTO;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -99,5 +100,12 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return 获取token结果
      */
     ResultEntity<String> getToken(ApiUserDTO dto);
+
+    /**
+     * 更新发布状态
+     *
+     * @param dto dto
+     */
+    void updateApiPublishStatus(ModelPublishStatusDTO dto);
 }
 

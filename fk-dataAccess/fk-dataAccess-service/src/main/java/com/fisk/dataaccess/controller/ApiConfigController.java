@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.ApiUserDTO;
 import com.fisk.dataaccess.dto.api.GenerateDocDTO;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -98,5 +99,11 @@ public class ApiConfigController {
     @ApiOperation(value = "获取实时api的临时token")
     public ResultEntity<String> getToken(@RequestBody ApiUserDTO dto) {
         return service.getToken(dto);
+    }
+
+    @ApiOperation("修改api发布状态")
+    @PutMapping("/updateApiPublishStatus")
+    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto){
+        service.updateApiPublishStatus(dto);
     }
 }
