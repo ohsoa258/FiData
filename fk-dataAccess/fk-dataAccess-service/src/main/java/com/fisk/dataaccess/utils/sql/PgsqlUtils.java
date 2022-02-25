@@ -2,7 +2,10 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.exception.FkException;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.dto.json.JsonTableData;
+import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -40,15 +43,15 @@ public class PgsqlUtils {
      * @version v1.0
      * @params
      */
-    public static Connection getConn() {
+    public static Connection getPgConn() {
         Connection conn = null;
         try {
-            Class.forName("org.postgresql.Driver");
-//            Class.forName(DriverTypeEnum.PGSQL.getName());
+            Class.forName(DriverTypeEnum.PGSQL.getName());
             conn = DriverManager.getConnection("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified", "postgres", "Password01!");
 //            conn = DriverManager.getConnection(pgUrl, username, password);
         } catch (ClassNotFoundException | SQLException e) {
-            System.out.println("驱动连接异常关闭: " + e.getMessage());
+            log.error("【getPgConn】创建pgsql连接驱动失败, ex", e);
+            throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
         }
         return conn;
     }
@@ -65,7 +68,7 @@ public class PgsqlUtils {
      * @params tablePrefixName pg中的物理表前缀名
      */
     public void executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
-        Connection con = getConn();
+        Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
         con.setAutoCommit(false);
@@ -111,6 +114,7 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             con.close();
+            throw new FkException(ResultEnum.PUSH_DATA_ERROR);
         }
     }
 
