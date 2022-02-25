@@ -1861,7 +1861,7 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
         List<String> SqlForPgOds = new ArrayList<>();
         String name = config.processorConfig.targetTableName;
         String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName());
-        config.processorConfig.targetTableName = name;
+        config.processorConfig.targetTableName = "stg_"+name;
         String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName());
         SqlForPgOds.add(deleteSql);
         SqlForPgOds.add(toOdaSql);
