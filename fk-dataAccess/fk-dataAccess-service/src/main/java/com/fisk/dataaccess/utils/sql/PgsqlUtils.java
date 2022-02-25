@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,14 +25,27 @@ import java.util.Map;
  * @date 2022/1/21 17:13
  */
 @Slf4j
+@Component
 public class PgsqlUtils {
 
+    private static String pgUrl;
+    private static String pgUsername;
+    private static String pgPpassword;
+
     @Value("${pgsql-ods.url}")
-    private String pgUrl;
+    public void setPgUrl(String pgUrl) {
+        PgsqlUtils.pgUrl = pgUrl;
+    }
+
     @Value("${pgsql-ods.username}")
-    private String username;
+    public void setPgUsername(String pgUsername) {
+        PgsqlUtils.pgUsername = pgUsername;
+    }
+
     @Value("${pgsql-ods.password}")
-    private String password;
+    public void setPgPpassword(String pgPpassword) {
+        PgsqlUtils.pgPpassword = pgPpassword;
+    }
 
     /**
      * 创建pgsql连接驱动
@@ -47,8 +61,7 @@ public class PgsqlUtils {
         Connection conn = null;
         try {
             Class.forName(DriverTypeEnum.PGSQL.getName());
-            conn = DriverManager.getConnection("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified", "postgres", "Password01!");
-//            conn = DriverManager.getConnection(pgUrl, username, password);
+            conn = DriverManager.getConnection(pgUrl, pgUsername, pgPpassword);
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getPgConn】创建pgsql连接驱动失败, ex", e);
             throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
