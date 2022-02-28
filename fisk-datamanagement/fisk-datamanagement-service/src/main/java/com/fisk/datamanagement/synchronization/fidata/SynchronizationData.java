@@ -116,9 +116,11 @@ public class SynchronizationData {
             queryWrapper.lambda()
                     .eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_INSTANCE.getValue());
             String[] hostName = fiDataHostName.split(",");
+            String[] hostPort=fiDataPort.split(",");
             for (int i=0;i<hostName.length;i++)
             {
-                queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName,hostName[i]);
+                String newHostName=hostName[i]+":"+hostPort[i];
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName,newHostName);
                 MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
                 String instanceGuid="";
                 //判断实例是否已存在
@@ -131,7 +133,7 @@ public class SynchronizationData {
                     }
                     //向MetadataMapAtlas表添加数据
                     instanceGuid = addMetadataMapAtlas(addResult,
-                            EntityTypeEnum.RDBMS_INSTANCE, hostName[i],
+                            EntityTypeEnum.RDBMS_INSTANCE, newHostName,
                             0,
                             0,
                             0,
@@ -174,6 +176,7 @@ public class SynchronizationData {
                 return;
             }
             String[] instanceList=fiDataHostName.split(",");
+            String[] hostPort=fiDataPort.split(",");
             String[] dbList = db.split(",");
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_DB.getValue());
@@ -184,7 +187,8 @@ public class SynchronizationData {
                 index+=1;
                 int j=i;
                 int finalIndex = index;
-                Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(instanceList[j])).findFirst();
+                String newHostName=instanceList[i]+":"+hostPort[i];
+                Optional<MetadataMapAtlasPO> instancePo = poList.stream().filter(e -> e.qualifiedName.equals(newHostName)).findFirst();
                 if (!instancePo.isPresent())
                 {
                     continue;
@@ -558,11 +562,11 @@ public class SynchronizationData {
             case RDBMS_INSTANCE:
                 String[] userList = fiDataUserName.split(",");
                 String[] passwordList = fiDataPassword.split(",");
-                attributesDTO.qualifiedName=fiDataName.split(",")[index];
+                attributesDTO.qualifiedName=fiDataName.split(",")[index]+":"+fiDataPort.split(",")[index];
                 attributesDTO.hostname =fiDataHostName.split(",")[index];
                 attributesDTO.port=fiDataPort.split(",")[index];
                 attributesDTO.platform=fiDataPlatform.split(",")[index];
-                attributesDTO.name=fiDataName.split(",")[index];
+                attributesDTO.name=fiDataName.split(",")[index]+":"+fiDataPort.split(",")[index];
                 attributesDTO.protocol=fiDataProtocol.split(",")[index];
                 attributesDTO.rdbms_type=fiDataRdbmsType.split(",")[index];
                 attributesDTO.description=fiDataName.split(",")[index];

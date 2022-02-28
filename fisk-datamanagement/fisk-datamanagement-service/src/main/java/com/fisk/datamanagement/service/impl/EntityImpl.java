@@ -345,7 +345,12 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(dto.list).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/labels", jsonParameter);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.guid);
+        if (exist)
+        {
+            setRedis(dto.guid);
+        }
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -353,7 +358,12 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(dto.businessMetaDataAttribute).toString();
         ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
-        return newResultEnum(result);
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.guid);
+        if (exist)
+        {
+            setRedis(dto.guid);
+        }
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -640,25 +650,6 @@ public class EntityImpl implements IEntity {
             return;
         }
         redisTemplate.opsForValue().set("metaDataEntityData:"+guid,getDetail.data);
-    }
-
-    public ResultEnum newResultEnum(ResultDataDTO<String> result)
-    {
-        String error="";
-        if (result.code.getCode() !=ResultEnum.NO_CONTENT.getCode())
-        {
-            try {
-                ResultErrorDTO dto=JSONObject.parseObject(result.data,ResultErrorDTO.class);
-                error = dto.errorMessage;
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-                return result.code;
-            }
-        }
-        throw new FkException(ResultEnum.BAD_REQUEST,error);
-
     }
 
 }

@@ -69,14 +69,14 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Put(typedefs + "?type=business_metadata", jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
     public ResultEnum deleteBusinessMetaData(String businessMetaDataName)
     {
         ResultDataDTO<String> result = atlasClient.Delete(delTypeDefs + "/" + businessMetaDataName);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
 }

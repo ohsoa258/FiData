@@ -63,7 +63,7 @@ public class GlossaryImpl implements IGlossary {
     public ResultEnum deleteGlossary(String guid)
     {
         ResultDataDTO<String> result = atlasClient.Delete(glossary +"/"+ guid);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override

@@ -1,7 +1,10 @@
 package com.fisk.datamanagement.utils.atlas;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import com.fisk.datamanagement.vo.ResultErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
@@ -271,6 +274,25 @@ public class AtlasClient {
         String auth = this.account + ":" + this.password;
         String base64 = encoder.encode(auth.getBytes());
         return "Basic " + base64;
+    }
+
+    public ResultEnum newResultEnum(ResultDataDTO<String> result)
+    {
+        String error="";
+        if (result.code.getCode() ==ResultEnum.NO_CONTENT.getCode())
+        {
+            return ResultEnum.SUCCESS;
+        }
+        try {
+            ResultErrorDTO dto= JSONObject.parseObject(result.data,ResultErrorDTO.class);
+            error = dto.errorMessage;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return result.code;
+        }
+        throw new FkException(ResultEnum.BAD_REQUEST,error);
     }
 
 }

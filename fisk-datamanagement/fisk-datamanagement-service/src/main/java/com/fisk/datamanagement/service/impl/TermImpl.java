@@ -64,7 +64,7 @@ public class TermImpl implements ITerm {
     public ResultEnum deleteTerm(String guid)
     {
         ResultDataDTO<String> result = atlasClient.Delete(term +"/"+ guid);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto.dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class TermImpl implements ITerm {
             JSONObject msg= JSON.parseObject(result.data);
             throw new FkException(result.code,msg.getString("errorMessage"));
         }
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
 }

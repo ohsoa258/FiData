@@ -82,7 +82,7 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum deleteClassification(String classificationName)
     {
         ResultDataDTO<String> result = atlasClient.Delete(delTypeDefs + classificationName);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
@@ -103,14 +103,14 @@ public class ClassificationImpl implements IClassification {
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.Post(bulkClassification, jsonParameter);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
     @Override
     public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto)
     {
         ResultDataDTO<String> result = atlasClient.Delete(entityByGuid + "/" + dto.entityGuid+"/classification/"+dto.classificationName);
-        return result.code==ResultEnum.NO_CONTENT?ResultEnum.SUCCESS:result.code;
+        return atlasClient.newResultEnum(result);
     }
 
 }
