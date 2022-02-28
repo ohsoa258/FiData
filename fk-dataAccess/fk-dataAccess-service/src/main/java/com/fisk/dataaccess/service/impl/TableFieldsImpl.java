@@ -13,6 +13,7 @@ import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
@@ -57,6 +58,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
     private TableBusinessImpl businessImpl;
     @Resource
     private TableSyncmodeImpl syncmodeImpl;
+    @Resource
+    private AppDataSourceImpl dataSourceImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
     @Resource
@@ -312,12 +315,22 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             // 版本号入库、调用存储存储过程  
             List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
             AppRegistrationPO registration = iAppRegistration.getById(appId);
+            AppDataSourcePO dataSourcePO = dataSourceImpl.query().eq("app_id", appId).one();
             String odsTableName = "ods_" + registration.appAbbreviation + "_" + tableName;
             data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
 
             // 执行发布
             try {
-                if (registration.appType == 0) {
+                // 实时--RestfulAPI类型
+                if (registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePO.driveType)) {
+                    // 传入apiId和api下所有表
+                    TableAccessPO accessPO = tableAccessImpl.query().eq("id", accessId).one();
+                    List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPO.apiId).list();
+                    // api下所有表
+                    data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
+                    data.appType = registration.appType;
+                    data.apiId = accessPO.apiId;
+
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                 } else if (registration.appType == 1) {
                     publishTaskClient.publishBuildAtlasTableTask(data);

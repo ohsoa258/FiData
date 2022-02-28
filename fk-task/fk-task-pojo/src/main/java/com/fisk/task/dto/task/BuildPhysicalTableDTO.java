@@ -42,4 +42,18 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     public String queryEndTime;
 
     public boolean openTransmission;
+
+    /**
+     * 应用类型
+     */
+    public Integer appType;
+    /**
+     * api下所有表
+     */
+    public List<String> apiTableNames;
+
+    /**
+     * api id
+     */
+    public Long apiId;
 }

@@ -204,10 +204,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEnum.DATAACCESS_APPNAME_ERROR;
         }
 
-        // 获取当前登陆人信息
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        Long userId = userInfo.id;
-
         // 1.0前端应用注册传来的id
         long id = dto.getId();
 
@@ -221,7 +217,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         AppRegistrationPO po = dto.toEntity(AppRegistrationPO.class);
 
         // 1.3修改tb_app_registration数据
-        po.setUpdateUser(String.valueOf(userId));
         boolean edit = this.updateById(po);
         if (!edit) {
             return ResultEnum.UPDATE_DATA_ERROR;
@@ -247,8 +242,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         long appDataSid = appDataSourceImpl.query().eq("app_id", id).one().getId();
         modelDataSource.setId(appDataSid);
         modelDataSource.setAppId(id);
-        // 更新人
-        modelDataSource.updateUser = String.valueOf(userId);
 
         return appDataSourceMapper.updateById(modelDataSource) > 0 ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
