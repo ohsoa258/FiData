@@ -37,7 +37,7 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
         this.save(model);
 
         data.logId = model.id;
-
+        str = JSON.toJSONString(data);
         try {
             producerServer.sendMessageAsync(queue,str);
             model.taskSendOk = true;
