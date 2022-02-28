@@ -338,6 +338,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
             } catch (Exception e) {
                 log.info("发布失败", e);
                 log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
+                throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
         }
     }
