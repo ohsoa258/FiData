@@ -204,7 +204,7 @@ public class ConsumerServer {
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
+    @MQConsumerLog
     public void buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {
         buildAtlasTableAndColumnTaskListener.msg(data,ack);
     }
@@ -234,7 +234,7 @@ public class ConsumerServer {
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
+    @MQConsumerLog
     public void buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
         buildDataInputPgTableListener.msg(dataInfo,acke);
     }
