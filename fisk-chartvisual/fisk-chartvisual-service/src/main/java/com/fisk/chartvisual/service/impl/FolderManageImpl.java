@@ -75,7 +75,7 @@ public class FolderManageImpl extends ServiceImpl<FolderMapper, FolderPO> implem
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
-        mapper.deleteByIdWithFill(model);
+        mapper.deleteById(model);
 
         delChild(model.id, userInfo.id.toString());
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
