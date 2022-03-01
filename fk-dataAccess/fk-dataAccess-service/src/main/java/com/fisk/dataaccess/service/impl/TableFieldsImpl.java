@@ -327,7 +327,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     TableAccessPO accessPO = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPO.apiId).list();
                     // api下所有表
-                    data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
+                    data.apiTableNames = tablePoList.stream().map(e -> registration.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
                     data.apiId = accessPO.apiId;
 
