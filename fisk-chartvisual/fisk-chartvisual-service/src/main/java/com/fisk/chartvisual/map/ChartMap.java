@@ -5,10 +5,8 @@ import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
 import com.fisk.chartvisual.dto.ChildvisualDTO;
 import com.fisk.chartvisual.contentSplit.ContentDTO;
 import com.fisk.chartvisual.dto.ReleaseChart;
-import com.fisk.chartvisual.entity.BaseChartProperty;
-import com.fisk.chartvisual.entity.ChartChildvisualPO;
-import com.fisk.chartvisual.entity.ChartPO;
-import com.fisk.chartvisual.entity.DraftChartPO;
+import com.fisk.chartvisual.entity.*;
+import com.fisk.chartvisual.stringInterception.ContextDTO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -42,7 +40,8 @@ public interface ChartMap {
      */
     @Mappings({
             @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
-            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "content",source = "content",qualifiedByName="publicSplits")
     })
     ChartPO chartDtoToPo(ReleaseChart dto);
 
@@ -109,6 +108,13 @@ public interface ChartMap {
     ChartChildvisualPO dtoToPo(ChildvisualDTO dto);
 
     /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    ChartOptionPO dtoToOptionPo(ChildvisualDTO dto);
+
+    /**
      * 字节转base64
      * @param image
      * @return
@@ -143,6 +149,18 @@ public interface ChartMap {
     default String publicSplit(String content){
         JSONObject jsonObject = JSONObject.parseObject(content);
         ContentDTO datalist = JSONObject.parseObject(jsonObject.toJSONString(), ContentDTO.class);
+        return JSONObject.toJSONString(datalist);
+    }
+
+    /**
+     * json拆分公共的 2.0
+     * @param content
+     * @return
+     */
+    @Named("publicSplits")
+    default String publicSplits(String content){
+        JSONObject jsonObject = JSONObject.parseObject(content);
+        ContextDTO datalist = JSONObject.parseObject(jsonObject.toJSONString(), ContextDTO.class);
         return JSONObject.toJSONString(datalist);
     }
 }
