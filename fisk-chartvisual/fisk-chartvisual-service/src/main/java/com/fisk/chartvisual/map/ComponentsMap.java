@@ -68,5 +68,5 @@ public interface ComponentsMap {
      * @param po
      * @return
      */
-    ComponentsDTO poToDto(ComponentsPO po);
+    List<ComponentsDTO> poToDtoList(List<ComponentsPO> po);
 }

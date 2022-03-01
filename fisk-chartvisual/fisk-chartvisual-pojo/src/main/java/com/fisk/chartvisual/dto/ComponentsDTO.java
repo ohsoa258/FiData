@@ -1,7 +1,6 @@
 package com.fisk.chartvisual.dto;
 
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author WangYan
@@ -15,4 +14,5 @@ public class ComponentsDTO {
     private String description;
     private String version;
     private String icon;
+    private String path;
 }

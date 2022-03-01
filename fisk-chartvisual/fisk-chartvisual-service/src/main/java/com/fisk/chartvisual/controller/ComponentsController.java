@@ -39,7 +39,7 @@ public class ComponentsController {
     @ApiOperation("根据菜单id查询组件")
     @GetMapping("/selectClassById")
     @ResponseBody
-    public ResultEntity<ComponentsDTO> selectClassById(Integer id) {
+    public ResultEntity<List<ComponentsDTO>> selectClassById(Integer id) {
         return componentsService.selectClassById(id);
     }
 

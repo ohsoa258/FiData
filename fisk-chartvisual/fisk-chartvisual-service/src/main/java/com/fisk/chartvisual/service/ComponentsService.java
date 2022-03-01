@@ -24,11 +24,11 @@ public interface ComponentsService {
     List<ComponentsClassDTO> listData();
 
     /**
-     * 根据组件id查询菜单
+     * 根据菜单id查询组件
      * @param id
      * @return
      */
-    ResultEntity<ComponentsDTO> selectClassById(Integer id);
+    ResultEntity<List<ComponentsDTO>> selectClassById(Integer id);
 
     /**
      * 保存菜单

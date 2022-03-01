@@ -33,6 +33,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipOutputStream;
 
+import static com.fisk.chartvisual.enums.ComponentsTypeEnum.COMPONENTS;
+import static com.fisk.chartvisual.enums.ComponentsTypeEnum.MENU;
 import static com.fisk.chartvisual.util.dbhelper.zip.ZipHelper.isZip;
 import static com.fisk.chartvisual.util.dbhelper.zip.ZipUtils.compress;
 
@@ -52,6 +54,8 @@ public class ComponentsServiceImpl implements ComponentsService {
     ComponentsMapper componentsMapper;
     @Resource
     ComponentsClassMapper classMapper;
+    @Resource
+    ComponentsService componentsService;
 
     @Override
     public List<ComponentsClassDTO> listData() {
@@ -63,13 +67,19 @@ public class ComponentsServiceImpl implements ComponentsService {
                 dto.setPid(e.getPid());
                 dto.setName(e.getName());
                 dto.setIcon(e.getIcon());
+                dto.setType(MENU);
 
                 // 子级
                 List<ComponentsClassPO> componentsClassPoList = this.queryChildren(e.getId());
                 if (CollectionUtils.isNotEmpty(componentsClassPoList)){
                     dto.setChildren(
                             componentsClassPoList.stream().filter(Objects::nonNull)
-                            .map(item -> new ComponentsClassDTO((int)item.getId(),item.getPid(),item.getName(),item.getIcon()))
+                            .map(item -> {
+                                // 查询菜单下的组件
+                                List<ComponentsDTO> componentsDTOList = componentsService.selectClassById((int) item.getId()).getData();
+                                ComponentsClassDTO dto1 = new ComponentsClassDTO((int) item.getId(), item.getPid(), item.getName(), item.getIcon(), COMPONENTS, componentsDTOList);
+                                return dto1;
+                            })
                             .collect(Collectors.toList())
                     );
                 }
@@ -96,13 +106,13 @@ public class ComponentsServiceImpl implements ComponentsService {
     }
 
     @Override
-    public ResultEntity<ComponentsDTO> selectClassById(Integer id) {
+    public ResultEntity<List<ComponentsDTO>> selectClassById(Integer id) {
         QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ComponentsPO::getClassId,id);
 
-        ComponentsPO components = componentsMapper.selectOne(queryWrapper);
-        if (components != null){
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,ComponentsMap.INSTANCES.poToDto(components));
+        List<ComponentsPO> componentsList = componentsMapper.selectList(queryWrapper);
+        if (componentsList != null){
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,ComponentsMap.INSTANCES.poToDtoList(componentsList));
         }
 
         return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS,null);
