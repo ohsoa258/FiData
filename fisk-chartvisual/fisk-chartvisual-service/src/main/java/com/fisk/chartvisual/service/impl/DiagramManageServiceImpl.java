@@ -68,6 +68,12 @@ public class DiagramManageServiceImpl implements DiagramManageService {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, "文件夹不存在");
         }
 
+        // 校验同级目录报表名称是否重复
+        boolean name = this.checkRepeatName(dto.name, dto.fid);
+        if (name == true){
+            return ResultEntityBuild.build(ResultEnum.NAME_EXISTS);
+        }
+
         ChartPO model = ChartMap.INSTANCES.chartDtoToPo(dto);
 
         int res = chartMapper.insert(model);
@@ -85,6 +91,25 @@ public class DiagramManageServiceImpl implements DiagramManageService {
         });
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, model.id);
+    }
+
+    /**
+     * 校验同级目录报表名称是否重复
+     * @param name
+     * @return
+     */
+    public boolean checkRepeatName(String name,Long id){
+        QueryWrapper<ChartPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ChartPO::getName,name)
+                .eq(ChartPO::getFid,id)
+                .last("limit 1");
+        ChartPO po = chartMapper.selectOne(queryWrapper);
+        if (po != null){
+            return true;
+        }
+
+        return false;
     }
 
     /**
