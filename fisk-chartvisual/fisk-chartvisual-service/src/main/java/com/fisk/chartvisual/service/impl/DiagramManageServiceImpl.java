@@ -26,6 +26,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -153,6 +154,7 @@ public class DiagramManageServiceImpl implements DiagramManageService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum updateChart(ChartPropertyEditDTO dto) {
         int res = 0;
         switch (dto.type) {
@@ -172,6 +174,27 @@ public class DiagramManageServiceImpl implements DiagramManageService {
                 ChartMap.INSTANCES.editDiagDtoToPo(dto, release);
                 res = chartMapper.updateById(release);
 
+                if (!StringUtils.isEmpty(dto.content)){
+                    // 删除报表组件
+                    QueryWrapper<ChartOptionPO> query = new QueryWrapper<>();
+                    query.lambda()
+                            .eq(ChartOptionPO::getChartId,dto.id)
+                            .eq(ChartOptionPO::getDelFlag,1);
+                    int delete = optionMapper.delete(query);
+                    if (delete <= 0){
+                        return ResultEnum.SAVE_DATA_ERROR;
+                    }
+
+                    // 保存报表组件
+                    List<ChildvisualDTO> dtoList = this.stringInterception(dto.content, Integer.parseInt(String.valueOf(dto.getId())));
+                    dtoList.stream().filter(Objects::nonNull).forEach(e -> {
+                        ChartOptionPO optionPo = ChartMap.INSTANCES.dtoToOptionPo(e);
+                        int insert = optionMapper.insert(optionPo);
+                        if (insert == 0) {
+                            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                        }
+                    });
+                }
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
