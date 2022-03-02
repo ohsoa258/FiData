@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -32,22 +33,24 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                 Date startTime = etlIncremental.get(SystemVariableTypeEnum.START_TIME.getName());
                 Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
                 if (startTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'"+startTime+"'");
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), String.valueOf(startTime));
+                    String startDate = getStringDate(startTime);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
+                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
                     paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
                 }
                 if (endTime != null) {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'"+endTime+"'");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), String.valueOf(endTime));
+                    String endDate = getStringDate(endTime);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
                     paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
                 }
             } else {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'0000-00-00'");
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'0000-00-00'");
+                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
                 paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
                 paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
             }
@@ -55,6 +58,11 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
         paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);
         return  paramMap;
     }
+      public  String getStringDate(Date date) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String dateString = formatter.format(date);
+            return dateString;
+         }
 
     @Override
     public void addEtlIncremental(String tableName) {
