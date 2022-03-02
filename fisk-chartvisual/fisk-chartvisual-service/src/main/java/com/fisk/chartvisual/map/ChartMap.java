@@ -92,7 +92,8 @@ public interface ChartMap {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "image",source = "image",qualifiedByName="stringConvertByte"),
-            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte")
+            @Mapping(target = "backgroundImage",source = "backgroundImage",qualifiedByName="stringConvertByte"),
+            @Mapping(target = "content",source = "content",qualifiedByName="publicSplits")
     })
     void editDiagDtoToPo(ChartPropertyEditDTO dto, @MappingTarget BaseChartProperty po);
 
