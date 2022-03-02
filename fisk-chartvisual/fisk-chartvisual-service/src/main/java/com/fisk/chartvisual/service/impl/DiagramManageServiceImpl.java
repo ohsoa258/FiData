@@ -227,4 +227,39 @@ public class DiagramManageServiceImpl implements DiagramManageService {
 
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum deleteDataById(int id, ChartQueryTypeEnum type) {
+        int res = 0;
+        switch (type) {
+            case DRAFT:
+                DraftChartPO draft = draftChartMapper.selectById(id);
+                if (draft == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                res = draftChartMapper.deleteByIdWithFill(draft);
+                break;
+            case RELEASE:
+                ChartPO chart = chartMapper.selectById(id);
+                if (chart == null) {
+                    return ResultEnum.DATA_NOTEXISTS;
+                }
+                res = chartMapper.deleteById(chart);
+
+                // 删除报表组件
+                QueryWrapper<ChartOptionPO> query = new QueryWrapper<>();
+                query.lambda()
+                        .eq(ChartOptionPO::getChartId,id)
+                        .eq(ChartOptionPO::getDelFlag,1);
+                int delete = optionMapper.delete(query);
+                if (delete <= 0){
+                    return ResultEnum.SAVE_DATA_ERROR;
+                }
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
 }

@@ -37,4 +37,13 @@ public interface DiagramManageService {
      * @return 执行结果
      */
     ResultEnum updateChart(ChartPropertyEditDTO dto);
+
+    /**
+     * 删除图表
+     *
+     * @param id id
+     * @param type 查询类型（草稿，发布）
+     * @return 执行结果
+     */
+    ResultEnum deleteDataById(int id, ChartQueryTypeEnum type);
 }

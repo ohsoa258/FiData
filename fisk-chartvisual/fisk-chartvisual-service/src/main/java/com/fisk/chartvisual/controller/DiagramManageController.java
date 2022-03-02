@@ -49,4 +49,10 @@ public class DiagramManageController {
     public ResultEntity<Object> editData(@Validated @RequestBody ChartPropertyEditDTO dto) {
         return ResultEntityBuild.build(service.updateChart(dto));
     }
+
+    @ApiOperation("删除报表")
+    @DeleteMapping("/delete")
+    public ResultEntity<Object> deleteDataById(int id, ChartQueryTypeEnum type) {
+        return ResultEntityBuild.build(service.deleteDataById(id, type));
+    }
 }
