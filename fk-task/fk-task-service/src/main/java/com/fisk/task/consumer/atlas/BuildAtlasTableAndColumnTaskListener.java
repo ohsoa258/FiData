@@ -303,7 +303,6 @@ public class BuildAtlasTableAndColumnTaskListener
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");
-        acke.acknowledge();
     }
 
     private String createPhysicalTable(BuildPhysicalTableDTO buildPhysicalTableDTO){

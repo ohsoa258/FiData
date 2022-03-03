@@ -1,9 +1,11 @@
 package com.fisk.task.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -39,6 +41,8 @@ public class PublishTaskController {
     IBuildTaskService service;
     @Resource
     IBuildKfkTaskService iBuildKfkTaskService;
+    @Resource
+    BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
@@ -88,21 +92,11 @@ public class PublishTaskController {
     @ApiOperation(value = "在Atlas中生成数据库、表、字段的血缘关系")
     public ResultEntity<Object> publishBuildAtlasTableTask(@RequestBody BuildPhysicalTableDTO ArDto) {
         log.info("进入方法");
-        iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_ATLAS_TASK.getName(),
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW,
-                ArDto);
-         //pgsql
-                return iBuildKfkTaskService.publishTask("数据湖表:"+ArDto.tableName+",结构处理成功",
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW,
-                ArDto);
-        //Doris
-//        return service.publishTask(TaskTypeEnum.BUILD_DORIS_TASK.getName(),
-//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-//                MqConstants.QueueConstants.BUILD_DORIS_FLOW,
-//                ArDto);
-
+        ResultEntity<Object> resultEntity = new ResultEntity<Object>();
+        resultEntity.code=0;
+        resultEntity.msg="流程创建成功";
+        buildAtlasTableAndColumnTaskListener.msg(JSON.toJSONString(ArDto),null);
+        return resultEntity;
 
     }
 
