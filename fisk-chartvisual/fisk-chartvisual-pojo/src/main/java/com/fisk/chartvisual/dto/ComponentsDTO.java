@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class ComponentsDTO {
 
+    private Integer id;
     private Integer classId;
     private String name;
     private String description;
