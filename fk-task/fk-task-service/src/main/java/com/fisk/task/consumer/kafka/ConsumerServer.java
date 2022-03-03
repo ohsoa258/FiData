@@ -197,7 +197,7 @@ public class ConsumerServer {
         }
     }
 
-    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "testasd")
+    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void buildNifiTaskListener(String data, Acknowledgment ack) {
         buildNifiTaskListener.msg(data,ack);
