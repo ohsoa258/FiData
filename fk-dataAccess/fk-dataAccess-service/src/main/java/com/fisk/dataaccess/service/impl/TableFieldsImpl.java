@@ -330,9 +330,13 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     data.apiTableNames = tablePoList.stream().map(e -> registration.appAbbreviation + "_" + e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
                     data.apiId = accessPO.apiId;
-
+                    // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                 } else if (registration.appType == 1) {
+                    // 非实时物理表发布
+                    // 创建表流程
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                    // 生成nifi流程
                     publishTaskClient.publishBuildAtlasTableTask(data);
                 }
             } catch (Exception e) {
