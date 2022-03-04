@@ -35,13 +35,13 @@ public class NifiBuildTest {
     private final String groupPid = "017a11b8-82a2-134f-ee9c-3b4c1425b0b3";
     private final String dbConId = "017a11b9-82a2-134f-2f7e-12b3e8ef41d2";
 
-    @Value("${dorisconstr.url}")
+    //@Value("${dorisconstr.url}")
     private String dorisUrl;
-    @Value("${dorisconstr.username}")
+    //@Value("${dorisconstr.username}")
     private String dorisUser;
-    @Value("${dorisconstr.password}")
+    //@Value("${dorisconstr.password}")
     private String dorisPwd;
-    @Value("${dorisconstr.driver_class_name}")
+    //@Value("${dorisconstr.driver_class_name}")
     private String dorisDriver;
 
     @Resource
