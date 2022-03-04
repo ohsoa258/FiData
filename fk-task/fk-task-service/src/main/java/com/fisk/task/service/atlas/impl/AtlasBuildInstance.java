@@ -23,12 +23,7 @@ public class AtlasBuildInstance implements IAtlasBuildInstance {
     private Config config;
     //private String jvm=config.getProperty("spring.rabbitmq.virtual-host",null);
     private String spring_redis_host;
-    @Value("${atlasconstr.url}")
-    private String atlas_url;
-    @Value("${atlasconstr.username}")
-    private String atlas_username;
-    @Value("${atlasconstr.password}")
-    private String atlas_pwd;
+
 
     @Resource
     IAtlasBuildInstance atlas;

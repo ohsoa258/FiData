@@ -95,8 +95,6 @@ public class BuildDataModelDorisTableListener
     public String pgsqlDatamodelUsername;
     @Value("${pgsql-datamodel.password}")
     public String pgsqlDatamodelPassword;
-    @Value("${pgdw-dblink}")
-    public String pgdwDblink;
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
     @Resource
@@ -301,6 +299,7 @@ public class BuildDataModelDorisTableListener
         }else{
             tablePk=modelPublishTableDTO.tableName.substring(5)+"key";
         }
+        String pgdwDblink="";
         String selectSql="select * from dblink('||'''"+pgdwDblink+"'''||','||'''";
         String selectSql1="select sys_guid() as "+tablePk+", ";
         StringBuilder selectSql2=new StringBuilder("coalesce( fi_createtime,null),coalesce( fi_updatetime,null),");
