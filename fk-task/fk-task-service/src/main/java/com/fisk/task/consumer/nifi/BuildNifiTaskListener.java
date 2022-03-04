@@ -689,9 +689,21 @@ public class BuildNifiTaskListener {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
 
-        configMap.put("${"+dto.pwd+"}",dsConfig.password);
-        configMap.put("${"+dto.user+"}",dsConfig.user);
-        configMap.put("${"+dto.conUrl+"}",dsConfig.jdbcStr);
+        configMap.put(dto.pwd,dsConfig.password);
+        configMap.put(dto.user,dsConfig.user);
+        configMap.put(dto.conUrl,dsConfig.jdbcStr);
+
+        if(Objects.equals(type,DbPoolTypeEnum.SOURCE)&&Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)){
+            dto.user = dsConfig.user;
+            dto.pwd = dsConfig.password;
+            dto.conUrl = dsConfig.jdbcStr;
+        }else{
+            dto.pwd = "${"+dto.pwd+"}";
+            dto.conUrl = "${"+dto.conUrl+"}";
+            dto.user = "${"+dto.user+"}";
+        }
+
+
         componentsBuild.buildNifiGlobalVariable(configMap);
         dto.driverName = dsConfig.type.getName();
         dto.enabled = true;
