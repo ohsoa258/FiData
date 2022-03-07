@@ -1,14 +1,13 @@
 package com.fisk.dataservice.controller;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +23,7 @@ import javax.annotation.Resource;
 @Api(tags = {SwaggerConfig.TAG_4})
 @RestController
 @RequestMapping("/apiService")
+@EnableAsync
 public class ApiServiceController {
     @Resource
     private IApiServiceManageService service;

@@ -72,4 +72,9 @@ public class AtomicIndicatorsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.atomicIndicatorPush(id));
     }
 
+    @ApiOperation("根据事实表id,获取分析指标SQL")
+    @GetMapping("/getAnalysisIndexSql/{factId}")
+    public ResultEntity<Object> getAnalysisIndexSql(@PathVariable("id") int factId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAnalysisIndexSql(factId));
+    }
 }

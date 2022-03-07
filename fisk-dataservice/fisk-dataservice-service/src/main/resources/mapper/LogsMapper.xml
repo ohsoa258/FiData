@@ -1,0 +1,37 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.LogsMapper">
+    <select id="filter" resultType="com.fisk.dataservice.vo.logs.ApiLogVO">
+        SELECT
+        log.id,
+        log.app_id,
+        log.api_id,
+        log.log_type,
+        log.log_level,
+        log.log_request,
+        log.log_response_info,
+        log.log_info,
+        log.business_state,
+        log.create_time AS create_time,
+        api.api_name,
+        api.api_code,
+        app.app_name,
+        app.app_account
+        FROM
+        tb_logs AS log
+        LEFT JOIN tb_app_config AS app ON log.app_id = app.id
+        LEFT JOIN tb_api_config AS api ON log.api_id = api.id
+        WHERE
+        log.del_flag = 1
+        <if test="null != apiIds and apiIds.size > 0">
+            AND log.api_id IN
+            <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="appId !=null ">
+            AND log.app_id = #{appId}
+        </if>
+    </select>
+</mapper>

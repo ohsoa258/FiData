@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.*;
 
@@ -60,4 +61,11 @@ public interface IAtomicIndicators {
      */
     List<AtomicIndicatorFactDTO> atomicIndicatorPush(List<Integer> factIds);
 
+    /**
+     * 根据事实表id,获取分析指标SQL
+     *
+     * @param factId
+     * @return
+     */
+    ResultEntity<String> getAnalysisIndexSql(int factId);
 }

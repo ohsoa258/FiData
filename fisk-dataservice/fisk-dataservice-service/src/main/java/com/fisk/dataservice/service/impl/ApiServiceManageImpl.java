@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -20,9 +21,7 @@ import com.fisk.common.utils.SqlParmUtils;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
-import com.fisk.dataservice.enums.ApiStateTypeEnum;
-import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.enums.DataSourceTypeEnum;
+import com.fisk.dataservice.enums.*;
 import com.fisk.dataservice.map.ApiFilterConditionMap;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
@@ -69,6 +68,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     private ApiFilterConditionMapper apiFilterConditionMapper;
 
     @Resource
+    private LogsManageImpl logsManageImpl;
+
+    @Resource
     private UserHelper userHelper;
 
     @Resource
@@ -98,92 +100,114 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     @Override
     public ResultEntity<Object> getData(RequstDTO dto) {
         ResponseVO responseVO = new ResponseVO();
-        String appAccount = "";//"IMC_test";
+        String appAccount = "";
+        ResultEnum resultEnum = ResultEnum.REQUEST_SUCCESS;
+        // 日志实体类
+        LogPO logPO = new LogPO();
 
-        // 第一步：验证当前请求是否合法，解析token
-//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-//        String token  = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
-//        if (token == null || token.isEmpty())
-//            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
-//        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
-        UserInfo userInfo = userHelper.getLoginUserInfo();
-        if (userInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
-
-        appAccount = userInfo.username;
-        if (appAccount == null || appAccount.isEmpty())
-            return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
-
-        // 第二步：验证当前应用（下游系统）是否有效
-        AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
-        if (appInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, responseVO);
-
-        // 第三步：验证当前请求的API是否有效
-        ApiConfigPO apiInfo = apiRegisterMapper.getByApiCode(dto.apiCode);
-        if (apiInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
-
-        // 第四步：验证当前请求的API是否具备访问权限
-        AppApiPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
-        if (subscribeBy == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, responseVO);
-        if (subscribeBy.apiState == ApiStateTypeEnum.Disable.getValue())
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, responseVO);
-
-        // 第五步：验证数据源是否有效
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
-        if (dataSourceConPO == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
-
-        String sql = apiInfo.createSql;
-        // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
-        List<ParmConfigPO> parmList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.id));
-        if (CollectionUtils.isNotEmpty(parmList)) {
-            if (CollectionUtils.isNotEmpty(dto.parmList)) {
-                parmList.forEach(e -> {
-                    Optional<Map.Entry<String, Object>> entryStream = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst();
-                    if (entryStream.isPresent()) {
-                        Map.Entry<String, Object> stringObjectEntry = entryStream.get();
-                        if (stringObjectEntry != null)
-                            e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
-                    }
-                });
-            }
-            List<Long> collect = parmList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
-            List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);
-            if (CollectionUtils.isNotEmpty(builtinParmList)) {
-                parmList.forEach(e -> {
-                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();
-                    if (builtinParmOptional.isPresent()) {
-                        BuiltinParmPO builtinParmPO = builtinParmOptional.get();
-                        if (builtinParmPO != null)
-                            e.setParmValue(builtinParmPO.parmValue);
-                    }
-                });
-            }
-        }
-
-        // 第七步：拼接过滤条件
-        List<FilterConditionConfigPO> filterConditionConfigPOList = apiFilterConditionMapper.getListByApiId(Math.toIntExact(apiInfo.id));
-        if (apiInfo.apiType == ApiTypeEnum.SQL.getValue()) {
-            sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, apiInfo.getTableName());
-            if (CollectionUtils.isNotEmpty(filterConditionConfigPOList)) {
-                List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listPoToSqlWhereDto(filterConditionConfigPOList);
-                String s1 = SqlParmUtils.SqlWhere(sqlWhereDtos);
-                if (s1 != null && s1.length() > 0)
-                    sql += s1;
-            }
-        }
-
-        // 第八步：替换SQL中的参数
-        List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listPoToSqlParmDto(parmList);
-        String s = SqlParmUtils.SqlParm(sqlParmDtos, sql, "@");
-        if (s != null && s.length() > 0)
-            sql = s;
-
-        // 第九步：判断数据源类型，加载数据库驱动，执行查询SQL
         try {
+            // 开始记录日志
+            logPO.setLogLevel(LogLevelTypeEnum.INFO.getName());
+            logPO.setLogRequest(JSON.toJSONString(dto));
+            logPO.setLogType(LogTypeEnum.API.getValue());
+            logPO.setBusinessState("失败");
+
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+            if (userInfo == null) {
+                resultEnum = ResultEnum.AUTH_TOKEN_IS_NOTNULL;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
+            }
+
+            // 第一步：验证是否已进行授权认证
+            appAccount = userInfo.username;
+            if (appAccount == null || appAccount.isEmpty()) {
+                resultEnum = ResultEnum.AUTH_JWT_ERROR;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
+            }
+
+            // 第二步：验证当前应用（下游系统）是否有效
+            AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
+            if (appInfo == null) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_EXISTS;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, responseVO);
+            } else {
+                logPO.setAppId(Math.toIntExact(appInfo.getId()));
+            }
+
+            // 第三步：验证当前请求的API是否有效
+            ApiConfigPO apiInfo = apiRegisterMapper.getByApiCode(dto.apiCode);
+            if (apiInfo == null) {
+                resultEnum = ResultEnum.DS_APISERVICE_API_EXISTS;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
+            } else {
+                logPO.setApiId(Math.toIntExact(apiInfo.getId()));
+            }
+
+            // 第四步：验证当前请求的API是否具备访问权限
+            AppApiPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
+            if (subscribeBy == null) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_NOTSUB;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, responseVO);
+            }
+            if (subscribeBy.apiState == ApiStateTypeEnum.Disable.getValue()) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_NOTENABLE;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, responseVO);
+            }
+
+            // 第五步：验证数据源是否有效
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiInfo.datasourceId);
+            if (dataSourceConPO == null) {
+                resultEnum = ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, responseVO);
+            }
+
+            String sql = apiInfo.createSql;
+            // 第六步：查询参数信息，如果参数设置为内置参数，则以内置参数为准，反之则以传递的参数为准，如果没设置内置参数&参数列表中未传递，则读取后台配置的参数值
+            List<ParmConfigPO> parmList = apiParmMapper.getListByApiId(Math.toIntExact(apiInfo.id));
+            if (CollectionUtils.isNotEmpty(parmList)) {
+                if (CollectionUtils.isNotEmpty(dto.parmList)) {
+                    parmList.forEach(e -> {
+                        Optional<Map.Entry<String, Object>> entryStream = dto.parmList.entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst();
+                        if (entryStream.isPresent()) {
+                            Map.Entry<String, Object> stringObjectEntry = entryStream.get();
+                            if (stringObjectEntry != null)
+                                e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                        }
+                    });
+                }
+                List<Long> collect = parmList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
+                List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);
+                if (CollectionUtils.isNotEmpty(builtinParmList)) {
+                    parmList.forEach(e -> {
+                        Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();
+                        if (builtinParmOptional.isPresent()) {
+                            BuiltinParmPO builtinParmPO = builtinParmOptional.get();
+                            if (builtinParmPO != null)
+                                e.setParmValue(builtinParmPO.parmValue);
+                        }
+                    });
+                }
+            }
+
+            // 第七步：拼接过滤条件
+            List<FilterConditionConfigPO> filterConditionConfigPOList = apiFilterConditionMapper.getListByApiId(Math.toIntExact(apiInfo.id));
+            if (apiInfo.apiType == ApiTypeEnum.SQL.getValue()) {
+                sql = String.format("SELECT %s FROM %s WHERE 1=1 ", sql, apiInfo.getTableName());
+                if (CollectionUtils.isNotEmpty(filterConditionConfigPOList)) {
+                    List<SqlWhereDto> sqlWhereDtos = ApiFilterConditionMap.INSTANCES.listPoToSqlWhereDto(filterConditionConfigPOList);
+                    String s1 = SqlParmUtils.SqlWhere(sqlWhereDtos);
+                    if (s1 != null && s1.length() > 0)
+                        sql += s1;
+                }
+            }
+
+            // 第八步：替换SQL中的参数
+            List<SqlParmDto> sqlParmDtos = ApiParmMap.INSTANCES.listPoToSqlParmDto(parmList);
+            String s = SqlParmUtils.SqlParm(sqlParmDtos, sql, "@");
+            if (s != null && s.length() > 0)
+                sql = s;
+
+            // 第九步：判断数据源类型，加载数据库驱动，执行查询SQL
             Statement st = null;
             Connection conn = null;
             DataSourceTypeEnum typeEnum = DataSourceTypeEnum.MYSQL;
@@ -193,38 +217,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), dataSourceConPO.conStr, dataSourceConPO.conAccount, dataSourceConPO.conPassword);
                 typeEnum = DataSourceTypeEnum.SQLSERVER;
             }
-//            if (apiInfo.apiType == ApiTypeEnum.SQL.getValue() && dto.current > 0 && dto.size > 0) {
-//                String sqlCountStr = String.format("select count(*) from (%s) as t", sql);
-//                PreparedStatement preparedStatement = conn.prepareStatement(sqlCountStr);
-//                ResultSet resultSet = preparedStatement.executeQuery();
-//                resultSet.next();
-//                int rowsCount = resultSet.getInt(1);
-//                int pageCount = (int) Math.ceil(1.0 * rowsCount / dto.size);//算出总共需要多少页
-//                resultSet.close();
-//                if (typeEnum == DataSourceTypeEnum.MYSQL) {
-//                    sql = String.format("select * from (%s) as t limit %s,%s", sql, (dto.current - 1) * dto.size, dto.size);
-//                } else if (typeEnum == DataSourceTypeEnum.SQLSERVER) {
-////                    sql = String.format("SELECT\n" +
-////                            "\t* \n" +
-////                            "FROM\n" +
-////                            "\t( SELECT *, ROW_NUMBER ( ) OVER ( %s ) AS RowNumBerId FROM ( %s ) AS t ) AS b \n" +
-////                            "WHERE\n" +
-////                            "\tRowNumBerId BETWEEN %s \n" +
-////                            "\tAND %s", apiInfo.createSql, sql, (dto.current - 1) * dto.size + 1, dto.current * dto.size);
-////                    适用SQL Server 2012及以上版本
-//                    sql = String.format("SELECT\n" +
-//                            "\t* \n" +
-//                            "FROM\n" +
-//                            "\t(%s) \n" +
-//                            "ORDER BY\n" +
-//                            "\t%s\n" +
-//                            "\toffset %s row FETCH NEXT %s ROWS ONLY", sql, apiInfo.createSql, (dto.current - 1) * dto.size, dto.size);
-//                }
-//                responseVO.current = dto.current;
-//                responseVO.size = dto.size;
-//                responseVO.total = rowsCount;
-//                responseVO.page = pageCount;
-//            }
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
@@ -254,10 +246,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
             }
             responseVO.dataArray = collect;
+            logPO.setLogResponseInfo(String.valueOf(collect.stream().count()));
+            logPO.setBusinessState("成功");
         } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR);
+            logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
+            logPO.setLogInfo(e.getMessage());
+            resultEnum = ResultEnum.DS_APISERVICE_QUERY_ERROR;
+            throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR, e.getMessage());
+        } finally {
+            if (resultEnum != ResultEnum.REQUEST_SUCCESS) {
+                if (resultEnum == ResultEnum.DS_APISERVICE_QUERY_ERROR) {
+                    logPO.setLogInfo(ResultEnum.DS_APISERVICE_QUERY_ERROR.getMsg() + "。错误信息：" + logPO.logInfo);
+                } else {
+                    logPO.setLogInfo(resultEnum.getMsg());
+                }
+            }
+            logsManageImpl.saveLog(logPO);
         }
-        return ResultEntityBuild.buildData(ResultEnum.REQUEST_SUCCESS, responseVO);
+        return ResultEntityBuild.buildData(resultEnum, responseVO);
     }
 
     /**

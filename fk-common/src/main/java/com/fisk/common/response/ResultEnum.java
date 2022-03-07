@@ -139,6 +139,7 @@ public enum ResultEnum {
     BUSINESS_AREA_EXIST(8008,"业务域名称已存在"),
     ADD_TABLE_HISTORY(8009,"添加发布历史失败"),
     BUSINESS_AREA_EXISTS_ASSOCIATED(8010,"业务域中维度存在其他关联"),
+    PUBLISH_NOTSUCCESS(8011, "请发布成功后再获取分析指标语句"),
 
     /**
      * 数据工厂
