@@ -114,6 +114,47 @@ public class JwtUtils {
         return payload;
     }
 
+    /**
+     * 解析jwt，并将用户信息转为指定的Clazz类型
+     *
+     * @param jwt token
+     * @return 载荷，包含JTI和用户信息
+     */
+    public Payload parseClientRegisterJwt(String jwt) {
+        Jws<Claims> claimsJws;
+        // 1.验证并解析jwt
+        try {
+            claimsJws = jwtParser.parseClaimsJws(jwt);
+        } catch (Exception ex) {
+            throw new RuntimeException("token格式不正确");
+        }
+        Claims claims = claimsJws.getBody();
+        // 2.解析载荷数据
+        Payload payload = new Payload();
+        payload.setJti(claims.getId());
+        payload.setId(Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class)));
+        UserDetail userDetail;
+        try {
+            userDetail = MAPPER.readValue(claims.get(SystemConstants.CLAIM_ATTR_USERINFO, String.class), UserDetail.class);
+            payload.setUserDetail(userDetail);
+        } catch (IOException e) {
+            throw new RuntimeException("客户端信息解析失败！");
+        }
+
+        // 3.验证是否过期
+        // 3.1.取出redis中jwt
+        UserInfo userInfo = (UserInfo) redis.get(RedisKeyBuild.buildClientInfo(payload.getId()));
+        // 3.3.比较
+        if (userInfo == null || StringUtils.isEmpty(userInfo.token)) {
+            throw new RuntimeException("token失效，请联系管理员!");
+        }
+        if (!userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, "").equals(jwt)) {
+            // 有token，但是不是当前jwt，说明token已过期
+            throw new RuntimeException("token失效，请联系管理员!");
+        }
+        return payload;
+    }
+
     private String createJti() {
         return StringUtils.replace(UUID.randomUUID().toString(), "-", "");
     }

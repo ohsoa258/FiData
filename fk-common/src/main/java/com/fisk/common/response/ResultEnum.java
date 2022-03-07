@@ -40,6 +40,7 @@ public enum ResultEnum {
     TOKEN_EXCEPTION(1016,"该登录账号仅用于推送数据,无权访问其他服务"),
     GET_TOKEN_ERROR(1017,"获取token失败,请联系管理员"),
     API_ISEMPTY(1018,"获取api对象失败"),
+    CLIENT_ISEMPTY(1019,"客户端已删除"),
 
     /**
      * 报表可视化服务，错误码从2000开始

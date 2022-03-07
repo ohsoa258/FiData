@@ -19,6 +19,8 @@ public enum RedisKeyEnum implements BaseEnum {
     AUTH_WHITELIST(0, "Auth:WhiteList"),
     AUTH_PUSH_DATA_LIST(0, "Auth:PushDataList"),
     AUTH_USERINFO(21600, "Auth:UserInfo"),
+    // 客户端过期时间自定义,不使用当前设置的
+    AUTH_CLIENT_INFO(0, "Auth:ClientInfo"),
     CHARTVISUAL_DOWNLOAD_TOKEN(1800, "ChartVisual:DownLoad:Token");
 
     RedisKeyEnum(int value, String name) {

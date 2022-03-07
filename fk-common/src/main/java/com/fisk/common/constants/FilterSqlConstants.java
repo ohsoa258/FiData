@@ -34,4 +34,8 @@ public class FilterSqlConstants {
      * 数据服务--应用注册
      */
     public static final String DS_APP_REGISTRATION_SQL = " where Field in('app_name','app_principal','app_desc','create_time','create_user')";
+    /**
+     * 授权中心--客户端注册
+     */
+    public static final String TB_CLIENT_REGISTER_SQL = " where Field in('client_name','valid','token_des','create_time','create_user')";
 }

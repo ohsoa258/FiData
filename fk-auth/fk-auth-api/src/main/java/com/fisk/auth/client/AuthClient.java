@@ -1,12 +1,12 @@
 package com.fisk.auth.client;
 
+import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.response.ResultEntity;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -51,4 +51,21 @@ public interface AuthClient {
      */
     @PostMapping("/user/getToken")
     ResultEntity<String> getToken(@RequestBody UserAuthDTO dto);
+
+    /**
+     * 获取所有客户端信息
+     *
+     * @return list
+     */
+    @GetMapping("/clientRegister/getClientInfoList")
+    public ResultEntity<List<String>> getClientInfoList();
+
+    /**
+     * 根据id查询客户端数据
+     *
+     * @param id 客户端id
+     * @return 客户端信息
+     */
+    @GetMapping("/clientRegister/get/{id}")
+    public ResultEntity<ClientRegisterDTO> getData(@PathVariable("id") long id);
 }

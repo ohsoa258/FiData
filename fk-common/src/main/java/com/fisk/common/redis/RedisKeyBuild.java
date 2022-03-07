@@ -16,6 +16,14 @@ public class RedisKeyBuild {
     }
 
     /**
+     * @param id 用户id
+     * @return redis key
+     */
+    public static String buildClientInfo(long id) {
+        return RedisKeyEnum.AUTH_CLIENT_INFO.getName() + ":" + id;
+    }
+
+    /**
      * @return redis key
      */
     public static String buildDownLoadToken() {
