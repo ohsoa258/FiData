@@ -59,6 +59,25 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
         return sql;
     }
 
+    @Override
+    public String buildQueryAllTables(String databaseName) {
+        StringBuilder str = new StringBuilder();
+        str.append("select table_name AS table_name from information_schema.tables");
+        str.append(" where ");
+        str.append("table_schema= '").append(databaseName).append("'");
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryFiled(String databaseName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("select column_name from information_schema.columns");
+        str.append(" where ");
+        str.append("table_schema='").append(databaseName).append("'");
+        str.append(" AND table_name='").append(tableName).append("'");
+        return str.toString();
+    }
+
     /**
      * sql追加分页
      *

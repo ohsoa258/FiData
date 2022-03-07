@@ -40,4 +40,19 @@ public interface IBuildSqlCommand {
      * @return sql
      */
     String buildQuerySlicer(SlicerQueryObject query);
+
+    /**
+     * 查询数据库的所有表名
+     * @param databaseName
+     * @return
+     */
+    String buildQueryAllTables(String databaseName);
+
+    /**
+     * 查询表的字段
+     * @param databaseName 库名
+     * @param tableName 表名
+     * @return
+     */
+    String buildQueryFiled(String databaseName,String tableName);
 }

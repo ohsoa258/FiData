@@ -67,6 +67,20 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
         return sql;
     }
 
+    @Override
+    public String buildQueryAllTables(String databaseName) {
+        StringBuilder str = new StringBuilder();
+        str.append("select name AS table_name from sys.tables");
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryFiled(String databaseName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("select name from syscolumns where id=object_id('").append(tableName).append("')");
+        return str.toString();
+    }
+
     /**
      * sql追加分页
      *
