@@ -822,12 +822,6 @@ public class BuildNifiTaskListener {
         tableNifiSettingPO.appId = Math.toIntExact(dto.appId);
         tableNifiSettingPO.type = dto.type.getValue();
         tableNifiSettingPO.tableName = config.targetDsConfig.targetTableName;
-        //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId,dto);
-        //接受消息ConsumeKafka
-        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
-        componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
         //调度组件,在数据接入的时候调一次
         ProcessorEntity dispatchProcessor=new ProcessorEntity();
         ProcessorEntity publishKafkaProcessor=new ProcessorEntity();
@@ -838,6 +832,13 @@ public class BuildNifiTaskListener {
             publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 2);
             componentConnector(groupId, dispatchProcessor.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }
+        //读取增量字段组件
+        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId,dto);
+        //接受消息ConsumeKafka
+        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
+        componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
+
 
         if(dto.groupStructureId!=null){
             //  创建input_port(组)
@@ -1612,13 +1613,12 @@ public class BuildNifiTaskListener {
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
         componentsBuild.buildNifiGlobalVariable(variable);
         buildConsumeKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-        String targetTableName = configDTO.processorConfig.targetTableName;
-        String[] s = targetTableName.split("_");
-        String s1 = targetTableName.replaceFirst(s[0] + "_", "");
-        buildConsumeKafkaProcessorDTO.TopicNames = "dmp.datafactory.nifi." + s[0] + "." + s1;
-        if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            buildConsumeKafkaProcessorDTO.TopicNames = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getName();
-        }
+        TableTopicDTO tableTopicDTO = new TableTopicDTO();
+        tableTopicDTO.topicType=TopicTypeEnum.NO_TYPE.getValue();
+        tableTopicDTO.tableId = Math.toIntExact(dto.id);
+        tableTopicDTO.tableType = dto.type.getValue();
+        List<TableTopicDTO> tableTopicList = tableTopicService.getTableTopicList(tableTopicDTO);
+        buildConsumeKafkaProcessorDTO.TopicNames = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConsumeKafkaProcessor(buildConsumeKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -1659,9 +1659,7 @@ public class BuildNifiTaskListener {
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         //查出所有topic,拼接
-        tableTopicDTO.topicType=TopicTypeEnum.NO_TYPE.getValue();
-        List<TableTopicDTO> tableTopicList = tableTopicService.getTableTopicList(tableTopicDTO);
-        buildPublishKafkaProcessorDTO.TopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
+        buildPublishKafkaProcessorDTO.TopicName = tableTopicDTO.topicName;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;

@@ -80,6 +80,7 @@ public class MQConsumerLogAspect {
 
         if (model != null) {
             model.taskStatus = TaskStatusEnum.PROCESSING;
+            model.taskSendOk = true;
             mapper.updateById(model);
         }
 
