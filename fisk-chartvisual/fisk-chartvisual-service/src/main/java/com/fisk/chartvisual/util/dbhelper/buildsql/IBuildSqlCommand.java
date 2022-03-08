@@ -55,4 +55,20 @@ public interface IBuildSqlCommand {
      * @return
      */
     String buildQueryFiled(String databaseName,String tableName);
+
+    /**
+     * 预览数据
+     * @param tableName 表名
+     * @param total 条数
+     * @param filed 分页排序字段
+     * @return
+     */
+    String getData(String tableName,Integer total,String filed);
+
+    /**
+     * 查询表字段信息
+     * @param tableName
+     * @return
+     */
+    String buildQueryFiledInfo(String tableName);
 }

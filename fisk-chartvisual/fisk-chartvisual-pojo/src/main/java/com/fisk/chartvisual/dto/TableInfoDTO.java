@@ -9,5 +9,8 @@ import lombok.Data;
 @Data
 public class TableInfoDTO {
 
+    /**
+     * 表名
+     */
     private String table_name;
 }

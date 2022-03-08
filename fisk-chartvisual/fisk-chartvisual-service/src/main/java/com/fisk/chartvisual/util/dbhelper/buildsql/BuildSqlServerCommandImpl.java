@@ -81,6 +81,34 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String getData(String tableName, Integer total,String filed) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT * FROM ").append(tableName);
+        str.append(" ORDER BY ").append(filed);
+        str.append(" DESC OFFSET 0 ROWS FETCH NEXT ").append(total);
+        str.append(" ROWS ONLY");
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryFiledInfo(String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("field=a.name, ");
+        str.append("type=b.name, ");
+        str.append("fieldInfo=isnull(g.[value],'') ");
+        str.append("FROM syscolumns a ");
+        str.append("left join systypes b on a.xusertype=b.xusertype ");
+        str.append("inner join sysobjects d on a.id=d.id and d.xtype in('U','V') and  d.name<>'dtproperties' ");
+        str.append("left join syscomments e on a.cdefault=e.id ");
+        str.append("left join sys.extended_properties g on a.id=g.major_id and a.colid=g.minor_id ");
+        str.append("left join sys.extended_properties f on d.id=f.major_id and f.minor_id=0 ");
+        str.append("where d.name='").append(tableName).append("' ");
+        str.append("order by a.id,a.colorder");
+        return str.toString();
+    }
+
     /**
      * sql追加分页
      *

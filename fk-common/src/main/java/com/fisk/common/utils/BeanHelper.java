@@ -83,7 +83,7 @@ public class BeanHelper {
             while (rs.next()) {
                 Map<String, Object> rowData = new LinkedHashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
-                    rowData.put(md.getColumnLabel(i), rs.getObject(i));
+                    rowData.put(md.getColumnLabel(i), rs.getString(i));
                 }
                 list.add(rowData);
             }
