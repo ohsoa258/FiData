@@ -115,7 +115,7 @@ public class BeanHelper {
             String fieldName = metaData.getColumnLabel(i);
             Field field = Arrays.stream(fields).filter(e -> e.getName().equals(fieldName)).findFirst().orElse(null);
             if (field != null) {
-                Object result = resultSet.getObject(fieldName);
+                Object result = resultSet.getString(fieldName);
                 boolean flag = field.isAccessible();
                 field.setAccessible(true);
                 field.set(instance, result);

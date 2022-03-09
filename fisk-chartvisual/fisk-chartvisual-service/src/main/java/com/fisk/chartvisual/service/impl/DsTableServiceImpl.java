@@ -1,9 +1,6 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.fisk.chartvisual.dto.DsTableDTO;
-import com.fisk.chartvisual.dto.FieldInfoDTO;
-import com.fisk.chartvisual.dto.ObtainTableDataDTO;
-import com.fisk.chartvisual.dto.TableInfoDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.DsTableService;
@@ -17,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.fisk.chartvisual.enums.DataSourceInfoTypeEnum.*;
@@ -57,6 +56,19 @@ public class DsTableServiceImpl implements DsTableService {
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.getTableData(model,connection,db,dto));
+    }
+
+    @Override
+    public ResultEntity<List<FieldInfoDTO>> getTableStructure(TableStructureDTO dto) {
+        DataSourceConPO model = sourceConMapper.selectById(dto.getId());
+        if (model == null){
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, ResultEnum.DATA_NOTEXISTS.getMsg());
+        }
+
+        // 查询数据源连接配置
+        AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
+        Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.getFieldInfo(model,connection,db,dto));
     }
 
     /**
@@ -102,5 +114,36 @@ public class DsTableServiceImpl implements DsTableService {
             total = 20;
         }
         return db.execQueryResultMaps(buildSqlCommand.getData(dto.getTableName(), total, field), connection);
+    }
+
+    /**
+     * 获取表字段信息
+     * @param model
+     * @param connection
+     * @param db
+     * @param dto
+     * @return
+     */
+    public List<FieldInfoDTO> getFieldInfo(DataSourceConPO model,Connection connection,AbstractDbHelper db,TableStructureDTO dto){
+        IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
+
+        List<FieldInfoDTO> dtoList = new ArrayList<>();
+        dto.getTableName().stream().filter(Objects::nonNull).forEach(e -> {
+            List<FieldInfoDTO> fieldList = db.execQueryResultList(buildSqlCommand.buildQueryFiledInfo(e), connection, FieldInfoDTO.class);
+
+            // 把表名放进去一起返回
+            List<FieldInfoDTO> collect = fieldList.stream().filter(Objects::nonNull).map(item -> {
+                FieldInfoDTO dto1 = new FieldInfoDTO();
+                dto1.setTable_name(e);
+                dto1.setField(item.getField());
+                dto1.setType(item.getType());
+                dto1.setFieldInfo(item.getFieldInfo());
+                return dto1;
+            }).collect(Collectors.toList());
+
+            dtoList.addAll(collect);
+        });
+
+        return dtoList;
     }
 }

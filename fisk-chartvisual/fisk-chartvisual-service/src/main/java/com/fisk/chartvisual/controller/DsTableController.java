@@ -1,7 +1,9 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.chartvisual.dto.DsTableDTO;
+import com.fisk.chartvisual.dto.FieldInfoDTO;
 import com.fisk.chartvisual.dto.ObtainTableDataDTO;
+import com.fisk.chartvisual.dto.TableStructureDTO;
 import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.common.response.ResultEntity;
 import io.swagger.annotations.ApiOperation;
@@ -36,5 +38,12 @@ public class DsTableController {
     @ResponseBody
     public ResultEntity<List<Map<String, Object>>> getData(@Validated @RequestBody ObtainTableDataDTO dto) {
         return service.getData(dto);
+    }
+
+    @ApiOperation("获取表字段结构")
+    @PostMapping("/getTableStructure")
+    @ResponseBody
+    public ResultEntity<List<FieldInfoDTO>> getTableStructure(@Validated @RequestBody TableStructureDTO dto) {
+        return service.getTableStructure(dto);
     }
 }
