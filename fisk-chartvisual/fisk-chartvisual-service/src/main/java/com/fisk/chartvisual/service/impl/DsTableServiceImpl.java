@@ -2,6 +2,8 @@ package com.fisk.chartvisual.service.impl;
 
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.enums.MysqlFieldTypeMappingEnum;
+import com.fisk.chartvisual.enums.SqlServerFieldTypeMappingEnum;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
@@ -138,6 +140,21 @@ public class DsTableServiceImpl implements DsTableService {
                 dto1.setField(item.getField());
                 dto1.setType(item.getType());
                 dto1.setFieldInfo(item.getFieldInfo());
+
+                try {
+                    // 类型匹配
+                    switch (model.conType){
+                        case MYSQL:
+                            dto1.setTargetType(MysqlFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
+                            break;
+                        case SQLSERVER:
+                            dto1.setTargetType(SqlServerFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
+                            break;
+                    }
+                }catch (Exception exception){
+                    exception.printStackTrace();
+                }
+
                 return dto1;
             }).collect(Collectors.toList());
 

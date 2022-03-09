@@ -18,6 +18,10 @@ public class FieldInfoDTO extends TableInfoDTO {
      */
     private String type;
     /**
+     * 目标字段类型
+     */
+    private String targetType;
+    /**
      * 字段描述
      */
     private String fieldInfo;
