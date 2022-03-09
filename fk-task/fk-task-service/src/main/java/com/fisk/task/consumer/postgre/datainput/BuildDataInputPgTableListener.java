@@ -1,10 +1,8 @@
 package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
-import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
@@ -12,23 +10,19 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronExpression;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * @author: DennyHui
@@ -53,6 +47,7 @@ public class BuildDataInputPgTableListener {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = PublishTypeEnum.SUCCESS.getValue();
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
+        modelPublishStatusDTO.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         try {
             log.info("开始保存ods版本号,参数为{}", dto);
