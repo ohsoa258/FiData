@@ -293,9 +293,25 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public void updateApiPublishStatus(ModelPublishStatusDTO dto) {
+        // 修改表状态
+        tableAccessImpl.updateTablePublishStatus(dto);
+
         ApiConfigPO model = baseMapper.selectById(dto.apiId);
         if (model != null) {
-            model.publish = dto.publish;
+            // 获取api下所有表
+            List<TableAccessPO> list = tableAccessImpl.query().eq("api_id", dto.apiId).list();
+            // 获取所有表状态
+            List<Integer> publishList = list.stream().map(a -> a.publish).collect(Collectors.toList());
+            // 默认成功
+            int apiPublish = 1;
+            // 有一张表发布失败,api即失败
+            for (Integer publish : publishList) {
+                if (publish == 2) {
+                    apiPublish = publish;
+                }
+            }
+            // 修改api状态
+            model.publish = apiPublish;
             baseMapper.updateById(model);
         }
     }
