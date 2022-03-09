@@ -2,6 +2,7 @@ package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
+import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.BusinessTypeEnum;
 import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.common.response.ResultEnum;
@@ -99,16 +100,32 @@ public class BuildDataInputPgTableListener {
                 log.info("【PGSTG】" + stg_sql1);
                 log.info("pg：建表完成");
             }
-
+            //实时应用改状态
+            if (buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) {
+                int tableCount = 0;
+                modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
+                String selectTable = "select count(*) from pg_class where ";
+                for (String tableName : buildPhysicalTableDTO.apiTableNames) {
+                    selectTable += " relname='ods_" + tableName + "' or";
+                }
+                selectTable = selectTable.substring(0, selectTable.length() - 2);
+                BusinessResult businessResult = pg.postgreQuery(selectTable, BusinessTypeEnum.DATAINPUT);
+                if (businessResult.data != null) {
+                    List<Object> countList = JSON.parseArray(businessResult.data.toString(), Object.class);
+                    String countString = countList.get(0).toString();
+                    Map countMap = JSON.parseObject(countString, Map.class);
+                    Object count = countMap.get("count");
+                    tableCount = Integer.parseInt(count.toString());
+                }
+                if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
+                    dc.updateApiPublishStatus(modelPublishStatusDTO);
+                }
+            }
         } catch (Exception e) {
             modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
+            dc.updateApiPublishStatus(modelPublishStatusDTO);
             log.error("创建表失败:" + e.getMessage());
         } finally {
-            //实时应用改状态
-            if (buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 1) {
-                modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
-                dc.updateApiPublishStatus(modelPublishStatusDTO);
-            }
             acke.acknowledge();
         }
     }
