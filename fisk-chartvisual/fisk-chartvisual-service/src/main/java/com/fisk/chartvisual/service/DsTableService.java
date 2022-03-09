@@ -1,10 +1,8 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.DsTableDTO;
-import com.fisk.chartvisual.dto.FieldInfoDTO;
-import com.fisk.chartvisual.dto.ObtainTableDataDTO;
-import com.fisk.chartvisual.dto.TableStructureDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEnum;
 
 import java.util.List;
 import java.util.Map;
@@ -35,4 +33,11 @@ public interface DsTableService {
      * @return
      */
     ResultEntity<List<FieldInfoDTO>> getTableStructure(TableStructureDTO dto);
+
+    /**
+     * 保存表信息
+     * @param list
+     * @return
+     */
+    ResultEntity<ResultEnum> saveTableInfo(List<SaveDsTableDTO> list);
 }

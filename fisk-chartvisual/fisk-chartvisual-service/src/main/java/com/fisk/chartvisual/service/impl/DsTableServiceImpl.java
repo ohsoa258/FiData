@@ -2,17 +2,23 @@ package com.fisk.chartvisual.service.impl;
 
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.entity.DsTablePO;
 import com.fisk.chartvisual.enums.MysqlFieldTypeMappingEnum;
 import com.fisk.chartvisual.enums.SqlServerFieldTypeMappingEnum;
+import com.fisk.chartvisual.map.DsTableMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
+import com.fisk.chartvisual.mapper.DsTableFieldMapper;
+import com.fisk.chartvisual.mapper.DsTableMapper;
 import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -33,6 +39,10 @@ public class DsTableServiceImpl implements DsTableService {
 
     @Resource
     DataSourceConMapper sourceConMapper;
+    @Resource
+    DsTableFieldMapper dsTableFieldMapper;
+    @Resource
+    DsTableMapper dsTableMapper;
 
     @Override
     public ResultEntity<DsTableDTO> getTableInfo(Integer id) {
@@ -71,6 +81,31 @@ public class DsTableServiceImpl implements DsTableService {
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.getFieldInfo(model,connection,db,dto));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEntity<ResultEnum> saveTableInfo(List<SaveDsTableDTO> list) {
+
+        // 保存表名
+        SaveDsTableDTO info = list.get(0);
+        DsTablePO dsTable = new DsTablePO();
+        dsTable.setDataSourceId(info.getDataSourceId());
+        dsTable.setTableName(info.getTableName());
+        int i = dsTableMapper.insert(dsTable);
+        if (i <= 0){
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, ResultEnum.SAVE_DATA_ERROR.getMsg());
+        }
+
+        // 保存字段信息
+        list.stream().filter(Objects::nonNull).forEach(e -> {
+            int res = dsTableFieldMapper.insert(DsTableMap.INSTANCES.dtoToPo(e, dsTable.getId()));
+            if (res <= 0){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        });
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     /**

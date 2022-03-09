@@ -1,11 +1,9 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.DsTableDTO;
-import com.fisk.chartvisual.dto.FieldInfoDTO;
-import com.fisk.chartvisual.dto.ObtainTableDataDTO;
-import com.fisk.chartvisual.dto.TableStructureDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -45,5 +43,12 @@ public class DsTableController {
     @ResponseBody
     public ResultEntity<List<FieldInfoDTO>> getTableStructure(@Validated @RequestBody TableStructureDTO dto) {
         return service.getTableStructure(dto);
+    }
+
+    @ApiOperation("保存表信息")
+    @PostMapping("/saveTableInfo")
+    @ResponseBody
+    public ResultEntity<ResultEnum> saveTableInfo(@Validated @RequestBody List<SaveDsTableDTO> list) {
+        return service.saveTableInfo(list);
     }
 }

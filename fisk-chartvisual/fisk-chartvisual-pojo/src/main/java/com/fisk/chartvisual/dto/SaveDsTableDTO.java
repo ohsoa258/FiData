@@ -1,22 +1,26 @@
-package com.fisk.chartvisual.entity;
+package com.fisk.chartvisual.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * @author WangYan
- * @date 2022/3/4 10:57
+ * @date 2022/3/9 17:27
  */
-@TableName("tb_ds_table_field")
 @Data
-public class DsTableFieldPO extends BasePO {
+public class SaveDsTableDTO {
 
     /**
-     * 表名id
+     * 数据源id
      */
-    private Integer tableInfoId;
+    @NotNull
+    private Integer dataSourceId;
+    /**
+     * 表名
+     */
+    @NotNull
+    private String tableName;
     /**
      * 源字段
      */
@@ -36,6 +40,5 @@ public class DsTableFieldPO extends BasePO {
     /**
      * 字段描述
      */
-    @TableField(value = "`describe`")
     private String describe;
 }
