@@ -24,14 +24,16 @@
         LEFT JOIN tb_api_config AS api ON log.api_id = api.id
         WHERE
         log.del_flag = 1
-        <if test="null != apiIds and apiIds.size > 0">
-            AND log.api_id IN
-            <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
-                #{item}
-            </foreach>
+        <if test="apiId !=null ">
+            AND log.api_id = #{apiId}
         </if>
         <if test="appId !=null ">
             AND log.app_id = #{appId}
+        </if>
+        <if test="keyword !=null and keyword!='' ">
+            AND api.api_name like concat('%', #{keyword}, '%')
+            OR app.app_account like concat('%', #{keyword}, '%')
+            OR log.business_state like concat('%', #{keyword}, '%')
         </if>
     </select>
 </mapper>

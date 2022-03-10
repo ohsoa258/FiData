@@ -261,6 +261,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     logPO.setLogInfo(resultEnum.getMsg());
                 }
             }
+            logPO.setCreateUser("system");
             logsManageImpl.saveLog(logPO);
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);

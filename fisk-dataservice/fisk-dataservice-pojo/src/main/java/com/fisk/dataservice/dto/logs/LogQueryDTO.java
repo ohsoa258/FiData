@@ -12,19 +12,24 @@ import java.util.List;
  * @description 查询日志
  * @date 2022/3/7 12:14
  */
-public class LogQueryDTO
-{
+public class LogQueryDTO {
     /**
      * API ID
      */
     @ApiModelProperty(value = "apiId")
-    public List<Integer> apiIds;
+    public Integer apiId;
 
     /**
      * APP ID
      */
     @ApiModelProperty(value = "appId")
     public Integer appId;
+
+    /**
+     * keyword
+     */
+    @ApiModelProperty(value = "keyword")
+    public String keyword;
 
     /**
      * 分页对象

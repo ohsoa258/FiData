@@ -20,10 +20,10 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
     /**
      * 筛选器分页功能
      *
-     * @param page  分页对象
-     * @param apiIds apiIds
-     * @param appId appId
+     * @param page   分页对象
+     * @param apiId apiIds
+     * @param appId  appId
      * @return 查询结果
      */
-    Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiIds") List<Integer> apiIds, @Param("appId") Integer appId);
+    Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiId") Integer apiId, @Param("appId") Integer appId, @Param("keyword") String keyword);
 }
