@@ -36,8 +36,15 @@ public interface DsTableService {
 
     /**
      * 保存表信息
-     * @param list
+     * @param dsTableDto
      * @return
      */
-    ResultEntity<ResultEnum> saveTableInfo(List<SaveDsTableDTO> list);
+    ResultEntity<ResultEnum> saveTableInfo(SaveDsTableDTO dsTableDto);
+
+    /**
+     * 根据数据源id查询表字段
+     * @param dataSourceId
+     * @return
+     */
+    ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer dataSourceId);
 }

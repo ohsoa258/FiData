@@ -1,7 +1,11 @@
 package com.fisk.chartvisual.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
+import com.fisk.chartvisual.entity.DsTableFieldPO;
 import com.fisk.chartvisual.entity.DsTablePO;
 import com.fisk.chartvisual.enums.MysqlFieldTypeMappingEnum;
 import com.fisk.chartvisual.enums.SqlServerFieldTypeMappingEnum;
@@ -35,7 +39,7 @@ import static com.fisk.chartvisual.enums.DataSourceInfoTypeEnum.*;
  * @date 2022/3/4 11:22
  */
 @Service
-public class DsTableServiceImpl implements DsTableService {
+public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFieldPO> implements DsTableService {
 
     @Resource
     DataSourceConMapper sourceConMapper;
@@ -43,6 +47,8 @@ public class DsTableServiceImpl implements DsTableService {
     DsTableFieldMapper dsTableFieldMapper;
     @Resource
     DsTableMapper dsTableMapper;
+    @Resource
+    DsTableServiceImpl dsTableService;
 
     @Override
     public ResultEntity<DsTableDTO> getTableInfo(Integer id) {
@@ -85,27 +91,56 @@ public class DsTableServiceImpl implements DsTableService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEntity<ResultEnum> saveTableInfo(List<SaveDsTableDTO> list) {
+    public ResultEntity<ResultEnum> saveTableInfo(SaveDsTableDTO dsTableDto) {
 
         // 保存表名
-        SaveDsTableDTO info = list.get(0);
         DsTablePO dsTable = new DsTablePO();
-        dsTable.setDataSourceId(info.getDataSourceId());
-        dsTable.setTableName(info.getTableName());
+        dsTable.setDataSourceId(dsTableDto.getDataSourceId());
+        dsTable.setTableName(dsTableDto.getTableName());
         int i = dsTableMapper.insert(dsTable);
         if (i <= 0){
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, ResultEnum.SAVE_DATA_ERROR.getMsg());
         }
 
+
         // 保存字段信息
-        list.stream().filter(Objects::nonNull).forEach(e -> {
-            int res = dsTableFieldMapper.insert(DsTableMap.INSTANCES.dtoToPo(e, dsTable.getId()));
-            if (res <= 0){
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-            }
-        });
+        List<DsTableFieldPO> fieldList = dsTableDto.getFieldList().stream().filter(Objects::nonNull).map(e -> {
+            return DsTableMap.INSTANCES.dtoToPo(e, dsTable.getId());
+        }).collect(Collectors.toList());
+
+        boolean saveBatch = dsTableService.saveBatch(fieldList);
+        if (saveBatch == false){
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, ResultEnum.SAVE_DATA_ERROR.getMsg());
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
+    }
+
+    @Override
+    public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer dataSourceId) {
+        QueryWrapper<DsTablePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DsTablePO::getDataSourceId,dataSourceId);
+        List<DsTablePO> dsTableList = dsTableMapper.selectList(queryWrapper);
+
+        if (CollectionUtils.isNotEmpty(dsTableList)){
+            // 查询表名字段信息
+            List<SaveDsTableDTO> dtoList = dsTableList.stream().filter(Objects::nonNull).map(e -> {
+                SaveDsTableDTO dto = new SaveDsTableDTO();
+                dto.setDataSourceId(e.getDataSourceId());
+                dto.setTableName(e.getTableName());
+
+                QueryWrapper<DsTableFieldPO> query = new QueryWrapper<>();
+                query.lambda().
+                        eq(DsTableFieldPO::getTableInfoId, e.getId());
+                dto.setFieldList(DsTableMap.INSTANCES.poToDtoDsList(dsTableFieldMapper.selectList(query)));
+                return dto;
+            }).collect(Collectors.toList());
+
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,dtoList);
+        }
+
+        return null;
     }
 
     /**

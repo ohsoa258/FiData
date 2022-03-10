@@ -3,6 +3,7 @@ package com.fisk.chartvisual.dto;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author WangYan
@@ -21,24 +22,9 @@ public class SaveDsTableDTO {
      */
     @NotNull
     private String tableName;
+
     /**
-     * 源字段
+     * 字段信息
      */
-    private String sourceField;
-    /**
-     * 目标字段名
-     */
-    private String targetField;
-    /**
-     * 源字段类型
-     */
-    private String sourceFieldType;
-    /**
-     * 目标字段类型
-     */
-    private String targetFieldType;
-    /**
-     * 字段描述
-     */
-    private String describe;
+    private List<DsTableFieldDTO> fieldList;
 }

@@ -1,12 +1,11 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.SaveDsTableDTO;
+import com.fisk.chartvisual.dto.DsTableFieldDTO;
 import com.fisk.chartvisual.entity.DsTableFieldPO;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -24,5 +23,12 @@ public interface DsTableMap {
     @Mappings({
             @Mapping(source = "id",target = "tableInfoId")
     })
-    DsTableFieldPO dtoToPo(SaveDsTableDTO dto, Long id);
+    DsTableFieldPO dtoToPo(DsTableFieldDTO dto, Long id);
+
+    /**
+     * po => dto
+     * @param list
+     * @return
+     */
+    List<DsTableFieldDTO> poToDtoDsList(List<DsTableFieldPO> list);
 }

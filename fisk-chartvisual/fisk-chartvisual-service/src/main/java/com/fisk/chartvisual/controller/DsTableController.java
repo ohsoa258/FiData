@@ -48,7 +48,14 @@ public class DsTableController {
     @ApiOperation("保存表信息")
     @PostMapping("/saveTableInfo")
     @ResponseBody
-    public ResultEntity<ResultEnum> saveTableInfo(@Validated @RequestBody List<SaveDsTableDTO> list) {
-        return service.saveTableInfo(list);
+    public ResultEntity<ResultEnum> saveTableInfo(@Validated @RequestBody SaveDsTableDTO dto) {
+        return service.saveTableInfo(dto);
+    }
+
+    @ApiOperation("根据数据源id查询表字段")
+    @GetMapping("/selectByDataSourceId")
+    @ResponseBody
+    public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer id) {
+        return service.selectByDataSourceId(id);
     }
 }
