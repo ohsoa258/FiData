@@ -67,23 +67,11 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeData(id));
     }
 
-    /*@GetMapping("/getDimensionListEntity")
-    @ApiOperation("获取维度表元数据(用于Doris创建表)")
-    public ResultEntity<Object> getDimensionListEntity(@RequestParam("businessAreaId") int businessAreaId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaDataList(businessAreaId));
-    }*/
-
-    /*@ApiOperation("根据维度id获取维度字段所有来源id")
-    @GetMapping("/getDimensionAttributeSourceId/{id}")
-    public ResultEntity<Object> getDimensionAttributeSourceId(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeSourceId(id));
-    }*/
-
-    /*@GetMapping("/getDimensionEntity")
-    @ApiOperation("获取维度表元数据(用于DW创建表)")
-    public ResultEntity<Object> getDimensionEntity(@RequestParam("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionMetaData(id));
-    }*/
+    @GetMapping("/getDimensionAttributeDataList/{id}")
+    @ApiOperation("根据维度id获取字段列表(宽表)")
+    public ResultEntity<Object> getDimensionAttributeDataList(@RequestParam("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeDataList(id));
+    }
 
     @GetMapping("/selectDimensionAttributeList")
     @ApiOperation("根据维度id获取维度字段及其关联详情(nifi)")

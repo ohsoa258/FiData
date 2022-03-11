@@ -83,4 +83,11 @@ public interface IFactAttribute {
      */
     ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(Integer factId);
 
+    /**
+     * 根据事实id,获取事实字段(宽表)
+     * @param factId
+     * @return
+     */
+    List<FactAttributeUpdateDTO> getFactAttribute(int factId);
+
 }

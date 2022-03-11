@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionSourceDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -21,7 +22,7 @@ public interface IDimension {
      * @param dto
      * @return
      */
-    ResultEnum addDimension(DimensionDTO dto);
+    ResultEnum addDimension(DimensionDTO dto) throws SQLException;
 
     /**
      * 获取维度表详情
@@ -35,7 +36,7 @@ public interface IDimension {
      * @param dto
      * @return
      */
-    ResultEnum updateDimension(DimensionDTO dto);
+    ResultEnum updateDimension(DimensionDTO dto) throws SQLException;
 
     /**
      * 删除维度表

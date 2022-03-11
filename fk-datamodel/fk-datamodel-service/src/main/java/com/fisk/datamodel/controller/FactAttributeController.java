@@ -93,5 +93,11 @@ public class FactAttributeController {
         return service.selectAttributeList(factId);
     }
 
+    @ApiOperation("根据事实id获取事实字段(宽表)")
+    @GetMapping("/getFactAttribute/{id}")
+    public ResultEntity<Object> getFactAttribute(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttribute(id));
+    }
+
 
 }

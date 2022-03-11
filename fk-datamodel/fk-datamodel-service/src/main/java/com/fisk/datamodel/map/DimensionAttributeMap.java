@@ -71,4 +71,11 @@ public interface DimensionAttributeMap {
      */
     DimensionAttributeUpdateDTO poToDetailDto(DimensionAttributePO po);
 
+    /**
+     * po==>DetailDtoList
+     * @param po
+     * @return
+     */
+    List<DimensionAttributeUpdateDTO> poToDetailDtoList(List<DimensionAttributePO> po);
+
 }

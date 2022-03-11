@@ -76,4 +76,11 @@ public interface IDimensionAttribute {
      */
     ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(Integer dimensionId);
 
+    /**
+     * 获取维度字段列表数据(宽表)
+     * @param dimensionId
+     * @return
+     */
+    List<DimensionAttributeUpdateDTO> getDimensionAttributeDataList(int dimensionId);
+
 }

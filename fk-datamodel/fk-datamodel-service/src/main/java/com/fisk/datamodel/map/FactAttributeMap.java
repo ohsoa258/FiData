@@ -68,4 +68,11 @@ public interface FactAttributeMap {
      */
     List<AtomicIndicatorFactAttributeDTO> attributePoToDto(List<FactAttributePO> po);
 
+    /**
+     * poDetail==>DtoList
+     * @param po
+     * @return
+     */
+    List<FactAttributeUpdateDTO> poDetailToDtoList(List<FactAttributePO> po);
+
 }

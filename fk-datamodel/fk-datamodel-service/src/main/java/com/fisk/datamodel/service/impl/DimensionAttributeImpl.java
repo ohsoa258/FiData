@@ -9,7 +9,6 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
-import com.fisk.datamodel.dto.syncmode.SyncModeDTO;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.enums.PublicStatusEnum;
@@ -124,7 +123,6 @@ public class DimensionAttributeImpl
         }
         return result==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
-
 
     @Override
     public ResultEntity<List<ModelPublishFieldDTO>> selectDimensionAttributeList(Integer dimensionId){
@@ -347,5 +345,29 @@ public class DimensionAttributeImpl
         data.dto=dtoList;
         return data;
     }
+
+    /**
+     * 生成时间日期维度表数据
+     * @param list
+     * @param dimensionId
+     * @return
+     */
+    public ResultEnum addTimeTableAttribute(List<DimensionAttributeDTO> list,int dimensionId)
+    {
+        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(list);
+        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
+        return this.saveOrUpdateBatch(poList)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<DimensionAttributeUpdateDTO> getDimensionAttributeDataList(int dimensionId)
+    {
+        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
+        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        return DimensionAttributeMap.INSTANCES.poToDetailDtoList(list);
+    }
+
+
 
 }

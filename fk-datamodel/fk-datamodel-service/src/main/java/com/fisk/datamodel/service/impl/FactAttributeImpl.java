@@ -11,6 +11,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.FieldNameDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
@@ -31,6 +32,7 @@ import net.bytebuddy.implementation.bytecode.Throw;
 import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -63,6 +65,8 @@ public class FactAttributeImpl
     SyncModeImpl syncMode;
     @Resource
     TableBusinessImpl tableBusiness;
+    @Resource
+    AtomicIndicatorsImpl atomicIndicators;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
@@ -201,35 +205,6 @@ public class FactAttributeImpl
             return data;
         }
         data.appId=businessProcessPO.businessId;
-
-        //获取注册表相关数据
-        /*ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
-        if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
-        {
-            data.appbAbreviation=appAbbreviation.data.appAbbreviation;
-        }
-        //获取来源表相关数据
-        ResultEntity<TableAccessDTO> tableAccess = client.getTableAccess(po.tableSourceId);
-        if (tableAccess.code==ResultEnum.SUCCESS.getCode() || tableAccess.data !=null)
-        {
-            data.sourceTableName=tableAccess.data.tableName;
-        }
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,id);
-        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
-        List<FactAttributePO> list=mapper.selectList(queryWrapper);
-        for (FactAttributePO item:list) {
-            ModelAttributeMetaDataDTO dto =new ModelAttributeMetaDataDTO();
-            dto.attributeType = item.attributeType;
-            dto.fieldEnName = item.factFieldEnName;
-            dto.fieldLength = item.factFieldLength;
-            dto.fieldType = item.factFieldType;
-            dto.fieldCnName = item.factFieldCnName;
-            dto.sourceFieldId=item.tableSourceFieldId;
-            dto.fieldId=String.valueOf(item.id);
-            dtoList.add(dto);
-        }
-        data.dto=dtoList;*/
         return data;
     }
 
@@ -265,24 +240,6 @@ public class FactAttributeImpl
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
         }
-        /*ResultEntity<Object> data=client.getTableFieldId(factPO.tableSourceId);
-        if (ResultEnum.SUCCESS.equals(data.code))
-        {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, "获取数据接入表数据失败");
-        }
-        List<FieldNameDTO> list= JSON.parseArray(JSON.toJSONString(data.data), FieldNameDTO.class);
-        System.out.println(list);
-        if (list ==null || list.size()==0)
-        {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "数据接入表数据为空");
-        }*/
-        //获取维度表存在字段来源id
-       /* QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("table_source_field_id").lambda()
-                .eq(FactAttributePO::getFactId,id);
-        List<Integer> ids=(List)mapper.selectObjs(queryWrapper).stream().collect(Collectors.toList());
-        //过滤已添加来源表id
-        return list.stream().filter(e -> !ids.contains((int)e.getId())).collect(Collectors.toList());*/
         return null;
     }
 
@@ -355,6 +312,46 @@ public class FactAttributeImpl
             fieldList.add(fieldDTO);
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fieldList);
+    }
+
+    @Override
+    public List<FactAttributeUpdateDTO> getFactAttribute(int factId)
+    {
+        List<FactAttributeUpdateDTO> data=new ArrayList<>();
+        List<AtomicIndicatorPushDTO> atomicIndicator = atomicIndicators.getAtomicIndicator(factId);
+        if(CollectionUtils.isEmpty(atomicIndicator))
+        {
+            return data;
+        }
+        for (AtomicIndicatorPushDTO item:atomicIndicator)
+        {
+            FactAttributeUpdateDTO dto=new FactAttributeUpdateDTO();
+            switch (item.attributeType)
+            {
+                //退化维度
+                case 0:
+                    dto.factFieldEnName=item.factFieldName;
+                    dto.factFieldLength=item.factFieldLength;
+                    dto.factFieldType=item.factFieldType;
+                    break;
+                //维度键
+                case 1:
+                    dto.factFieldEnName=item.dimensionTableName+"key";
+                    dto.factFieldType="varchar";
+                    dto.factFieldLength=255;
+                    break;
+                //原子指标
+                case 2:
+                    dto.factFieldEnName=item.atomicIndicatorName;
+                    dto.factFieldType=item.factFieldType;
+                    dto.factFieldLength=item.factFieldLength;
+                    break;
+                default:
+                    break;
+            }
+            data.add(dto);
+        }
+        return data;
     }
 
 }

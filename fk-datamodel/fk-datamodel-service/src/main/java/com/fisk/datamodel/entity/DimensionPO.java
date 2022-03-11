@@ -58,5 +58,16 @@ public class DimensionPO extends BasePO {
      * 是否为日期维度表
      */
     public Boolean isDimDateTbl;
-
+    /**
+     * 是否为时间表
+     */
+    public Boolean timeTable;
+    /**
+     * 开始时间
+     */
+    public String startTime;
+    /**
+     * 截止时间
+     */
+    public String endTime;
 }

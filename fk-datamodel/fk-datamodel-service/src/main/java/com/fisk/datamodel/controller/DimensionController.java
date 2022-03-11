@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 
 /**
  * @author JianWenYang
@@ -36,7 +37,7 @@ public class DimensionController {
 
     @ApiOperation("添加维度")
     @PostMapping("/addDimension")
-    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto) {
+    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto) throws SQLException {
         return ResultEntityBuild.build(service.addDimension(dto));
     }
 
@@ -54,7 +55,7 @@ public class DimensionController {
 
     @ApiOperation("修改维度")
     @PutMapping("/editDimension")
-    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) {
+    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) throws SQLException {
         return ResultEntityBuild.build(service.updateDimension(dto));
     }
 
