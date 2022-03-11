@@ -606,31 +606,34 @@ public class BuildNifiCustomWorkFlow {
                 nifiSchedulingComponentPO.name = nifiNode.nifiCustomWorkflowName;
                 nifiSchedulingComponentPO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.nifiCustomWorkflowId);
                 nifiSchedulingComponent.save(nifiSchedulingComponentPO);
-                BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
                 Map<String, String> variable = new HashMap<>();
                 variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
                 componentsBuild.buildNifiGlobalVariable(variable);
-                buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-                buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
-                buildPublishKafkaProcessorDTO.groupId = groupStructure;
-                buildPublishKafkaProcessorDTO.name = "PublishKafka";
-                buildPublishKafkaProcessorDTO.details = "PublishKafka";
-                buildPublishKafkaProcessorDTO.UseTransactions = "false";
-                buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                buildPublishKafkaProcessorDTO.TopicName = TopicName;
-                BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-                componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 //拿到与调度组件直连的组件,创建另外的topic
                 List<BuildNifiCustomWorkFlowDTO> outputDucts = nifiCustomWorkDTO.outputDucts;
                 for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                     TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
-                    updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, TopicName, TopicTypeEnum.PIPELINE_NIFI_FLOW,
-                            tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
+                    String Topic = TopicName;
+                    Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
+                    if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
+                            Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
+                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getName();
+                    }
+                    BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
+                    buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+                    buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
+                    buildPublishKafkaProcessorDTO.groupId = groupStructure;
+                    buildPublishKafkaProcessorDTO.name = "PublishKafka";
+                    buildPublishKafkaProcessorDTO.details = "PublishKafka";
+                    buildPublishKafkaProcessorDTO.UseTransactions = "false";
+                    buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+                    buildPublishKafkaProcessorDTO.TopicName = Topic;
+                    BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+                    componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 }
             }
         }
         //--------------------------------------------------------------------------
-
         for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
             if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
                     Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
