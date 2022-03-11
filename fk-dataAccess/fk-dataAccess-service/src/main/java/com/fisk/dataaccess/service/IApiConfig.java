@@ -77,7 +77,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     List<ApiConfigDTO> getApiListData(long appId);
 
     /**
-     * 根据apiId生成api文档
+     * 生成文档(以api为单位)
      *
      * @param dto      dto
      * @param response response
@@ -107,5 +107,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      */
     void updateApiPublishStatus(ModelPublishStatusDTO dto);
+
+    /**
+     * 生成文档(以应用为单位)
+     *
+     * @param list     api集合
+     * @param response response
+     * @return 执行结果
+     */
+    ResultEnum generateAppPDFDoc(List<GenerateDocDTO> list, HttpServletResponse response);
 }
 

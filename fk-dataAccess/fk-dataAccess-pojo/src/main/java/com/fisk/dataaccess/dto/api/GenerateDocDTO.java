@@ -20,4 +20,7 @@ public class GenerateDocDTO {
 
     @ApiModelProperty(value = "api下的物理表json结构")
     public String pushDataJson;
+
+    @ApiModelProperty(value = "true: 当前api下存在表;false: 当前api下没有表")
+    public boolean tableIsEmpty;
 }

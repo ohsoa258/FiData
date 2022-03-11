@@ -234,6 +234,51 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
+    public ResultEnum generateAppPDFDoc(List<GenerateDocDTO> list, HttpServletResponse response) {
+
+        List<ApiConfigDTO> dtoList = new ArrayList<>();
+        list.forEach(generateDocDTO -> {
+            ApiConfigDTO data = getData(generateDocDTO.apiId);
+            if (data != null & generateDocDTO.tableIsEmpty) {
+                data.pushDataJson = generateDocDTO.pushDataJson;
+                dtoList.add(data);
+            }
+        });
+
+        // api信息转换为文档实体
+        ApiDocDTO docDTO = createApiDocDTO(dtoList);
+        // 生成pdf,返回文件名称
+        PDFHeaderFooter headerFooter = new PDFHeaderFooter();
+        PDFKit kit = new PDFKit();
+        kit.setHeaderFooterBuilder(headerFooter);
+        // 系统时间戳
+        long timeMillis = System.currentTimeMillis();
+        String fileName = "APIServiceDoc" + timeMillis + ".pdf";
+//        GenerateDocDTO generateDocDTO = list.get(0);
+//        if (generateDocDTO != null) {
+//            ApiConfigPO apiConfigPO = this.query().eq("id", generateDocDTO.apiId).one();
+//            if (apiConfigPO != null) {
+//                AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPO.appId).one();
+//                if (app != null) {
+//                     fileName = app.appName + "接口文档.pdf";
+//                }
+//            }
+//        } else {
+//            fileName = "APIServiceDoc" + "接口文档.pdf";
+//        }
+        // 生成PDF文件
+        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
+                templatePath, fileName, "FiData接口文档", docDTO, response);
+        try {
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException ex) {
+            throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
     public ResultEnum pushData(ReceiveDataDTO dto) {
         try {
             if (dto.apiId == null) {
@@ -241,7 +286,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
 
             // 每次推送数据前,将stg数据删除
-            pushDataStgToOds(dto.apiId,0);
+            pushDataStgToOds(dto.apiId, 0);
 
             // 根据api_id查询所有物理表
             List<TableAccessPO> accessPOList = tableAccessImpl.query().eq("api_id", dto.apiId).list();
@@ -569,7 +614,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
                 "}", addIndex + ".7");
 
-        // 参数(body)表格
+        // 参数(body)表格(2.5.9返回参数说明)
         List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
         ApiResponseDTO code = new ApiResponseDTO();
         code.parmName = "code";
@@ -588,7 +633,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiResponseDTOS.add(data);
         apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
 
-        //设置API返回参数,即返回示例
+        //设置API返回参数,即返回示例(3)
         apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
                 " &nbsp;&nbsp;\"code\": 0,\n" +
                 " &nbsp;&nbsp;\"msg\": \"xxx\",\n" +
@@ -652,42 +697,205 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return apiDocDTO;
     }
 
-    public static void main(String[] args) {
-        JsonUtils jsonUtils = new JsonUtils();
-        // 测试时间
-//        Instant inst1 = Instant.now();
-        String s = StringEscapeUtils.unescapeJava(jsonUtils.JSONSTR);
-        JSONObject json = JSON.parseObject(s);
-        System.out.println("json = " + json);
+    /**
+     * 创建模板填充数据所需的对象(以应用为单位)
+     *
+     * @return com.fisk.dataaccess.dto.api.doc.doc.ApiDocDTO
+     * @description 创建模板填充数据所需的对象(以应用为单位)
+     * @author Lock
+     * @date 2022/3/11 14:49
+     * @version v1.0
+     * @params dtoList
+     */
+    private ApiDocDTO createApiDocDTO(List<ApiConfigDTO> dtoList) {
 
-        // 封装数据库存储的数据结构
-        List<ApiTableDTO> apiTableDtoList = jsonUtils.getApiTableDtoList01();
-//        apiTableDtoList.forEach(System.out::println);
-//        int a = 1 / 0;
+        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
+                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
+                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
+                "}";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
+                "&nbsp;&nbsp; \"code\": 0,\n" +
+                "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" +
+                "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" +
+                "}", "2.4.9");
+        BigDecimal catalogueIndex = new BigDecimal("2.4");
 
-        List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
-        // 获取目标表
-        List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
-        targetTable.forEach(System.out::println);
-        // 获取Json的schema信息
-        List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList);
-        schemas.forEach(System.out::println);
-//        System.out.println("====================");
-        try {
-            // json根节点处理
-            jsonUtils.rootNodeHandler(schemas, json, targetTable);
-            targetTable.forEach(System.out::println);
+        // API基本信息对象
+        List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
 
-            System.out.println("开始执行sql");
-            PgsqlUtils pgsqlUtils = new PgsqlUtils();
-            // ods_abbreviationName_tableName
-            pgsqlUtils.executeBatchPgsql("stg_push_", targetTable);
+        for (int i = 0; i < dtoList.size(); i++) {
+            ApiConfigDTO dto = dtoList.get(i);
+            List<TableAccessNonDTO> tableAccessDtoList = dto.list;
+            if (CollectionUtils.isEmpty(tableAccessDtoList)) {
+                return apiDocDTO;
+            }
 
-//            Instant inst2 = Instant.now();
-//            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
-//            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
-        } catch (Exception e) {
-            System.out.println("执行失败");
+            // 设置目录
+            // 设置目录
+            ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
+            BigDecimal incrementIndex = new BigDecimal("0.1");
+            BigDecimal addIndex = catalogueIndex.add(incrementIndex);
+            // 目录等级
+            apiCatalogueDTO.grade = 3;
+            // 目录序号
+            apiCatalogueDTO.catalogueIndex = addIndex + ".";
+            // 目录名称
+            apiCatalogueDTO.catalogueName = dto.apiName;
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 1, apiCatalogueDTO);
+            catalogueIndex = addIndex;
+
+            // 设置API基础信息(2.5.-2.5.5)
+            ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
+            apiBasicInfoDTO.apiName = dto.apiName;
+            apiBasicInfoDTO.apiAddress = "/dataAccess/apiConfig/pushdata";
+            apiBasicInfoDTO.apiDesc = dto.apiDes;
+            apiBasicInfoDTO.apiRequestType = "POST";
+            apiBasicInfoDTO.apiContentType = "application/json";
+            apiBasicInfoDTO.apiHeader = "Authorization: Bearer {token}";
+
+            // 设置API请求参数(2.5.7 参数body)
+            List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+            ApiRequestDTO apiId = new ApiRequestDTO();
+            apiId.parmName = "apiId";
+            apiId.isRequired = "是";
+            apiId.parmType = "String";
+            apiId.parmDesc = "api唯一标识: " + dto.id + " (真实数据)";
+            apiId.trStyle = "background-color: #fff";
+            ApiRequestDTO pushData = new ApiRequestDTO();
+            pushData.parmName = "pushData";
+            pushData.isRequired = "是";
+            pushData.parmType = "String";
+            pushData.parmDesc = "json序列化数据(参数格式及字段类型参考本小节【pushData json格式】及【json字段描述】)";
+            pushData.trStyle = "background-color: #f8f8f8";
+            apiRequestDTOS.add(apiId);
+            apiRequestDTOS.add(pushData);
+            apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
+            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
+                    " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
+                    " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
+                    "}", addIndex + ".7");
+
+            // 参数(body)表格(2.5.9返回参数说明)
+            List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
+            ApiResponseDTO code = new ApiResponseDTO();
+            code.parmName = "code";
+            code.parmType = "int";
+            code.parmDesc = "调用结果状态";
+            ApiResponseDTO msg = new ApiResponseDTO();
+            msg.parmName = "msg";
+            msg.parmType = "String";
+            msg.parmDesc = "调用结果描述";
+            ApiResponseDTO data = new ApiResponseDTO();
+            data.parmName = "data";
+            data.parmType = "String";
+            data.parmDesc = "返回的数据";
+            apiResponseDTOS.add(code);
+            apiResponseDTOS.add(msg);
+            apiResponseDTOS.add(data);
+            apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
+
+            //设置API返回参数,即返回示例(3)
+            apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
+                    " &nbsp;&nbsp;\"code\": 0,\n" +
+                    " &nbsp;&nbsp;\"msg\": \"xxx\",\n" +
+                    " &nbsp;&nbsp;\"data\": null\n" +
+                    "}", addIndex + ".9");
+
+            // pushData json格式
+            if (StringUtils.isNotBlank(dto.pushDataJson)) {
+                apiBasicInfoDTO.pushDataJson = dto.pushDataJson;
+            } else {// 防止模板报错
+                apiBasicInfoDTO.pushDataJson = "&nbsp;&nbsp;No parameters";
+            }
+
+
+            // pushData json字段描述
+            List<ApiResponseDTO> pushDataDtos = new ArrayList<>();
+            List<TableAccessNonDTO> list = dto.list;
+            if (!CollectionUtils.isEmpty(list)) {
+                final int[] trIndex = {1};
+                list.forEach(e -> {
+                    e.list.forEach(f -> {
+                        ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+                        apiResponseDTO.tableName = e.tableName;
+                        apiResponseDTO.parmName = f.fieldName;
+                        apiResponseDTO.parmType = f.fieldType;
+                        apiResponseDTO.parmDesc = f.fieldDes;
+                        apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                        pushDataDtos.add(apiResponseDTO);
+                        trIndex[0]++;
+                    });
+                });
+            } else {// 防止模板报错
+                ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+                apiResponseDTO.tableName = "No parameters";
+                apiResponseDTO.parmName = "No parameters";
+                apiResponseDTO.parmType = "No parameters";
+                apiResponseDTO.parmDesc = "No parameters";
+                apiResponseDTO.trStyle = "background-color: #f8f8f8";
+                pushDataDtos.add(apiResponseDTO);
+            }
+            apiBasicInfoDTO.pushDataDtos = pushDataDtos;
+
+
+            //设置API目录
+            /* 设置API目录 start */
+            apiBasicInfoDTO.apiNameCatalogue = addIndex + ".";
+            apiBasicInfoDTO.apiAddressCatalogue = addIndex + ".1";
+            apiBasicInfoDTO.apiDescCatalogue = addIndex + ".2";
+            apiBasicInfoDTO.apiRequestTypeCatalogue = addIndex + ".3";
+            apiBasicInfoDTO.apiContentTypeCatalogue = addIndex + ".4";
+            apiBasicInfoDTO.apiHeaderCatalogue = addIndex + ".5";
+            apiBasicInfoDTO.apiRequestExamplesCatalogue = addIndex + ".6";
+            apiBasicInfoDTO.apiRequestCatalogue = addIndex + ".7";
+            apiBasicInfoDTO.apiResponseExamplesCatalogue = addIndex + ".8";
+            apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
+            /* 设置API目录 end */
+
+            apiBasicInfoDTOS.add(apiBasicInfoDTO);
         }
+
+        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
+        return apiDocDTO;
     }
+
+//    public static void main(String[] args) {
+//        JsonUtils jsonUtils = new JsonUtils();
+//        // 测试时间
+////        Instant inst1 = Instant.now();
+//        String s = StringEscapeUtils.unescapeJava(jsonUtils.JSONSTR);
+//        JSONObject json = JSON.parseObject(s);
+//        System.out.println("json = " + json);
+//
+//        // 封装数据库存储的数据结构
+//        List<ApiTableDTO> apiTableDtoList = jsonUtils.getApiTableDtoList01();
+////        apiTableDtoList.forEach(System.out::println);
+////        int a = 1 / 0;
+//
+//        List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+//        // 获取目标表
+//        List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
+//        targetTable.forEach(System.out::println);
+//        // 获取Json的schema信息
+//        List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList);
+//        schemas.forEach(System.out::println);
+////        System.out.println("====================");
+//        try {
+//            // json根节点处理
+//            jsonUtils.rootNodeHandler(schemas, json, targetTable);
+//            targetTable.forEach(System.out::println);
+//
+//            System.out.println("开始执行sql");
+//            PgsqlUtils pgsqlUtils = new PgsqlUtils();
+//            // ods_abbreviationName_tableName
+//            pgsqlUtils.executeBatchPgsql("stg_push_", targetTable);
+//
+////            Instant inst2 = Instant.now();
+////            System.out.println("Difference in 纳秒 : " + Duration.between(inst1, inst2).getNano());
+////            System.out.println("Difference in seconds : " + Duration.between(inst1, inst2).getSeconds());
+//        } catch (Exception e) {
+//            System.out.println("执行失败");
+//        }
+//    }
 }

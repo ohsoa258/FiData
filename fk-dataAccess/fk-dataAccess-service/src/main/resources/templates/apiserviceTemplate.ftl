@@ -470,6 +470,7 @@
                 </table>
             </div>
         </div>
+        <!-- 返回示例 -->
         <div>
             <div>
                 <p style="font-weight: bold;">${apiBasicItem.apiResponseExamplesCatalogue}&nbsp;&nbsp;返回示例</p>
@@ -479,6 +480,7 @@
                      style="word-wrap: break-word; white-space: pre-wrap;">${apiBasicItem.apiResponseExamples}</pre>
             </div>
         </div>
+        <!-- 返回参数说明 -->
         <div>
             <div>
                 <p style="font-weight: bold;">${apiBasicItem.apiResponseCatalogue}&nbsp;&nbsp;返回参数说明</p>
@@ -546,11 +548,106 @@
                 </table>
             </div>
         </div>
+        <!--pushData json格式 start-->
+        <div>
+            <div>
+                <p style="font-weight: bold;color: coral"> &nbsp;pushData json格式</p>
+            </div>
+            <div style="width: 100%;padding: 20px;">
+                <pre id="out_pre_rep_pushdatajson"
+                     style="word-wrap: break-word; white-space: pre-wrap;">${apiBasicItem.pushDataJson!}</pre>
+            </div>
+        </div>
+        <!--pushData json字段描述 start-->
+        <div>
+            <div>
+                <p style="font-weight: bold;color: coral"> &nbsp;json字段描述</p>
+            </div>
+            <div>
+                <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
+                    <thead>
+                    <tr>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">表名
+                        </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">参数名
+                        </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">类型
+                        </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">说明
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <#list apiBasicItem.pushDataDtos! as pushDataItem>
+                        <tr style="${pushDataItem.trStyle!}">
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.tableName!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmName!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmType!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmDesc!}
+                            </td>
+                        </tr>
+                    </#list>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </#list>
 </div>
 
+<#--
 
-<!--pushData json格式 start-->
+<!--pushData json格式 start&ndash;&gt;
 <div>
     <div>
         <p style="font-weight: bold;">2.6.0.&nbsp;&nbsp;pushData json格式</p>
@@ -560,10 +657,10 @@
                      style="word-wrap: break-word; white-space: pre-wrap;">${pushDataJson!}</pre>
     </div>
 </div>
-<!--pushData json格式 end-->
+<!--pushData json格式 end&ndash;&gt;
 
 
-<!--pushData json字段描述 start-->
+<!--pushData json字段描述 start&ndash;&gt;
 <div>
     <div>
         <p style="font-weight: bold;">2.6.1.&nbsp;&nbsp;pushData json字段描述</p>
@@ -647,8 +744,9 @@
         </table>
     </div>
 </div>
-<!--pushData json字段描述 end-->
+<!--pushData json字段描述 end&ndash;&gt;
 
+-->
 
 <span style="page-break-after:always;"></span>
 <!---Restful API end-->

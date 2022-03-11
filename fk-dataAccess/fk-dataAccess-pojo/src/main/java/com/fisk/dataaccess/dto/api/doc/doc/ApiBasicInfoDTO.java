@@ -119,4 +119,14 @@ public class ApiBasicInfoDTO {
      * API返回参数 目录
      */
     public String apiResponseCatalogue;
+
+    /**
+     * pushData Json格式
+     */
+    public String pushDataJson;
+
+    /**
+     * pushData List
+     */
+    public List<ApiResponseDTO> pushDataDtos;
 }
