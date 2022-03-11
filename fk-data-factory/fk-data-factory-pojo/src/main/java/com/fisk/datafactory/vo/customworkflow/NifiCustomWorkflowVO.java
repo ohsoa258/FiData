@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author Lock
@@ -40,7 +41,7 @@ public class NifiCustomWorkflowVO {
      */
     @ApiModelProperty(value = "组件连线", required = true)
     public String listEdge;
-    @ApiModelProperty(value = "状态：已发布（1）、未发布（0）、发布失败（2）、正在发布（3）", required = true)
+    @ApiModelProperty(value = "发布状态：已发布（1）、未发布（0）、发布失败（2）、正在发布（3）", required = true)
     public int status;
     /**
      * 创建时间
@@ -51,4 +52,10 @@ public class NifiCustomWorkflowVO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "更新时间")
     public LocalDateTime updateTime;
+
+    @ApiModelProperty(value = "呼吸灯状态(0/1:未运行  2:正在运行  3:运行成功 4:运行失败)")
+    public int breathingLamp;
+
+    @ApiModelProperty(value = "管道内绑定表的组件id集合")
+    public List<Long> componentIds;
 }
