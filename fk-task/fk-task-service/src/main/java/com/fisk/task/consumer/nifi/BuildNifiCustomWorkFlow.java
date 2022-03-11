@@ -6,6 +6,7 @@ import com.davis.client.model.*;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.enums.factory.PipelineStatuTypeEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.TopicTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
@@ -15,6 +16,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
@@ -96,9 +98,12 @@ public class BuildNifiCustomWorkFlow {
     //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
     //@MQConsumerLog
     public void msg(String data, Acknowledgment acke) {
+        NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
+        NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
+        nifiCustomWorkflowDTO.id=dto.pipelineId;
+        nifiCustomWorkflowDTO.status= PipelineStatuTypeEnum.success_publish.getValue();
         try {
         // 组里共用port,用漏斗连接共同使用,这样向外提供的连接点就只有一个
-        NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         log.info("管道参数::" + dto);
         dto.structure = stringToMap(dto.structure1);
         dto.externalStructure = stringToMap(dto.externalStructure1);
@@ -119,12 +124,15 @@ public class BuildNifiCustomWorkFlow {
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
+            dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
             //启动两次,防止有的组件创建不及时导致没启动
             for (int i = 3; i > 0; i--) {
                 Thread.sleep(200);
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             }
         } catch (ApiException | InterruptedException e) {
+            nifiCustomWorkflowDTO.status=PipelineStatuTypeEnum.failure_publish.getValue();
+            dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
             log.info("此组启动失败:" + e.getMessage());
         }finally {
             acke.acknowledge();
