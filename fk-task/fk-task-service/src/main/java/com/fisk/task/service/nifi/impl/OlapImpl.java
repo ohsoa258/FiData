@@ -1,12 +1,15 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactAttributeDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.doris.IDorisBuild;
@@ -304,5 +307,61 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         List<OlapPO> list = this.query().eq("business_area_id", BusinessAreaId).eq("del_flag", 1).list();
         return list;
     }
+
+    @Override
+    public OlapPO selectOlapPO(int id, int type) {
+        HashMap<String, Object> conditionHashMap = new HashMap<>();
+        OlapPO olapPO = new OlapPO();
+        conditionHashMap.put("del_flag", 1);
+        conditionHashMap.put("id", id);
+        if (Objects.equals(type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)) {
+            conditionHashMap.put("type", 1);
+        } else {
+            conditionHashMap.put("type", 0);
+        }
+        List<OlapPO> olapPOS = mapper.selectByMap(conditionHashMap);
+        if (olapPOS.size() > 0) {
+            olapPO = olapPOS.get(0);
+        } else {
+            log.error("未找到对应指标表" + type + "表id" + id);
+        }
+        return olapPO;
+    }
+
+    @Override
+    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineName,int type,String tableName,int tableAccessId) {
+        NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
+        nifiGetPortHierarchyDTO.workflowName = pipelineName;
+        OlapTableEnum nameByValue = OlapTableEnum.getNameByValue(type);
+        switch (nameByValue) {
+            case KPI:
+                if (tableName.contains("dim")) {
+                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
+                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
+                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                } else {
+                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
+                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
+                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                }
+                break;
+            case DIMENSION:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case FACT:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case PHYSICS:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            default:
+                break;
+        }
+        return nifiGetPortHierarchyDTO;
+    }
+
 
 }

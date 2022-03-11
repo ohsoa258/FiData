@@ -177,6 +177,17 @@ public interface INifiComponentsBuild {
     BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);
 
     /**
+     * 连接两个Processor组件,多种关系
+     *
+     * @param groupId  组id
+     * @param sourceId 源组件的id
+     * @param targetId 目标组件的id
+     * @param type     自动结束的流程
+     * @return 连接entity
+     */
+    BusinessResult<ConnectionEntity> buildConnectProcessor(String groupId, String sourceId, String targetId, List<AutoEndBranchTypeEnum> type);
+
+    /**
      * 查询所有的分组
      *
      * @param groupId 组id

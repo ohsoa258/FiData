@@ -20,4 +20,5 @@ public class TBETLlogPO {
     public int status;
     public String code;
     public String errordesc;
+    public String topicName;
 }

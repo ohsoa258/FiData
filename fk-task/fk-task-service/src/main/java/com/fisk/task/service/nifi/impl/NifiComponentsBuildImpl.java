@@ -877,6 +877,39 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
 
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ConnectionEntity> buildConnectProcessor(String groupId, String sourceId, String targetId, List<AutoEndBranchTypeEnum> type) {
+        //目标组件
+        ConnectableDTO targetProcessor = NifiHelper.buildConnectableDTO(groupId, targetId);
+        //源组件
+        ConnectableDTO sourceProcessor = NifiHelper.buildConnectableDTO(groupId, sourceId);
+        //连接条件
+        List<String> relationships = new ArrayList<>();
+        for (AutoEndBranchTypeEnum autoEndBranchTypeEnum : type) {
+            relationships.add(autoEndBranchTypeEnum.getName());
+        }
+
+        //连接器属性
+        ConnectionDTO dto = new ConnectionDTO();
+        dto.setDestination(targetProcessor);
+        dto.setSource(sourceProcessor);
+        dto.setName("test connect");
+        dto.setSelectedRelationships(relationships);
+
+        ConnectionEntity entity = new ConnectionEntity();
+        entity.setComponent(dto);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        try {
+            ConnectionEntity res = NifiHelper.getProcessGroupsApi().createConnection(groupId, entity);
+            return BusinessResult.of(true, "连接器创建成功", res);
+        } catch (ApiException e) {
+            log.error("连接器创建失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "连接器创建失败" + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessGroupsVO> getAllGroups(String groupId) {
         try {
             groupId = StringUtils.isEmpty(groupId) ? NifiConstants.ApiConstants.ROOT_NODE : groupId;
@@ -1372,6 +1405,9 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
                 ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.saveNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.publishKafkaPipelineProcessorId);
+                ProcessIds.add(tableNifiSettingPO.queryForSupervisionProcessorId);
+                ProcessIds.add(tableNifiSettingPO.convertJsonForSupervisionProcessorId);
+                ProcessIds.add(tableNifiSettingPO.publishKafkaForSupervisionProcessorId);
                 nifiRemoveDTO.appId=appNifiSettingPO.appComponentId;
                 nifiRemoveDTO.ProcessIds = ProcessIds;
                 nifiRemoveDTO.controllerServicesIds = controllerServicesIds;

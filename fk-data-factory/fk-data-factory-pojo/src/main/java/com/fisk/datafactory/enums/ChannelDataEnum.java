@@ -1,6 +1,7 @@
 package com.fisk.datafactory.enums;
 
 import com.fisk.common.enums.BaseEnum;
+import com.fisk.task.enums.OlapTableEnum;
 
 /**
  * @author Lock
@@ -63,6 +64,23 @@ public enum ChannelDataEnum implements BaseEnum {
             }
         }
         return null;
+    }
+
+    public static OlapTableEnum getOlapTableEnum(Integer value){
+        switch (value){
+            case 3:
+                return OlapTableEnum.PHYSICS;
+            case 4:
+                return OlapTableEnum.DIMENSION;
+            case 5:
+                return OlapTableEnum.FACT;
+            case 6:
+                return OlapTableEnum.KPI;
+            case 7:
+                return OlapTableEnum.KPI;
+            default:
+                return null;
+        }
     }
 
 }

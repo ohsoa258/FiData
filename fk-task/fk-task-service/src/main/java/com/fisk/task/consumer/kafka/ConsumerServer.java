@@ -27,7 +27,11 @@ import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.OlapMapper;
+import com.fisk.task.mapper.PipelineTableLogMapper;
+import com.fisk.task.service.nifi.INifiStage;
+import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -83,7 +87,14 @@ public class ConsumerServer {
     BuildDataInputDeletePgTableListener buildDataInputDeletePgTableListener;
     @Resource
     BuildDataInputPgTableListener buildDataInputPgTableListener;
-
+    @Resource
+    IOlap iOlap;
+    @Resource
+    INifiStage iNifiStage;
+    @Resource
+    NifiStageMapper nifiStageMapper;
+    @Resource
+    PipelineTableLogMapper pipelineTableLogMapper;
 
 
     //这里只用来存放reids
@@ -93,106 +104,109 @@ public class ConsumerServer {
         log.info("消费消息 size:" + arrMessage.size());
         //每次进来存进redis里面,key-value,都是topic-name,过期时间为5分钟
         try {
-        for (String mapString : arrMessage) {
-            log.info("mapString信息:" + mapString);
-            if (mapString.contains("topic") && mapString.contains("table_id") && mapString.contains("table_type")) {
-                KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
-                if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
-                    String topicName = kafkaReceiveDTO.topic;
-                    String[] split1 = topicName.split("\\.");
-                    if (split1.length == 5) {
-                        continue;
-                    }
-                    String pipelineName = split1[3];
-                    //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
-                    NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
-                    nifiGetPortHierarchyDTO.workflowName = pipelineName;
-                    switch (kafkaReceiveDTO.tableType) {
-                        case 0:
-                            if (split1[5].contains("dim")) {
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
-                                OlapPO olapPO = selectOlapPO(kafkaReceiveDTO.tableId, 1);
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
-                            } else {
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
-                                OlapPO olapPO = selectOlapPO(kafkaReceiveDTO.tableId, 2);
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
-                            }
-                            break;
-                        case 1:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 2:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        case 3:
-                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
-                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNIfiPortHierarchy(nifiGetPortHierarchyDTO);
-                    NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
-                    //本节点
-                    NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
-                    TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id));
-                    //本节点topic
-                    String topicName1 = topicSelf.topicName;
-                    //下一级
-                    List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
-                    if (nextList == null) {
-                        continue;
-                    }
-                    for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
-                        //下一级本身
-                        NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
-                        //下一级所有的上一级
-                        List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
-                        //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
-                        TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id));
-                        String topicKey = "";
-                        Object key = redisUtil.get(topicDTO.topicName);
-                        if (key == null) {
-                            if (upPortList.size() == 1) {
-                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
-                            } else {
-                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
-                            }
-                        } else {
-                            topicKey = key.toString();
-                            String[] split = topicKey.split(",");
-                            //意思是没全了,所有上游没有调完
-                            if (split.length != upPortList.size()) {
-                                if (upPortList.size() - split.length <= 1) {
-                                    if (topicKey.contains(topicSelf.topicName)) {
-                                        redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
-                                    } else {
-                                        redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
-                                    }
+            for (String mapString : arrMessage) {
+                log.info("mapString信息:" + mapString);
+                if (mapString.contains("topic") && mapString.contains("table_id") && mapString.contains("table_type")) {
+                    KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
+                    if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
+                        String topicName = kafkaReceiveDTO.topic;
+                        String[] split1 = topicName.split("\\.");
+                        if (split1.length == 5) {
+                            continue;
+                        }
+                        String pipelineName = split1[3];
+                        //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
+                        NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
+                        nifiGetPortHierarchyDTO.workflowName = pipelineName;
+                        switch (kafkaReceiveDTO.tableType) {
+                            case 0:
+                                if (split1[5].contains("dim")) {
+                                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
+                                    OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId, 1);
+                                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
                                 } else {
-                                    if (topicKey.contains(topicSelf.topicName)) {
-                                        redisUtil.expire(topicDTO.topicName, 3000L);
-                                    } else {
-                                        redisUtil.set(topicSelf.topicName, topicKey + "," + topicSelf.topicName, 3000L);
-                                    }
+                                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
+                                    OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId, 2);
+                                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                                }
+                                break;
+                            case 1:
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
+                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                                break;
+                            case 2:
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
+                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                                break;
+                            case 3:
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                                break;
+                            default:
+                                break;
+                        }
+
+                        ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNIfiPortHierarchy(nifiGetPortHierarchyDTO);
+                        NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
+                        //本节点
+                        NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
+                        TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id));
+                        //能走到最后说明这一批次走成功了
+                        nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
+                        pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
+                        //本节点topic
+                        String topicName1 = topicSelf.topicName;
+                        //下一级
+                        List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
+                        if (nextList == null) {
+                            continue;
+                        }
+                        for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
+                            //下一级本身
+                            NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
+                            //下一级所有的上一级
+                            List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
+                            //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
+                            TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id));
+                            String topicKey = "";
+                            Object key = redisUtil.get(topicDTO.topicName);
+                            if (key == null) {
+                                if (upPortList.size() == 1) {
+                                    redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
+                                } else {
+                                    redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
                                 }
                             } else {
-                                redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
+                                topicKey = key.toString();
+                                String[] split = topicKey.split(",");
+                                //意思是没全了,所有上游没有调完
+                                if (split.length != upPortList.size()) {
+                                    if (upPortList.size() - split.length <= 1) {
+                                        if (topicKey.contains(topicSelf.topicName)) {
+                                            redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
+                                        } else {
+                                            redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
+                                        }
+                                    } else {
+                                        if (topicKey.contains(topicSelf.topicName)) {
+                                            redisUtil.expire(topicDTO.topicName, 3000L);
+                                        } else {
+                                            redisUtil.set(topicSelf.topicName, topicKey + "," + topicSelf.topicName, 3000L);
+                                        }
+                                    }
+                                } else {
+                                    redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        log.info("消费消息:end");
-        }catch (Exception e){
-            log.error("管道调度报错:"+e.getMessage());
-        }finally {
+            log.info("消费消息:end");
+        } catch (Exception e) {
+            log.error("管道调度报错:" + e.getMessage());
+        } finally {
             ack.acknowledge();
         }
     }
@@ -200,82 +214,51 @@ public class ConsumerServer {
     @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void buildNifiTaskListener(String data, Acknowledgment ack) {
-        buildNifiTaskListener.msg(data,ack);
+        buildNifiTaskListener.msg(data, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {
-        buildAtlasTableAndColumnTaskListener.msg(data,ack);
+        buildAtlasTableAndColumnTaskListener.msg(data, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataModelDorisTableListener.msg(dataInfo,acke);
+        buildDataModelDorisTableListener.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
     public void buildDorisTaskListener(String dataInfo, Acknowledgment acke) {
-        buildDorisTaskListener.msg(dataInfo,acke);
+        buildDorisTaskListener.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void buildNifiCustomWorkFlow(String dataInfo, Acknowledgment acke) {
-        buildNifiCustomWorkFlow.msg(dataInfo,acke);
+        buildNifiCustomWorkFlow.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
     public void buildDataInputDeletePgTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataInputDeletePgTableListener.msg(dataInfo,acke);
+        buildDataInputDeletePgTableListener.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    @MQConsumerLog
+    @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
     public void buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataInputPgTableListener.msg(dataInfo,acke);
+        buildDataInputPgTableListener.msg(dataInfo, acke);
+    }
+
+    @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")
+    public void saveNifiStage(String dataInfo, Acknowledgment acke) {
+        iNifiStage.saveNifiStage(dataInfo,acke);
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public OlapPO selectOlapPO(int id, int type) {
-        HashMap<String, Object> conditionHashMap = new HashMap<>();
-        OlapPO olapPO = new OlapPO();
-        conditionHashMap.put("del_flag", 1);
-        conditionHashMap.put("id", id);
-        if (Objects.equals(type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)) {
-            conditionHashMap.put("type", 1);
-        } else {
-            conditionHashMap.put("type", 0);
-        }
-        List<OlapPO> olapPOS = olapMapper.selectByMap(conditionHashMap);
-        if (olapPOS.size() > 0) {
-            olapPO = olapPOS.get(0);
-        } else {
-            log.error("未找到对应指标表" + type + "表id" + id);
-        }
-        return olapPO;
-    }
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {

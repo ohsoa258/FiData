@@ -1,7 +1,9 @@
 package com.fisk.task.client;
 
 import com.fisk.common.response.ResultEntity;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
+import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -59,11 +61,12 @@ public interface PublishTaskClient {
 
     /**
      * 创建物理表
+     *
      * @param ArDto
      * @return
      */
     @PostMapping("/publishTask/publishBuildPhysicsTableTask")
-    ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto) ;
+    ResultEntity<Object> publishBuildPhysicsTableTask(@RequestBody BuildPhysicalTableDTO ArDto);
 
     /**
      * 元数据删除
@@ -167,7 +170,40 @@ public interface PublishTaskClient {
     ResultEntity<Map<String, String>> converSql(
             @RequestParam("tableName") String tableName, @RequestParam("sql") String sql, @RequestParam(value = "driveType", required = false) String driveType);
 
+    /**
+     * getSqlForPgOds
+     *
+     * @param configDTO configDTO
+     * @return 返回值
+     */
     @PostMapping("/nifi/getSqlForPgOds")
     ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO);
+
+    /**
+     * 获取管道内每张表的状态
+     *
+     * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
+     * @return 返回值
+     */
+    @PostMapping("/pipeline/getPipelineTableLogs")
+    public ResultEntity<List<Object>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
+
+    /**
+     * 获取管道呼吸灯
+     *
+     * @param nifiCustomWorkflows nifiCustomWorkflows
+     * @return 返回值
+     */
+    @PostMapping("/pipeline/getNifiCustomWorkflowDetails")
+    public ResultEntity<List<NifiCustomWorkflowVO>> getNifiCustomWorkflowDetails(@RequestBody List<NifiCustomWorkflowVO> nifiCustomWorkflows);
+
+    /**
+     * 获取nifi阶段信息
+     *
+     * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
+     * @return 返回值
+     */
+    @PostMapping("/pipeline/getNifiStage")
+    public ResultEntity<Object> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
 }
