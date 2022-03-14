@@ -42,18 +42,6 @@
             <version>3.4.0</version>
         </dependency>
 
-        <!-- swagger-ui -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
-        </dependency>
-
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
@@ -98,6 +86,11 @@
             <artifactId>fk-data-factory-api</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fk-datamodel-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- elk -->
         <dependency>
@@ -129,6 +122,7 @@
             <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
         </dependency>
 
+        <!--apollo-->
         <dependency>
             <groupId>com.ctrip.framework.apollo</groupId>
             <artifactId>apollo-client</artifactId>
@@ -142,11 +136,6 @@
             <version>1.8.1</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/src/main/resources/lib/apollo-core-1.8.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fk-datamodel-api</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <!-- ftp -->
