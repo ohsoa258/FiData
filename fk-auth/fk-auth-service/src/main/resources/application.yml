@@ -13,6 +13,8 @@ spring:
   redis:
   #host: 192.168.21.13
     host: 192.168.11.130
+  profiles:
+    active: test
 
 # 配置秘钥,给Jwt加密的私钥,可定期更改
 fk:
