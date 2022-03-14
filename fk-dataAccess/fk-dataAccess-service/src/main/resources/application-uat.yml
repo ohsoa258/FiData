@@ -51,11 +51,11 @@ mybatis-plus:
 # pg数据源配置
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_dw_UAT?stringtype=unspecified
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
   username: postgres
   password: PgPassword01!
 pgsql-ods:
-  url: jdbc:postgresql://192.168.1.250:5432/dmp_ods_UAT?stringtype=unspecified
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
   username: postgres
   password: PgPassword01!
 
