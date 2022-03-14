@@ -33,6 +33,7 @@ import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -256,8 +257,47 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         data.page = query.page;
         // 筛选器左边的模糊搜索查询SQL拼接
         data.where = querySql.toString();
+        Page<NifiCustomWorkflowVO> filter = baseMapper.filter(query.page, data);
 
-        return baseMapper.filter(query.page, data);
+        try {
+            if (CollectionUtils.isNotEmpty(filter.getRecords())) {
+                // 分页对象添加子表组件id集合
+                // TODO 调用task feign接口,查询呼吸灯状态
+                ResultEntity<List<NifiCustomWorkflowVO>> result = publishTaskClient.getNifiCustomWorkflowDetails(buildRecords(filter.getRecords()));
+                if (result.code == ResultEnum.SUCCESS.getCode()) {
+                    filter.setRecords(result.data);
+                    return filter;
+                }
+            }
+        } catch (Exception e) {
+            // 此时task异常保存,不查询呼吸灯状态
+            return filter;
+        }
+        return filter;
+    }
+
+    /**
+     * 分页对象添加子表组件id集合
+     *
+     * @return java.util.List<com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO>
+     * @description 分页对象添加子表组件id集合
+     * @author Lock
+     * @date 2022/3/11 11:37
+     * @version v1.0
+     * @params filter
+     */
+    private List<NifiCustomWorkflowVO> buildRecords(List<NifiCustomWorkflowVO> records) {
+        records.forEach(vo -> {
+            List<Long> componentIds;
+            // 查询当前管道下所有组件
+            List<NifiCustomWorkflowDetailPO> workflowDetailList = customWorkflowDetailImpl.query().eq("workflow_id", vo.workflowId).list();
+            // 将绑定表的组件id集合筛选出来
+            componentIds = workflowDetailList.stream()
+                    .filter(workflow -> StringUtils.isNotBlank(workflow.tableId))
+                    .map(workflow -> workflow.id).collect(Collectors.toList());
+            vo.componentIds = componentIds;
+        });
+        return records;
     }
 
     @Override
