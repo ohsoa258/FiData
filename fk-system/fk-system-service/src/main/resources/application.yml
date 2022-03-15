@@ -3,6 +3,9 @@ server:
 spring:
   application:
     name: user-service
+  # 日志输入环境
+  profiles:
+    active: dev
   datasource:
     url: jdbc:mysql://192.168.11.130:3306/dmp_system_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
     username: root
