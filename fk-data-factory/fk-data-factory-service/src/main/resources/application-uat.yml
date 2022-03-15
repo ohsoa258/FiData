@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: data-factory
+  datasource:
+    url: jdbc:mysql://192.168.21.13:3306/dmp_datafactory_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Password01!
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 192.168.21.13
+
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.fisk.datafactory.entity
+
+fk:
+  auth:
+    clientId: data-factory
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
