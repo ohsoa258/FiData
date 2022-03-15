@@ -22,7 +22,7 @@ spring:
 # pdf文档模板
 dataservice:
   pdf:
-    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fk-dataAccess\\fk-dataAccess-service\\target\\classes
+    path: /root/java/dataaccess/pdf
 
 #授权
 fk:
