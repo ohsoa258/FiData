@@ -317,41 +317,10 @@ public class FactAttributeImpl
     @Override
     public List<FactAttributeUpdateDTO> getFactAttribute(int factId)
     {
-        List<FactAttributeUpdateDTO> data=new ArrayList<>();
-        List<AtomicIndicatorPushDTO> atomicIndicator = atomicIndicators.getAtomicIndicator(factId);
-        if(CollectionUtils.isEmpty(atomicIndicator))
-        {
-            return data;
-        }
-        for (AtomicIndicatorPushDTO item:atomicIndicator)
-        {
-            FactAttributeUpdateDTO dto=new FactAttributeUpdateDTO();
-            switch (item.attributeType)
-            {
-                //退化维度
-                case 0:
-                    dto.factFieldEnName=item.factFieldName;
-                    dto.factFieldLength=item.factFieldLength;
-                    dto.factFieldType=item.factFieldType;
-                    break;
-                //维度键
-                case 1:
-                    dto.factFieldEnName=item.dimensionTableName+"key";
-                    dto.factFieldType="varchar";
-                    dto.factFieldLength=255;
-                    break;
-                //原子指标
-                case 2:
-                    dto.factFieldEnName=item.atomicIndicatorName;
-                    dto.factFieldType=item.factFieldType;
-                    dto.factFieldLength=item.factFieldLength;
-                    break;
-                default:
-                    break;
-            }
-            data.add(dto);
-        }
-        return data;
+        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
+        List<FactAttributePO> list=mapper.selectList(queryWrapper);
+        return FactAttributeMap.INSTANCES.poDetailToDtoList(list);
     }
 
 }

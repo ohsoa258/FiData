@@ -7,9 +7,11 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
+import com.fisk.datamodel.map.WideTableMap;
 import com.fisk.datamodel.mapper.WideTableMapper;
 import com.fisk.datamodel.service.IWideTable;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -31,6 +33,17 @@ public class WideTableImpl implements IWideTable {
     WideTableMapper mapper;
     @Resource
     DimensionImpl dimensionImpl;
+
+    @Value("${generate.date-dimension.datasource.typeName}")
+    private String typeName;
+    @Value("${generate.date-dimension.datasource.driver}")
+    private String driver;
+    @Value("${generate.date-dimension.datasource.url}")
+    private String url;
+    @Value("${generate.date-dimension.datasource.userName}")
+    private String userName;
+    @Value("${generate.date-dimension.datasource.password}")
+    private String password;
 
     @Override
     public List<WideTableListDTO> getWideTableList(int businessId)
@@ -65,7 +78,8 @@ public class WideTableImpl implements IWideTable {
         }
         StringBuilder appendSql=new StringBuilder();
         appendSql.append("select ");
-        appendSql.append(appendField(dto.entity));
+        WideTableAliasDTO wideTableAliasDTO = appendField(dto.entity);
+        appendSql.append(wideTableAliasDTO.sql);
         WideTableSourceRelationsDTO firstTable = dto.relations.get(0);
         appendSql.append(" from "+firstTable.sourceTable+" "+firstTable.joinType+" "+firstTable.targetTable
                         + " on "+firstTable.sourceTable+"."+firstTable.sourceColumn
@@ -82,7 +96,10 @@ public class WideTableImpl implements IWideTable {
                 appendSql.append(attribute.targetTable+"."+attribute.targetColumn+" ");
             }
         }
-        return getWideTableData(appendSql.toString());
+        WideTableQueryPageDTO wideTableData = getWideTableData(appendSql.toString(), dto.pageSize);
+        dto.entity=wideTableAliasDTO.entity;
+        wideTableData.configDTO=dto;
+        return wideTableData;
     }
 
     /**
@@ -90,37 +107,54 @@ public class WideTableImpl implements IWideTable {
      * @param entity
      * @return
      */
-    public String appendField(List<WideTableSourceTableConfigDTO> entity)
+    public WideTableAliasDTO appendField(List<WideTableSourceTableConfigDTO> entity)
     {
+        WideTableAliasDTO dto=new WideTableAliasDTO();
         StringBuilder str=new StringBuilder();
+        List<String> fieldList=new ArrayList<>();
         for (WideTableSourceTableConfigDTO item:entity)
         {
             for (WideTableSourceFieldConfigDTO field:item.columnConfig)
             {
-                str.append(item.tableName+"."+field.fieldName+",");
+                //判断字段名称是否重复
+                if (fieldList.contains(field.fieldName))
+                {
+                    field.alias=item.tableName+"_"+field.fieldName;
+                    str.append(item.tableName+"."+field.fieldName+" as "+item.tableName+"_"+field.fieldName+",");
+                }
+                else {
+                    str.append(item.tableName+"."+field.fieldName+",");
+                }
+                fieldList.add(field.fieldName);
             }
         }
         str.deleteCharAt(str.length()-1);
-        return str.toString();
+        dto.entity=entity;
+        dto.sql=str.toString();
+        return dto;
     }
 
-    public WideTableQueryPageDTO getWideTableData(String sql) {
+    public WideTableQueryPageDTO getWideTableData(String sql,int pageSize) {
         WideTableQueryPageDTO data=new WideTableQueryPageDTO();
         try {
-            String drive="com.mysql.jdbc.Driver";
-            String url="jdbc:mysql://192.168.11.130:3306/dmp_datamodel_db";
-            String username="root";
-            String password="root123";
-            Connection conn = dimensionImpl.getStatement(drive, url, username, password);
+            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
             Statement st = conn.createStatement();
-            String sqlType="mysql";
-            switch (sqlType)
+            switch (typeName.toLowerCase())
             {
                 case "mysql":
-                    sql=sql+" limit "+10;
+                    sql=sql+" limit "+pageSize;
+                    break;
+                case "postgresql":
+                    sql=sql+" limit  "+pageSize;
+                    break;
+                case "doris":
+                    sql=sql+"  limit "+pageSize;
+                    break;
+                case "sqlserver":
+                    sql="select top "+pageSize+" * from ("+sql+") as tabInfo";
                     break;
                 default:
-                    break;
+                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
             ResultSet rs = st.executeQuery(sql);
             // json数组
@@ -140,17 +174,85 @@ public class WideTableImpl implements IWideTable {
                 array.add(jsonObj);
             }
             data.dataArray=array;
+            data.sqlScript=sql;
             //获取列名
             List<String> columnList=new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
                 columnList.add(metaData.getColumnLabel(i));
             }
             data.columnList=columnList;
-            data.pageSize=10;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return data;
+    }
+
+    @Override
+    public ResultEnum addWideTable(WideTableConfigDTO dto)
+    {
+        QueryWrapper<WideTableConfigPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(WideTableConfigPO::getName,dto.name);
+        WideTableConfigPO po=mapper.selectOne(queryWrapper);
+        if (po!=null)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
+        return mapper.insert(WideTableMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public WideTableConfigDTO getWideTable(int id)
+    {
+        WideTableConfigPO po=mapper.selectById(id);
+        if (po==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        return WideTableMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public ResultEnum updateWideTable(WideTableConfigDTO dto)
+    {
+        WideTableConfigPO po=mapper.selectById(dto.id);
+        if (po==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        QueryWrapper<WideTableConfigPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(WideTableConfigPO::getName,dto.name);
+        WideTableConfigPO model=mapper.selectOne(queryWrapper);
+        if (model !=null && model.id !=dto.id)
+        {
+            return ResultEnum.DATA_EXISTS;
+        }
+        return mapper.updateById(WideTableMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteWideTable(int id)
+    {
+        try {
+            WideTableConfigPO po=mapper.selectById(id);
+            if (po==null)
+            {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
+            Statement st = conn.createStatement();
+            String delSql="drop table "+po.name;
+            boolean execute = st.execute(delSql);
+            if (execute)
+            {
+                return ResultEnum.SQL_ERROR;
+            }
+            return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return ResultEnum.SAVE_DATA_ERROR;
     }
 
 }

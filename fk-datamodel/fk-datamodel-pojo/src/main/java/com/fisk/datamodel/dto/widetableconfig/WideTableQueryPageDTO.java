@@ -17,6 +17,8 @@ public class WideTableQueryPageDTO {
 
     public List<String> columnList;
 
-    public int pageSize;
+    public String sqlScript;
+
+    public WideTableFieldConfigDTO configDTO;
 
 }

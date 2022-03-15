@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableListDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
@@ -26,5 +27,34 @@ public interface IWideTable {
      * @return
      */
     WideTableQueryPageDTO executeWideTableSql(WideTableFieldConfigDTO dto);
+
+    /**
+     * 添加宽表
+     * @param dto
+     * @return
+     */
+    ResultEnum addWideTable(WideTableConfigDTO dto);
+
+    /**
+     * 获取宽表详情
+     * @param id
+     * @return
+     */
+    WideTableConfigDTO getWideTable(int id);
+
+    /**
+     * 修改宽表
+     * @param dto
+     * @return
+     */
+    ResultEnum updateWideTable(WideTableConfigDTO dto);
+
+    /**
+     * 删除宽表
+     * @param id
+     * @return
+     */
+    ResultEnum deleteWideTable(int id);
+
 
 }

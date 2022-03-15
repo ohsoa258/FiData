@@ -43,6 +43,7 @@ public class SwaggerConfig {
     public static final String TABLE_HISTORY="table-history--controller";
     public static final String DATA_MANAGEMENT="data-management-controller";
     public static final String TABLE_BUSINESS="table-business-controller";
+    public static final String WIDE_TABLE="wide-table-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -74,6 +75,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TABLE_HISTORY,"表发布历史"))
                 .tags(new Tag(DATA_MANAGEMENT,"数据治理"))
                 .tags(new Tag(TABLE_BUSINESS,"表增量配置"))
+                .tags(new Tag(WIDE_TABLE,"宽表"))
                 .securityContexts(securityContexts());
     }
 

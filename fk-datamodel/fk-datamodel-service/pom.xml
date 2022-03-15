@@ -41,6 +41,27 @@
             <version>3.4.0</version>
         </dependency>
 
+        <!-- sql server驱动 -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>6.4.0.jre7</version>
+        </dependency>
+        <!-- pg驱动 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
+        </dependency>
+        <!-- oracle驱动 -->
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc7</artifactId>
+            <version>11.1.0.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
+        </dependency>
+
         <!-- swagger-ui -->
         <dependency>
             <groupId>io.springfox</groupId>

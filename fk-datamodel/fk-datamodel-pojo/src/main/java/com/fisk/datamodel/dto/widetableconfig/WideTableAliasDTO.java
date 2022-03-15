@@ -8,11 +8,11 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class WideTableFieldConfigDTO {
+public class WideTableAliasDTO {
 
-    public int pageSize;
+    public String sql;
 
     public List<WideTableSourceTableConfigDTO> entity;
 
-    public List<WideTableSourceRelationsDTO> relations;
+
 }
