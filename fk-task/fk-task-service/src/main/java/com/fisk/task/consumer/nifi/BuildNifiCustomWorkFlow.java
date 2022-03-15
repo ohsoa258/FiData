@@ -104,7 +104,7 @@ public class BuildNifiCustomWorkFlow {
         nifiCustomWorkflowDTO.status= PipelineStatuTypeEnum.success_publish.getValue();
         try {
         // 组里共用port,用漏斗连接共同使用,这样向外提供的连接点就只有一个
-        log.info("管道参数::" + dto);
+        log.info("管道参数:" + JSON.toJSONString(dto));
         dto.structure = stringToMap(dto.structure1);
         dto.externalStructure = stringToMap(dto.externalStructure1);
         //多次发布,重建管道
@@ -736,7 +736,7 @@ public class BuildNifiCustomWorkFlow {
             //String topic = properties.get("topic");
             properties.put("topic", consumerTopicName);
             processor.getComponent().getConfig().setProperties(properties);
-            log.debug("组件详情:" + JSON.toJSONString(processor));
+            log.info("组件详情:" + id);
             NifiHelper.getProcessorsApi().updateProcessor(id, processor);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             componentsBuild.enabledProcessor(processor.getId(), processor);

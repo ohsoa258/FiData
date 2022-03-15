@@ -70,11 +70,6 @@ spring:
           password: Password01!
           url: jdbc:mysql://192.168.21.13:3306/dmp_datainput_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
-        dorisdb:
-          driver-class-name: com.mysql.jdbc.Driver
-          password: DsPassword01!
-          url: jdbc:mysql://192.168.21.13:9030/test_db
-          username: root
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: Password01!

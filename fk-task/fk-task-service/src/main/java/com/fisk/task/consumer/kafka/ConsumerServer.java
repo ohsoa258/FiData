@@ -172,6 +172,7 @@ public class ConsumerServer {
                             Object key = redisUtil.get(topicDTO.topicName);
                             if (key == null) {
                                 if (upPortList.size() == 1) {
+                                    log.info("存入redis即将调用的节点1:"+topicDTO.topicName);
                                     redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
                                 } else {
                                     redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
@@ -183,8 +184,10 @@ public class ConsumerServer {
                                 if (split.length != upPortList.size()) {
                                     if (upPortList.size() - split.length <= 1) {
                                         if (topicKey.contains(topicSelf.topicName)) {
+                                            log.info("存入redis即将调用的节点2:"+topicDTO.topicName);
                                             redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                         } else {
+                                            log.info("存入redis即将调用的节点3:"+topicDTO.topicName);
                                             redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                         }
                                     } else {
@@ -195,6 +198,7 @@ public class ConsumerServer {
                                         }
                                     }
                                 } else {
+                                    log.info("存入redis即将调用的节点4:"+topicDTO.topicName);
                                     redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                 }
                             }

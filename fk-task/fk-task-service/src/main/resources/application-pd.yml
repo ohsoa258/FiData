@@ -70,11 +70,6 @@ spring:
           password: .FdF_r&tj4)+
           url: jdbc:mysql://100.102.201.107:3307/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
           username: root
-        dorisdb:
-          driver-class-name: com.mysql.jdbc.Driver
-          password: .FdF_r&tj4)+
-          url: jdbc:mysql://100.102.201.107:9030/test_db
-          username: root
         taskdb:
           driver-class-name: com.mysql.jdbc.Driver
           password: .FdF_r&tj4)+

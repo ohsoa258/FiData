@@ -242,13 +242,16 @@ public class BuildNifiTaskListener {
                 enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size() - 1));
                 //7. 如果是接入,同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
-                    enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
-                    ProcessorEntity processorEntity = processors.get(processors.size() - 1);
-                    ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
-                    processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
-                    processorRunStatusEntity.setRevision(processorEntity.getRevision());
-                    processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
-                    NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
+                    for (int i = 2; i > 0; i--) {
+                        Thread.sleep(200);
+                        enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
+                        ProcessorEntity processorEntity = processors.get(processors.size() - 1);
+                        ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
+                        processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+                        processorRunStatusEntity.setRevision(processorEntity.getRevision());
+                        processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
+                        NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
+                    }
                 }
                 //7. 回写id
                 savaNifiConfig(cfgDbPool.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
