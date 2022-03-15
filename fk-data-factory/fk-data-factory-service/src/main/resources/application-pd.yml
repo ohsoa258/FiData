@@ -2,7 +2,7 @@ spring:
   application:
     name: data-factory
   datasource:
-    url: jdbc:mysql://100.102.201.107:3307/dmp_datafactory_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://10.220.108.140:13307/dmp_datafactory_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: .FdF_r&tj4)+
     driver-class-name: com.mysql.jdbc.Driver

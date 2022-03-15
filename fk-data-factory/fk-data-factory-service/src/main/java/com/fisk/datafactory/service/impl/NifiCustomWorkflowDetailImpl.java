@@ -304,6 +304,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL;
             case 7:
                 return DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL;
+            case 8:
+                return DataClassifyEnum.DATAMODELWIDETABLE;
             default:
                 break;
         }
@@ -337,6 +339,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return OlapTableEnum.CUSTOMWORKDIMENSIONKPI;
             case 7:
                 return OlapTableEnum.CUSTOMWORKFACTKPI;
+            // 宽表
+            case 8:
+                return OlapTableEnum.WIDETABLE;
             default:
                 break;
         }
