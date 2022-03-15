@@ -4,17 +4,6 @@ spring:
     username: root
     password: root123
     driver-class-name: com.mysql.jdbc.Driver
-  rabbitmq:
-    host: 192.168.11.130
-    port: 5672
-    username: admin
-    password: admin
-    virtual-host: test_vhost
-    #消息确认配置项
-    #确认消息已发送到交换机(Exchange)
-    publisher-confirms: true
-    #确认消息已发送到队列(Queue)
-    publisher-returns: true
   redis:
     host: 192.168.11.130
   jackson:
