@@ -3,11 +3,6 @@ datamodeldorisconstr:
   password: Password01!
   url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
   username: root
-dorisconstr:
-  driver_class_name: com.mysql.jdbc.Driver
-  password: Password01!
-  url: jdbc:mysql://192.168.11.134:9030/dmp_ods?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
-  username: root
 eureka:
   client:
     service-url:
@@ -100,7 +95,5 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-  profiles:
-    active: uat
   redis:
     host: 192.168.11.130
