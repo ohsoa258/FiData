@@ -1,0 +1,91 @@
+server:
+  port:8088
+
+# 数据库配置信息
+spring:
+  application:
+    name: chartvisual-service
+  datasource:
+    url: jdbc:mysql://192.168.11.130:3306/dmp_chartvisual_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+
+  # redis配置
+  redis:
+    host: 192.168.11.130
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# 授权
+fk:
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+  auth:
+    clientId: chartvisual-service
+    secret: 1234
+
+# 注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+  instance:
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 5
+logging:
+  level:
+    com:
+      fisk:
+        chartvisual:debug
+    org:
+      springframework:
+        orm:
+          jpa:debug
+  config: classpath:logback-spring.xml
+
+# mybatis-plus配置
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      update-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: ''
+      logic-not-delete-value: 1
+  mapper-locations:classpath: mapper/*.xml
+  configuration:
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+database:
+  type: mysql
+
+# 图片上传地址
+file:
+  uploadurl: /root/nginx/app/file/chartvisual/componentfile
+
+# feign接口超时配置
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 60000
+
+# 组件文件上传地址
+folder:
+  uploadPath: /root/nginx/app/vue/component/component/
+  accessAddress: /component/

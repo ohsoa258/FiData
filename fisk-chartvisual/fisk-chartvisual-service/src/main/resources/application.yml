@@ -1,0 +1,11 @@
+server:
+  port: 8088
+spring:
+  application:
+    name: chart-visual
+  # 日志输入环境
+  profiles:
+    active: dev
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
