@@ -27,13 +27,13 @@ public class GlossaryImpl implements IGlossary {
     @Resource
     AtlasClient atlasClient;
 
-    @Value("${atlas.glossary}")
+    @Value("${atlas.glossary.url}")
     private String glossary;
 
     @Override
     public List<GlossaryAttributeDTO> getGlossaryList()
     {
-        List<GlossaryAttributeDTO> list=new ArrayList<>();
+        List<GlossaryAttributeDTO> list;
         try {
             ResultDataDTO<String> result = atlasClient.Get(glossary);
             if (result.code != ResultEnum.REQUEST_SUCCESS)
