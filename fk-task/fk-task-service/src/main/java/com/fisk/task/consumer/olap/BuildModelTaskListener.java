@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -35,7 +36,6 @@ import java.util.List;
  * @author JinXingWang
  */
 @Component
-@RabbitListener(queues = MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW)
 @Slf4j
 public class BuildModelTaskListener {
 
@@ -54,9 +54,7 @@ public class BuildModelTaskListener {
     @Resource
     private ITBETLIncremental itbetlIncremental;
 
-    @RabbitHandler
-    @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
-    public void msg(String dataInfo, Channel channel, Message message) {
+    public void msg(String dataInfo, Acknowledgment acke) {
         log.info("doris组装参数:"+dataInfo);
         int tableId=0;
         int tableType=0;
@@ -64,21 +62,7 @@ public class BuildModelTaskListener {
         modelPublishStatusDTO.type=1;
 
         try {
-
-
-
         BusinessAreaGetDataDTO data = JSON.parseObject(dataInfo, BusinessAreaGetDataDTO.class);
-        /*//删除此业务域下所有的表与nifi流程
-        List<OlapPO> olapPOS1 = olap.selectOlapByBusinessAreaId(String.valueOf(inpData.businessAreaId));
-        DataModelVO dataModelVO = new DataModelVO();
-        dataModelVO.dataClassifyEnum=DataClassifyEnum.DATAMODELING;
-        dataModelVO.delBusiness=true;
-        dataModelVO.businessId=String.valueOf(inpData.businessAreaId);
-        dataModelVO.userId=inpData.userId;
-        DataModelTableVO dataModelTableVO = new DataModelTableVO();
-        dataModelTableVO.type=OlapTableEnum.KPI;
-        dataModelTableVO.ids=olapPOS1.stream().map(e -> e.getId()).collect(Collectors.toList());
-        dataModelVO.indicatorIdList=dataModelTableVO;*/
             //创建Doris实际表和外部表
             List<OlapPO> olapPOS=  olap.build(data.businessAreaId, data);
             for (OlapPO olapPO:olapPOS) {
@@ -124,6 +108,8 @@ public class BuildModelTaskListener {
                 modelPublishStatusDTO.id= Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
+        }finally {
+            acke.acknowledge();
         }
     }
 }

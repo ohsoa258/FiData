@@ -21,6 +21,7 @@ import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.consumer.doris.BuildDorisTaskListener;
 import com.fisk.task.consumer.nifi.BuildNifiCustomWorkFlow;
 import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
+import com.fisk.task.consumer.olap.BuildModelTaskListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -95,6 +96,8 @@ public class ConsumerServer {
     NifiStageMapper nifiStageMapper;
     @Resource
     PipelineTableLogMapper pipelineTableLogMapper;
+    @Resource
+    BuildModelTaskListener buildModelTaskListener;
 
 
     //这里只用来存放reids
@@ -255,6 +258,12 @@ public class ConsumerServer {
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
     public void buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
         buildDataInputPgTableListener.msg(dataInfo, acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
+    public void buildModelTaskListener(String dataInfo, Acknowledgment acke) {
+        buildModelTaskListener.msg(dataInfo, acke);
     }
 
     @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")
