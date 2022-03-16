@@ -139,7 +139,7 @@
         -->
     </springProfile>
 
-    <springProfile name="uat,test">
+    <springProfile name="uat,test,pd,dev">
         <logger name="org" level="info">
             <appender-ref ref="AppInfo"/>
             <appender-ref ref="Console"/>
