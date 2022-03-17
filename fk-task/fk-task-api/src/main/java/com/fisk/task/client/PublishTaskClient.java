@@ -10,6 +10,8 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pipeline.NifiStageDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -186,7 +188,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getPipelineTableLogs")
-    public ResultEntity<List<Object>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
+    public ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
 
     /**
      * 获取管道呼吸灯
@@ -204,6 +206,6 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiStage")
-    public ResultEntity<Object> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
 }

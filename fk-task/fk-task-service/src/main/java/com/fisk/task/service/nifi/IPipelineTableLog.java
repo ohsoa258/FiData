@@ -2,10 +2,14 @@ package com.fisk.task.service.nifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.entity.PipelineTableLogPO;
 
 import java.util.List;
 
+/**
+ * @author cfk
+ */
 public interface IPipelineTableLog {
 
     /**
@@ -14,7 +18,7 @@ public interface IPipelineTableLog {
      * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
      * @return PipelineTableLogPO
      */
-    PipelineTableLogPO getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    PipelineTableLogDTO getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
 
     /**
@@ -23,8 +27,7 @@ public interface IPipelineTableLog {
      * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
      * @return PipelineTableLogPO
      */
-    List<PipelineTableLogPO> getPipelineTableLogs(List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
-
+    List<PipelineTableLogDTO> getPipelineTableLogs(List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO);
 
 
     /**

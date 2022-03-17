@@ -2,9 +2,13 @@ package com.fisk.task.service.nifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
+import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.entity.NifiStagePO;
 import org.springframework.kafka.support.Acknowledgment;
 
+/**
+ * @author cfk
+ */
 public interface INifiStage {
 
     /**
@@ -13,7 +17,7 @@ public interface INifiStage {
      * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
      * @return NifiStagePO
      */
-    NifiStagePO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
     /**
      * 更新一张表nifi流程的运行状态

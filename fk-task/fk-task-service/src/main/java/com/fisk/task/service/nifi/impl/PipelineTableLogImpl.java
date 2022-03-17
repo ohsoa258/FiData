@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
+import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.map.PipelineTableLogMap;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * @author cfk
+ */
 @Service
 @Slf4j
 public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, PipelineTableLogPO> implements IPipelineTableLog {
@@ -25,19 +31,21 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
     PipelineTableLogMapper pipelineTableLogMapper;
 
     @Override
-    public PipelineTableLogPO getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailPO) {
+    public PipelineTableLogDTO getPipelineTableLog(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailPO) {
         //获取一个表的状态,分开写
         QueryWrapper<PipelineTableLogPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PipelineTableLogPO::getComponentId, nifiCustomWorkflowDetailPO.id);
+        //
         PipelineTableLogPO pipelineTableLogPO = pipelineTableLogMapper.selectOne(queryWrapper);
-        return pipelineTableLogPO;
+        PipelineTableLogDTO pipelineTableLogDTO =PipelineTableLogMap.INSTANCES.poToDto(pipelineTableLogPO);
+        return pipelineTableLogDTO;
     }
 
     @Override
-    public List<PipelineTableLogPO> getPipelineTableLogs(List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTOs) {
-        List<PipelineTableLogPO> pipelineTableLogPOS = new ArrayList<>();
+    public List<PipelineTableLogDTO> getPipelineTableLogs(List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTOs) {
+        List<PipelineTableLogDTO> pipelineTableLogPOS = new ArrayList<>();
         for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : nifiCustomWorkflowDetailDTOs) {
-            PipelineTableLogPO pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
+            PipelineTableLogDTO pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
             pipelineTableLogPOS.add(pipelineTableLog);
         }
         return pipelineTableLogPOS;
@@ -47,10 +55,12 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
     public NifiCustomWorkflowVO getNifiCustomWorkflowDetail(NifiCustomWorkflowVO nifiCustomWorkflow) {
         List<Long> componentIds = nifiCustomWorkflow.componentIds;
         NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = new NifiCustomWorkflowDetailDTO();
-        List<PipelineTableLogPO> pipelineTableLogs = new ArrayList<>();
+        List<PipelineTableLogDTO> pipelineTableLogs = new ArrayList<>();
         for (Long id : componentIds) {
             nifiCustomWorkflowDetailDTO.id = id;
-            PipelineTableLogPO pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
+            //PipelineTableLogPO pipelineTableLog =
+            PipelineTableLogDTO pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
+
             if (pipelineTableLog != null) {
                 pipelineTableLogs.add(pipelineTableLog);
             }
@@ -60,7 +70,7 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
         //一方通行
         if (pipelineTableLogs.size() != 0) {
             boolean statuResolution = true;
-            for (PipelineTableLogPO pipelineTableLog : pipelineTableLogs) {
+            for (PipelineTableLogDTO pipelineTableLog : pipelineTableLogs) {
                 if (Objects.equals(pipelineTableLog.state, NifiStageTypeEnum.RUN_FAILED.getValue())) {
                     statu = NifiStageTypeEnum.RUN_FAILED.getValue();
                     statuResolution = false;
@@ -68,7 +78,7 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
                 }
             }
             if (statuResolution) {
-                for (PipelineTableLogPO pipelineTableLog : pipelineTableLogs) {
+                for (PipelineTableLogDTO pipelineTableLog : pipelineTableLogs) {
                     if (Objects.equals(pipelineTableLog.state, NifiStageTypeEnum.RUNNING.getValue())) {
                         statu = NifiStageTypeEnum.RUNNING.getValue();
                         statuResolution = false;

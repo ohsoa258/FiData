@@ -12,14 +12,13 @@ import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
-import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
+import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.task.TableNifiSettingPO;
 import com.fisk.task.entity.NifiStagePO;
-import com.fisk.task.entity.OlapPO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
-import com.fisk.task.enums.OlapTableEnum;
+import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.INifiStage;
@@ -49,12 +48,13 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
 
     @Override
-    public NifiStagePO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail) {
+    public NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail) {
         QueryWrapper<NifiStagePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(NifiStagePO::getComponentId, nifiCustomWorkflowDetail.id);
-        NifiStagePO nifiStage = nifiStageMapper.selectOne(queryWrapper);
+        NifiStagePO nifiStagePO = nifiStageMapper.selectOne(queryWrapper);
+        NifiStageDTO nifiStageDTO = NifiStageMap.INSTANCES.poToDto(nifiStagePO);
         //通过组件id查到nifi阶段
-        return nifiStage;
+        return nifiStageDTO;
     }
 
     @Override
