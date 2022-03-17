@@ -10,6 +10,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class ClientRegisterController {
 
     @PostMapping("/add")
     @ApiOperation(value = "添加客户端")
-    public ResultEntity<Object> addData(@RequestBody ClientRegisterDTO clientRegister){
+    public ResultEntity<Object> addData(@Validated @RequestBody ClientRegisterDTO clientRegister){
 
         return ResultEntityBuild.build(service.addData(clientRegister));
     }
