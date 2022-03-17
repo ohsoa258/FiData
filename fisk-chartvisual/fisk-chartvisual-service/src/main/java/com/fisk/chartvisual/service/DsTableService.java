@@ -18,7 +18,7 @@ public interface DsTableService {
      * @param id
      * @return
      */
-    DsTableDTO getTableInfo(Integer id);
+    List<DsTableDTO> getTableInfo(Integer id);
 
     /**
      * 获取预览表数据

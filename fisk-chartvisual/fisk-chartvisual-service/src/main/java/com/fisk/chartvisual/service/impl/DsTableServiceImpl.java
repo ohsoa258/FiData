@@ -51,7 +51,8 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     DsTableServiceImpl dsTableService;
 
     @Override
-    public DsTableDTO getTableInfo(Integer id) {
+    public List<DsTableDTO> getTableInfo(Integer id) {
+        List<DsTableDTO> dtoList = new ArrayList<>();
         DataSourceConPO model = sourceConMapper.selectById(id);
         if (model == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -60,7 +61,9 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return this.dataSourceInfo(model,connection,db);
+        DsTableDTO dto = this.dataSourceInfo(model, connection, db);
+        dtoList.add(dto);
+        return dtoList;
     }
 
     @Override

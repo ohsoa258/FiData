@@ -28,7 +28,7 @@ public class DsTableController {
     @ApiOperation("获取表结构信息")
     @GetMapping("/getTableInfo")
     @ResponseBody
-    public ResultEntity<DsTableDTO> getTableInfo(Integer id) {
+    public ResultEntity<List<DsTableDTO>> getTableInfo(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableInfo(id));
     }
 
