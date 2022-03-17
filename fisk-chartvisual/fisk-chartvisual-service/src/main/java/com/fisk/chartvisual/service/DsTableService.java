@@ -18,21 +18,21 @@ public interface DsTableService {
      * @param id
      * @return
      */
-    ResultEntity<DsTableDTO> getTableInfo(Integer id);
+    DsTableDTO getTableInfo(Integer id);
 
     /**
      * 获取预览表数据
      * @param dto
      * @return
      */
-    ResultEntity<List<Map<String, Object>>> getData(ObtainTableDataDTO dto);
+    List<Map<String, Object>> getData(ObtainTableDataDTO dto);
 
     /**
      * 获取表字段结构
      * @param dto
      * @return
      */
-    ResultEntity<List<FieldInfoDTO>> getTableStructure(TableStructureDTO dto);
+    List<FieldInfoDTO> getTableStructure(TableStructureDTO dto);
 
     /**
      * 保存表信息
@@ -46,5 +46,5 @@ public interface DsTableService {
      * @param dataSourceId
      * @return
      */
-    ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer dataSourceId);
+    List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId);
 }

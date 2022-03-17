@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -9,24 +10,19 @@ import lombok.Data;
 @Data
 public class DsTableFieldDTO {
 
-    /**
-     * 源字段
-     */
+
+    @ApiModelProperty(value = "源字段")
     private String sourceField;
-    /**
-     * 目标字段名
-     */
+
+    @ApiModelProperty(value = "目标字段名")
     private String targetField;
-    /**
-     * 源字段类型
-     */
+
+    @ApiModelProperty(value = "源字段类型")
     private String sourceFieldType;
-    /**
-     * 目标字段类型
-     */
+
+    @ApiModelProperty(value = "目标字段类型")
     private String targetFieldType;
-    /**
-     * 字段描述
-     */
+
+    @ApiModelProperty(value = "字段描述")
     private String describe;
 }

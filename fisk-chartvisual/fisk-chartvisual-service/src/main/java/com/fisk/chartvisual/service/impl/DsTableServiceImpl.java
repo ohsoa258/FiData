@@ -51,42 +51,42 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     DsTableServiceImpl dsTableService;
 
     @Override
-    public ResultEntity<DsTableDTO> getTableInfo(Integer id) {
+    public DsTableDTO getTableInfo(Integer id) {
         DataSourceConPO model = sourceConMapper.selectById(id);
         if (model == null){
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, ResultEnum.DATA_NOTEXISTS.getMsg());
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.dataSourceInfo(model,connection,db));
+        return this.dataSourceInfo(model,connection,db);
     }
 
     @Override
-    public ResultEntity<List<Map<String, Object>>> getData(ObtainTableDataDTO dto) {
+    public List<Map<String, Object>> getData(ObtainTableDataDTO dto) {
         DataSourceConPO model = sourceConMapper.selectById(dto.getId());
         if (model == null){
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, ResultEnum.DATA_NOTEXISTS.getMsg());
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.getTableData(model,connection,db,dto));
+        return this.getTableData(model,connection,db,dto);
     }
 
     @Override
-    public ResultEntity<List<FieldInfoDTO>> getTableStructure(TableStructureDTO dto) {
+    public List<FieldInfoDTO> getTableStructure(TableStructureDTO dto) {
         DataSourceConPO model = sourceConMapper.selectById(dto.getId());
         if (model == null){
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, ResultEnum.DATA_NOTEXISTS.getMsg());
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,this.getFieldInfo(model,connection,db,dto));
+        return this.getFieldInfo(model,connection,db,dto);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -117,7 +117,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     }
 
     @Override
-    public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer dataSourceId) {
+    public List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId) {
         QueryWrapper<DsTablePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DsTablePO::getDataSourceId,dataSourceId);
@@ -137,7 +137,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
                 return dto;
             }).collect(Collectors.toList());
 
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,dtoList);
+            return dtoList;
         }
 
         return null;

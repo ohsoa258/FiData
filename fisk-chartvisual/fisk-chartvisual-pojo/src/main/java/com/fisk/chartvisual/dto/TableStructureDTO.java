@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -12,14 +13,12 @@ import java.util.List;
 @Data
 public class TableStructureDTO {
 
-    /**
-     * 数据源id
-     */
+
     @NotNull
+    @ApiModelProperty(value = "数据源id")
     private Integer id;
-    /**
-     * 表名
-     */
+
     @NotNull
+    @ApiModelProperty(value = "表名")
     private List<String> tableName;
 }
