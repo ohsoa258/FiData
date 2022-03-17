@@ -12,6 +12,11 @@ public class WideTableAliasDTO {
 
     public String sql;
 
+    /**
+     * 返回带前缀表名sql
+     */
+    public String preSql;
+
     public List<WideTableSourceTableConfigDTO> entity;
 
 

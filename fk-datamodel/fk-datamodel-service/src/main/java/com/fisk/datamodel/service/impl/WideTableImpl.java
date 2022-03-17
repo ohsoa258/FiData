@@ -81,9 +81,9 @@ public class WideTableImpl implements IWideTable {
         WideTableAliasDTO wideTableAliasDTO = appendField(dto.entity);
         appendSql.append(wideTableAliasDTO.sql);
         WideTableSourceRelationsDTO firstTable = dto.relations.get(0);
-        appendSql.append(" from "+firstTable.sourceTable+" "+firstTable.joinType+" "+firstTable.targetTable
-                        + " on "+firstTable.sourceTable+"."+firstTable.sourceColumn
-                        +" = "+firstTable.targetTable+"."+firstTable.targetColumn
+        appendSql.append(" from "+"external_"+firstTable.sourceTable+" "+firstTable.joinType+" "+"external_"+firstTable.targetTable
+                        + " on "+"external_"+firstTable.sourceTable+"."+firstTable.sourceColumn
+                        +" = "+"external_"+firstTable.targetTable+"."+firstTable.targetColumn
         );
         if (dto.relations.size()>1)
         {
@@ -91,9 +91,9 @@ public class WideTableImpl implements IWideTable {
             {
                 WideTableSourceRelationsDTO attribute=dto.relations.get(i);
                 appendSql.append(" "+attribute.joinType+" ");
-                appendSql.append(attribute.targetTable+" on ");
-                appendSql.append(attribute.sourceTable+"."+attribute.sourceColumn+" = ");
-                appendSql.append(attribute.targetTable+"."+attribute.targetColumn+" ");
+                appendSql.append("external_"+attribute.targetTable+" on ");
+                appendSql.append("external_"+attribute.sourceTable+"."+attribute.sourceColumn+" = ");
+                appendSql.append("external_"+attribute.targetTable+"."+attribute.targetColumn+" ");
             }
         }
         WideTableQueryPageDTO wideTableData = getWideTableData(appendSql.toString(), dto.pageSize);
@@ -119,11 +119,11 @@ public class WideTableImpl implements IWideTable {
                 //判断字段名称是否重复
                 if (fieldList.contains(field.fieldName))
                 {
-                    field.alias=item.tableName+"_"+field.fieldName;
-                    str.append(item.tableName+"."+field.fieldName+" as "+item.tableName+"_"+field.fieldName+",");
+                    field.alias="external_"+item.tableName+"_"+field.fieldName;
+                    str.append("external_"+item.tableName+"."+field.fieldName+" as "+"external_"+item.tableName+"_"+field.fieldName+",");
                 }
                 else {
-                    str.append(item.tableName+"."+field.fieldName+",");
+                    str.append("external_"+item.tableName+"."+field.fieldName+",");
                 }
                 fieldList.add(field.fieldName);
             }
@@ -137,26 +137,28 @@ public class WideTableImpl implements IWideTable {
     public WideTableQueryPageDTO getWideTableData(String sql,int pageSize) {
         WideTableQueryPageDTO data=new WideTableQueryPageDTO();
         try {
+            String newSql=sql.replace("external_","");
             Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
             Statement st = conn.createStatement();
             switch (typeName.toLowerCase())
             {
                 case "mysql":
-                    sql=sql+" limit "+pageSize;
+                    newSql=newSql+" limit "+pageSize;
                     break;
                 case "postgresql":
-                    sql=sql+" limit  "+pageSize;
+                    newSql=newSql+" limit  "+pageSize;
                     break;
                 case "doris":
-                    sql=sql+"  limit "+pageSize;
+                    newSql=newSql+"  limit "+pageSize;
                     break;
                 case "sqlserver":
-                    sql="select top "+pageSize+" * from ("+sql+") as tabInfo";
+                    newSql="select top "+pageSize+" * from ("+sql+") as tabInfo";
                     break;
                 default:
                     throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            ResultSet rs = st.executeQuery(sql);
+
+            ResultSet rs = st.executeQuery(newSql);
             // json数组
             JSONArray array = new JSONArray();
             // 获取列数
