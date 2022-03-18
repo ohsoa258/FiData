@@ -158,6 +158,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         return vo;
     }
 
+    /**
+     * 组装应用名称和表名
+     *
+     * @return void
+     * @description 组装应用名称和表名
+     * @author Lock
+     * @date 2022/3/18 18:26
+     * @version v1.0
+     * @params e
+     * @params flag
+     */
     private void getDataAccessIdsDtoAccess(NifiCustomWorkflowDetailDTO e, int flag) {
 
         DataAccessIdsDTO dto = new DataAccessIdsDTO();
@@ -174,6 +185,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         }
     }
 
+    /**
+     * 组装业务域名称和表名
+     *
+     * @return void
+     * @description 组装业务域名称和表名
+     * @author Lock
+     * @date 2022/3/18 18:27
+     * @version v1.0
+     * @params e
+     * @params flag
+     */
     private void getDataAccessIdsDtoModel(NifiCustomWorkflowDetailDTO e, int flag) {
 
         DataAccessIdsDTO dto = new DataAccessIdsDTO();
@@ -191,6 +213,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         }
     }
 
+    /**
+     * feign接口调用,封装名称
+     *
+     * @return void
+     * @description feign接口调用, 封装名称
+     * @author Lock
+     * @date 2022/3/18 18:28
+     * @version v1.0
+     * @params e
+     * @params result
+     */
     private void getName(NifiCustomWorkflowDetailDTO e, ResultEntity<Object> result) {
         if (result.code == 0) {
             ResultEntity<ComponentIdDTO> resultEntity = JSON.parseObject(JSON.toJSONString(result.data), ResultEntity.class);
