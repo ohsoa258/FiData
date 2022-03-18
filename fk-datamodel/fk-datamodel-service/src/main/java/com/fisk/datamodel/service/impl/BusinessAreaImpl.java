@@ -91,6 +91,8 @@ public class BusinessAreaImpl
     DimensionFolderMapper dimensionFolderMapper;
     @Resource
     BusinessProcessMapper businessProcessMapper;
+    @Resource
+    WideTableImpl wideTable;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -412,7 +414,6 @@ public class BusinessAreaImpl
         BusinessPageDTO data = new BusinessPageDTO();
         data.page = query.page;
         data.where = str.toString();
-
         return baseMapper.queryList(query.page, data);
     }
 
@@ -464,6 +465,8 @@ public class BusinessAreaImpl
             addTableHistory(dto);
             //消息推送
             publishTaskClient.publishOlapCreateModel(data);
+            //宽表发布
+            wideTable.publishWideTable(dto.wideTableIds);
         }
         catch (Exception e)
         {
@@ -476,13 +479,27 @@ public class BusinessAreaImpl
     private void addTableHistory(IndicatorQueryDTO dto)
     {
         List<TableHistoryDTO> list=new ArrayList<>();
-        for (Integer id:dto.factIds)
+        if (CollectionUtils.isEmpty(dto.factIds))
         {
-            TableHistoryDTO data=new TableHistoryDTO();
-            data.remark=dto.remark;
-            data.tableId=id;
-            data.tableType= CreateTypeEnum.CREATE_DORIS.getValue();
-            list.add(data);
+            for (Integer id:dto.factIds)
+            {
+                TableHistoryDTO data=new TableHistoryDTO();
+                data.remark=dto.remark;
+                data.tableId=id;
+                data.tableType= CreateTypeEnum.CREATE_DORIS.getValue();
+                list.add(data);
+            }
+        }
+        if (CollectionUtils.isEmpty(dto.wideTableIds))
+        {
+            for (Integer id:dto.wideTableIds)
+            {
+                TableHistoryDTO data=new TableHistoryDTO();
+                data.remark=dto.remark;
+                data.tableId=id;
+                data.tableType= CreateTypeEnum.CREATE_WIDE_TABLE.getValue();
+                list.add(data);
+            }
         }
         tableHistory.addTableHistory(list);
     }

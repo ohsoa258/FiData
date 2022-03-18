@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
 import com.fisk.datamodel.map.WideTableMap;
@@ -33,6 +34,8 @@ public class WideTableImpl implements IWideTable {
     WideTableMapper mapper;
     @Resource
     DimensionImpl dimensionImpl;
+    @Resource
+    UserHelper userHelper;
 
     @Value("${generate.date-dimension.datasource.typeName}")
     private String typeName;
@@ -255,6 +258,37 @@ public class WideTableImpl implements IWideTable {
             e.printStackTrace();
         }
         return ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 宽表发布
+     * @param ids
+     */
+    public void publishWideTable(List<Integer> ids){
+
+        try {
+            if (!CollectionUtils.isEmpty(ids))
+            {
+                return;
+            }
+            for (Integer id:ids)
+            {
+                WideTableConfigPO po=mapper.selectById(id);
+                if (po==null)
+                {
+                    continue;
+                }
+                WideTableFieldConfigTaskDTO dto=WideTableMap.INSTANCES.poToTaskDto(po);
+                dto.userId=userHelper.getLoginUserInfo().id;
+                JSONObject jsonObject=JSONObject.parseObject(po.configDetails);
+                dto.entity=JSONObject.parseArray(jsonObject.getString("entity"),WideTableSourceTableConfigDTO.class);
+                dto.relations=JSONObject.parseArray(jsonObject.getString("relations"),WideTableSourceRelationsDTO.class);
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
 }

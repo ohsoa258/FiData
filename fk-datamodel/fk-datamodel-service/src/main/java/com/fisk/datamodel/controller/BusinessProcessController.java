@@ -89,7 +89,7 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessProcessList(businessAreaId));
     }
 
-    @ApiOperation("根据维度id集合,发布相关事实")
+    @ApiOperation("根据事实id集合,发布相关事实")
     @PostMapping("/publicFactFolder")
     public ResultEntity<Object> publicFactFolder(@Validated @RequestBody BusinessProcessPublishQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublishBusinessProcess(dto));

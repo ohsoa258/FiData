@@ -19,7 +19,11 @@ public enum  CreateTypeEnum implements BaseEnum {
     /**
      * Doris创建指标表
      */
-    CREATE_DORIS(2,"创建指标表");
+    CREATE_DORIS(2,"创建指标表"),
+    /**
+     * 创建宽表
+     */
+    CREATE_WIDE_TABLE(3,"宽表");
 
     CreateTypeEnum(int value, String name) {
         this.name = name;

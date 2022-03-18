@@ -1,6 +1,7 @@
 package com.fisk.datamodel.map;
 
 import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.entity.WideTableConfigPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -27,5 +28,12 @@ public interface WideTableMap {
      * @return
      */
     WideTableConfigDTO poToDto(WideTableConfigPO po);
+
+    /**
+     * po==>TaskDto
+     * @param po
+     * @return
+     */
+    WideTableFieldConfigTaskDTO poToTaskDto(WideTableConfigPO po);
 
 }
