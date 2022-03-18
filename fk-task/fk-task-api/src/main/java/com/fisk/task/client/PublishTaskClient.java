@@ -6,6 +6,7 @@ import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -207,5 +208,14 @@ public interface PublishTaskClient {
      */
     @PostMapping("/pipeline/getNifiStage")
     public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+
+    /**
+     * 创建宽表
+     *
+     * @param wideTableFieldConfigTaskDTO wideTableFieldConfigTaskDTO
+     * @return 返回值
+     */
+    @PostMapping("/olapTask/publishBuildWideTableTask")
+    public ResultEntity<Object> publishBuildWideTableTask(@RequestBody WideTableFieldConfigTaskDTO wideTableFieldConfigTaskDTO);
 
 }

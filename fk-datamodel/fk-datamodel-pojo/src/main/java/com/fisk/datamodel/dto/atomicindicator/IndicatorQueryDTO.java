@@ -12,4 +12,5 @@ public class IndicatorQueryDTO {
     public int businessAreaId;
     public String remark;
     public List<Integer> factIds;
+    public List<Integer> wideTableIds;
 }
