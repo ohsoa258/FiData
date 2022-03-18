@@ -8,6 +8,7 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
+import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.WideTableMap;
 import com.fisk.datamodel.mapper.WideTableMapper;
 import com.fisk.datamodel.service.IWideTable;
@@ -204,7 +205,9 @@ public class WideTableImpl implements IWideTable {
         {
             return ResultEnum.DATA_EXISTS;
         }
-        return mapper.insert(WideTableMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        WideTableConfigPO data = WideTableMap.INSTANCES.dtoToPo(dto);
+        data.dorisPublish=PublicStatusEnum.UN_PUBLIC.getValue();
+        return mapper.insert(data)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

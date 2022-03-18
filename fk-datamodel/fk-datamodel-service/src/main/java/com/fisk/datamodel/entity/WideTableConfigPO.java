@@ -28,4 +28,8 @@ public class WideTableConfigPO extends BasePO {
      * 配置详情
      */
     public String configDetails;
+    /**
+     * doris发布状态
+     */
+    public int dorisPublish;
 }

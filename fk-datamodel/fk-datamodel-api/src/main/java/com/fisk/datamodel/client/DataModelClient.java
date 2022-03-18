@@ -210,6 +210,6 @@ public interface DataModelClient {
      * @return
      * */
     @GetMapping("/factAttribute/selectAttributeList")
-    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId);
+    ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId);
 
 }

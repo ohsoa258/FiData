@@ -13,11 +13,13 @@ import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
+import com.fisk.datamodel.entity.WideTableConfigPO;
 import com.fisk.datamodel.enums.DataFactoryEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactMapper;
+import com.fisk.datamodel.mapper.WideTableMapper;
 import com.fisk.datamodel.service.IDataFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -40,6 +42,8 @@ public class DataFactoryImpl implements IDataFactory {
     FactMapper factMapper;
     @Resource
     BusinessAreaMapper businessAreaMapper;
+    @Resource
+    WideTableMapper wideTableMapper;
 
     @Override
     public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto)
@@ -57,6 +61,9 @@ public class DataFactoryImpl implements IDataFactory {
         //查询事实
         QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
         List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
+        //查询宽表
+        QueryWrapper<WideTableConfigPO> wideTableConfigPOQueryWrapper=new QueryWrapper<>();
+        List<WideTableConfigPO> wideTableConfigPOList=wideTableMapper.selectList(wideTableConfigPOQueryWrapper);
         //获取枚举类型
         DataFactoryEnum dataFactoryEnum=DataFactoryEnum.getValue((int) dto.id);
         for (BusinessAreaPO item:businessAreaPOList)
@@ -90,6 +97,13 @@ public class DataFactoryImpl implements IDataFactory {
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelFactData(factPOS);
                     break;
+                case WIDE_TABLE:
+                    List<WideTableConfigPO> wideTableConfigPOS=wideTableConfigPOList.stream()
+                            .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
+                            .collect(Collectors.toList());
+                    dataDTO.list=getChannelWideTableData(wideTableConfigPOS);
+                    break;
+                default:
             }
             data.add(dataDTO);
         }
@@ -140,6 +154,22 @@ public class DataFactoryImpl implements IDataFactory {
         return data;
     }
 
+    private List<ChannelDataChildDTO> getChannelWideTableData(List<WideTableConfigPO> wideTableConfigPO)
+    {
+        List<ChannelDataChildDTO> data=new ArrayList<>();
+        if (!CollectionUtils.isEmpty(wideTableConfigPO))
+        {
+            for (WideTableConfigPO wide:wideTableConfigPO)
+            {
+                ChannelDataChildDTO child=new ChannelDataChildDTO();
+                child.id=wide.id;
+                child.tableName=wide.name;
+                data.add(child);
+            }
+        }
+        return data;
+    }
+
     @Override
     public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto)
     {
@@ -150,9 +180,14 @@ public class DataFactoryImpl implements IDataFactory {
         {
             DimensionPO dimensionPO=dimensionMapper.selectById(dto.tableId);
             componentIdDTO.tableName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-        }else {
+        }else if (dto.flag==DataFactoryEnum.ANALYSIS_DIMENSION.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_FACT.getValue()){
             FactPO factPO=factMapper.selectById(dto.tableId);
             componentIdDTO.tableName=factPO==null?"":factPO.factTabName;
+        }
+        else if (dto.flag==DataFactoryEnum.WIDE_TABLE.getValue())
+        {
+            WideTableConfigPO po=wideTableMapper.selectById(dto.tableId);
+            componentIdDTO.tableName=po==null?"":po.name;
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }

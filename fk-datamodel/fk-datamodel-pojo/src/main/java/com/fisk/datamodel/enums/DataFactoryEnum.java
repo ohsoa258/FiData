@@ -12,6 +12,7 @@ public enum DataFactoryEnum implements BaseEnum {
     NUMBER_FACT(5,"数仓事实"),
     ANALYSIS_DIMENSION(6,"分析维度"),
     ANALYSIS_FACT(7,"分析事实"),
+    WIDE_TABLE(8,"宽表"),
     OTHER(-1,"其他");
 
     DataFactoryEnum(int value, String name) {

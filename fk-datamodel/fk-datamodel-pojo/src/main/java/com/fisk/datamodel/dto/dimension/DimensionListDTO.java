@@ -25,6 +25,10 @@ public class DimensionListDTO {
      */
     public int isPublish;
     /**
+     * 是否为时间维度表
+     */
+    public boolean timeTable;
+    /**
      * 维度字段列表
      */
     public List<DimensionAttributeDataDTO> attributeList;

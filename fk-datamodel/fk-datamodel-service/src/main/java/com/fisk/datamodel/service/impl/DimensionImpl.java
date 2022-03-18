@@ -88,7 +88,7 @@ public class DimensionImpl implements IDimension {
         //判断是否为生成时间维度表
         if (dto.timeTable)
         {
-            dto.isPublish= PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+            model.isPublish= PublicStatusEnum.PUBLIC_SUCCESS.getValue();
             //生成物理表以及插入数据
             editDateDimension(dto,dto.dimensionTabName);
         }
