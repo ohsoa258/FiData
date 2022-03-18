@@ -37,6 +37,8 @@ public class MqConstants {
 
         public static final String BUILD_OLAP_CREATEMODEL_FLOW="task.build.olap.createmodel.flow";
 
+        public static final String BUILD_OLAP_WIDE_TABLE_FLOW="task.build.olap.wide.table.flow";
+
         public static final String BUILD_CUSTOMWORK_FLOW="task.build.customwork.flow";
 
     }

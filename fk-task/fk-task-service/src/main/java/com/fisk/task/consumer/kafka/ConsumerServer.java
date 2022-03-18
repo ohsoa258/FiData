@@ -22,6 +22,7 @@ import com.fisk.task.consumer.doris.BuildDorisTaskListener;
 import com.fisk.task.consumer.nifi.BuildNifiCustomWorkFlow;
 import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
 import com.fisk.task.consumer.olap.BuildModelTaskListener;
+import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -98,6 +99,8 @@ public class ConsumerServer {
     PipelineTableLogMapper pipelineTableLogMapper;
     @Resource
     BuildModelTaskListener buildModelTaskListener;
+    @Resource
+    BuildWideTableTaskListener buildWideTableTaskListener;
 
 
     //这里只用来存放reids
@@ -175,7 +178,7 @@ public class ConsumerServer {
                             Object key = redisUtil.get(topicDTO.topicName);
                             if (key == null) {
                                 if (upPortList.size() == 1) {
-                                    log.info("存入redis即将调用的节点1:"+topicDTO.topicName);
+                                    log.info("存入redis即将调用的节点1:" + topicDTO.topicName);
                                     redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
                                 } else {
                                     redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
@@ -187,10 +190,10 @@ public class ConsumerServer {
                                 if (split.length != upPortList.size()) {
                                     if (upPortList.size() - split.length <= 1) {
                                         if (topicKey.contains(topicSelf.topicName)) {
-                                            log.info("存入redis即将调用的节点2:"+topicDTO.topicName);
+                                            log.info("存入redis即将调用的节点2:" + topicDTO.topicName);
                                             redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                         } else {
-                                            log.info("存入redis即将调用的节点3:"+topicDTO.topicName);
+                                            log.info("存入redis即将调用的节点3:" + topicDTO.topicName);
                                             redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                         }
                                     } else {
@@ -201,7 +204,7 @@ public class ConsumerServer {
                                         }
                                     }
                                 } else {
-                                    log.info("存入redis即将调用的节点4:"+topicDTO.topicName);
+                                    log.info("存入redis即将调用的节点4:" + topicDTO.topicName);
                                     redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                 }
                             }
@@ -266,11 +269,16 @@ public class ConsumerServer {
         buildModelTaskListener.msg(dataInfo, acke);
     }
 
-    @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")
-    public void saveNifiStage(String dataInfo, Acknowledgment acke) {
-        iNifiStage.saveNifiStage(dataInfo,acke);
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_WIDE_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public void buildWideTableTaskListener(String dataInfo, Acknowledgment acke) {
+        buildWideTableTaskListener.msg(dataInfo, acke);
     }
 
+    @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")
+    public void saveNifiStage(String dataInfo, Acknowledgment acke) {
+        iNifiStage.saveNifiStage(dataInfo, acke);
+    }
 
 
     @Bean
