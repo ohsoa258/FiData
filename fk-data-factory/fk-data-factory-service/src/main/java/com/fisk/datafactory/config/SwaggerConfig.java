@@ -23,24 +23,26 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "task-schedule-controller";
-    public static final String TAG_2 = "nifi-custom-workflow-controller";
-    public static final String TAG_3 = "nifi-component-controller";
-    public static final String TAG_4 = "nifi-custom-workflow-detail-controller";
-    public static final String TAG_5 = "nifi-port-controller";
-    public static final String TAG_6 = "SystemWebIndex-controller";
+    public static final String TASK_SCHEDULE = "task-schedule-controller";
+    public static final String NIFI_CUSTOM_WORKFLOW = "nifi-custom-workflow-controller";
+    public static final String NIFI_COMPONENT = "nifi-component-controller";
+    public static final String NIFI_CUSTOM_WORKFLOW_DETAIL = "nifi-custom-workflow-detail-controller";
+    public static final String NIFI_PORT = "nifi-port-controller";
+    public static final String SYSTEM_WEB_INDEX = "SystemWebIndex-controller";
+    public static final String PIPELINE_PROCESS_MONITOR = "Pipeline-Process-Monitor-Controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataFactoryApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1, "调度中心"))
-                .tags(new Tag(TAG_2, "NIFI数据管道"))
-                .tags(new Tag(TAG_3, "可视化视图-组件列表"))
-                .tags(new Tag(TAG_4, "NIFI数据管道详情"))
-                .tags(new Tag(TAG_5, "提供nifi参数"))
-                .tags(new Tag(TAG_6, "首页API"))
+                .tags(new Tag(TASK_SCHEDULE, "调度中心"))
+                .tags(new Tag(NIFI_CUSTOM_WORKFLOW, "NIFI数据管道"))
+                .tags(new Tag(NIFI_COMPONENT, "可视化视图-组件列表"))
+                .tags(new Tag(NIFI_CUSTOM_WORKFLOW_DETAIL, "NIFI数据管道详情"))
+                .tags(new Tag(NIFI_PORT, "提供nifi参数"))
+                .tags(new Tag(SYSTEM_WEB_INDEX, "首页API"))
+                .tags(new Tag(PIPELINE_PROCESS_MONITOR, "管道流程监控"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

@@ -16,7 +16,7 @@ import javax.annotation.Resource;
 /**
  * @author Lock
  */
-@Api(tags = {SwaggerConfig.TAG_6})
+@Api(tags = {SwaggerConfig.SYSTEM_WEB_INDEX})
 @RestController
 @RequestMapping("/systemWebIndex")
 public class SystemWebIndexController {

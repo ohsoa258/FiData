@@ -1,8 +1,6 @@
 package com.fisk.datafactory.controller;
 
 import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
@@ -16,7 +14,7 @@ import javax.annotation.Resource;
 /**
  * @author Lock
  */
-@Api(tags = SwaggerConfig.TAG_5)
+@Api(tags = SwaggerConfig.NIFI_PORT)
 @RestController
 @RequestMapping("/nifiPort")
 public class NifiPortController {
