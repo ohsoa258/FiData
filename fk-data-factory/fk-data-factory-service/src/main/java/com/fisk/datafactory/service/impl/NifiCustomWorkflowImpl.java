@@ -146,6 +146,9 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                         }
                         getDataAccessIdsDtoModel(e, 7);
                         break;
+                    case OLAP_WIDETABLE_TASK:
+                        getDataAccessIdsDtoModel(e, 8);
+                        break;
                     default:
                         break;
                 }
@@ -161,18 +164,31 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         dto.appId = Long.valueOf(e.appId);
         dto.tableId = Long.valueOf(e.tableId);
         dto.flag = flag;
-        ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dto);
-        getName(e, result);
+        try {
+            ResultEntity<Object> result = dataAccessClient.getAppNameAndTableName(dto);
+            getName(e, result);
+        } catch (Exception ex) {
+            log.error("远程调用失败，方法名：【data-access:getAppNameAndTableName】");
+            e.appName = null;
+            e.tableName = null;
+        }
     }
 
     private void getDataAccessIdsDtoModel(NifiCustomWorkflowDetailDTO e, int flag) {
 
         DataAccessIdsDTO dto = new DataAccessIdsDTO();
-        dto.appId = Long.valueOf(e.appId);
-        dto.tableId = Long.valueOf(e.tableId);
+        dto.appId = e.appId == null ? null : Long.valueOf(e.appId);
+        dto.tableId = e.tableId == null ? null : Long.valueOf(e.tableId);
         dto.flag = flag;
-        ResultEntity<Object> result = dataModelClient.getAppNameAndTableName(dto);
-        getName(e, result);
+        ResultEntity<Object> result = null;
+        try {
+            result = dataModelClient.getAppNameAndTableName(dto);
+            getName(e, result);
+        } catch (Exception ex) {
+            log.error("远程调用失败，方法名：【data-model:getAppNameAndTableName】");
+            e.appName = null;
+            e.tableName = null;
+        }
     }
 
     private void getName(NifiCustomWorkflowDetailDTO e, ResultEntity<Object> result) {

@@ -35,7 +35,11 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 分析模型事实表任务组
      */
-    OLAP_FACT_TASK(7,"分析模型事实表任务");
+    OLAP_FACT_TASK(7,"分析模型事实表任务"),
+    /**
+     * 分析模型宽表任务
+     */
+    OLAP_WIDETABLE_TASK(8,"分析模型宽表任务");
 
     ChannelDataEnum(int value, String name) {
         this.name = name;
