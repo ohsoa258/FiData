@@ -39,10 +39,10 @@ public class DsTableController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getData(dto));
     }
 
-    @ApiOperation("获取表字段结构")
+    @ApiOperation("获取字段结构库里否存在")
     @PostMapping("/getTableStructure")
     @ResponseBody
-    public ResultEntity<List<FieldInfoDTO>> getTableStructure(@Validated @RequestBody TableStructureDTO dto) {
+    public ResultEntity<List<TableInfoDTO>> getTableStructure(@Validated @RequestBody TableStructureDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableStructure(dto));
     }
 
@@ -58,5 +58,19 @@ public class DsTableController {
     @ResponseBody
     public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.selectByDataSourceId(id));
+    }
+
+    @ApiOperation("获取表结构信息状态")
+    @GetMapping("/getTableInfoStatus")
+    @ResponseBody
+    public ResultEntity<List<ShowDsTableDTO>> getTableInfoStatus(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableInfoStatus(id));
+    }
+
+    @ApiOperation("修改表信息")
+    @PostMapping("/updateTableInfo")
+    @ResponseBody
+    public ResultEntity<ResultEnum> updateTableInfo(@Validated @RequestBody List<UpdateDsTableDTO> dtoList) {
+        return service.updateTableInfo(dtoList);
     }
 }

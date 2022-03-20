@@ -70,7 +70,7 @@ public class BuildSqlServerCommandImpl extends BaseBuildSqlCommand {
     @Override
     public String buildQueryAllTables(String databaseName) {
         StringBuilder str = new StringBuilder();
-        str.append("select name AS table_name from sys.tables");
+        str.append("select name AS tableName from sys.tables");
         return str.toString();
     }
 

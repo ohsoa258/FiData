@@ -62,7 +62,7 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
     @Override
     public String buildQueryAllTables(String databaseName) {
         StringBuilder str = new StringBuilder();
-        str.append("select table_name AS table_name from information_schema.tables");
+        str.append("select table_name AS tableName from information_schema.tables");
         str.append(" where ");
         str.append("table_schema= '").append(databaseName).append("'");
         return str.toString();
@@ -89,7 +89,7 @@ public class BuildMySqlCommandImpl extends BaseBuildSqlCommand {
     @Override
     public String buildQueryFiledInfo(String tableName) {
         StringBuilder str = new StringBuilder();
-        str.append("SELECT column_name AS field,data_type AS type,column_comment AS fieldInfo FROM information_schema. COLUMNS");
+        str.append("SELECT table_name AS table_name,column_name AS field,data_type AS type,column_comment AS fieldInfo FROM information_schema. COLUMNS");
         str.append(" WHERE ");
         str.append("table_name = '").append(tableName).append("'");
         str.append(" AND table_schema = (SELECT DATABASE())");

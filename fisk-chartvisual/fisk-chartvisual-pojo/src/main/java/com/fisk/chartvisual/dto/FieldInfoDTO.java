@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto;
 
+import com.fisk.chartvisual.enums.isExistTypeEnum;
 import lombok.Data;
 
 /**
@@ -7,7 +8,7 @@ import lombok.Data;
  * @date 2022/3/8 15:35
  */
 @Data
-public class FieldInfoDTO extends TableInfoDTO {
+public class FieldInfoDTO {
 
     /**
      * 字段名称
@@ -25,4 +26,8 @@ public class FieldInfoDTO extends TableInfoDTO {
      * 字段描述
      */
     private String fieldInfo;
+    /**
+     * 表是否存在库里
+     */
+    private isExistTypeEnum fieldIsExist;
 }

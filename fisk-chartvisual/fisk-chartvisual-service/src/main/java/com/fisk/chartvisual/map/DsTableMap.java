@@ -2,6 +2,7 @@ package com.fisk.chartvisual.map;
 
 import com.fisk.chartvisual.dto.DsTableFieldDTO;
 import com.fisk.chartvisual.entity.DsTableFieldPO;
+import com.fisk.chartvisual.entity.DsTablePO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -31,4 +32,16 @@ public interface DsTableMap {
      * @return
      */
     List<DsTableFieldDTO> poToDtoDsList(List<DsTableFieldPO> list);
+
+    /**
+     * dataSourceId,tableName => po
+     * @param dataSourceId
+     * @param tableName
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "dataSourceId",target = "dataSourceId"),
+            @Mapping(source = "tableName",target = "tableName")
+    })
+    DsTablePO tableDtoToPo(Integer dataSourceId,String tableName);
 }

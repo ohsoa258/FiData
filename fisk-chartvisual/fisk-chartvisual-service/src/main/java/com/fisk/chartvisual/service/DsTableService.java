@@ -28,11 +28,11 @@ public interface DsTableService {
     List<Map<String, Object>> getData(ObtainTableDataDTO dto);
 
     /**
-     * 获取表字段结构
+     * 获取字段结构库里否存在
      * @param dto
      * @return
      */
-    List<FieldInfoDTO> getTableStructure(TableStructureDTO dto);
+    List<TableInfoDTO> getTableStructure(TableStructureDTO dto);
 
     /**
      * 保存表信息
@@ -47,4 +47,18 @@ public interface DsTableService {
      * @return
      */
     List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId);
+
+    /**
+     * 根据数据源连接获取表名状态
+     * @param id
+     * @return
+     */
+    List<ShowDsTableDTO> getTableInfoStatus(Integer id);
+
+    /**
+     * 修改表信息
+     * @param dto
+     * @return
+     */
+    ResultEntity<ResultEnum> updateTableInfo(List<UpdateDsTableDTO> dto);
 }
