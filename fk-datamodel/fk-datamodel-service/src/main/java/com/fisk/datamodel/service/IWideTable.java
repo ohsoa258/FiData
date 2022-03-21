@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableListDTO;
@@ -55,6 +56,12 @@ public interface IWideTable {
      * @return
      */
     ResultEnum deleteWideTable(int id);
+
+    /**
+     * 更改宽表doris发布状态
+     * @param dto
+     */
+    void updateWideTablePublishStatus(ModelPublishStatusDTO dto);
 
 
 }

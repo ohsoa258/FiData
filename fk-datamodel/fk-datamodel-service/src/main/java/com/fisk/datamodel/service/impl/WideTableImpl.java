@@ -9,6 +9,7 @@ import com.fisk.common.user.UserHelper;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
 import com.fisk.datamodel.enums.*;
@@ -70,6 +71,7 @@ public class WideTableImpl implements IWideTable {
             WideTableListDTO dto=new WideTableListDTO();
             dto.id=item.id;
             dto.name=item.name;
+            dto.dorisPublish=item.dorisPublish;
             List<String> fieldList=new ArrayList<>();
             //获取宽表字段
             WideTableFieldConfigDTO configDTO = JSONObject.parseObject(item.configDetails, WideTableFieldConfigDTO.class);
@@ -155,7 +157,7 @@ public class WideTableImpl implements IWideTable {
                 +firstTable.joinType+" "+"external_"+firstTable.targetTable
         );
         RelateTableTypeEnum relateTableTypeEnum = RelateTableTypeEnum.getValue(firstTable.joinType);
-        if (!relateTableTypeEnum.getName().equals(firstTable.joinType))
+        if (!relateTableTypeEnum.name().equals(firstTable.joinType))
         {
             appendSql.append(" on "+"external_"+firstTable.sourceTable+"."+firstTable.sourceColumn
                     +" = "+"external_"+firstTable.targetTable+"."+firstTable.targetColumn
@@ -378,6 +380,17 @@ public class WideTableImpl implements IWideTable {
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }
+        }
+    }
+
+    @Override
+    public void updateWideTablePublishStatus(ModelPublishStatusDTO dto)
+    {
+        WideTableConfigPO po=mapper.selectById(dto.id);
+        if (po !=null)
+        {
+            po.dorisPublish=dto.status;
+            mapper.updateById(po);
         }
     }
 

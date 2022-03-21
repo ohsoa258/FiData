@@ -14,6 +14,8 @@ public class WideTableListDTO {
 
     public String name;
 
+    public int dorisPublish;
+
     public List<String> fieldList;
 
 }

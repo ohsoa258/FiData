@@ -164,6 +164,13 @@ public interface DataModelClient {
     void updateFactPublishStatus(@RequestBody ModelPublishStatusDTO dto);
 
     /**
+     * 修改宽表发布状态
+     * @param dto
+     */
+    @PutMapping("/wideTable/updateWideTablePublishStatus")
+    void updateWideTablePublishStatus(@RequestBody ModelPublishStatusDTO dto);
+
+    /**
      * 根据appId和tableId 获取appName和tableName
      * @param dto
      * @return

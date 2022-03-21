@@ -4,6 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.service.IWideTable;
@@ -53,6 +54,18 @@ public class WideTableController {
     @PostMapping("/updateWideTable")
     public ResultEntity<Object> updateWideTable(@Validated @RequestBody WideTableConfigDTO dto){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateWideTable(dto));
+    }
+
+    @ApiOperation("删除宽表")
+    @DeleteMapping("/deleteWideTable/{id}")
+    public ResultEntity<Object> deleteWideTable(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(service.deleteWideTable(id));
+    }
+
+    @ApiOperation("修改宽表doris发布状态")
+    @PutMapping("/updateWideTablePublishStatus")
+    public void updateWideTablePublishStatus(@RequestBody ModelPublishStatusDTO dto){
+        service.updateWideTablePublishStatus(dto);
     }
 
 }

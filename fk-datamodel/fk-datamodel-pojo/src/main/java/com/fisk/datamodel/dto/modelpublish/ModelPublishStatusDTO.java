@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class ModelPublishStatusDTO {
     /**
-     * 维度id/事实id
+     * 维度id/事实id/宽表id
      */
     public int id;
     /**

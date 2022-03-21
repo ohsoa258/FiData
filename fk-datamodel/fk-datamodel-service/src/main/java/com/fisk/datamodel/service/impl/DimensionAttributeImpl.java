@@ -272,6 +272,10 @@ public class DimensionAttributeImpl
     public List<ModelMetaDataDTO> getDimensionMetaDataList(List<Integer> factIds)
     {
         List<ModelMetaDataDTO> list=new ArrayList<>();
+        if (CollectionUtils.isEmpty(factIds))
+        {
+            return list;
+        }
         //根据事实表id查询所有字段
         QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.select("associate_dimension_id").in("fact_id",factIds)
