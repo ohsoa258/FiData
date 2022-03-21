@@ -467,8 +467,11 @@ public class BusinessAreaImpl
             }
             //发布历史
             addTableHistory(dto);
-            //消息推送
-            publishTaskClient.publishOlapCreateModel(data);
+            if (!CollectionUtils.isEmpty(dto.factIds))
+            {
+                //消息推送
+                publishTaskClient.publishOlapCreateModel(data);
+            }
             //宽表发布
             wideTable.publishWideTable(dto);
         }
