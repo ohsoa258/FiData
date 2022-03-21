@@ -1,9 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.ComponentsClassDTO;
-import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
-import com.fisk.chartvisual.dto.ComponentsDTO;
-import com.fisk.chartvisual.dto.ComponentsEditDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.service.ComponentsService;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
@@ -53,7 +50,7 @@ public class ComponentsController {
     @ApiOperation("保存组件并上传服务器")
     @PostMapping("/upload")
     @ResponseBody
-    public ResultEntity<String> upload( ComponentsDTO dto,@RequestParam("file") MultipartFile file) {
+    public ResultEntity<String> upload(SaveComponentsDTO dto, @RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponents(dto,file));
     }
 
@@ -85,5 +82,12 @@ public class ComponentsController {
     @DeleteMapping(value = "/deleteComponentsClass")
     public ResultEntity<ResultEnum> deleteComponentsClass(Integer id) {
         return ResultEntityBuild.build(componentsService.deleteComponentsClass(id));
+    }
+
+    @ApiOperation("保存组件不同版本信息")
+    @PostMapping("/saveComponentsOption")
+    @ResponseBody
+    public ResultEntity<String> saveComponentsOption( SaveComponentsOptionDTO dto, @RequestParam("file") MultipartFile file) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponentsOption(dto,file));
     }
 }

@@ -1,10 +1,8 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.ComponentsClassDTO;
-import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
-import com.fisk.chartvisual.dto.ComponentsDTO;
-import com.fisk.chartvisual.dto.ComponentsEditDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
+import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -41,13 +39,31 @@ public interface ComponentsMap {
     /**
      * dto => po
      * @param dto
+     * @return
+     */
+    ComponentsPO compDtoToPo(SaveComponentsDTO dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "componentId",target = "componentId"),
+            @Mapping(source = "uploadAddress",target = "path")
+    })
+    ComponentsOptionPO optionDtoToPo(ComponentsOptionDTO dto,Integer componentId,String uploadAddress);
+
+    /**
+     * dto => po
+     * @param dto
      * @param uploadAddress
      * @return
      */
     @Mappings({
             @Mapping(source = "uploadAddress",target = "path")
     })
-    ComponentsPO compDtoToPo(ComponentsDTO dto, String uploadAddress);
+    ComponentsOptionPO optionDtoToPo(SaveComponentsOptionDTO dto,String uploadAddress);
 
     /**
      * dto => po
@@ -55,6 +71,13 @@ public interface ComponentsMap {
      * @return
      */
     ComponentsPO compEditDtoToPo(ComponentsEditDTO dto);
+
+    /**
+     * dto => po
+     * @param dtoList
+     * @return
+     */
+    List<ComponentsOptionPO> optionEditDtoToPo(List<ComponentsOptionDTO> dtoList);
 
     /**
      * dto => po
@@ -69,4 +92,11 @@ public interface ComponentsMap {
      * @return
      */
     List<ComponentsDTO> poToDtoList(List<ComponentsPO> po);
+
+    /**
+     * po => dto list
+     * @param optionPoList
+     * @return
+     */
+    List<ComponentsOptionDTO> poToOptionList(List<ComponentsOptionPO> optionPoList);
 }

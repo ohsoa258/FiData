@@ -3,24 +3,25 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.ComponentsClassDTO;
-import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
-import com.fisk.chartvisual.dto.ComponentsDTO;
-import com.fisk.chartvisual.dto.ComponentsEditDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
+import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
 import com.fisk.chartvisual.map.ComponentsMap;
 import com.fisk.chartvisual.mapper.ComponentsClassMapper;
 import com.fisk.chartvisual.mapper.ComponentsMapper;
+import com.fisk.chartvisual.mapper.ComponentsOptionMapper;
 import com.fisk.chartvisual.service.ComponentsService;
 import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipHelper;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipUtils;
+import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -56,6 +57,8 @@ public class ComponentsServiceImpl implements ComponentsService {
     ComponentsClassMapper classMapper;
     @Resource
     ComponentsService componentsService;
+    @Resource
+    ComponentsOptionMapper optionMapper;
 
     @Override
     public List<ComponentsClassDTO> listData() {
@@ -91,6 +94,22 @@ public class ComponentsServiceImpl implements ComponentsService {
     }
 
     /**
+     * 查询每个组件的不同版本数据
+     * @param componentId
+     */
+    public List<ComponentsOptionDTO> getOptionData(Integer componentId){
+        QueryWrapper<ComponentsOptionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsOptionPO::getComponentId,componentId);
+        List<ComponentsOptionPO> optionPoList = optionMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(optionPoList)){
+            return ComponentsMap.INSTANCES.poToOptionList(optionPoList);
+        }
+
+        return null;
+    }
+
+    /**
      * 查询菜单表子级
      * @param id
      */
@@ -111,9 +130,27 @@ public class ComponentsServiceImpl implements ComponentsService {
         queryWrapper.lambda().eq(ComponentsPO::getClassId,id);
 
         List<ComponentsPO> componentsList = componentsMapper.selectList(queryWrapper);
-        if (componentsList != null){
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,ComponentsMap.INSTANCES.poToDtoList(componentsList));
+
+        if (CollectionUtils.isNotEmpty(componentsList)){
+            List<ComponentsDTO> dtoList = componentsList.stream().filter(Objects::nonNull).map(e -> {
+                // 查询每个组件的不同版本数据
+                List<ComponentsOptionDTO> optionData = this.getOptionData((int) e.getId());
+
+                ComponentsDTO dto = new ComponentsDTO();
+                dto.setId((int) e.getId());
+                dto.setClassId(e.getClassId().intValue());
+                dto.setName(e.getName());
+                dto.setIcon(e.getIcon());
+                if (CollectionUtils.isNotEmpty(optionData)) {
+                    dto.setOptionList(optionData);
+                }
+
+                return dto;
+            }).collect(Collectors.toList());
+
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,dtoList);
         }
+
 
         return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS,null);
     }
@@ -124,7 +161,7 @@ public class ComponentsServiceImpl implements ComponentsService {
     }
 
     @Override
-    public String saveComponents(ComponentsDTO dto,MultipartFile file) {
+    public String saveComponents(SaveComponentsDTO dto,MultipartFile file) {
         QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(ComponentsPO::getName,dto.getName());
         ComponentsPO components = componentsMapper.selectOne(queryWrapper);
@@ -133,19 +170,23 @@ public class ComponentsServiceImpl implements ComponentsService {
         }
 
         String uploadAddress = this.uploadZip(file);
-        componentsMapper.insert(ComponentsMap.INSTANCES.compDtoToPo(dto,uploadAddress));
+        // 保存组件表
+        ComponentsPO po = ComponentsMap.INSTANCES.compDtoToPo(dto);
+        componentsMapper.insert(po);
+        // 保存组件版本信息表
+        optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto.getOption(),(int)po.getId(),uploadAddress));
         return uploadAddress;
     }
 
     @Override
     public ResultEnum downloadFile(Integer id, HttpServletResponse response) {
-        ComponentsPO components = componentsMapper.selectById(id);
-        if (components == null){
+        ComponentsOptionPO optionPo = optionMapper.selectById(id);
+        if (optionPo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         // 源文件的路径
-        String zipName = components.getPath().substring(10);
+        String zipName = optionPo.getPath().substring(10);
         String sourcePath = uploadPath + zipName;
 
         try {
@@ -164,19 +205,36 @@ public class ComponentsServiceImpl implements ComponentsService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        int res = componentsMapper.updateById(ComponentsMap.INSTANCES.compEditDtoToPo(dto));
-        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 修改组件
+        componentsMapper.updateById(ComponentsMap.INSTANCES.compEditDtoToPo(dto));
+
+        // 修改组件配置表
+        List<ComponentsOptionPO> optionPoList = ComponentsMap.INSTANCES.optionEditDtoToPo(dto.getOptionList());
+        if (CollectionUtils.isNotEmpty(optionPoList)){
+            optionPoList.stream().filter(Objects::nonNull).forEach(e -> {
+                int res = optionMapper.updateById(e);
+                if (res <= 0){
+                    throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+                }
+            });
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum deleteComponents(Integer id) {
-        boolean components = this.isExistComponents(id);
-        if (components == false){
+        ComponentsPO components = componentsMapper.selectById(id);
+        if (components == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        // 删除组件
         int res = componentsMapper.deleteById(id);
-        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
+        // 删除组件配置
+        ResultEnum resultEnum = this.deleteCompOption((int) components.getId());
+        return resultEnum;
     }
 
     @Override
@@ -199,6 +257,50 @@ public class ComponentsServiceImpl implements ComponentsService {
 
         int res = classMapper.deleteById(id);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String saveComponentsOption(SaveComponentsOptionDTO dto, MultipartFile file) {
+        // 判断组件是否存在
+        QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsPO::getId,dto.getComponentId());
+        ComponentsPO componentsPo = componentsMapper.selectOne(queryWrapper);
+        if (componentsPo == null){
+            return ResultEnum.DATA_NOTEXISTS.getMsg();
+        }
+
+        // 判断组件配置表是否有重复数据
+        QueryWrapper<ComponentsOptionPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(ComponentsOptionPO::getComponentId,dto.getComponentId())
+                .eq(ComponentsOptionPO::getVersion,dto.getVersion())
+                .last("limit 1");
+        ComponentsOptionPO optionPo = optionMapper.selectOne(query);
+        if (optionPo != null){
+            return ResultEnum.DATA_EXISTS.getMsg();
+        }
+
+        String uploadAddress = this.uploadZip(file);
+        optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
+        return uploadAddress;
+    }
+
+    /**
+     * 删除组件配置
+     * @param id
+     */
+    public ResultEnum deleteCompOption(Integer id){
+        QueryWrapper<ComponentsOptionPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(ComponentsOptionPO::getComponentId,id);
+        int res = optionMapper.delete(query);
+        if (res <= 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**

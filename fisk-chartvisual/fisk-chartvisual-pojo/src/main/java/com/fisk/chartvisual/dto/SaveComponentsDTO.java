@@ -9,11 +9,11 @@ import java.util.List;
  * @date 2022/2/9 15:32
  */
 @Data
-public class ComponentsDTO {
+public class SaveComponentsDTO {
 
     private Integer id;
     private Integer classId;
     private String name;
     private String icon;
-    private List<ComponentsOptionDTO> optionList;
+    private ComponentsOptionDTO option;
 }

@@ -9,10 +9,11 @@ import lombok.Data;
  * @date 2022/2/9 14:50
  */
 @Data
-@TableName("tb_components")
-public class ComponentsPO extends BasePO {
+@TableName("tb_components_option")
+public class ComponentsOptionPO extends BasePO {
 
-    private Long classId;
-    private String name;
-    private String icon;
+    private Integer componentId;
+    private String description;
+    private String version;
+    private String path;
 }

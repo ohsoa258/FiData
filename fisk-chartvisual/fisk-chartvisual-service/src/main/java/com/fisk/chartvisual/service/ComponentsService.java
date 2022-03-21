@@ -1,9 +1,6 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.ComponentsClassDTO;
-import com.fisk.chartvisual.dto.ComponentsClassEditDTO;
-import com.fisk.chartvisual.dto.ComponentsDTO;
-import com.fisk.chartvisual.dto.ComponentsEditDTO;
+import com.fisk.chartvisual.dto.*;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +40,7 @@ public interface ComponentsService {
      * @param file
      * @return
      */
-    String saveComponents(ComponentsDTO dto,MultipartFile file);
+    String saveComponents(SaveComponentsDTO dto, MultipartFile file);
 
     /**
      * 组件压缩包下载
@@ -80,4 +77,12 @@ public interface ComponentsService {
      * @return
      */
     ResultEnum deleteComponentsClass(Integer id);
+
+    /**
+     * 保存组件不同版本信息
+     * @param dto
+     * @param file
+     * @return
+     */
+    String saveComponentsOption(SaveComponentsOptionDTO dto, MultipartFile file);
 }
