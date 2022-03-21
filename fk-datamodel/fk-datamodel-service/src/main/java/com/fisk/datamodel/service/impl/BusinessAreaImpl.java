@@ -430,9 +430,13 @@ public class BusinessAreaImpl
             //获取事实表关联的维度
             data.dimensionList=dimensionAttribute.getDimensionMetaDataList(dto.factIds);
             //更改事实表Doris发布状态
-            QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.in("id",dto.factIds);
-            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
+            List<FactPO> factPOList=new ArrayList<>();
+            if (!CollectionUtils.isEmpty(dto.factIds))
+            {
+                QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+                queryWrapper.in("id",dto.factIds);
+                factPOList=factMapper.selectList(queryWrapper);
+            }
             if (!CollectionUtils.isEmpty(factPOList))
             {
                 for (FactPO po:factPOList)
