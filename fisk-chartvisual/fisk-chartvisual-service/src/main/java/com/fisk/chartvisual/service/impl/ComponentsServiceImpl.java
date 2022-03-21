@@ -100,7 +100,8 @@ public class ComponentsServiceImpl implements ComponentsService {
     public List<ComponentsOptionDTO> getOptionData(Integer componentId){
         QueryWrapper<ComponentsOptionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ComponentsOptionPO::getComponentId,componentId);
+                .eq(ComponentsOptionPO::getComponentId,componentId)
+                .orderByDesc(ComponentsOptionPO::getCreateTime);
         List<ComponentsOptionPO> optionPoList = optionMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(optionPoList)){
             return ComponentsMap.INSTANCES.poToOptionList(optionPoList);
