@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
+import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -191,14 +192,14 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         sql.append(" ( ");
         String keyName=(dto.factTable+"key").toLowerCase();
         //维度字段
-        dto.list.stream().filter(e->e.attributeType==2).forEach(e->{
+        dto.list.stream().filter(e->e.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue()).forEach(e->{
             sql.append("`"+e.dimensionTableName.substring(4)+"key` VARCHAR(50) COMMENT \"\" , ");
             aggregateKeys.add(e.dimensionTableName);
         });
         //退化维度
-        dto.list.stream().filter(e->e.attributeType==1).forEach(e-> sql.append("`"+e.factFieldName+"` "+e.factFieldType+"("+e.factFieldLength+") COMMENT \"\", "));
+        dto.list.stream().filter(e -> e.attributeType == FactAttributeEnum.DEGENERATION_DIMENSION.getValue()).forEach(e-> sql.append("`"+e.factFieldName+"` "+e.factFieldType+"("+e.factFieldLength+") COMMENT \"\", "));
         //聚合字段
-        dto.list.stream().filter(e->e.attributeType==3).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` BIGINT "+e.aggregationLogic+" COMMENT \"\", "));
+        dto.list.stream().filter(e -> e.attributeType == FactAttributeEnum.MEASURE.getValue()).forEach(e-> sql.append("`"+e.atomicIndicatorName+"` BIGINT "+e.aggregationLogic+" COMMENT \"\", "));
         sql.deleteCharAt(sql.lastIndexOf(","));
         sql.append(" ) ");
         if (aggregateKeys.size()>0){
@@ -223,7 +224,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder filedsBuilder = new StringBuilder();
         String tableName=dto.factTable;
         dto.list.forEach(e->{
-            if(e.attributeType==3){
+            if (e.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()) {
                 aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
                 aggregationFunSql.append("(");
@@ -232,11 +233,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 aggregationFunSql.append(e.atomicIndicatorName.toLowerCase());
                 aggregationFunSql.append(" , ");
                 filedsBuilder.append(e.atomicIndicatorName.toLowerCase()+", ");
-            }else if(e.attributeType==2){
+            } else if (e.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()) {
                 groupSql.append(""+e.dimensionTableName.substring(4)+"key , ");
                 aggregationFunSql.append("COALESCE("+e.dimensionTableName.substring(4)+"key,'') AS "+e.dimensionTableName.toLowerCase().substring(4)+"key , ");
                 filedsBuilder.append(e.dimensionTableName.toLowerCase().substring(4)+"key , ");
-            }else if(e.attributeType==1){
+            } else if (e.attributeType == FactAttributeEnum.DEGENERATION_DIMENSION.getValue()) {
                 groupSql.append(""+e.factFieldName+", ");
                 aggregationFunSql.append("COALESCE("+e.factFieldName+",'') AS "+e.factFieldName.toLowerCase()+" , ");
                 filedsBuilder.append(e.factFieldName.toLowerCase()+" , ");
