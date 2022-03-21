@@ -466,7 +466,7 @@ public class BusinessAreaImpl
             //消息推送
             publishTaskClient.publishOlapCreateModel(data);
             //宽表发布
-            wideTable.publishWideTable(dto.wideTableIds);
+            wideTable.publishWideTable(dto);
         }
         catch (Exception e)
         {

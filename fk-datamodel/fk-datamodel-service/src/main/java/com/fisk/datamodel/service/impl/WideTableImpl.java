@@ -6,9 +6,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.widetableconfig.*;
 import com.fisk.datamodel.entity.WideTableConfigPO;
-import com.fisk.datamodel.enums.PublicStatusEnum;
+import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.WideTableMap;
 import com.fisk.datamodel.mapper.WideTableMapper;
 import com.fisk.datamodel.service.IWideTable;
@@ -37,6 +40,10 @@ public class WideTableImpl implements IWideTable {
     DimensionImpl dimensionImpl;
     @Resource
     UserHelper userHelper;
+    @Resource
+    DimensionFolderImpl dimensionFolder;
+    @Resource
+    BusinessProcessImpl businessProcess;
 
     @Value("${generate.date-dimension.datasource.typeName}")
     private String typeName;
@@ -84,24 +91,11 @@ public class WideTableImpl implements IWideTable {
         }
         StringBuilder appendSql=new StringBuilder();
         appendSql.append("select ");
+        //拼接查询字段
         WideTableAliasDTO wideTableAliasDTO = appendField(dto.entity);
         appendSql.append(wideTableAliasDTO.sql);
-        WideTableSourceRelationsDTO firstTable = dto.relations.get(0);
-        appendSql.append(" from "+"external_"+firstTable.sourceTable+" "+firstTable.joinType+" "+"external_"+firstTable.targetTable
-                        + " on "+"external_"+firstTable.sourceTable+"."+firstTable.sourceColumn
-                        +" = "+"external_"+firstTable.targetTable+"."+firstTable.targetColumn
-        );
-        if (dto.relations.size()>1)
-        {
-            for (int i=1;i<dto.relations.size();i++)
-            {
-                WideTableSourceRelationsDTO attribute=dto.relations.get(i);
-                appendSql.append(" "+attribute.joinType+" ");
-                appendSql.append("external_"+attribute.targetTable+" on ");
-                appendSql.append("external_"+attribute.sourceTable+"."+attribute.sourceColumn+" = ");
-                appendSql.append("external_"+attribute.targetTable+"."+attribute.targetColumn+" ");
-            }
-        }
+        //拼接关联表
+        appendSql.append(appendRelateTable(dto.relations));
         WideTableQueryPageDTO wideTableData = getWideTableData(appendSql.toString(), dto.pageSize);
         dto.entity=wideTableAliasDTO.entity;
         wideTableData.configDTO=dto;
@@ -138,6 +132,50 @@ public class WideTableImpl implements IWideTable {
         dto.entity=entity;
         dto.sql=str.toString();
         return dto;
+    }
+
+    /**
+     * SQL拼接关联表
+     * @param relations
+     * @return
+     */
+    public StringBuilder appendRelateTable(List<WideTableSourceRelationsDTO> relations){
+        DataBaseTypeEnum value = DataBaseTypeEnum.getValue(typeName.toLowerCase());
+        if (value.getValue()==DataBaseTypeEnum.MYSQL.getValue())
+        {
+            List<WideTableSourceRelationsDTO> full_join = relations.stream().filter(e -> e.joinType.equals("full join")).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(full_join))
+            {
+                throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
+            }
+        }
+        WideTableSourceRelationsDTO firstTable = relations.get(0);
+        StringBuilder appendSql=new StringBuilder();
+        appendSql.append(" from "+"external_"+firstTable.sourceTable+" "
+                +firstTable.joinType+" "+"external_"+firstTable.targetTable
+        );
+        RelateTableTypeEnum relateTableTypeEnum = RelateTableTypeEnum.getValue(firstTable.joinType);
+        if (!relateTableTypeEnum.getName().equals(firstTable.joinType))
+        {
+            appendSql.append(" on "+"external_"+firstTable.sourceTable+"."+firstTable.sourceColumn
+                    +" = "+"external_"+firstTable.targetTable+"."+firstTable.targetColumn
+            );
+        }
+        if (relations.size()>1)
+        {
+            for (int i=1;i<relations.size();i++)
+            {
+                WideTableSourceRelationsDTO attribute=relations.get(i);
+                appendSql.append(" "+attribute.joinType+" ");
+                appendSql.append("external_"+attribute.targetTable);
+                if (!firstTable.joinType.equals("cross join"))
+                {
+                    appendSql.append(" on "+"external_"+attribute.sourceTable+"."+attribute.sourceColumn+" = ");
+                    appendSql.append("external_"+attribute.targetTable+"."+attribute.targetColumn+" ");
+                }
+            }
+        }
+        return appendSql;
     }
 
     public WideTableQueryPageDTO getWideTableData(String sql,int pageSize) {
@@ -267,33 +305,79 @@ public class WideTableImpl implements IWideTable {
 
     /**
      * 宽表发布
-     * @param ids
+     * @param dto
      */
-    public void publishWideTable(List<Integer> ids){
-
+    public void publishWideTable(IndicatorQueryDTO dto){
         try {
-            if (!CollectionUtils.isEmpty(ids))
+            if (!CollectionUtils.isEmpty(dto.wideTableIds))
             {
                 return;
             }
-            for (Integer id:ids)
+            for (Integer id:dto.wideTableIds)
             {
                 WideTableConfigPO po=mapper.selectById(id);
                 if (po==null)
                 {
                     continue;
                 }
-                WideTableFieldConfigTaskDTO dto=WideTableMap.INSTANCES.poToTaskDto(po);
-                dto.userId=userHelper.getLoginUserInfo().id;
+                WideTableFieldConfigTaskDTO data=WideTableMap.INSTANCES.poToTaskDto(po);
+                data.userId=userHelper.getLoginUserInfo().id;
                 JSONObject jsonObject=JSONObject.parseObject(po.configDetails);
-                dto.entity=JSONObject.parseArray(jsonObject.getString("entity"),WideTableSourceTableConfigDTO.class);
-                dto.relations=JSONObject.parseArray(jsonObject.getString("relations"),WideTableSourceRelationsDTO.class);
-                publishTaskClient.publishBuildWideTableTask(dto);
+                data.entity=JSONObject.parseArray(jsonObject.getString("entity"),WideTableSourceTableConfigDTO.class);
+                data.relations=JSONObject.parseArray(jsonObject.getString("relations"),WideTableSourceRelationsDTO.class);
+                //创建外部表
+                createExternalTable(data.entity,dto);
+                //宽表创建
+                publishTaskClient.publishBuildWideTableTask(data);
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * doris创建维度和事实外部表
+     * @param entity
+     * @param dto
+     */
+    public void createExternalTable(List<WideTableSourceTableConfigDTO> entity,IndicatorQueryDTO dto){
+        //过滤维度
+        List<Integer> dimensionIdList = entity.stream()
+                .filter(e->e.tableType==CreateTypeEnum.CREATE_DIMENSION.getValue())
+                .map(e -> e.getTableId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(dimensionIdList))
+        {
+            DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
+            queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
+            queryDTO.remark=dto.remark;
+            queryDTO.dimensionIds=dimensionIdList;
+            queryDTO.businessAreaId=dto.businessAreaId;
+            queryDTO.openTransmission=true;
+            ResultEnum resultEnum = dimensionFolder.batchPublishDimensionFolder(queryDTO);
+            if (resultEnum.getCode()!=ResultEnum.SUCCESS.getCode())
+            {
+                throw new FkException(ResultEnum.PUBLISH_FAILURE);
+            }
+        }
+        //过滤事实
+        List<Integer> factIdList = entity.stream()
+                .filter(e->e.tableType==CreateTypeEnum.CREATE_FACT.getValue())
+                .map(e -> e.getTableId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(factIdList))
+        {
+            BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
+            queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
+            queryDTO.remark=dto.remark;
+            queryDTO.factIds=factIdList;
+            queryDTO.businessAreaId=dto.businessAreaId;
+            queryDTO.openTransmission=true;
+            ResultEnum resultEnum = businessProcess.batchPublishBusinessProcess(queryDTO);
+            if (resultEnum.getCode()!=ResultEnum.SUCCESS.getCode())
+            {
+                throw new FkException(ResultEnum.PUBLISH_FAILURE);
+            }
         }
     }
 

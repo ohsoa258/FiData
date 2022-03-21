@@ -13,6 +13,7 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.*;
+import com.fisk.datamodel.enums.DataBaseTypeEnum;
 import com.fisk.datamodel.enums.DimensionAttributeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.map.DimensionMap;
@@ -145,6 +146,7 @@ public class DimensionImpl implements IDimension {
      */
     public String buildTableSql(String dimensionTabName)
     {
+        DataBaseTypeEnum dataBaseTypeEnum = DataBaseTypeEnum.getValue(typeName);
         String sql="CREATE TABLE "+dimensionTabName +"("
                 +"FullDateAlternateKey date not null,"
                 +"DayNumberOfWeek int not null,"
@@ -156,11 +158,11 @@ public class DimensionImpl implements IDimension {
                 +"MonthNumberOfYear int not null,"
                 +"CalendarQuarter int not null,"
                 +"CalendarYear int not null)";
-        switch (typeName.toLowerCase())
+        switch (dataBaseTypeEnum)
         {
-            case "mysql":
+            case MYSQL:
                 break;
-            case "oracle":
+            case ORACLE:
                 sql="CREATE TABLE "+dimensionTabName +"("
                         +"FullDateAlternateKey date not null,"
                         +"DayNumberOfWeek number  not null,"
@@ -173,9 +175,9 @@ public class DimensionImpl implements IDimension {
                         +"CalendarQuarter number not null,"
                         +"CalendarYear number not null)";
                 break;
-            case "sqlserver":
+            case SQL_SERVER:
                 break;
-            case "postgresql":
+            case POSTGRESQL:
                 sql="CREATE TABLE "+dimensionTabName +"("
                         +"FullDateAlternateKey date not null,"
                         +"DayNumberOfWeek int2  not null,"
@@ -188,7 +190,7 @@ public class DimensionImpl implements IDimension {
                         +"CalendarQuarter int2 not null,"
                         +"CalendarYear int2 not null)";
                 break;
-            case "doris":
+            case DORIS:
                 sql="CREATE TABLE "+dimensionTabName +"("
                         +"FullDateAlternateKey date not null,"
                         +"DayNumberOfWeek int  not null,"

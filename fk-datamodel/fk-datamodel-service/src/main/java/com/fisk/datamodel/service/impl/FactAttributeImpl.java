@@ -65,8 +65,6 @@ public class FactAttributeImpl
     SyncModeImpl syncMode;
     @Resource
     TableBusinessImpl tableBusiness;
-    @Resource
-    AtomicIndicatorsImpl atomicIndicators;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId)
