@@ -118,15 +118,20 @@ spring:
           predicates:
             - Path=/dataservice/**
 
-        - id: data-factory # 数据源接入服务
+        - id: data-factory # 数据工厂服务
           uri: lb://data-factory
           predicates:
             - Path=/taskschedule/**
 
-        - id: datamanagement-service # 数据治理
+        - id: datamanagement-service # 元数据服务
           uri: lb://datamanagement-service
           predicates:
             - Path=/datamanagement/**
+
+        - id: datagovernance-service # 数据治理服务
+          uri: lb://datagovernance-service
+          predicates:
+            - Path=/datagovernance/**
 
 
   redis:

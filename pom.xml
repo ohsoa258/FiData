@@ -20,6 +20,7 @@
         <module>fisk-dataservice</module>
         <module>fk-data-factory</module>
         <module>fisk-datamanagement</module>
+        <module>fisk-datagovernance</module>
     </modules>
 
 
