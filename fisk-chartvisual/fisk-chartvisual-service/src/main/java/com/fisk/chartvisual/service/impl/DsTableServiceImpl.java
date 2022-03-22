@@ -1,7 +1,6 @@
 package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.dto.*;
@@ -29,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.fisk.chartvisual.enums.DataSourceInfoTypeEnum.*;
@@ -96,6 +96,10 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEntity<ResultEnum> saveTableInfo(SaveDsTableDTO dsTableDto) {
+        boolean table = this.isExistTable(dsTableDto.getDataSourceId(), dsTableDto.getTableName());
+        if (table == false){
+            return ResultEntityBuild.build(ResultEnum.DATA_EXISTS, ResultEnum.DATA_EXISTS.getMsg());
+        }
 
         // 保存表名
         DsTablePO dsTable = new DsTablePO();
@@ -118,6 +122,26 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
+    }
+
+    /**
+     * 判断数据源和表名是否存在
+     * @param dataSourceId
+     * @param tableName
+     * @return
+     */
+    public boolean isExistTable(Integer dataSourceId,String tableName){
+        QueryWrapper<DsTablePO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(DsTablePO::getDataSourceId,dataSourceId)
+                .eq(DsTablePO::getTableName,tableName)
+                .last("limit 1");
+        DsTablePO dsTablePo = dsTableMapper.selectOne(query);
+        if (dsTablePo == null){
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -346,9 +370,11 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
         dto.getTableName().stream().filter(Objects::nonNull).forEach(e -> {
             List<FieldInfoDTO> fieldList = db.execQueryResultList(buildSqlCommand.buildQueryFiledInfo(e), connection, FieldInfoDTO.class);
 
+            AtomicInteger count = new AtomicInteger(1);
             // 字段类型匹配
             List<FieldInfoDTO> collect = fieldList.stream().filter(Objects::nonNull).map(item -> {
                 FieldInfoDTO dto1 = new FieldInfoDTO();
+                dto1.setId(count.getAndIncrement());
                 dto1.setField(item.getField());
                 dto1.setTargetField(item.getField());
                 dto1.setType(item.getType());
