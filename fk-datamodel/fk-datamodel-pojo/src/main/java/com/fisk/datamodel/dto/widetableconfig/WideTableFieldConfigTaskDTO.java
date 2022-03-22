@@ -18,7 +18,7 @@ public class WideTableFieldConfigTaskDTO extends MQBaseDTO {
 
     public String name;
 
-    public String sql;
+    public String sqlScript;
 
     public Long userId;
 
