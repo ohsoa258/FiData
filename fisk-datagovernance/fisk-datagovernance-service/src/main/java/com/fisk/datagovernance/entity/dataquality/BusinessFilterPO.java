@@ -7,12 +7,12 @@ import lombok.Data;
 /**
  * @author dick
  * @version v1.0
- * @description 模板配置表
+ * @description 业务清洗
  * @date 2022/3/22 14:51
  */
 @Data
-@TableName("tb_bizcheck_module")
-public class BusinessCheckPO extends BasePO
+@TableName("tb_bizfilter_module")
+public class BusinessFilterPO extends BasePO
 {
     /**
      * 模板id
@@ -35,9 +35,9 @@ public class BusinessCheckPO extends BasePO
     public String moduleName;
 
     /**
-     * 检验步骤
+     * 清洗步骤
      */
-    public int checkStep;
+    public int filterStep;
 
     /**
      * 表名称

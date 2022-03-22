@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.vo.dataquality.businesscheck;
+package com.fisk.datagovernance.vo.dataquality.businessfilter;
 
 import com.fisk.datagovernance.enums.dataquality.CheckStepTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
@@ -15,7 +15,13 @@ import java.time.LocalDateTime;
  * @date 2022/3/22 15:36
  */
 @Data
-public class BusinessCheckVO {
+public class BusinessFilterVO {
+    /**
+     * id
+     */
+    @ApiModelProperty(value = "id")
+    public int id;
+
     /**
      * 模板id
      */

@@ -24,6 +24,13 @@ import java.util.List;
 public class SwaggerConfig {
 
     public static final String TEST = "test-controller";
+    public static final String TAG_1 = "businessfilter-controller";
+    public static final String TAG_2 = "datacheck-controller";
+    public static final String TAG_3 = "datasource-controller";
+    public static final String TAG_4 = "emailserver-controller";
+    public static final String TAG_5 = "lifecycle-controller";
+    public static final String TAG_6 = "notice-controller";
+    public static final String TAG_7 = "template-controller";
 
     @Bean
     public Docket createRestApi() {
