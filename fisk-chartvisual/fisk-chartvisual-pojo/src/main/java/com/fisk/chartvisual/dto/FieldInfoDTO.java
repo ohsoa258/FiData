@@ -15,6 +15,10 @@ public class FieldInfoDTO {
      */
     private String field;
     /**
+     * 目标字段名称
+     */
+    private String targetField;
+    /**
      * 字段类型
      */
     private String type;

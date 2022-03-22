@@ -350,6 +350,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
             List<FieldInfoDTO> collect = fieldList.stream().filter(Objects::nonNull).map(item -> {
                 FieldInfoDTO dto1 = new FieldInfoDTO();
                 dto1.setField(item.getField());
+                dto1.setTargetField(item.getField());
                 dto1.setType(item.getType());
                 dto1.setFieldInfo(item.getFieldInfo());
 
