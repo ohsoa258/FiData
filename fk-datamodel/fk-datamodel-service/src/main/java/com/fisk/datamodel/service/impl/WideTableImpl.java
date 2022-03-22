@@ -6,8 +6,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
+import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.*;
@@ -41,6 +44,10 @@ public class WideTableImpl implements IWideTable {
     DimensionImpl dimensionImpl;
     @Resource
     UserHelper userHelper;
+    @Resource
+    DimensionAttributeImpl dimensionAttribute;
+    @Resource
+    AtomicIndicatorsImpl atomicIndicators;
     @Resource
     DimensionFolderImpl dimensionFolder;
     @Resource
@@ -345,23 +352,20 @@ public class WideTableImpl implements IWideTable {
      * @param dto
      */
     public void createExternalTable(List<WideTableSourceTableConfigDTO> entity,IndicatorQueryDTO dto){
+        BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
+        data.businessAreaId=dto.businessAreaId;
         //过滤维度
         List<Integer> dimensionIdList = entity.stream()
                 .filter(e->e.tableType==CreateTypeEnum.CREATE_DIMENSION.getValue())
                 .map(e -> e.getTableId()).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(dimensionIdList))
         {
-            DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
-            queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
-            queryDTO.remark=dto.remark;
-            queryDTO.dimensionIds=dimensionIdList;
-            queryDTO.businessAreaId=dto.businessAreaId;
-            queryDTO.openTransmission=true;
-            ResultEnum resultEnum = dimensionFolder.batchPublishDimensionFolder(queryDTO);
-            if (resultEnum.getCode()!=ResultEnum.SUCCESS.getCode())
+            List<ModelMetaDataDTO> dimensionList=new ArrayList<>();
+            for (Integer dimensionId:dimensionIdList)
             {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                dimensionList.add(dimensionAttribute.getDimensionMetaData(dimensionId));
             }
+            data.dimensionList=dimensionList;
         }
         //过滤事实
         List<Integer> factIdList = entity.stream()
@@ -369,18 +373,13 @@ public class WideTableImpl implements IWideTable {
                 .map(e -> e.getTableId()).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(factIdList))
         {
-            BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
-            queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
-            queryDTO.remark=dto.remark;
-            queryDTO.factIds=factIdList;
-            queryDTO.businessAreaId=dto.businessAreaId;
-            queryDTO.openTransmission=true;
-            ResultEnum resultEnum = businessProcess.batchPublishBusinessProcess(queryDTO);
-            if (resultEnum.getCode()!=ResultEnum.SUCCESS.getCode())
-            {
-                throw new FkException(ResultEnum.PUBLISH_FAILURE);
-            }
+            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(factIdList);
         }
+        if (CollectionUtils.isEmpty(data.atomicIndicatorList) && CollectionUtils.isEmpty(data.dimensionList))
+        {
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+        publishTaskClient.publishOlapCreateModel(data);
     }
 
     @Override
