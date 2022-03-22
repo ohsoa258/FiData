@@ -311,7 +311,7 @@ public class WideTableImpl implements IWideTable {
      */
     public void publishWideTable(IndicatorQueryDTO dto){
         try {
-            if (!CollectionUtils.isEmpty(dto.wideTableIds))
+            if (CollectionUtils.isEmpty(dto.wideTableIds))
             {
                 return;
             }
@@ -349,7 +349,7 @@ public class WideTableImpl implements IWideTable {
         List<Integer> dimensionIdList = entity.stream()
                 .filter(e->e.tableType==CreateTypeEnum.CREATE_DIMENSION.getValue())
                 .map(e -> e.getTableId()).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(dimensionIdList))
+        if (!CollectionUtils.isEmpty(dimensionIdList))
         {
             DimensionFolderPublishQueryDTO queryDTO=new DimensionFolderPublishQueryDTO();
             queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
@@ -367,7 +367,7 @@ public class WideTableImpl implements IWideTable {
         List<Integer> factIdList = entity.stream()
                 .filter(e->e.tableType==CreateTypeEnum.CREATE_FACT.getValue())
                 .map(e -> e.getTableId()).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(factIdList))
+        if (!CollectionUtils.isEmpty(factIdList))
         {
             BusinessProcessPublishQueryDTO queryDTO=new BusinessProcessPublishQueryDTO();
             queryDTO.syncMode= SyncModeEnum.INCREMENTAL.getValue();
