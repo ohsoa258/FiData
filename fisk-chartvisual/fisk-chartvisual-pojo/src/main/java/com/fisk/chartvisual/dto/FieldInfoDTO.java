@@ -11,6 +11,10 @@ import lombok.Data;
 public class FieldInfoDTO {
 
     /**
+     * 唯一标识
+     */
+    private Integer id;
+    /**
      * 字段名称
      */
     private String field;
