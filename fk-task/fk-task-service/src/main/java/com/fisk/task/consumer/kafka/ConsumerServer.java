@@ -21,6 +21,7 @@ import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.consumer.doris.BuildDorisTaskListener;
 import com.fisk.task.consumer.nifi.BuildNifiCustomWorkFlow;
 import com.fisk.task.consumer.nifi.BuildNifiTaskListener;
+import com.fisk.task.consumer.nifi.INifiTaskListener;
 import com.fisk.task.consumer.olap.BuildModelTaskListener;
 import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
@@ -101,6 +102,8 @@ public class ConsumerServer {
     BuildModelTaskListener buildModelTaskListener;
     @Resource
     BuildWideTableTaskListener buildWideTableTaskListener;
+    @Resource
+    INifiTaskListener iNifiTaskListener;
 
 
     //这里只用来存放reids
@@ -224,7 +227,7 @@ public class ConsumerServer {
     @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public void buildNifiTaskListener(String data, Acknowledgment ack) {
-        buildNifiTaskListener.msg(data, ack);
+        iNifiTaskListener.msg(data, ack);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")

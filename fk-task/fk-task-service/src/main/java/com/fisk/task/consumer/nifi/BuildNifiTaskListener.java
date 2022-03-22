@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 
-public class BuildNifiTaskListener {
+public class BuildNifiTaskListener implements INifiTaskListener{
 
     @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
@@ -129,10 +129,11 @@ public class BuildNifiTaskListener {
 
 
     //@MQConsumerLog
+    @Override
     public void msg(String data, Acknowledgment ack) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
-
+        log.info("创建nifi流程发布参数:"+data);
         try {
             BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
             modelPublishStatusDTO.tableId = dto.id;
@@ -163,7 +164,7 @@ public class BuildNifiTaskListener {
                 appNifiSettingPO = appNifiSettingPO1;
             }
             NifiConfigPO nifiConfigPO = new NifiConfigPO();
-            log.info(JSON.toJSONString("【数据接入配置项参数】" + configDTO));
+            log.info("【数据接入配置项参数】" + JSON.toJSONString(configDTO));
             //1. 获取数据接入配置库连接池
             ControllerServiceEntity cfgDbPool = buildCfgDsPool(configDTO);
 
@@ -1132,11 +1133,12 @@ public class BuildNifiTaskListener {
 
     private ProcessorEntity createExecuteSQLRecordDoris(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto, String targetDbPoolId) {
         BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
-        buildCallDbProcedureProcessorDTO.haveNextOne = false;
+        buildCallDbProcedureProcessorDTO.haveNextOne = true;
         buildCallDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         buildCallDbProcedureProcessorDTO.executsql = config.processorConfig.sourceExecSqlQuery;
         buildCallDbProcedureProcessorDTO.details = "query_phase";
         buildCallDbProcedureProcessorDTO.name = "executeSql";
+        buildCallDbProcedureProcessorDTO.groupId=groupId;
         buildCallDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(buildCallDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1463,7 +1465,12 @@ public class BuildNifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
+        if(Objects.equals(dto.type,OlapTableEnum.WIDETABLE)){
+            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time from " + config.processorConfig.targetTableName;
+        }else{
+            querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
+        }
+
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());

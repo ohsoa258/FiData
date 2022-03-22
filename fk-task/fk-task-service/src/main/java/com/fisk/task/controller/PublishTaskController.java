@@ -6,6 +6,7 @@ import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
+import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
@@ -43,6 +44,8 @@ public class PublishTaskController {
     IBuildKfkTaskService iBuildKfkTaskService;
     @Resource
     BuildAtlasTableAndColumnTaskListener buildAtlasTableAndColumnTaskListener;
+    @Resource
+    BuildDataModelDorisTableListener buildDataModelDorisTableListener;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
@@ -179,10 +182,12 @@ public class PublishTaskController {
     @PostMapping("/atlasDorisTable")
     @ApiOperation(value = "dmp_dw创建表")
     public ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO){
-        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE,
-                modelPublishDataDTO);
+        log.info("进入方法");
+        ResultEntity<Object> resultEntity = new ResultEntity<Object>();
+        resultEntity.code=0;
+        resultEntity.msg="流程创建成功";
+        buildDataModelDorisTableListener.msg(JSON.toJSONString(modelPublishDataDTO),null);
+        return resultEntity;
     }
 
     /**

@@ -108,8 +108,6 @@ public class BuildModelTaskListener {
                 modelPublishStatusDTO.id= Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
-        }finally {
-            acke.acknowledge();
         }
     }
 }

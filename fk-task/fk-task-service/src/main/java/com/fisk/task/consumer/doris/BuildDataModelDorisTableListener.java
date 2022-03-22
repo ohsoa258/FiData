@@ -230,7 +230,6 @@ public class BuildDataModelDorisTableListener
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
         }
-        acke.acknowledge();
     }
 
     public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO){

@@ -707,6 +707,8 @@ public class BuildNifiCustomWorkFlow {
             }
             log.info("表类别:" + nifiNode.type + "表id:" + nifiNode.tableId + "表信息" + olapPO);
              tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
+        } else if (Objects.equals(nifiNode.type, DataClassifyEnum.DATAMODELWIDETABLE)) {
+            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.WIDETABLE.getValue()).eq("del_flag", 1).one();
         }
         return tableNifiSettingPO;
     }
