@@ -469,7 +469,6 @@ public class BusinessAreaImpl
             addTableHistory(dto);
             if (!CollectionUtils.isEmpty(dto.factIds))
             {
-                String aa="";
                 //消息推送
                 publishTaskClient.publishOlapCreateModel(data);
             }

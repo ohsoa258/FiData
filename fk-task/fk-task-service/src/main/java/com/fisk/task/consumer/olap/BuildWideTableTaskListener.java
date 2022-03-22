@@ -48,7 +48,7 @@ public class BuildWideTableTaskListener {
             buildNifiFlowDTO.dataClassifyEnum = DataClassifyEnum.DATAMODELWIDETABLE;
             buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
             buildNifiFlowDTO.tableName = wideTableFieldConfigDTO.name;
-            buildNifiFlowDTO.selectSql = wideTableFieldConfigDTO.sql;
+            buildNifiFlowDTO.selectSql = wideTableFieldConfigDTO.sqlScript;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
         } catch (Exception e) {
             log.error("宽表创建失败:" + e.getMessage());
