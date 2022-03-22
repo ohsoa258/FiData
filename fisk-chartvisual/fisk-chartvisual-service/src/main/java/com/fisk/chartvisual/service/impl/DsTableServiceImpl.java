@@ -367,10 +367,10 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
         IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
 
         List<TableInfoDTO> dtoList = new ArrayList<>();
+        AtomicInteger count = new AtomicInteger(1);
         dto.getTableName().stream().filter(Objects::nonNull).forEach(e -> {
             List<FieldInfoDTO> fieldList = db.execQueryResultList(buildSqlCommand.buildQueryFiledInfo(e), connection, FieldInfoDTO.class);
 
-            AtomicInteger count = new AtomicInteger(1);
             // 字段类型匹配
             List<FieldInfoDTO> collect = fieldList.stream().filter(Objects::nonNull).map(item -> {
                 FieldInfoDTO dto1 = new FieldInfoDTO();
