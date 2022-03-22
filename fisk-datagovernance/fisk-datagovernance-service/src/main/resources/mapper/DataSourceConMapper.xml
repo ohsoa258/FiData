@@ -1,0 +1,36 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.DataSourceConMapper">
+    <select id="listDataSourceCon" resultType="com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO">
+        select id,
+        `name`,
+        con_str,
+        con_ip,
+        con_port,
+        con_type,
+        con_cube,
+        con_dbname,
+        con_account,
+        con_password,
+        create_time
+        from tb_datasource_config
+        where del_flag = 1
+        <if test="query.keyword != null and query.keyword != '' ">
+            and name like concat('%', #{query.keyword}, '%')
+            or con_dbname like concat('%', #{query.keyword}, '%')
+            <if test="query.keyword =='mysql' ">
+                or con_type = 0
+            </if>
+            <if test="query.keyword =='sqlserver' ">
+                or con_type = 1
+            </if>
+            <if test="query.keyword =='cube' ">
+                or con_type = 2
+            </if>
+            <if test="query.keyword =='tabular' ">
+                or con_type = 3
+            </if>
+        </if>
+    </select>
+</mapper>
