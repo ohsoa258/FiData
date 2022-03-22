@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.datasource;
 
 import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
-import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  * @author dick
  * @version v1.0
  * @description 数据源
- * @date 2022/1/14 18:27
+ * @date 2022/3/22 14:51
  */
 public class DataSourceVO
 {

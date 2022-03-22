@@ -4,7 +4,7 @@ package com.fisk.datagovernance.vo.dataquality.datasource;
  * @author dick
  * @version v1.0
  * @description 字段详细信息
- * @date 2022/1/17 15:19
+ * @date 2022/3/22 15:19
  */
 public class FieldInfoVO {
     /**

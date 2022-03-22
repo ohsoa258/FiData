@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
  * @author dick
  * @version v1.0
  * @description 测试连接 DTO
- * @date 2022/1/6 14:51
+ * @date 2022/3/22 14:51
  */
 @Data
 public class TestConnectionDTO {
