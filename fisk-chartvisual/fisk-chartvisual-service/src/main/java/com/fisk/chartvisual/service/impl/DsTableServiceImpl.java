@@ -283,6 +283,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
         // 该库下的表
         List<TableInfoDTO> resultList = db.execQueryResultList(buildSqlCommand.buildQueryAllTables(model.conDbname), connection, TableInfoDTO.class);
 
+        AtomicInteger count = new AtomicInteger(1);
         // 查询表已经是否选中的状态
         List<ShowDsTableDTO> collect = resultList.stream().map(e -> {
             // 查询该表下的字段
@@ -297,9 +298,9 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
             DsTablePO tablePo = dsTableMapper.selectOne(queryWrapper);
             ShowDsTableDTO dto1;
             if (tablePo == null) {
-                dto1 = new ShowDsTableDTO(e.getTableName(), fields.size(), TABLE_NAME, NOT_CHECKED);
+                dto1 = new ShowDsTableDTO(count.getAndIncrement(),e.getTableName(), fields.size(), TABLE_NAME, NOT_CHECKED);
             } else {
-                dto1 = new ShowDsTableDTO(e.getTableName(), fields.size(), TABLE_NAME, CHECKED);
+                dto1 = new ShowDsTableDTO(count.getAndIncrement(),e.getTableName(), fields.size(), TABLE_NAME, CHECKED);
             }
 
             return dto1;
