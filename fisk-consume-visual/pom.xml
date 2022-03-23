@@ -12,9 +12,9 @@
     <artifactId>fisk-chartvisual</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>fisk-chartvisual-api</module>
-        <module>fisk-chartvisual-pojo</module>
-        <module>fisk-chartvisual-service</module>
+        <module>fisk-consume-visual-api</module>
+        <module>fisk-consume-visual-pojo</module>
+        <module>fisk-consume-visual-service</module>
     </modules>
 
     <dependencies>
