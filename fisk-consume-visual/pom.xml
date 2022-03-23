@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fisk-chartvisual</artifactId>
+    <artifactId>fisk-consume-visual</artifactId>
     <packaging>pom</packaging>
     <modules>
         <module>fisk-consume-visual-api</module>
