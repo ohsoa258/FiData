@@ -124,7 +124,7 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-task-api</artifactId>
+            <artifactId>fisk-task-center-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

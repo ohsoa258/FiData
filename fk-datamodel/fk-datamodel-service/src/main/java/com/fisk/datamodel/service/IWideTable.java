@@ -6,7 +6,7 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableListDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableQueryPageDTO;
-import com.google.gson.JsonObject;
+//import com.google.gson.JsonObject;
 
 import java.util.List;
 
