@@ -16,10 +16,10 @@
         <module>fisk-consume-visual</module>
         <module>fisk-factory-access</module>
         <module>fisk-task-center</module>
-        <module>fk-datamodel</module>
+        <module>fisk-factory-model</module>
         <module>fisk-dataservice</module>
+        <module>fisk-datamanage-center</module>
         <module>fisk-factory-dispatch</module>
-        <module>fisk-datamanagement</module>
         <module>fisk-governance-center</module>
     </modules>
 
