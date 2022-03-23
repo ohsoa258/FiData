@@ -1,0 +1,22 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamodel.mapper.AtomicIndicatorsMapper">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO">
+        select a.id,
+        a.fact_attribute_id,
+        a.calculation_logic,
+        a.indicators_name,
+        a.indicators_des,
+        b.fact_field_en_name as factFieldName,
+        c.fact_table_en_name as factName
+        from tb_indicators a
+        LEFT JOIN tb_fact_attribute b on a.fact_attribute_id=b.id
+        LEFT JOIN tb_fact c on b.fact_id=c.id
+        where a.del_flag=1 and a.indicators_type=0
+        <if test="query.factId !=0 ">
+            and c.id= ${query.factId}
+        </if>
+    </select>
+
+</mapper>
