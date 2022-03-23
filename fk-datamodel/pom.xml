@@ -12,8 +12,8 @@
     <artifactId>fk-datamodel</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>fk-datamodel-api</module>
-        <module>fk-datamodel-pojo</module>
+        <module>fisk-factory-model-apiclient</module>
+        <module>fisk-factory-model-entity</module>
         <module>fk-datamodel-service</module>
     </modules>
 
