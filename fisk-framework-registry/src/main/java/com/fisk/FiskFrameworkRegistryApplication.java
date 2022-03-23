@@ -9,10 +9,10 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
  */
 @SpringBootApplication
 @EnableEurekaServer
-public class FkRegistryApplication {
+public class FiskFrameworkRegistryApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FkRegistryApplication.class);
+        SpringApplication.run(FiskFrameworkRegistryApplication.class);
     }
 
 }

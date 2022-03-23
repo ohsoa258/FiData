@@ -8,7 +8,7 @@
     <artifactId>fisk</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
-        <module>fk-registry</module>
+        <module>fisk-framework-registry</module>
         <module>fk-gateway</module>
         <module>fk-common</module>
         <module>fk-system</module>

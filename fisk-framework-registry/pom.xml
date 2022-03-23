@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fk-registry</artifactId>
+    <artifactId>fisk-framework-registry</artifactId>
 
     <dependencies>
         <!-- Eureka注册中心 -->
