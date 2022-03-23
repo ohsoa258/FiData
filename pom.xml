@@ -13,7 +13,7 @@
         <module>fisk-framework-gateway</module>
         <module>fisk-framework-authorization</module>
         <module>fisk-system-center</module>
-        <module>fisk-chartvisual</module>
+        <module>fisk-consume-visual</module>
         <module>fisk-factory-access</module>
         <module>fisk-task-center</module>
         <module>fk-datamodel</module>
