@@ -15,6 +15,7 @@ import java.util.List;
 @Data
 public class ShowDsTableDTO {
 
+    private Integer id;
     private String name;
     private Integer count;
     private List<ShowDsTableDTO> children;
@@ -24,7 +25,8 @@ public class ShowDsTableDTO {
      */
     private isCheckedTypeEnum isChecked;
 
-    public ShowDsTableDTO(String name, Integer count, DataSourceInfoTypeEnum type, isCheckedTypeEnum isChecked) {
+    public ShowDsTableDTO(Integer id,String name, Integer count, DataSourceInfoTypeEnum type, isCheckedTypeEnum isChecked) {
+        this.id = id;
         this.name = name;
         this.count = count;
         this.type = type;
