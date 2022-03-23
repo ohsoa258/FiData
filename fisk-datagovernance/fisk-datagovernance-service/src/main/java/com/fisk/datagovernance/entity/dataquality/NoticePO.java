@@ -21,7 +21,7 @@ public class NoticePO extends BasePO {
     /**
      * 通知类型
      */
-    public String noticeType;
+    public int noticeType;
 
     /**
      * 邮件配置表id

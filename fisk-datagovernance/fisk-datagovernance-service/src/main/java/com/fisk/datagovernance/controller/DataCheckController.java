@@ -15,4 +15,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/datacheck")
 public class DataCheckController {
+
 }

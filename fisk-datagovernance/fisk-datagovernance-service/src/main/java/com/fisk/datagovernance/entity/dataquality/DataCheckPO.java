@@ -81,7 +81,7 @@ public class DataCheckPO extends BasePO {
     /**
      * 组件规则类型
      */
-    public Integer moduleType;
+    public int moduleType;
 
     /**
      * 组件规则

@@ -38,6 +38,6 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      * 查询所有数据源信息
      * @return 查询结果
      */
-    @Select("SELECT id,`name` FROM tb_datasource_config  WHERE del_flag=1;")
-    List<DataSourceConVO> getAll();
+//    @Select("SELECT id,`name` FROM tb_datasource_config  WHERE del_flag=1;")
+//    List<DataSourceConVO> getAll();
 }

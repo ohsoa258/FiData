@@ -39,6 +39,18 @@ public class DataSourceVO
     public String conDbname;
 
     /**
+     * IP
+     */
+    @ApiModelProperty(value = "IP")
+    public String conIp;
+
+    /**
+     * 端口
+     */
+    @ApiModelProperty(value = "端口")
+    public int conPort;
+
+    /**
      * 表
      */
     @ApiModelProperty(value = "表")

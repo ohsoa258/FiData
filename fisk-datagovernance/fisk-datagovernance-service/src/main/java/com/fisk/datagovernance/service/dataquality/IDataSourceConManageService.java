@@ -60,12 +60,11 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * 获取全部数据源
      * @return 查询结果
      */
-    List<DataSourceConVO> getAll();
+    //List<DataSourceConVO> getAll();
 
     /**
      * 获取数据源下的表
-     * @param datasourceId 数据源id
      * @return 查询结果
      */
-    DataSourceVO getMeta(int datasourceId) throws SQLException;
+    List<DataSourceVO> getMeta() throws SQLException;
 }

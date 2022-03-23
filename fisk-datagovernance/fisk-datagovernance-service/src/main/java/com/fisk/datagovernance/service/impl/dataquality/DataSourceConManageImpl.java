@@ -134,62 +134,65 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
     }
 
-    @Override
-    public List<DataSourceConVO> getAll() {
-        return mapper.getAll();
-    }
+//    @Override
+//    public List<DataSourceConVO> getAll() {
+//        return mapper.getAll();
+//    }
 
     @Override
-    public DataSourceVO getMeta(int datasourceId) throws SQLException {
-        DataSourceVO dataSource = new DataSourceVO();
-        DataSourceConPO conPo = mapper.selectById(datasourceId);
-        if (conPo == null)
-            return dataSource;
+    public List<DataSourceVO> getMeta() throws SQLException {
+        List<DataSourceVO> dataSources = new ArrayList<>();
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DataSourceConPO::getDelFlag, 1);
+        List<DataSourceConPO> dataSourceConPOS = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(dataSourceConPOS)) {
+            return dataSources;
+        }
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-
-        switch (DataSourceTypeEnum.values()[conPo.conType]) {
-            case MYSQL:
-                // 表结构
-                dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
-                //视图结构
-                //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
-                break;
-            case SQLSERVER:
-                // 表结构
-                dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
-                // 视图结构
-                //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
-                break;
+        for (DataSourceConPO conPo : dataSourceConPOS) {
+            DataSourceVO dataSource = new DataSourceVO();
+            switch (DataSourceTypeEnum.values()[conPo.conType]) {
+                case MYSQL:
+                    // 表结构
+                    dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
+                    break;
+                case SQLSERVER:
+                    // 表结构
+                    dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                    break;
+            }
+//            Connection conn = null;
+//            if (conPo.getConType() == DataSourceTypeEnum.MYSQL.getValue()) {
+//                conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
+//            } else if (conPo.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
+//                conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
+//            }
+//            List<FieldInfoVO> tableFieldList = getTableFieldList(conn, conPo);
+//            if (CollectionUtils.isNotEmpty(tableFieldList)
+//                    && CollectionUtils.isNotEmpty(dataSource.tableDtoList))
+//                dataSource.tableDtoList.forEach(e -> {
+//                    List<FieldInfoVO> collect = tableFieldList.stream().filter(item -> item.originalTableName.equals(e.tableName)).collect(Collectors.toList());
+//                    if (CollectionUtils.isNotEmpty(collect)) {
+//                        e.fields.forEach(fieldItem -> {
+//                            Optional<FieldInfoVO> first = collect.stream().filter(item -> item.originalFieldName.equals(fieldItem.fieldName)).findFirst();
+//                            if (first.isPresent()) {
+//                                FieldInfoVO fieldInfoVO = first.get();
+//                                if (fieldInfoVO != null)
+//                                    fieldItem.fieldDes = fieldInfoVO.originalFieldDesc;
+//                            }
+//                        });
+//                    }
+//                });
+            dataSource.id = (int) conPo.id;
+            dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
+            dataSource.name = conPo.name;
+            dataSource.conDbname = conPo.conDbname;
+            dataSource.conIp=conPo.conIp;
+            dataSource.conPort=conPo.conPort;
+            dataSources.add(dataSource);
         }
-        Connection conn = null;
-        if (conPo.getConType() ==DataSourceTypeEnum.MYSQL.getValue()) {
-            conn = getStatement(DataSourceTypeEnum.MYSQL.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-        } else if (conPo.getConType() == DataSourceTypeEnum.SQLSERVER.getValue()) {
-            conn = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-        }
-        List<FieldInfoVO> tableFieldList = getTableFieldList(conn, conPo);
-        if (CollectionUtils.isNotEmpty(tableFieldList)
-                && CollectionUtils.isNotEmpty(dataSource.tableDtoList))
-            dataSource.tableDtoList.forEach(e -> {
-                List<FieldInfoVO> collect = tableFieldList.stream().filter(item -> item.originalTableName.equals(e.tableName)).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect)) {
-                    e.fields.forEach(fieldItem -> {
-                        Optional<FieldInfoVO> first = collect.stream().filter(item -> item.originalFieldName.equals(fieldItem.fieldName)).findFirst();
-                        if (first.isPresent()) {
-                            FieldInfoVO fieldInfoVO = first.get();
-                            if (fieldInfoVO != null)
-                                fieldItem.fieldDes = fieldInfoVO.originalFieldDesc;
-                        }
-                    });
-                }
-            });
-        dataSource.id = (int) conPo.id;
-        dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
-        dataSource.name = conPo.name;
-        dataSource.conDbname = conPo.conDbname;
-
-        return dataSource;
+        return dataSources;
     }
 
 
