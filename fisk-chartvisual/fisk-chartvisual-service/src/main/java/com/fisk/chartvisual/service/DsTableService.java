@@ -39,7 +39,7 @@ public interface DsTableService {
      * @param dsTableDto
      * @return
      */
-    ResultEntity<ResultEnum> saveTableInfo(SaveDsTableDTO dsTableDto);
+    ResultEntity<ResultEnum> saveTableInfo(List<UpdateDsTableDTO> dsTableDto);
 
     /**
      * 根据数据源id查询表字段
@@ -60,5 +60,5 @@ public interface DsTableService {
      * @param dto
      * @return
      */
-    ResultEntity<ResultEnum> updateTableInfo(List<UpdateDsTableDTO> dto);
+    ResultEntity<ResultEnum> updateTableInfo(UpdateDsTableDTO dto);
 }

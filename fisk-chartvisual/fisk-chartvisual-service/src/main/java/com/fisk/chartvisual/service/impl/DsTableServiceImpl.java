@@ -40,7 +40,7 @@ import static com.fisk.chartvisual.enums.isExistTypeEnum.*;
  * @date 2022/3/4 11:22
  */
 @Service
-public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFieldPO> implements DsTableService {
+public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableFieldPO> implements DsTableService {
 
     @Resource
     DataSourceConMapper sourceConMapper;
@@ -55,7 +55,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     public List<DsTableDTO> getTableInfo(Integer id) {
         List<DsTableDTO> dtoList = new ArrayList<>();
         DataSourceConPO model = sourceConMapper.selectById(id);
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -70,74 +70,80 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     @Override
     public List<Map<String, Object>> getData(ObtainTableDataDTO dto) {
         DataSourceConPO model = sourceConMapper.selectById(dto.getId());
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return this.getTableData(model,connection,db,dto);
+        return this.getTableData(model, connection, db, dto);
     }
 
     @Override
     public List<TableInfoDTO> getTableStructure(TableStructureDTO dto) {
         DataSourceConPO model = sourceConMapper.selectById(dto.getId());
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询数据源连接配置
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
-        return this.getFieldInfo(model,connection,db,dto);
+        return this.getFieldInfo(model, connection, db, dto);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEntity<ResultEnum> saveTableInfo(SaveDsTableDTO dsTableDto) {
-        boolean table = this.isExistTable(dsTableDto.getDataSourceId(), dsTableDto.getTableName());
-        if (table == false){
-            return ResultEntityBuild.build(ResultEnum.DATA_EXISTS, ResultEnum.DATA_EXISTS.getMsg());
-        }
+    public ResultEntity<ResultEnum> saveTableInfo(List<UpdateDsTableDTO> dsTableDto) {
+        dsTableDto.stream().filter(Objects::nonNull).map(item -> {
+            boolean table = this.isExistTable(item.getDataSourceId(), item.getTableName());
+            if (table == false) {
+                // 修改
+                this.updateTableInfo(item);
+            }else {
+                // 保存表名
+                DsTablePO dsTable = new DsTablePO();
+                dsTable.setDataSourceId(item.getDataSourceId());
+                dsTable.setTableName(item.getTableName());
+                int i = dsTableMapper.insert(dsTable);
+                if (i <= 0) {
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                }
 
-        // 保存表名
-        DsTablePO dsTable = new DsTablePO();
-        dsTable.setDataSourceId(dsTableDto.getDataSourceId());
-        dsTable.setTableName(dsTableDto.getTableName());
-        int i = dsTableMapper.insert(dsTable);
-        if (i <= 0){
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, ResultEnum.SAVE_DATA_ERROR.getMsg());
-        }
 
+                // 保存字段信息
+                List<DsTableFieldPO> fieldList = item.getFieldList().stream().filter(Objects::nonNull).map(e -> {
+                    return DsTableMap.INSTANCES.dtoToPo(e, dsTable.getId());
+                }).collect(Collectors.toList());
 
-        // 保存字段信息
-        List<DsTableFieldPO> fieldList = dsTableDto.getFieldList().stream().filter(Objects::nonNull).map(e -> {
-            return DsTableMap.INSTANCES.dtoToPo(e, dsTable.getId());
+                boolean saveBatch = dsTableService.saveBatch(fieldList);
+                if (saveBatch == false) {
+                    throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                }
+            }
+
+            return null;
         }).collect(Collectors.toList());
-
-        boolean saveBatch = dsTableService.saveBatch(fieldList);
-        if (saveBatch == false){
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, ResultEnum.SAVE_DATA_ERROR.getMsg());
-        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     /**
      * 判断数据源和表名是否存在
+     *
      * @param dataSourceId
      * @param tableName
      * @return
      */
-    public boolean isExistTable(Integer dataSourceId,String tableName){
+    public boolean isExistTable(Integer dataSourceId, String tableName) {
         QueryWrapper<DsTablePO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DsTablePO::getDataSourceId,dataSourceId)
-                .eq(DsTablePO::getTableName,tableName)
+                .eq(DsTablePO::getDataSourceId, dataSourceId)
+                .eq(DsTablePO::getTableName, tableName)
                 .last("limit 1");
         DsTablePO dsTablePo = dsTableMapper.selectOne(query);
-        if (dsTablePo == null){
+        if (dsTablePo == null) {
             return true;
         }
 
@@ -148,10 +154,10 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     public List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId) {
         QueryWrapper<DsTablePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DsTablePO::getDataSourceId,dataSourceId);
+                .eq(DsTablePO::getDataSourceId, dataSourceId);
         List<DsTablePO> dsTableList = dsTableMapper.selectList(queryWrapper);
 
-        if (CollectionUtils.isNotEmpty(dsTableList)){
+        if (CollectionUtils.isNotEmpty(dsTableList)) {
             // 查询表名字段信息
             List<SaveDsTableDTO> dtoList = dsTableList.stream().filter(Objects::nonNull).map(e -> {
                 SaveDsTableDTO dto = new SaveDsTableDTO();
@@ -174,7 +180,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     @Override
     public List<ShowDsTableDTO> getTableInfoStatus(Integer id) {
         DataSourceConPO model = sourceConMapper.selectById(id);
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -182,24 +188,25 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
         AbstractDbHelper db = DbHelperFactory.getDbHelper(model.conType);
         Connection connection = db.connection(model.conStr, model.conAccount, model.conPassword);
 
-        return this.dataSourceInfo(model, connection, db,id);
+        return this.dataSourceInfo(model, connection, db, id);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEntity<ResultEnum> updateTableInfo(List<UpdateDsTableDTO> dto) {
+    public ResultEntity<ResultEnum> updateTableInfo(UpdateDsTableDTO dto) {
         QueryWrapper<DsTablePO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DsTablePO::getDataSourceId,dto.get(0).getDataSourceId());
-        List<DsTablePO> tablePoList = dsTableMapper.selectList(query);
-        if (CollectionUtils.isEmpty(tablePoList)){
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS,"数据源不存在");
+                .eq(DsTablePO::getDataSourceId, dto.getDataSourceId())
+                .eq(DsTablePO::getTableName, dto.getTableName());
+        DsTablePO tablePo = dsTableMapper.selectOne(query);
+        if (tablePo == null) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS, ResultEnum.DATA_NOTEXISTS.getMsg());
         }
 
         // 先删除表
-        ResultEnum resultEnum = this.deleteTable(tablePoList);
-        if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR,"删除表信息失败!");
+        ResultEnum resultEnum = this.deleteTable(tablePo);
+        if (resultEnum == ResultEnum.SAVE_DATA_ERROR) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR, "删除表信息失败!");
         }
 
         // 保存新的表信息
@@ -210,70 +217,68 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
 
     /**
      * 保存表和字段信息
-     * @param dtoList
+     *
+     * @param dto
      * @return
      */
-    public ResultEnum saveTable(List<UpdateDsTableDTO> dtoList){
-        dtoList.stream().filter(Objects::nonNull)
-                .forEach(e -> {
-                    // 保存表名
-                    DsTablePO tablePo = DsTableMap.INSTANCES.tableDtoToPo(dtoList.get(0).getDataSourceId(), e.getTableName());
-                    int insert = dsTableMapper.insert(tablePo);
-                    if (insert <= 0){
-                        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-                    }
+    public ResultEnum saveTable(UpdateDsTableDTO dto) {
+        // 保存表名
+        DsTablePO tablePo = DsTableMap.INSTANCES.tableDtoToPo(dto.getDataSourceId(), dto.getTableName());
+        int insert = dsTableMapper.insert(tablePo);
+        if (insert <= 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
 
-                    // 保存字段信息
-                    List<DsTableFieldPO> dsTableFieldList = e.getFieldList().stream().filter(Objects::nonNull).map(item -> DsTableMap.INSTANCES.dtoToPo(item, tablePo.getId())).collect(Collectors.toList());
+        // 保存字段信息
+        List<DsTableFieldPO> dsTableFieldList = dto.getFieldList().stream().filter(Objects::nonNull).map(item -> DsTableMap.INSTANCES.dtoToPo(item, tablePo.getId())).collect(Collectors.toList());
 
-                    boolean saveBatch = dsTableService.saveBatch(dsTableFieldList);
-                    if (saveBatch == false){
-                        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-                    }
-                });
+        boolean saveBatch = dsTableService.saveBatch(dsTableFieldList);
+        if (saveBatch == false) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
 
         return ResultEnum.SUCCESS;
     }
 
     /**
      * 删除库里的表和字段信息
-     * @param tablePoList
+     *
+     * @param tablePo
      * @return
      */
-    public ResultEnum deleteTable(List<DsTablePO> tablePoList){
+    public ResultEnum deleteTable(DsTablePO tablePo) {
         // 先删除表信息
         QueryWrapper<DsTablePO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DsTablePO::getDataSourceId,tablePoList.get(0).getDataSourceId());
+                .eq(DsTablePO::getDataSourceId, tablePo.getDataSourceId())
+                .eq(DsTablePO::getTableName, tablePo.getTableName());
         int delete = dsTableMapper.delete(query);
-        if (delete <= 0 ){
+        if (delete <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 再删除字段信息
-        tablePoList.stream().filter(Objects::nonNull)
-                .forEach(e -> {
-                    QueryWrapper<DsTableFieldPO> queryWrapper = new QueryWrapper<>();
-                    queryWrapper.lambda()
-                            .eq(DsTableFieldPO::getTableInfoId,e.getId());
-                    int res = dsTableFieldMapper.delete(queryWrapper);
-                    if (res <= 0){
-                        throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-                    }
-                });
+        QueryWrapper<DsTableFieldPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DsTableFieldPO::getTableInfoId, tablePo.getId());
+        int res = dsTableFieldMapper.delete(queryWrapper);
+        if (res <= 0) {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
 
         return ResultEnum.SUCCESS;
     }
 
     /**
      * 获取数据源连接信息和库中是否存在
+     *
      * @param model
      * @param connection
      * @param db
      * @param id
      * @return
      */
-    public List<ShowDsTableDTO> dataSourceInfo(DataSourceConPO model,Connection connection,AbstractDbHelper db,Integer id){
+    public List<ShowDsTableDTO> dataSourceInfo(DataSourceConPO model, Connection connection, AbstractDbHelper db, Integer id) {
         IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
         // 该库下的表
         List<TableInfoDTO> resultList = db.execQueryResultList(buildSqlCommand.buildQueryAllTables(model.conDbname), connection, TableInfoDTO.class);
@@ -312,9 +317,10 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
 
     /**
      * 获取数据源连接信息
+     *
      * @param model
      */
-    public DsTableDTO dataSourceInfo(DataSourceConPO model,Connection connection,AbstractDbHelper db){
+    public DsTableDTO dataSourceInfo(DataSourceConPO model, Connection connection, AbstractDbHelper db) {
         IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
         List<TableInfoDTO> resultList = db.execQueryResultList(buildSqlCommand.buildQueryAllTables(model.conDbname), connection, TableInfoDTO.class);
 
@@ -328,7 +334,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
                     List<String> fields = db.execQueryResultList(buildSqlCommand.buildQueryFiled(model.conDbname, e.getTableName()),
                             connection, String.class);
 
-                    return new DsTableDTO(e.getTableName(), fields.size(),TABLE_NAME);
+                    return new DsTableDTO(e.getTableName(), fields.size(), TABLE_NAME);
                 }).collect(Collectors.toList())
         );
 
@@ -337,11 +343,12 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
 
     /**
      * 获取表预览数据
+     *
      * @param model
      * @param connection
      * @param db
      */
-    public List<Map<String, Object>> getTableData(DataSourceConPO model,Connection connection,AbstractDbHelper db,ObtainTableDataDTO dto){
+    public List<Map<String, Object>> getTableData(DataSourceConPO model, Connection connection, AbstractDbHelper db, ObtainTableDataDTO dto) {
         IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
 
         // 查询表字段信息
@@ -349,7 +356,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
 
         String field = fieldList.get(0).get("field").toString();
         Integer total = dto.getTotal();
-        if (total == null){
+        if (total == null) {
             total = 20;
         }
         return db.execQueryResultMaps(buildSqlCommand.getData(dto.getTableName(), total, field), connection);
@@ -357,13 +364,14 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
 
     /**
      * 获取表字段信息
+     *
      * @param model
      * @param connection
      * @param db
      * @param dto
      * @return
      */
-    public List<TableInfoDTO> getFieldInfo(DataSourceConPO model,Connection connection,AbstractDbHelper db,TableStructureDTO dto){
+    public List<TableInfoDTO> getFieldInfo(DataSourceConPO model, Connection connection, AbstractDbHelper db, TableStructureDTO dto) {
         IBuildSqlCommand buildSqlCommand = DbHelperFactory.getSqlBuilder(model.conType);
 
         List<TableInfoDTO> dtoList = new ArrayList<>();
@@ -380,12 +388,9 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
                 dto1.setType(item.getType());
                 dto1.setFieldInfo(item.getFieldInfo());
 
-                // 判断字段是否在数据库存在
-                dto1.setFieldIsExist(this.fieldIsExist(dto.getId(),e,item.getField()));
-
                 try {
                     // 类型匹配
-                    switch (model.conType){
+                    switch (model.conType) {
                         case MYSQL:
                             dto1.setTargetType(MysqlFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
                             break;
@@ -393,9 +398,12 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
                             dto1.setTargetType(SqlServerFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
                             break;
                     }
-                }catch (Exception exception){
+                } catch (Exception exception) {
                     exception.printStackTrace();
                 }
+
+                // 匹配库里的目标字段、目标类型、描述
+                this.matchField(dto1, dto.getId(), e, item.getField());
 
                 return dto1;
             }).collect(Collectors.toList());
@@ -404,7 +412,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
             TableInfoDTO dto1 = new TableInfoDTO();
             dto1.setTableName(e);
             dto1.setDtoList(collect);
-            dto1.setIsExist(this.tableIsExist(dto.getId(),e));
+            dto1.setIsExist(this.tableIsExist(dto.getId(), e));
 
             dtoList.add(dto1);
         });
@@ -415,45 +423,68 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper,DsTableFi
     /**
      * 查询该数据源的下的表名是否在库里存在
      */
-    public isExistTypeEnum tableIsExist(Integer dataSourceId, String tableName){
+    public isExistTypeEnum tableIsExist(Integer dataSourceId, String tableName) {
         QueryWrapper<DsTablePO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DsTablePO::getDataSourceId,dataSourceId)
-                .eq(DsTablePO::getTableName,tableName);
+                .eq(DsTablePO::getDataSourceId, dataSourceId)
+                .eq(DsTablePO::getTableName, tableName);
         DsTablePO dsTablePo = dsTableMapper.selectOne(query);
-        if (dsTablePo == null){
+        if (dsTablePo == null) {
             return NOT_Exist;
-        }else {
+        } else {
             return EXIST;
         }
     }
 
     /**
      * 查询该数据源的下的字段名是否在库里存在
+     *
      * @param dataSourceId
      * @param tableName
      * @param fieldName
      */
-    public isExistTypeEnum fieldIsExist(Integer dataSourceId, String tableName,String fieldName){
+    public DsTableFieldPO fieldIsExist(Integer dataSourceId, String tableName, String fieldName) {
         QueryWrapper<DsTablePO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DsTablePO::getDataSourceId,dataSourceId)
-                .eq(DsTablePO::getTableName,tableName);
+                .eq(DsTablePO::getDataSourceId, dataSourceId)
+                .eq(DsTablePO::getTableName, tableName);
         DsTablePO dsTablePo = dsTableMapper.selectOne(query);
-        if (dsTablePo != null){
+        if (dsTablePo != null) {
             QueryWrapper<DsTableFieldPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda()
-                    .eq(DsTableFieldPO::getTableInfoId,dsTablePo.getId())
-                    .eq(DsTableFieldPO::getSourceField,fieldName);
+                    .eq(DsTableFieldPO::getTableInfoId, dsTablePo.getId())
+                    .eq(DsTableFieldPO::getSourceField, fieldName);
 
             DsTableFieldPO fieldPo = dsTableFieldMapper.selectOne(queryWrapper);
-            if (fieldPo == null){
-                return NOT_Exist;
-            }else {
-                return EXIST;
+            if (fieldPo != null) {
+                return fieldPo;
             }
         }
 
         return null;
+    }
+
+    /**
+     * 匹配库里的目标字段、目标类型、描述
+     *
+     * @param dto1
+     * @param dataSourceId
+     * @param tableName
+     * @param fieldName
+     */
+    public void matchField(FieldInfoDTO dto1, Integer dataSourceId, String tableName, String fieldName) {
+        // 判断字段是否在数据库存在
+        DsTableFieldPO dsTableFieldPo = this.fieldIsExist(dataSourceId, tableName, fieldName);
+        isExistTypeEnum type = null;
+        if (dsTableFieldPo == null) {
+            type = NOT_Exist;
+        } else {
+            type = EXIST;
+            // 目标字段和目标类型
+            dto1.setTargetField(dsTableFieldPo.getTargetField());
+            dto1.setTargetType(dsTableFieldPo.getTargetFieldType());
+            dto1.setFieldInfo(dsTableFieldPo.getDescribe());
+        }
+        dto1.setFieldIsExist(type);
     }
 }

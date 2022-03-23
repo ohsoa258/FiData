@@ -39,21 +39,21 @@ public class DsTableController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getData(dto));
     }
 
-    @ApiOperation("获取字段结构库里否存在")
+    @ApiOperation("获取字段结构")
     @PostMapping("/getTableStructure")
     @ResponseBody
     public ResultEntity<List<TableInfoDTO>> getTableStructure(@Validated @RequestBody TableStructureDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableStructure(dto));
     }
 
-    @ApiOperation("保存表信息")
-    @PostMapping("/saveTableInfo")
+    @ApiOperation("保存或修改表信息")
+    @PostMapping("/saveOrUpdateTableInfo")
     @ResponseBody
-    public ResultEntity<ResultEnum> saveTableInfo(@Validated @RequestBody SaveDsTableDTO dto) {
-        return service.saveTableInfo(dto);
+    public ResultEntity<ResultEnum> saveTableInfo(@Validated @RequestBody List<UpdateDsTableDTO> dtoList) {
+        return service.saveTableInfo(dtoList);
     }
 
-    @ApiOperation("根据数据源id查询表字段")
+    @ApiOperation("根据数据源id查询库里表字段")
     @GetMapping("/selectByDataSourceId")
     @ResponseBody
     public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer id) {
@@ -65,12 +65,5 @@ public class DsTableController {
     @ResponseBody
     public ResultEntity<List<ShowDsTableDTO>> getTableInfoStatus(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableInfoStatus(id));
-    }
-
-    @ApiOperation("修改表信息")
-    @PostMapping("/updateTableInfo")
-    @ResponseBody
-    public ResultEntity<ResultEnum> updateTableInfo(@Validated @RequestBody List<UpdateDsTableDTO> dtoList) {
-        return service.updateTableInfo(dtoList);
     }
 }
