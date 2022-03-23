@@ -307,7 +307,11 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
         }).collect(Collectors.toList());
 
         List<ShowDsTableDTO> list = new ArrayList<>();
+
+        // 唯一标识
+        int mark = 1;
         ShowDsTableDTO dto = new ShowDsTableDTO();
+        dto.setId(mark++);
         dto.setName(model.getConDbname());
         dto.setCount(resultList.size());
         dto.setType(DATABASE_NAME);
