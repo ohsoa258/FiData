@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-data-factory-pojo</artifactId>
+            <artifactId>fisk-factory-dispatch-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

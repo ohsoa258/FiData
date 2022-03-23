@@ -68,7 +68,7 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-dataAccess-api</artifactId>
+            <artifactId>fisk-factory-access-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <!-- feign接口调用 -->
@@ -205,13 +205,13 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-data-factory-pojo</artifactId>
+            <artifactId>fisk-factory-dispatch-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-data-factory-api</artifactId>
+            <artifactId>fisk-factory-dispatch-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-common</artifactId>
+            <artifactId>fisk-framework-common</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
