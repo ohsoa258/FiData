@@ -80,7 +80,7 @@
     </dependencies>
 
     <build>
-        <finalName>data-governance</finalName>
+        <finalName>fisk-governance-center</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

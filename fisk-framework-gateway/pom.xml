@@ -68,7 +68,7 @@
 
     <!-- 打包插件 -->
     <build>
-        <finalName>gate-way</finalName>
+        <finalName>fisk-framework-gateway</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

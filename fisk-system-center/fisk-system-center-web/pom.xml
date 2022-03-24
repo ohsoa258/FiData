@@ -62,7 +62,7 @@
     </dependencies>
 
     <build>
-        <finalName>system-manage</finalName>
+        <finalName>fisk-system-center</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
