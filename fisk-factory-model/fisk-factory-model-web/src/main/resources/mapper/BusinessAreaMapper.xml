@@ -2,7 +2,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.datamodel.mapper.BusinessAreaMapper">
-    <select id="queryList" resultType="com.fisk.datamodel.dto.BusinessPageResultDTO">
+    <select id="queryList" resultType="com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO">
         SELECT
         id,
         business_name,

@@ -330,16 +330,22 @@ public class AtomicIndicatorsImpl
      * @param factId 事实表id
      * @return SQL
      */
+    @Override
     public ResultEntity<String> getAnalysisIndexSql(int factId) {
         StringBuilder stringBuilder = new StringBuilder();
         if (factId <= 0)
+        {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, stringBuilder.toString());
+        }
         FactPO factPO = factMapper.selectById(factId);
         if (factPO == null)
+        {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, stringBuilder.toString());
+        }
         if (factPO.isPublish != 1)
+        {
             return ResultEntityBuild.buildData(ResultEnum.PUBLISH_NOTSUCCESS, stringBuilder.toString());
-
+        }
         // 第一步：查询原子指标 & 派生指标
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper = new QueryWrapper<>();
         indicatorsQueryWrapper.lambda()
@@ -347,8 +353,9 @@ public class AtomicIndicatorsImpl
                 .eq(IndicatorsPO::getDelFlag, 1);
         List<IndicatorsPO> indicatorsPOS = mapper.selectList(indicatorsQueryWrapper);
         if (CollectionUtils.isEmpty(indicatorsPOS))
+        {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, stringBuilder.toString());
-
+        }
         // 第二步：查询
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, stringBuilder.toString());

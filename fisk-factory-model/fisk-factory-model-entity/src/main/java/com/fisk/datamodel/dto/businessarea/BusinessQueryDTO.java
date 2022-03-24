@@ -1,16 +1,17 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
 import lombok.Data;
 
 import java.util.List;
 
 /**
- * @author Lock
+ * @author JianWenYang
  */
 @Data
-public class DataAreaQueryDTO {
+public class BusinessQueryDTO {
     /**
      * 查询具体值
      */
@@ -19,5 +20,5 @@ public class DataAreaQueryDTO {
     /**
      * 分页,返回给前端的数据对象
      */
-    public Page<DataAreaDTO> page;
+    public Page<BusinessPageResultDTO> page;
 }

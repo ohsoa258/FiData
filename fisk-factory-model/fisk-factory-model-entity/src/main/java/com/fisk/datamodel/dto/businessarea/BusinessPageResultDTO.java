@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

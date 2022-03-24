@@ -37,13 +37,19 @@
         </dependency>-->
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-datamodel-pojo</artifactId>
+            <artifactId>fisk-factory-model-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-factory-dispatch-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-model-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

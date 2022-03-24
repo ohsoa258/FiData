@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
-import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
@@ -152,7 +151,7 @@ public class WideTableImpl implements IWideTable {
         DataBaseTypeEnum value = DataBaseTypeEnum.getValue(typeName.toLowerCase());
         if (value.getValue()==DataBaseTypeEnum.MYSQL.getValue())
         {
-            List<WideTableSourceRelationsDTO> full_join = relations.stream().filter(e -> e.joinType.equals("full join")).collect(Collectors.toList());
+            List<WideTableSourceRelationsDTO> full_join = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.name().equals(e.joinType)).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(full_join))
             {
                 throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);

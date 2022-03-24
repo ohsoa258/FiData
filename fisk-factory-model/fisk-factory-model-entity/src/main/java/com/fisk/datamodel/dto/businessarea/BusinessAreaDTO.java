@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.fisk.common.dto.BaseDTO;
 import com.fisk.common.entity.BaseEntity;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ProjectInfoDTO extends BaseDTO {
+public class BusinessAreaDTO extends BaseDTO {
 
     /**
      * 主键
@@ -25,36 +25,27 @@ public class ProjectInfoDTO extends BaseDTO {
     public long id;
 
     /**
-     * 业务表名称
+     * 业务域名称
      */
     public String businessName;
 
     /**
-     * 项目空间模式
+     * 业务域描述
      */
-    public String projectPattern;
+    public String businessDes;
 
     /**
-     * 项目名称
+     * 业务需求管理员
      */
-    public String projectName;
+    public String businessAdmin;
 
     /**
-     * 项目描述
+     * 应用负责人邮箱
      */
-    public String projectDes;
+    public String businessEmail;
 
-    /**
-     * 项目负责人
-     */
-    public String projectPrincipal;
 
-    /**
-     * 负责人邮箱
-     */
-    public String principalEmail;
-
-    public ProjectInfoDTO(BaseEntity entity) {
+    public BusinessAreaDTO(BaseEntity entity) {
         super(entity);
     }
 
@@ -65,10 +56,11 @@ public class ProjectInfoDTO extends BaseDTO {
      * @param <T>  PO的类型
      * @return DTO集合
      */
-    public static <T extends BaseEntity> List<ProjectInfoDTO> convertEntityList(Collection<T> list) {
+    public static <T extends BaseEntity> List<BusinessAreaDTO> convertEntityList(Collection<T> list) {
         if (list == null) {
             return Collections.emptyList();
         }
-        return list.stream().map(ProjectInfoDTO::new).collect(Collectors.toList());
+        return list.stream().map(BusinessAreaDTO::new).collect(Collectors.toList());
     }
+
 }

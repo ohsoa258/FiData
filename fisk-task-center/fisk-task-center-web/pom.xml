@@ -132,13 +132,13 @@
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-datamodel-service</artifactId>
+            <artifactId>fisk-factory-model-web</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-datamodel-api</artifactId>
+            <artifactId>fisk-factory-model-apiclient</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
@@ -220,6 +220,14 @@
             <artifactId>original-swagger-java-client</artifactId>
             <version>1.0.0</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit</artifactId>
         </dependency>
     </dependencies>
 

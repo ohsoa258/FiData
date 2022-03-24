@@ -8,7 +8,7 @@ import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
-import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;

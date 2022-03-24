@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;

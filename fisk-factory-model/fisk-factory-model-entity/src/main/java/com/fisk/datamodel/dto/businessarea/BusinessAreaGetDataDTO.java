@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorFactDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;

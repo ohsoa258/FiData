@@ -4,7 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
-import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;

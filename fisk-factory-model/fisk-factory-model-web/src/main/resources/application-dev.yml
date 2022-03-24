@@ -40,7 +40,7 @@ mybatis-plus:
 generate:
   date-dimension:
     datasource:
-      typeName: postgresql
+      typeName: MySql
       driver: org.postgresql.Driver
       url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
       userName: postgres

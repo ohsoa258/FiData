@@ -1,6 +1,6 @@
 package com.fisk.datamodel.map;
 
-import com.fisk.datamodel.dto.BusinessAreaDTO;
+import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

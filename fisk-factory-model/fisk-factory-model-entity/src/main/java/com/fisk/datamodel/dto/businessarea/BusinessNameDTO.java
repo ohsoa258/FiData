@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto;
+package com.fisk.datamodel.dto.businessarea;
 
 import com.fisk.common.dto.BaseDTO;
 import lombok.Data;

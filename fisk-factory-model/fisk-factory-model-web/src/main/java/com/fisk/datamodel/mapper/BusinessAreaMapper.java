@@ -2,8 +2,8 @@ package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.BusinessPageDTO;
-import com.fisk.datamodel.dto.BusinessPageResultDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessPageDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
