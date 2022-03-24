@@ -83,7 +83,7 @@
 
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fk-dataAccess-pojo</artifactId>
+            <artifactId>fisk-factory-access-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
