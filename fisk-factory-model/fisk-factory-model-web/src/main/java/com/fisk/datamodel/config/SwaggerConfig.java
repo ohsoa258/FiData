@@ -31,13 +31,10 @@ public class SwaggerConfig {
     public static final String BUSINESS_AREA ="business-area-controller";
     public static final String DATASOURCE_AREA ="data-source-area-controller";
     public static final String ATOMIC_INDICATOR ="atomic-indicators-controller";
-    public static final String DATA_AREA ="data-area-controller";
-    public static final String PROJECT_INFO ="project-info-controller";
     public static final String DERIVED_INDICATOR="derived-indicators-controller";
     public static final String BUSINES_LIMITE ="busines-limited-controller";
     public static final String TAG_4 = "data-domain-controller";
     public static final String FACT_SYNC_MODE="factsyncmode--controller";
-    public static final String META_DATA_KINSHIP="metadataKinship-controller";
     public static final String DIMENSION_FOLDER="dimension-folder-controller";
     public static final String DATAFACTORY="datafactory--controller";
     public static final String TABLE_HISTORY="table-history--controller";
@@ -63,13 +60,10 @@ public class SwaggerConfig {
                 .tags(new Tag(BUSINESS_AREA,"业务域"))
                 .tags(new Tag(DATASOURCE_AREA,"计算数据源"))
                 .tags(new Tag(ATOMIC_INDICATOR,"数仓建模–指标"))
-                .tags(new Tag(DATA_AREA,"数据域"))
-                .tags(new Tag(PROJECT_INFO,"项目信息"))
                 .tags(new Tag(DERIVED_INDICATOR,"数仓建模–派生指标"))
                 .tags(new Tag(BUSINES_LIMITE,"数据建模-业务限定"))
                 .tags(new Tag(TAG_4,"数据源"))
                 .tags(new Tag(FACT_SYNC_MODE,"事实表同步方式"))
-                .tags(new Tag(META_DATA_KINSHIP,"元数据血缘关系"))
                 .tags(new Tag(DIMENSION_FOLDER,"维度文件夹"))
                 .tags(new Tag(DATAFACTORY,"数据工厂-管道组件表id"))
                 .tags(new Tag(TABLE_HISTORY,"表发布历史"))
