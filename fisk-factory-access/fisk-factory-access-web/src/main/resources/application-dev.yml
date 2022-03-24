@@ -22,8 +22,8 @@ spring:
 # pdf文档模板
 dataservice:
   pdf:
-    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fk-dataAccess\\fk-dataAccess-service\\target\\classes
-
+#    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fk-dataAccess\\fk-dataAccess-service\\target\\classes
+    path: /root/java/fisk-factory-access/pdf
 #授权
 fk:
   auth:
