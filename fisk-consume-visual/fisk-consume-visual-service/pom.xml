@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fisk-chartvisual-service</artifactId>
+    <artifactId>fisk-consume-visual-service</artifactId>
 
     <dependencies>
         <!--web启动器-->
