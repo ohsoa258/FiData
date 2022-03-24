@@ -51,6 +51,7 @@ public class NifiConstants {
         public static final String TABLE_TYPE="table_type";
         public static final String FI_BATCH_CODE="fi_batch_code";
         public static final String KAFKA_TOPIC="kafka.topic";
+        public static final String INITIAL_TIME="0000-01-01";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
