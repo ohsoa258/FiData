@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.TaskTypeEnum;
 import com.fisk.common.response.ResultEntity;
-import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.task.consumer.olap.BuildModelTaskListener;
 import com.fisk.task.consumer.olap.BuildWideTableTaskListener;

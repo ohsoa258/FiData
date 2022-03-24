@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
