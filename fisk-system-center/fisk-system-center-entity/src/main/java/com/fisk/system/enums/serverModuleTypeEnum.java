@@ -1,5 +1,6 @@
 package com.fisk.system.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fisk.common.enums.BaseEnum;
 
 /**
@@ -19,6 +20,7 @@ public enum  serverModuleTypeEnum implements BaseEnum {
     DATA_MANAGEMENT("数据治理",4);
 
     private final String name;
+    @EnumValue
     private final int value;
 
     serverModuleTypeEnum(String name,int value){
