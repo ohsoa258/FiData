@@ -2,7 +2,6 @@ package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamanagement.dto.label.LabelDTO;
 import com.fisk.datamanagement.dto.label.LabelDataDTO;
@@ -14,6 +13,7 @@ import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.mapper.LabelMapper;
 import com.fisk.datamanagement.service.ILabel;
 import com.google.common.base.Joiner;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
