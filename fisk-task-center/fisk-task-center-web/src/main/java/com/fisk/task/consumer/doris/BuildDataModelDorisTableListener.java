@@ -48,17 +48,10 @@ import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;

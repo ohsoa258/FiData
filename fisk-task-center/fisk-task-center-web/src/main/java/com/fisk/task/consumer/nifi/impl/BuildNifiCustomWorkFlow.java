@@ -1,16 +1,14 @@
-package com.fisk.task.consumer.nifi;
+package com.fisk.task.consumer.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
-import com.fisk.common.constants.MqConstants;
 import com.fisk.common.constants.NifiConstants;
 import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.factory.PipelineStatuTypeEnum;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.TopicTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.common.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEnum;
@@ -30,7 +28,6 @@ import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
@@ -40,14 +37,8 @@ import com.fisk.task.service.pipeline.impl.*;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.google.gson.Gson;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
@@ -303,26 +294,6 @@ public class BuildNifiCustomWorkFlow {
                 appNifiSettingPO.nifiCustomWorkflowId = nifiCustomWorkListDTO.nifiCustomWorkflowId;
                 appNifiSettingPO.appComponentId = res1.data.getId();
                 appNifiSettingService.save(appNifiSettingPO);
-                // 在层级组里生成port和漏斗,后面连接,还需要存库
-                /*BuildPortDTO buildPortDTO = new BuildPortDTO();
-                buildPortDTO.componentX = 500.0;
-                buildPortDTO.componentY = 500.0;
-                buildPortDTO.componentId = appNifiSettingPO.appComponentId;
-                buildPortDTO.portName = groupName;
-                PortEntity inputPort = componentsBuild.buildInputPort(buildPortDTO);
-                PortEntity outputPort = componentsBuild.buildOutputPort(buildPortDTO);
-                FunnelDTO funnelDTO = new FunnelDTO();
-                funnelDTO.groupId = buildPortDTO.componentId;
-                BusinessResult<FunnelEntity> funnel1 = componentsBuild.createFunnel(funnelDTO);
-                BusinessResult<FunnelEntity> funnel2 = componentsBuild.createFunnel(funnelDTO);
-                PipelineConfigurationPO pipelineConfigurationPO = new PipelineConfigurationPO();
-                pipelineConfigurationPO.app_id = appNifiSettingPO.appId;
-                pipelineConfigurationPO.appComponentId = appNifiSettingPO.appComponentId;
-                pipelineConfigurationPO.outputPortId = outputPort.getId();
-                pipelineConfigurationPO.inputPortId = inputPort.getId();
-                pipelineConfigurationPO.inFunnelId = funnel1.data.getId();
-                pipelineConfigurationPO.outFunnelId = funnel2.data.getId();
-                pipelineConfiguration.save(pipelineConfigurationPO);*/
             }
 
         }
@@ -368,26 +339,6 @@ public class BuildNifiCustomWorkFlow {
                 appNifiSettingPO.type = DataClassifyEnum.CUSTOMWORKSTRUCTURE.getValue();
                 appNifiSettingPO.appComponentId = res1.data.getId();
                 appNifiSettingService.save(appNifiSettingPO);
-                // 在层级组里生成port和漏斗,后面连接,还需要存库
-                /*BuildPortDTO buildPortDTO = new BuildPortDTO();
-                buildPortDTO.componentX = 500.0;
-                buildPortDTO.componentY = 500.0;
-                buildPortDTO.componentId = appNifiSettingPO.appComponentId;
-                buildPortDTO.portName = groupName;
-                PortEntity inputPort = componentsBuild.buildInputPort(buildPortDTO);
-                PortEntity outputPort = componentsBuild.buildOutputPort(buildPortDTO);
-                FunnelDTO funnelDTO = new FunnelDTO();
-                funnelDTO.groupId = buildPortDTO.componentId;
-                BusinessResult<FunnelEntity> funnel1 = componentsBuild.createFunnel(funnelDTO);
-                BusinessResult<FunnelEntity> funnel2 = componentsBuild.createFunnel(funnelDTO);
-                PipelineConfigurationPO pipelineConfigurationPO = new PipelineConfigurationPO();
-                pipelineConfigurationPO.app_id = appNifiSettingPO.appId;
-                pipelineConfigurationPO.appComponentId = appNifiSettingPO.appComponentId;
-                pipelineConfigurationPO.outputPortId = outputPort.getId();
-                pipelineConfigurationPO.inputPortId = inputPort.getId();
-                pipelineConfigurationPO.inFunnelId = funnel1.data.getId();
-                pipelineConfigurationPO.outFunnelId = funnel2.data.getId();
-                pipelineConfiguration.save(pipelineConfigurationPO);*/
             }
         }
         return greatProcessGroupEntityId;
@@ -465,22 +416,6 @@ public class BuildNifiCustomWorkFlow {
                 } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKFACT)) {
                     one1 = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.FACT.getValue()).eq("del_flag", 1).one();
                 }
-                //维度,事实流程
-       /*         ModelPublishDataDTO modelPublishDataDTO = new ModelPublishDataDTO();
-                modelPublishDataDTO.businessAreaId = one1.appId;
-                modelPublishDataDTO.nifiCustomWorkflowId = nifiCustomWorkListDTO.nifiCustomWorkflowId;
-                ModelPublishTableDTO modelPublishTableDTO = new ModelPublishTableDTO();
-                modelPublishTableDTO.tableName = one1.tableName;
-                modelPublishTableDTO.groupComponentId = groupId;
-                modelPublishTableDTO.tableId = Long.parseLong(nifiNode.tableId);
-                modelPublishTableDTO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.workflowDetailId);
-                modelPublishTableDTO.groupStructureId = groupStructure;
-                log.info("表id为:" + nifiNode.tableId);
-                if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKDIMENSION)) {
-                    buildDataModelDorisTableListener.createNiFiFlow(modelPublishDataDTO, modelPublishTableDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKDIMENSION);
-                } else if (Objects.equals(nifiNode.tableType, OlapTableEnum.CUSTOMWORKFACT)) {
-                    buildDataModelDorisTableListener.createNiFiFlow(modelPublishDataDTO, modelPublishTableDTO, nifiNode.tableName, nifiNode.type, OlapTableEnum.CUSTOMWORKFACT);
-                }*/
                 //-------------------------------------------------
                 BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
                 buildNifiFlowDTO.userId=nifiCustomWorkListDTO.userId;

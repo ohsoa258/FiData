@@ -10,13 +10,7 @@ import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 

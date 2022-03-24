@@ -1,10 +1,7 @@
 package com.fisk.task.consumer.olap;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.BusinessAreaGetDataDTO;
@@ -19,11 +16,7 @@ import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.ITBETLIncremental;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 

@@ -11,15 +11,9 @@ import com.fisk.common.mdc.TraceTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.nifi.IPostgreBuild;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 

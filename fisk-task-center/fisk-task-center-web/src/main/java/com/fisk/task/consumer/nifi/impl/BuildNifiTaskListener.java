@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.nifi;
+package com.fisk.task.consumer.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
@@ -25,6 +25,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.task.consumer.nifi.INifiTaskListener;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
@@ -58,7 +59,7 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 
-public class BuildNifiTaskListener implements INifiTaskListener{
+public class BuildNifiTaskListener implements INifiTaskListener {
 
     @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
@@ -715,81 +716,6 @@ public class BuildNifiTaskListener implements INifiTaskListener{
         return dto;
     }
 
-    /**
-     * 创建nifi流程
-     *
-     * @param config         数据接入配置
-     * @param groupId        组id
-     * @param sourceDbPoolId 数据源连接池id
-     * @param targetDbPoolId 目标连接池id
-     * @param cfgDbPoolId    增量配置库id
-     */
-    private List<ProcessorEntity> buildProcessor(DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId) {
-        //读取增量字段组件
-        ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, new BuildNifiFlowDTO());
-        //创建数据转换json组件
-        ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 2);
-        //连接器
-        componentConnector(groupId, queryField.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //字段转换nifi变量
-        ProcessorEntity evaluateJson = evaluateJsonPathProcessor(groupId);
-        //连接器
-        componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //创建log
-        ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, new BuildNifiFlowDTO(), new DataAccessConfigDTO());
-        //连接器
-        componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
-        //创建执行删除组件
-        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, SynchronousTypeEnum.PGTOPG);
-        //连接器
-        componentConnector(groupId, logProcessor.getId(), delSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //创建查询组件
-        ProcessorEntity querySqlRes = execSqlProcessor(config, groupId, sourceDbPoolId);
-        //连接器
-        componentConnector(groupId, delSqlRes.getId(), querySqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //创建数据转换json组件
-        ProcessorEntity toJsonRes = convertJsonProcessor(groupId, 0, 7);
-        //连接器
-        componentConnector(groupId, querySqlRes.getId(), toJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //SplitJson  json拆分
-        ProcessorEntity processorEntity = splitJsonProcessor(groupId);
-        componentConnector(groupId, toJsonRes.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //EvaluateJsonPath+ReplaceText 用来转sql语句
-        ProcessorEntity sqlParameterProcessor = sqlParameterProcessor(config, groupId);
-        componentConnector(groupId, processorEntity.getId(), sqlParameterProcessor.getId(), AutoEndBranchTypeEnum.SPLIT);
-        //转sql
-        ProcessorEntity assembleSql = assembleSql(config, groupId);
-        //连接器
-        componentConnector(groupId, sqlParameterProcessor.getId(), assembleSql.getId(), AutoEndBranchTypeEnum.MATCHED);
-        //创建执行sql组件
-        ProcessorEntity putSqlRes = putSqlProcessor(groupId, targetDbPoolId);
-        //连接器
-        componentConnector(groupId, assembleSql.getId(), putSqlRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //合并流文件组件
-        ProcessorEntity mergeRes = mergeContentProcessor(groupId);
-        //连接器
-        componentConnector(groupId, putSqlRes.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        //用组件,调存储过程把stg里的数据向ods里面插入
-        //ProcessorEntity processorEntity1 = CallDbProcedure(config, groupId, targetDbPoolId);
-        //componentConnector(groupId, mergeRes.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.MERGED);
-        // 用组件然后再调存储过程写日志
-
-        List<ProcessorEntity> res = new ArrayList<>();
-        res.add(queryField);
-        res.add(jsonRes);
-        res.add(evaluateJson);
-        res.add(logProcessor);
-        res.add(delSqlRes);
-        res.add(querySqlRes);
-        res.add(toJsonRes);
-        res.add(processorEntity);
-        res.add(sqlParameterProcessor);
-        res.add(assembleSql);
-        res.add(putSqlRes);
-        res.add(mergeRes);
-        //res.add(processorEntity1);
-        return res;
-    }
 
     private List<ProcessorEntity> buildProcessorVersion2(String appGroupId, DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId, AppNifiSettingPO appNifiSettingPO, BuildNifiFlowDTO dto) {
         List<ProcessorEntity> res = new ArrayList<>();

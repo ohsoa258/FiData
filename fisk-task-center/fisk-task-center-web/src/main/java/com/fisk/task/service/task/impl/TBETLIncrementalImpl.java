@@ -1,6 +1,7 @@
 package com.fisk.task.service.task.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.constants.NifiConstants;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
@@ -37,22 +38,22 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                     sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
                     paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
-                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                 }
                 if (endTime != null) {
                     String endDate = getStringDate(endTime);
                     sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                     paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                 } else {
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
-                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                    paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
                 }
             } else {
-                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
-                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
-                paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), "0000-00-00");
-                paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), "0000-00-00");
+                sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
+                paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
             }
         }
         paramMap.put(SystemVariableTypeEnum.QUERY_SQL.getValue(),sql);

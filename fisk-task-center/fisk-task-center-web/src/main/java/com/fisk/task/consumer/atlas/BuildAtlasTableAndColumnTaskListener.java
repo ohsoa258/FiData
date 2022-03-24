@@ -23,15 +23,9 @@ import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.TriggerUtils;
 import org.quartz.impl.triggers.CronTriggerImpl;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 

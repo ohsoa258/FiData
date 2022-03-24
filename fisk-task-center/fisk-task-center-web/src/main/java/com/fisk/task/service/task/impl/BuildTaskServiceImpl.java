@@ -11,8 +11,7 @@ import com.fisk.task.enums.TaskStatusEnum;
 import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.service.task.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
-//import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.apache.kafka.common.KafkaException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -49,7 +48,7 @@ public class BuildTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogPO> 
             model.taskSendOk = true;
             this.updateById(model);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
-        } catch (AmqpException ex) {
+        } catch (KafkaException ex) {
             log.error("【{}】【{}】消息发布失败，消息内容【{}】，ex：", exchange, queue, str, ex);
             model.taskSendOk = false;
             this.updateById(model);

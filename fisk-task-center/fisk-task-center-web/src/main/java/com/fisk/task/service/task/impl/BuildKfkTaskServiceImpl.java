@@ -12,7 +12,7 @@ import com.fisk.task.enums.TaskStatusEnum;
 import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
+import org.apache.kafka.common.KafkaException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -43,7 +43,7 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
             model.taskSendOk = true;
             this.updateById(model);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
-        } catch (AmqpException ex) {
+        } catch (KafkaException ex) {
             log.error("【{}】消息发布失败，消息内容【{}】，ex：" , queue, str, ex);
             model.taskSendOk = false;
             this.updateById(model);
