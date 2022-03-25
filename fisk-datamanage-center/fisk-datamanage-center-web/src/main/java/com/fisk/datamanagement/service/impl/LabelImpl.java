@@ -87,8 +87,8 @@ public class LabelImpl implements ILabel {
         }
         LabelDTO dto = LabelMap.INSTANCES.poToDto(po);
         dto.moduleIds = Arrays.asList(dto.applicationModule.split(","));
-        CategoryPO categoryPO=categoryMapper.selectById(po.categoryId);
-        dto.categoryName=categoryPO==null?"":categoryPO.categoryCnName;
+        CategoryPO categoryPo=categoryMapper.selectById(po.categoryId);
+        dto.categoryName=categoryPo==null?"":categoryPo.categoryCnName;
         return dto;
     }
 

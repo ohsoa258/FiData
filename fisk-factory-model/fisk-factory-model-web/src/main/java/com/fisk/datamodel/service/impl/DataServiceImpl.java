@@ -41,14 +41,14 @@ public class DataServiceImpl implements IDataService {
         //是维度字段
         if (dto.dimensionOne==1)
         {
-            DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(dto.fieldIdOne);
-            if (dimensionAttributePO==null)
+            DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(dto.fieldIdOne);
+            if (dimensionAttributePo==null)
             {
                 return false;
             }
             QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
             queryWrapper.select("dimension_id").lambda()
-                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePO.dimensionId);
+                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo.dimensionId);
             List<Integer> dimensionIds1=(List)dimensionAttributeMapper.selectObjs(queryWrapper);
             if (dimensionIds1 !=null && dimensionIds1.size()>0)
             {
@@ -57,15 +57,15 @@ public class DataServiceImpl implements IDataService {
             }
             if (dto.dimensionTwo==1)
             {
-                DimensionAttributePO dimensionAttributePO1=dimensionAttributeMapper.selectById(dto.fieldIdTwo);
-                if (dimensionAttributePO1==null)
+                DimensionAttributePO dimensionAttributePo1=dimensionAttributeMapper.selectById(dto.fieldIdTwo);
+                if (dimensionAttributePo1==null)
                 {
                     return false;
                 }
                 QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
                 queryWrapper1.select("associate_dimension_id").lambda()
                         .ne(DimensionAttributePO::getAssociateDimensionId,0)
-                        .eq(DimensionAttributePO::getDimensionId,dimensionAttributePO1.dimensionId);
+                        .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo1.dimensionId);
                 List<Integer> dimensionIds2=(List)dimensionAttributeMapper.selectObjs(queryWrapper1);
                 if (dimensionIds2 !=null && dimensionIds2.size()>0)
                 {
@@ -79,16 +79,16 @@ public class DataServiceImpl implements IDataService {
                     return true;
                 }
             }else {
-                IndicatorsPO indicatorsPO=indicatorsMapper.selectById(dto.fieldIdTwo);
-                if (indicatorsPO ==null)
+                IndicatorsPO indicatorsPo=indicatorsMapper.selectById(dto.fieldIdTwo);
+                if (indicatorsPo ==null)
                 {
                     return false;
                 }
-                QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper();
-                factAttributePOQueryWrapper.select("associate_dimension_id").lambda()
+                QueryWrapper<FactAttributePO> factAttributePoQueryWrapper=new QueryWrapper();
+                factAttributePoQueryWrapper.select("associate_dimension_id").lambda()
                         .ne(FactAttributePO::getAssociateDimensionId,0)
-                        .eq(FactAttributePO::getFactId,indicatorsPO.factId);
-                List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+                        .eq(FactAttributePO::getFactId,indicatorsPo.factId);
+                List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
                 if (factIds !=null && factIds.size()>0)
                 {
                     factIds=factIds.stream()
@@ -110,14 +110,14 @@ public class DataServiceImpl implements IDataService {
                 return false;
             }
 
-            DimensionAttributePO dimensionAttributePO1=dimensionAttributeMapper.selectById(dto.fieldIdTwo);
-            if (dimensionAttributePO1==null)
+            DimensionAttributePO dimensionAttributePo1=dimensionAttributeMapper.selectById(dto.fieldIdTwo);
+            if (dimensionAttributePo1==null)
             {
                 return false;
             }
             QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.select("dimension_id").lambda()
-                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePO1.dimensionId);
+                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo1.dimensionId);
             List<Integer> dimensionIds=(List)dimensionAttributeMapper.selectObjs(queryWrapper1);
             if (dimensionIds !=null && dimensionIds.size()>0)
             {
@@ -125,15 +125,15 @@ public class DataServiceImpl implements IDataService {
                         .distinct().collect(Collectors.toList());
             }
 
-            IndicatorsPO indicatorsPO=indicatorsMapper.selectById(dto.fieldIdOne);
-            if (indicatorsPO ==null)
+            IndicatorsPO indicatorsPo=indicatorsMapper.selectById(dto.fieldIdOne);
+            if (indicatorsPo ==null)
             {
                 return false;
             }
-            QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper();
-            factAttributePOQueryWrapper.select("associate_dimension_id").lambda()
-                    .eq(FactAttributePO::getFactId,indicatorsPO.factId);
-            List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+            QueryWrapper<FactAttributePO> factAttributePoQueryWrapper=new QueryWrapper();
+            factAttributePoQueryWrapper.select("associate_dimension_id").lambda()
+                    .eq(FactAttributePO::getFactId,indicatorsPo.factId);
+            List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
             if (factIds !=null && factIds.size()>0)
             {
                 factIds=factIds.stream()
@@ -153,33 +153,33 @@ public class DataServiceImpl implements IDataService {
     public DimensionTimePeriodDTO getDimensionDate(int indicatorsId)
     {
         DimensionTimePeriodDTO dto=new DimensionTimePeriodDTO();
-        IndicatorsPO indicatorsPO=indicatorsMapper.selectById(indicatorsId);
-        if (indicatorsPO==null)
+        IndicatorsPO indicatorsPo=indicatorsMapper.selectById(indicatorsId);
+        if (indicatorsPo==null)
         {
             return dto;
         }
         QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(DimensionPO::getBusinessId,indicatorsPO.businessId)
+                .eq(DimensionPO::getBusinessId,indicatorsPo.businessId)
                 .eq(DimensionPO::getIsDimDateTbl,true);
-        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper);
-        if (dimensionPOList ==null || dimensionPOList.size()==0)
+        List<DimensionPO> dimensionPoList=dimensionMapper.selectList(queryWrapper);
+        if (dimensionPoList ==null || dimensionPoList.size()==0)
         {
             return dto;
         }
         //查询日期字段表字段
         List<Integer> dimensionIds=(List) dimensionMapper.selectObjs(queryWrapper.select("id"));
-        QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-        attributePOQueryWrapper.in("dimension_id",dimensionIds).lambda()
+        QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
+        attributePoQueryWrapper.in("dimension_id",dimensionIds).lambda()
                 .eq(DimensionAttributePO::getIsDimDateField,true);
-        List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper.selectList(attributePOQueryWrapper);
-        if (dimensionAttributePOList ==null && dimensionAttributePOList.size()==0)
+        List<DimensionAttributePO> dimensionAttributePoList=dimensionAttributeMapper.selectList(attributePoQueryWrapper);
+        if (dimensionAttributePoList ==null && dimensionAttributePoList.size()==0)
         {
             return dto;
         }
-        dto.dimensionTabName=dimensionPOList.get(0).dimensionTabName;
-        dto.fieldId=dimensionAttributePOList.get(0).id;
-        dto.dimensionAttributeField=dimensionAttributePOList.get(0).dimensionFieldEnName;
+        dto.dimensionTabName=dimensionPoList.get(0).dimensionTabName;
+        dto.fieldId=dimensionAttributePoList.get(0).id;
+        dto.dimensionAttributeField=dimensionAttributePoList.get(0).dimensionFieldEnName;
         return dto;
     }
 
@@ -195,10 +195,10 @@ public class DataServiceImpl implements IDataService {
             {
                 return nameList;
             }
-            QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-            attributePOQueryWrapper.select("dimension_field_en_name").lambda()
+            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
+            attributePoQueryWrapper.select("dimension_field_en_name").lambda()
                     .eq(DimensionAttributePO::getDimensionId,po.id);
-            nameList=(List)dimensionAttributeMapper.selectObjs(attributePOQueryWrapper);
+            nameList=(List)dimensionAttributeMapper.selectObjs(attributePoQueryWrapper);
         }
         catch (Exception e)
         {

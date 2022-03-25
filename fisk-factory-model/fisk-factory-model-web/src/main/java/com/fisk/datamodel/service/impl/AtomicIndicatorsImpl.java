@@ -155,10 +155,10 @@ public class AtomicIndicatorsImpl
                 String name = matcher.group(1);
                 String newName = name.replace("@", "");
                 //根据中括号的名称与业务域获取指标id
-                QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper = new QueryWrapper<>();
-                indicatorsPOQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId, po.businessId)
+                QueryWrapper<IndicatorsPO> indicatorsPoQueryWrapper = new QueryWrapper<>();
+                indicatorsPoQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId, po.businessId)
                         .eq(IndicatorsPO::getIndicatorsName, newName);
-                IndicatorsPO selectById = mapper.selectOne(indicatorsPOQueryWrapper);
+                IndicatorsPO selectById = mapper.selectOne(indicatorsPoQueryWrapper);
                 if (selectById == null) {
                     exit = true;
                     break;
@@ -225,8 +225,8 @@ public class AtomicIndicatorsImpl
         if (ids != null && ids.size() > 0) {
             QueryWrapper<DimensionPO> dimensionQueryWrapper = new QueryWrapper<>();
             dimensionQueryWrapper.in("id", ids);
-            List<DimensionPO> dimensionPOList = dimensionMapper.selectList(dimensionQueryWrapper);
-            for (DimensionPO item : dimensionPOList) {
+            List<DimensionPO> dimensionPoList = dimensionMapper.selectList(dimensionQueryWrapper);
+            for (DimensionPO item : dimensionPoList) {
                 AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                 dto.attributeType = FactAttributeEnum.DIMENSION_KEY.getValue();
                 dto.dimensionTableName = item.dimensionTabName;
@@ -236,11 +236,11 @@ public class AtomicIndicatorsImpl
         }
 
         //获取事实表中的退化维度
-        QueryWrapper<FactAttributePO> factAttributePOQueryWrapper = new QueryWrapper<>();
-        factAttributePOQueryWrapper.select("id").lambda()
+        QueryWrapper<FactAttributePO> factAttributePoQueryWrapper = new QueryWrapper<>();
+        factAttributePoQueryWrapper.select("id").lambda()
                 .eq(FactAttributePO::getAttributeType, FactAttributeEnum.DEGENERATION_DIMENSION)
                 .eq(FactAttributePO::getFactId, factId);
-        List<Integer> factAttributeIds = (List) factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+        List<Integer> factAttributeIds = (List) factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
         if (factAttributeIds != null && factAttributeIds.size() > 0) {
             //存在退化维度,则查询该退化维度在业务限定中是否用到
             QueryWrapper<BusinessLimitedAttributePO> queryWrapper1 = new QueryWrapper<>();
@@ -248,11 +248,11 @@ public class AtomicIndicatorsImpl
             List<Integer> factAttributeIds1 = (List) businessLimitedAttributeMapper.selectObjs(queryWrapper1);
             if (factAttributeIds1 != null && factAttributeIds1.size() > 0) {
                 //退化在业务限定中用到,则字段进入Doris
-                QueryWrapper<FactAttributePO> factAttributePOQueryWrapper1 = new QueryWrapper<>();
-                factAttributePOQueryWrapper1.in("id", factAttributeIds1);
-                List<FactAttributePO> factAttributePOS = factAttributeMapper.selectList(factAttributePOQueryWrapper1);
-                if (factAttributePOS != null && factAttributePOS.size() > 0) {
-                    for (FactAttributePO po : factAttributePOS) {
+                QueryWrapper<FactAttributePO> factAttributePoQueryWrapper1 = new QueryWrapper<>();
+                factAttributePoQueryWrapper1.in("id", factAttributeIds1);
+                List<FactAttributePO> factAttributePoList = factAttributeMapper.selectList(factAttributePoQueryWrapper1);
+                if (factAttributePoList != null && factAttributePoList.size() > 0) {
+                    for (FactAttributePO po : factAttributePoList) {
                         AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
                         dto.attributeType = FactAttributeEnum.DEGENERATION_DIMENSION.getValue();
                         ;
@@ -271,21 +271,21 @@ public class AtomicIndicatorsImpl
         QueryWrapper<IndicatorsPO> indicatorsQueryWrapper = new QueryWrapper<>();
         indicatorsQueryWrapper.lambda().eq(IndicatorsPO::getFactId, factId)
                 .eq(IndicatorsPO::getIndicatorsType, IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue());
-        List<IndicatorsPO> indicatorsPO = indicatorsMapper.selectList(indicatorsQueryWrapper);
-        for (IndicatorsPO item : indicatorsPO) {
+        List<IndicatorsPO> indicatorsPo = indicatorsMapper.selectList(indicatorsQueryWrapper);
+        for (IndicatorsPO item : indicatorsPo) {
             AtomicIndicatorPushDTO dto = new AtomicIndicatorPushDTO();
             dto.attributeType = FactAttributeEnum.MEASURE.getValue();
             ;
             dto.atomicIndicatorName = item.indicatorsName;
             dto.aggregationLogic = item.calculationLogic;
             //获取聚合字段
-            FactAttributePO factAttributePO = factAttributeMapper.selectById(item.factAttributeId);
-            if (factAttributePO == null) {
+            FactAttributePO factAttributePo = factAttributeMapper.selectById(item.factAttributeId);
+            if (factAttributePo == null) {
                 continue;
             }
-            dto.aggregatedField = factAttributePO.factFieldEnName;
-            dto.factFieldType = factAttributePO.factFieldType;
-            dto.factFieldLength = factAttributePO.factFieldLength;
+            dto.aggregatedField = factAttributePo.factFieldEnName;
+            dto.factFieldType = factAttributePo.factFieldType;
+            dto.factFieldLength = factAttributePo.factFieldLength;
             dto.id = item.id;
             data.add(dto);
         }
@@ -302,8 +302,8 @@ public class AtomicIndicatorsImpl
         List<AtomicIndicatorFactAttributeDTO> data = new ArrayList<>();
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
-        List<FactAttributePO> factAttributePOList = factAttributeMapper.selectList(queryWrapper);
-        data = FactAttributeMap.INSTANCES.attributePoToDto(factAttributePOList);
+        List<FactAttributePO> factAttributePoList = factAttributeMapper.selectList(queryWrapper);
+        data = FactAttributeMap.INSTANCES.attributePoToDto(factAttributePoList);
         //获取关联维度表
         queryWrapper.select("associate_dimension_id");
         List<Integer> dimensionIds = (List) factAttributeMapper.selectObjs(queryWrapper);
@@ -311,9 +311,9 @@ public class AtomicIndicatorsImpl
         if (!CollectionUtils.isEmpty(dimensionIds)) {
             QueryWrapper<DimensionPO> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.in("id", dimensionIds);
-            List<DimensionPO> dimensionPOList = dimensionMapper.selectList(queryWrapper1);
-            if (!CollectionUtils.isEmpty(dimensionPOList)) {
-                for (DimensionPO item : dimensionPOList) {
+            List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper1);
+            if (!CollectionUtils.isEmpty(dimensionPoList)) {
+                for (DimensionPO item : dimensionPoList) {
                     AtomicIndicatorFactAttributeDTO dto = new AtomicIndicatorFactAttributeDTO();
                     dto.associateDimensionTable = item.dimensionTabName;
                     dto.attributeType = 1;
@@ -337,12 +337,12 @@ public class AtomicIndicatorsImpl
         {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, stringBuilder.toString());
         }
-        FactPO factPO = factMapper.selectById(factId);
-        if (factPO == null)
+        FactPO factPo = factMapper.selectById(factId);
+        if (factPo == null)
         {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, stringBuilder.toString());
         }
-        if (factPO.isPublish != 1)
+        if (factPo.isPublish != 1)
         {
             return ResultEntityBuild.buildData(ResultEnum.PUBLISH_NOTSUCCESS, stringBuilder.toString());
         }
@@ -351,8 +351,8 @@ public class AtomicIndicatorsImpl
         indicatorsQueryWrapper.lambda()
                 .eq(IndicatorsPO::getFactId, factId)
                 .eq(IndicatorsPO::getDelFlag, 1);
-        List<IndicatorsPO> indicatorsPOS = mapper.selectList(indicatorsQueryWrapper);
-        if (CollectionUtils.isEmpty(indicatorsPOS))
+        List<IndicatorsPO> indicatorsPoList = mapper.selectList(indicatorsQueryWrapper);
+        if (CollectionUtils.isEmpty(indicatorsPoList))
         {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, stringBuilder.toString());
         }
@@ -368,7 +368,7 @@ public class AtomicIndicatorsImpl
      * @param dimensionFiled 维度字段
      * @return SQL
      */
-    public String GetDerivedIndex(String timePeriodType, String dimensionFiled) {
+    public String getDerivedIndex(String timePeriodType, String dimensionFiled) {
         StringBuilder stringBuilder = new StringBuilder();
         switch (timePeriodType) {
             case "YTD":
@@ -425,6 +425,8 @@ public class AtomicIndicatorsImpl
                         "ORDER BY\n" +
                         "\tfulldatekey");
                 break;
+            default:
+                break;
         }
         return stringBuilder.toString();
     }
@@ -436,7 +438,7 @@ public class AtomicIndicatorsImpl
      * @param dimensionFiled 维度字段
      * @return SQL
      */
-    public String GetDerivedIndex_PreviousIssue(String timePeriodType, String dimensionFiled) {
+    public String getDerivedIndexPreviousIssue(String timePeriodType, String dimensionFiled) {
         StringBuilder stringBuilder = new StringBuilder();
         switch (timePeriodType) {
             case "YTD":
@@ -514,6 +516,8 @@ public class AtomicIndicatorsImpl
                         "\tfulldatekey \n" +
                         "\t) t");
                 break;
+            default:
+                break;
         }
         return stringBuilder.toString();
     }
@@ -525,7 +529,7 @@ public class AtomicIndicatorsImpl
      * @param dimensionFiled 维度字段
      * @return SQL
      */
-    public String GetDerivedIndex_Synchronism(String timePeriodType, String dimensionFiled) {
+    public String getDerivedIndexSynchronism(String timePeriodType, String dimensionFiled) {
         StringBuilder stringBuilder = new StringBuilder();
         switch (timePeriodType) {
             case "YTD":
@@ -665,6 +669,8 @@ public class AtomicIndicatorsImpl
                         "\t\tsubdate( nq.fulldatekey, INTERVAL 1 YEAR ),\n" +
                         "\t\"%Y%m%d\" \n" +
                         "\t)");
+                break;
+            default:
                 break;
         }
         return stringBuilder.toString();

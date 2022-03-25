@@ -8,6 +8,9 @@ import com.fisk.common.filter.dto.FilterEnum;
  */
 public enum DataFactoryEnum implements BaseEnum {
 
+    /**
+     * 数仓维度
+     */
     NUMBER_DIMENSION(4,"数仓维度"),
     NUMBER_FACT(5,"数仓事实"),
     ANALYSIS_DIMENSION(6,"分析维度"),

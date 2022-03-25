@@ -91,8 +91,8 @@ public class BusinessAreaImpl
         //判断名称是否重复
         QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
-        BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
-        if (businessAreaPO !=null)
+        BusinessAreaPO businessAreaPo=mapper.selectOne(queryWrapper);
+        if (businessAreaPo !=null)
         {
             return ResultEnum.BUSINESS_AREA_EXIST;
         }
@@ -128,8 +128,8 @@ public class BusinessAreaImpl
         //判断名称是否重复
         QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
-        BusinessAreaPO businessAreaPO=mapper.selectOne(queryWrapper);
-        if (businessAreaPO !=null && businessAreaPO.id !=businessAreaDTO.id)
+        BusinessAreaPO businessAreaPo=mapper.selectOne(queryWrapper);
+        if (businessAreaPo !=null && businessAreaPo.id !=businessAreaDTO.id)
         {
             return ResultEnum.BUSINESS_AREA_EXIST;
         }
@@ -162,14 +162,14 @@ public class BusinessAreaImpl
             if (!CollectionUtils.isEmpty(idArray)) {
                 result = true;
                 List<Integer> folder = new ArrayList<>();
-                QueryWrapper<DimensionPO> dimensionPOQueryWrapper = new QueryWrapper<>();
-                dimensionPOQueryWrapper
+                QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
+                dimensionPoQueryWrapper
                         .notIn("id", idArray).lambda()
                         .eq(DimensionPO::getBusinessId, id);
-                List<DimensionPO> dimensionPOList = dimensionMapper.selectList(dimensionPOQueryWrapper);
-                if (!CollectionUtils.isEmpty(dimensionPOList)) {
+                List<DimensionPO> dimensionPoList = dimensionMapper.selectList(dimensionPoQueryWrapper);
+                if (!CollectionUtils.isEmpty(dimensionPoList)) {
                     //循环删除维度表数据
-                    for (DimensionPO item : dimensionPOList) {
+                    for (DimensionPO item : dimensionPoList) {
                         folder.add(item.dimensionFolderId);
                         if (dimensionMapper.deleteByIdWithFill(item) == 0) {
                             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
@@ -192,9 +192,9 @@ public class BusinessAreaImpl
             }
             else {
                 //删除所有维度文件夹
-                QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
-                folderPOQueryWrapper.select("id").lambda().eq(DimensionFolderPO::getBusinessId,id);
-                List<Integer> folderIds=(List) dimensionFolderMapper.selectObjs(folderPOQueryWrapper);
+                QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
+                folderPoQueryWrapper.select("id").lambda().eq(DimensionFolderPO::getBusinessId,id);
+                List<Integer> folderIds=(List) dimensionFolderMapper.selectObjs(folderPoQueryWrapper);
                 if (!CollectionUtils.isEmpty(folderIds))
                 {
                     if (dimensionFolderMapper.deleteBatchIds(folderIds)==0)
@@ -203,9 +203,9 @@ public class BusinessAreaImpl
                     }
                 }
                 //删除所有维度
-                QueryWrapper<DimensionPO> dimensionPOQueryWrapper=new QueryWrapper<>();
-                dimensionPOQueryWrapper.select("id").lambda().eq(DimensionPO::getBusinessId,id);
-                List<Integer> ids=(List) dimensionMapper.selectObjs(dimensionPOQueryWrapper);
+                QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
+                dimensionPoQueryWrapper.select("id").lambda().eq(DimensionPO::getBusinessId,id);
+                List<Integer> ids=(List) dimensionMapper.selectObjs(dimensionPoQueryWrapper);
                 if (!CollectionUtils.isEmpty(ids))
                 {
                     if (dimensionMapper.deleteBatchIds(ids)==0)
@@ -217,7 +217,7 @@ public class BusinessAreaImpl
             //删除业务过程和事实表
             delBusinessProcessFact(id);
             //删除niFi流程
-            //publishTaskClient.deleteNifiFlow(vo);
+            ////publishTaskClient.deleteNifiFlow(vo);
             //拼接删除DW/Doris库中维度事实表
             publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
 
@@ -246,28 +246,28 @@ public class BusinessAreaImpl
         List<Long> dimensionFolderIds = (List) dimensionFolderMapper.selectObjs(queryWrapper);
         if (!CollectionUtils.isEmpty(dimensionFolderIds)) {
             //获取维度文件夹下维度表
-            QueryWrapper<DimensionPO> dimensionPOQueryWrapper = new QueryWrapper<>();
-            dimensionPOQueryWrapper.select("id").in("dimension_folder_id", dimensionFolderIds)
+            QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
+            dimensionPoQueryWrapper.select("id").in("dimension_folder_id", dimensionFolderIds)
                     .lambda().eq(DimensionPO::getBusinessId, id);
-            dimensionIds = (List) dimensionMapper.selectObjs(dimensionPOQueryWrapper);
+            dimensionIds = (List) dimensionMapper.selectObjs(dimensionPoQueryWrapper);
             if (!CollectionUtils.isEmpty(dimensionIds)) {
-                QueryWrapper<DimensionAttributePO> attributePOQueryWrapper = new QueryWrapper<>();
-                attributePOQueryWrapper.select("associate_dimension_id")
+                QueryWrapper<DimensionAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
+                attributePoQueryWrapper.select("associate_dimension_id")
                         .in("associate_dimension_id", dimensionIds)
                         .notIn("dimension_id", dimensionIds);
-                idArray.addAll((List) dimensionAttributeMapper.selectObjs(attributePOQueryWrapper));
+                idArray.addAll((List) dimensionAttributeMapper.selectObjs(attributePoQueryWrapper));
             }
         }
         //查看事实表与共享维度是否存在关联
-        QueryWrapper<FactPO> factPOQueryWrapper = new QueryWrapper<>();
-        factPOQueryWrapper.select("id").lambda().ne(FactPO::getBusinessId, id);
-        List<Long> factIds = (List) factMapper.selectObjs(factPOQueryWrapper);
+        QueryWrapper<FactPO> factPoQueryWrapper = new QueryWrapper<>();
+        factPoQueryWrapper.select("id").lambda().ne(FactPO::getBusinessId, id);
+        List<Long> factIds = (List) factMapper.selectObjs(factPoQueryWrapper);
         if (!CollectionUtils.isEmpty(factIds) && !CollectionUtils.isEmpty(dimensionIds)) {
-            QueryWrapper<FactAttributePO> factAttributePOQueryWrapper = new QueryWrapper<>();
-            factAttributePOQueryWrapper.select("associate_dimension_id")
+            QueryWrapper<FactAttributePO> factAttributePoQueryWrapper = new QueryWrapper<>();
+            factAttributePoQueryWrapper.select("associate_dimension_id")
                     .in("fact_id", factIds)
                     .in("associate_dimension_id", dimensionIds);
-            List<Long> factDimensionId = (List) factAttributeMapper.selectObjs(factAttributePOQueryWrapper);
+            List<Long> factDimensionId = (List) factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
             if (!CollectionUtils.isEmpty(factDimensionId)) {
                 idArray.addAll(factDimensionId);
             }
@@ -282,20 +282,20 @@ public class BusinessAreaImpl
     private void delBusinessProcessFact(long id)
     {
         //删除业务域下所有业务过程
-        QueryWrapper<BusinessProcessPO> businessProcessPOQueryWrapper=new QueryWrapper<>();
-        businessProcessPOQueryWrapper.select("id").lambda().eq(BusinessProcessPO::getBusinessId,id);
-        List<Integer> businessProcessPOS=(List)businessProcessMapper.selectObjs(businessProcessPOQueryWrapper);
-        if (!CollectionUtils.isEmpty(businessProcessPOS))
+        QueryWrapper<BusinessProcessPO> businessProcessPoQueryWrapper=new QueryWrapper<>();
+        businessProcessPoQueryWrapper.select("id").lambda().eq(BusinessProcessPO::getBusinessId,id);
+        List<Integer> businessProcessPoList=(List)businessProcessMapper.selectObjs(businessProcessPoQueryWrapper);
+        if (!CollectionUtils.isEmpty(businessProcessPoList))
         {
-            if (businessProcessMapper.deleteBatchIds(businessProcessPOS)==0)
+            if (businessProcessMapper.deleteBatchIds(businessProcessPoList)==0)
             {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
         //删除业务域下所有事实表
-        QueryWrapper<FactPO> factPOQueryWrapper1=new QueryWrapper<>();
-        factPOQueryWrapper1.select("id").lambda().eq(FactPO::getBusinessId,id);
-        List<Integer> factIdList=(List)factMapper.selectObjs(factPOQueryWrapper1);
+        QueryWrapper<FactPO> factPoQueryWrapper1=new QueryWrapper<>();
+        factPoQueryWrapper1.select("id").lambda().eq(FactPO::getBusinessId,id);
+        List<Integer> factIdList=(List)factMapper.selectObjs(factPoQueryWrapper1);
         if (!CollectionUtils.isEmpty(factIdList))
         {
             if (factMapper.deleteBatchIds(factIdList)==0)
@@ -324,9 +324,9 @@ public class BusinessAreaImpl
         //获取业务域下所有事实id
         DataModelTableVO factTable = new DataModelTableVO();
         factTable.type = OlapTableEnum.FACT;
-        QueryWrapper<FactPO> factPOQueryWrapper2 = new QueryWrapper<>();
-        factPOQueryWrapper2.select("id").lambda().eq(FactPO::getBusinessId, id);
-        factTable.ids = (List) factMapper.selectObjs(factPOQueryWrapper2).stream().collect(Collectors.toList());
+        QueryWrapper<FactPO> factPoQueryWrapper2 = new QueryWrapper<>();
+        factPoQueryWrapper2.select("id").lambda().eq(FactPO::getBusinessId, id);
+        factTable.ids = (List) factMapper.selectObjs(factPoQueryWrapper2).stream().collect(Collectors.toList());
         vo.factIdList = factTable;
         vo.userId=userHelper.getLoginUserInfo().id;
         return vo;
@@ -359,9 +359,9 @@ public class BusinessAreaImpl
             }
         }
         //获取事实表名称集合
-        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-        factPOQueryWrapper.lambda().eq(FactPO::getBusinessId,businessAreaId);
-        List<String> factNameList=(List) factMapper.selectObjs(factPOQueryWrapper);
+        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
+        factPoQueryWrapper.lambda().eq(FactPO::getBusinessId,businessAreaId);
+        List<String> factNameList=(List) factMapper.selectObjs(factPoQueryWrapper);
         if (!CollectionUtils.isEmpty(factNameList))
         {
             for (String name:factNameList)
@@ -421,16 +421,16 @@ public class BusinessAreaImpl
             //获取事实表关联的维度
             data.dimensionList=dimensionAttribute.getDimensionMetaDataList(dto.factIds);
             //更改事实表Doris发布状态
-            List<FactPO> factPOList=new ArrayList<>();
+            List<FactPO> factPoList=new ArrayList<>();
             if (!CollectionUtils.isEmpty(dto.factIds))
             {
                 QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
                 queryWrapper.in("id",dto.factIds);
-                factPOList=factMapper.selectList(queryWrapper);
+                factPoList=factMapper.selectList(queryWrapper);
             }
-            if (!CollectionUtils.isEmpty(factPOList))
+            if (!CollectionUtils.isEmpty(factPoList))
             {
-                for (FactPO po:factPOList)
+                for (FactPO po:factPoList)
                 {
                     po.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
                     if (factMapper.updateById(po)==0)
@@ -444,13 +444,13 @@ public class BusinessAreaImpl
             {
                 for (ModelMetaDataDTO item:data.dimensionList)
                 {
-                    DimensionPO dimensionPO=dimensionMapper.selectById(item.id);
-                    if (dimensionPO==null)
+                    DimensionPO dimensionPo=dimensionMapper.selectById(item.id);
+                    if (dimensionPo==null)
                     {
                         continue;
                     }
-                    dimensionPO.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
-                    if (dimensionMapper.updateById(dimensionPO)==0)
+                    dimensionPo.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
+                    if (dimensionMapper.updateById(dimensionPo)==0)
                     {
                         throw new FkException(ResultEnum.PUBLISH_FAILURE);
                     }

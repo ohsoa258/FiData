@@ -70,11 +70,11 @@ public class DimensionFolderImpl
         //判断共享维度文件夹是否已存在
         if (dto.share)
         {
-            QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
-            folderPOQueryWrapper.lambda()
+            QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
+            folderPoQueryWrapper.lambda()
                     .eq(DimensionFolderPO::getDimensionFolderCnName,dto.dimensionFolderCnName)
                     .eq(DimensionFolderPO::getShare,true);
-            List<DimensionFolderPO> poList=mapper.selectList(folderPOQueryWrapper);
+            List<DimensionFolderPO> poList=mapper.selectList(folderPoQueryWrapper);
             if (poList !=null && poList.size()>0)
             {
                 return ResultEnum.DATA_NOTEXISTS;
@@ -99,9 +99,9 @@ public class DimensionFolderImpl
     public ResultEnum delDimensionFolder(List<Integer> ids)
     {
         try {
-            QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
-            folderPOQueryWrapper.select("id").in("id",ids);
-            List<Integer> folderIds=(List)mapper.selectObjs(folderPOQueryWrapper);
+            QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
+            folderPoQueryWrapper.select("id").in("id",ids);
+            List<Integer> folderIds=(List)mapper.selectObjs(folderPoQueryWrapper);
             if (CollectionUtils.isEmpty(folderIds))
             {
                 return ResultEnum.SAVE_DATA_ERROR;
@@ -155,11 +155,11 @@ public class DimensionFolderImpl
         //判断共享维度文件夹是否已存在
         if (dto.share)
         {
-            QueryWrapper<DimensionFolderPO> folderPOQueryWrapper=new QueryWrapper<>();
-            folderPOQueryWrapper.lambda()
+            QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
+            folderPoQueryWrapper.lambda()
                     .eq(DimensionFolderPO::getDimensionFolderCnName,dto.dimensionFolderCnName)
                     .eq(DimensionFolderPO::getShare,true);
-            List<DimensionFolderPO> poList=mapper.selectList(folderPOQueryWrapper);
+            List<DimensionFolderPO> poList=mapper.selectList(folderPoQueryWrapper);
             if (poList !=null && poList.size()>0)
             {
                 if (poList.get(0).id != dto.id)
@@ -192,51 +192,51 @@ public class DimensionFolderImpl
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        List<DimensionFolderDataDTO> listDTOS=new ArrayList<>();
+        List<DimensionFolderDataDTO> listDtoList=new ArrayList<>();
         //根据业务域id,获取维度文件夹列表
         QueryWrapper<DimensionFolderPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.orderByDesc("create_time").lambda()
                 .eq(DimensionFolderPO::getShare,true)
                 .or()
                 .eq(DimensionFolderPO::getBusinessId,businessAreaId);
-        List<DimensionFolderPO> dimensionFolderPOList=mapper.selectList(queryWrapper);
-        if (dimensionFolderPOList==null || dimensionFolderPOList.size()==0)
+        List<DimensionFolderPO> dimensionFolderPoList=mapper.selectList(queryWrapper);
+        if (dimensionFolderPoList==null || dimensionFolderPoList.size()==0)
         {
-            return listDTOS;
+            return listDtoList;
         }
-        listDTOS=DimensionFolderMap.INSTANCES.poListToDtoList(dimensionFolderPOList);
-        List<Integer> dimIds=(List) dimensionFolderPOList.stream().map(DimensionFolderPO::getId)
+        listDtoList=DimensionFolderMap.INSTANCES.poListToDtoList(dimensionFolderPoList);
+        List<Integer> dimIds=(List) dimensionFolderPoList.stream().map(DimensionFolderPO::getId)
                 .collect(Collectors.toList());
         //根据业务域id,获取维度列表
-        QueryWrapper<DimensionPO> dimensionPOQueryWrapper=new QueryWrapper<>();
-        dimensionPOQueryWrapper.orderByDesc("create_time")
+        QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
+        dimensionPoQueryWrapper.orderByDesc("create_time")
                 .in("dimension_folder_id",dimIds.toArray());
-        List<DimensionPO> list=dimensionMapper.selectList(dimensionPOQueryWrapper);
+        List<DimensionPO> list=dimensionMapper.selectList(dimensionPoQueryWrapper);
         if (list==null || list.size()==0)
         {
-            return listDTOS;
+            return listDtoList;
         }
-        for (DimensionFolderDataDTO item:listDTOS)
+        for (DimensionFolderDataDTO item:listDtoList)
         {
             item.dimensionListDTO=DimensionMap.INSTANCES.listPoToListsDto(list.stream().filter(e->e.dimensionFolderId==item.id).collect(Collectors.toList()));
         }
         //获取业务域下所有维度id集合
-        dimensionPOQueryWrapper.select("id");
-        List<Integer> ids=(List)dimensionMapper.selectObjs(dimensionPOQueryWrapper);
+        dimensionPoQueryWrapper.select("id");
+        List<Integer> ids=(List)dimensionMapper.selectObjs(dimensionPoQueryWrapper);
         if (ids==null || ids.size()==0)
         {
-            return listDTOS;
+            return listDtoList;
         }
         //根据维度id集合获取字段列表
-        QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-        attributePOQueryWrapper.in("dimension_id",ids);
-        List<DimensionAttributePO> attributePOS=dimensionAttributeMapper.selectList(attributePOQueryWrapper);
-        if (attributePOS==null || attributePOS.size()==0)
+        QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
+        attributePoQueryWrapper.in("dimension_id",ids);
+        List<DimensionAttributePO> attributePoList=dimensionAttributeMapper.selectList(attributePoQueryWrapper);
+        if (attributePoList==null || attributePoList.size()==0)
         {
-            return listDTOS;
+            return listDtoList;
         }
         //循环赋值
-        for (DimensionFolderDataDTO dimensionFolder:listDTOS)
+        for (DimensionFolderDataDTO dimensionFolder:listDtoList)
         {
             dimensionFolder.dimensionListDTO= DimensionMap.INSTANCES.listPoToListsDto(list.stream()
                     .filter(e->e.dimensionFolderId==dimensionFolder.id)
@@ -248,7 +248,7 @@ public class DimensionFolderImpl
             for (DimensionListDTO item:dimensionFolder.dimensionListDTO)
             {
                 int newId=Integer.parseInt(String.valueOf(item.id));
-                item.attributeList= DimensionAttributeMap.INSTANCES.poToDto(attributePOS.stream()
+                item.attributeList= DimensionAttributeMap.INSTANCES.poToDto(attributePoList.stream()
                         .filter(e->e.getDimensionId()==newId)
                         .sorted(Comparator.comparing(DimensionAttributePO::getCreateTime))
                         .collect(Collectors.toList()));
@@ -257,17 +257,17 @@ public class DimensionFolderImpl
                 {
                     if (attributeItem.associateDimensionId !=0)
                     {
-                        DimensionPO dimensionPO=dimensionMapper.selectById(attributeItem.associateDimensionId);
-                        attributeItem.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
-                        attributeItem.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        DimensionPO dimensionPo=dimensionMapper.selectById(attributeItem.associateDimensionId);
+                        attributeItem.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
+                        attributeItem.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
                     }
                 }
                 //降序排列
                 Collections.reverse(item.attributeList);
             }
         }
-        return listDTOS;
+        return listDtoList;
 
     }
 
@@ -276,21 +276,21 @@ public class DimensionFolderImpl
     public ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto)
     {
         try{
-            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.businessAreaId);
-            if (businessAreaPO==null)
+            BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.businessAreaId);
+            if (businessAreaPo==null)
             {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
             //获取维度文件夹下所有维度
             QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.in("id",dto.dimensionIds);
-            List<DimensionPO> dimensionPOList=dimensionMapper.selectList(queryWrapper);
-            if (dimensionPOList==null || dimensionPOList.size()==0)
+            List<DimensionPO> dimensionPoList=dimensionMapper.selectList(queryWrapper);
+            if (dimensionPoList==null || dimensionPoList.size()==0)
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
             }
             //更改发布状态
-            for (DimensionPO item:dimensionPOList)
+            for (DimensionPO item:dimensionPoList)
             {
                 item.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
                 if (dimensionMapper.updateById(item)==0)
@@ -299,25 +299,25 @@ public class DimensionFolderImpl
                 }
             }
             //获取维度字段数据
-            QueryWrapper<DimensionAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+            QueryWrapper<DimensionAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
             //获取维度id集合
             List<Integer> dimensionIds=(List) dimensionMapper.selectObjs(queryWrapper.select("id"));
-            List<DimensionAttributePO> dimensionAttributePOList=dimensionAttributeMapper
-                    .selectList(attributePOQueryWrapper.in("dimension_id",dimensionIds));
+            List<DimensionAttributePO> dimensionAttributePoList=dimensionAttributeMapper
+                    .selectList(attributePoQueryWrapper.in("dimension_id",dimensionIds));
             //遍历取值
             ModelPublishDataDTO data=new ModelPublishDataDTO();
-            data.businessAreaId=businessAreaPO.getId();
-            data.businessAreaName=businessAreaPO.getBusinessName();
+            data.businessAreaId=businessAreaPo.getId();
+            data.businessAreaName=businessAreaPo.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             data.openTransmission=dto.openTransmission;
             List<ModelPublishTableDTO> dimensionList=new ArrayList<>();
             //获取表增量配置信息
-            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-            syncModePOQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
-            List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
+            QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
+            syncModePoQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION.getValue());
+            List<SyncModePO> syncModePoList=syncModeMapper.selectList(syncModePoQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
-            for (DimensionPO item:dimensionPOList)
+            for (DimensionPO item:dimensionPoList)
             {
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
@@ -334,7 +334,7 @@ public class DimensionFolderImpl
                     pushDto.synMode=dto.syncMode;
                 }
                 else {
-                    Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                    Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
                     if (first.isPresent())
                     {
                         pushDto.synMode=first.get().syncMode;
@@ -342,27 +342,27 @@ public class DimensionFolderImpl
                 }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-                List<DimensionAttributePO> attributePOList=dimensionAttributePOList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());
-                for (DimensionAttributePO attributePO:attributePOList)
+                List<DimensionAttributePO> attributePoList=dimensionAttributePoList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());
+                for (DimensionAttributePO attributePo:attributePoList)
                 {
                     ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-                    fieldDTO.fieldId=attributePO.id;
-                    fieldDTO.fieldEnName=attributePO.dimensionFieldEnName;
-                    fieldDTO.fieldType=attributePO.dimensionFieldType;
-                    fieldDTO.fieldLength=attributePO.dimensionFieldLength;
-                    fieldDTO.attributeType=attributePO.attributeType;
-                    fieldDTO.isPrimaryKey=attributePO.isPrimaryKey;
-                    fieldDTO.sourceFieldName=attributePO.sourceFieldName;
-                    fieldDTO.associateDimensionId=attributePO.associateDimensionId;
-                    fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+                    fieldDTO.fieldId=attributePo.id;
+                    fieldDTO.fieldEnName=attributePo.dimensionFieldEnName;
+                    fieldDTO.fieldType=attributePo.dimensionFieldType;
+                    fieldDTO.fieldLength=attributePo.dimensionFieldLength;
+                    fieldDTO.attributeType=attributePo.attributeType;
+                    fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
+                    fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+                    fieldDTO.associateDimensionId=attributePo.associateDimensionId;
+                    fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
                     //判断是否关联维度
-                    if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+                    if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
                     {
-                        DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                        fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
-                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
-                        fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
+                        fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+                        fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
+                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+                        fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
                     }
                     fieldList.add(fieldDTO);
                 }

@@ -53,89 +53,89 @@ public class DataModelTableImpl implements IDataModelTable {
     public List<SourceTableDTO> getDimensionTable(int publishStatus)
     {
         List<SourceTableDTO> list=new ArrayList<>();
-        QueryWrapper<DimensionPO> dimensionPOQueryWrapper=new QueryWrapper<>();
+        QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
         //dw已发布
         if (publishStatus==1)
         {
-            dimensionPOQueryWrapper.lambda().eq(DimensionPO::getIsPublish, PublicStatusEnum.PUBLIC_SUCCESS);
+            dimensionPoQueryWrapper.lambda().eq(DimensionPO::getIsPublish, PublicStatusEnum.PUBLIC_SUCCESS);
         }
         //doris已发布
         else {
-            dimensionPOQueryWrapper.lambda().eq(DimensionPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
+            dimensionPoQueryWrapper.lambda().eq(DimensionPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
         }
-        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionPOQueryWrapper);
-        if (!CollectionUtils.isEmpty(dimensionPOList))
+        List<DimensionPO> dimensionPoList=dimensionMapper.selectList(dimensionPoQueryWrapper);
+        if (!CollectionUtils.isEmpty(dimensionPoList))
         {
-            dimensionPOQueryWrapper.select("id");
-            List<Integer> dimensionIdList=(List)dimensionMapper.selectObjs(dimensionPOQueryWrapper);
-            List<DimensionAttributePO> dimensionAttributePOList=new ArrayList<>();
+            dimensionPoQueryWrapper.select("id");
+            List<Integer> dimensionIdList=(List)dimensionMapper.selectObjs(dimensionPoQueryWrapper);
+            List<DimensionAttributePO> dimensionAttributePoList=new ArrayList<>();
             if (!CollectionUtils.isEmpty(dimensionIdList))
             {
-                QueryWrapper<DimensionAttributePO> dimensionAttributePOQueryWrapper=new QueryWrapper<>();
-                dimensionAttributePOQueryWrapper.in("dimension_id",dimensionIdList);
-                dimensionAttributePOList=dimensionAttributeMapper.selectList(dimensionAttributePOQueryWrapper);
+                QueryWrapper<DimensionAttributePO> dimensionAttributePoQueryWrapper=new QueryWrapper<>();
+                dimensionAttributePoQueryWrapper.in("dimension_id",dimensionIdList);
+                dimensionAttributePoList=dimensionAttributeMapper.selectList(dimensionAttributePoQueryWrapper);
             }
-            for (DimensionPO dimensionPO:dimensionPOList)
+            for (DimensionPO dimensionPo:dimensionPoList)
             {
                 SourceTableDTO dto=new SourceTableDTO();
-                dto.id=dimensionPO.id;
-                dto.tableName=dimensionPO.dimensionTabName;
+                dto.id=dimensionPo.id;
+                dto.tableName=dimensionPo.dimensionTabName;
                 dto.type= publishStatus==DataModelTableTypeEnum.DW_DIMENSION.getValue()?DataModelTableTypeEnum.DW_DIMENSION.getValue():DataModelTableTypeEnum.DORIS_DIMENSION.getValue();
-                dto.tableDes=dimensionPO.dimensionDesc==null?dimensionPO.dimensionTabName:dimensionPO.dimensionDesc;
-                dto.sqlScript=dimensionPO.sqlScript;
-                List<SourceFieldDTO> fieldDTOS=new ArrayList<>();
-                List<DimensionAttributePO> attributePOS=dimensionAttributePOList.stream()
-                        .filter(e->e.dimensionId==dimensionPO.id).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(attributePOS))
+                dto.tableDes=dimensionPo.dimensionDesc==null?dimensionPo.dimensionTabName:dimensionPo.dimensionDesc;
+                dto.sqlScript=dimensionPo.sqlScript;
+                List<SourceFieldDTO> fieldDtoList=new ArrayList<>();
+                List<DimensionAttributePO> attributePoList=dimensionAttributePoList.stream()
+                        .filter(e->e.dimensionId==dimensionPo.id).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(attributePoList))
                 {
                     continue;
                 }
                 //创建维度表主键key
                 SourceFieldDTO dimensionKey=new SourceFieldDTO();
-                String newFieldName=dimensionPO.dimensionTabName.substring(4);
+                String newFieldName=dimensionPo.dimensionTabName.substring(4);
                 dimensionKey.fieldName=newFieldName+"key";
                 dimensionKey.fieldType="NVARCHAR";
                 dimensionKey.fieldLength=255;
                 dimensionKey.fieldDes="";
-                fieldDTOS.add(dimensionKey);
+                fieldDtoList.add(dimensionKey);
 
-                for (DimensionAttributePO attributePO:attributePOS)
+                for (DimensionAttributePO attributePo:attributePoList)
                 {
                     SourceFieldDTO field=new SourceFieldDTO();
-                    field.id=attributePO.id;
-                    field.fieldName=attributePO.dimensionFieldEnName;
-                    field.fieldType=attributePO.dimensionFieldType;
-                    field.fieldLength=attributePO.dimensionFieldLength;
-                    field.fieldDes=attributePO.dimensionFieldDes;
-                    field.primaryKey=attributePO.isPrimaryKey;
-                    field.sourceTable=attributePO.sourceTableName;
-                    field.sourceField=attributePO.sourceFieldName;
-                    if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0)
+                    field.id=attributePo.id;
+                    field.fieldName=attributePo.dimensionFieldEnName;
+                    field.fieldType=attributePo.dimensionFieldType;
+                    field.fieldLength=attributePo.dimensionFieldLength;
+                    field.fieldDes=attributePo.dimensionFieldDes;
+                    field.primaryKey=attributePo.isPrimaryKey;
+                    field.sourceTable=attributePo.sourceTableName;
+                    field.sourceField=attributePo.sourceFieldName;
+                    if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0)
                     {
                         field.associatedDim=true;
-                        field.associatedDimId=attributePO.associateDimensionId;
-                        DimensionPO dimensionPO1=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        if (dimensionPO1==null)
+                        field.associatedDimId=attributePo.associateDimensionId;
+                        DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
+                        if (dimensionPo1==null)
                         {
                             continue;
                         }
-                        field.associatedDimName=dimensionPO1.dimensionTabName;
+                        field.associatedDimName=dimensionPo1.dimensionTabName;
                         //查询关联维度字段
-                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
-                        field.associatedDimAttributeId=attributePO.associateDimensionFieldId;
-                        field.associatedDimAttributeName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+                        field.associatedDimAttributeId=attributePo.associateDimensionFieldId;
+                        field.associatedDimAttributeName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
 
                         SourceFieldDTO associatedField=new SourceFieldDTO();
-                        associatedField.id=attributePO.associateDimensionId;
+                        associatedField.id=attributePo.associateDimensionId;
                         associatedField.fieldName=newFieldName+"key";
                         associatedField.fieldType="NVARCHAR";
                         associatedField.fieldLength=255;
-                        associatedField.fieldDes=dimensionPO1.dimensionDesc;
-                        fieldDTOS.add(associatedField);
+                        associatedField.fieldDes=dimensionPo1.dimensionDesc;
+                        fieldDtoList.add(associatedField);
                     }
-                    fieldDTOS.add(field);
+                    fieldDtoList.add(field);
                 }
-                dto.fieldList=fieldDTOS;
+                dto.fieldList=fieldDtoList;
                 list.add(dto);
             }
         }
@@ -145,73 +145,73 @@ public class DataModelTableImpl implements IDataModelTable {
     public List<SourceTableDTO> getDwFactTable()
     {
         List<SourceTableDTO> list=new ArrayList<>();
-        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-        factPOQueryWrapper.lambda().eq(FactPO::getIsPublish, PublicStatusEnum.PUBLIC_SUCCESS);
-        List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
-        if (!CollectionUtils.isEmpty(factPOList))
+        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
+        factPoQueryWrapper.lambda().eq(FactPO::getIsPublish, PublicStatusEnum.PUBLIC_SUCCESS);
+        List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
+        if (!CollectionUtils.isEmpty(factPoList))
         {
-            factPOQueryWrapper.select("id");
-            List<Integer> factIdList=(List)factMapper.selectObjs(factPOQueryWrapper);
-            List<FactAttributePO> factAttributePOList=new ArrayList<>();
+            factPoQueryWrapper.select("id");
+            List<Integer> factIdList=(List)factMapper.selectObjs(factPoQueryWrapper);
+            List<FactAttributePO> factAttributePoList=new ArrayList<>();
             if (!CollectionUtils.isEmpty(factIdList))
             {
-                QueryWrapper<FactAttributePO> factAttributePOQueryWrapper=new QueryWrapper<>();
-                factAttributePOQueryWrapper.in("fact_id",factIdList);
-                factAttributePOList=factAttributeMapper.selectList(factAttributePOQueryWrapper);
+                QueryWrapper<FactAttributePO> factAttributePoQueryWrapper=new QueryWrapper<>();
+                factAttributePoQueryWrapper.in("fact_id",factIdList);
+                factAttributePoList=factAttributeMapper.selectList(factAttributePoQueryWrapper);
             }
-            for (FactPO factPO:factPOList)
+            for (FactPO factPo:factPoList)
             {
                 SourceTableDTO dto=new SourceTableDTO();
-                dto.id=factPO.id;
-                dto.tableName=factPO.factTabName;
+                dto.id=factPo.id;
+                dto.tableName=factPo.factTabName;
                 dto.type= OlapTableEnum.FACT.getValue();
-                dto.tableDes=factPO.factTableDesc;
-                dto.sqlScript=factPO.sqlScript;
-                List<SourceFieldDTO> fieldDTOS=new ArrayList<>();
-                List<FactAttributePO> attributePOS=factAttributePOList.stream()
-                        .filter(e->e.factId==factPO.id).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(attributePOS))
+                dto.tableDes=factPo.factTableDesc;
+                dto.sqlScript=factPo.sqlScript;
+                List<SourceFieldDTO> fieldDtoList=new ArrayList<>();
+                List<FactAttributePO> attributePoList=factAttributePoList.stream()
+                        .filter(e->e.factId==factPo.id).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(attributePoList))
                 {
                     continue;
                 }
-                for (FactAttributePO attributePO:attributePOS)
+                for (FactAttributePO attributePo:attributePoList)
                 {
                     SourceFieldDTO field=new SourceFieldDTO();
-                    field.id=attributePO.id;
-                    field.fieldName=attributePO.factFieldEnName;
-                    field.fieldType=attributePO.factFieldType;
-                    field.fieldLength=attributePO.factFieldLength;
-                    field.fieldDes=attributePO.factFieldDes;
-                    field.sourceTable=attributePO.sourceTableName;
-                    field.sourceField=attributePO.sourceFieldName;
-                    if (attributePO.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue())
+                    field.id=attributePo.id;
+                    field.fieldName=attributePo.factFieldEnName;
+                    field.fieldType=attributePo.factFieldType;
+                    field.fieldLength=attributePo.factFieldLength;
+                    field.fieldDes=attributePo.factFieldDes;
+                    field.sourceTable=attributePo.sourceTableName;
+                    field.sourceField=attributePo.sourceFieldName;
+                    if (attributePo.attributeType== FactAttributeEnum.DIMENSION_KEY.getValue())
                     {
                         field.associatedDim=true;
-                        field.associatedDimId=attributePO.associateDimensionId;
-                        DimensionPO dimensionPO1=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        if (dimensionPO1==null)
+                        field.associatedDimId=attributePo.associateDimensionId;
+                        DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
+                        if (dimensionPo1==null)
                         {
                             continue;
                         }
-                        field.associatedDimName=dimensionPO1.dimensionTabName;
+                        field.associatedDimName=dimensionPo1.dimensionTabName;
                         //查询关联维度字段
-                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
-                        field.associatedDimAttributeId=attributePO.associateDimensionFieldId;
-                        field.associatedDimAttributeName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+                        field.associatedDimAttributeId=attributePo.associateDimensionFieldId;
+                        field.associatedDimAttributeName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
 
                         SourceFieldDTO associatedField=new SourceFieldDTO();
-                        associatedField.id=attributePO.associateDimensionId;
-                        String newFieldName=dimensionPO1.dimensionTabName.substring(4);
+                        associatedField.id=attributePo.associateDimensionId;
+                        String newFieldName=dimensionPo1.dimensionTabName.substring(4);
                         associatedField.fieldName=newFieldName+"key";
                         associatedField.fieldType="NVARCHAR";
                         associatedField.fieldLength=255;
-                        associatedField.fieldDes=dimensionPO1.dimensionDesc;
+                        associatedField.fieldDes=dimensionPo1.dimensionDesc;
                         associatedField.attributeType=FactAttributeEnum.DIMENSION_KEY.getValue();
-                        fieldDTOS.add(associatedField);
+                        fieldDtoList.add(associatedField);
                     }
-                    fieldDTOS.add(field);
+                    fieldDtoList.add(field);
                 }
-                dto.fieldList=fieldDTOS;
+                dto.fieldList=fieldDtoList;
                 list.add(dto);
             }
         }
@@ -222,15 +222,15 @@ public class DataModelTableImpl implements IDataModelTable {
     {
         List<SourceTableDTO> list=new ArrayList<>();
         //获取doris已发布表集合
-        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-        factPOQueryWrapper.lambda().eq(FactPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
-        List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
-        if (CollectionUtils.isEmpty(factPOList))
+        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
+        factPoQueryWrapper.lambda().eq(FactPO::getDorisPublish, PublicStatusEnum.PUBLIC_SUCCESS);
+        List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
+        if (CollectionUtils.isEmpty(factPoList))
         {
             return list;
         }
         //获取事实表指标字段
-        for (FactPO item:factPOList)
+        for (FactPO item:factPoList)
         {
             SourceTableDTO dto=new SourceTableDTO();
             dto.id=item.id;
@@ -243,7 +243,7 @@ public class DataModelTableImpl implements IDataModelTable {
             {
                 continue;
             }
-            List<SourceFieldDTO> fieldDTOS=new ArrayList<>();
+            List<SourceFieldDTO> fieldDtoList=new ArrayList<>();
             for (AtomicIndicatorPushDTO atomic:atomicIndicator)
             {
                 SourceFieldDTO field=new SourceFieldDTO();
@@ -273,9 +273,9 @@ public class DataModelTableImpl implements IDataModelTable {
                         break;
                 }
                 field.fieldDes=atomic.factFieldName;
-                fieldDTOS.add(field);
+                fieldDtoList.add(field);
             }
-            dto.fieldList=fieldDTOS;
+            dto.fieldList=fieldDtoList;
             list.add(dto);
         }
         return list;

@@ -41,12 +41,12 @@ public interface IBusinessLimited {
       * @param dto
       * @return
       */
-     ResultEnum BusinessLimitedUpdate(BusinessLimitedUpdateDTO dto);
+     ResultEnum businessLimitedUpdate(BusinessLimitedUpdateDTO dto);
 
      /**
       * 添加业务限定
       * @param dto
       * @return
       */
-     ResultEnum BusinessLimitedAdd(BusinessLimitedDataAddDTO dto);
+     ResultEnum businessLimitedAdd(BusinessLimitedDataAddDTO dto);
 }

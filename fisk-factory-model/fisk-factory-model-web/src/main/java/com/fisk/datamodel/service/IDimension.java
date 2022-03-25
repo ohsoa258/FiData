@@ -22,7 +22,7 @@ public interface IDimension {
      * @param dto
      * @return
      */
-    ResultEnum addDimension(DimensionDTO dto) throws SQLException;
+    ResultEnum addDimension(DimensionDTO dto);
 
     /**
      * 获取维度表详情
@@ -36,7 +36,7 @@ public interface IDimension {
      * @param dto
      * @return
      */
-    ResultEnum updateDimension(DimensionDTO dto) throws SQLException;
+    ResultEnum updateDimension(DimensionDTO dto);
 
     /**
      * 删除维度表

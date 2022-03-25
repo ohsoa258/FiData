@@ -7,7 +7,9 @@ import com.fisk.common.filter.dto.FilterEnum;
  * @author JianWenYang
  */
 public enum EntityTypeEnum implements BaseEnum {
-
+    /**
+     * 实例
+     */
     RDBMS_INSTANCE(1,"rdbms_instance"),
     RDBMS_DB(2,"rdbms_db"),
     RDBMS_TABLE(3,"rdbms_table"),

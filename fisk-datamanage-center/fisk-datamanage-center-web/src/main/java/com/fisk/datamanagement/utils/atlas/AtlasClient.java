@@ -36,7 +36,7 @@ public class AtlasClient {
     @Value("${atlas.password}")
     private String password;
 
-    public ResultDataDTO<String> Get(String url)
+    public ResultDataDTO<String> get(String url)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
         resultDataDTO.code=ResultEnum.UNKNOWN;
@@ -89,7 +89,7 @@ public class AtlasClient {
         return resultDataDTO;
     }
 
-    public ResultDataDTO<String> Post(String url,String parameter)
+    public ResultDataDTO<String> post(String url, String parameter)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
         resultDataDTO.code=ResultEnum.UNKNOWN;
@@ -151,7 +151,7 @@ public class AtlasClient {
         return resultDataDTO;
     }
 
-    public ResultDataDTO<String> Put(String url,String parameter)
+    public ResultDataDTO<String> put(String url, String parameter)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
         CloseableHttpResponse httpResponse = null;
@@ -203,7 +203,7 @@ public class AtlasClient {
         return resultDataDTO;
     }
 
-    public ResultDataDTO<String> Delete(String url)
+    public ResultDataDTO<String> delete(String url)
     {
         ResultDataDTO<String> resultDataDTO=new ResultDataDTO<String>();
         resultDataDTO.code=ResultEnum.UNKNOWN;

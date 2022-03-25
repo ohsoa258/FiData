@@ -78,7 +78,7 @@ public class FactAttributeController {
     @PostMapping("/getFactAttributeData")
     @ApiOperation("根据事实id获取事实字段详情")
     public ResultEntity<Object> getFactAttributeData(@RequestBody FactAttributeDropQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.GetFactAttributeData(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeData(dto));
     }
 
     @ApiOperation("根据事实id获取事实字段所有来源id")

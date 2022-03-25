@@ -21,6 +21,7 @@ import com.fisk.datamodel.mapper.*;
 import com.fisk.datamodel.service.IDerivedIndicators;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.sql.Date;
@@ -97,10 +98,10 @@ public class DerivedIndicatorsImpl
                 System.out.println(matcher.group(1));
                 String name=matcher.group(1);
                 //根据中括号的名称与业务域获取指标id
-                QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper = new QueryWrapper<>();
-                indicatorsPOQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
+                QueryWrapper<IndicatorsPO> indicatorsPoQueryWrapper = new QueryWrapper<>();
+                indicatorsPoQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
                         .eq(IndicatorsPO::getIndicatorsName,name);
-                IndicatorsPO selectById=mapper.selectOne(indicatorsPOQueryWrapper);
+                IndicatorsPO selectById=mapper.selectOne(indicatorsPoQueryWrapper);
                 if (selectById==null)
                 {
                     exit=true;
@@ -127,12 +128,12 @@ public class DerivedIndicatorsImpl
         //业务限定条件集合
         if (poAdd.limitedList !=null && poAdd.limitedList.size()>0)
         {
-            List<DerivedIndicatorsLimitedPO> limitedPOList=new ArrayList<>();
+            List<DerivedIndicatorsLimitedPO> limitedPoList=new ArrayList<>();
             for (DerivedIndicatorsLimitedDTO item:dto.limitedList)
             {
                 item.indicatorsId=poAdd.id;
-                limitedPOList.add(DerivedIndicatorsLimitedMap.INSTANCES.dtoToPo(item));
-                boolean result = this.saveBatch(limitedPOList);
+                limitedPoList.add(DerivedIndicatorsLimitedMap.INSTANCES.dtoToPo(item));
+                boolean result = this.saveBatch(limitedPoList);
                 if (!result) {
                     throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                 }
@@ -177,9 +178,9 @@ public class DerivedIndicatorsImpl
             return  dto;
         }
         //获取业务限定
-        QueryWrapper<DerivedIndicatorsLimitedPO> limitedPOQueryWrapper=new QueryWrapper<>();
-        limitedPOQueryWrapper.lambda().eq(DerivedIndicatorsLimitedPO::getIndicatorsId,po.id);
-        List<DerivedIndicatorsLimitedPO> limitedList=derivedIndicatorsLimitedMapper.selectList(limitedPOQueryWrapper);
+        QueryWrapper<DerivedIndicatorsLimitedPO> limitedPoQueryWrapper=new QueryWrapper<>();
+        limitedPoQueryWrapper.lambda().eq(DerivedIndicatorsLimitedPO::getIndicatorsId,po.id);
+        List<DerivedIndicatorsLimitedPO> limitedList=derivedIndicatorsLimitedMapper.selectList(limitedPoQueryWrapper);
         List<DerivedIndicatorsLimitedDTO> dataList=new ArrayList<>();
         for (DerivedIndicatorsLimitedPO item:limitedList)
         {
@@ -215,10 +216,10 @@ public class DerivedIndicatorsImpl
                 System.out.println(matcher.group(1));
                 String name=matcher.group(1);
                 //根据中括号的名称与业务域获取指标id
-                QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper = new QueryWrapper<>();
-                indicatorsPOQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
+                QueryWrapper<IndicatorsPO> indicatorsPoQueryWrapper = new QueryWrapper<>();
+                indicatorsPoQueryWrapper.lambda().eq(IndicatorsPO::getBusinessId,dto.businessId)
                         .eq(IndicatorsPO::getIndicatorsName,name);
-                IndicatorsPO selectById=mapper.selectOne(indicatorsPOQueryWrapper);
+                IndicatorsPO selectById=mapper.selectOne(indicatorsPoQueryWrapper);
                 if (selectById==null)
                 {
                     exit=true;
@@ -235,7 +236,7 @@ public class DerivedIndicatorsImpl
             return mapper.updateById(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
         //聚合字段拼接
-        //po.aggregatedFields=String.join(",", dto.attributeId.stream().map(String::valueOf).collect(Collectors.toList()));
+        ////po.aggregatedFields=String.join(",", dto.attributeId.stream().map(String::valueOf).collect(Collectors.toList()));
         //保存派生指标数据
         int flat=mapper.updateById(po);
         if (flat==0)
@@ -254,14 +255,14 @@ public class DerivedIndicatorsImpl
             }
         }
         //保存派生指标下业务限定
-        if (dto.limitedList !=null && dto.limitedList.size()>0)
+        if (!CollectionUtils.isEmpty(dto.limitedList))
         {
-            List<DerivedIndicatorsLimitedPO> limitedPOList=new ArrayList<>();
+            List<DerivedIndicatorsLimitedPO> limitedPoList=new ArrayList<>();
             for (DerivedIndicatorsLimitedDTO item:dto.limitedList)
             {
                 item.indicatorsId=dto.id;
-                limitedPOList.add(DerivedIndicatorsLimitedMap.INSTANCES.dtoToPo(item));
-                boolean result = this.saveBatch(limitedPOList);
+                limitedPoList.add(DerivedIndicatorsLimitedMap.INSTANCES.dtoToPo(item));
+                boolean result = this.saveBatch(limitedPoList);
                 if (!result) {
                     throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                 }
@@ -269,48 +270,6 @@ public class DerivedIndicatorsImpl
         }
 
         return ResultEnum.SUCCESS;
-    }
-
-    @Override
-    public List<ModelAttributeMetaDataDTO> getDerivedIndicatorsParticle(int id)
-    {
-        //获取聚合字段列表
-        QueryWrapper<DerivedIndicatorsAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.select("fact_attribute_id").lambda().eq(DerivedIndicatorsAttributePO::getIndicatorsId,id);
-        List<Object> idList=attributeMapper.selectObjs(queryWrapper);
-        //根据聚合字段列表查询事实表字段集合
-        QueryWrapper<FactAttributePO> factAttributeQueryWrapper=new QueryWrapper<>();
-        factAttributeQueryWrapper.in("id",idList);
-        List<FactAttributePO> list=factAttributeMapper.selectList(factAttributeQueryWrapper);
-        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
-        for (FactAttributePO item:list)
-        {
-            ModelAttributeMetaDataDTO dto=new ModelAttributeMetaDataDTO();
-            //判断是否为关联维度
-            /*if (item.attributeType== DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue())
-            {
-                //查看关联维度字段相关信息
-                DimensionAttributePO po1=dimensionAttributeMapper.selectById(item.associateDimensionId);
-                if (po1 !=null)
-                {
-                    dto.attributeType=DimensionAttributeEnum.ASSOCIATED_DIMENSION.getValue();
-                    dto.fieldEnName=po1.dimensionFieldEnName;
-                    dto.fieldLength=po1.dimensionFieldLength;
-                    dto.fieldType=po1.dimensionFieldType;
-                    dto.fieldCnName=po1.dimensionFieldCnName;
-                    dtoList.add(dto);
-                }
-            }
-            else {
-                dto.attributeType=item.attributeType;
-                dto.fieldEnName=item.factFieldEnName;
-                dto.fieldLength=item.factFieldLength;
-                dto.fieldType=item.factFieldType;
-                dto.fieldCnName=item.factFieldCnName;
-                dtoList.add(dto);
-            }*/
-        }
-        return dtoList;
     }
 
     @Override

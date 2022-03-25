@@ -10,15 +10,12 @@ import com.fisk.datamanagement.service.IBusinessMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * @author JianWenYang
@@ -40,7 +37,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     {
         BusinessMetaDataDTO data;
         try {
-            ResultDataDTO<String> result = atlasClient.Get(typedefs + "?type=business_metadata");
+            ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=business_metadata");
             data= JSONObject.parseObject(result.data,BusinessMetaDataDTO.class);
             //根据时间升序排序
             data.businessMetadataDefs.sort(Comparator.comparing(BusinessMetadataDefsDTO::getCreateTime));
@@ -60,7 +57,7 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     public ResultEnum addBusinessMetaData(BusinessMetaDataDTO dto)
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(typedefs + "?type=business_metadata", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=business_metadata", jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -68,14 +65,14 @@ public class BusinessMetaDataImpl implements IBusinessMetaData {
     public ResultEnum updateBusinessMetaData(BusinessMetaDataDTO dto)
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Put(typedefs + "?type=business_metadata", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=business_metadata", jsonParameter);
         return atlasClient.newResultEnum(result);
     }
 
     @Override
     public ResultEnum deleteBusinessMetaData(String businessMetaDataName)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(delTypeDefs + "/" + businessMetaDataName);
+        ResultDataDTO<String> result = atlasClient.delete(delTypeDefs + "/" + businessMetaDataName);
         return atlasClient.newResultEnum(result);
     }
 

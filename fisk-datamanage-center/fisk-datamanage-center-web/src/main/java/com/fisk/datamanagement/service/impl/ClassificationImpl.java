@@ -14,14 +14,12 @@ import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -42,13 +40,18 @@ public class ClassificationImpl implements IClassification {
     private String bulkClassification;
     @Value("${atlas.entityByGuid}")
     private String entityByGuid;
+    @Resource
+    private RedisTemplate redisTemplate;
+
+    @Resource
+    EntityImpl entity;
 
     @Override
     public ClassificationDefsDTO getClassificationList()
     {
         ClassificationDefsDTO data=new ClassificationDefsDTO();
         try {
-            ResultDataDTO<String> result = atlasClient.Get(typedefs + "?type=classification");
+            ResultDataDTO<String> result = atlasClient.get(typedefs + "?type=classification");
             if (result.code != ResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(result.code);
@@ -74,14 +77,14 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum updateClassification(ClassificationDefsDTO dto)
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Put(typedefs + "?type=classification", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.put(typedefs + "?type=classification", jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
     @Override
     public ResultEnum deleteClassification(String classificationName)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(delTypeDefs + classificationName);
+        ResultDataDTO<String> result = atlasClient.delete(delTypeDefs + classificationName);
         return atlasClient.newResultEnum(result);
     }
 
@@ -94,7 +97,7 @@ public class ClassificationImpl implements IClassification {
                 .map(e->e.createTime=System.currentTimeMillis())
                 .collect(Collectors.toList());
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(typedefs + "?type=classification", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(typedefs + "?type=classification", jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
@@ -102,14 +105,19 @@ public class ClassificationImpl implements IClassification {
     public ResultEnum classificationAddAssociatedEntity(ClassificationAddEntityDTO dto)
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(bulkClassification, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(bulkClassification, jsonParameter);
+        Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.entityGuids.get(0));
+        if (exist)
+        {
+            entity.setRedis(dto.entityGuids.get(0));
+        }
         return atlasClient.newResultEnum(result);
     }
 
     @Override
     public ResultEnum classificationDelAssociatedEntity(ClassificationDelAssociatedEntityDTO dto)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(entityByGuid + "/" + dto.entityGuid+"/classification/"+dto.classificationName);
+        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + dto.entityGuid+"/classification/"+dto.classificationName);
         return atlasClient.newResultEnum(result);
     }
 

@@ -44,7 +44,7 @@ public class ProcessImpl implements IProcess {
     public ProcessDTO getProcess(String processGuid)
     {
         ProcessDTO dto=new ProcessDTO();
-        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + processGuid);
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
         if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return dto;
@@ -88,7 +88,7 @@ public class ProcessImpl implements IProcess {
     public ResultEnum addProcess(AddProcessDTO dto)
     {
         //获取实体详情
-        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + dto.outGuid);
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + dto.outGuid);
         if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return ResultEnum.DATA_NOTEXISTS;
@@ -137,7 +137,7 @@ public class ProcessImpl implements IProcess {
         entityDTO.entity=entityTypeDTO;
         String jsonParameter= JSONArray.toJSON(entityDTO).toString();
         //调用atlas添加血缘
-        ResultDataDTO<String> addResult = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
         return addResult.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -165,7 +165,7 @@ public class ProcessImpl implements IProcess {
         //修改process
         String jsonParameter= JSONArray.toJSON(dto).toString();
         //调用atlas修改实例
-        ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 

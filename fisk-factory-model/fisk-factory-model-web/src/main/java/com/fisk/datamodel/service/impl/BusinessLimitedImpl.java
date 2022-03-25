@@ -79,7 +79,7 @@ public class BusinessLimitedImpl implements IBusinessLimited {
     }
 
     @Override
-    public ResultEnum BusinessLimitedUpdate(BusinessLimitedUpdateDTO dto)
+    public ResultEnum businessLimitedUpdate(BusinessLimitedUpdateDTO dto)
     {
         BusinessLimitedPO po=businessLimitedMapper.selectById(dto.id);
         if (po==null)
@@ -92,7 +92,7 @@ public class BusinessLimitedImpl implements IBusinessLimited {
     }
 
     @Override
-    public ResultEnum BusinessLimitedAdd(BusinessLimitedDataAddDTO dto)
+    public ResultEnum businessLimitedAdd(BusinessLimitedDataAddDTO dto)
     {
         QueryWrapper<BusinessLimitedPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(BusinessLimitedPO::getLimitedName,dto.limitedName)

@@ -7,6 +7,9 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum SyncModeEnum implements BaseEnum {
 
+    /**
+     * 追加
+     */
     FULL_AMOUNT(1,"追加"),
 
     INCREMENTAL(2,"全量覆盖"),

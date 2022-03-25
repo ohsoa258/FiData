@@ -6,6 +6,9 @@ import com.fisk.common.enums.BaseEnum;
  * @author JianWenYang
  */
 public enum DataModelTableTypeEnum implements BaseEnum {
+    /**
+     * dw_dimension
+     */
     DW_DIMENSION(1,"dw_dimension"),
     DW_FACT(2,"dw_fact"),
     DORIS_DIMENSION(3,"doris_dimension"),

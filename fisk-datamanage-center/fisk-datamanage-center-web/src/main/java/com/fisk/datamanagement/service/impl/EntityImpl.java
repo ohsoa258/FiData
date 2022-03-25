@@ -15,7 +15,6 @@ import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
-import com.fisk.datamanagement.vo.ResultErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -83,7 +82,7 @@ public class EntityImpl implements IEntity {
     {
         List<EntityTreeDTO> list=new ArrayList<>();
         try {
-            ResultDataDTO<String> data = atlasClient.Get(searchBasic + "?typeName=rdbms_instance");
+            ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
             if (data.code != ResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(data.code);
@@ -103,7 +102,7 @@ public class EntityImpl implements IEntity {
                 entityParentDTO.type=EntityTypeEnum.RDBMS_INSTANCE.getName();
                 entityParentDTO.parentId="-1";
                 //查询实例下db/table/column
-                ResultDataDTO<String> attribute=atlasClient.Get(entityByGuid+"/"+entityParentDTO.id);
+                ResultDataDTO<String> attribute=atlasClient.get(entityByGuid+"/"+entityParentDTO.id);
                 if (attribute.code != ResultEnum.REQUEST_SUCCESS)
                 {
                     throw new FkException(data.code);
@@ -199,7 +198,7 @@ public class EntityImpl implements IEntity {
             dto.entity.attributes.comment=dto.entity.attributes.userName+"&"+dto.entity.attributes.password;
         }
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
         updateRedis();
         //添加redis
         if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName())
@@ -228,7 +227,7 @@ public class EntityImpl implements IEntity {
     @Override
     public ResultEnum deleteEntity(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(entityByGuid + "/" + guid);
+        ResultDataDTO<String> result = atlasClient.delete(entityByGuid + "/" + guid);
         updateRedis();
         Boolean exist = redisTemplate.hasKey(metaDataEntity);
         if (exist)
@@ -246,7 +245,7 @@ public class EntityImpl implements IEntity {
             String data = redisTemplate.opsForValue().get("metaDataEntityData:"+guid).toString();
             return JSON.parseObject(data);
         }
-        ResultDataDTO<String> result = atlasClient.Get(entityByGuid + "/" + guid);
+        ResultDataDTO<String> result = atlasClient.get(entityByGuid + "/" + guid);
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
             throw new FkException(result.code);
@@ -258,7 +257,7 @@ public class EntityImpl implements IEntity {
     public ResultEnum updateEntity(JSONObject dto)
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
         updateRedis();
         try {
             JSONObject jsonObj = JSON.parseObject(jsonParameter);
@@ -281,7 +280,7 @@ public class EntityImpl implements IEntity {
     public EntityInstanceDTO getInstanceDetail(String guid)
     {
         try {
-            ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" +guid);
+            ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" +guid);
             if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -304,13 +303,6 @@ public class EntityImpl implements IEntity {
      * entity操作后,更新Redis数据
      */
     public void updateRedis(){
-        /*Thread t1 = new Thread(new Runnable(){
-            @Override
-            public void run() {
-                getEntityList();
-            }
-        });
-        t1.start();*/
         getEntityList();
     }
 
@@ -318,7 +310,7 @@ public class EntityImpl implements IEntity {
     public JSONObject searchBasicEntity(EntityFilterDTO dto)
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(searchBasic, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(searchBasic, jsonParameter);
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
@@ -331,7 +323,7 @@ public class EntityImpl implements IEntity {
     public List<EntityAuditsDTO> getAuditsList(String guid)
     {
         List<EntityAuditsDTO> data;
-        ResultDataDTO<String> result = atlasClient.Get(entity + "/" + guid + "/audit");
+        ResultDataDTO<String> result = atlasClient.get(entity + "/" + guid + "/audit");
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
             throw new FkException(result.code);
@@ -344,7 +336,7 @@ public class EntityImpl implements IEntity {
     public ResultEnum entityAssociatedLabel(EntityAssociatedLabelDTO dto)
     {
         String jsonParameter=JSONArray.toJSON(dto.list).toString();
-        ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/labels", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entityByGuid + "/" + dto.guid + "/labels", jsonParameter);
         Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.guid);
         if (exist)
         {
@@ -357,7 +349,7 @@ public class EntityImpl implements IEntity {
     public ResultEnum entityAssociatedMetaData(EntityAssociatedMetaDataDTO dto)
     {
         String jsonParameter=JSONArray.toJSON(dto.businessMetaDataAttribute).toString();
-        ResultDataDTO<String> result = atlasClient.Post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entityByGuid + "/" + dto.guid + "/businessmetadata?isOverwrite=true", jsonParameter);
         Boolean exist = redisTemplate.hasKey("metaDataEntityData:"+dto.guid);
         if (exist)
         {
@@ -371,7 +363,7 @@ public class EntityImpl implements IEntity {
     {
         try {
             LineAgeDTO dto=new LineAgeDTO();
-            ResultDataDTO<String> result = atlasClient.Get(lineage + "/" + guid);
+            ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid);
             if (result.code != ResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(result.code);
@@ -394,14 +386,14 @@ public class EntityImpl implements IEntity {
             jsonArrayList.add(entityDetailJson);
             String typeName=entityDetailJson.getString("typeName");
 
-            List<LineAgeRelationsDTO> relationsDTOS;
-            relationsDTOS=JSONObject.parseArray(jsonObj.getString("relations"), LineAgeRelationsDTO.class);
+            List<LineAgeRelationsDTO> relationsDtoList;
+            relationsDtoList=JSONObject.parseArray(jsonObj.getString("relations"), LineAgeRelationsDTO.class);
 
-            if (!CollectionUtils.isNotEmpty(relationsDTOS))
+            if (!CollectionUtils.isNotEmpty(relationsDtoList))
             {
                 return dto;
             }
-            List<LineAgeRelationsDTO> lineAgeRelationsDTOStream = relationsDTOS.stream()
+            List<LineAgeRelationsDTO> lineAgeRelationsDtoListtream = relationsDtoList.stream()
                     .filter(e -> e.toEntityId.equals(guid))
                     .collect(Collectors.toList());
             List<LineAgeRelationsDTO> relations=new ArrayList<>();
@@ -410,11 +402,11 @@ public class EntityImpl implements IEntity {
             while (flat)
             {
                 ids.clear();
-                if (CollectionUtils.isEmpty(lineAgeRelationsDTOStream))
+                if (CollectionUtils.isEmpty(lineAgeRelationsDtoListtream))
                 {
                     flat=false;
                 }
-                for (LineAgeRelationsDTO item :lineAgeRelationsDTOStream)
+                for (LineAgeRelationsDTO item :lineAgeRelationsDtoListtream)
                 {
                     String  jsonObj1String = guidEntityMapJson.getString(item.fromEntityId);
                     JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
@@ -427,7 +419,7 @@ public class EntityImpl implements IEntity {
                     //判断process上一级typeName是否一致
                     if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
                     {
-                        List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
+                        List<LineAgeRelationsDTO> higherLevelLineAge = relationsDtoList.stream()
                                 .filter(e -> e.toEntityId.equals(item.fromEntityId))
                                 .collect(Collectors.toList());
                         if (!CollectionUtils.isNotEmpty(higherLevelLineAge))
@@ -463,15 +455,15 @@ public class EntityImpl implements IEntity {
                     jsonArrayList.add(entityDetailJson1);
                     ids.add(item.fromEntityId);
                 }
-                lineAgeRelationsDTOStream.clear();
+                lineAgeRelationsDtoListtream.clear();
                 if (!CollectionUtils.isNotEmpty(ids))
                 {
                     flat=false;
                 }
-                lineAgeRelationsDTOStream=relationsDTOS.stream()
+                lineAgeRelationsDtoListtream=relationsDtoList.stream()
                         .filter(e->ids.contains(e.toEntityId))
                         .collect(Collectors.toList());
-                if (!CollectionUtils.isNotEmpty(lineAgeRelationsDTOStream))
+                if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoListtream))
                 {
                     flat=false;
                 }
@@ -479,7 +471,7 @@ public class EntityImpl implements IEntity {
             dto.guidEntityMap=jsonArrayList;
             dto.relations=relations;
             //获取输出数据
-            LineAgeDTO outData=getOutPutData(guid,relationsDTOS,guidEntityMapJson,typeName);
+            LineAgeDTO outData=getOutPutData(guid,relationsDtoList,guidEntityMapJson,typeName);
             dto.guidEntityMap.addAll(outData.guidEntityMap);
             dto.relations.addAll(outData.relations);
             return dto;
@@ -495,18 +487,18 @@ public class EntityImpl implements IEntity {
     /**
      * 查询选中实体输出血缘数据
      * @param guid
-     * @param relationsDTOS
+     * @param relationsDtoList
      * @param guidEntityMapJson
      * @param typeName
      * @return
      */
     public LineAgeDTO getOutPutData(String guid,
-                                    List<LineAgeRelationsDTO> relationsDTOS,
+                                    List<LineAgeRelationsDTO> relationsDtoList,
                                     JSONObject guidEntityMapJson,
                                     String typeName)
     {
         LineAgeDTO dto=new LineAgeDTO();
-        List<LineAgeRelationsDTO> lineAgeRelationsDTOStream = relationsDTOS.stream()
+        List<LineAgeRelationsDTO> lineAgeRelationsDtoStream = relationsDtoList.stream()
                 .filter(e -> e.fromEntityId.equals(guid))
                 .collect(Collectors.toList());
         List<JSONObject> jsonArrayList=new ArrayList<>();
@@ -516,11 +508,11 @@ public class EntityImpl implements IEntity {
         while (flat)
         {
             ids.clear();
-            if (CollectionUtils.isEmpty(lineAgeRelationsDTOStream))
+            if (CollectionUtils.isEmpty(lineAgeRelationsDtoStream))
             {
                 flat=false;
             }
-            for (LineAgeRelationsDTO item :lineAgeRelationsDTOStream)
+            for (LineAgeRelationsDTO item :lineAgeRelationsDtoStream)
             {
                 String  jsonObj1String = guidEntityMapJson.getString(item.toEntityId);
                 JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
@@ -533,7 +525,7 @@ public class EntityImpl implements IEntity {
                 //判断process上一级typeName是否一致
                 if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
                 {
-                    List<LineAgeRelationsDTO> higherLevelLineAge = relationsDTOS.stream()
+                    List<LineAgeRelationsDTO> higherLevelLineAge = relationsDtoList.stream()
                             .filter(e -> e.fromEntityId.equals(item.toEntityId))
                             .collect(Collectors.toList());
                     if (!CollectionUtils.isNotEmpty(higherLevelLineAge))
@@ -569,15 +561,15 @@ public class EntityImpl implements IEntity {
                 jsonArrayList.add(entityDetailJson1);
                 ids.add(item.toEntityId);
             }
-            lineAgeRelationsDTOStream.clear();
+            lineAgeRelationsDtoStream.clear();
             if (!CollectionUtils.isNotEmpty(ids))
             {
                 flat=false;
             }
-            lineAgeRelationsDTOStream=relationsDTOS.stream()
+            lineAgeRelationsDtoStream=relationsDtoList.stream()
                     .filter(e->ids.contains(e.fromEntityId))
                     .collect(Collectors.toList());
-            if (!CollectionUtils.isNotEmpty(lineAgeRelationsDTOStream))
+            if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoStream))
             {
                 flat=false;
             }
@@ -595,7 +587,7 @@ public class EntityImpl implements IEntity {
     public boolean getRelationShip(String guid)
     {
         try {
-            ResultDataDTO<String> result = atlasClient.Get(relationship + "/guid/" + guid);
+            ResultDataDTO<String> result = atlasClient.get(relationship + "/guid/" + guid);
             if (result.code != ResultEnum.REQUEST_SUCCESS)
             {
                 return false;
@@ -621,7 +613,7 @@ public class EntityImpl implements IEntity {
     @Override
     public JSONObject searchQuick(String query,int limit,int offset)
     {
-        ResultDataDTO<String> result = atlasClient.Get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
+        ResultDataDTO<String> result = atlasClient.get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
@@ -633,7 +625,7 @@ public class EntityImpl implements IEntity {
     @Override
     public JSONObject searchSuggestions(String prefixString)
     {
-        ResultDataDTO<String> result = atlasClient.Get(searchSuggestions + "?prefixString=" + prefixString);
+        ResultDataDTO<String> result = atlasClient.get(searchSuggestions + "?prefixString=" + prefixString);
         if (result.code != ResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
@@ -644,7 +636,7 @@ public class EntityImpl implements IEntity {
 
     public void setRedis(String guid)
     {
-        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + guid);
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + guid);
         if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return;

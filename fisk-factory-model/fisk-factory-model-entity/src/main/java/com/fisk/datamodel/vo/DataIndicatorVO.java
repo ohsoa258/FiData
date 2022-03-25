@@ -23,12 +23,12 @@ public class DataIndicatorVO {
     /**
      * 指标表名称
      */
-    public String IndicatorTable;
+    public String indicatorTable;
 
     /**
      * 指标名称
      */
-    public String IndicatorName;
+    public String indicatorName;
 
     /**
      * 是否删除指标表

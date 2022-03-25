@@ -56,21 +56,21 @@ public class DimensionAttributeImpl
     public ResultEnum addOrUpdateDimensionAttribute(DimensionAttributeAddDTO dto)
     {
         //判断是否存在
-        DimensionPO dimensionPO=mapper.selectById(dto.dimensionId);
-        if (dimensionPO==null)
+        DimensionPO dimensionPo=mapper.selectById(dto.dimensionId);
+        if (dimensionPo==null)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
         //添加增量配置
-        SyncModePO syncModePO = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
-        boolean syncMode = this.syncMode.saveOrUpdate(syncModePO);
+        SyncModePO syncModePo = SyncModeMap.INSTANCES.dtoToPo(dto.syncModeDTO);
+        boolean syncMode = this.syncMode.saveOrUpdate(syncModePo);
         boolean tableBusiness=true;
         if (dto.syncModeDTO.syncMode== SyncModeEnum.CUSTOM_OVERRIDE.getValue())
         {
-            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-            syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dto.syncModeDTO.syncTableId)
+            QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
+            syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dto.syncModeDTO.syncTableId)
                     .eq(SyncModePO::getTableType,dto.syncModeDTO.tableType);
-            SyncModePO po=this.syncMode.getOne(syncModePOQueryWrapper);
+            SyncModePO po=this.syncMode.getOne(syncModePoQueryWrapper);
             if (po==null)
             {
                 return ResultEnum.SAVE_DATA_ERROR;
@@ -109,13 +109,13 @@ public class DimensionAttributeImpl
             List<Integer> dimensionIds=new ArrayList<>();
             dimensionIds.add(dto.dimensionId);
             //修改发布状态
-            dimensionPO.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
-            if (mapper.updateById(dimensionPO)==0)
+            dimensionPo.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
+            if (mapper.updateById(dimensionPo)==0)
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE);
             }
             queryDTO.dimensionIds=dimensionIds;
-            queryDTO.businessAreaId=dimensionPO.businessId;
+            queryDTO.businessAreaId=dimensionPo.businessId;
             queryDTO.remark=dto.remark;
             queryDTO.syncMode=dto.syncModeDTO.syncMode;
             queryDTO.openTransmission=dto.openTransmission;
@@ -130,27 +130,27 @@ public class DimensionAttributeImpl
         List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
         conditionHashMap.put("dimension_id",dimensionId);
         conditionHashMap.put("del_flag",1);
-        List<DimensionAttributePO> dimensionAttributePOS = attributeMapper.selectByMap(conditionHashMap);
-        for (DimensionAttributePO attributePO:dimensionAttributePOS)
+        List<DimensionAttributePO> dimensionAttributePoList = attributeMapper.selectByMap(conditionHashMap);
+        for (DimensionAttributePO attributePo:dimensionAttributePoList)
         {
             ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-            fieldDTO.fieldId=attributePO.id;
-            fieldDTO.fieldEnName=attributePO.dimensionFieldEnName;
-            fieldDTO.fieldType=attributePO.dimensionFieldType;
-            fieldDTO.fieldLength=attributePO.dimensionFieldLength;
-            fieldDTO.attributeType=attributePO.attributeType;
-            fieldDTO.isPrimaryKey=attributePO.isPrimaryKey;
-            fieldDTO.sourceFieldName=attributePO.sourceFieldName;
-            fieldDTO.associateDimensionId=attributePO.associateDimensionId;
-            fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+            fieldDTO.fieldId=attributePo.id;
+            fieldDTO.fieldEnName=attributePo.dimensionFieldEnName;
+            fieldDTO.fieldType=attributePo.dimensionFieldType;
+            fieldDTO.fieldLength=attributePo.dimensionFieldLength;
+            fieldDTO.attributeType=attributePo.attributeType;
+            fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
+            fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+            fieldDTO.associateDimensionId=attributePo.associateDimensionId;
+            fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
             //判断是否关联维度
-            if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+            if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
             {
-                DimensionPO dimensionPO=mapper.selectById(attributePO.associateDimensionId);
-                fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
-                DimensionAttributePO dimensionAttributePO=attributeMapper.selectById(attributePO.associateDimensionFieldId);
-                fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                DimensionPO dimensionPo=mapper.selectById(attributePo.associateDimensionId);
+                fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+                fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
+                DimensionAttributePO dimensionAttributePo=attributeMapper.selectById(attributePo.associateDimensionFieldId);
+                fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
             }
             fieldList.add(fieldDTO);
         }
@@ -192,40 +192,40 @@ public class DimensionAttributeImpl
     public DimensionAttributeListDTO getDimensionAttributeList(int dimensionId)
     {
         DimensionAttributeListDTO data=new DimensionAttributeListDTO();
-        DimensionPO dimensionPO=mapper.selectById(dimensionId);
-        if (dimensionPO==null)
+        DimensionPO dimensionPo=mapper.selectById(dimensionId);
+        if (dimensionPo==null)
         {
             return data;
         }
         //获取sql脚本
-        data.sqlScript=dimensionPO.sqlScript;
+        data.sqlScript=dimensionPo.sqlScript;
         //获取表字段详情
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,dimensionId);
         List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
         data.attributeDTOList=DimensionAttributeMap.INSTANCES.poListToDtoList(list);
         //获取增量配置信息
-        QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-        syncModePOQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dimensionPO.id)
+        QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
+        syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId,dimensionPo.id)
                 .eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_DIMENSION);
-        SyncModePO syncModePO=syncMode.getOne(syncModePOQueryWrapper);
-        if(syncModePO==null)
+        SyncModePO syncModePo=syncMode.getOne(syncModePoQueryWrapper);
+        if(syncModePo==null)
         {
             return data;
         }
-        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePO);
-        if (syncModePO.syncMode!= SyncModeEnum.CUSTOM_OVERRIDE.getValue())
+        data.syncModeDTO=SyncModeMap.INSTANCES.poToDto(syncModePo);
+        if (syncModePo.syncMode!= SyncModeEnum.CUSTOM_OVERRIDE.getValue())
         {
             return data;
         }
-        QueryWrapper<TableBusinessPO> tableBusinessPOQueryWrapper=new QueryWrapper<>();
-        tableBusinessPOQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePO.id);
-        TableBusinessPO tableBusinessPO=tableBusiness.getOne(tableBusinessPOQueryWrapper);
-        if (tableBusinessPO==null)
+        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper=new QueryWrapper<>();
+        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,syncModePo.id);
+        TableBusinessPO tableBusinessPo=tableBusiness.getOne(tableBusinessPoQueryWrapper);
+        if (tableBusinessPo==null)
         {
             return data;
         }
-        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPO);
+        data.syncModeDTO.syncTableBusinessDTO=TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
         return data;
     }
 
@@ -306,17 +306,6 @@ public class DimensionAttributeImpl
         data.id=po.id;
         data.appId=po.businessId;
         //获取注册表相关数据
-        /*ResultEntity<AppRegistrationDTO> appAbbreviation = client.getData(po.appId);
-        if (appAbbreviation.code==ResultEnum.SUCCESS.getCode() || appAbbreviation.data !=null)
-        {
-            data.appbAbreviation=appAbbreviation.data.appAbbreviation;
-        }
-        //获取来源表相关数据
-        ResultEntity<TableAccessDTO> tableAccess = client.getTableAccess(po.tableSourceId);
-        if (tableAccess.code==ResultEnum.SUCCESS.getCode() || tableAccess.data !=null)
-        {
-            data.sourceTableName=tableAccess.data.tableName;
-        }*/
         QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
         List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();

@@ -71,8 +71,8 @@ public class WideTableImpl implements IWideTable {
         List<WideTableListDTO> list=new ArrayList<>();
         QueryWrapper<WideTableConfigPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(WideTableConfigPO::getBusinessId,businessId);
-        List<WideTableConfigPO> wideTableConfigPOList=mapper.selectList(queryWrapper);
-        for (WideTableConfigPO item:wideTableConfigPOList)
+        List<WideTableConfigPO> wideTableConfigPoList=mapper.selectList(queryWrapper);
+        for (WideTableConfigPO item:wideTableConfigPoList)
         {
             WideTableListDTO dto=new WideTableListDTO();
             dto.id=item.id;
@@ -151,8 +151,8 @@ public class WideTableImpl implements IWideTable {
         DataBaseTypeEnum value = DataBaseTypeEnum.getValue(typeName.toLowerCase());
         if (value.getValue()==DataBaseTypeEnum.MYSQL.getValue())
         {
-            List<WideTableSourceRelationsDTO> full_join = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.name().equals(e.joinType)).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(full_join))
+            List<WideTableSourceRelationsDTO> fullJoin = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.getName().equals(e.joinType)).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(fullJoin))
             {
                 throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
             }
@@ -176,7 +176,7 @@ public class WideTableImpl implements IWideTable {
                 WideTableSourceRelationsDTO attribute=relations.get(i);
                 appendSql.append(" "+attribute.joinType+" ");
                 appendSql.append("external_"+attribute.targetTable);
-                if (!firstTable.joinType.equals("cross join"))
+                if (!RelateTableTypeEnum.CROSS_JOIN.getName().equals(firstTable.joinType))
                 {
                     appendSql.append(" on "+"external_"+attribute.sourceTable+"."+attribute.sourceColumn+" = ");
                     appendSql.append("external_"+attribute.targetTable+"."+attribute.targetColumn+" ");

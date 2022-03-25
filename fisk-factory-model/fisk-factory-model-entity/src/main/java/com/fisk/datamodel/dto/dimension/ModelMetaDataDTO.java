@@ -36,16 +36,22 @@ public class ModelMetaDataDTO {
      * 维度字段列表
      */
     public List<ModelAttributeMetaDataDTO> dto;
-    //处理后的表字段
+    /**
+     * 处理后的表字段
+     */
     public List<String> fieldEnNames;
-    //存放存储过程名称
+    /**
+     * 存放存储过程名称
+     */
     public String sqlName;
-
+    /**
+     * fieldEnNameMaps
+     */
     public Map<String, String> fieldEnNameMaps;
 
-    /*
-    * 组id,仅管道用的到
-    * */
+    /**
+     * 组id,仅管道用的到
+     */
     public String groupComponentId;
 
 }

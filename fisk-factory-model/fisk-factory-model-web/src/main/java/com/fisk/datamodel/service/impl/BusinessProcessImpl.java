@@ -173,21 +173,21 @@ public class BusinessProcessImpl
     public ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto)
     {
         try {
-            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.businessAreaId);
-            if (businessAreaPO==null)
+            BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.businessAreaId);
+            if (businessAreaPo==null)
             {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
             //获取业务过程下所有事实
             QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.in("id",dto.factIds);
-            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
-            if (factPOList==null || factPOList.size()==0)
+            List<FactPO> factPoList=factMapper.selectList(queryWrapper);
+            if (factPoList==null || factPoList.size()==0)
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"事实表为空");
             }
             //更改发布状态
-            for (FactPO item:factPOList)
+            for (FactPO item:factPoList)
             {
                 item.isPublish= PublicStatusEnum.PUBLIC_ING.getValue();
                 if (factMapper.updateById(item)==0)
@@ -196,24 +196,24 @@ public class BusinessProcessImpl
                 }
             }
             //获取事实字段数据
-            QueryWrapper<FactAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
+            QueryWrapper<FactAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
             //获取事实id集合
             List<Integer> factIds=(List) factMapper.selectObjs(queryWrapper.select("id"));
-            List<FactAttributePO> factAttributePOList=factAttributeMapper
-                    .selectList(attributePOQueryWrapper.in("fact_id",factIds));
+            List<FactAttributePO> factAttributePoList=factAttributeMapper
+                    .selectList(attributePoQueryWrapper.in("fact_id",factIds));
             //遍历取值
             ModelPublishDataDTO data=new ModelPublishDataDTO();
-            data.businessAreaId=businessAreaPO.getId();
-            data.businessAreaName=businessAreaPO.getBusinessName();
+            data.businessAreaId=businessAreaPo.getId();
+            data.businessAreaName=businessAreaPo.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
             List<ModelPublishTableDTO> factList=new ArrayList<>();
             //获取表增量配置信息
-            QueryWrapper<SyncModePO> syncModePOQueryWrapper=new QueryWrapper<>();
-            syncModePOQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT.getValue());
-            List<SyncModePO> syncModePOList=syncModeMapper.selectList(syncModePOQueryWrapper);
+            QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
+            syncModePoQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT.getValue());
+            List<SyncModePO> syncModePoList=syncModeMapper.selectList(syncModePoQueryWrapper);
             //发布历史添加数据
             addTableHistory(dto);
-            for (FactPO item:factPOList)
+            for (FactPO item:factPoList)
             {
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
@@ -230,7 +230,7 @@ public class BusinessProcessImpl
                     pushDto.synMode=dto.syncMode;
                 }
                 else {
-                    Optional<SyncModePO> first = syncModePOList.stream().filter(e -> e.syncTableId == item.id).findFirst();
+                    Optional<SyncModePO> first = syncModePoList.stream().filter(e -> e.syncTableId == item.id).findFirst();
                     if (first.isPresent())
                     {
                         pushDto.synMode=first.get().syncMode;
@@ -238,26 +238,26 @@ public class BusinessProcessImpl
                 }
                 //获取该维度下所有维度字段
                 List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-                List<FactAttributePO> attributePOList=factAttributePOList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
-                for (FactAttributePO attributePO:attributePOList)
+                List<FactAttributePO> attributePoList=factAttributePoList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
+                for (FactAttributePO attributePo:attributePoList)
                 {
                     ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-                    fieldDTO.fieldId=attributePO.id;
-                    fieldDTO.fieldEnName=attributePO.factFieldEnName;
-                    fieldDTO.fieldType=attributePO.factFieldType;
-                    fieldDTO.fieldLength=attributePO.factFieldLength;
-                    fieldDTO.attributeType=attributePO.attributeType;
-                    fieldDTO.sourceFieldName=attributePO.sourceFieldName;
-                    fieldDTO.associateDimensionId=attributePO.associateDimensionId;
-                    fieldDTO.associateDimensionFieldId=attributePO.associateDimensionFieldId;
+                    fieldDTO.fieldId=attributePo.id;
+                    fieldDTO.fieldEnName=attributePo.factFieldEnName;
+                    fieldDTO.fieldType=attributePo.factFieldType;
+                    fieldDTO.fieldLength=attributePo.factFieldLength;
+                    fieldDTO.attributeType=attributePo.attributeType;
+                    fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+                    fieldDTO.associateDimensionId=attributePo.associateDimensionId;
+                    fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
                     //判断是否关联维度
-                    if (attributePO.associateDimensionId !=0 && attributePO.associateDimensionFieldId !=0 )
+                    if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
                     {
-                        DimensionPO dimensionPO=dimensionMapper.selectById(attributePO.associateDimensionId);
-                        fieldDTO.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                        fieldDTO.associateDimensionSqlScript=dimensionPO==null?"":dimensionPO.sqlScript;
-                        DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributePO.associateDimensionFieldId);
-                        fieldDTO.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                        DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
+                        fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+                        fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
+                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+                        fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
                     }
                     fieldList.add(fieldDTO);
                 }
@@ -315,13 +315,13 @@ public class BusinessProcessImpl
             return dtoList;
         }
         //根据业务过程id集合,获取事实表数据
-        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-        factPOQueryWrapper.in("business_process_id",businessProcessIds);
-        List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
+        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
+        factPoQueryWrapper.in("business_process_id",businessProcessIds);
+        List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
         for (BusinessProcessListDTO item:dtoList)
         {
             //获取业务过程下所有事实表
-            item.factList= FactMap.INSTANCES.poListToDtoList(factPOList.stream()
+            item.factList= FactMap.INSTANCES.poListToDtoList(factPoList.stream()
                     .filter(e->e.businessProcessId==item.id)
                     .sorted(Comparator.comparing(FactPO::getCreateTime))
                     .collect(Collectors.toList()));
@@ -331,45 +331,45 @@ public class BusinessProcessImpl
                 continue;
             }
             //查询业务过程下事实表id集合
-            List<Integer> factIds=(List)factMapper.selectObjs(factPOQueryWrapper.select("id"));
+            List<Integer> factIds=(List)factMapper.selectObjs(factPoQueryWrapper.select("id"));
             if (factIds==null || factIds.size()==0)
             {
                 continue;
             }
             //根据事实表id集合,获取事实字段列表以及指标列表
-            QueryWrapper<FactAttributePO> attributePOQueryWrapper=new QueryWrapper<>();
-            attributePOQueryWrapper.in("fact_id",factIds);
-            List<FactAttributePO> factAttributePOList=factAttributeMapper.selectList(attributePOQueryWrapper);
+            QueryWrapper<FactAttributePO> attributePoQueryWrapper=new QueryWrapper<>();
+            attributePoQueryWrapper.in("fact_id",factIds);
+            List<FactAttributePO> factAttributePoList=factAttributeMapper.selectList(attributePoQueryWrapper);
             //根据事实表id集合,获取指标列表
-            QueryWrapper<IndicatorsPO> indicatorsPOQueryWrapper=new QueryWrapper<>();
-            indicatorsPOQueryWrapper.in("fact_id",factIds);
-            List<IndicatorsPO> indicatorsPOList=indicatorsMapper.selectList(indicatorsPOQueryWrapper);
+            QueryWrapper<IndicatorsPO> indicatorsPoQueryWrapper=new QueryWrapper<>();
+            indicatorsPoQueryWrapper.in("fact_id",factIds);
+            List<IndicatorsPO> indicatorsPoList=indicatorsMapper.selectList(indicatorsPoQueryWrapper);
             //获取每个事实表下字段列表、指标列表
             for (FactDataDTO fact:item.factList)
             {
-                List<FactAttributePO> attributePOS=factAttributePOList.stream()
+                List<FactAttributePO> attributePoList=factAttributePoList.stream()
                         .filter(e->e.factId==fact.id).collect(Collectors.toList());
-                if (attributePOS!=null && attributePOS.size()>0)
+                if (attributePoList!=null && attributePoList.size()>0)
                 {
-                    fact.attributeList=FactAttributeMap.INSTANCES.poListToDtoList(attributePOS);
+                    fact.attributeList=FactAttributeMap.INSTANCES.poListToDtoList(attributePoList);
                     //循环获取关联维度表相关数据
                     for (FactAttributeDataDTO attributeItem:fact.attributeList)
                     {
                         if (attributeItem.associateDimensionFieldId !=0)
                         {
-                            DimensionPO dimensionPO=dimensionMapper.selectById(attributeItem.associateDimensionId);
-                            attributeItem.associateDimensionName=dimensionPO==null?"":dimensionPO.dimensionTabName;
-                            DimensionAttributePO dimensionAttributePO=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
-                            attributeItem.associateDimensionFieldName=dimensionAttributePO==null?"":dimensionAttributePO.dimensionFieldEnName;
+                            DimensionPO dimensionPo=dimensionMapper.selectById(attributeItem.associateDimensionId);
+                            attributeItem.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+                            DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributeItem.associateDimensionFieldId);
+                            attributeItem.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
                         }
                     }
                     Collections.reverse(fact.attributeList);
                 }
-                List<IndicatorsPO> indicatorsPOS=indicatorsPOList.stream()
+                List<IndicatorsPO> indicatorsPoStreamList=indicatorsPoList.stream()
                         .filter(e->e.factId==fact.id).collect(Collectors.toList());
-                if (indicatorsPOS!=null && indicatorsPOS.size()>0)
+                if (indicatorsPoStreamList!=null && indicatorsPoStreamList.size()>0)
                 {
-                    fact.indicatorsList= AtomicIndicatorsMap.INSTANCES.poListToDtoList(indicatorsPOS);
+                    fact.indicatorsList= AtomicIndicatorsMap.INSTANCES.poListToDtoList(indicatorsPoStreamList);
                     Collections.reverse(fact.indicatorsList);
                 }
             }
@@ -394,34 +394,34 @@ public class BusinessProcessImpl
     public ResultEnum businessProcessPublish(BusinessProcessPublishDTO dto)
     {
         try{
-            BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.businessAreaId);
-            if (businessAreaPO==null)
+            BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.businessAreaId);
+            if (businessAreaPo==null)
             {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
             QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.in("business_process_id",dto.businessProcessIds);
-            List<FactPO> factPOList=factMapper.selectList(queryWrapper);
-            if (factPOList==null || factPOList.size()==0)
+            List<FactPO> factPoList=factMapper.selectList(queryWrapper);
+            if (factPoList==null || factPoList.size()==0)
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"事实表为空");
             }
             List<DimensionAttributeAddDTO> list=new ArrayList<>();
             DimensionAttributeAddListDTO dimensionAttributeAddListDTO = new DimensionAttributeAddListDTO();
-            for (FactPO item:factPOList)
+            for (FactPO item:factPoList)
             {
                 DimensionAttributeAddDTO pushDto=new DimensionAttributeAddDTO();
                 pushDto.dimensionId=Integer.parseInt(String.valueOf(item.id));;
                 pushDto.dimensionName=item.factTableEnName;
-                pushDto.businessAreaName=businessAreaPO.getBusinessName();
+                pushDto.businessAreaName=businessAreaPo.getBusinessName();
                 pushDto.createType= CreateTypeEnum.CREATE_FACT.getValue();
                 pushDto.userId=userHelper.getLoginUserInfo().id;
                 list.add(pushDto);
             }
-            dimensionAttributeAddListDTO.dimensionAttributeAddDTOS=list;
+            dimensionAttributeAddListDTO.dimensionAttributeAddDtoList=list;
             dimensionAttributeAddListDTO.userId=userHelper.getLoginUserInfo().id;
             //发送消息
-            //publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
+            ////publishTaskClient.publishBuildAtlasDorisTableTask(dimensionAttributeAddListDTO);
         }
         catch (Exception ex){
             log.error(ex.getMessage());
@@ -464,12 +464,12 @@ public class BusinessProcessImpl
         }
         dto.factTableName=po.factTableEnName;
         //查询业务过程id
-        BusinessProcessPO businessProcessPO=businessProcessMapper.selectById(po.businessProcessId);
+        BusinessProcessPO businessProcessPo=businessProcessMapper.selectById(po.businessProcessId);
         if (po==null)
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "业务过程不存在");
         }
-        dto.businessAreaId=businessProcessPO.businessId;
+        dto.businessAreaId=businessProcessPo.businessId;
         return  dto;
     }
 

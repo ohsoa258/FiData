@@ -42,7 +42,7 @@ public class CategoryImpl implements ICategory {
                jsonObj.remove("guid");
                jsonParameter=jsonObj.toJSONString();
            }
-           ResultDataDTO<String> result = atlasClient.Post(category,jsonParameter);
+           ResultDataDTO<String> result = atlasClient.post(category,jsonParameter);
            return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
        }
        catch (Exception e)
@@ -54,14 +54,14 @@ public class CategoryImpl implements ICategory {
     @Override
     public ResultEnum deleteCategory(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(category + "/" + guid);
+        ResultDataDTO<String> result = atlasClient.delete(category + "/" + guid);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
     @Override
     public CategoryDTO getCategory(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.Get(category + "/" + guid);
+        ResultDataDTO<String> result = atlasClient.get(category + "/" + guid);
         return JSONObject.parseObject(result.data,CategoryDTO.class);
     }
 
@@ -69,7 +69,7 @@ public class CategoryImpl implements ICategory {
     public ResultEnum updateCategory(CategoryDTO dto)
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(category,jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(category,jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 

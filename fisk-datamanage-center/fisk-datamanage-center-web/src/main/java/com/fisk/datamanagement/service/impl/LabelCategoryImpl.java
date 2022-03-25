@@ -94,10 +94,10 @@ public class LabelCategoryImpl implements ILabelCategory {
             dataList= LabelCategoryMap.INSTANCES.dataListPoToDto(list);
         }
         //获取子节点
-        QueryWrapper<CategoryPO> categoryPOQueryWrapper=new QueryWrapper<>();
-        categoryPOQueryWrapper.lambda().ne(CategoryPO::getCategoryParentCode,"1");
-        List<CategoryPO> childrenList=mapper.selectList(categoryPOQueryWrapper);
-        List<CategoryPO> childrenAllList=mapper.selectList(categoryPOQueryWrapper);
+        QueryWrapper<CategoryPO> categoryPoQueryWrapper=new QueryWrapper<>();
+        categoryPoQueryWrapper.lambda().ne(CategoryPO::getCategoryParentCode,"1");
+        List<CategoryPO> childrenList=mapper.selectList(categoryPoQueryWrapper);
+        List<CategoryPO> childrenAllList=mapper.selectList(categoryPoQueryWrapper);
         if (childrenList==null || childrenList.size()==0)
         {
             return dataList;

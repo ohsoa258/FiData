@@ -38,14 +38,14 @@ public class TableBusinessImpl
         {
             return dto;
         }
-        QueryWrapper<TableBusinessPO> tableBusinessPOQueryWrapper=new QueryWrapper<>();
-        tableBusinessPOQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,po.id);
-        TableBusinessPO tableBusinessPO=tableBusinessMapper.selectOne(tableBusinessPOQueryWrapper);
-        if (tableBusinessPO==null)
+        QueryWrapper<TableBusinessPO> tableBusinessPoQueryWrapper=new QueryWrapper<>();
+        tableBusinessPoQueryWrapper.lambda().eq(TableBusinessPO::getSyncId,po.id);
+        TableBusinessPO tableBusinessPo=tableBusinessMapper.selectOne(tableBusinessPoQueryWrapper);
+        if (tableBusinessPo==null)
         {
             return dto;
         }
-        dto.details= TableBusinessMap.INSTANCES.poToDto(tableBusinessPO);
+        dto.details= TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
         return dto;
     }
 

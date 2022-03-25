@@ -6,7 +6,6 @@ import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerSchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat;
-import com.alibaba.druid.util.JdbcConstants;
 import com.fisk.datamanagement.dto.druid.FieldStructureDTO;
 import jdk.nashorn.internal.runtime.ParserException;
 import org.springframework.stereotype.Component;
@@ -19,7 +18,7 @@ import java.util.*;
 @Component
 public class AnalysisSqlHelper {
 
-    public List<String> AnalysisTableSql(String sql, String dbType)
+    public List<String> analysisTableSql(String sql, String dbType)
     {
         List<String> tableNameList = new ArrayList<>();
         try {
@@ -55,7 +54,7 @@ public class AnalysisSqlHelper {
         return tableNameList;
     }
 
-    public List<FieldStructureDTO> AnalysisColumnSql(String sql, String dbType)
+    public List<FieldStructureDTO> analysisColumnSql(String sql, String dbType)
     {
         List<FieldStructureDTO> columnList = new ArrayList<>();
         try {
@@ -78,15 +77,15 @@ public class AnalysisSqlHelper {
                 //别名  *详细字段 2022年01月05日18:06:30 Dennyhui
                 Set<String> set = new HashSet<>();
                 List<FieldStructureDTO> fields=new ArrayList<>();
-                List<SQLSelectItem> SourceBName = ((SQLSelectQueryBlock)((SQLSelect)((SQLSelectStatement)sqlStatement).getSelect()).getQuery()).getSelectList();
-                for(SQLSelectItem item : SourceBName){
+                List<SQLSelectItem> sourceName = ((SQLSelectQueryBlock)((SQLSelect)((SQLSelectStatement)sqlStatement).getSelect()).getQuery()).getSelectList();
+                for(SQLSelectItem item : sourceName){
                     if(item.getExpr() instanceof SQLPropertyExpr) {
                         SQLPropertyExpr itemex = (SQLPropertyExpr) item.getExpr();
-                        SQLExprTableSource TableSource=(SQLExprTableSource)itemex.getResolvedOwnerObject();
-                        System.out.println(TableSource.getExpr()+"."+itemex.getName());
+                        SQLExprTableSource tableSource=(SQLExprTableSource)itemex.getResolvedOwnerObject();
+                        System.out.println(tableSource.getExpr()+"."+itemex.getName());
                         FieldStructureDTO fs=new FieldStructureDTO();
                         fs.fieldName=itemex.getName();
-                        fs.source=TableSource.getExpr().toString();
+                        fs.source=tableSource.getExpr().toString();
                         fs.logic=item.getExpr().toString();
                         fs.alias=false;
                         fields.add(fs);

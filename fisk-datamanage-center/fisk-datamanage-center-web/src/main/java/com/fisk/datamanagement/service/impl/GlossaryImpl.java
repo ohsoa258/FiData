@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,7 +34,7 @@ public class GlossaryImpl implements IGlossary {
     {
         List<GlossaryAttributeDTO> list;
         try {
-            ResultDataDTO<String> result = atlasClient.Get(glossary);
+            ResultDataDTO<String> result = atlasClient.get(glossary);
             if (result.code != ResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(result.code);
@@ -55,14 +54,14 @@ public class GlossaryImpl implements IGlossary {
     public ResultEnum addGlossary(GlossaryDTO dto)
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Post(glossary,jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(glossary,jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 
     @Override
     public ResultEnum deleteGlossary(String guid)
     {
-        ResultDataDTO<String> result = atlasClient.Delete(glossary +"/"+ guid);
+        ResultDataDTO<String> result = atlasClient.delete(glossary +"/"+ guid);
         return atlasClient.newResultEnum(result);
     }
 
@@ -70,7 +69,7 @@ public class GlossaryImpl implements IGlossary {
     public ResultEnum updateGlossary(GlossaryDTO dto)
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
-        ResultDataDTO<String> result = atlasClient.Put(glossary+"/"+dto.guid,jsonParameter);
+        ResultDataDTO<String> result = atlasClient.put(glossary+"/"+dto.guid,jsonParameter);
         return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
     }
 

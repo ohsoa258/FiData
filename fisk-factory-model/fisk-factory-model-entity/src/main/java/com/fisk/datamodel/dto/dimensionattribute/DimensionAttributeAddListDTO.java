@@ -9,5 +9,5 @@ import java.util.List;
  */
 @Data
 public class DimensionAttributeAddListDTO extends MQBaseDTO {
-    public List<DimensionAttributeAddDTO> dimensionAttributeAddDTOS;
+    public List<DimensionAttributeAddDTO> dimensionAttributeAddDtoList;
 }

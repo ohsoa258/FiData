@@ -101,8 +101,8 @@ public class TableNameImpl implements ITableName {
         List<IndicatorDTO> dtoList = new ArrayList<>();
 
         dto.getIndicatorList().stream().forEach(b -> {
-            IndicatorsPO indicatorsPO = indicatorsMapper.selectById(b.getId());
-            if (indicatorsPO == null){
+            IndicatorsPO indicatorsPo = indicatorsMapper.selectById(b.getId());
+            if (indicatorsPo == null){
                 return;
             }
 
@@ -110,28 +110,28 @@ public class TableNameImpl implements ITableName {
             indicator.setId(b.getId());
             indicator.setFieldName(b.getFieldName());
             indicator.setTableName(b.getTableName());
-            if (indicatorsPO.getIndicatorsType() == IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue()){
+            if (indicatorsPo.getIndicatorsType() == IndicatorsTypeEnum.ATOMIC_INDICATORS.getValue()){
                 // 原子指标
                 indicator.setType(ATOMIC_INDICATORS);
-                indicator.setCalculationLogic(indicatorsPO.getCalculationLogic());
+                indicator.setCalculationLogic(indicatorsPo.getCalculationLogic());
                 dtoList.add(indicator);
-            }else if (indicatorsPO.getIndicatorsType() == IndicatorsTypeEnum.DERIVED_INDICATORS.getValue()){
-                IndicatorsPO indicatorsPO1 = indicatorsMapper.selectById(indicatorsPO.getAtomicId());
-                indicator.setFieldName(indicatorsPO1.getIndicatorsName());
-                indicator.setDeriveName(indicatorsPO.getIndicatorsName());
+            }else if (indicatorsPo.getIndicatorsType() == IndicatorsTypeEnum.DERIVED_INDICATORS.getValue()){
+                IndicatorsPO indicatorsP01 = indicatorsMapper.selectById(indicatorsPo.getAtomicId());
+                indicator.setFieldName(indicatorsP01.getIndicatorsName());
+                indicator.setDeriveName(indicatorsPo.getIndicatorsName());
                 indicator.setType(DERIVED_INDICATORS);
-                indicator.setTimePeriod(indicatorsPO.timePeriod);
-                indicator.setCalculationLogic(indicatorsPO1.getCalculationLogic());
+                indicator.setTimePeriod(indicatorsPo.timePeriod);
+                indicator.setCalculationLogic(indicatorsP01.getCalculationLogic());
 
                 // 派生指标
                 QueryWrapper<BusinessLimitedPO> query = new QueryWrapper<>();
-                query.lambda().eq(BusinessLimitedPO::getId,indicatorsPO.getBusinessLimitedId());
-                BusinessLimitedPO limitedPO = businessLimitedMapper.selectOne(query);
-                if (limitedPO != null){
+                query.lambda().eq(BusinessLimitedPO::getId,indicatorsPo.getBusinessLimitedId());
+                BusinessLimitedPO limitedPo = businessLimitedMapper.selectOne(query);
+                if (limitedPo != null){
                     QueryWrapper<BusinessLimitedAttributePO> queryWrapper = new QueryWrapper<>();
-                    queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,limitedPO.getId());
-                    List<BusinessLimitedAttributePO> attributePOList = attributeMapper.selectList(queryWrapper);
-                    indicator.setWhereTimeLogic(attributePOList.stream().filter(e -> e!=null)
+                    queryWrapper.lambda().eq(BusinessLimitedAttributePO::getBusinessLimitedId,limitedPo.getId());
+                    List<BusinessLimitedAttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
+                    indicator.setWhereTimeLogic(attributePoList.stream().filter(e -> e!=null)
                             .map(e -> {
                                 String factFieldName = this.getFactFieldName(e.getFactAttributeId(),e.getCalculationLogic(),e.getCalculationValue());
                                 return factFieldName;
@@ -152,23 +152,22 @@ public class TableNameImpl implements ITableName {
      * @return
      */
     public String getFactFieldName(Integer id,String calculationLogic,String calculationValue){
-        FactAttributePO factAttributePO = factAttributeMapper.selectById(id);
-        if (factAttributePO != null){
-            if (factAttributePO.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()){
-                DimensionPO dimension = dimensionMapper.selectById(factAttributePO.getAssociateDimensionId());
-                DimensionAttributePO dimensionAttributePO = dimensionAttributeMapper.selectById(factAttributePO.getAssociateDimensionFieldId());
+        FactAttributePO factAttributePo = factAttributeMapper.selectById(id);
+        if (factAttributePo != null){
+            if (factAttributePo.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()){
+                DimensionPO dimension = dimensionMapper.selectById(factAttributePo.getAssociateDimensionId());
+                DimensionAttributePO dimensionAttributePo = dimensionAttributeMapper.selectById(factAttributePo.getAssociateDimensionFieldId());
                 String tableName = dimension.getDimensionTabName();
-                // String dimensionFieldEnName = dimensionAttribute.getDimensionFieldEnName();
                 String str1 = tableName.substring(0, tableName.indexOf("_"));
                 String dimensionTabName = tableName.substring(str1.length()+1, tableName.length()) + "key";
                 String subQuery = " SELECT " + dimensionTabName + " FROM " + tableName + " WHERE " +
-                        dimensionAttributePO.getDimensionFieldEnName() + calculationLogic + calculationValue;
-                return factMapper.selectById(factAttributePO.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";
+                        dimensionAttributePo.getDimensionFieldEnName() + calculationLogic + calculationValue;
+                return factMapper.selectById(factAttributePo.factId).getFactTabName() + "." + dimensionTabName +"=" + "(" + subQuery +")";
             }else {
-                FactPO factPO=factMapper.selectById(factAttributePO.factId);
-                if (factPO !=null)
+                FactPO factPo=factMapper.selectById(factAttributePo.factId);
+                if (factPo !=null)
                 {
-                    return factPO.factTabName+"."+factAttributePO.factFieldEnName+calculationLogic + calculationValue;
+                    return factPo.factTabName+"."+factAttributePo.factFieldEnName+calculationLogic + calculationValue;
                 }
 
             }

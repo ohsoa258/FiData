@@ -50,23 +50,23 @@ public class DataFactoryImpl implements IDataFactory {
     {
         List<ChannelDataDTO> data=new ArrayList<>();
         QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
-        List<BusinessAreaPO> businessAreaPOList=businessAreaMapper.selectList(queryWrapper);
-        if (businessAreaPOList==null || businessAreaPOList.size()==0)
+        List<BusinessAreaPO> businessAreaPoList=businessAreaMapper.selectList(queryWrapper);
+        if (businessAreaPoList==null || businessAreaPoList.size()==0)
         {
             return data;
         }
         //查询维度
-        QueryWrapper<DimensionPO> dimensionPOQueryWrapper=new QueryWrapper<>();
-        List<DimensionPO> dimensionPOList=dimensionMapper.selectList(dimensionPOQueryWrapper);
+        QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
+        List<DimensionPO> dimensionPoList=dimensionMapper.selectList(dimensionPoQueryWrapper);
         //查询事实
-        QueryWrapper<FactPO> factPOQueryWrapper=new QueryWrapper<>();
-        List<FactPO> factPOList=factMapper.selectList(factPOQueryWrapper);
+        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
+        List<FactPO> factPoList=factMapper.selectList(factPoQueryWrapper);
         //查询宽表
-        QueryWrapper<WideTableConfigPO> wideTableConfigPOQueryWrapper=new QueryWrapper<>();
-        List<WideTableConfigPO> wideTableConfigPOList=wideTableMapper.selectList(wideTableConfigPOQueryWrapper);
+        QueryWrapper<WideTableConfigPO> wideTableConfigPoQueryWrapper=new QueryWrapper<>();
+        List<WideTableConfigPO> wideTableConfigPoList=wideTableMapper.selectList(wideTableConfigPoQueryWrapper);
         //获取枚举类型
         DataFactoryEnum dataFactoryEnum=DataFactoryEnum.getValue((int) dto.id);
-        for (BusinessAreaPO item:businessAreaPOList)
+        for (BusinessAreaPO item:businessAreaPoList)
         {
             ChannelDataDTO dataDTO=new ChannelDataDTO();
             dataDTO.id=item.getId();
@@ -74,34 +74,34 @@ public class DataFactoryImpl implements IDataFactory {
             switch (dataFactoryEnum)
             {
                 case NUMBER_DIMENSION:
-                    List<DimensionPO> dimensionPO=dimensionPOList.stream()
+                    List<DimensionPO> dimensionPo=dimensionPoList.stream()
                             .filter(e->e.businessId==item.id && (e.isPublish== PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelDimensionData(dimensionPO);
+                    dataDTO.list=getChannelDimensionData(dimensionPo);
                     break;
                 case ANALYSIS_DIMENSION:
-                    List<DimensionPO> dimensionPOS=dimensionPOList.stream()
+                    List<DimensionPO> dimensionPoStreamList=dimensionPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelDimensionData(dimensionPOS);
+                    dataDTO.list=getChannelDimensionData(dimensionPoStreamList);
                     break;
                 case NUMBER_FACT:
-                    List<FactPO> factPO=factPOList.stream()
+                    List<FactPO> factPo=factPoList.stream()
                             .filter(e->e.businessId==item.id && (e.isPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelFactData(factPO);
+                    dataDTO.list=getChannelFactData(factPo);
                     break;
                 case ANALYSIS_FACT:
-                    List<FactPO> factPOS=factPOList.stream()
+                    List<FactPO> factPoStreamList=factPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelFactData(factPOS);
+                    dataDTO.list=getChannelFactData(factPoStreamList);
                     break;
                 case WIDE_TABLE:
-                    List<WideTableConfigPO> wideTableConfigPOS=wideTableConfigPOList.stream()
+                    List<WideTableConfigPO> wideTableConfigPoStreamList=wideTableConfigPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list=getChannelWideTableData(wideTableConfigPOS);
+                    dataDTO.list=getChannelWideTableData(wideTableConfigPoStreamList);
                     break;
                 default:
             }
@@ -114,19 +114,19 @@ public class DataFactoryImpl implements IDataFactory {
 
     /**
      * 获取发布成功/正在发布维度表List
-     * @param dimensionPO
+     * @param dimensionPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPO)
+    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo)
     {
         List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(dimensionPO))
+        if (!CollectionUtils.isEmpty(dimensionPo))
         {
-            for (DimensionPO dimPO:dimensionPO)
+            for (DimensionPO dimPo:dimensionPo)
             {
                 ChannelDataChildDTO child=new ChannelDataChildDTO();
-                child.id=dimPO.id;
-                child.tableName=dimPO.dimensionTabName;
+                child.id=dimPo.id;
+                child.tableName=dimPo.dimensionTabName;
                 data.add(child);
             }
         }
@@ -135,15 +135,15 @@ public class DataFactoryImpl implements IDataFactory {
 
     /**
      * 获取发布成功/正在发布事实表List
-     * @param factPO
+     * @param factPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPO)
+    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo)
     {
         List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(factPO))
+        if (!CollectionUtils.isEmpty(factPo))
         {
-            for (FactPO fact:factPO)
+            for (FactPO fact:factPo)
             {
                 ChannelDataChildDTO child=new ChannelDataChildDTO();
                 child.id=fact.id;
@@ -154,12 +154,12 @@ public class DataFactoryImpl implements IDataFactory {
         return data;
     }
 
-    private List<ChannelDataChildDTO> getChannelWideTableData(List<WideTableConfigPO> wideTableConfigPO)
+    private List<ChannelDataChildDTO> getChannelWideTableData(List<WideTableConfigPO> wideTableConfigPo)
     {
         List<ChannelDataChildDTO> data=new ArrayList<>();
-        if (!CollectionUtils.isEmpty(wideTableConfigPO))
+        if (!CollectionUtils.isEmpty(wideTableConfigPo))
         {
-            for (WideTableConfigPO wide:wideTableConfigPO)
+            for (WideTableConfigPO wide:wideTableConfigPo)
             {
                 ChannelDataChildDTO child=new ChannelDataChildDTO();
                 child.id=wide.id;
@@ -174,15 +174,15 @@ public class DataFactoryImpl implements IDataFactory {
     public ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto)
     {
         ComponentIdDTO componentIdDTO=new ComponentIdDTO();
-        BusinessAreaPO businessAreaPO=businessAreaMapper.selectById(dto.appId);
-        componentIdDTO.appName=businessAreaPO==null?"":businessAreaPO.getBusinessName();
+        BusinessAreaPO businessAreaPo=businessAreaMapper.selectById(dto.appId);
+        componentIdDTO.appName=businessAreaPo==null?"":businessAreaPo.getBusinessName();
         if (dto.flag==DataFactoryEnum.NUMBER_DIMENSION.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_DIMENSION.getValue())
         {
-            DimensionPO dimensionPO=dimensionMapper.selectById(dto.tableId);
-            componentIdDTO.tableName=dimensionPO==null?"":dimensionPO.dimensionTabName;
+            DimensionPO dimensionPo=dimensionMapper.selectById(dto.tableId);
+            componentIdDTO.tableName=dimensionPo==null?"":dimensionPo.dimensionTabName;
         }else if (dto.flag==DataFactoryEnum.ANALYSIS_DIMENSION.getValue() || dto.flag==DataFactoryEnum.ANALYSIS_FACT.getValue()){
-            FactPO factPO=factMapper.selectById(dto.tableId);
-            componentIdDTO.tableName=factPO==null?"":factPO.factTabName;
+            FactPO factPo=factMapper.selectById(dto.tableId);
+            componentIdDTO.tableName=factPo==null?"":factPo.factTabName;
         }
         else if (dto.flag==DataFactoryEnum.WIDE_TABLE.getValue())
         {

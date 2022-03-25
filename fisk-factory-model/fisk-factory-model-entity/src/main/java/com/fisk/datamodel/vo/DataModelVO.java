@@ -36,19 +36,19 @@ public class DataModelVO {
      */
     public DataModelTableVO factIdList;
 
-    /*
-    * 物理表id集合
-    * */
+    /**
+     * 物理表id集合
+     */
     public DataModelTableVO physicsIdList;
 
-    /*
-    * 指标表id集合
-    * */
+    /**
+     * 指标表id集合
+     */
     public DataModelTableVO indicatorIdList;
 
-    /*
-    * userid
-    * */
+    /**
+     * userid
+     */
     public Long userId;
 
 }

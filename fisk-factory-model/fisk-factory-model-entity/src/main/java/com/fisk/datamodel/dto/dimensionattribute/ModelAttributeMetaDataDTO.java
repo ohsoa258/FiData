@@ -41,8 +41,8 @@ public class ModelAttributeMetaDataDTO {
      */
     public String associationTable;
 
-    /*
-    关联表字段名称
+    /**
+     * 关联表字段名称
      */
     public String associationField;
 

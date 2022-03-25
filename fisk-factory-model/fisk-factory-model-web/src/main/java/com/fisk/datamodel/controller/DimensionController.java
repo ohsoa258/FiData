@@ -37,7 +37,7 @@ public class DimensionController {
 
     @ApiOperation("添加维度")
     @PostMapping("/addDimension")
-    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto) throws SQLException {
+    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto){
         return ResultEntityBuild.build(service.addDimension(dto));
     }
 
@@ -55,7 +55,7 @@ public class DimensionController {
 
     @ApiOperation("修改维度")
     @PutMapping("/editDimension")
-    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) throws SQLException {
+    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto){
         return ResultEntityBuild.build(service.updateDimension(dto));
     }
 

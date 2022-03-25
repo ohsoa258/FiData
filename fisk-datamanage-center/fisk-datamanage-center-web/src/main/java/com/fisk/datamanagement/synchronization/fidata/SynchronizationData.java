@@ -25,12 +25,10 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.tableconfig.SourceFieldDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.datamodel.enums.FactAttributeEnum;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -180,7 +178,7 @@ public class SynchronizationData {
             String[] dbList = db.split(",");
             QueryWrapper<MetadataMapAtlasPO> queryWrapper1=new QueryWrapper<>();
             queryWrapper1.lambda().eq(MetadataMapAtlasPO::getType, EntityTypeEnum.RDBMS_DB.getValue());
-            List<MetadataMapAtlasPO> mapAtlasDbPOS=metadataMapAtlasMapper.selectList(queryWrapper1);
+            List<MetadataMapAtlasPO> mapAtlasDbPoList =metadataMapAtlasMapper.selectList(queryWrapper1);
             int index=0;
             for (int i=0;i<dbList.length;i++)
             {
@@ -195,7 +193,7 @@ public class SynchronizationData {
                 }
                 String dbQualifiedName=instancePo.get().qualifiedName+"_"+dbList[i];
                 String dbGuid="";
-                List<MetadataMapAtlasPO> dbPo=mapAtlasDbPOS.stream()
+                List<MetadataMapAtlasPO> dbPo= mapAtlasDbPoList.stream()
                         .filter(e->e.dbNameType== finalIndex).collect(Collectors.toList());
                 //存在,判断是否修改
                 if (!CollectionUtils.isEmpty(dbPo))
@@ -250,7 +248,7 @@ public class SynchronizationData {
             dto.fieldList=dto.fieldList.stream().distinct().collect(Collectors.toList());
             list.add(dto);
         }
-        //list=list.stream().filter(e->e.tableName.contains("timingTask_Favorite")).collect(Collectors.toList());
+        ////list=list.stream().filter(e->e.tableName.contains("timingTask_Favorite")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_INPUT.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
@@ -275,7 +273,7 @@ public class SynchronizationData {
             return;
         }
         List<SourceTableDTO> list=JSON.parseArray(JSON.toJSONString(result.data),SourceTableDTO.class);
-        //list=list.stream().filter(e->e.tableName.equals("fact_UserTest")).collect(Collectors.toList());
+        ////list=list.stream().filter(e->e.tableName.equals("fact_UserTest")).collect(Collectors.toList());
         QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(MetadataMapAtlasPO::getDbNameType,DataTypeEnum.DATA_MODEL.getValue());
         MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
@@ -316,11 +314,11 @@ public class SynchronizationData {
     public void synchronizationData(List<SourceTableDTO> list, String dbName, int dataType)
     {
         try {
-            QueryWrapper<MetadataMapAtlasPO> mapAtlasPOQueryWrapper=new QueryWrapper<>();
-            mapAtlasPOQueryWrapper.lambda().eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_DB)
+            QueryWrapper<MetadataMapAtlasPO> mapAtlasPoQueryWrapper =new QueryWrapper<>();
+            mapAtlasPoQueryWrapper.lambda().eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_DB)
                     .eq(MetadataMapAtlasPO::getQualifiedName,dbName);
-            MetadataMapAtlasPO dbPO=metadataMapAtlasMapper.selectOne(mapAtlasPOQueryWrapper);
-            if (dbPO==null)
+            MetadataMapAtlasPO dbPo=metadataMapAtlasMapper.selectOne(mapAtlasPoQueryWrapper);
+            if (dbPo==null)
             {
                 return;
             }
@@ -337,10 +335,10 @@ public class SynchronizationData {
                         .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE)
                         .eq(MetadataMapAtlasPO::getTableType,dto.type);
                 MetadataMapAtlasPO po=metadataMapAtlasMapper.selectOne(queryWrapper);
-                String qualifiedName=dbPO.qualifiedName+"_"+dto.tableName;
+                String qualifiedName=dbPo.qualifiedName+"_"+dto.tableName;
                 if (po==null)
                 {
-                    String addResult = addEntity(EntityTypeEnum.RDBMS_TABLE, dbPO, dto.tableName, dto,null,0);
+                    String addResult = addEntity(EntityTypeEnum.RDBMS_TABLE, dbPo, dto.tableName, dto,null,0);
                     if (addResult=="")
                     {
                         continue;
@@ -353,7 +351,7 @@ public class SynchronizationData {
                             0,
                             dto.type,
                             0,
-                            dbPO.atlasGuid,
+                            dbPo.atlasGuid,
                             "",
                             0);
                     log.info("add entity table name:",dto.tableName+",guid:"+tableGuid);
@@ -479,7 +477,7 @@ public class SynchronizationData {
                     .collect(Collectors.toList());
             for (MetadataMapAtlasPO item:delList )
             {
-                ResultDataDTO<String> delAtlas = atlasClient.Delete(entityByGuid + "/" + item.atlasGuid);
+                ResultDataDTO<String> delAtlas = atlasClient.delete(entityByGuid + "/" + item.atlasGuid);
                 if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
@@ -517,14 +515,14 @@ public class SynchronizationData {
             List<MetadataMapAtlasPO> delColumnList=dwMetadataList.stream()
                     .filter(e->columnList.contains(e.columnId) && e.tableType==dto.type)
                     .collect(Collectors.toList());
-            for (MetadataMapAtlasPO mapAtlasPO:delColumnList)
+            for (MetadataMapAtlasPO mapAtlasPo :delColumnList)
             {
-                ResultDataDTO<String> delAtlas = atlasClient.Delete(entityByGuid + "/" + mapAtlasPO.atlasGuid);
+                ResultDataDTO<String> delAtlas = atlasClient.delete(entityByGuid + "/" + mapAtlasPo.atlasGuid);
                 if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
                 }
-                metadataMapAtlasMapper.deleteByIdWithFill(mapAtlasPO);
+                metadataMapAtlasMapper.deleteByIdWithFill(mapAtlasPo);
             }
         }
     }
@@ -607,7 +605,7 @@ public class SynchronizationData {
         entityDTO.entity=entityTypeDTO;
         String jsonParameter= JSONArray.toJSON(entityDTO).toString();
         //调用atlas添加实例
-        ResultDataDTO<String> addResult = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
         return addResult.code==ResultEnum.REQUEST_SUCCESS?addResult.data:"";
     }
 
@@ -628,7 +626,7 @@ public class SynchronizationData {
                              SourceFieldDTO fieldDTO)
     {
         boolean change=false;
-        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + po.atlasGuid);
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
         if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return;
@@ -710,7 +708,7 @@ public class SynchronizationData {
         entityObject.put("attributes",attribute);
         jsonObj.put("entity",entityObject);
         String jsonParameter=JSONArray.toJSON(jsonObj).toString();
-        ResultDataDTO<String> result = atlasClient.Post(entity, jsonParameter);
+        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
         if (result.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return;
@@ -754,20 +752,20 @@ public class SynchronizationData {
             else {
                 jsonArray=mutatedEntities.getJSONArray("UPDATE");
             }
-            MetadataMapAtlasPO metadataMapAtlasPO=new MetadataMapAtlasPO();
-            metadataMapAtlasPO.atlasGuid=jsonArray.getJSONObject(0).getString("guid");
-            metadataMapAtlasPO.type=entityTypeEnum.getValue();
-            metadataMapAtlasPO.qualifiedName=qualifiedName;
-            metadataMapAtlasPO.parentAtlasGuid=parentGuid;
-            metadataMapAtlasPO.dataType=dataType;
-            metadataMapAtlasPO.columnId=columnId;
-            metadataMapAtlasPO.tableId=tableId;
-            metadataMapAtlasPO.tableType=tableType;
-            metadataMapAtlasPO.dbNameType=dbNameType;
-            metadataMapAtlasPO.attributeType=attributeType;
-            metadataMapAtlasPO.dimensionKey=dimensionKey;
-            int flat = metadataMapAtlasMapper.insert(metadataMapAtlasPO);
-            return flat>0?metadataMapAtlasPO.atlasGuid:"";
+            MetadataMapAtlasPO metadataMapAtlasPo =new MetadataMapAtlasPO();
+            metadataMapAtlasPo.atlasGuid=jsonArray.getJSONObject(0).getString("guid");
+            metadataMapAtlasPo.type=entityTypeEnum.getValue();
+            metadataMapAtlasPo.qualifiedName=qualifiedName;
+            metadataMapAtlasPo.parentAtlasGuid=parentGuid;
+            metadataMapAtlasPo.dataType=dataType;
+            metadataMapAtlasPo.columnId=columnId;
+            metadataMapAtlasPo.tableId=tableId;
+            metadataMapAtlasPo.tableType=tableType;
+            metadataMapAtlasPo.dbNameType=dbNameType;
+            metadataMapAtlasPo.attributeType=attributeType;
+            metadataMapAtlasPo.dimensionKey=dimensionKey;
+            int flat = metadataMapAtlasMapper.insert(metadataMapAtlasPo);
+            return flat>0? metadataMapAtlasPo.atlasGuid:"";
         }
         catch (Exception e)
         {
@@ -777,7 +775,7 @@ public class SynchronizationData {
 
     public void setRedis(String guid)
     {
-        ResultDataDTO<String> getDetail = atlasClient.Get(entityByGuid + "/" + guid);
+        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + guid);
         if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
         {
             return;

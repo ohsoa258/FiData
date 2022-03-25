@@ -50,14 +50,8 @@ public interface IDerivedIndicators {
     ResultEnum updateDerivedIndicators(DerivedIndicatorsDTO dto);
 
     /**
-     * 获取派生指标聚合字段列表
-     * @param id
-     * @return
-     */
-    List<ModelAttributeMetaDataDTO> getDerivedIndicatorsParticle(int id);
-
-    /**
      * 获取所有指标
+     * @param businessId
      * @return
      */
     List<String> getIndicatorsList(int businessId);

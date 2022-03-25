@@ -59,8 +59,9 @@ public interface IFactAttribute {
     /**
      * 根据事实id获取事实下字段
      * @param dto
+     * @return
      */
-    List<FactAttributeDropDTO> GetFactAttributeData(FactAttributeDropQueryDTO dto);
+    List<FactAttributeDropDTO> getFactAttributeData(FactAttributeDropQueryDTO dto);
 
     /**
      * 根据事实表id获取来源表下未添加字段

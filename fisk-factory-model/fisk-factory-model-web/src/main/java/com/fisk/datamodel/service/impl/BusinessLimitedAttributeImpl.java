@@ -48,8 +48,8 @@ public class BusinessLimitedAttributeImpl implements IBusinessLimitedAttribute {
                 .eq(BusinessLimitedAttributePO::getCalculationLogic,dto.calculationLogic)
                 .eq(BusinessLimitedAttributePO::getCalculationValue,dto.calculationValue)
                 .eq(BusinessLimitedAttributePO::getFactAttributeId,dto.factAttributeId);
-        BusinessLimitedAttributePO attributePO=businessLimitedAttributeMapper.selectOne(queryWrapper);
-        if (attributePO !=null && attributePO.id !=dto.id)
+        BusinessLimitedAttributePO attributePo=businessLimitedAttributeMapper.selectOne(queryWrapper);
+        if (attributePo !=null && attributePo.id !=dto.id)
         {
             return ResultEnum.DATA_EXISTS;
         }

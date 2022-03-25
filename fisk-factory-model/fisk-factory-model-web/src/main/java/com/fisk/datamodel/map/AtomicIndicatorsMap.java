@@ -25,17 +25,17 @@ public interface AtomicIndicatorsMap {
 
     /**
      * po==>dtoList
-     * @param PO
+     * @param poList
      * @return
      */
-    List<AtomicIndicatorDropListDTO> poToDtoList(List<IndicatorsPO> PO);
+    List<AtomicIndicatorDropListDTO> poToDtoList(List<IndicatorsPO> poList);
 
     /**
      * poList==>dtoList
-     * @param PO
+     * @param poList
      * @return
      */
-    List<IndicatorsDataDTO> poListToDtoList(List<IndicatorsPO> PO);
+    List<IndicatorsDataDTO> poListToDtoList(List<IndicatorsPO> poList);
 
     /**
      * po==>dto

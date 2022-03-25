@@ -1,13 +1,11 @@
 package com.fisk.datamodel.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.businessLimited.*;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
-import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.service.IBusinessLimited;
 import com.fisk.datamodel.service.IBusinessLimitedAttribute;
@@ -54,13 +52,13 @@ public class BusinessLimitedController {
     @ApiOperation("添加业务限定")
     @PostMapping("/BusinessLimitedAdd")
     public ResultEntity<Object> BusinessLimitedAdd(@Validated @RequestBody BusinessLimitedDataAddDTO dto) {
-        return ResultEntityBuild.build(iBusinessLimited.BusinessLimitedAdd(dto));
+        return ResultEntityBuild.build(iBusinessLimited.businessLimitedAdd(dto));
     }
 
     @ApiOperation("更新业务限定")
     @PutMapping("/businessLimitedUpdate")
     public ResultEntity<Object> businessLimitedUpdate(@Validated @RequestBody BusinessLimitedUpdateDTO dto) {
-        return ResultEntityBuild.build(iBusinessLimited.BusinessLimitedUpdate(dto));
+        return ResultEntityBuild.build(iBusinessLimited.businessLimitedUpdate(dto));
     }
 
     @ApiOperation("更新业务限定字段")

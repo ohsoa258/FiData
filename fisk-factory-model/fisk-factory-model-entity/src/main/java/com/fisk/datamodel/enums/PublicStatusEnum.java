@@ -7,6 +7,9 @@ import com.fisk.common.enums.BaseEnum;
  */
 public enum PublicStatusEnum implements BaseEnum {
 
+    /**
+     * 未发布
+     */
     UN_PUBLIC(0,"未发布"),
 
     PUBLIC_SUCCESS(1,"发布成功"),
