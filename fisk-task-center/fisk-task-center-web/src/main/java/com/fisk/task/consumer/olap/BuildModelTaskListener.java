@@ -78,6 +78,7 @@ public class BuildModelTaskListener {
                 buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
                 buildNifiFlowDTO.tableName = olapPO.tableName;
                 buildNifiFlowDTO.selectSql = olapPO.selectDataSql;
+                buildNifiFlowDTO.openTransmission=true;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 //1是维度
                 if (tableType == 1) {

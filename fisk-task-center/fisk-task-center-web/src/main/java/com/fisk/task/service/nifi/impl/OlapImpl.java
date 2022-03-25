@@ -224,7 +224,7 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
         StringBuilder filedsBuilder = new StringBuilder();
         String tableName=dto.factTable;
         dto.list.forEach(e->{
-            if (e.attributeType == FactAttributeEnum.DIMENSION_KEY.getValue()) {
+            if (e.attributeType == FactAttributeEnum.MEASURE.getValue()) {
                 aggregationFunSql.append("COALESCE(");
                 aggregationFunSql.append(e.aggregationLogic);
                 aggregationFunSql.append("(");
