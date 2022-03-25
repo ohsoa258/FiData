@@ -42,12 +42,13 @@ public class BuildWideTableTaskListener {
 
     public void msg(String dataInfo, Acknowledgment acke) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
-        modelPublishStatusDTO.type=1;
-        modelPublishStatusDTO.status= PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+        modelPublishStatusDTO.type = 1;
+        modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+        log.info("宽表建表数据:" + dataInfo);
         try {
             WideTableFieldConfigTaskDTO wideTableFieldConfigDTO = JSON.parseObject(dataInfo, WideTableFieldConfigTaskDTO.class);
             tbetlIncremental.addEtlIncremental(wideTableFieldConfigDTO.name);
-            modelPublishStatusDTO.id=wideTableFieldConfigDTO.id;
+            modelPublishStatusDTO.id = wideTableFieldConfigDTO.id;
             String createTableSql = buildWideTableSql(wideTableFieldConfigDTO);
             log.info("宽表建表语句:" + createTableSql);
             doris.dorisBuildTable(createTableSql);
@@ -61,14 +62,14 @@ public class BuildWideTableTaskListener {
             buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
             buildNifiFlowDTO.tableName = wideTableFieldConfigDTO.name;
             String insertSql = insertWideSql(wideTableFieldConfigDTO);
-            log.info("宽表插入语句:"+insertSql);
+            log.info("宽表插入语句:" + insertSql);
             buildNifiFlowDTO.selectSql = insertSql;
-            buildNifiFlowDTO.openTransmission=true;
+            buildNifiFlowDTO.openTransmission = true;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
         } catch (Exception e) {
             log.error("宽表创建失败:" + e.getMessage());
-            modelPublishStatusDTO.status= PublicStatusEnum.PUBLIC_FAILURE.getValue();
-        }finally {
+            modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_FAILURE.getValue();
+        } finally {
             dataModelClient.updateWideTablePublishStatus(modelPublishStatusDTO);
             acke.acknowledge();
         }
@@ -84,11 +85,20 @@ public class BuildWideTableTaskListener {
         for (WideTableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
             List<WideTableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
             for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
-                if (wideTableSourceFieldConfigDTO.alias!=null&&wideTableSourceFieldConfigDTO.alias.length()>0) {
-                    field += "," + wideTableSourceFieldConfigDTO.alias + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                if ("float".equalsIgnoreCase(wideTableSourceFieldConfigDTO.fieldType)) {
+                    if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
+                        field += "," + wideTableSourceFieldConfigDTO.alias + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                    } else {
+                        field += "," + wideTableSourceFieldConfigDTO.fieldName + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                    }
                 } else {
-                    field += "," + wideTableSourceFieldConfigDTO.fieldName + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                    if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
+                        field += "," + wideTableSourceFieldConfigDTO.alias + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                    } else {
+                        field += "," + wideTableSourceFieldConfigDTO.fieldName + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                    }
                 }
+
             }
         }
         createTableSql += field.substring(1) + ") ";
@@ -104,7 +114,7 @@ public class BuildWideTableTaskListener {
         for (WideTableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
             List<WideTableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
             for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
-                if (wideTableSourceFieldConfigDTO.alias!=null&&wideTableSourceFieldConfigDTO.alias.length()>0) {
+                if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
                     fieldSql += wideTableSourceFieldConfigDTO.alias + ",";
                 } else {
                     fieldSql += wideTableSourceFieldConfigDTO.fieldName + ",";
