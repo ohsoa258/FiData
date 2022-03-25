@@ -21,6 +21,7 @@
         <module>fisk-datamanage-center</module>
         <module>fisk-factory-dispatch</module>
         <module>fisk-governance-center</module>
+        <module>fisk-mdm-model</module>
     </modules>
 
 

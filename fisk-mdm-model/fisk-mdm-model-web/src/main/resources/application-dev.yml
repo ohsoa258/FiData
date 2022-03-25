@@ -1,0 +1,80 @@
+server:
+  port: 9001
+
+# 注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+  instance:
+    lease-expiration-duration-in-seconds: 5
+    lease-renewal-interval-in-seconds: 5
+
+# feign接口超时
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 30000
+
+# 授权中心
+fk:
+  auth:
+    clientId: mdmmodel-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    com:
+      fisk:
+        chartvisual: debug
+    org:
+      springframework:
+        orm:
+          jpa: debug
+management:
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# mybatis-plus 配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+
+# spring配置
+spring:
+  application:
+    name: mdmmodel-service
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: root123
+    url: jdbc:mysql://192.168.11.130:3306/dmp_mdm_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 192.168.11.130

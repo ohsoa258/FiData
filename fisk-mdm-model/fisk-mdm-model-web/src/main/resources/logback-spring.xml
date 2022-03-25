@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <!-- 定义变量，下方可通过${}引用 -->
+    <property name="LOG_HOME" value="./logs/chartVisual" />
+    <property name="appName" value="chartVisual" />
+    <contextName>${appName}</contextName>
+
+    <!-- Print the log to the console -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %green(%logger{50}) %highlight([%file:%line]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- INFO级别日志 -->
+    <appender name="AppInfo" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志文件名 -->
+        <file>${LOG_HOME}/${appName}-info.log</file>
+        <!-- 日志文件滚动策略，按日期和大小分片 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 日志文件名格式 -->
+            <fileNamePattern>${LOG_HOME}/${appName}-info-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <!-- 日志保留最大日期 -->
+            <MaxHistory>30</MaxHistory>
+            <!-- 单个文件最大大小 -->
+            <maxFileSize>100MB</maxFileSize>
+            <!-- 日志文件总大小 -->
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <!-- 日志文件输出格式 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- 日志格式
+            %d 时间格式
+            %thread 线程名称
+            %-5level 级别从左显示5个字符宽度
+            %logger{50} logger名称最长50个字符，超过按照句号分割
+            %file 文件名
+            %line 行号
+            %msg 日志信息
+            %n 换行符
+            -->
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
+        </encoder>
+        <!-- 过滤级别 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ERROR级别日志 -->
+    <appender name="AppError" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-error-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <MaxHistory>30</MaxHistory>
+            <maxFileSize>100MB</maxFileSize>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- WARN级别日志 -->
+    <appender name="AppWarn" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-warn.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-warn-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <MaxHistory>30</MaxHistory>
+            <maxFileSize>100MB</maxFileSize>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ELK
+    通过TCP的方式连接Logstash
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>192.168.11.130:5044</destination>
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "logLevel": "%level",
+                        "serviceName": "${springAppName:-}",
+                        "pid": "${PID:-}",
+                        "trace": "%X{X-B3-TraceId:-}",
+                        "span": "%X{X-B3-SpanId:-}",
+                        "thread": "%thread",
+                        "class": "%logger{40}",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+    -->
+
+    <!-- 根据application.yml文件中的spring.profile.active配置，设置日志输出 -->
+    <springProfile name="dev">
+        <!--
+        logger: 指定java包的输出级别
+        -->
+        <logger name="org" level="info">
+            <appender-ref ref="Console"/>
+        </logger>
+
+        <logger name="com.fisk" level="info">
+            <appender-ref ref="Console"/>
+        </logger>
+
+        <!--
+        root: 设置输出级别，只有一个level属性
+        root.level: 输出级别，默认是debug
+        <root level="info">
+            <appender-ref ref="Console"/>
+        </root>
+        -->
+    </springProfile>
+
+    <springProfile name="uat,test,pd">
+        <logger name="org" level="info">
+            <appender-ref ref="AppInfo"/>
+            <appender-ref ref="Console"/>
+        </logger>
+
+        <logger name="com.fisk" level="info">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="AppInfo"/>
+            <appender-ref ref="AppWarn"/>
+            <appender-ref ref="AppError"/>
+        </logger>
+    </springProfile>
+
+</configuration>
