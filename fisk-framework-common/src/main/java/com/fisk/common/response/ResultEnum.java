@@ -187,7 +187,15 @@ public enum ResultEnum {
     DS_API_FIELD_EXISTS(10018, "字段信息为空，请检查API配置"),
     DS_APPAPIDOC_ERROR(10019, "pdf文档生成失败"),
     DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已启用的API，请先禁用"),
-    DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对");
+    DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
+
+    /**
+     * 数据质量
+     */
+    DATA_QUALITY_STRONGRULE_ERROR(11001, "数据强规则校验参数异常，请核查"),
+    DATA_QUALITY_TEMPLATE_EXISTS(11002, "模板信息不存在"),
+    DATA_QUALITY_DATASOURCE_EXISTS(11003, "数据源不存在"),
+    DATA_QUALITY_REQUESTSORT_ERROR(11004, "参数异常，执行顺序调整失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

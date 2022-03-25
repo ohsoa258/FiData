@@ -1,6 +1,5 @@
-package com.fisk.datagovernance.vo.dataquality.notice;
+package com.fisk.datagovernance.vo.dataquality.emailserver;
 
-import com.fisk.datagovernance.enums.dataquality.EmailServerSslTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.EmailServerTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -61,7 +60,7 @@ public class EmailServerVO {
      * 是否启用SSL加密连接
      */
     @ApiModelProperty(value = "是否启用SSL加密连接")
-    public EmailServerSslTypeEnum enableSsl;
+    public Integer enableSsl;
 
     /**
      * 创建时间

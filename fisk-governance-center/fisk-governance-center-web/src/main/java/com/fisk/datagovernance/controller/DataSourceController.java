@@ -72,7 +72,13 @@ public class DataSourceController {
 
     @GetMapping("/getTableAll")
     @ApiOperation("获取全部表字段信息")
-    public ResultEntity<List<DataSourceVO>> getTableAll() throws SQLException {
+    public ResultEntity<List<DataSourceVO>> getTableAll() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta());
+    }
+
+    @GetMapping("/getAssetsMetaData")
+    @ApiOperation("获取元数据资产管理下的表信息")
+    public ResultEntity<DataSourceVO> getAssetsMetaData(int datasourceId, String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAssetsMetaData(datasourceId,tableName));
     }
 }

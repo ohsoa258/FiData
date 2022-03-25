@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author dick
@@ -20,6 +21,12 @@ public class NoticeVO {
      */
     @ApiModelProperty(value = "id")
     public int id;
+
+    /**
+     * 模板id
+     */
+    @ApiModelProperty(value = "模板id")
+    public int templateId;
 
     /**
      * 组件名称

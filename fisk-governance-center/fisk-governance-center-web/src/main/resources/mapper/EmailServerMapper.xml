@@ -1,0 +1,26 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.EmailServerMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO">
+        SELECT
+        id,
+        `name`,
+        email_server,
+        email_server_port,
+        email_server_account,
+        email_server_pwd,
+        email_server_type,
+        enable_ssl,
+        create_time,
+        create_user
+        FROM
+        tb_emailserver_config
+        WHERE
+        del_flag = 1
+        <if test="keyword != null and keyword != '' ">
+            AND (`name` LIKE concat('%', #{keyword}, '%')
+            OR email_server LIKE concat('%', #{keyword}, '%'))
+        </if>
+    </select>
+</mapper>

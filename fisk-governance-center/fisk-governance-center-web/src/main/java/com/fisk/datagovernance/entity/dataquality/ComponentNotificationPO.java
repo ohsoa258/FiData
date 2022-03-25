@@ -22,4 +22,9 @@ public class ComponentNotificationPO extends BasePO {
      * 通知id
      */
     public int noticeId;
+
+    /**
+     * 模板id
+     */
+    public  int templateId;
 }

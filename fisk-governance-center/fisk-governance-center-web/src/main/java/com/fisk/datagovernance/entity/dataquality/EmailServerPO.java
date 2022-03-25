@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.entity.dataquality;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class EmailServerPO extends BasePO {
     /**
      * 名称
      */
+    @TableField("`name`")
     public String name;
 
     /**
@@ -46,5 +48,5 @@ public class EmailServerPO extends BasePO {
     /**
      * 是否启用SSL加密连接
      */
-    public int enableSsl;
+    public Integer enableSsl;
 }

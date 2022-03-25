@@ -1,0 +1,27 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.NoticeMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.notice.NoticeVO">
+        SELECT
+        id,
+        template_id,
+        email_server_id,
+        module_name,
+        notice_type,
+        email_subject,
+        email_consignee,
+        email_cc,
+        body,
+        module_state,
+        create_time,
+        create_user
+        FROM
+        tb_notice_module
+        WHERE
+        del_flag = 1
+        <if test="keyword != null and keyword != '' ">
+            AND module_name LIKE concat('%', #{keyword}, '%')
+        </if>
+    </select>
+</mapper>

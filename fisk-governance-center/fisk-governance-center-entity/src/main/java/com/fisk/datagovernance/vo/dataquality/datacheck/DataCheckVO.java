@@ -1,10 +1,12 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
 import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author dick
@@ -75,11 +77,13 @@ public class DataCheckVO {
     public String fieldAggregate;
 
     /**
-     * 校验规则的类型
+     * 校验规则的类型，英文逗号分隔
+     * 1、唯一校验
+     * 2、非空校验
+     * 3、长度校验
      */
-    @ApiModelProperty(value = "校验规则的类型")
+    @ApiModelProperty(value = "校验规则的类型，英文逗号分隔")
     public String checkRuleType;
-
     /**
      * 波动阀值
      */
@@ -94,9 +98,10 @@ public class DataCheckVO {
 
     /**
      * 上下游血缘关系范围
+     * 1、上游 2、下游 3、上下游
      */
-    @ApiModelProperty(value = "上下游血缘关系范围")
-    public CheckConsanguinityTypeEnum checkConsanguinity;
+    @ApiModelProperty(value = "上下游血缘关系范围 1、上游 2、下游 3、上下游")
+    public Integer checkConsanguinity;
 
     /**
      * 组件规则类型
@@ -115,6 +120,12 @@ public class DataCheckVO {
      */
     @ApiModelProperty(value = "组件状态")
     public ModuleStateEnum moduleState;
+
+    /**
+     * 通知id集合
+     */
+    @ApiModelProperty(value = "通知id集合")
+    public List<Integer> noticeIds;
 
     /**
      * 创建时间
