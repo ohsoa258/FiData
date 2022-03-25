@@ -47,10 +47,6 @@ public class WideTableImpl implements IWideTable {
     DimensionAttributeImpl dimensionAttribute;
     @Resource
     AtomicIndicatorsImpl atomicIndicators;
-    @Resource
-    DimensionFolderImpl dimensionFolder;
-    @Resource
-    BusinessProcessImpl businessProcess;
 
     @Value("${generate.date-dimension.datasource.typeName}")
     private String typeName;
@@ -249,7 +245,7 @@ public class WideTableImpl implements IWideTable {
         WideTableConfigPO po=mapper.selectOne(queryWrapper);
         if (po!=null)
         {
-            return ResultEnum.DATA_EXISTS;
+            throw new FkException(ResultEnum.DATA_EXISTS);
         }
         WideTableConfigPO data = WideTableMap.INSTANCES.dtoToPo(dto);
         data.dorisPublish=PublicStatusEnum.UN_PUBLIC.getValue();
@@ -273,14 +269,14 @@ public class WideTableImpl implements IWideTable {
         WideTableConfigPO po=mapper.selectById(dto.id);
         if (po==null)
         {
-            return ResultEnum.DATA_NOTEXISTS;
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         QueryWrapper<WideTableConfigPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(WideTableConfigPO::getName,dto.name);
         WideTableConfigPO model=mapper.selectOne(queryWrapper);
         if (model !=null && model.id !=dto.id)
         {
-            return ResultEnum.DATA_EXISTS;
+            throw new FkException(ResultEnum.DATA_EXISTS);
         }
         return mapper.updateById(WideTableMap.INSTANCES.dtoToPo(dto))>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
@@ -292,7 +288,7 @@ public class WideTableImpl implements IWideTable {
             WideTableConfigPO po=mapper.selectById(id);
             if (po==null)
             {
-                return ResultEnum.DATA_NOTEXISTS;
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
             Connection conn = dimensionImpl.getStatement(driver, url, userName, password);
             Statement st = conn.createStatement();
@@ -300,7 +296,7 @@ public class WideTableImpl implements IWideTable {
             boolean execute = st.execute(delSql);
             if (execute)
             {
-                return ResultEnum.SQL_ERROR;
+                throw new FkException(ResultEnum.SQL_ERROR);
             }
             return mapper.deleteByIdWithFill(po)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
         }
