@@ -133,6 +133,11 @@ spring:
           predicates:
             - Path=/datagovernance/**
 
+        - id: mdmmodel-service # mdm服务
+          uri: lb://mdmmodel-service
+          predicates:
+            - Path=/mdmmodel/**
+
 
   redis:
     host: 192.168.11.130
