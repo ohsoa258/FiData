@@ -24,7 +24,7 @@ spring:
 # pdf文档模板
 dataservice:
   pdf:
-    path: /data/java/dataaccess/pdf
+    path: /data/java/fisk-factory-access/pdf
 
 #授权
 fk:
