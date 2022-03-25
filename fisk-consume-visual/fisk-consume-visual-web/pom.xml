@@ -63,7 +63,7 @@
         <!-- 本模块实体类 -->
         <dependency>
             <groupId>com.fisk</groupId>
-            <artifactId>fisk-chartvisual-pojo</artifactId>
+            <artifactId>fisk-consume-visual-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
