@@ -262,7 +262,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (!isUpdate)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
-        return null;
+        return ResultEnum.SUCCESS;
     }
 
     @Override

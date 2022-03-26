@@ -14,6 +14,11 @@ import lombok.Data;
 @TableName("tb_notice_module")
 public class NoticePO extends BasePO {
     /**
+     * 模板id
+     */
+    public int templateId;
+
+    /**
      * 组件名称
      */
     public String moduleName;

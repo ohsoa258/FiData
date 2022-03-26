@@ -3,10 +3,12 @@ package com.fisk.datagovernance.vo.dataquality.lifecycle;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.TableStateTypeEnum;
+import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author dick
@@ -111,6 +113,12 @@ public class LifecycleVO {
      */
     @ApiModelProperty(value = "组件状态")
     public ModuleStateEnum moduleState;
+
+    /**
+     * 通知id集合
+     */
+    @ApiModelProperty(value = "通知id集合")
+    public List<Integer> noticeIds;
 
     /**
      * 创建时间

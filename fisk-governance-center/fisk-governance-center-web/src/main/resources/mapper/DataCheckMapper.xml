@@ -1,0 +1,35 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
+        SELECT
+        id,
+        template_id,
+        datasource_id,
+        datasource_type,
+        module_name,
+        check_step,
+        table_name,
+        pro_table_name,
+        field_name,
+        field_aggregate,
+        check_rule_type,
+        threshold_value,
+        run_time_cron,
+        check_consanguinity,
+        module_type,
+        module_rule,
+        module_state,
+        create_time,
+        create_user
+        FROM
+        tb_datacheck_module
+        WHERE
+        del_flag = 1
+        AND table_name = #{tableName,jdbcType=VARCHAR}
+        <if test="keyword != null and keyword != '' ">
+            AND module_name LIKE concat('%', #{keyword}, '%'))
+        </if>
+    </select>
+</mapper>

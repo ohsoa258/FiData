@@ -138,9 +138,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 //    public List<DataSourceConVO> getAll() {
 //        return mapper.getAll();
 //    }
-
     @Override
-    public List<DataSourceVO> getMeta() throws SQLException {
+    public List<DataSourceVO> getMeta() {
         List<DataSourceVO> dataSources = new ArrayList<>();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourceConPO::getDelFlag, 1);
@@ -188,13 +187,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
             dataSource.name = conPo.name;
             dataSource.conDbname = conPo.conDbname;
-            dataSource.conIp=conPo.conIp;
-            dataSource.conPort=conPo.conPort;
+            dataSource.conIp = conPo.conIp;
+            dataSource.conPort = conPo.conPort;
             dataSources.add(dataSource);
         }
         return dataSources;
     }
 
+    @Override
+    public DataSourceVO getAssetsMetaData(int datasourceId, String tableName) {
+        DataSourceVO dataSourceVO = new DataSourceVO();
+        // 调用元数据接口，获取库、表信息
+        return dataSourceVO;
+    }
 
     /**
      * 连接数据库
