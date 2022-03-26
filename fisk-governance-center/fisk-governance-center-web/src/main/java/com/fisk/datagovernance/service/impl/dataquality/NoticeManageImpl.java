@@ -198,45 +198,45 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         }
 
         //第三步:获取邮件服务器信息
-        List<EmailServerVO> emailServerVOS=new ArrayList<>();
+        List<EmailServerVO> emailServerVOS = new ArrayList<>();
         QueryWrapper<EmailServerPO> queryWrapper3 = new QueryWrapper<>();
         queryWrapper3.lambda().eq(EmailServerPO::getDelFlag, 1);
         List<EmailServerPO> emailServerPOS = emailServerMapper.selectList(queryWrapper3);
-       if (CollectionUtils.isNotEmpty(emailServerPOS)){
-           emailServerPOS.forEach(e->{
-               EmailServerVO emailServerVO=new EmailServerVO();
-               emailServerVO.setId(Math.toIntExact(e.getId()));
-               emailServerVO.setName(e.getName());
-               emailServerVOS.add(emailServerVO);
-           });
-       }
+        if (CollectionUtils.isNotEmpty(emailServerPOS)) {
+            emailServerPOS.forEach(e -> {
+                EmailServerVO emailServerVO = new EmailServerVO();
+                emailServerVO.setId(Math.toIntExact(e.getId()));
+                emailServerVO.setName(e.getName());
+                emailServerVOS.add(emailServerVO);
+            });
+        }
         addNoticeVO.notificationVOList = notificationVOS;
         addNoticeVO.emailServerVOS = emailServerVOS;
         return addNoticeVO;
     }
 
     @Override
-    public List<NoticeModule> getModuleNoticeList(){
-        List<NoticeModule> noticeModules=new ArrayList<>();
-        NoticeModule noticeModule_email=new NoticeModule();
+    public List<NoticeModule> getModuleNoticeList() {
+        List<NoticeModule> noticeModules = new ArrayList<>();
+        NoticeModule noticeModule_email = new NoticeModule();
         noticeModule_email.setNoticeName("邮件通知");
-        NoticeModule noticeModule_system=new NoticeModule();
+        NoticeModule noticeModule_system = new NoticeModule();
         noticeModule_system.setNoticeName("系统通知");
 
-        List<NoticeModule> noticeModules_email=new ArrayList<>();
-        List<NoticeModule> noticeModules_system=new ArrayList<>();
+        List<NoticeModule> noticeModules_email = new ArrayList<>();
+        List<NoticeModule> noticeModules_system = new ArrayList<>();
 
         QueryWrapper<NoticePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(NoticePO::getDelFlag, 1);
         List<NoticePO> noticePOS = baseMapper.selectList(queryWrapper);
-        if (CollectionUtils.isNotEmpty(noticePOS)){
-            noticePOS.forEach(e->{
-                NoticeModule noticeModule=new NoticeModule();
+        if (CollectionUtils.isNotEmpty(noticePOS)) {
+            noticePOS.forEach(e -> {
+                NoticeModule noticeModule = new NoticeModule();
                 noticeModule.setNoticeId(Math.toIntExact(e.getId()));
                 noticeModule.setNoticeName(e.getModuleName());
-                if (e.getNoticeType()== NoticeTypeEnum.EMAIL_NOTICE.getValue()){
+                if (e.getNoticeType() == NoticeTypeEnum.EMAIL_NOTICE.getValue()) {
                     noticeModules_email.add(noticeModule);
-                }else if (e.getNoticeType()== NoticeTypeEnum.SYSTEM_NOTICE.getValue()){
+                } else if (e.getNoticeType() == NoticeTypeEnum.SYSTEM_NOTICE.getValue()) {
                     noticeModules_system.add(noticeModule);
                 }
             });
@@ -246,5 +246,17 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         noticeModules.add(noticeModule_email);
         noticeModules.add(noticeModule_system);
         return noticeModules;
+    }
+
+    @Override
+    public ResultEnum testSend(NoticeDTO dto) {
+        //第一步：查询邮件服务器设置
+        EmailServerPO emailServerPO = emailServerMapper.selectById(dto.emailServerId);
+        if (emailServerPO == null) {
+            return ResultEnum.PARAMTER_ERROR;
+        }
+
+        //第二步：调用邮件发送方法
+        return ResultEnum.SUCCESS;
     }
 }

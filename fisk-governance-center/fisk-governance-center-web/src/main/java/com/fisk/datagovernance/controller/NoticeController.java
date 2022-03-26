@@ -67,4 +67,10 @@ public class NoticeController {
     public ResultEntity< List<NoticeModule>> getModuleNoticeList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModuleNoticeList());
     }
+
+    @ApiOperation("测试发送邮件通知")
+    @PostMapping("/testSend")
+    public ResultEntity<Object> testSend(@RequestBody NoticeDTO dto) {
+        return ResultEntityBuild.build(service.testSend(dto));
+    }
 }

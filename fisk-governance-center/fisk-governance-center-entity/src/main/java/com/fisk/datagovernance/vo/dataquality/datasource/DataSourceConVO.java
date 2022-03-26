@@ -41,7 +41,7 @@ public class DataSourceConVO {
      * 端口
      */
     @ApiModelProperty(value = "端口")
-    public Integer conPort;
+    public int conPort;
 
     /**
      * 模型
