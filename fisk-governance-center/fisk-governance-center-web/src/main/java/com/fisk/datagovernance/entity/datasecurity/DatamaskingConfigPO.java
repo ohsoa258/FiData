@@ -55,6 +55,11 @@ public class DatamaskingConfigPO extends BasePO {
     public long encryptType;
 
     /**
+     * 生成秘钥(16位字母+数字的随机值)
+     */
+    public String secretKey;
+
+    /**
      * 是否有效
      */
     public boolean valid;

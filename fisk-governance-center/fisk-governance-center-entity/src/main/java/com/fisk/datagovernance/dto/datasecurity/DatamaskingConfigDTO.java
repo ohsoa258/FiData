@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -14,48 +15,33 @@ import lombok.Data;
 @Data
 public class DatamaskingConfigDTO {
 
-    /**
-     * 主键
-     */
+    @ApiModelProperty(value = "主键,修改时必传", required = true)
     public long id;
 
-    /**
-     * 数据源id
-     */
-    public long datasourceId;
+    @ApiModelProperty(value = "数据源id", required = true)
+    public Long datasourceId;
 
-    /**
-     * 表id
-     */
-    public long tableId;
+    @ApiModelProperty(value = "表id", required = true)
+    public Long tableId;
 
-    /**
-     * 脱敏字段
-     */
+    @ApiModelProperty(value = "脱敏字段", required = true)
     public String fieldName;
 
-    /**
-     * 脱敏类型
-     */
-    public long maskingType;
+    @ApiModelProperty(value = "脱敏类型(0: 保留  1:值加密)", required = true)
+    public Long maskingType;
 
-    /**
-     * 保留前几位文本
-     */
-    public long numberDigits;
+    @ApiModelProperty(value = "保留前几位文本", required = true)
+    public Long numberDigits;
 
-    /**
-     * 内容替换
-     */
+    @ApiModelProperty(value = "内容替换", required = true)
     public String contentReplace;
 
-    /**
-     * 加密方式
-     */
-    public long encryptType;
+    @ApiModelProperty(value = "加密方式(0: 对称加密  1: 非对称加密)", required = true)
+    public Long encryptType;
 
-    /**
-     * 是否有效
-     */
+    @ApiModelProperty(value = "生成秘钥(16位字母+数字的随机值)", required = true)
+    public String secretKey;
+
+    @ApiModelProperty(value = "是否有效(添加时默认有效)", required = true)
     public Boolean valid;
 }
