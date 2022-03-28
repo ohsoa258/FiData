@@ -1,16 +1,16 @@
-package com.fisk.datagovernance.service;
+package com.fisk.datagovernance.service.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datagovernance.dto.datasecurity.RowUserAssignmentDTO;
-import com.fisk.datagovernance.entity.datasecurity.RowUserAssignmentPO;
+import com.fisk.datagovernance.dto.datasecurity.ColumnsecurityConfigDTO;
+import com.fisk.datagovernance.entity.datasecurity.ColumnsecurityConfigPO;
 
 /**
  * @author lock
  * @email feihongz@fisksoft.com.cn
  * @date 2022-03-28 15:47:33
  */
-public interface RowUserAssignmentService extends IService<RowUserAssignmentPO> {
+public interface ColumnsecurityConfigService extends IService<ColumnsecurityConfigPO> {
 
     /**
      * 回显: 根据id查询数据
@@ -18,7 +18,7 @@ public interface RowUserAssignmentService extends IService<RowUserAssignmentPO> 
      * @param id id
      * @return 查询结果
      */
-    RowUserAssignmentDTO getData(long id);
+    ColumnsecurityConfigDTO getData(long id);
 
     /**
      * 添加
@@ -26,7 +26,7 @@ public interface RowUserAssignmentService extends IService<RowUserAssignmentPO> 
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(RowUserAssignmentDTO dto);
+    ResultEnum addData(ColumnsecurityConfigDTO dto);
 
     /**
      * 修改
@@ -34,7 +34,7 @@ public interface RowUserAssignmentService extends IService<RowUserAssignmentPO> 
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum editData(RowUserAssignmentDTO dto);
+    ResultEnum editData(ColumnsecurityConfigDTO dto);
 
     /**
      * 删除

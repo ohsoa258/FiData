@@ -1,11 +1,11 @@
-package com.fisk.datagovernance.service.impl;
+package com.fisk.datagovernance.service.impl.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.UsergroupInfoDTO;
 import com.fisk.datagovernance.entity.datasecurity.UsergroupInfoPO;
-import com.fisk.datagovernance.mapper.UsergroupInfoMapper;
-import com.fisk.datagovernance.service.UsergroupInfoService;
+import com.fisk.datagovernance.mapper.datasecurity.UsergroupInfoMapper;
+import com.fisk.datagovernance.service.datasecurity.UsergroupInfoService;
 import org.springframework.stereotype.Service;
 
 /**

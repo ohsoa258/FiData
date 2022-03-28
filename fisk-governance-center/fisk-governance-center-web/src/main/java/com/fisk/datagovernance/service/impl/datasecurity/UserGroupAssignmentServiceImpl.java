@@ -1,18 +1,12 @@
-package com.fisk.datagovernance.service.impl;
+package com.fisk.datagovernance.service.impl.datasecurity;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.UserGroupAssignmentDTO;
 import com.fisk.datagovernance.entity.datasecurity.UserGroupAssignmentPO;
-import com.fisk.datagovernance.mapper.UserGroupAssignmentMapper;
-import com.fisk.datagovernance.service.UserGroupAssignmentService;
+import com.fisk.datagovernance.mapper.datasecurity.UserGroupAssignmentMapper;
+import com.fisk.datagovernance.service.datasecurity.UserGroupAssignmentService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author lock

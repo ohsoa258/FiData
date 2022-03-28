@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.service;
+package com.fisk.datagovernance.service.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;

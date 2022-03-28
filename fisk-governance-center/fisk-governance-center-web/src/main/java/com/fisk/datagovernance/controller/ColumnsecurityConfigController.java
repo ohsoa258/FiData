@@ -4,7 +4,7 @@ import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.ColumnsecurityConfigDTO;
-import com.fisk.datagovernance.service.ColumnsecurityConfigService;
+import com.fisk.datagovernance.service.datasecurity.ColumnsecurityConfigService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

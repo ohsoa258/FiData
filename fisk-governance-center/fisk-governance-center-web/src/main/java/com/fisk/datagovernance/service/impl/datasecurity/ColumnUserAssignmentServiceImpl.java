@@ -1,11 +1,11 @@
-package com.fisk.datagovernance.service.impl;
+package com.fisk.datagovernance.service.impl.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.ColumnUserAssignmentDTO;
 import com.fisk.datagovernance.entity.datasecurity.ColumnUserAssignmentPO;
-import com.fisk.datagovernance.mapper.ColumnUserAssignmentMapper;
-import com.fisk.datagovernance.service.ColumnUserAssignmentService;
+import com.fisk.datagovernance.mapper.datasecurity.ColumnUserAssignmentMapper;
+import com.fisk.datagovernance.service.datasecurity.ColumnUserAssignmentService;
 import org.springframework.stereotype.Service;
 
 /**
