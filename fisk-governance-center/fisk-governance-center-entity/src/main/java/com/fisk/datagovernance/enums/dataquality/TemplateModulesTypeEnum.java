@@ -12,7 +12,7 @@ public enum TemplateModulesTypeEnum implements BaseEnum {
     /**
      * 模板模块
      */
-    DEFAULT(0, "默认全部"),
+    NONE(0, "空模板"),
     DATACHECK_MODULE(100, "数据校验"),
     BIZCHECK_MODULE(200, "业务清洗"),
     LIFECYCLE_MODULE(300, "生命周期"),
@@ -34,5 +34,13 @@ public enum TemplateModulesTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static TemplateModulesTypeEnum  getEnum(int value){
+        for (TemplateModulesTypeEnum e:TemplateModulesTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return TemplateModulesTypeEnum.NONE;
     }
 }

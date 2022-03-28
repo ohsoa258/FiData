@@ -12,6 +12,7 @@ public enum TemplateTypeEnum implements BaseEnum {
     /**
      * 模板类型
      */
+    NONE(0,"空模板"),
     FIELD_STRONG_RULE_TEMPLATE(100, "字段强规则模板"),
     FIELD_AGGREGETION_TEMPLATE(101, "字段聚合波动阀值模板"),
     TABLEROW_THRESHOLD_TEMPLATE(102, "表行数波动阀值模板"),
@@ -43,5 +44,13 @@ public enum TemplateTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static TemplateTypeEnum  getEnum(int value){
+        for (TemplateTypeEnum e:TemplateTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return TemplateTypeEnum.NONE;
     }
 }

@@ -36,8 +36,8 @@ public class TemplateManageImpl extends ServiceImpl<TemplateMapper, TemplatePO> 
             TemplateVO templateVO = new TemplateVO();
             templateVO.setId(Math.toIntExact(e.getId()));
             templateVO.setTemplateDesc(e.getTemplateDesc());
-            templateVO.setTemplateType(TemplateTypeEnum.values()[e.getTemplateType()]);
-            templateVO.setTemplateModules(TemplateModulesTypeEnum.values()[e.getTemplateModules()]);
+            templateVO.setTemplateType(TemplateTypeEnum.getEnum(e.getTemplateType()));
+            templateVO.setTemplateModules(TemplateModulesTypeEnum.getEnum(e.getTemplateModules()));
             templateVO.setTemplatenName(e.getTemplatenName());
             templateVO.setCreateTime(e.getCreateTime());
             templateVO.setCreateUser(e.getCreateUser());

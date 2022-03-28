@@ -10,20 +10,21 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author: Lock
  * @data: 2021/5/25 10:53
  */
-@SpringBootApplication(scanBasePackages = {"com.fisk.dataservice",
+@SpringBootApplication(scanBasePackages = {
+        "com.fisk.dataservice",
         "com.fisk.common.advice",
         "com.fisk.common.mdc",
         "com.fisk.common.mybatis",
-        "com.fisk.common.constants",
+        "com.fisk.common.feign",
         "com.fisk.common.redis",
-        "com.fisk.common.user",
+        "com.fisk.common.exception",
+        "com.fisk.common.actuators",
         "com.fisk.common.filter",
-        "com.fisk.common.actuators"})
+        "com.fisk.common.user"})
 @MapperScan("com.fisk.dataservice.mapper")
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
         "com.fisk.task.client",
-        "com.fisk.datamodel.client",
         "com.fisk.system.client"
 })
 @EnableApolloConfig
