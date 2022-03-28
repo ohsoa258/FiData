@@ -1,14 +1,8 @@
 package com.fisk.datagovernance.map.dataquality;
 
-import com.fisk.datagovernance.entity.dataquality.TemplatePO;
-import com.fisk.datagovernance.vo.dataquality.template.TemplateVO;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
-
-import java.util.List;
 
 /**
  * @author dick

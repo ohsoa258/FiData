@@ -1,10 +1,7 @@
 package com.fisk.datagovernance.map.dataquality;
 
-import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
-import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleEditDTO;
-import com.fisk.datagovernance.entity.dataquality.BusinessFilterPO;
 import com.fisk.datagovernance.entity.dataquality.LifecyclePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -12,6 +12,7 @@ public enum CheckRuleTypeEnum implements BaseEnum {
     /**
      * 校验规则类型
      */
+    NONE(0,"空"),
     UNIQUE_CHECK(1, "唯一校验"),
     NONEMPTY_CHECK(2, "非空校验"),
     LENGTH_CHECK(3, "长度校验");
@@ -32,5 +33,13 @@ public enum CheckRuleTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static CheckRuleTypeEnum  getEnum(int value){
+        for (CheckRuleTypeEnum e:CheckRuleTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return CheckRuleTypeEnum.NONE;
     }
 }

@@ -7,10 +7,7 @@ import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerDTO;
 import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerEditDTO;
 import com.fisk.datagovernance.dto.dataquality.emailserver.EmailServerQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.EmailServerPO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
-
-import java.util.List;
 
 /**
  * @author dick

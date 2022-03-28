@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.EmailServerPO;
 import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

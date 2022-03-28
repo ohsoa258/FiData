@@ -22,7 +22,6 @@ import com.fisk.datagovernance.mapper.dataquality.DataCheckMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
-import com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,7 +165,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, "");
         }
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
-        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.values()[templatePO.getTemplateType()];
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         String tableName = dto.checkStep == CheckStepTypeEnum.TABLE_FRONT ? dto.proTableName : dto.tableName;
         ResultEntity<String> rule = null;
         switch (templateTypeEnum) {
@@ -249,7 +248,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         String[] split = checkRuleType.split(",");
         for (String x : split) {
-            CheckRuleTypeEnum checkRuleTypeEnum = CheckRuleTypeEnum.values()[Integer.parseInt(x)];
+            CheckRuleTypeEnum checkRuleTypeEnum = CheckRuleTypeEnum.getEnum(Integer.parseInt(x));
 
             switch (checkRuleTypeEnum) {
                 case UNIQUE_CHECK:
@@ -275,7 +274,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     break;
                 case NONEMPTY_CHECK:
                     if (stringBuilder.toString() != null && stringBuilder.toString().length() > 0) {
-                        stringBuilder.append("UNION ALL");
+                        stringBuilder.append(" UNION ALL ");
                     }
                     stringBuilder.append(String.format("SELECT\n" +
                                     "\t* \n" +
@@ -298,7 +297,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     break;
                 case LENGTH_CHECK:
                     if (stringBuilder.toString() != null && stringBuilder.toString().length() > 0) {
-                        stringBuilder.append("UNION ALL");
+                        stringBuilder.append(" UNION ALL ");
                     }
                     stringBuilder.append(String.format("SELECT\n" +
                                     "\t* \n" +

@@ -1,7 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.notice;
 
 import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -14,8 +13,8 @@ public class ComponentNotificationVO {
     /**
      * id
      */
-    //@ApiModelProperty(value = "id")
-    //public int id;
+    @ApiModelProperty(value = "id")
+    public int id;
 
     /**
      * 组件id

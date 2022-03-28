@@ -1,7 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
 import com.fisk.datagovernance.enums.dataquality.*;
-import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

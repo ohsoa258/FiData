@@ -31,7 +31,7 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum saveData(int templateId, long moduleId, List<ComponentNotificationDTO> dto, boolean isDel) {
         int moduleIdValue = Math.toIntExact(moduleId);
-        if (!CollectionUtils.isNotEmpty(dto)) {
+        if (CollectionUtils.isNotEmpty(dto)) {
             dto.forEach(e -> {
                 e.templateId = templateId;
                 e.moduleId = moduleIdValue;
@@ -41,9 +41,8 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             if (isDel) {
-                List<Integer> collect = componentNotificationPOS.stream().map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect)) {
-                    String noticeIds = String.join(",", (CharSequence) collect);
+                List<Integer> noticeIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(noticeIds)) {
                     baseMapper.updateBy(templateId, moduleIdValue, noticeIds);
                 }
             }
@@ -59,7 +58,7 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum saveNoticeData(long noticeId, List<ComponentNotificationDTO> dto, boolean isDel) {
         int noticeIdValue = Math.toIntExact(noticeId);
-        if (!CollectionUtils.isNotEmpty(dto)) {
+        if (CollectionUtils.isNotEmpty(dto)) {
             dto.forEach(e -> {
                 e.noticeId = noticeIdValue;
             });
@@ -68,12 +67,10 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             if (isDel) {
-                List<Integer> collect = componentNotificationPOS.stream().map(ComponentNotificationPO::getModuleId).distinct().collect(Collectors.toList());
-                List<Integer> collect1 = componentNotificationPOS.stream().map(ComponentNotificationPO::getTemplateId).distinct().collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect) && CollectionUtils.isNotEmpty(collect1)) {
-                    String moduleIds = String.join(",", (CharSequence) collect);
-                    String templateIds = String.join(",", (CharSequence) collect1);
-                    baseMapper.updateByModuleIds(templateIds, noticeIdValue, moduleIds);
+                List<Integer> moduleIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getModuleId).distinct().collect(Collectors.toList());
+                List<Integer> templateIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getTemplateId).distinct().collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(moduleIds) && CollectionUtils.isNotEmpty(templateIds)) {
+                    baseMapper.updateByModuleIds(noticeIdValue, templateIds, moduleIds);
                 }
             }
             boolean b = componentNotificationMapImpl.saveBatch(componentNotificationPOS);

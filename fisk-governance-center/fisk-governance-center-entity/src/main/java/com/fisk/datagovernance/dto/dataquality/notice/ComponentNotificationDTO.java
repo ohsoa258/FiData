@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 组件通知关联DTO
  * @date 2022/3/24 14:31
  */
 public class ComponentNotificationDTO {

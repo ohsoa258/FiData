@@ -3,9 +3,9 @@ package com.fisk.common.utils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.utils.Dto.SqlParmDto;
 import com.fisk.common.utils.Dto.SqlWhereDto;
+import com.google.common.base.Joiner;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author dick
@@ -70,5 +70,21 @@ public class SqlParmUtils {
             sql = sql.replace(targetKey, replacement);
         }
         return sql;
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 分割字符串为in查询
+     * @author dick
+     * @date 2022/3/28 19:33
+     * @version v1.0
+     * @params list
+     */
+    public static <T> String parseListToParmStr(List<T> list) {
+        String result = null;
+        if (CollectionUtils.isNotEmpty(list)) {
+            result = Joiner.on(",").join(list);
+        }
+        return result;
     }
 }

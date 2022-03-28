@@ -124,6 +124,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         notificationPOQueryWrapper.lambda().eq(ComponentNotificationPO::getDelFlag, 1);
         List<ComponentNotificationPO> componentNotificationPOS = componentNotificationMapper.selectList(notificationPOQueryWrapper);
 
+        final int[] id = {1};
         //第一步：根据查询所有模板组件信息
         QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1);
@@ -141,11 +142,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
+                notificationVO.id= id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
                 notificationVO.templateModules = TemplateModulesTypeEnum.DATACHECK_MODULE;
                 notificationVOS.add(notificationVO);
+                id[0]++;
             });
         }
 
@@ -165,11 +168,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
+                notificationVO.id= id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
                 notificationVO.templateModules = TemplateModulesTypeEnum.BIZCHECK_MODULE;
                 notificationVOS.add(notificationVO);
+                id[0]++;
             });
         }
 
@@ -189,11 +194,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
+                notificationVO.id= id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
                 notificationVO.templateModules = TemplateModulesTypeEnum.LIFECYCLE_MODULE;
                 notificationVOS.add(notificationVO);
+                id[0]++;
             });
         }
 

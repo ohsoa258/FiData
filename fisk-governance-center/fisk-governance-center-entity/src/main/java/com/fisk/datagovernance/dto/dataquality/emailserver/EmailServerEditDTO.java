@@ -1,13 +1,12 @@
 package com.fisk.datagovernance.dto.dataquality.emailserver;
 
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 邮件服务器编辑DTO
  * @date 2022/3/24 13:56
  */
 @EqualsAndHashCode(callSuper = true)

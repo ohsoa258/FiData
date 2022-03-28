@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
 import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
-import com.fisk.datagovernance.map.dataquality.TemplateMap;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ITemplateManageService;
 import com.fisk.datagovernance.vo.dataquality.template.TemplateVO;

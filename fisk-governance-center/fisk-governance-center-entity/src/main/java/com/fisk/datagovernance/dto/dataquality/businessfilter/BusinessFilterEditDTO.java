@@ -1,13 +1,12 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 业务清洗编辑DTO
  * @date 2022/3/24 13:48
  */
 @EqualsAndHashCode(callSuper = true)

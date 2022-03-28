@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 告警通知查询DTO
  * @date 2022/3/24 14:30
  */
 public class NoticeQueryDTO {

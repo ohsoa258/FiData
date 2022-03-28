@@ -28,7 +28,7 @@
         del_flag = 1
         AND table_name = #{tableName,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
-            AND module_name LIKE concat('%', #{keyword}, '%'))
+            AND module_name LIKE concat('%', #{keyword}, '%')
         </if>
     </select>
 </mapper>

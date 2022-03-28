@@ -8,7 +8,6 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.NoticePO;
 import com.fisk.datagovernance.vo.dataquality.notice.AddNoticeVO;
-import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeModule;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 

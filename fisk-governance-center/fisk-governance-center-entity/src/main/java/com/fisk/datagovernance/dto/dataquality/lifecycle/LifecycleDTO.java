@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 生命周期DTO
  * @date 2022/3/24 13:59
  */
 public class LifecycleDTO {

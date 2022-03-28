@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 邮件服务器DTO
  * @date 2022/3/24 13:56
  */
 public class EmailServerDTO {

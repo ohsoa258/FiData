@@ -4,7 +4,8 @@ import com.fisk.common.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -23,8 +24,7 @@ public interface ComponentNotificationMapper extends FKBaseMapper<ComponentNotif
      * @param noticeIds  通知id集合
      * @return 操作结果
      */
-    @Update("UPDATE tb_component_notification SET del_flag=0 WHERE template_id=#{templateId} AND module_id=#{moduleId} AND notice_id IN(#{noticeIds});")
-    int updateBy(@Param("templateId") int templateId, @Param("moduleId") int moduleId, @Param("noticeIds") String noticeIds);
+    int updateBy(@Param("templateId") int templateId, @Param("moduleId") int moduleId, @Param("noticeIds") List<Integer> noticeIds);
 
     /**
      * 修改关联通知有效性
@@ -34,6 +34,5 @@ public interface ComponentNotificationMapper extends FKBaseMapper<ComponentNotif
      * @param noticeId    通知id
      * @return 操作结果
      */
-    @Update("UPDATE tb_component_notification SET del_flag=0 WHERE template_id IN (#{templateIds}) AND notice_id=#{noticeId} AND module_id IN(#{moduleIds});")
-    int updateByModuleIds(@Param("templateIds") String templateIds, @Param("noticeId") int noticeId, @Param("moduleIds") String moduleIds);
+    int updateByModuleIds( @Param("noticeId") int noticeId, @Param("templateIds") List<Integer> templateIds, @Param("moduleIds") List<Integer> moduleIds);
 }

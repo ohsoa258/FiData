@@ -33,6 +33,6 @@ public interface LifecycleMapper extends FKBaseMapper<LifecyclePO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO `tb_lifecycle_module`(`template_id`, `datasource_id`, `datasource_type`, `module_name`, `table_name`, `field_name`, `recovery_date`, `remind_date`, `is_backup`, `check_emptytb_day`, `check_refreshtb_day`, `check_consanguinity_day`, `run_time_cron`, `table_state`, `module_state`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{datasourceType}, #{moduleName}, #{tableName}, #{fieldName}, #{recoveryDate}, #{remindDate}, #{isBackup}, #{checkEmptytbDay}, #{checkRefreshtbDay}, #{checkConsanguinityDay}, #{runTimeCron}, #{tableState}, #{moduleState}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_lifecycle_module(`template_id`, `datasource_id`, `datasource_type`, `module_name`, `table_name`, `field_name`, `recovery_date`, `remind_date`, `is_backup`, `check_emptytb_day`, `check_refreshtb_day`, `check_consanguinity_day`, `run_time_cron`, `table_state`, `module_state`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{datasourceType}, #{moduleName}, #{tableName}, #{fieldName}, #{recoveryDate}, #{remindDate}, #{isBackup}, #{checkEmptytbDay}, #{checkRefreshtbDay}, #{checkConsanguinityDay}, #{runTimeCron}, #{tableState}, #{moduleState}, #{createTime}, #{createUser},1);")
     int insertOne(LifecyclePO po);
 }

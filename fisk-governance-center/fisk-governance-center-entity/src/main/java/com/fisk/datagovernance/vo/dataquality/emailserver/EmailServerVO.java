@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * @author dick
  * @version 1.0
- * @description 邮件服务器配置
+ * @description 邮件服务器配置VO
  * @date 2022/3/22 15:37
  */
 @Data

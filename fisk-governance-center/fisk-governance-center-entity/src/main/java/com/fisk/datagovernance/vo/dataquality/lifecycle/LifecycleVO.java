@@ -3,7 +3,6 @@ package com.fisk.datagovernance.vo.dataquality.lifecycle;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.TableStateTypeEnum;
-import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

@@ -1,7 +1,6 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
 import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
-import com.fisk.datagovernance.enums.dataquality.CheckStepTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
 import io.swagger.annotations.ApiModelProperty;
@@ -11,7 +10,7 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 业务清洗DTO
  * @date 2022/3/24 13:48
  */
 public class BusinessFilterDTO {

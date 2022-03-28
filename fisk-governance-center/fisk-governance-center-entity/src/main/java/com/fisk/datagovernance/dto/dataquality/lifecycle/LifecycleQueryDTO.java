@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 生命周期查询DTO
  * @date 2022/3/24 13:59
  */
 public class LifecycleQueryDTO {
