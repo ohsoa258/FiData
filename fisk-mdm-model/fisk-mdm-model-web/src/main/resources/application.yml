@@ -3,7 +3,7 @@ server:
 spring:
   application:
     name: mdmmodel-service
-  # 日志输入环境
+  # 鏃ュ織杈撳叆鐜
   profiles:
     active: dev
   jackson:

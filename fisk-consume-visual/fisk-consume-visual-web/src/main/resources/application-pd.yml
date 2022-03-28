@@ -1,11 +1,11 @@
 server:
   port: 8088
 
-# Êı¾İ¿âÀàĞÍ
+# æ•°æ®åº“ç±»å‹
 database:
   type: mysql
 
-# ×¢²áÖĞĞÄ
+# æ³¨å†Œä¸­å¿ƒ
 eureka:
   client:
     service-url:
@@ -14,7 +14,7 @@ eureka:
     lease-expiration-duration-in-seconds: 5
     lease-renewal-interval-in-seconds: 5
 
-# feign½Ó¿Ú³¬Ê±
+# feignæ¥å£è¶…æ—¶
 feign:
   client:
     config:
@@ -22,7 +22,7 @@ feign:
         connectTimeout: 10000
         readTimeout: 60000
 
-# Í¼Æ¬ÉÏ´«
+# å›¾ç‰‡ä¸Šä¼ 
 file:
   uploadurl: /root/nginx/app/file/chartvisual/componentfile
 fk:
@@ -34,7 +34,7 @@ fk:
       secret: ${random.uuid}
       strength: 6
 
-# ×é¼şÉÏ´«
+# ç»„ä»¶ä¸Šä¼ 
 folder:
   accessAddress: /component/
   uploadPath: /root/nginx/app/vue/component/component/
@@ -59,7 +59,7 @@ management:
       exposure:
         include: '*'
 
-# mybatis-plus ÅäÖÃ
+# mybatis-plus é…ç½®
 mybatis-plus:
   configuration:
     default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
@@ -73,7 +73,7 @@ mybatis-plus:
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
 
-# springÅäÖÃ
+# springé…ç½®
 spring:
   application:
     name: chartvisual-service
