@@ -6,9 +6,9 @@ import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
 import com.fisk.datagovernance.service.datasecurity.TablesecurityConfigService;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 
 
 /**
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/tableSecurity")
 public class TableSecurityConfigController {
 
-    @Autowired
+    @Resource
     private TablesecurityConfigService service;
 
     /**
