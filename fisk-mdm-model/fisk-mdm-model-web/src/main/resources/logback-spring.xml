@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="./logs/chartVisual" />
-    <property name="appName" value="chartVisual" />
+    <property name="LOG_HOME" value="./logs/mdmModel" />
+    <property name="appName" value="mdmModel" />
     <contextName>${appName}</contextName>
 
     <!-- Print the log to the console -->
