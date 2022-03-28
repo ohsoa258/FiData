@@ -123,13 +123,13 @@ public class WideTableImpl implements IWideTable {
                 //判断字段名称是否重复
                 if (fieldList.contains(field.fieldName))
                 {
-                    field.alias="external_"+item.tableName+"_"+field.fieldName;
-                    str.append("external_"+item.tableName+"."+field.fieldName+" as "+"external_"+item.tableName+"_"+field.fieldName+",");
+                    field.alias=item.tableName+"_"+field.fieldName;
+                    str.append("external_"+item.tableName+"."+field.fieldName+" as "+item.tableName+"_"+field.fieldName+",");
                 }
                 else {
                     str.append("external_"+item.tableName+"."+field.fieldName+",");
+                    fieldList.add(field.fieldName);
                 }
-                fieldList.add(field.fieldName);
             }
         }
         str.deleteCharAt(str.length()-1);
@@ -326,6 +326,7 @@ public class WideTableImpl implements IWideTable {
                 }
                 WideTableFieldConfigTaskDTO data=WideTableMap.INSTANCES.poToTaskDto(po);
                 data.userId=userHelper.getLoginUserInfo().id;
+                data.sqlScript.toLowerCase();
                 JSONObject jsonObject=JSONObject.parseObject(po.configDetails);
                 data.entity=JSONObject.parseArray(jsonObject.getString("entity"),WideTableSourceTableConfigDTO.class);
                 data.relations=JSONObject.parseArray(jsonObject.getString("relations"),WideTableSourceRelationsDTO.class);
@@ -349,6 +350,7 @@ public class WideTableImpl implements IWideTable {
     public void createExternalTable(List<WideTableSourceTableConfigDTO> entity,IndicatorQueryDTO dto){
         BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
         data.businessAreaId=dto.businessAreaId;
+        data.userId=userHelper.getLoginUserInfo().id;
         //过滤维度
         List<Integer> dimensionIdList = entity.stream()
                 .filter(e->e.tableType==CreateTypeEnum.CREATE_DIMENSION.getValue())
