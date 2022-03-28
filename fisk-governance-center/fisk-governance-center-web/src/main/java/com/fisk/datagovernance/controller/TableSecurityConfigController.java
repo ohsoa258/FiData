@@ -1,19 +1,13 @@
 package com.fisk.datagovernance.controller;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
+import com.fisk.datagovernance.service.datasecurity.TablesecurityConfigService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import com.lock.mysql.entity.TablesecurityConfigPO;
-import com.lock.mysql.service.TablesecurityConfigService;
-import com.lock.common.utils.PageUtils;
-import com.lock.common.utils.R;
 
 
 
@@ -23,8 +17,8 @@ import com.lock.common.utils.R;
  * @date 2022-03-28 15:47:33
  */
 @RestController
-@RequestMapping("/tablesecurityconfig")
-public class TablesecurityConfigController {
+@RequestMapping("/tableSecurity")
+public class TableSecurityConfigController {
 
     @Autowired
     private TablesecurityConfigService service;
