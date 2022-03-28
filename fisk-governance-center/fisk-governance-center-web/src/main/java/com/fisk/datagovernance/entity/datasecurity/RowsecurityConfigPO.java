@@ -47,11 +47,5 @@ public class RowsecurityConfigPO extends BasePO {
     /**
      * 是否有效
      */
-    public Integer valid;
-
-    /**
-     * 创建人
-     */
-    public String createUser;
-
+    public boolean valid;
 }

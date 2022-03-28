@@ -8,7 +8,7 @@ import lombok.Data;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author lock
@@ -19,9 +19,9 @@ import lombok.Data;
 public class UsergroupInfoDTO {
 
     /**
-     * 
+     *
      */
-        public long id;
+    public long id;
 
     /**
      * 用户组名称
@@ -33,4 +33,4 @@ public class UsergroupInfoDTO {
      */
     public String userGroupDesc;
 
-            }
+}

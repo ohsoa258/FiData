@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author lock
@@ -28,5 +28,4 @@ public class UsergroupInfoPO extends BasePO {
      * 用户组描述
      */
     public String userGroupDesc;
-
-            }
+}

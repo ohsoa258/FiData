@@ -52,11 +52,7 @@ public class ColumnsecurityConfigPO extends BasePO {
     /**
      * 是否有效
      */
-    public Integer valid;
+    public boolean valid;
 
-    /**
-     * 创建人
-     */
-    public String createUser;
 
             }

@@ -1,14 +1,10 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
-
 import lombok.Data;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author lock
@@ -21,7 +17,7 @@ public class ColumnUserAssignmentDTO {
     /**
      * 主键
      */
-        public long id;
+    public long id;
 
     /**
      * tb_rowsecurity_config表  id
@@ -43,9 +39,4 @@ public class ColumnUserAssignmentDTO {
      */
     public long permission;
 
-    /**
-     * 创建人
-     */
-    public String createUser;
-
-            }
+}

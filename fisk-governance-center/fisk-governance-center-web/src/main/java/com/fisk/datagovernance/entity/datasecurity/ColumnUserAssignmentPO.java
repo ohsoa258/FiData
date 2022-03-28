@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author lock
@@ -39,9 +39,4 @@ public class ColumnUserAssignmentPO extends BasePO {
      */
     public long permission;
 
-    /**
-     * 创建人
-     */
-    public String createUser;
-
-            }
+}

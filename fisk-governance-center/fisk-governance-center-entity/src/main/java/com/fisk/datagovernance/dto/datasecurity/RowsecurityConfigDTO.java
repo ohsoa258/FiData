@@ -1,9 +1,5 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
-
 import lombok.Data;
 
 /**
@@ -21,7 +17,7 @@ public class RowsecurityConfigDTO {
     /**
      * 主键
      */
-        public long id;
+    public long id;
 
     /**
      * 缺省设置(0: 所有可读  1: 所有不可读)
@@ -51,11 +47,6 @@ public class RowsecurityConfigDTO {
     /**
      * 是否有效
      */
-    public Integer valid;
+    public Boolean valid;
 
-    /**
-     * 创建人
-     */
-    public String createUser;
-
-            }
+}

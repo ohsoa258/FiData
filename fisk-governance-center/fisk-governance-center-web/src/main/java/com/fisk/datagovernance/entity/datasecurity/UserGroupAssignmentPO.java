@@ -1,10 +1,7 @@
 package com.fisk.datagovernance.entity.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
-
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -32,4 +29,4 @@ public class UserGroupAssignmentPO extends BasePO {
      */
     public long userId;
 
-            }
+}
