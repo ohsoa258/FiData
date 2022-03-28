@@ -12,17 +12,12 @@ import lombok.EqualsAndHashCode;
  *
  * @author lock
  * @email feihongz@fisksoft.com.cn
- * @date 2022-03-28 15:47:33
+ * @date 2022-03-28 15:47:48
  */
 @Data
-@TableName("tb_tablesecurity_config")
+@TableName("tb_datamasking_config")
 @EqualsAndHashCode(callSuper = true)
-public class TablesecurityConfigPO extends BasePO {
-
-    /**
-     * 缺省设置(0: 所有可读  1: 所有不可读)
-     */
-    public long defaultConfig;
+public class DatamaskingConfigPO extends BasePO {
 
     /**
      * 数据源id
@@ -35,23 +30,32 @@ public class TablesecurityConfigPO extends BasePO {
     public long tableId;
 
     /**
-     * 访问类型(0:用户组   1: 用户)
+     * 脱敏字段
      */
-    public long accessType;
+    public String fieldName;
 
     /**
-     * 展示名称(用户组名or用户名)     存id
+     * 脱敏类型
      */
-    public long userGroupId;
+    public long maskingType;
 
     /**
-     * 访问权限(0: 编辑  1: 只读  2: 导入  3:导出)
+     * 保留前几位文本
      */
-    public long accessPermission;
+    public long numberDigits;
 
     /**
-     * 创建人
+     * 内容替换
      */
-    public String createUser;
+    public String contentReplace;
 
-            }
+    /**
+     * 加密方式
+     */
+    public long encryptType;
+
+    /**
+     * 是否有效
+     */
+    public boolean valid;
+}

@@ -1,10 +1,7 @@
 package com.fisk.datagovernance.entity.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
-
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -21,12 +18,6 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_usergroup_info")
 @EqualsAndHashCode(callSuper = true)
 public class UsergroupInfoPO extends BasePO {
-
-    /**
-     * 
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    public long id;
 
     /**
      * 用户组名称

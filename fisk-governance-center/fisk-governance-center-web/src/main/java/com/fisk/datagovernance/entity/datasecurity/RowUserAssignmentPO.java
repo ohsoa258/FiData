@@ -1,10 +1,7 @@
 package com.fisk.datagovernance.entity.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
-
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -21,12 +18,6 @@ import lombok.EqualsAndHashCode;
 @TableName("tb_row_user_assignment")
 @EqualsAndHashCode(callSuper = true)
 public class RowUserAssignmentPO extends BasePO {
-
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    public long id;
 
     /**
      * tb_rowsecurity_config表  id

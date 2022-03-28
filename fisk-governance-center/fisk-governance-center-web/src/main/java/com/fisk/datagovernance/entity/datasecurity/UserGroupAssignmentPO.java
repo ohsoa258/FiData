@@ -23,12 +23,6 @@ import lombok.EqualsAndHashCode;
 public class UserGroupAssignmentPO extends BasePO {
 
     /**
-     * 
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    public long id;
-
-    /**
      * 用户组id
      */
     public long userGroupId;
