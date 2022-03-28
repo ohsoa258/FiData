@@ -1,21 +1,13 @@
 package com.fisk.datagovernance.controller;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.fisk.datagovernance.dto.datasecurity.UserGroupAssignmentDTO;
+import com.fisk.datagovernance.service.datasecurity.UserGroupAssignmentService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import com.lock.mysql.entity.UserGroupAssignmentPO;
-import com.lock.mysql.service.UserGroupAssignmentService;
-import com.lock.common.utils.PageUtils;
-import com.lock.common.utils.R;
-
-
 
 /**
  * @author lock
