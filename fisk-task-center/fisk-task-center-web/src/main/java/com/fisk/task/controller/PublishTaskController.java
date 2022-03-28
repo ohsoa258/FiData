@@ -11,9 +11,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import com.google.gson.Gson;
@@ -200,6 +198,20 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW,
                 nifiCustomWorkListDTO);
+    }
+
+    /**
+     * 立即重启
+     * @param buildTableNifiSettingDTO
+     * @return
+     */
+    @PostMapping("/immediatelyStart")
+    @ApiOperation(value = "立即启动")
+    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW,
+                buildTableNifiSettingDTO);
     }
 
 }

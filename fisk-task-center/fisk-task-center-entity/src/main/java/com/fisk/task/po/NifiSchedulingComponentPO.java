@@ -1,14 +1,17 @@
-package com.fisk.task.dto.task;
+package com.fisk.task.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/**
+ * @author cfk
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("tb_nifi_scheduling_component")
-public class NifiSchedulingComponentPO  extends BasePO {
+public class NifiSchedulingComponentPO extends BasePO {
 
     public String name;
     public String componentId;

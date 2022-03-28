@@ -1,10 +1,13 @@
-package com.fisk.task.dto.task;
+package com.fisk.task.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/**
+ * @author cfk
+ */
 @Data
 @TableName("tb_pipeline_configuration")
 public class PipelineConfigurationPO extends BasePO {

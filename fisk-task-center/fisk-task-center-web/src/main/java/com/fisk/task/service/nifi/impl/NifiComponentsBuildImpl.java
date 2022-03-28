@@ -26,8 +26,9 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.dto.task.AppNifiSettingPO;
-import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
+import com.fisk.task.po.AppNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
@@ -1976,6 +1977,22 @@ public class NifiComponentsBuildImpl implements INifiComponentsBuild {
             }
         }
         return sql;
+    }
+
+    @Override
+    public void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO) {
+        try {
+            TableNifiSettingPO tableNifiSetting = tableNifiSettingService.getByTableId(tableNifiSettingDTO.tableAccessId, tableNifiSettingDTO.type);
+            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSetting.publishKafkaProcessorId);
+            enabledProcessor(tableNifiSetting.tableComponentId, processor);
+            com.davis.client.model.ProcessorRunStatusEntity processorRunStatusEntity = new com.davis.client.model.ProcessorRunStatusEntity();
+            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            processorRunStatusEntity.setRevision(processor.getRevision());
+            processorRunStatusEntity.setState(com.davis.client.model.ProcessorRunStatusEntity.StateEnum.STOPPED);
+            NifiHelper.getProcessorsApi().updateRunStatus(processor.getId(), processorRunStatusEntity);
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
     }
 
     public String associatedConditions(DataAccessConfigDTO config){

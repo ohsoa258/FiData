@@ -25,12 +25,15 @@ import com.fisk.task.consumer.olap.BuildModelTaskListener;
 import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
 import com.fisk.task.consumer.postgre.datainput.BuildDataInputPgTableListener;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
+import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
@@ -46,9 +49,13 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 
+/**
+ * @author cfk
+ */
 @Slf4j
 @Component
 public class ConsumerServer {
@@ -101,6 +108,8 @@ public class ConsumerServer {
     BuildWideTableTaskListener buildWideTableTaskListener;
     @Resource
     INifiTaskListener iNifiTaskListener;
+    @Resource
+    INifiComponentsBuild iNifiComponentsBuild;
 
 
     //这里只用来存放reids
@@ -273,6 +282,24 @@ public class ConsumerServer {
     @MQConsumerLog
     public void buildWideTableTaskListener(String dataInfo, Acknowledgment acke) {
         buildWideTableTaskListener.msg(dataInfo, acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public void buildImmediatelyStartTaskListener(String dataInfo, Acknowledgment acke) {
+        try {
+            BuildTableNifiSettingDTO buildTableNifiSettingDTO = JSON.parseObject(dataInfo, BuildTableNifiSettingDTO.class);
+            List<TableNifiSettingDTO> tableNifiSettings = buildTableNifiSettingDTO.tableNifiSettings;
+            if (!CollectionUtils.isEmpty(tableNifiSettings)) {
+                for (TableNifiSettingDTO tableNifiSettingDTO : tableNifiSettings) {
+                    iNifiComponentsBuild.immediatelyStart(tableNifiSettingDTO);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            acke.acknowledge();
+        }
     }
 
     @KafkaListener(topics = "pipeline.supervision", containerFactory = "batchFactory", groupId = "test")

@@ -53,6 +53,10 @@ public enum TaskTypeEnum implements BaseEnum {
      * */
     BUILD_CUSTOMWORK_TASK(10, "创建nifi管道"),
     /*
+     * 立即同步
+     * */
+    BUILD_IMMEDIATELYSTART_TASK(12,"立即同步"),
+    /*
      * 创建宽表
      * */
     BUILD_WIDE_TABLE_TASK(11, "创建宽表");

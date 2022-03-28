@@ -1,7 +1,10 @@
 package com.fisk.task.mapper;
 
 import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.task.dto.task.NifiConfigPO;
+import com.fisk.task.po.NifiConfigPO;
 
-public interface NifiConfigMapper  extends FKBaseMapper<NifiConfigPO> {
+/**
+ * @author cfk
+ */
+public interface NifiConfigMapper extends FKBaseMapper<NifiConfigPO> {
 }

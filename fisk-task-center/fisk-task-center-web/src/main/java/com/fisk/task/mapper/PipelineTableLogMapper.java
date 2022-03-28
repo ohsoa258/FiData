@@ -5,6 +5,9 @@ import com.fisk.task.entity.PipelineTableLogPO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * @author cfk
+ */
 public interface PipelineTableLogMapper extends FKBaseMapper<PipelineTableLogPO> {
 
     /**

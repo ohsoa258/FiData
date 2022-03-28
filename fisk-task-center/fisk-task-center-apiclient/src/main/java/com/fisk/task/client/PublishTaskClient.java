@@ -15,8 +15,9 @@ import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
-import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -217,5 +218,13 @@ public interface PublishTaskClient {
      */
     @PostMapping("/olapTask/publishBuildWideTableTask")
     public ResultEntity<Object> publishBuildWideTableTask(@RequestBody WideTableFieldConfigTaskDTO wideTableFieldConfigTaskDTO);
+
+    /**
+     * 立即重启
+     * @param buildTableNifiSettingDTO
+     * @return
+     */
+    @PostMapping("/immediatelyStart")
+    public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
 
 }

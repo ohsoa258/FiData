@@ -41,6 +41,8 @@ public class MqConstants {
 
         public static final String BUILD_CUSTOMWORK_FLOW="task.build.customwork.flow";
 
+        public static final String BUILD_IMMEDIATELYSTART_FLOW="task.build.immediatelyStart.flow";
+
     }
 
     public static final class RouterConstants{

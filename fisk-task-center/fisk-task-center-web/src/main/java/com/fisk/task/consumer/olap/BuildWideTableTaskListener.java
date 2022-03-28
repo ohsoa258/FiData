@@ -67,7 +67,8 @@ public class BuildWideTableTaskListener {
             buildNifiFlowDTO.openTransmission = true;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
         } catch (Exception e) {
-            log.error("宽表创建失败:" + e.getMessage());
+            log.error("宽表创建失败");
+            e.printStackTrace();
             modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_FAILURE.getValue();
         } finally {
             dataModelClient.updateWideTablePublishStatus(modelPublishStatusDTO);
@@ -77,8 +78,8 @@ public class BuildWideTableTaskListener {
 
 
     public String buildWideTableSql(WideTableFieldConfigTaskDTO wideTableFieldConfigDTO) {
-        String tableName = wideTableFieldConfigDTO.name;
-        String fistfield = wideTableFieldConfigDTO.entity.get(0).columnConfig.get(0).fieldName;
+        String tableName = wideTableFieldConfigDTO.name.toLowerCase();
+        String fistfield = wideTableFieldConfigDTO.entity.get(0).columnConfig.get(0).fieldName.toLowerCase();
         String createTableSql = "DROP TABLE IF EXISTS " + tableName + "; create table " + tableName + " (";
         String field = "";
         List<WideTableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
@@ -87,15 +88,15 @@ public class BuildWideTableTaskListener {
             for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
                 if ("float".equalsIgnoreCase(wideTableSourceFieldConfigDTO.fieldType)) {
                     if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
-                        field += "," + wideTableSourceFieldConfigDTO.alias + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                        field += "," + wideTableSourceFieldConfigDTO.alias.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
                     } else {
-                        field += "," + wideTableSourceFieldConfigDTO.fieldName + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                        field += "," + wideTableSourceFieldConfigDTO.fieldName.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
                     }
                 } else {
                     if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
-                        field += "," + wideTableSourceFieldConfigDTO.alias + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                        field += "," + wideTableSourceFieldConfigDTO.alias.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
                     } else {
-                        field += "," + wideTableSourceFieldConfigDTO.fieldName + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
+                        field += "," + wideTableSourceFieldConfigDTO.fieldName.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + "(" + wideTableSourceFieldConfigDTO.fieldLength + ")";
                     }
                 }
 
@@ -108,16 +109,16 @@ public class BuildWideTableTaskListener {
 
     public String insertWideSql(WideTableFieldConfigTaskDTO wideTableFieldConfigDTO) {
         String sql = wideTableFieldConfigDTO.sqlScript;
-        String tableName = wideTableFieldConfigDTO.name;
+        String tableName = wideTableFieldConfigDTO.name.toLowerCase();
         String fieldSql = "";
         List<WideTableSourceTableConfigDTO> entity = wideTableFieldConfigDTO.entity;
         for (WideTableSourceTableConfigDTO wideTableSourceTableConfigDTO : entity) {
             List<WideTableSourceFieldConfigDTO> columnConfig = wideTableSourceTableConfigDTO.columnConfig;
             for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
                 if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
-                    fieldSql += wideTableSourceFieldConfigDTO.alias + ",";
+                    fieldSql += wideTableSourceFieldConfigDTO.alias.toLowerCase() + ",";
                 } else {
-                    fieldSql += wideTableSourceFieldConfigDTO.fieldName + ",";
+                    fieldSql += wideTableSourceFieldConfigDTO.fieldName.toLowerCase() + ",";
                 }
             }
         }

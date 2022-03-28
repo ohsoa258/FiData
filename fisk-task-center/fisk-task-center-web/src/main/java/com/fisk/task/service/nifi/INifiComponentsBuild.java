@@ -5,11 +5,11 @@ import com.fisk.common.entity.BusinessResult;
 import com.fisk.common.enums.task.SynchronousTypeEnum;
 import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.nifi.FunnelDTO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
 import java.util.List;
@@ -487,6 +487,14 @@ public interface INifiComponentsBuild {
      * @return String
      */
     String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName);
+
+    /**
+     * immediatelyStart
+     *
+     * @param tableNifiSettingDTO 配置信息
+     * @return String
+     */
+    void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO);
 
 
 }

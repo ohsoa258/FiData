@@ -29,6 +29,7 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.mapper.OlapMapper;
+import com.fisk.task.po.*;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.NifiComponentsBuildImpl;

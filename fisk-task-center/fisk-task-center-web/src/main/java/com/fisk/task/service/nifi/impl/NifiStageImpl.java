@@ -14,7 +14,7 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
-import com.fisk.task.dto.task.TableNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -31,6 +31,9 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author cfk
+ */
 @Service
 @Slf4j
 public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> implements INifiStage {
