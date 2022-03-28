@@ -68,4 +68,12 @@ public interface INoticeManageService extends IService<NoticePO> {
      * @return 查询结果
      */
     List<NoticeModule> getModuleNoticeList();
+
+    /**
+     * 测试发送邮件通知
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum testSend(NoticeDTO dto);
 }
