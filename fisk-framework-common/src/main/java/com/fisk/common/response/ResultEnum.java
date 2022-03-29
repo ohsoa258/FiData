@@ -195,7 +195,12 @@ public enum ResultEnum {
     DATA_QUALITY_STRONGRULE_ERROR(11001, "数据强规则校验参数异常，请核查"),
     DATA_QUALITY_TEMPLATE_EXISTS(11002, "模板信息不存在"),
     DATA_QUALITY_DATASOURCE_EXISTS(11003, "数据源不存在"),
-    DATA_QUALITY_REQUESTSORT_ERROR(11004, "参数异常，执行顺序调整失败");
+    DATA_QUALITY_REQUESTSORT_ERROR(11004, "参数异常，执行顺序调整失败"),
+
+    /**
+     * 数据安全
+     */
+    FIELD_NAME_IS_SELECTED(12001,"当前字段已被设置,请重新选择");
 
     ResultEnum(int code, String msg) {
         this.code = code;
