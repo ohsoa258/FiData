@@ -52,13 +52,13 @@ public class SqlServerPlusUtils {
      * @param tableName tableName
      * @return tableName中的表字段
      */
-    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName) {
+    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName,String tableFramework) {
         List<TableStructureDTO> colNameList = null;
         try {
             colNameList = new ArrayList<>();
 
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            ResultSet resultSet = metaData.getColumns(null, tableFramework, tableName, "%");
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
@@ -102,7 +102,7 @@ public class SqlServerPlusUtils {
             int tag = 0;
             for (String tableName : tableNames) {
                 // 获取字段名
-                List<TableStructureDTO> columnsName = getColumnsName(conn, tableName);
+                List<TableStructureDTO> columnsName = getColumnsName(conn, tableName,"%");
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(columnsName);
@@ -119,7 +119,7 @@ public class SqlServerPlusUtils {
         return list;
     }
 
-    public Map<String, String> getTablesPlus(Connection conn, String dbName) {
+    public Map<String, String> getTablesPlus(Connection conn) {
 //        ArrayList<Map<String, String>> tableList = null;
         Map<String, String> tableMap = new LinkedHashMap<>();
         try {
@@ -157,7 +157,7 @@ public class SqlServerPlusUtils {
             list = new ArrayList<>();
 
             // 获取指定数据库所有表
-            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
+            Map<String, String> mapList = this.getTablesPlus(conn);
 
             List<TablePyhNameDTO> finalList = list;
 
@@ -166,7 +166,7 @@ public class SqlServerPlusUtils {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey(),"%");
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
                 tablePyhNameDTO.setFields(columnsName);

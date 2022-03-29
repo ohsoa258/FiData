@@ -9,6 +9,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
 import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
@@ -72,13 +73,14 @@ public class DataSourceController {
 
     @GetMapping("/getTableAll")
     @ApiOperation("获取全部表字段信息")
-    public ResultEntity<List<DataSourceVO>> getTableAll() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta());
+    public ResultEntity<List<DataSourceVO>> getTableAll(String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(tableName));
     }
 
-    @GetMapping("/getAssetsMetaData")
-    @ApiOperation("获取元数据资产管理下的表信息")
-    public ResultEntity<DataSourceVO> getAssetsMetaData(int datasourceId, String tableName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAssetsMetaData(datasourceId,tableName));
+    @GetMapping("/getTableFieldAll")
+    @ApiOperation("获取表字段信息")
+    public ResultEntity<DataSourceVO> getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe,
+                                                       String tableName,String tableFramework) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(datasourceId,datasourceTyoe,tableName,tableFramework));
     }
 }

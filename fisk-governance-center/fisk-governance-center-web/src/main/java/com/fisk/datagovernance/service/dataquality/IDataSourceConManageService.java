@@ -8,6 +8,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
 import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
+import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 
@@ -64,11 +65,11 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * 获取数据源下的表
      * @return 查询结果
      */
-    List<DataSourceVO> getMeta();
+    List<DataSourceVO> getMeta(String tableName);
 
     /**
      * 获取元数据资产管理下的表信息
      * @return 查询结果
      */
-    DataSourceVO getAssetsMetaData(int datasourceId, String tableName);
+    DataSourceVO getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe, String tableName,String tableFramework);
 }
