@@ -9,12 +9,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>fisk-dataservice-center</artifactId>
+    <artifactId>fisk-consume-serveice</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>fisk-dataservice-center-apiclient</module>
-        <module>fisk-dataservice-center-entity</module>
-        <module>fisk-dataservice-center-web</module>
+        <module>fisk-consume-serveice-apiclient</module>
+        <module>fisk-consume-serveice-entity</module>
+        <module>fisk-consume-serveice-web</module>
     </modules>
 
     <dependencies>

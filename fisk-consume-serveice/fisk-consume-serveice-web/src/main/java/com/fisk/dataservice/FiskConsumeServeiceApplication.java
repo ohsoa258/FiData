@@ -28,9 +28,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.system.client"
 })
 @EnableApolloConfig
-public class FkDataServiceApplication {
+public class FiskConsumeServeiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(FkDataServiceApplication.class, args);
+        SpringApplication.run(FiskConsumeServeiceApplication.class, args);
     }
 
 }

@@ -1,6 +1,6 @@
 dataservice:
   pdf:
-    path: /root/java/dataservice/pdf
+    path: /root/java/fisk-consume-serveice/pdf
 eureka:
   client:
     service-url:

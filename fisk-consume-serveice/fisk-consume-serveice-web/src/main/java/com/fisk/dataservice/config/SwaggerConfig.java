@@ -1,7 +1,7 @@
 package com.fisk.dataservice.config;
 
 import com.fisk.common.constants.SystemConstants;
-import com.fisk.dataservice.FkDataServiceApplication;
+import com.fisk.dataservice.FiskConsumeServeiceApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -31,7 +31,7 @@ public class SwaggerConfig {
 
     @Bean
     public Docket createRestApi() {
-        String basePck = FkDataServiceApplication.class.getPackage().getName();
+        String basePck = FiskConsumeServeiceApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .tags(new Tag(TAG_1,"数据源接口"))

@@ -1,6 +1,6 @@
 dataservice:
   pdf:
-    path: /root/java/dataservice/pdf
+    path: /data/java/fisk-consume-serveice/pdf
 eureka:
   client:
     service-url:
@@ -52,8 +52,8 @@ spring:
     name: dataservice-service
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    password: Password01!
-    url: jdbc:mysql://192.168.21.13:3306/dmp_dataservice_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    password: .FdF_r&tj4)+
+    url: jdbc:mysql://100.102.201.107:3307/dmp_dataservice_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
   freemarker:
     settings:

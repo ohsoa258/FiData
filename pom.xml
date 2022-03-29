@@ -17,7 +17,7 @@
         <module>fisk-factory-access</module>
         <module>fisk-task-center</module>
         <module>fisk-factory-model</module>
-        <module>fisk-dataservice-center</module>
+        <module>fisk-consume-serveice</module>
         <module>fisk-datamanage-center</module>
         <module>fisk-factory-dispatch</module>
         <module>fisk-governance-center</module>
