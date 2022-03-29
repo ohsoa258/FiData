@@ -1,6 +1,9 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,39 +17,33 @@ import lombok.Data;
 @Data
 public class TablesecurityConfigDTO {
 
-    /**
-     * 主键
-     */
+    @ApiModelProperty(value = "主键(修改时必传)", required = true)
     public long id;
 
     /**
-     * 缺省设置(0: 所有可读  1: 所有不可读)
+     * 缺省设置(0: 所有可读  1: 所有不可读--此时无论权限如何,当前表不可读取),默认值: 0
      */
-    public long defaultConfig;
+    @ApiModelProperty(value = "缺省设置(0: 空 1: 所有可读  2: 所有不可读--此时无论权限如何,当前表不可读取),默认值: 1", required = true)
+    public Long defaultConfig;
 
-    /**
-     * 数据源id
-     */
-    public long datasourceId;
+    @ApiModelProperty(value = "数据源id", required = true)
+    public String datasourceId;
 
-    /**
-     * 表id
-     */
-    public long tableId;
+    @ApiModelProperty(value = "表id", required = true)
+    public String tableId;
 
-    /**
-     * 访问类型(0:用户组   1: 用户)
-     */
-    public long accessType;
+    @ApiModelProperty(value = "访问类型(0:用户组   1: 用户)", required = true)
+    public Long accessType;
 
-    /**
-     * 展示名称(用户组名or用户名)     存id
-     */
-    public long userGroupId;
+    @ApiModelProperty(value = "用户组id or 用户id", required = true)
+    public Long userGroupId;
 
-    /**
-     * 访问权限(0: 编辑  1: 只读  2: 导入  3:导出)
-     */
-    public long accessPermission;
+    @ApiModelProperty(value = "回显的名称")
+    public String name;
 
+//    @ApiModelProperty(value = "访问权限(0: 编辑  1: 只读  2: 导入  3:导出)", required = true)
+//    public long accessPermission;
+
+    @ApiModelProperty(value = "访问权限(0: 编辑  1: 只读  2: 导入  3:导出)", required = true)
+    public List<Long> accessPermissionList;
 }

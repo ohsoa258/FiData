@@ -47,7 +47,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_5, "生命周期API"))
                 .tags(new Tag(TAG_6, "告警通知API"))
                 .tags(new Tag(TAG_7, "模板配置API"))
-                .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表安全API"))
+                .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))

@@ -3,12 +3,15 @@ package com.fisk.datagovernance.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
+import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
 import com.fisk.datagovernance.service.datasecurity.TablesecurityConfigService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 
 /**
@@ -16,6 +19,7 @@ import javax.annotation.Resource;
  * @email feihongz@fisksoft.com.cn
  * @date 2022-03-28 15:47:33
  */
+@Api(tags = SwaggerConfig.TABLE_SECURITY_CONFIG_CONTROLLER)
 @RestController
 @RequestMapping("/tableSecurity")
 public class TableSecurityConfigController {
@@ -31,6 +35,13 @@ public class TableSecurityConfigController {
     public ResultEntity<TablesecurityConfigDTO> getData(@PathVariable("id") long id){
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
+    }
+
+    @GetMapping("/getList")
+    @ApiOperation(value = "获取表级安全列表")
+    public ResultEntity<List<TablesecurityConfigDTO>> getList() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList());
     }
 
     /**
