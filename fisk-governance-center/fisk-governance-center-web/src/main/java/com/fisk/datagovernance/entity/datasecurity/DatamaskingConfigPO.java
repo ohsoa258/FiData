@@ -22,12 +22,12 @@ public class DatamaskingConfigPO extends BasePO {
     /**
      * 数据源id
      */
-    public long datasourceId;
+    public String datasourceId;
 
     /**
      * 表id
      */
-    public long tableId;
+    public String tableId;
 
     /**
      * 脱敏字段

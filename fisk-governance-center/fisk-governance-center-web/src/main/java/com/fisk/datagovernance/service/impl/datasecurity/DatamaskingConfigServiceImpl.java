@@ -42,7 +42,7 @@ public class DatamaskingConfigServiceImpl extends ServiceImpl<DatamaskingConfigM
         // 当前字段名不可重复
         List<String> list = this.list().stream().map(e -> e.fieldName).collect(Collectors.toList());
         if (list.contains(dto.fieldName)) {
-            return ResultEnum.NAME_EXISTS;
+            return ResultEnum.FIELD_NAME_IS_SELECTED;
         }
 
         // dto -> po
@@ -65,7 +65,7 @@ public class DatamaskingConfigServiceImpl extends ServiceImpl<DatamaskingConfigM
         queryWrapper.lambda().eq(DatamaskingConfigPO::getFieldName, dto.fieldName);
         DatamaskingConfigPO po = baseMapper.selectOne(queryWrapper);
         if (po != null && po.id != dto.id) {
-            return ResultEnum.WORKFLOWNAME_EXISTS;
+            return ResultEnum.FIELD_NAME_IS_SELECTED;
         }
 
         // 参数校验

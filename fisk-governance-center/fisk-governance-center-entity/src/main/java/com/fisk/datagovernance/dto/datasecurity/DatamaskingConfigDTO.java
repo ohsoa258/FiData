@@ -19,10 +19,10 @@ public class DatamaskingConfigDTO {
     public long id;
 
     @ApiModelProperty(value = "数据源id", required = true)
-    public Long datasourceId;
+    public String datasourceId;
 
     @ApiModelProperty(value = "表id", required = true)
-    public Long tableId;
+    public String tableId;
 
     @ApiModelProperty(value = "脱敏字段", required = true)
     public String fieldName;
