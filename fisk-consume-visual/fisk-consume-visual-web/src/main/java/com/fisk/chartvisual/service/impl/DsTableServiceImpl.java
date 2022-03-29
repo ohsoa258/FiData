@@ -151,7 +151,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
     }
 
     @Override
-    public List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId) {
+    public List<DsFiledDTO> selectByDataSourceId(Integer dataSourceId) {
         QueryWrapper<DsTablePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(DsTablePO::getDataSourceId, dataSourceId);
@@ -159,15 +159,21 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
 
         if (CollectionUtils.isNotEmpty(dsTableList)) {
             // 查询表名字段信息
-            List<SaveDsTableDTO> dtoList = dsTableList.stream().filter(Objects::nonNull).map(e -> {
-                SaveDsTableDTO dto = new SaveDsTableDTO();
-                dto.setDataSourceId(e.getDataSourceId());
-                dto.setTableName(e.getTableName());
+            List<DsFiledDTO> dtoList = dsTableList.stream().filter(Objects::nonNull).map(e -> {
+                DsFiledDTO dto = new DsFiledDTO();
+                dto.setId((int)e.getId());
+                dto.setName(e.getTableName());
 
                 QueryWrapper<DsTableFieldPO> query = new QueryWrapper<>();
                 query.lambda().
                         eq(DsTableFieldPO::getTableInfoId, e.getId());
-                dto.setFieldList(DsTableMap.INSTANCES.poToDtoDsList(dsTableFieldMapper.selectList(query)));
+                List<DsTableFieldPO> tableFieldList = dsTableFieldMapper.selectList(query);
+                if (CollectionUtils.isNotEmpty(tableFieldList)){
+                    List<DsFiledDTO> collect = tableFieldList.stream().filter(Objects::nonNull)
+                            .map(item -> new DsFiledDTO((int) item.getId(), item.getTargetField(), item.getTargetFieldType()))
+                            .collect(Collectors.toList());
+                    dto.setChildren(collect);
+                }
                 return dto;
             }).collect(Collectors.toList());
 

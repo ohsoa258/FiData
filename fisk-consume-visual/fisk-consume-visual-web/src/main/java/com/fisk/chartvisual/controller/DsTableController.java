@@ -56,7 +56,7 @@ public class DsTableController {
     @ApiOperation("根据数据源id查询库里表字段")
     @GetMapping("/selectByDataSourceId")
     @ResponseBody
-    public ResultEntity<List<SaveDsTableDTO>> selectByDataSourceId(Integer id) {
+    public ResultEntity<List<DsFiledDTO>> selectByDataSourceId(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.selectByDataSourceId(id));
     }
 

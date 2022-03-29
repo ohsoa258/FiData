@@ -46,7 +46,7 @@ public interface DsTableService {
      * @param dataSourceId
      * @return
      */
-    List<SaveDsTableDTO> selectByDataSourceId(Integer dataSourceId);
+    List<DsFiledDTO> selectByDataSourceId(Integer dataSourceId);
 
     /**
      * 根据数据源连接获取表名状态
