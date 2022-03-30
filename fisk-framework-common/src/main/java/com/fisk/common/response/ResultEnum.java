@@ -200,7 +200,8 @@ public enum ResultEnum {
     /**
      * 数据安全
      */
-    FIELD_NAME_IS_SELECTED(12001,"当前字段已被设置,请重新选择");
+    FIELD_NAME_IS_SELECTED(12001,"当前字段已被设置,请重新选择"),
+    ROW_SECURITYNAME_EXISTS(12002,"当前权限名称已存在");
 
     ResultEnum(int code, String msg) {
         this.code = code;
