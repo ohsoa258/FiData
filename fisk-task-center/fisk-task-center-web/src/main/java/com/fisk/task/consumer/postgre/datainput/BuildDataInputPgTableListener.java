@@ -39,8 +39,7 @@ public class BuildDataInputPgTableListener {
     @Resource
     TaskPgTableStructureHelper taskPgTableStructureHelper;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
+
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);

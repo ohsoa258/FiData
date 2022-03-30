@@ -35,8 +35,7 @@ public class BuildDataInputDeletePgTableListener {
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
+
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);

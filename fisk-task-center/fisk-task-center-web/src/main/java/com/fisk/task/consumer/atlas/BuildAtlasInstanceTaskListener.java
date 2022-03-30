@@ -31,8 +31,6 @@ public class BuildAtlasInstanceTaskListener {
     @Resource
     DataAccessClient dc;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_INSTANCE_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.ATLASINSTANCE_MQ_BUILD)
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("data:" + dataInfo);
         AtlasEntityQueryDTO inpData = JSON.parseObject(dataInfo, AtlasEntityQueryDTO.class);
