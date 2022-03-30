@@ -27,12 +27,9 @@ public class TableSecurityConfigController {
     @Resource
     private TablesecurityConfigService service;
 
-    /**
-     * 回显: 根据id查询数据
-     */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
-    public ResultEntity<TablesecurityConfigDTO> getData(@PathVariable("id") long id){
+    public ResultEntity<TablesecurityConfigDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
@@ -44,28 +41,19 @@ public class TableSecurityConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList());
     }
 
-    /**
-     * 保存
-     */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody TablesecurityConfigDTO tablesecurityConfig){
+    public ResultEntity<Object> addData(@RequestBody TablesecurityConfigDTO tablesecurityConfig) {
 
         return ResultEntityBuild.build(service.addData(tablesecurityConfig));
     }
 
-    /**
-     * 修改
-     */
     @PutMapping("/edit")
-    public ResultEntity<Object> editData(@RequestBody TablesecurityConfigDTO dto){
+    public ResultEntity<Object> editData(@RequestBody TablesecurityConfigDTO dto) {
 
         return ResultEntityBuild.build(service.editData(dto));
     }
 
-    /**
-     * 删除
-     */
     @DeleteMapping("/delete/{id}")
     @ApiOperation(value = "删除")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
@@ -73,4 +61,10 @@ public class TableSecurityConfigController {
         return ResultEntityBuild.build(service.deleteData(id));
     }
 
+    @PutMapping("/editDefaultConfig/{defaultConfig}")
+    @ApiOperation(value = "修改缺省配置")
+    public ResultEntity<Object> editDefaultConfig(@PathVariable("defaultConfig") long defaultConfig) {
+
+        return ResultEntityBuild.build(service.editDefaultConfig(defaultConfig));
+    }
 }

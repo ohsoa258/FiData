@@ -1,13 +1,11 @@
 package com.fisk.datagovernance.service.impl.datasecurity;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
-import com.fisk.datagovernance.entity.datasecurity.PermissionManagementPO;
 import com.fisk.datagovernance.entity.datasecurity.TablesecurityConfigPO;
-import com.fisk.datagovernance.enums.datasecurity.SecurityTableTypeEnum;
 import com.fisk.datagovernance.map.datasecurity.TablesecurityConfigMap;
 import com.fisk.datagovernance.mapper.datasecurity.PermissionManagementMapper;
 import com.fisk.datagovernance.mapper.datasecurity.TablesecurityConfigMapper;
@@ -41,44 +39,28 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         }
 
         // po -> dto
-        return TablesecurityConfigMap.INSTANCES.poToDto(po);
+        TablesecurityConfigDTO dto = TablesecurityConfigMap.INSTANCES.poToDto(po);
+        // TODO 根据访问类型和用户(组)id,查询用户(组)名称
+        return dto;
     }
 
     @Override
     public ResultEnum addData(TablesecurityConfigDTO dto) {
 
-        try {
-            // dto -> po
-            TablesecurityConfigPO model = TablesecurityConfigMap.INSTANCES.dtoToPo(dto);
-            // 参数校验
-            if (model == null) {
-                return ResultEnum.PARAMTER_NOTNULL;
-            }
-
-            // 保存主表数据
-            this.save(model);
-
-            // 保存访问权限
-            dto.accessPermissionList.forEach(e -> {
-                PermissionManagementPO permissionManagementPo = new PermissionManagementPO();
-                permissionManagementPo.tableType = SecurityTableTypeEnum.TABLE_SECURITY.getValue();
-                permissionManagementPo.tableId = model.id;
-                permissionManagementPo.accessType = model.accessType;
-                permissionManagementPo.accessPermission = e;
-                permissionManagementServiceImpl.addData(permissionManagementPo);
-            });
-
-            return ResultEnum.SUCCESS;
-        } catch (Exception e) {
-            return ResultEnum.SAVE_DATA_ERROR;
+        // dto -> po
+        TablesecurityConfigPO model = TablesecurityConfigMap.INSTANCES.dtoToPo(dto);
+        // 参数校验
+        if (model == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
         }
+
+        // 保存主表数据
+        return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum editData(TablesecurityConfigDTO dto) {
-
-        // 修改的时候,访问权限直接走对应controller的单表添加或删除,没有修改
 
         // 参数校验
         TablesecurityConfigPO model = this.getById(dto.id);
@@ -92,37 +74,35 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
 
     @Override
     public ResultEnum deleteData(long id) {
-        try {
-            // 参数校验
-            TablesecurityConfigPO model = this.getById(id);
-            if (model == null) {
-                return ResultEnum.DATA_NOTEXISTS;
-            }
-
-            // 删除主表数据
-            baseMapper.deleteByIdWithFill(model);
-
-            // 查询当前用户or用户组的权限
-            List<PermissionManagementPO> list = permissionManagementServiceImpl.query()
-                    .eq("table_type", 1)
-                    .eq("table_id", id)
-                    .eq("access_type", 0)
-                    .list();
-            if (CollectionUtils.isNotEmpty(list)) {
-                // 删除权限
-                list.forEach(e -> permissionManagementMapper.deleteByIdWithFill(e));
-            }
-
-            return ResultEnum.SUCCESS;
-        } catch (Exception e) {
-            return ResultEnum.SAVE_DATA_ERROR;
+        // 参数校验
+        TablesecurityConfigPO model = this.getById(id);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // 执行删除
+        return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public List<TablesecurityConfigDTO> getList() {
         // 根据创建时间倒叙
         List<TablesecurityConfigPO> listPo = this.query().orderByDesc("create_time").list();
-        return TablesecurityConfigMap.INSTANCES.listPoToDto(listPo);
+        List<TablesecurityConfigDTO> list = TablesecurityConfigMap.INSTANCES.listPoToDto(listPo);
+
+        for (TablesecurityConfigDTO dto : list) {
+            // TODO 根据访问类型和用户(组)id,查询用户(组)名称
+        }
+
+        return list;
+    }
+
+    @Override
+    public ResultEnum editDefaultConfig(long defaultConfig) {
+
+        UpdateWrapper updateWrapper = new UpdateWrapper();
+        // 修改表中default_config这一列的数据
+        updateWrapper.set("default_config", defaultConfig);
+        return baseMapper.update(null, updateWrapper) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 }

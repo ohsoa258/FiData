@@ -47,5 +47,5 @@ public class TablesecurityConfigPO extends BasePO {
     /**
      * 访问权限(0: 编辑  1: 只读  2: 导入  3:导出)
      */
-//    public long accessPermission;
+    public long accessPermission;
 }

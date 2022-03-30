@@ -52,5 +52,13 @@ public interface TablesecurityConfigService extends IService<TablesecurityConfig
      * @return list
      */
     List<TablesecurityConfigDTO> getList();
+
+    /**
+     * 修改缺省配置
+     *
+     * @param defaultConfig defaultConfig
+     * @return 执行结果
+     */
+    ResultEnum editDefaultConfig(long defaultConfig);
 }
 
