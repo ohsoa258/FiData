@@ -37,9 +37,9 @@ public class RowSecurityConfigController {
      */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody RowSecurityConfigDTO rowsecurityConfig){
+    public ResultEntity<Object> addData(@RequestBody RowSecurityConfigDTO dto){
 
-        return ResultEntityBuild.build(service.addData(rowsecurityConfig));
+        return ResultEntityBuild.build(service.addData(dto));
     }
 
     /**

@@ -1,6 +1,9 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,39 +17,34 @@ import lombok.Data;
 @Data
 public class RowSecurityConfigDTO {
 
-    /**
-     * 主键
-     */
+    @ApiModelProperty(value = "主键(修改时必传)", required = true)
     public long id;
 
-    /**
-     * 缺省设置(0: 所有可读  1: 所有不可读)
-     */
+    @ApiModelProperty(value = "缺省设置(0: 空  1: 所有可读  2: 所有不可读--此时无论权限如何,当前表不可读取),默认值: 1", required = true)
     public long defaultConfig;
 
-    /**
-     * 数据源id
-     */
+    @ApiModelProperty(value = "数据源id", required = true)
     public long datasourceId;
 
-    /**
-     * 表id
-     */
+    @ApiModelProperty(value = "表id", required = true)
     public long tableId;
 
-    /**
-     * 权限名称
-     */
+    @ApiModelProperty(value = "权限名称", required = true)
     public String permissionsName;
 
-    /**
-     * 权限描述
-     */
+    @ApiModelProperty(value = "权限描述", required = true)
     public String permissionsDes;
 
-    /**
-     * 是否有效
-     */
+    @ApiModelProperty(value = "是否有效", required = true)
     public Boolean valid;
 
+    /**
+     * 过滤条件对象集合
+     */
+    public List<RowfilterConfigDTO> filterConditionDtoList;
+
+    /**
+     * 权限表格对象集合
+     */
+    public List<RowUserAssignmentDTO> rowUserAssignmentDTOList;
 }

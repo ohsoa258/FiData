@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.dto.datasecurity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -14,29 +15,28 @@ import lombok.Data;
 @Data
 public class RowUserAssignmentDTO {
 
-    /**
-     * 主键
-     */
+    @ApiModelProperty(value = "主键(修改时必传)", required = true)
     public long id;
 
-    /**
-     * tb_rowsecurity_config表  id
-     */
+    @ApiModelProperty(value = "tb_rowsecurity_config表id (修改时必传)", required = true)
     public long rowsecurityId;
 
     /**
-     * 类型: 0: 用户组  1: 用户
+     * 类型(0: 空  1: 用户组  2: 用户)
      */
-    public long type;
+    @ApiModelProperty(value = "类型(0: 空  1: 用户组  2: 用户)", required = true)
+    public Long type;
 
     /**
      * 用户id or 用户组id
      */
+    @ApiModelProperty(value = "用户id or 用户组id", required = true)
     public long userId;
 
     /**
-     * 权限(0: 只读  1: 编辑)
+     * 权限(0: 空  1: 只读  2: 编辑)
      */
-    public long permission;
+    @ApiModelProperty(value = "权限(0: 空  1: 只读  2: 编辑)", required = true)
+    public Long permission;
 
 }
