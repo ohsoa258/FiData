@@ -12,7 +12,7 @@ import lombok.Data;
  * @date 2022-03-28 15:47:33
  */
 @Data
-public class RowsecurityConfigDTO {
+public class RowSecurityConfigDTO {
 
     /**
      * 主键

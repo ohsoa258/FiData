@@ -3,11 +3,12 @@ package com.fisk.datagovernance.controller;
 import com.fisk.common.response.ResultEntity;
 import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datagovernance.dto.datasecurity.RowsecurityConfigDTO;
-import com.fisk.datagovernance.service.datasecurity.RowsecurityConfigService;
+import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
+import com.fisk.datagovernance.service.datasecurity.RowSecurityConfigService;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * @author lock
@@ -15,18 +16,18 @@ import org.springframework.web.bind.annotation.*;
  * @date 2022-03-28 15:47:33
  */
 @RestController
-@RequestMapping("/rowsecurityconfig")
-public class RowsecurityConfigController {
+@RequestMapping("/rowSecurityConfig")
+public class RowSecurityConfigController {
 
-    @Autowired
-    private RowsecurityConfigService service;
+    @Resource
+    private RowSecurityConfigService service;
 
     /**
      * 回显: 根据id查询数据
      */
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
-    public ResultEntity<RowsecurityConfigDTO> getData(@PathVariable("id") long id){
+    public ResultEntity<RowSecurityConfigDTO> getData(@PathVariable("id") long id){
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
@@ -36,7 +37,7 @@ public class RowsecurityConfigController {
      */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody RowsecurityConfigDTO rowsecurityConfig){
+    public ResultEntity<Object> addData(@RequestBody RowSecurityConfigDTO rowsecurityConfig){
 
         return ResultEntityBuild.build(service.addData(rowsecurityConfig));
     }
@@ -45,7 +46,8 @@ public class RowsecurityConfigController {
      * 修改
      */
     @PutMapping("/edit")
-    public ResultEntity<Object> editData(@RequestBody RowsecurityConfigDTO dto){
+    @ApiOperation(value = "修改")
+    public ResultEntity<Object> editData(@RequestBody RowSecurityConfigDTO dto){
 
         return ResultEntityBuild.build(service.editData(dto));
     }
@@ -58,6 +60,13 @@ public class RowsecurityConfigController {
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(service.deleteData(id));
+    }
+
+    @PutMapping("/editDefaultConfig/{defaultConfig}")
+    @ApiOperation(value = "修改表级缺省配置")
+    public ResultEntity<Object> editDefaultConfig(@PathVariable("defaultConfig") long defaultConfig) {
+
+        return ResultEntityBuild.build(service.editDefaultConfig(defaultConfig));
     }
 
 }

@@ -12,9 +12,9 @@ import java.util.List;
  * @author dick
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface TablesecurityConfigMap {
+public interface TableSecurityConfigMap {
 
-    TablesecurityConfigMap INSTANCES = Mappers.getMapper(TablesecurityConfigMap.class);
+    TableSecurityConfigMap INSTANCES = Mappers.getMapper(TableSecurityConfigMap.class);
 
     /**
      * dto => po

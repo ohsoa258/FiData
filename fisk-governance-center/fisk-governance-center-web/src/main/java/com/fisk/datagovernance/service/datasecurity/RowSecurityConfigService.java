@@ -2,17 +2,15 @@ package com.fisk.datagovernance.service.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.response.ResultEnum;
-import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
-import com.fisk.datagovernance.entity.datasecurity.TablesecurityConfigPO;
-
-import java.util.List;
+import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
+import com.fisk.datagovernance.entity.datasecurity.RowSecurityConfigPO;
 
 /**
  * @author lock
  * @email feihongz@fisksoft.com.cn
  * @date 2022-03-28 15:47:33
  */
-public interface TablesecurityConfigService extends IService<TablesecurityConfigPO> {
+public interface RowSecurityConfigService extends IService<RowSecurityConfigPO> {
 
     /**
      * 回显: 根据id查询数据
@@ -20,7 +18,7 @@ public interface TablesecurityConfigService extends IService<TablesecurityConfig
      * @param id id
      * @return 查询结果
      */
-    TablesecurityConfigDTO getData(long id);
+    RowSecurityConfigDTO getData(long id);
 
     /**
      * 添加
@@ -28,7 +26,7 @@ public interface TablesecurityConfigService extends IService<TablesecurityConfig
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(TablesecurityConfigDTO dto);
+    ResultEnum addData(RowSecurityConfigDTO dto);
 
     /**
      * 修改
@@ -36,7 +34,7 @@ public interface TablesecurityConfigService extends IService<TablesecurityConfig
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum editData(TablesecurityConfigDTO dto);
+    ResultEnum editData(RowSecurityConfigDTO dto);
 
     /**
      * 删除
@@ -47,14 +45,7 @@ public interface TablesecurityConfigService extends IService<TablesecurityConfig
     ResultEnum deleteData(long id);
 
     /**
-     * 获取表级安全列表
-     *
-     * @return list
-     */
-    List<TablesecurityConfigDTO> getList();
-
-    /**
-     * 修改缺省配置
+     * 修改表级缺省配置
      *
      * @param defaultConfig defaultConfig
      * @return 执行结果

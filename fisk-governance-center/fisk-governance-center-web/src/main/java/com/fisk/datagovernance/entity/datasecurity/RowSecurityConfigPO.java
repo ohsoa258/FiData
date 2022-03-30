@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_rowsecurity_config")
 @EqualsAndHashCode(callSuper = true)
-public class RowsecurityConfigPO extends BasePO {
+public class RowSecurityConfigPO extends BasePO {
 
     /**
      * 缺省设置(0: 所有可读  1: 所有不可读)

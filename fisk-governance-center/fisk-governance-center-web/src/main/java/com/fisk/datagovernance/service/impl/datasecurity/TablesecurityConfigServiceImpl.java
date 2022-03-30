@@ -6,10 +6,10 @@ import com.fisk.common.exception.FkException;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
 import com.fisk.datagovernance.entity.datasecurity.TablesecurityConfigPO;
-import com.fisk.datagovernance.map.datasecurity.TablesecurityConfigMap;
+import com.fisk.datagovernance.map.datasecurity.TableSecurityConfigMap;
 import com.fisk.datagovernance.mapper.datasecurity.PermissionManagementMapper;
 import com.fisk.datagovernance.mapper.datasecurity.TablesecurityConfigMapper;
-import com.fisk.datagovernance.service.datasecurity.TablesecurityConfigService;
+import com.fisk.datagovernance.service.datasecurity.TableSecurityConfigService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +22,7 @@ import java.util.List;
  * @date 2022-03-28 15:47:33
  */
 @Service
-public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityConfigMapper, TablesecurityConfigPO> implements TablesecurityConfigService {
+public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityConfigMapper, TablesecurityConfigPO> implements TableSecurityConfigService {
 
     @Resource
     private PermissionManagementServiceImpl permissionManagementServiceImpl;
@@ -39,7 +39,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         }
 
         // po -> dto
-        TablesecurityConfigDTO dto = TablesecurityConfigMap.INSTANCES.poToDto(po);
+        TablesecurityConfigDTO dto = TableSecurityConfigMap.INSTANCES.poToDto(po);
         // TODO 根据访问类型和用户(组)id,查询用户(组)名称
         return dto;
     }
@@ -48,7 +48,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
     public ResultEnum addData(TablesecurityConfigDTO dto) {
 
         // dto -> po
-        TablesecurityConfigPO model = TablesecurityConfigMap.INSTANCES.dtoToPo(dto);
+        TablesecurityConfigPO model = TableSecurityConfigMap.INSTANCES.dtoToPo(dto);
         // 参数校验
         if (model == null) {
             return ResultEnum.PARAMTER_NOTNULL;
@@ -69,7 +69,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         }
         // dto -> po
         // 执行修改
-        return this.updateById(TablesecurityConfigMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+        return this.updateById(TableSecurityConfigMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
     public List<TablesecurityConfigDTO> getList() {
         // 根据创建时间倒叙
         List<TablesecurityConfigPO> listPo = this.query().orderByDesc("create_time").list();
-        List<TablesecurityConfigDTO> list = TablesecurityConfigMap.INSTANCES.listPoToDto(listPo);
+        List<TablesecurityConfigDTO> list = TableSecurityConfigMap.INSTANCES.listPoToDto(listPo);
 
         for (TablesecurityConfigDTO dto : list) {
             // TODO 根据访问类型和用户(组)id,查询用户(组)名称

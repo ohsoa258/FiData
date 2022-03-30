@@ -5,7 +5,7 @@ import com.fisk.common.response.ResultEntityBuild;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
-import com.fisk.datagovernance.service.datasecurity.TablesecurityConfigService;
+import com.fisk.datagovernance.service.datasecurity.TableSecurityConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ import java.util.List;
 public class TableSecurityConfigController {
 
     @Resource
-    private TablesecurityConfigService service;
+    private TableSecurityConfigService service;
 
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
@@ -49,6 +49,7 @@ public class TableSecurityConfigController {
     }
 
     @PutMapping("/edit")
+    @ApiOperation(value = "修改")
     public ResultEntity<Object> editData(@RequestBody TablesecurityConfigDTO dto) {
 
         return ResultEntityBuild.build(service.editData(dto));
@@ -62,7 +63,7 @@ public class TableSecurityConfigController {
     }
 
     @PutMapping("/editDefaultConfig/{defaultConfig}")
-    @ApiOperation(value = "修改缺省配置")
+    @ApiOperation(value = "修改表级缺省配置")
     public ResultEntity<Object> editDefaultConfig(@PathVariable("defaultConfig") long defaultConfig) {
 
         return ResultEntityBuild.build(service.editDefaultConfig(defaultConfig));
