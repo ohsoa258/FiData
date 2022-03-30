@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.email.method.MailSenderUtils;
 import com.fisk.common.response.ResultEnum;
 import com.fisk.common.user.UserHelper;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
@@ -58,6 +59,9 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
 
     @Resource
     UserHelper userHelper;
+
+    @Resource
+    private MailSenderUtils mailSenderUtils;
 
     @Override
     public Page<NoticeVO> getAll(NoticeQueryDTO query) {
