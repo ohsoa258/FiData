@@ -60,9 +60,6 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     @Resource
     UserHelper userHelper;
 
-    @Resource
-    private MailSenderUtils mailSenderUtils;
-
     @Override
     public Page<NoticeVO> getAll(NoticeQueryDTO query) {
         return baseMapper.getAll(query.page, query.keyword);

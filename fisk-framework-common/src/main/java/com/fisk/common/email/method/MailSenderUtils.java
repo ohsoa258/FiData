@@ -18,7 +18,7 @@ import java.util.Properties;
  */
 public class MailSenderUtils {
 
-    public void send(MailServeiceDTO serveiceDTO, MailSenderDTO senderDTO) throws Exception {
+    public static void send(MailServeiceDTO serveiceDTO, MailSenderDTO senderDTO) throws Exception {
         if (senderDTO == null || senderDTO == null) {
             return;
         }
@@ -40,7 +40,6 @@ public class MailSenderUtils {
         }
         Session session = Session.getInstance(props,
                 new Authenticator() {
-
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
                         //匿名只能访问函数内容的final类型的变量，可以访问外部类的成员变量
@@ -53,11 +52,11 @@ public class MailSenderUtils {
         //构建邮件详情
         Message mimeMessage = createMimeMessage(session, senderDTO);
         //建立发送邮件的对象
-        Transport transport = session.getTransport();
+        session.getTransport();
         Transport.send(mimeMessage);
     }
 
-    private Message createMimeMessage(Session session, MailSenderDTO senderDTO) throws Exception {
+    private static Message createMimeMessage(Session session, MailSenderDTO senderDTO) throws Exception {
         // 1. 创建邮件对象
         Message mimeMessage = new MimeMessage(session);
         // 2. 发件人
@@ -82,7 +81,6 @@ public class MailSenderUtils {
         mimeMessage.saveChanges();
         return mimeMessage;
     }
-
 }
 
 
