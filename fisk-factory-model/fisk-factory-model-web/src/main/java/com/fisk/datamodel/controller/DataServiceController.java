@@ -1,9 +1,9 @@
 package com.fisk.datamodel.controller;
 
 import com.fisk.chartvisual.dto.IsDimensionDTO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.service.IDataService;
 import io.swagger.annotations.ApiOperation;

@@ -1,7 +1,7 @@
 package com.fisk.dataservice.dto.app;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
 import io.swagger.annotations.ApiModelProperty;
 

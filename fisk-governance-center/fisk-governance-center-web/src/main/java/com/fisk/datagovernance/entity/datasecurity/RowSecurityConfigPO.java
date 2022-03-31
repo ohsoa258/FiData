@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.entity.datasecurity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -27,12 +27,12 @@ public class RowSecurityConfigPO extends BasePO {
     /**
      * 数据源id
      */
-    public long datasourceId;
+    public String datasourceId;
 
     /**
      * 表id
      */
-    public long tableId;
+    public String tableId;
 
     /**
      * 权限名称

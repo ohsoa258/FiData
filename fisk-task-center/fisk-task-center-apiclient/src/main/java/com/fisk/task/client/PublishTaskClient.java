@@ -1,6 +1,6 @@
 package com.fisk.task.client;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;

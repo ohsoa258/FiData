@@ -1,6 +1,6 @@
 package com.fisk.task.service.task;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.task.dto.MQBaseDTO;
 
 public interface IBuildKfkTaskService {

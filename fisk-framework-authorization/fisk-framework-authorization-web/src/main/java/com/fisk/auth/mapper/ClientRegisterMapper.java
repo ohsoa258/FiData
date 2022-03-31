@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.auth.dto.clientregister.ClientRegisterPageDTO;
 import com.fisk.auth.entity.ClientRegisterPO;
 import com.fisk.auth.vo.ClientRegisterVO;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

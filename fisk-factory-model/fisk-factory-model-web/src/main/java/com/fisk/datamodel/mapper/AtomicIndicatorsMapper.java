@@ -1,11 +1,9 @@
 package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDetailDTO;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
-import com.fisk.datamodel.entity.AtomicIndicatorsPO;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

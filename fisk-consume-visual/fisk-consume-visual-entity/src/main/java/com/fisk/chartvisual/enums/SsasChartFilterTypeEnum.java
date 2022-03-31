@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * Ssas筛选类型枚举

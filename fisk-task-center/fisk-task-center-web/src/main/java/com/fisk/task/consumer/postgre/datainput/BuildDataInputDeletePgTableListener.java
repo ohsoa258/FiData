@@ -1,11 +1,8 @@
 package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.enums.task.BusinessTypeEnum;
-import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.doris.IDorisBuild;

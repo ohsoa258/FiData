@@ -2,9 +2,9 @@ package com.fisk.task.service.task.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.TaskStatusEnum;
@@ -13,8 +13,6 @@ import com.fisk.task.service.task.IBuildTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.KafkaException;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
 
 /**
  * @author gy

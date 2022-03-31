@@ -1,8 +1,8 @@
 package com.fisk.chartvisual.dto;
 
 import com.fisk.chartvisual.enums.FieldTypeEnum;
-import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
-import com.fisk.common.enums.chartvisual.TableOrderEnum;
+import com.fisk.common.core.enums.chartvisual.AggregationTypeEnum;
+import com.fisk.common.core.enums.chartvisual.TableOrderEnum;
 import lombok.Data;
 
 /**

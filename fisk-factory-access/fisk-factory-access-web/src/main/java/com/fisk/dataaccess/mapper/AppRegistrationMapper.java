@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
 import com.fisk.dataaccess.dto.DataAccessTreeDTO;

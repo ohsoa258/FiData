@@ -1,7 +1,8 @@
 package com.fisk.chartvisual.dto;
 
 import com.fisk.chartvisual.enums.GraphicTypeEnum;
-import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
+import com.fisk.common.core.enums.chartvisual.InteractiveTypeEnum;
+
 import javax.validation.constraints.NotNull;
 import java.util.List;
 

@@ -36,7 +36,7 @@ fk:
 
 mybatis-plus:
   configuration:
-    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
   global-config:
     db-config:
       id-type: auto

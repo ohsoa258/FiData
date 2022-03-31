@@ -1,6 +1,6 @@
 package com.fisk.datamanagement.dto.dataassets;
 
-import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import lombok.Data;
 
 import java.util.List;

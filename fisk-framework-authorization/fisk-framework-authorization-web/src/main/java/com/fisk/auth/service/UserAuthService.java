@@ -1,7 +1,7 @@
 package com.fisk.auth.service;
 
 import com.fisk.auth.dto.UserAuthDTO;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

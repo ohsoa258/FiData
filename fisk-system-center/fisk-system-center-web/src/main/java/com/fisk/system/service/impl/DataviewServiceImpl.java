@@ -3,7 +3,7 @@ package com.fisk.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.DataViewAddDTO;
 import com.fisk.system.dto.DataViewDTO;
 import com.fisk.system.dto.DataViewEditDTO;
@@ -19,9 +19,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static com.fisk.common.response.ResultEnum.DELETE_ERROR;
+import static com.fisk.common.core.response.ResultEnum.DELETE_ERROR;
 import static com.fisk.system.utils.paging.PagingUtils.startPage;
 
 /**

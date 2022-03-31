@@ -1,10 +1,10 @@
 package com.fisk.task.service.nifi;
 
 import com.davis.client.model.*;
-import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.SynchronousTypeEnum;
-import com.fisk.common.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.nifi.*;

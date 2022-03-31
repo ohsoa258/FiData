@@ -1,7 +1,7 @@
 package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.DataViewAddDTO;
 import com.fisk.system.dto.DataViewDTO;
 import com.fisk.system.dto.DataViewEditDTO;

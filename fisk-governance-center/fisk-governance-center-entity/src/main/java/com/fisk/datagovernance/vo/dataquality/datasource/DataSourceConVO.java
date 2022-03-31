@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.datasource;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

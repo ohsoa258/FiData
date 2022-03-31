@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;

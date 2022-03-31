@@ -1,6 +1,6 @@
 package com.fisk.datafactory.dto.taskschedule;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import lombok.Data;
 

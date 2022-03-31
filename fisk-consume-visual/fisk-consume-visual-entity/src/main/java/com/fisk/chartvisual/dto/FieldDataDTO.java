@@ -2,7 +2,7 @@ package com.fisk.chartvisual.dto;
 
 import com.fisk.chartvisual.enums.NodeTypeEnum;
 import com.fisk.chartvisual.enums.FieldTypeEnum;
-import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
+import com.fisk.common.core.enums.chartvisual.AggregationTypeEnum;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;

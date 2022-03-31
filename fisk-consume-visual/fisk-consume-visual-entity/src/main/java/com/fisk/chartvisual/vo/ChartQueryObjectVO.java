@@ -3,7 +3,7 @@ package com.fisk.chartvisual.vo;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.enums.GraphicTypeEnum;
 import com.fisk.chartvisual.enums.StorageEngineTypeEnum;
-import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
+import com.fisk.common.core.enums.chartvisual.InteractiveTypeEnum;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;

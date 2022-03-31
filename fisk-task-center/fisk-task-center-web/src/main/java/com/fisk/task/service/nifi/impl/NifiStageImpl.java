@@ -7,7 +7,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.BulletinEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;

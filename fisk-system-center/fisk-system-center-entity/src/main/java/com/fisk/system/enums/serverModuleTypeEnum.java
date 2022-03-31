@@ -1,7 +1,7 @@
 package com.fisk.system.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author WangYan

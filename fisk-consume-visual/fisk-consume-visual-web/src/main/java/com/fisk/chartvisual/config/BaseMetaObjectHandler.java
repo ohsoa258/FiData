@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.fisk.common.constants.SqlConstants;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.constants.SqlConstants;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.chartvisual.dto.ChartQueryDTO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 

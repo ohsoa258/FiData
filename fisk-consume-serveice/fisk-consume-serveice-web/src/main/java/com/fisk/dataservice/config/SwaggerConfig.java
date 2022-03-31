@@ -1,6 +1,6 @@
 package com.fisk.dataservice.config;
 
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.dataservice.FiskConsumeServeiceApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,9 +1,9 @@
 package com.fisk.datamanagement.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.service.IEntity;

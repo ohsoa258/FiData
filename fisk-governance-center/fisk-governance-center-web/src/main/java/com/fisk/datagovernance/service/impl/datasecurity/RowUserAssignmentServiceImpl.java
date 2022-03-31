@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.service.impl.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.RowUserAssignmentDTO;
 import com.fisk.datagovernance.entity.datasecurity.RowUserAssignmentPO;
 import com.fisk.datagovernance.mapper.datasecurity.RowUserAssignmentMapper;

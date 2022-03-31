@@ -2,9 +2,8 @@ package com.fisk.auth.config;
 
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.utils.JwtUtils;
-import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.framework.redis.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

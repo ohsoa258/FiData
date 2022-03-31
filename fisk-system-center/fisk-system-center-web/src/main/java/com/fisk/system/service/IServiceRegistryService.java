@@ -1,11 +1,8 @@
 package com.fisk.system.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.ServiceRegistryDTO;
 import com.fisk.system.dto.ServiceRegistryDataDTO;
-import com.fisk.system.entity.ServiceRegistryPO;
 
 import java.util.List;
 

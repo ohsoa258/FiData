@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import org.apache.ibatis.annotations.Mapper;

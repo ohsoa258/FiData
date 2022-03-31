@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.service;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.DbConnectionDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import com.fisk.dataaccess.dto.ftp.ExcelTreeDTO;

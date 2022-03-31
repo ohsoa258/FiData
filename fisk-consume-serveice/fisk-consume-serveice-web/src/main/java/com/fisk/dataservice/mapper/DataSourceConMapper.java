@@ -4,11 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 

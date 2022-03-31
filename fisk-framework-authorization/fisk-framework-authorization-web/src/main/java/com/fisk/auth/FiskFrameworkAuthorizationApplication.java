@@ -16,11 +16,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.auth.mapper")
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.auth",
-        "com.fisk.common.advice",
-        "com.fisk.common.redis",
-        "com.fisk.common.user",
-        "com.fisk.common.mybatis",
-        "com.fisk.common.filter"})
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.core.user",
+        "com.fisk.common.framework.mybatis",
+        "com.fisk.common.service.pageFilter"})
 public class FiskFrameworkAuthorizationApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskFrameworkAuthorizationApplication.class);

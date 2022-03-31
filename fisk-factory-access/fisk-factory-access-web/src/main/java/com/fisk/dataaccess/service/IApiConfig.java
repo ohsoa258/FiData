@@ -1,8 +1,8 @@
 package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.api.ApiUserDTO;
 import com.fisk.dataaccess.dto.api.GenerateDocDTO;

@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.dto;
 
-import com.fisk.common.dto.BaseDTO;
-import com.fisk.common.entity.BaseEntity;
+import com.fisk.common.core.baseObject.dto.BaseDTO;
+import com.fisk.common.core.baseObject.entity.BaseEntity;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -1,6 +1,6 @@
 package com.fisk.task.dto.doris;
 
-import com.fisk.common.dto.BaseDTO;
+import com.fisk.common.core.baseObject.dto.BaseDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

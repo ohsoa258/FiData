@@ -1,6 +1,6 @@
 package com.fisk.mdm.config;
 
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.mdm.FiskMdmModelApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

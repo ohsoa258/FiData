@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.enums.dataquality;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author dick

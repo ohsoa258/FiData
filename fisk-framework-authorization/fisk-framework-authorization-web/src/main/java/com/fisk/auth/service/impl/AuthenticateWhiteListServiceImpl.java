@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.entity.AuthenticateWhiteListPO;
 import com.fisk.auth.mapper.AuthenticateWhiteListMapper;
 import com.fisk.auth.service.IAuthenticateWhiteListService;
-import com.fisk.common.redis.RedisKeyEnum;
-import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 

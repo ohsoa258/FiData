@@ -1,7 +1,7 @@
 package com.fisk.system.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.dto.userinfo.UserPageDTO;
 import com.fisk.system.entity.UserPO;

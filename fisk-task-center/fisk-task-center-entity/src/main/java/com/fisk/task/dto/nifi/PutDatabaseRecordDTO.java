@@ -1,6 +1,6 @@
 package com.fisk.task.dto.nifi;
 
-import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

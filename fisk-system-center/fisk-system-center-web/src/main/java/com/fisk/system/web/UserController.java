@@ -2,9 +2,9 @@ package com.fisk.system.web;
 
 import com.fisk.auth.dto.UserDetail;
 import com.fisk.auth.utils.UserContext;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.userinfo.UserDTO;

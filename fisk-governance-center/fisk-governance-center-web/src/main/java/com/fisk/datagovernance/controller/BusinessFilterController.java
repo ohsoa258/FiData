@@ -1,9 +1,9 @@
 package com.fisk.datagovernance.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.BusinessFilterEditDTO;

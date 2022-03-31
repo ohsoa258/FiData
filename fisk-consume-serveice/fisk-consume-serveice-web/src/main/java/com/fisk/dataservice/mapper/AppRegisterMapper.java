@@ -1,16 +1,13 @@
 package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;
 import com.fisk.dataservice.vo.app.*;
-import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-import java.util.List;
 
 /**
  * 应用注册mapper

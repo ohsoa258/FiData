@@ -8,7 +8,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
 
 import java.sql.SQLException;
