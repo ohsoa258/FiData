@@ -33,6 +33,7 @@ public class SwaggerConfig {
     public static final String TAG_7 = "template-controller";
     public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "table-security-config-controller";
     public static final String DATA_MASKING_CONFIG_CONTROLLER = "data_masking_config_controller";
+    public static final String ROW_SECURITY_CONFIG_CONTROLLER = "row_security_config_controller";
 
     @Bean
     public Docket createRestApi() {
@@ -49,6 +50,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_7, "模板配置API"))
                 .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
+                .tags(new Tag(ROW_SECURITY_CONFIG_CONTROLLER, "行级安全API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
