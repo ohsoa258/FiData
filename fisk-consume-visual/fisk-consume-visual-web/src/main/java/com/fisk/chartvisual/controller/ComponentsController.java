@@ -1,10 +1,10 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.service.ComponentsService;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;

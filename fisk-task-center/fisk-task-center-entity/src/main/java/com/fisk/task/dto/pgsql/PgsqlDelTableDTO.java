@@ -1,6 +1,6 @@
 package com.fisk.task.dto.pgsql;
 
-import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import lombok.Data;
 

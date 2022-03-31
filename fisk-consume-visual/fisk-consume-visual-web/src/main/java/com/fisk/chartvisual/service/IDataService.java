@@ -1,11 +1,11 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObjectSsas;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQuerySsasObject;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;

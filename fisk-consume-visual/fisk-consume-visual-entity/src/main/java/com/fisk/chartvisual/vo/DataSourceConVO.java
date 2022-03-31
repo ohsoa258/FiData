@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
 
 /**

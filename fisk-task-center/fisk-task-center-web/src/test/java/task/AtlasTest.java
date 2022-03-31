@@ -1,9 +1,9 @@
 package task;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.TaskTypeEnum;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.doris.TableColumnInfoDTO;

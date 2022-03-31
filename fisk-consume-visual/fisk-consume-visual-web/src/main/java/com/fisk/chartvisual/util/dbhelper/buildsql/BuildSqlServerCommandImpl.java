@@ -1,8 +1,8 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQueryObject;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 
 /**
  * @author gy

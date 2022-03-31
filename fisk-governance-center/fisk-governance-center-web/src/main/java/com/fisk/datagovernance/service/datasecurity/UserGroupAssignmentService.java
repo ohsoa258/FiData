@@ -1,9 +1,16 @@
 package com.fisk.datagovernance.service.datasecurity;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.datagovernance.dto.datasecurity.UserGroupAssignmentDTO;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datagovernance.dto.datasecurity.usergroupassignment.AddUserGroupAssignmentDTO;
+import com.fisk.datagovernance.dto.datasecurity.usergroupassignment.UserGroupAssignmentDTO;
 import com.fisk.datagovernance.entity.datasecurity.UserGroupAssignmentPO;
+import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
+import com.fisk.system.dto.userinfo.UserPowerDTO;
+
+import java.util.List;
 
 /**
  * @author lock
@@ -13,35 +20,25 @@ import com.fisk.datagovernance.entity.datasecurity.UserGroupAssignmentPO;
 public interface UserGroupAssignmentService extends IService<UserGroupAssignmentPO> {
 
     /**
-     * 回显: 根据id查询数据
-     *
-     * @param id id
-     * @return 查询结果
+     * 分页获取系统用户信息
+     * @param dto
+     * @return
      */
-    UserGroupAssignmentDTO getData(long id);
+    Page<UserPowerDTO> getPageUserData(UserGroupQueryDTO dto);
 
     /**
-     * 添加
-     *
-     * @param dto dto
-     * @return 执行结果
+     * 用户组添加系统用户
+     * @param dto
+     * @return
      */
-    ResultEnum addData(UserGroupAssignmentDTO dto);
+    ResultEnum saveData(AddUserGroupAssignmentDTO dto);
 
     /**
-     * 修改
-     *
-     * @param dto dto
-     * @return 执行结果
+     * 获取用户组下所有系统用户id
+     * @param userGroupId
+     * @return
      */
-    ResultEnum editData(UserGroupAssignmentDTO dto);
+    List<Integer> getSelectedUser(long userGroupId);
 
-    /**
-     * 删除
-     *
-     * @param id id
-     * @return 执行结果
-     */
-    ResultEnum deleteData(long id);
 }
 

@@ -2,7 +2,7 @@ package com.fisk.auth.client;
 
 import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.dto.UserAuthDTO;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

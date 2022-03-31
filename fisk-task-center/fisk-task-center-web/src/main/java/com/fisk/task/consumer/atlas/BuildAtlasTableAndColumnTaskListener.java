@@ -7,7 +7,7 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
-import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;

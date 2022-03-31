@@ -2,7 +2,7 @@ package com.fisk.datagovernance.entity.dataquality;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 
 /**

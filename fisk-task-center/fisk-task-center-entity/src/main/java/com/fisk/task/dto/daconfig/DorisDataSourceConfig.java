@@ -1,7 +1,5 @@
 package com.fisk.task.dto.daconfig;
 
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
-
 /**
  * Author:DennyHui
  * CreateTime: 2021/6/30 17:40

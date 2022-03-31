@@ -1,8 +1,8 @@
 package com.fisk.datagovernance.service.impl.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.entity.datasecurity.PermissionManagementPO;
 import com.fisk.datagovernance.mapper.datasecurity.PermissionManagementMapper;
 import com.fisk.datagovernance.service.datasecurity.PermissionManagementService;

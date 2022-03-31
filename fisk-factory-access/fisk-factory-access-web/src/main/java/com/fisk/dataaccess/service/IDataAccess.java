@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.service;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 
 import java.util.List;

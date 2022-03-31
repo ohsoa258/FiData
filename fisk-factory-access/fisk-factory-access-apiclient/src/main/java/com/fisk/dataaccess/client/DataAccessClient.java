@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.client;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;

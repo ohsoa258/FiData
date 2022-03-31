@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.DataDoFieldDTO;
+import com.fisk.chartvisual.dto.contentsplit.DataDoFieldDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +14,7 @@ public interface BuildSqlService {
     /**
      * 白泽数据源生成执行sql
      * @param apiConfigureFieldList
+     * @param id  数据源id
      * @return
      */
     List<Map<String, Object>> query(List<DataDoFieldDTO> apiConfigureFieldList, Integer id);

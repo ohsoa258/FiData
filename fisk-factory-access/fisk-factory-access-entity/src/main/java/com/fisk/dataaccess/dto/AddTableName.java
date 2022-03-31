@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.dto;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import lombok.Data;
 
 /**

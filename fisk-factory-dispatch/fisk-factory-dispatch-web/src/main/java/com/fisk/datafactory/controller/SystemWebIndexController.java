@@ -1,8 +1,8 @@
 package com.fisk.datafactory.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import io.swagger.annotations.Api;

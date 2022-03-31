@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.doris;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;

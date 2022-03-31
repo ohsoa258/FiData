@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * 组件类型
@@ -10,6 +10,9 @@ import com.fisk.common.enums.BaseEnum;
 public enum ComponentsTypeEnum implements BaseEnum {
 
 
+    /**
+     * 组件类型
+     */
     MENU(0,"菜单"),
 
     COMPONENTS(1,"组件");

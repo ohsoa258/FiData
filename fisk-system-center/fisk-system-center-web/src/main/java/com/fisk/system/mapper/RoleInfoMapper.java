@@ -1,10 +1,9 @@
 package com.fisk.system.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RolePageDTO;
-import com.fisk.system.dto.roleinfo.RolePowerDTO;
 import com.fisk.system.entity.RoleInfoPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

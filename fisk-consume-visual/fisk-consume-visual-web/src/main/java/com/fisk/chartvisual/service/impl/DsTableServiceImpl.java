@@ -3,7 +3,9 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.chartVisual.ObtainTableDataDTO;
+import com.fisk.chartvisual.dto.chartVisual.TableInfoDTO;
+import com.fisk.chartvisual.dto.dsTable.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.entity.DsTableFieldPO;
 import com.fisk.chartvisual.entity.DsTablePO;
@@ -18,10 +20,10 @@ import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -408,6 +410,8 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                         case SQLSERVER:
                             dto1.setTargetType(SqlServerFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
                             break;
+                        default:
+                            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
                     }
                 } catch (Exception exception) {
                     exception.printStackTrace();

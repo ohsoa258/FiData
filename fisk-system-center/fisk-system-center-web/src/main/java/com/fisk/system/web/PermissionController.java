@@ -1,11 +1,14 @@
 package com.fisk.system.web;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
+import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.service.IRoleInfoService;
 import com.fisk.system.service.IRoleServiceAssignmentService;
 import com.fisk.system.service.IRoleUserAssignmentService;
@@ -46,6 +49,18 @@ public class PermissionController {
     @ApiOperation("分页获取所有用户信息")
     public ResultEntity<Object> getUserPageList(QueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.getPageUserData(dto));
+    }
+
+    @PostMapping("/getUserGroupAssignmentPageList")
+    @ApiOperation("数据治理-分页获取所有用户信息")
+    public ResultEntity<Page<UserPowerDTO>> getUserGroupAssignmentPageList(@RequestBody UserGroupQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.userGroupQuery(dto));
+    }
+
+    @PostMapping("/userGroupQuery")
+    @ApiOperation("数据治理-用户组筛选系统用户")
+    public ResultEntity<Page<UserPowerDTO>> userGroupQuery(@RequestBody UserGroupQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, userService.userGroupQuery(dto));
     }
 
     @GetMapping("/getRoleUser/{id}")

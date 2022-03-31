@@ -1,11 +1,11 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ReleaseChart;
+import com.fisk.chartvisual.dto.chartVisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartVisual.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 
 /**
  * @author WangYan

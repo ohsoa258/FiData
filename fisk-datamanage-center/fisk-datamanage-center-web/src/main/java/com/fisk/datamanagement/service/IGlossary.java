@@ -1,6 +1,6 @@
 package com.fisk.datamanagement.service;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 

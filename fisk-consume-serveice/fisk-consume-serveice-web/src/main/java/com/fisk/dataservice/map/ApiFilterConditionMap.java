@@ -1,6 +1,6 @@
 package com.fisk.dataservice.map;
 
-import com.fisk.common.utils.Dto.SqlWhereDto;
+import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.fisk.dataservice.dto.api.FilterConditionConfigDTO;
 import com.fisk.dataservice.entity.FilterConditionConfigPO;
 import com.fisk.dataservice.vo.api.FilterConditionConfigVO;

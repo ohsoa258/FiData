@@ -1,15 +1,13 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.DataSourceConDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Optional;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)

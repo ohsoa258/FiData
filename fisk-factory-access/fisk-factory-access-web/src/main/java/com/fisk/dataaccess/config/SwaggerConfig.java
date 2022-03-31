@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.config;
 
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.dataaccess.FiskFactoryAccessApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

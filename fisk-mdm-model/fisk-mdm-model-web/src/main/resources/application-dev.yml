@@ -53,7 +53,7 @@ management:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    default-enum-type-handler: com.fisk.common.mybatis.config.BaseEnumTypeHandler
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
   global-config:
     db-config:
       id-type: auto

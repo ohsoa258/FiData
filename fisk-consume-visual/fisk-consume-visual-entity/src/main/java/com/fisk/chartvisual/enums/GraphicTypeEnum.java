@@ -1,12 +1,16 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * 图形类型
  * @author JinXingWang
  */
 public enum GraphicTypeEnum implements BaseEnum {
+
+    /**
+     * 图形类型
+     */
     TABLE(3,"表格"),
     MATRIX(4,"矩阵"),
     DEFAULT(5,"其他");

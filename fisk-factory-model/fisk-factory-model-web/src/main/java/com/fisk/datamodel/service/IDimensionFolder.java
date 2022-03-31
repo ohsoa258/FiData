@@ -1,6 +1,6 @@
 package com.fisk.datamodel.service;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;

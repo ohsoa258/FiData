@@ -1,13 +1,13 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.ChartQueryFilter;
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryFilter;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ColumnDetails;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
+import com.fisk.common.core.enums.chartvisual.AggregationTypeEnum;
+import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
+import com.fisk.common.core.enums.chartvisual.InteractiveTypeEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

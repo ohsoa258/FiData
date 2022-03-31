@@ -2,17 +2,16 @@ package com.fisk.chartvisual.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
-import com.fisk.chartvisual.dto.TestConnectionDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConQuery;
+import com.fisk.chartvisual.dto.dataSource.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.chartvisual.vo.DimensionVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -70,7 +69,7 @@ public class DataSourceConManageController {
 
     @GetMapping("/getSSASDataStructure")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getSSASDataStructure(int id) {
-        return service.SSASDataStructure(id);
+    public ResultEntity<List<DataDomainVO>> getSsasDataStructure(int id) {
+        return service.ssasDataStructure(id);
     }
 }

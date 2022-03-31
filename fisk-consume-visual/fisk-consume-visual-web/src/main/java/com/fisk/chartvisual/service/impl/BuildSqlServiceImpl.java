@@ -1,15 +1,15 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.fisk.chartvisual.dto.DataDoFieldDTO;
-import com.fisk.chartvisual.dto.IndicatorDTO;
-import com.fisk.chartvisual.dto.IsDimensionDTO;
+import com.fisk.chartvisual.dto.contentsplit.DataDoFieldDTO;
+import com.fisk.chartvisual.dto.chartVisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartVisual.IsDimensionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.chartvisual.dto.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartVisual.IndicatorFeignDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,9 +25,9 @@ import static com.fisk.chartvisual.enums.FieldTypeEnum.COLUMN;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.ATOMIC_INDICATORS;
 import static com.fisk.chartvisual.enums.IndicatorTypeEnum.DERIVED_INDICATORS;
 import static com.fisk.chartvisual.util.dbhelper.database.DatabaseConnect.execQueryResultList;
-import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.AtomicHelper.aliasField;
-import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.AtomicHelper.*;
-import static com.fisk.chartvisual.util.dbhelper.whitePondbuidsql.DeriveHelper.*;
+import static com.fisk.chartvisual.util.dbhelper.whitepondbuidsql.AtomicHelper.aliasField;
+import static com.fisk.chartvisual.util.dbhelper.whitepondbuidsql.AtomicHelper.*;
+import static com.fisk.chartvisual.util.dbhelper.whitepondbuidsql.DeriveHelper.*;
 
 /**
  * @author WangYan
@@ -96,7 +96,7 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 .filter(e -> e.getType() == ATOMIC_INDICATORS).collect(Collectors.toList());
         // 派生指标数量
         List<IndicatorDTO> deriveCount = indicatorList.stream().filter(e -> e != null)
-                .filter(e -> e.getType() == DERIVED_INDICATORS && !e.getTimePeriod().equals("上一期")).collect(Collectors.toList());
+                .filter(e -> e.getType() == DERIVED_INDICATORS && !"上一期".equals(e.getTimePeriod())).collect(Collectors.toList());
 
         // 子查询别名
         AtomicInteger aliasCount = new AtomicInteger(0);
@@ -108,11 +108,12 @@ public class BuildSqlServiceImpl implements BuildSqlService {
         List<DataDoFieldDTO> tableNameList = tableNameSet.stream().collect(Collectors.toList());
 
         // 是否计算上一期
-        String last_issue_DeriveName = null;
+        String lastIssueDeriveName = null;
         if (!CollectionUtils.isEmpty(indicatorList)) {
-            Optional<IndicatorDTO> optional = indicatorList.stream().filter(item -> item.getTimePeriod().equals("上一期")).findFirst();
-            if (optional.isPresent())
-                last_issue_DeriveName = optional.get().getDeriveName();
+            Optional<IndicatorDTO> optional = indicatorList.stream().filter(item -> "上一期".equals(item.getTimePeriod())).findFirst();
+            if (optional.isPresent()){
+                lastIssueDeriveName = optional.get().getDeriveName();
+            }
         }
         // 拼接原子指标
         String atom = indicatorList.stream()
@@ -140,15 +141,17 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                 }).collect(Collectors.joining(" JOIN "));
 
         // 拼接派生指标
-        String finalLast_issue_DeriveName = last_issue_DeriveName;
+        String finalLastIssueDeriveName = lastIssueDeriveName;
         String derive = indicatorList.stream()
                 .filter(e -> e.getType() == DERIVED_INDICATORS)
                 .map(e -> {
                     StringBuilder deriveStr = new StringBuilder();
 
                     // 派生指标如果为上一期，跳过
-                    if (e.getTimePeriod().equals("上一期"))
+                    String lastTerm = "上一期";
+                    if (lastTerm.equals(e.getTimePeriod())){
                         return null;
+                    }
 
                     // 派生指标别名维度列
                     String deriveDim = apiConfigureFieldList.stream().filter(b -> b.getDimension() == OTHER && b.getFieldType() == COLUMN)
@@ -175,11 +178,11 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                     deriveStr.append(DERIVE + "." + e.getDeriveName());
                     // 判断是否需要计算上一期
 
-                    if (finalLast_issue_DeriveName != null) {
+                    if (finalLastIssueDeriveName != null) {
                         deriveStr.append(",");
                         deriveStr.append("lag(" + DERIVE + "." + e.getDeriveName() + ",1,0) ");
                         deriveStr.append("over (order by " + deriveDim + ") ");
-                        deriveStr.append("as '" + e.getDeriveName()+"_"+finalLast_issue_DeriveName + "' ");
+                        deriveStr.append("as '" + e.getDeriveName()+"_"+finalLastIssueDeriveName + "' ");
                     }
                     deriveStr.append(" FROM (" + deriveSql + ")" + " AS " + DERIVE);
 
@@ -196,8 +199,9 @@ public class BuildSqlServiceImpl implements BuildSqlService {
                             , str);
                     return deriveStr;
                 }).collect(Collectors.joining(" JOIN "));
-        if (finalLast_issue_DeriveName != null)
+        if (finalLastIssueDeriveName != null){
             derive = derive.replace("null JOIN ", "");
+        }
 
         return this.splicingIndicatorsSql(apiConfigureFieldList, escapeStr, atom, derive, str);
     }

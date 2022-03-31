@@ -1,9 +1,9 @@
 package com.fisk.dataservice.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.vo.app.*;

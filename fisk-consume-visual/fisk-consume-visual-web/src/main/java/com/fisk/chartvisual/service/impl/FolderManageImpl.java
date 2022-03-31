@@ -2,18 +2,18 @@ package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.FolderDTO;
-import com.fisk.chartvisual.dto.FolderEditDTO;
+import com.fisk.chartvisual.dto.folder.FolderDTO;
+import com.fisk.chartvisual.dto.folder.FolderEditDTO;
 import com.fisk.chartvisual.entity.FolderPO;
 import com.fisk.chartvisual.map.FolderMap;
 import com.fisk.chartvisual.mapper.FolderMapper;
 import com.fisk.chartvisual.service.IFolderManageService;
 import com.fisk.chartvisual.vo.FolderVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

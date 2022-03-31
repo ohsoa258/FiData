@@ -1,6 +1,6 @@
 package com.fisk.dataservice.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author dick

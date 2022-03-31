@@ -1,11 +1,10 @@
 package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsQueryDTO;
-import com.fisk.datamodel.dto.dimensionattribute.ModelAttributeMetaDataDTO;
 
 import java.util.List;
 

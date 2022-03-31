@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.contentsplit.ChildvisualDTO;
+import com.fisk.chartvisual.dto.chartVisual.ChartPropertyDTO;
+import com.fisk.chartvisual.dto.chartVisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryDTO;
+import com.fisk.chartvisual.dto.chartVisual.ReleaseChart;
 import com.fisk.chartvisual.entity.ChartChildvisualPO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.entity.DraftChartPO;
@@ -17,12 +21,12 @@ import com.fisk.chartvisual.mapper.DraftChartMapper;
 import com.fisk.chartvisual.mapper.FolderMapper;
 import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.fisk.chartvisual.util.dbhelper.Base64.ByteCodeUtils.byteConvertStringFun;
+import static com.fisk.chartvisual.util.dbhelper.base64.ByteCodeUtils.byteConvertStringFun;
 
 /**
  * @author gy
@@ -89,8 +93,8 @@ public class ChartManageImpl implements IChartManageService {
         List<ChildvisualDTO> poList = stringSplit(dto.content, Integer.parseInt(String.valueOf(model.getId())));
         if (!CollectionUtils.isEmpty(poList)){
             for (ChildvisualDTO po : poList) {
-                ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);
-                int insert = childvisualMapper.insert(childvisualPO);
+                ChartChildvisualPO childvisualPo = ChartMap.INSTANCES.dtoToPo(po);
+                int insert = childvisualMapper.insert(childvisualPo);
                 if (insert == 0) {
                     return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
                 }
@@ -153,10 +157,10 @@ public class ChartManageImpl implements IChartManageService {
                 DraftChartPO po=  draftChartMapper.selectById(id);
                 return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
-                ChartPO chartPO = chartMapper.selectById((id));
+                ChartPO chartPo = chartMapper.selectById((id));
                 String content = this.assemblySplicing(id);
-                chartPO.setContent(content);
-                return ChartMap.INSTANCES.poToVo(chartPO);
+                chartPo.setContent(content);
+                return ChartMap.INSTANCES.poToVo(chartPo);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -206,8 +210,8 @@ public class ChartManageImpl implements IChartManageService {
      * @param image
      */
     public String chartSplicing(Integer id,String noImage,String image){
-        ChartPO chartPO = chartMapper.selectById(id);
-        String context = chartPO.getContent();
+        ChartPO chartPo = chartMapper.selectById(id);
+        String context = chartPo.getContent();
         String chartContent = context.substring(1, context.length() - 1);
         StringBuilder str = new StringBuilder();
         str.append("{\"listChar\":[");
@@ -280,8 +284,8 @@ public class ChartManageImpl implements IChartManageService {
                     List<ChildvisualDTO> poList = stringSplit(dto.content, dto.id);
                     if (!CollectionUtils.isEmpty(poList)){
                         for (ChildvisualDTO po : poList) {
-                            ChartChildvisualPO childvisualPO = ChartMap.INSTANCES.dtoToPo(po);
-                            int insert = childvisualMapper.insert(childvisualPO);
+                            ChartChildvisualPO childvisualPo = ChartMap.INSTANCES.dtoToPo(po);
+                            int insert = childvisualMapper.insert(childvisualPo);
                             if (insert == 0) {
                                 return ResultEnum.SAVE_DATA_ERROR;
                             }

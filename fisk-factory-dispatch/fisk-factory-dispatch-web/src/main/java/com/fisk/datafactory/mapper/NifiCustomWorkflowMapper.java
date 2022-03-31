@@ -1,7 +1,7 @@
 package com.fisk.datafactory.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowPageDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;

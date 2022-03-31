@@ -1,7 +1,7 @@
 package com.fisk.task.service.pipeline.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.enums.task.TopicTypeEnum;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.mapper.TableTopicMapper;
 import com.fisk.task.service.pipeline.ITableTopicService;

@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.olap;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
@@ -11,7 +11,6 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.IOlap;

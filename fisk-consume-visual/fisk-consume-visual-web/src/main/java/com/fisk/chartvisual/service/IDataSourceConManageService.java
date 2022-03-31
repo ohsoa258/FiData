@@ -2,16 +2,15 @@ package com.fisk.chartvisual.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
-import com.fisk.chartvisual.dto.TestConnectionDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConQuery;
+import com.fisk.chartvisual.dto.dataSource.TestConnectionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.chartvisual.vo.DimensionVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 
 import java.util.List;
 
@@ -70,5 +69,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param id 数据源连接地址
      * @return Tabular或Cube下的数据结构
      */
-    ResultEntity<List<DataDomainVO>> SSASDataStructure(int id);
+    ResultEntity<List<DataDomainVO>> ssasDataStructure(int id);
 }

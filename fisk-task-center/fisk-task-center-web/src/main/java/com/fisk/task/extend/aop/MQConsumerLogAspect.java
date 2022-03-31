@@ -1,11 +1,11 @@
 package com.fisk.task.extend.aop;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.enums.task.MessageLevelEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.mdc.MDCHelper;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.utils.DateTimeUtils;
+import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.mdc.MDCHelper;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.TaskStatusEnum;

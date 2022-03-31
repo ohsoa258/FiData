@@ -1,6 +1,6 @@
 package com.fisk.task.service.doris.impl;
 
-import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
 import lombok.extern.slf4j.Slf4j;

@@ -1,9 +1,9 @@
 package com.fisk.task.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.service.task.IWsMessageService;
 import com.fisk.task.vo.WsMessageLogVO;

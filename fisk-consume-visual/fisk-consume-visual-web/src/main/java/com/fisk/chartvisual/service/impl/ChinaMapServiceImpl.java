@@ -1,9 +1,6 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.ChinaMapDTO;
-import com.fisk.chartvisual.entity.ProvincialAmountPO;
+import com.fisk.chartvisual.dto.contentsplit.ChinaMapDTO;
 import com.fisk.chartvisual.entity.ProvincialPO;
 import com.fisk.chartvisual.mapper.ProvincialAmountMapper;
 import com.fisk.chartvisual.mapper.ProvincialMapper;

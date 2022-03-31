@@ -1,7 +1,7 @@
 package com.fisk.auth.config;
 
 import com.fisk.auth.utils.JwtUtils;
-import com.fisk.common.redis.RedisUtil;
+import com.fisk.common.framework.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

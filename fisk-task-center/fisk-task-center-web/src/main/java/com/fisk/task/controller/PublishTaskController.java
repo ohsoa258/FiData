@@ -1,9 +1,9 @@
 package com.fisk.task.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.enums.task.TaskTypeEnum;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.TaskTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
@@ -14,7 +14,6 @@ import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
-import com.google.gson.Gson;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author gy

@@ -2,7 +2,6 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.dataservice.dto.logs.LogQueryDTO;
 import com.fisk.dataservice.entity.LogPO;
 import com.fisk.dataservice.vo.logs.ApiLogVO;

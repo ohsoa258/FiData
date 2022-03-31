@@ -1,15 +1,14 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.chartvisual.config.SwaggerConfig;
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ReleaseChart;
+import com.fisk.chartvisual.dto.chartVisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartVisual.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.service.DiagramManageService;
-import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.mapper.dataquality;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

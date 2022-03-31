@@ -1,8 +1,8 @@
 package com.fisk.mdm.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

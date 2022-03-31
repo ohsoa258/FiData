@@ -1,9 +1,11 @@
 package com.fisk.datagovernance.service.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.datagovernance.dto.datasecurity.ColumnUserAssignmentDTO;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datagovernance.dto.datasecurity.columnuserassignment.ColumnUserAssignmentDTO;
 import com.fisk.datagovernance.entity.datasecurity.ColumnUserAssignmentPO;
+
+import java.util.List;
 
 /**
  * @author lock
@@ -12,36 +14,21 @@ import com.fisk.datagovernance.entity.datasecurity.ColumnUserAssignmentPO;
  */
 public interface ColumnUserAssignmentService extends IService<ColumnUserAssignmentPO> {
 
-    /**
-     * 回显: 根据id查询数据
-     *
-     * @param id id
-     * @return 查询结果
-     */
-    ColumnUserAssignmentDTO getData(long id);
 
     /**
-     * 添加
-     *
-     * @param dto dto
-     * @return 执行结果
+     * 批量添加列级安全关联
+     * @param columnSecurityId
+     * @param dtoList
+     * @return
      */
-    ResultEnum addData(ColumnUserAssignmentDTO dto);
+    ResultEnum saveColumnUserAssignment(long columnSecurityId, List<ColumnUserAssignmentDTO> dtoList);
 
     /**
-     * 修改
-     *
-     * @param dto dto
-     * @return 执行结果
+     * 获取列级配置关联用户
+     * @param columnSecurityId
+     * @return
      */
-    ResultEnum editData(ColumnUserAssignmentDTO dto);
+    List<ColumnUserAssignmentDTO> listColumnUserAssignment(long columnSecurityId);
 
-    /**
-     * 删除
-     *
-     * @param id id
-     * @return 执行结果
-     */
-    ResultEnum deleteData(long id);
 }
 

@@ -1,6 +1,6 @@
 package com.fisk.datafactory.controller;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;

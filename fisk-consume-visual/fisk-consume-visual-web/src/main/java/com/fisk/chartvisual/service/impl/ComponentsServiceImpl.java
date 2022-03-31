@@ -2,8 +2,7 @@ package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
 import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
@@ -12,13 +11,13 @@ import com.fisk.chartvisual.mapper.ComponentsClassMapper;
 import com.fisk.chartvisual.mapper.ComponentsMapper;
 import com.fisk.chartvisual.mapper.ComponentsOptionMapper;
 import com.fisk.chartvisual.service.ComponentsService;
-import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
+import com.fisk.chartvisual.util.dbhelper.IoCloseUtil;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipHelper;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipUtils;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -324,8 +322,8 @@ public class ComponentsServiceImpl implements ComponentsService {
      * @return
      */
     public boolean isExistComponentsClass(Integer id){
-        ComponentsClassPO classPO = classMapper.selectById(id);
-        if (classPO == null){
+        ComponentsClassPO classPo = classMapper.selectById(id);
+        if (classPo == null){
             return false;
         }
 
@@ -360,7 +358,7 @@ public class ComponentsServiceImpl implements ComponentsService {
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
-            IOCloseUtil.close(bos, out);
+            IoCloseUtil.close(bos, out);
         }
     }
 

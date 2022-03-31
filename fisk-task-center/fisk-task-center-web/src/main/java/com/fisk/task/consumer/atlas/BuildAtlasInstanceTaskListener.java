@@ -1,14 +1,11 @@
 package com.fisk.task.consumer.atlas;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
-import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;

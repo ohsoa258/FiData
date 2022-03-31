@@ -1,13 +1,11 @@
 package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.entity.LogPO;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 /**
  * 日志 mapper

@@ -1,15 +1,14 @@
 package com.fisk.datamanagement.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.label.LabelDTO;
 import com.fisk.datamanagement.dto.label.LabelQueryDTO;
 import com.fisk.datamanagement.service.ILabel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 

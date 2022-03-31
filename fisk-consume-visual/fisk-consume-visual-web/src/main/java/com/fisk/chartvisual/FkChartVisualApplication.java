@@ -11,13 +11,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @data: 2021/5/25 10:53
  */
 @SpringBootApplication(scanBasePackages = {"com.fisk.chartvisual",
-        "com.fisk.common.advice",
-        "com.fisk.common.mdc",
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.mdc",
         "com.fisk.chartvisual.config",
-        "com.fisk.common.redis",
-        "com.fisk.common.feign",
-        "com.fisk.common.user",
-        "com.fisk.common.actuators"})
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.feign",
+        "com.fisk.common.core.user",
+        "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.chartvisual.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client", "com.fisk.task.client","com.fisk.datamodel.client"})
 @EnableApolloConfig

@@ -1,16 +1,14 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ColumnDetails;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
-import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.enums.chartvisual.AggregationTypeEnum;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.enums.chartvisual.AggregationTypeEnum;
+import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.List;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)

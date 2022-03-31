@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.mapper.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import org.apache.ibatis.annotations.Insert;
