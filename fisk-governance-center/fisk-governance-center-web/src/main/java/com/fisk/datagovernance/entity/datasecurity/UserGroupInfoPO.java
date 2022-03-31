@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_usergroup_info")
 @EqualsAndHashCode(callSuper = true)
-public class UsergroupInfoPO extends BasePO {
+public class UserGroupInfoPO extends BasePO {
 
     /**
      * 用户组名称

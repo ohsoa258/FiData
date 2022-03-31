@@ -188,35 +188,83 @@ public class UserServiceImpl implements IUserService {
             data = mapper.selectList(queryWrapper.orderByDesc("create_time"));
         }
         //计算分页
+        return  userPageQuery(data,dto.size,dto.page);
+    }
+
+    @Override
+    public Page<UserPowerDTO> userGroupQuery(UserGroupQueryDTO dto)
+    {
+        List<UserPO> data = new ArrayList<>();
+        QueryWrapper<UserPO> queryWrapper=new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(dto.name))
+        {
+            queryWrapper.lambda().like(UserPO::getUsername,dto.name);
+        }
+        if (!CollectionUtils.isEmpty(dto.userIdList))
+        {
+            //获取已选中用户
+            QueryWrapper<UserPO> userPOQueryWrapper = new QueryWrapper<>();
+            if (dto != null && StringUtils.isNotEmpty(dto.name)) {
+                userPOQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+            }
+            userPOQueryWrapper.in("id", dto.userIdList).orderByDesc("create_time");
+            List<UserPO> userPo = mapper.selectList(userPOQueryWrapper);
+            if (userPo != null || userPo.size() > 0) {
+                data.addAll(userPo);
+            }
+            //获取未选中用户
+            queryWrapper.notIn("id", dto.userIdList);
+            //获取下标
+            int index = data.size();
+            List<UserPO> userPo1 = mapper.selectList(queryWrapper.orderByDesc("create_time"));
+            if (userPo1 != null || userPo1.size() > 0) {
+                data.addAll(index, userPo1);
+            }
+        }else {
+            data = mapper.selectList(queryWrapper.orderByDesc("create_time"));
+        }
+        return userPageQuery(data,dto.size,dto.page);
+    }
+
+    /**
+     * 计算分页
+     * @param data
+     * @param size
+     * @param page
+     * @return
+     */
+    public Page<UserPowerDTO> userPageQuery(List<UserPO> data,int size,int page)
+    {
+        //计算分页
         Integer count = data.size();
         Integer pageCount = 0;
-        if (count % dto.size == 0) {
-            pageCount = count / dto.size;
+        if (count % size == 0) {
+            pageCount = count / size;
         } else {
-            pageCount = count / dto.size + 1;
+            pageCount = count / size + 1;
         }
         int fromIndex = 0;
         int toIndex = 0;
 
-        if (dto.page != pageCount) {
-            fromIndex = (dto.page - 1) * dto.size;
-            toIndex = fromIndex + dto.size;
+        if (page != pageCount) {
+            fromIndex = (page - 1) * size;
+            toIndex = fromIndex + size;
         } else {
-            fromIndex = (dto.page - 1) * dto.size;
+            fromIndex = (page - 1) * size;
             toIndex = count;
         }
         int total = data.size();
-        Page<UserPowerDTO> page = new Page<>();
+        Page<UserPowerDTO> pageData = new Page<>();
         if (total == 0) {
-            return page;
+            return pageData;
         }
         data = data.subList(fromIndex, toIndex);
-        page.setRecords(UserMap.INSTANCES.poToPageDto(data));
-        page.setCurrent(dto.getPage());
-        page.setSize(dto.getSize());
-        page.setTotal(total);
+        pageData.setRecords(UserMap.INSTANCES.poToPageDto(data));
+        pageData.setCurrent(page);
+        pageData.setSize(size);
+        pageData.setTotal(total);
 
-        return page;
+        return pageData;
     }
 
     /**
@@ -315,6 +363,13 @@ public class UserServiceImpl implements IUserService {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDTOS);
         userDTOS = mapper.getUserListByIds(ids);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDTOS);
+    }
+
+    @Override
+    public List<UserDropDTO> listUserDrops()
+    {
+        QueryWrapper<UserPO> queryWrapper=new QueryWrapper<>();
+        return UserMap.INSTANCES.poToDropDto(mapper.selectList(queryWrapper.orderByDesc("create_time")));
     }
 
 }

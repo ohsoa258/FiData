@@ -3,14 +3,14 @@ package com.fisk.datagovernance.service.datasecurity;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.ColumnsecurityConfigDTO;
-import com.fisk.datagovernance.entity.datasecurity.ColumnsecurityConfigPO;
+import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
 
 /**
  * @author lock
  * @email feihongz@fisksoft.com.cn
  * @date 2022-03-28 15:47:33
  */
-public interface ColumnsecurityConfigService extends IService<ColumnsecurityConfigPO> {
+public interface ColumnsecurityConfigService extends IService<ColumnSecurityConfigPO> {
 
     /**
      * 回显: 根据id查询数据

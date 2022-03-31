@@ -3,7 +3,7 @@ package com.fisk.datagovernance.service.impl.datasecurity;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.ColumnsecurityConfigDTO;
-import com.fisk.datagovernance.entity.datasecurity.ColumnsecurityConfigPO;
+import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
 import com.fisk.datagovernance.mapper.datasecurity.ColumnsecurityConfigMapper;
 import com.fisk.datagovernance.service.datasecurity.ColumnsecurityConfigService;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @date 2022-03-28 15:47:33
  */
 @Service
-public class ColumnsecurityConfigServiceImpl extends ServiceImpl<ColumnsecurityConfigMapper, ColumnsecurityConfigPO> implements ColumnsecurityConfigService {
+public class ColumnsecurityConfigServiceImpl extends ServiceImpl<ColumnsecurityConfigMapper, ColumnSecurityConfigPO> implements ColumnsecurityConfigService {
 
 
     @Override

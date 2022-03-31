@@ -1,9 +1,6 @@
-package com.fisk.datagovernance.entity.datasecurity;
+package com.fisk.datagovernance.dto.datasecurity.columnsecurityconfig;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * <p>
@@ -15,9 +12,12 @@ import lombok.EqualsAndHashCode;
  * @date 2022-03-28 15:47:33
  */
 @Data
-@TableName("tb_columnsecurity_config")
-@EqualsAndHashCode(callSuper = true)
-public class ColumnsecurityConfigPO extends BasePO {
+public class ColumnSecurityConfigDTO {
+
+    /**
+     * 主键
+     */
+    public long id;
 
     /**
      * 缺省设置(0: 所有可读  1: 所有不可读)
@@ -52,7 +52,5 @@ public class ColumnsecurityConfigPO extends BasePO {
     /**
      * 是否有效
      */
-    public boolean valid;
-
-
-            }
+    public Boolean valid;
+}

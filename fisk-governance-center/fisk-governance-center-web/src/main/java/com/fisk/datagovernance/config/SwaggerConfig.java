@@ -34,6 +34,10 @@ public class SwaggerConfig {
     public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "table-security-config-controller";
     public static final String DATA_MASKING_CONFIG_CONTROLLER = "data_masking_config_controller";
     public static final String ROW_SECURITY_CONFIG_CONTROLLER = "row_security_config_controller";
+    public static final String USER_GROUP_INFO="user-group-info-controller";
+    public static final String USER_GROUP_ASSIGNMENT="user-group-assignment-controller";
+    public static final String COLUMN_SECURITY_CONFIG="column-security-config-controller\n";
+
 
     @Bean
     public Docket createRestApi() {
@@ -51,6 +55,10 @@ public class SwaggerConfig {
                 .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
                 .tags(new Tag(ROW_SECURITY_CONFIG_CONTROLLER, "行级安全API"))
+                .tags(new Tag(USER_GROUP_INFO,"用户组"))
+                .tags(new Tag(USER_GROUP_ASSIGNMENT,"用户组用户"))
+                .tags(new Tag(COLUMN_SECURITY_CONFIG,"列级安全"))
+
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

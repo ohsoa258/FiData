@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.mapper.datasecurity;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import com.fisk.datagovernance.entity.datasecurity.ColumnsecurityConfigPO;
+import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2022-03-28 15:47:33
  */
 @Mapper
-public interface ColumnsecurityConfigMapper extends FKBaseMapper<ColumnsecurityConfigPO> {
+public interface ColumnsecurityConfigMapper extends FKBaseMapper<ColumnSecurityConfigPO> {
 	
 }

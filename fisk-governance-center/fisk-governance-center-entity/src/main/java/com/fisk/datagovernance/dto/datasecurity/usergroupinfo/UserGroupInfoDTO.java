@@ -1,8 +1,4 @@
-package com.fisk.datagovernance.dto.datasecurity;
-
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
+package com.fisk.datagovernance.dto.datasecurity.usergroupinfo;
 
 import lombok.Data;
 
@@ -16,7 +12,7 @@ import lombok.Data;
  * @date 2022-03-28 15:47:33
  */
 @Data
-public class UsergroupInfoDTO {
+public class UserGroupInfoDTO {
 
     /**
      *

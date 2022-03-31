@@ -23,43 +23,4 @@ public class ColumnUserAssignmentController {
     @Autowired
     private ColumnUserAssignmentService service;
 
-    /**
-     * 回显: 根据id查询数据
-     */
-    @GetMapping("/get/{id}")
-    @ApiOperation(value = "回显: 根据id查询数据")
-    public ResultEntity<ColumnUserAssignmentDTO> getData(@PathVariable("id") long id){
-
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
-    }
-
-    /**
-     * 保存
-     */
-    @PostMapping("/add")
-    @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody ColumnUserAssignmentDTO columnUserAssignment){
-
-        return ResultEntityBuild.build(service.addData(columnUserAssignment));
-    }
-
-    /**
-     * 修改
-     */
-    @PutMapping("/edit")
-    public ResultEntity<Object> editData(@RequestBody ColumnUserAssignmentDTO dto){
-
-        return ResultEntityBuild.build(service.editData(dto));
-    }
-
-    /**
-     * 删除
-     */
-    @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除")
-    public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
-
-        return ResultEntityBuild.build(service.deleteData(id));
-    }
-
 }
