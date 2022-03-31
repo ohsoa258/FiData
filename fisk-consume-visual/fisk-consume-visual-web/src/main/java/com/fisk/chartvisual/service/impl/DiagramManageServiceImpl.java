@@ -140,10 +140,10 @@ public class DiagramManageServiceImpl implements DiagramManageService {
                 DraftChartPO po=  draftChartMapper.selectById(id);
                 return DraftChartMap.INSTANCES.poToVo(po);
             case RELEASE:
-                ChartPO chartPO = chartMapper.selectById((id));
+                ChartPO chartPo = chartMapper.selectById((id));
                 String content = this.assemblySplicing(id);
-                chartPO.setContent(content);
-                return ChartMap.INSTANCES.poToVo(chartPO);
+                chartPo.setContent(content);
+                return ChartMap.INSTANCES.poToVo(chartPo);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

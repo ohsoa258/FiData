@@ -9,6 +9,9 @@ import com.fisk.chartvisual.dto.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
+import com.fisk.common.response.ResultEntity;
+import com.fisk.common.response.ResultEntityBuild;
+import com.fisk.common.response.ResultEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -69,7 +72,7 @@ public class DataSourceConManageController {
 
     @GetMapping("/getSSASDataStructure")
     @ApiOperation("根据数据源连接获取数据域")
-    public ResultEntity<List<DataDomainVO>> getSSASDataStructure(int id) {
-        return service.SSASDataStructure(id);
+    public ResultEntity<List<DataDomainVO>> getSsasDataStructure(int id) {
+        return service.ssasDataStructure(id);
     }
 }

@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper.zip;
 
-import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
+import com.fisk.chartvisual.util.dbhelper.IoCloseUtil;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -124,7 +124,7 @@ public class ZipUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
-            IOCloseUtil.close(bis,fos);
+            IoCloseUtil.close(bis,fos);
         }
     }
 }

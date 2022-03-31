@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.util.dbhelper.Base64;
+package com.fisk.chartvisual.util.dbhelper.base64;
 
 import javax.xml.bind.DatatypeConverter;
 

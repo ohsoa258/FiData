@@ -11,7 +11,7 @@ import com.fisk.chartvisual.mapper.ComponentsClassMapper;
 import com.fisk.chartvisual.mapper.ComponentsMapper;
 import com.fisk.chartvisual.mapper.ComponentsOptionMapper;
 import com.fisk.chartvisual.service.ComponentsService;
-import com.fisk.chartvisual.util.dbhelper.IOCloseUtil;
+import com.fisk.chartvisual.util.dbhelper.IoCloseUtil;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipHelper;
 import com.fisk.chartvisual.util.dbhelper.zip.ZipUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -322,8 +322,8 @@ public class ComponentsServiceImpl implements ComponentsService {
      * @return
      */
     public boolean isExistComponentsClass(Integer id){
-        ComponentsClassPO classPO = classMapper.selectById(id);
-        if (classPO == null){
+        ComponentsClassPO classPo = classMapper.selectById(id);
+        if (classPo == null){
             return false;
         }
 
@@ -358,7 +358,7 @@ public class ComponentsServiceImpl implements ComponentsService {
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
-            IOCloseUtil.close(bos, out);
+            IoCloseUtil.close(bos, out);
         }
     }
 

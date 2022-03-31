@@ -408,6 +408,8 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                         case SQLSERVER:
                             dto1.setTargetType(SqlServerFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
                             break;
+                        default:
+                            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
                     }
                 } catch (Exception exception) {
                     exception.printStackTrace();

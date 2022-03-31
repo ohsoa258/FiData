@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.stringInterception;
+package com.fisk.chartvisual.stringinterception;
 
 /**
  * @author WangYan

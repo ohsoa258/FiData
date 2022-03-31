@@ -106,17 +106,17 @@ public class BaseBuildMdx    {
     /**
      * 生成from mdx语句
      * @param filters 切片器 筛选器过滤条件
-     * @param CubeName cube名称
+     * @param cubeName cube名称
      * @return  from mdx语句
      */
-    public String  buildFromMdx(List<ChartQueryFilter> filters,String CubeName){
+    public String  buildFromMdx(List<ChartQueryFilter> filters,String cubeName){
         //筛选器条件
         List<ChartQueryFilter> filterList=filters.stream().filter(e->e.ssasChartFilterType==SsasChartFilterTypeEnum.FILTER).collect(Collectors.toList());
         //切片器
         List<ChartQueryFilter> sliceList=filters.stream().filter(e->e.ssasChartFilterType==SsasChartFilterTypeEnum.SLICE).collect(Collectors.toList());
         StringBuilder fromMdx=new StringBuilder();
         fromMdx.append("[");
-        fromMdx.append(CubeName);
+        fromMdx.append(cubeName);
         fromMdx.append("]");
         //筛选器数据过滤
         joinPartFromMdx(filterList,fromMdx );
@@ -263,7 +263,7 @@ public class BaseBuildMdx    {
         DataServiceResult rs=new DataServiceResult();
         List<Map<String,Object>> mapList=new ArrayList<>();
         for (Position row :cellSet.getAxes().get(1)){
-            Map<String,Object> map=new HashMap<>();
+            Map<String,Object> map=new HashMap<>(16);
             boolean isCurrentAll=false;
             for (Member member:row.getMembers()){
                 if(member.isAll()){

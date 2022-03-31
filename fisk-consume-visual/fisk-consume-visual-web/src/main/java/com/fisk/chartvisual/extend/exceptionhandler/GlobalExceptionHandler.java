@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.extend.ExceptionHandler;
+package com.fisk.chartvisual.extend.exceptionhandler;
 
 import com.fisk.common.framework.exception.AbstractGlobalExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

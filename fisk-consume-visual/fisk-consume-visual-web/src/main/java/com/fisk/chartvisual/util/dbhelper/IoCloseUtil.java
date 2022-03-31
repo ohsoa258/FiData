@@ -7,7 +7,7 @@ import java.io.IOException;
  * @author WangYan
  * @date 2022/2/10 18:03
  */
-public class IOCloseUtil {
+public class IoCloseUtil {
 
     /**
      *   IO流关闭工具类

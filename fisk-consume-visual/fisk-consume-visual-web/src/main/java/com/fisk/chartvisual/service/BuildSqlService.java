@@ -14,6 +14,7 @@ public interface BuildSqlService {
     /**
      * 白泽数据源生成执行sql
      * @param apiConfigureFieldList
+     * @param id  数据源id
      * @return
      */
     List<Map<String, Object>> query(List<DataDoFieldDTO> apiConfigureFieldList, Integer id);

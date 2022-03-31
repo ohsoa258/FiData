@@ -3,6 +3,7 @@ package com.fisk.chartvisual.service.impl;
 import com.fisk.chartvisual.dto.ChartQueryObject;
 import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.entity.ChartImagePO;
+import com.fisk.chartvisual.enums.PictureSuffixTypeEnum;
 import com.fisk.chartvisual.map.VisualizationMap;
 import com.fisk.chartvisual.mapper.ChartImageMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
@@ -34,7 +35,7 @@ import java.util.UUID;
 public class VisualizationServiceImpl implements VisualizationService {
 
     @Resource
-    BuildSqlService BuildSqlService;
+    BuildSqlService buildSqlService;
     @Resource
     IDataService db;
     @Resource
@@ -53,7 +54,7 @@ public class VisualizationServiceImpl implements VisualizationService {
 
         switch (objectVO.type) {
             case DMP:
-                dataServiceResult.setData(BuildSqlService.query(VisualizationMap.INSTANCES.dataDoFields(objectVO.columnDetails), objectVO.id));
+                dataServiceResult.setData(buildSqlService.query(VisualizationMap.INSTANCES.dataDoFields(objectVO.columnDetails), objectVO.id));
                 return dataServiceResult;
             case VIEW:
                 ChartQueryObject object = VisualizationMap.INSTANCES.dataDoObject(objectVO);
@@ -77,14 +78,18 @@ public class VisualizationServiceImpl implements VisualizationService {
         }
         String fileName = "";
         String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null){
+            return null;
+        }
+
         String uuid = UUID.randomUUID().toString();
-        if (originalFilename.endsWith(".jpg")) {
+        if (originalFilename.endsWith(PictureSuffixTypeEnum.JGP.getName())) {
             fileName = String.format("%s.jpg", uuid);
-        } else if (originalFilename.endsWith(".png")) {
+        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.PNG.getName())) {
             fileName = String.format("%s.jpg", uuid);
-        } else if (originalFilename.endsWith(".jpeg")) {
+        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.JPEG.getName())) {
             fileName = String.format("%s.jpeg", uuid);
-        } else if (originalFilename.endsWith(".bmp")) {
+        } else if (originalFilename.endsWith(PictureSuffixTypeEnum.BMP.getName())) {
             fileName = String.format("%s.bmp", uuid);
         } else {
             throw new FkException(ResultEnum.VISUAL_IMAGE_ERROR);
@@ -114,7 +119,7 @@ public class VisualizationServiceImpl implements VisualizationService {
             case VIEW:
                 return service.listDataDomain(dto.getId());
             case MDX:
-                return service.SSASDataStructure(dto.getId());
+                return service.ssasDataStructure(dto.getId());
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

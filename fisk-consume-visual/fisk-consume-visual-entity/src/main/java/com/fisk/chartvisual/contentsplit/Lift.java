@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.contentSplit;
+package com.fisk.chartvisual.contentsplit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

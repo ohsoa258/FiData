@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.util.dbhelper.whitePondbuidsql;
+package com.fisk.chartvisual.util.dbhelper.whitepondbuidsql;
 
 import com.fisk.chartvisual.dto.DataDoFieldDTO;
 import com.fisk.chartvisual.dto.IndicatorDTO;

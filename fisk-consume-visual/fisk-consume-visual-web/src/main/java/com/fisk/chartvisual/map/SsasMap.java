@@ -5,11 +5,7 @@ import com.fisk.chartvisual.entity.HierarchyPO;
 import com.fisk.chartvisual.entity.MeasurePO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DimensionVO;
-import com.fisk.chartvisual.vo.HierarchyVO;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -20,8 +16,8 @@ import java.util.List;
  * @author JinXingWang
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface SSASMap {
-    SSASMap INSTANCES = Mappers.getMapper(SSASMap.class);
+public interface SsasMap {
+    SsasMap INSTANCES = Mappers.getMapper(SsasMap.class);
 
 
     /**

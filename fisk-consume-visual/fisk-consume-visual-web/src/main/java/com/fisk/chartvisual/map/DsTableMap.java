@@ -19,6 +19,7 @@ public interface DsTableMap {
     /**
      * dto => po
      * @param dto
+     * @param id
      * @return
      */
     @Mappings({

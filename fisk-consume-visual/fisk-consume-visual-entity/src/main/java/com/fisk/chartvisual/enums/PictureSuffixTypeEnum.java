@@ -1,24 +1,22 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.core.enums.BaseEnum;
+import com.fisk.common.enums.BaseEnum;
 
 /**
- * 组件类型
- *
- * @author wangyan
+ * @author WangYan
+ * @date 2022/1/6 16:11
  */
-public enum ComponentsTypeEnum implements BaseEnum {
-
+public enum PictureSuffixTypeEnum implements BaseEnum {
 
     /**
-     * 组件类型
+     * 图片后缀名
      */
-    MENU(0,"菜单"),
+    JGP(1,".jpg"),
+    PNG(2,".png"),
+    JPEG(3,".jpeg"),
+    BMP(4,".bmp");
 
-    COMPONENTS(1,"组件");
-
-
-    ComponentsTypeEnum(int value, String name) {
+    PictureSuffixTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }

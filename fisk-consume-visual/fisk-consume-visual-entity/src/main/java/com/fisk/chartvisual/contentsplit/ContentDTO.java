@@ -1,4 +1,4 @@
-package com.fisk.chartvisual.contentSplit;
+package com.fisk.chartvisual.contentsplit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -13,15 +13,15 @@ import java.util.List;
 public class ContentDTO {
     @JsonProperty("bdColor")
     private String bdColor;
-    private int height;
-    private int width;
+    private Integer height;
+    private Integer width;
     @JsonProperty("selfAdaptWidth")
-    private boolean selfAdaptWidth;
+    private Boolean selfAdaptWidth;
     @JsonProperty("selfAdaptHeight")
-    private boolean selfAdaptHeight;
-    private int bigid;
+    private Boolean selfAdaptHeight;
+    private Integer bigid;
     @JsonProperty("listSlicer")
     private List<ListSlicer> listSlicer;
     @JsonProperty("bigTyple")
-    private int bigTyple;
+    private Integer bigTyple;
 }

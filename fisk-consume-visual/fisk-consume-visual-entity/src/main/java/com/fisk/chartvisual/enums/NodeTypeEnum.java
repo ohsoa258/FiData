@@ -7,6 +7,10 @@ import com.fisk.common.core.enums.BaseEnum;
  * @author JinXingWang
  */
 public enum NodeTypeEnum implements BaseEnum {
+
+    /**
+     * 维度类型
+     */
     MEASURE(0,"度量"),
     OTHER(1,"维度"),
     BUSINESS_DOMAIN(2,"业务域"),

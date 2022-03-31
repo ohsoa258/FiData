@@ -69,5 +69,5 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @param id 数据源连接地址
      * @return Tabular或Cube下的数据结构
      */
-    ResultEntity<List<DataDomainVO>> SSASDataStructure(int id);
+    ResultEntity<List<DataDomainVO>> ssasDataStructure(int id);
 }

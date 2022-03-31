@@ -46,6 +46,8 @@ public interface ComponentsMap {
     /**
      * dto => po
      * @param dto
+     * @param componentId
+     * @param uploadAddress
      * @return
      */
     @Mappings({

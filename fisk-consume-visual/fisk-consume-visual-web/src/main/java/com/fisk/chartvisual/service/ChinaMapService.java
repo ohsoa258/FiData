@@ -10,5 +10,9 @@ import java.util.List;
  */
 public interface ChinaMapService {
 
+    /**
+     * 获取中国地图省信息
+     * @return
+     */
     List<ChinaMapDTO> getAll();
 }
