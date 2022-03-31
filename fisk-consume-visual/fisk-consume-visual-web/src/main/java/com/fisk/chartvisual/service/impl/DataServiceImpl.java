@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.chartVisual.*;
+import com.fisk.chartvisual.dto.chartvisual.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;

@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.dataSource.DataSourceDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceDTO;
 import com.fisk.chartvisual.service.VisualizationService;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataDomainVO;

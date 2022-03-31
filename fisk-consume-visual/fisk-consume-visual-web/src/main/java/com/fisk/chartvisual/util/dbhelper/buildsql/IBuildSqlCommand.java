@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
-import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
-import com.fisk.chartvisual.dto.chartVisual.SlicerQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.SlicerQueryObject;
 
 /**
  * 构建sql命令

@@ -1,5 +1,5 @@
 package com.fisk.chartvisual.util.dbhelper.buildmdx;
-import com.fisk.chartvisual.dto.chartVisual.ColumnDetailsSsas;
+import com.fisk.chartvisual.dto.chartvisual.ColumnDetailsSsas;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import org.olap4j.Cell;
 import org.olap4j.CellSet;

@@ -1,15 +1,15 @@
 package com.fisk.chartvisual.service.impl;
 
 import com.fisk.chartvisual.dto.contentsplit.DataDoFieldDTO;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorDTO;
-import com.fisk.chartvisual.dto.chartVisual.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IsDimensionDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.BuildSqlService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;

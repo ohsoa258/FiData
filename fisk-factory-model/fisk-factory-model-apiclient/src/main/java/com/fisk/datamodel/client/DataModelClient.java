@@ -1,9 +1,9 @@
 package com.fisk.datamodel.client;
 
-import com.fisk.chartvisual.dto.chartVisual.IndicatorDTO;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorFeignDTO;
-import com.fisk.chartvisual.dto.chartVisual.IsDimensionDTO;
-import com.fisk.chartvisual.dto.chartVisual.TableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;

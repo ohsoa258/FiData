@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.util.dbhelper.whitepondbuidsql;
 
 import com.fisk.chartvisual.dto.contentsplit.DataDoFieldDTO;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import org.springframework.util.StringUtils;
 

@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.service.impl;
 
-import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
-import com.fisk.chartvisual.dto.dataSource.DataSourceDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.datasource.DataSourceDTO;
 import com.fisk.chartvisual.entity.ChartImagePO;
 import com.fisk.chartvisual.enums.PictureSuffixTypeEnum;
 import com.fisk.chartvisual.map.VisualizationMap;

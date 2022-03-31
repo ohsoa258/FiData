@@ -1,10 +1,10 @@
 package com.fisk.chartvisual.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.chartVisual.ChartPropertyDTO;
-import com.fisk.chartvisual.dto.chartVisual.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.chartVisual.ChartQueryDTO;
-import com.fisk.chartvisual.dto.chartVisual.ReleaseChart;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryDTO;
+import com.fisk.chartvisual.dto.chartvisual.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.core.response.ResultEntity;

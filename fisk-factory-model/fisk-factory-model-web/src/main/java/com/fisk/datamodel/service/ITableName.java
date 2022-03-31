@@ -1,9 +1,9 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorDTO;
-import com.fisk.chartvisual.dto.chartVisual.IndicatorFeignDTO;
-import com.fisk.chartvisual.dto.chartVisual.TableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 
 import java.util.List;

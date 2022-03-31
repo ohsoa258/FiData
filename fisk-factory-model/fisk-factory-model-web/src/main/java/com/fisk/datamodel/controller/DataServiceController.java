@@ -1,6 +1,6 @@
 package com.fisk.datamodel.controller;
 
-import com.fisk.chartvisual.dto.chartVisual.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartvisual.IsDimensionDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;

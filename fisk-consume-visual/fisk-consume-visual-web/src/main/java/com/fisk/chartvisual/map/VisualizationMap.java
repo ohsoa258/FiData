@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.map;
 
 import com.fisk.chartvisual.dto.contentsplit.DataDoFieldDTO;
-import com.fisk.chartvisual.dto.chartVisual.*;
+import com.fisk.chartvisual.dto.chartvisual.*;
 import com.fisk.chartvisual.enums.FieldTypeEnum;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;

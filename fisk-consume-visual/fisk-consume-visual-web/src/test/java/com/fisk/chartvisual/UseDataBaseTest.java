@@ -1,8 +1,8 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
-import com.fisk.chartvisual.dto.chartVisual.ColumnDetails;
-import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ColumnDetails;
+import com.fisk.chartvisual.dto.datasource.DataSourceConDTO;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataServiceResult;
