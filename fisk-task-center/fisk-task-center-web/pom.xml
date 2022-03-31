@@ -219,7 +219,8 @@
             <groupId>io.github.samuel-davis</groupId>
             <artifactId>original-swagger-java-client</artifactId>
             <version>1.0.0</version>
-            <scope>compile</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/original-swagger-java-client-1.0.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>
