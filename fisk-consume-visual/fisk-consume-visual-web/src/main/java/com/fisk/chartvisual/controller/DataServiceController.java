@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.chartvisual.dto.SlicerQuerySsasObject;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObjectSsas;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQuerySsasObject;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -63,6 +63,7 @@ public class DataServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, db.querySlicer(query));
     }
 
+    @Deprecated
     @ApiOperation("获取图表数据(SSAS)")
     @PostMapping("/get_ssas")
     public ResultEntity<DataServiceResult> getSsas(@Validated @RequestBody ChartQueryObjectSsas query) {

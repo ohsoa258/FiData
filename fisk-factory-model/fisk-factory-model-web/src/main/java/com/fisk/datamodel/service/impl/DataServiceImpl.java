@@ -11,7 +11,7 @@ import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.IDataService;
-import com.fisk.chartvisual.dto.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartVisual.IsDimensionDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

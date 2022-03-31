@@ -2,16 +2,13 @@ package com.fisk.chartvisual.controller;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.DataSourceConDTO;
-import com.fisk.chartvisual.dto.DataSourceConEditDTO;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
-import com.fisk.chartvisual.dto.TestConnectionDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConQuery;
+import com.fisk.chartvisual.dto.dataSource.TestConnectionDTO;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;

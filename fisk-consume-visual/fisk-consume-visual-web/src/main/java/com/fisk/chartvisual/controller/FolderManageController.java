@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.FolderDTO;
-import com.fisk.chartvisual.dto.FolderEditDTO;
+import com.fisk.chartvisual.dto.folder.FolderDTO;
+import com.fisk.chartvisual.dto.folder.FolderEditDTO;
 import com.fisk.chartvisual.service.IFolderManageService;
 import com.fisk.chartvisual.vo.FolderVO;
 import com.fisk.common.core.response.ResultEntity;

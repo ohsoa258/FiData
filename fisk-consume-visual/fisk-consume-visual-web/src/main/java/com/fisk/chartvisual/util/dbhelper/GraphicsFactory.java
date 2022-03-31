@@ -5,8 +5,8 @@ import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.util.dbhelper.buildmdx.BuildLinePieMdx;
 import com.fisk.chartvisual.util.dbhelper.buildmdx.BuildMatrixMdx;
 import com.fisk.chartvisual.util.dbhelper.buildmdx.BuildTableMdx;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 
 /**
  * Chart图形工厂

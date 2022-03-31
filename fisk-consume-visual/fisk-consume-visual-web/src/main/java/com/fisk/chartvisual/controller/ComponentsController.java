@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.service.ComponentsService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;

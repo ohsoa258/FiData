@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.ChartQueryDTO;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryDTO;
 import com.fisk.chartvisual.entity.ChartPO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.common.framework.mybatis.FKBaseMapper;

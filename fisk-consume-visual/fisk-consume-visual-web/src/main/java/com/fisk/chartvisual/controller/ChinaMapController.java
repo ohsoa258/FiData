@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.chartvisual.dto.ChinaMapDTO;
+import com.fisk.chartvisual.dto.contentsplit.ChinaMapDTO;
 import com.fisk.chartvisual.service.ChinaMapService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;

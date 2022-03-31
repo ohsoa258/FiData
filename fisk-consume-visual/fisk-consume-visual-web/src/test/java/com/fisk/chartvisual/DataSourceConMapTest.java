@@ -1,6 +1,6 @@
 package com.fisk.chartvisual;
 
-import com.fisk.chartvisual.dto.DataSourceConDTO;
+import com.fisk.chartvisual.dto.dataSource.DataSourceConDTO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.map.DataSourceConMap;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;

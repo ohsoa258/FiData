@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.util.dbhelper.buildmdx;
-import com.fisk.chartvisual.dto.ChartQueryFilter;
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
-import com.fisk.chartvisual.dto.ColumnDetailsSsas;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryFilter;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObjectSsas;
+import com.fisk.chartvisual.dto.chartVisual.ColumnDetailsSsas;
 import com.fisk.chartvisual.enums.DragElemTypeEnum;
 import com.fisk.chartvisual.enums.SsasChartFilterTypeEnum;
 import com.fisk.chartvisual.vo.DataServiceResult;

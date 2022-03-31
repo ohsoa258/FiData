@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.service;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import org.springframework.web.multipart.MultipartFile;

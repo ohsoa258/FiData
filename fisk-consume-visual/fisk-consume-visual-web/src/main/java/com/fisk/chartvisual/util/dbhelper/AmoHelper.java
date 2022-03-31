@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.dto.ChartQueryObjectSsas;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObjectSsas;
 import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DimensionPO;
 import com.fisk.chartvisual.entity.HierarchyPO;

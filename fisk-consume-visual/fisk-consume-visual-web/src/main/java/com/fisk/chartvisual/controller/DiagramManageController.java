@@ -1,8 +1,8 @@
 package com.fisk.chartvisual.controller;
 
 import com.fisk.chartvisual.config.SwaggerConfig;
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ReleaseChart;
+import com.fisk.chartvisual.dto.chartVisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.chartVisual.ReleaseChart;
 import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.service.DiagramManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;

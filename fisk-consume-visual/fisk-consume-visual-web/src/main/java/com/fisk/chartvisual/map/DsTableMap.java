@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.DsTableFieldDTO;
+import com.fisk.chartvisual.dto.dsTable.DsTableFieldDTO;
 import com.fisk.chartvisual.entity.DsTableFieldPO;
 import com.fisk.chartvisual.entity.DsTablePO;
 import org.mapstruct.*;

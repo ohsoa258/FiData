@@ -2,10 +2,10 @@ package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.chartvisual.dto.ChartQueryFilter;
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryFilter;
+import com.fisk.chartvisual.dto.chartVisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartVisual.ColumnDetails;
+import com.fisk.chartvisual.dto.chartVisual.SlicerQueryObject;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;

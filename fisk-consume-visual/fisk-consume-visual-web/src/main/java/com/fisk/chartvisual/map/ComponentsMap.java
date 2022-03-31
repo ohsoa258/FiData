@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.components.*;
 import com.fisk.chartvisual.entity.ComponentsClassPO;
 import com.fisk.chartvisual.entity.ComponentsOptionPO;
 import com.fisk.chartvisual.entity.ComponentsPO;
