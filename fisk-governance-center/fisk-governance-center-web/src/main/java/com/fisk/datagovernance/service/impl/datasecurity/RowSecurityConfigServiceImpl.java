@@ -3,9 +3,10 @@ package com.fisk.datagovernance.service.impl.datasecurity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowUserAssignmentDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowfilterConfigDTO;
@@ -19,6 +20,7 @@ import com.fisk.datagovernance.mapper.datasecurity.RowSecurityConfigMapper;
 import com.fisk.datagovernance.mapper.datasecurity.RowUserAssignmentMapper;
 import com.fisk.datagovernance.mapper.datasecurity.RowfilterConfigMapper;
 import com.fisk.datagovernance.service.datasecurity.RowSecurityConfigService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,9 +125,21 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
         // 行级权限对象集合
         List<RowUserAssignmentDTO> rowUserAssignmentDtoList = dto.rowUserAssignmentDTOList;
 
-        // 修改tb_rowsecurity_config表数据
+        // 更新操作前,先查出过滤条件表和主表的关联数据,只取id
+        List<RowfilterConfigPO> beforeUpdateRowFilterPoIdList = rowfilterConfigServiceImpl.list(Wrappers.<RowfilterConfigPO>lambdaQuery()
+                // where rowsecurity_id = dto.id
+                .eq(RowfilterConfigPO::getRowsecurityId, dto.id)
+                // select id from tb_rowfilter_config
+                .select(RowfilterConfigPO::getId));
+
+        // 更新操作前,先查出权限表和主表的关联数据,只取id
+        List<RowUserAssignmentPO> beforeUpdateRowUserPoIdList = rowUserAssignmentServiceImpl.list(Wrappers.<RowUserAssignmentPO>lambdaQuery()
+                .eq(RowUserAssignmentPO::getRowsecurityId, dto.id)
+                .select(RowUserAssignmentPO::getId));
+
+        // 1.0修改tb_rowsecurity_config表数据
         RowSecurityConfigPO rowSecurityConfigPo = RowSecurityConfigMap.INSTANCES.dtoToPo(dto);
-        // 参数校验
+        // 1.1参数校验
         RowSecurityConfigPO model = this.getById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -133,27 +147,70 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
         if (rowSecurityConfigPo == null || filterConditionDtoList.isEmpty() || rowUserAssignmentDtoList.isEmpty()) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
-        // 判断名称是否重复
+        // 1.2判断名称是否重复
         QueryWrapper<RowSecurityConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(RowSecurityConfigPO::getPermissionsName, dto.permissionsName);
         RowSecurityConfigPO po = baseMapper.selectOne(queryWrapper);
         if (po != null && po.id != dto.id) {
             return ResultEnum.ROW_SECURITYNAME_EXISTS;
         }
+        // 1.3修改
         boolean update = this.updateById(rowSecurityConfigPo);
         if (!update) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 
-        // 批量修改tb_rowfilter_config表数据
-        update = rowfilterConfigServiceImpl.updateBatchById(RowFilterConfigMap.INSTANCES.listDtoToPo(filterConditionDtoList));
+        // 2.0批量修改tb_rowfilter_config表数据(增删改)
+        List<RowfilterConfigPO> rowfilterConfigPoList = RowFilterConfigMap.INSTANCES.listDtoToPo(filterConditionDtoList);
+        // 2.1批量添加or保存
+        update = rowfilterConfigServiceImpl.saveOrUpdateBatch(rowfilterConfigPoList);
         if (!update) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
+        // 2.2筛选出id不为空的,即前端修改的数据
+        List<RowfilterConfigPO> webUpdateByRowFilter = rowfilterConfigPoList.stream().filter(e -> StringUtils.isNotEmpty(String.valueOf(e.id))).collect(Collectors.toList());
 
-        // 批量修改tb_row_user_assignment表数据
-        update = rowUserAssignmentServiceImpl.updateBatchById(RowUserAssignmentMap.INSTANCES.listDtoToPo(rowUserAssignmentDtoList));
+        // 2.3只取修改数据的id
+        List<RowfilterConfigPO> webUpdateByRowFilterPoIdList = webUpdateByRowFilter.stream().map(e -> {
+            RowfilterConfigPO row = new RowfilterConfigPO();
+            row.setId(e.id);
+            return row;
+        }).collect(Collectors.toList());
+
+        // 2.4用更新操作前库中存储的beforeUpdateRowFilterPoIdList--A 和 本次更新的webUpdateByRowFilterPoIdList--B 做比较(对象只取id),
+        // B中哪个不在A集合里,哪个就是前端没传的,即前端删除了这一条数据
+        List<RowfilterConfigPO> webDeleteDataByRowFilter = beforeUpdateRowFilterPoIdList.stream().filter(e -> !webUpdateByRowFilterPoIdList.contains(e)).collect(Collectors.toList());
+        System.out.println("webDeleteDataByRowFilter删除的数据为: " + webDeleteDataByRowFilter);
+        // 2.5批量删除
+        try {
+            webDeleteDataByRowFilter.stream().map(e -> rowfilterConfigMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+        } catch (Exception e) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
+        // 3.0批量修改tb_row_user_assignment表数据  webUpdateByRowUserList
+        List<RowUserAssignmentPO> rowUserAssignmentPoList = RowUserAssignmentMap.INSTANCES.listDtoToPo(rowUserAssignmentDtoList);
+        // 3.1批量添加or保存
+        update = rowUserAssignmentServiceImpl.saveOrUpdateBatch(rowUserAssignmentPoList);
         if (!update) {
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+        // 3.2筛选出id不为空的,即前端修改的数据
+        List<RowUserAssignmentPO> webUpdateByRowUserList = rowUserAssignmentPoList.stream().filter(e -> StringUtils.isNotEmpty(String.valueOf(e.id))).collect(Collectors.toList());
+        // 3.3只取修改数据的id
+        List<RowUserAssignmentPO> webUpdateByRowUserPoIdList = webUpdateByRowUserList.stream().map(e -> {
+            RowUserAssignmentPO userAssignmentPo = new RowUserAssignmentPO();
+            userAssignmentPo.setId(e.id);
+            return userAssignmentPo;
+        }).collect(Collectors.toList());
+        // 3.4用更新操作前库中存储的beforeUpdateRowUserPoIdList--C 和 本次更新的webUpdateByRowUserPoIdList--D 做比较(对象只取id),
+        // C中哪个不在D集合里,哪个就是前端没传的,即前端删除了这一条数据
+        List<RowUserAssignmentPO> webDeleteDataByRowUser = beforeUpdateRowUserPoIdList.stream().filter(e -> !webUpdateByRowUserPoIdList.contains(e)).collect(Collectors.toList());
+        System.out.println("webDeleteDataByRowUser删除的数据为: " + webDeleteDataByRowUser);
+        // 3.5批量删除
+        try {
+            webDeleteDataByRowUser.stream().map(e -> rowUserAssignmentMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+        } catch (Exception e) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 
@@ -193,5 +250,16 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
         // 修改表中default_config这一列的数据
         updateWrapper.set("default_config", defaultConfig);
         return baseMapper.update(null, updateWrapper) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<RowSecurityConfigDTO> getList() {
+
+        QueryWrapper<RowSecurityConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().select(RowSecurityConfigPO::getId).orderByDesc(RowSecurityConfigPO::getCreateTime);
+
+        List<RowSecurityConfigPO> idList = baseMapper.selectList(queryWrapper);
+        System.out.println("idList = " + idList);
+        return idList.stream().map(e -> this.getData(e.id)).collect(Collectors.toList());
     }
 }

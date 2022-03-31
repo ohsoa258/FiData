@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author lock
@@ -33,6 +34,13 @@ public class RowSecurityConfigController {
     public ResultEntity<RowSecurityConfigDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
+    }
+
+    @GetMapping("/getList")
+    @ApiOperation(value = "获取行级安全列表")
+    public ResultEntity<List<RowSecurityConfigDTO>> getList() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getList());
     }
 
     /**
