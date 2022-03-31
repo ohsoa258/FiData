@@ -1,6 +1,6 @@
 package com.fisk.task.dto.task;
 
-import com.fisk.common.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.Data;

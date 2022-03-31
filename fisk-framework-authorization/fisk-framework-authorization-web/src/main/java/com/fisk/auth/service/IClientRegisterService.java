@@ -7,7 +7,7 @@ import com.fisk.auth.dto.clientregister.ClientRegisterQueryDTO;
 import com.fisk.auth.entity.ClientRegisterPO;
 import com.fisk.auth.vo.ClientRegisterVO;
 import com.fisk.common.filter.dto.FilterFieldDTO;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 
 import java.util.List;
 

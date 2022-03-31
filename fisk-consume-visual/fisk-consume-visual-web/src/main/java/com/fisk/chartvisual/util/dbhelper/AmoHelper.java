@@ -7,17 +7,20 @@ import com.fisk.chartvisual.entity.HierarchyPO;
 import com.fisk.chartvisual.entity.MeasurePO;
 import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import lombok.extern.slf4j.Slf4j;
 import org.olap4j.*;
 import org.olap4j.metadata.*;
 import org.springframework.util.StopWatch;
+
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author JinXingWang

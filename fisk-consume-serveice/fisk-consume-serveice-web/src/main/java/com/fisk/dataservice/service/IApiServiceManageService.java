@@ -1,6 +1,6 @@
 package com.fisk.dataservice.service;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 

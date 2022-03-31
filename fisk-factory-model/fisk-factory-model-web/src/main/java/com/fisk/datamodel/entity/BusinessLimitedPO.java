@@ -1,13 +1,12 @@
 package com.fisk.datamodel.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 /**
  * @author cfk
  */

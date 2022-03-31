@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.mapper.datasecurity;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.datasecurity.RowUserAssignmentPO;
 import org.apache.ibatis.annotations.Mapper;
 

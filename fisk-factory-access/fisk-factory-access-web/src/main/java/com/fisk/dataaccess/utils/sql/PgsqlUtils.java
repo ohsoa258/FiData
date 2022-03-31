@@ -2,8 +2,8 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;

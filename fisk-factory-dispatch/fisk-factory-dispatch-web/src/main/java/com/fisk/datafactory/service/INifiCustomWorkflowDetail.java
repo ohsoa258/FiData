@@ -1,8 +1,8 @@
 package com.fisk.datafactory.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;

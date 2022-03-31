@@ -1,6 +1,6 @@
 package com.fisk.system.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.system.entity.RoleServiceAssignmentPO;
 
 /**

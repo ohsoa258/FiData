@@ -1,8 +1,8 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

@@ -1,6 +1,6 @@
 package com.fisk.datafactory.client;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;

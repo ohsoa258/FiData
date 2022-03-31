@@ -1,7 +1,7 @@
 package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.api.ApiRegisterQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;

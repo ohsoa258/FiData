@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
@@ -212,7 +212,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     /**
-     * @return com.fisk.common.response.ResultEntity<java.lang.String>
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
      * @description 生成数据校验强规则
      * @author dick
      * @date 2022/3/25 13:59

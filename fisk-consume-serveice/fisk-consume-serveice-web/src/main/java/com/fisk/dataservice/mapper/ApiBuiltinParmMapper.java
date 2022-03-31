@@ -1,12 +1,9 @@
 package com.fisk.dataservice.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.dataservice.entity.AppConfigPO;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.entity.BuiltinParmPO;
-import com.fisk.dataservice.entity.ParmConfigPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;

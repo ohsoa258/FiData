@@ -1,11 +1,9 @@
 package com.fisk.datamanagement.service;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
-
-import java.util.List;
 
 /**
  * @author JianWenYang

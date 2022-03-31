@@ -8,10 +8,9 @@ import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
 import com.fisk.common.datadriven.sqlDto.TableStructureDTO;
 import com.fisk.common.datadriven.sqlUtils.MysqlConUtils;
 import com.fisk.common.datadriven.sqlUtils.SqlServerPlusUtils;
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
@@ -24,7 +23,6 @@ import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.FieldInfoVO;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +32,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 数据源接口实现类

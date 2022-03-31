@@ -1,9 +1,9 @@
 package com.fisk.common.filter.method;
 
-import com.fisk.common.exception.FkException;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.filter.dto.FilterFieldDTO;
 import com.fisk.common.filter.dto.MetaDataConfigDTO;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 

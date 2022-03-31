@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fisk.common.entity.BaseChartPO;
+import com.fisk.common.core.baseObject.entity.BaseChartPO;
 import lombok.Data;
 
 /**

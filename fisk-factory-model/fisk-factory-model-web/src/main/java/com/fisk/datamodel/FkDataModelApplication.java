@@ -10,14 +10,14 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author Lock
  */
 @SpringBootApplication(scanBasePackages = {"com.fisk.datamodel",
-        "com.fisk.common.advice",
-        "com.fisk.common.mdc",
-        "com.fisk.common.mybatis",
-        "com.fisk.common.redis",
-        "com.fisk.common.user",
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.mdc",
+        "com.fisk.common.framework.mybatis",
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.core.user",
         "com.fisk.common.filter",
-        "com.fisk.common.exception",
-        "com.fisk.common.actuators"},
+        "com.fisk.common.framework.exception",
+        "com.fisk.common.framework.actuators"},
         exclude = {RabbitAutoConfiguration.class})
 @MapperScan("com.fisk.datamodel.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client",

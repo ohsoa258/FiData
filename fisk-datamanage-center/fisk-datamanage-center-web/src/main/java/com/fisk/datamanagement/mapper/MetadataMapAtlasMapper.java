@@ -1,6 +1,6 @@
 package com.fisk.datamanagement.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.metadatamapatlas.UpdateMetadataMapAtlasDTO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 

@@ -4,7 +4,7 @@ import com.fisk.chartvisual.dto.DataSourceDTO;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataServiceResult;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

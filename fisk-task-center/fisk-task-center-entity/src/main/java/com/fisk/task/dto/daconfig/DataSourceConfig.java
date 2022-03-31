@@ -1,6 +1,6 @@
 package com.fisk.task.dto.daconfig;
 
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
+import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import lombok.Data;
 

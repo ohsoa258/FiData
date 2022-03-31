@@ -3,7 +3,7 @@ package com.fisk.chartvisual.map;
 import com.fisk.chartvisual.dto.*;
 import com.fisk.chartvisual.enums.FieldTypeEnum;
 import com.fisk.chartvisual.vo.ChartQueryObjectVO;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
+import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 

@@ -1,6 +1,6 @@
 package com.fisk.datafactory.controller;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;

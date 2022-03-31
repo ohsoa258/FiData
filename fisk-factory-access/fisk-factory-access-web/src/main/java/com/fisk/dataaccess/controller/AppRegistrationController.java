@@ -2,11 +2,11 @@ package com.fisk.dataaccess.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.dto.PageDTO;
-import com.fisk.common.enums.task.BusinessTypeEnum;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;

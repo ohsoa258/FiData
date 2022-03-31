@@ -2,10 +2,10 @@ package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskCronDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskScheduleDTO;

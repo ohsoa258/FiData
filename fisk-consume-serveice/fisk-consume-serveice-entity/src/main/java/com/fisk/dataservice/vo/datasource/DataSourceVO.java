@@ -1,7 +1,7 @@
 package com.fisk.dataservice.vo.datasource;
 
 import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
-import com.fisk.common.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;

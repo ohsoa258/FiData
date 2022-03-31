@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.controller;
 
-import com.fisk.common.constants.SystemConstants;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.netflix.discovery.DiscoveryManager;

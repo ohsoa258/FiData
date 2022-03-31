@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.DataBaseViewDTO;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;

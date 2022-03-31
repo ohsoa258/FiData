@@ -1,6 +1,6 @@
 package com.fisk.datamodel.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessAssociationDTO;
 import com.fisk.datamodel.entity.BusinessProcessPO;
 import org.apache.ibatis.annotations.Mapper;

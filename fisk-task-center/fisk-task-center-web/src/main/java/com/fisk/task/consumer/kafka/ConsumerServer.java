@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.redis.RedisUtil;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;

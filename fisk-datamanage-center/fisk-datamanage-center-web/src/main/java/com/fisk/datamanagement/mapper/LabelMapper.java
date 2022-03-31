@@ -1,7 +1,7 @@
 package com.fisk.datamanagement.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.label.LabelDataDTO;
 import com.fisk.datamanagement.entity.LabelPO;
 import org.apache.ibatis.annotations.Param;

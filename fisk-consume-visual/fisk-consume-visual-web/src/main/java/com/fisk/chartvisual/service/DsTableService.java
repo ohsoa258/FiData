@@ -1,8 +1,8 @@
 package com.fisk.chartvisual.service;
 
 import com.fisk.chartvisual.dto.*;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 
 import java.util.List;
 import java.util.Map;

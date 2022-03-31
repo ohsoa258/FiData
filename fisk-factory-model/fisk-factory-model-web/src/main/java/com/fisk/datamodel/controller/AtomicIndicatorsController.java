@@ -1,14 +1,13 @@
 package com.fisk.datamodel.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorsResultDTO;
-import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.service.IAtomicIndicators;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

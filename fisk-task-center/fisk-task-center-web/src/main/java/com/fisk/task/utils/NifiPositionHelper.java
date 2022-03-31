@@ -1,7 +1,7 @@
 package com.fisk.task.utils;
 
 import com.davis.client.model.PositionDTO;
-import com.fisk.common.constants.NifiConstants;
+import com.fisk.common.core.constants.NifiConstants;
 
 /**
  * @author gy

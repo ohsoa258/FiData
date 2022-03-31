@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.entity;
 
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

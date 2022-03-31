@@ -6,17 +6,16 @@ import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.util.dbhelper.*;
-import com.fisk.chartvisual.util.dbhelper.buildmdx.BaseBuildMdx;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.excel.ExcelUtil;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.mdc.TraceType;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.redis.RedisUtil;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.utils.office.excel.ExcelUtil;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import static com.fisk.chartvisual.enums.DragElemTypeEnum.COLUMN;
 import static com.fisk.chartvisual.enums.DragElemTypeEnum.ROW;
 

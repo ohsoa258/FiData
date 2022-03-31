@@ -1,9 +1,9 @@
 package com.fisk.datamodel.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsDTO;
 import com.fisk.datamodel.dto.derivedindicator.DerivedIndicatorsListDTO;

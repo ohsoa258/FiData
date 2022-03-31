@@ -1,11 +1,9 @@
 package com.fisk.datamodel.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.QueryDTO;
-import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
 import com.fisk.datamodel.service.ITableHistory;

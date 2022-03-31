@@ -1,7 +1,7 @@
 package com.fisk.task.service.nifi;
 
-import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 
 import java.sql.ResultSet;

@@ -1,7 +1,7 @@
 package com.fisk.auth.config;
 
 import com.fisk.auth.FiskFrameworkAuthorizationApplication;
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;

@@ -2,8 +2,8 @@ package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.filter.dto.FilterFieldDTO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserInfoCurrentDTO;

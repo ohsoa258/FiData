@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.config;
 
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.datagovernance.FkDataGovernanceApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

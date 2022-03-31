@@ -18,14 +18,14 @@ import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.mdc.TraceType;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.constants.SSASConstant.Measures_Name;
-import static com.fisk.common.constants.SSASConstant.Measures_UniqueName;
+import static com.fisk.common.core.constants.SSASConstant.Measures_Name;
+import static com.fisk.common.core.constants.SSASConstant.Measures_UniqueName;
 
 /**
  * 数据源管理实现类

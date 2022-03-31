@@ -1,6 +1,6 @@
 package com.fisk.common.filter.dto;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author JianWenYang

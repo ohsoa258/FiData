@@ -1,6 +1,6 @@
 package com.fisk.dataservice.map;
 
-import com.fisk.common.utils.Dto.SqlParmDto;
+import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.dataservice.dto.api.ParmConfigDTO;
 import com.fisk.dataservice.dto.api.ParmConfigEditDTO;
 import com.fisk.dataservice.entity.ParmConfigPO;

@@ -1,7 +1,7 @@
 package com.fisk.task.consumer.olap;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Description: 宽表监听

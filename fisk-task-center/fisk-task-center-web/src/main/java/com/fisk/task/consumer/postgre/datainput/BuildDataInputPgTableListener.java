@@ -1,9 +1,9 @@
 package com.fisk.task.consumer.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.BusinessTypeEnum;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;

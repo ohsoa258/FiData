@@ -2,7 +2,7 @@ package com.fisk.dataaccess.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.OperateMsgDTO;
 import com.fisk.dataaccess.dto.OperateTableDTO;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;

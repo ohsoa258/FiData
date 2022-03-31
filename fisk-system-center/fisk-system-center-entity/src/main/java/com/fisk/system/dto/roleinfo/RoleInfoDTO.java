@@ -1,11 +1,9 @@
 package com.fisk.system.dto.roleinfo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.dto.BaseDTO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author JianWenYang

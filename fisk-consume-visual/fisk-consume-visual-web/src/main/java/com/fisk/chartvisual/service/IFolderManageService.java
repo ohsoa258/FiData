@@ -3,7 +3,7 @@ package com.fisk.chartvisual.service;
 import com.fisk.chartvisual.dto.FolderDTO;
 import com.fisk.chartvisual.dto.FolderEditDTO;
 import com.fisk.chartvisual.vo.FolderVO;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 
 import java.util.List;
 

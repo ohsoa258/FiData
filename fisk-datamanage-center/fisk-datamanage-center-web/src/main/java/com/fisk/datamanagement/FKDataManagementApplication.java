@@ -10,15 +10,15 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.datamanagement",
-        "com.fisk.common.advice",
-        "com.fisk.common.mdc",
-        "com.fisk.common.mybatis",
-        "com.fisk.common.feign",
-        "com.fisk.common.redis",
-        "com.fisk.common.exception",
-        "com.fisk.common.actuators",
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.mdc",
+        "com.fisk.common.framework.mybatis",
+        "com.fisk.common.framework.feign",
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.exception",
+        "com.fisk.common.framework.actuators",
         "com.fisk.common.filter",
-        "com.fisk.common.user"})
+        "com.fisk.common.core.user"})
 @MapperScan("com.fisk.datamanagement.mapper")
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",

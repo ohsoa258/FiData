@@ -1,11 +1,8 @@
 package com.fisk.datamanagement.service;
 
-import com.fisk.common.response.ResultEnum;
-import com.fisk.datamanagement.dto.entity.EntityGuidDTO;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
-
-import java.util.List;
 
 /**
  * @author JianWenYang

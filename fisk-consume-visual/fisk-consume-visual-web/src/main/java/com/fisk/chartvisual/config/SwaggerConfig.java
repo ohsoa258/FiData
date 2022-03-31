@@ -1,7 +1,7 @@
 package com.fisk.chartvisual.config;
 
 import com.fisk.chartvisual.FkChartVisualApplication;
-import com.fisk.common.constants.SystemConstants;
+import com.fisk.common.core.constants.SystemConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;

@@ -1,7 +1,6 @@
 package com.fisk.datamodel.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.dimension.DimensionTabDTO;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.fact.FactTabDTO;
 import com.fisk.datamodel.entity.FactPO;
 import org.apache.ibatis.annotations.Mapper;

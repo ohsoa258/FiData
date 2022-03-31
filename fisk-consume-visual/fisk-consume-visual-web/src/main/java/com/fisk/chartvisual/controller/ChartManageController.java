@@ -6,17 +6,15 @@ import com.fisk.chartvisual.enums.ChartQueryTypeEnum;
 import com.fisk.chartvisual.service.IChartManageService;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import com.fisk.chartvisual.dto.ChartQueryDTO;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * 图表管理

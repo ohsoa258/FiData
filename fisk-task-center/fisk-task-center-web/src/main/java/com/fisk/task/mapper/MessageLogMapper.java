@@ -1,7 +1,7 @@
 package com.fisk.task.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.vo.WsMessageLogVO;
