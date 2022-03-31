@@ -1,0 +1,8 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: user-service
+  # 日志输入环境
+  profiles:
+    active: dev

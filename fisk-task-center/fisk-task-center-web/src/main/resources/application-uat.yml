@@ -1,0 +1,99 @@
+datamodeldorisconstr:
+  driver_class_name: com.mysql.jdbc.Driver
+  password: DsPassword01!
+  url: jdbc:mysql://192.168.21.13:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+external-table-link: '"host" = "192.168.21.13","port" = "5432","user" = "postgres","password"
+  = "PgPassword01!","database" = "dmp_dw_UAT"'
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 600000
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    com:
+      fisk:
+        chartvisual:
+          mapper: debug
+    org:
+      springframework:
+        orm:
+          jpa: debug
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+nifi:
+  basePath: http://192.168.21.13:8080/nifi-api
+  pipeline:
+    topicName: my-topic2
+    waitTime: 20
+nifi-ConcurrentTasks: 3
+nifi-FetchSize: 30000
+nifi-MaxRowsPerFlowFile: 10000
+nifi-OutputBatchSize: 1
+pgsql-datainput:
+  driverClassName: org.postgresql.Driver
+  password: PgPassword01!
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
+  username: postgres
+pgsql-datamodel:
+  driverClassName: org.postgresql.Driver
+  password: PgPassword01!
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
+  username: postgres
+server:
+  port: 8099
+spring:
+  application:
+    name: task-center
+  datasource:
+    dynamic:
+      datasource:
+        datainputdb:
+          driver-class-name: com.mysql.jdbc.Driver
+          password: Password01!
+          url: jdbc:mysql://192.168.21.13:3306/dmp_datainput_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+        taskdb:
+          driver-class-name: com.mysql.jdbc.Driver
+          password: Password01!
+          url: jdbc:mysql://192.168.21.13:3306/dmp_task_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+          username: root
+      primary: taskdb
+      strict: false
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  kafka:
+    consumer:
+      bootstrap-servers: 192.168.21.13:9092
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      session:
+        timeout:
+          ms: 300000
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      bootstrap-servers: 192.168.21.13:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  redis:
+    host: 192.168.21.13

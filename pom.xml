@@ -8,18 +8,20 @@
     <artifactId>fisk</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
-        <module>fk-registry</module>
-        <module>fk-gateway</module>
-        <module>fk-common</module>
-        <module>fk-system</module>
-        <module>fk-auth</module>
-        <module>fisk-chartvisual</module>
-        <module>fk-dataAccess</module>
-        <module>fk-task</module>
-        <module>fk-datamodel</module>
-        <module>fisk-dataservice</module>
-        <module>fk-data-factory</module>
-        <module>fisk-datamanagement</module>
+        <module>fisk-framework-registry</module>
+        <module>fisk-framework-common</module>
+        <module>fisk-framework-gateway</module>
+        <module>fisk-framework-authorization</module>
+        <module>fisk-system-center</module>
+        <module>fisk-consume-visual</module>
+        <module>fisk-factory-access</module>
+        <module>fisk-task-center</module>
+        <module>fisk-factory-model</module>
+        <module>fisk-consume-serveice</module>
+        <module>fisk-datamanage-center</module>
+        <module>fisk-factory-dispatch</module>
+        <module>fisk-governance-center</module>
+        <module>fisk-mdm-model</module>
     </modules>
 
 

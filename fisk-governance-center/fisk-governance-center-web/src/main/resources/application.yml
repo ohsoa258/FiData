@@ -1,0 +1,10 @@
+server:
+  port: 8093
+spring:
+  application:
+    name: datagovernance-service
+  profiles:
+    active: dev
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss

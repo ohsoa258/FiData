@@ -1,0 +1,23 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.auth.mapper.ClientRegisterMapper">
+    <select id="filter" resultType="com.fisk.auth.vo.ClientRegisterVO">
+        SELECT
+        id,
+        client_name,
+        token_value,
+        token_des,
+        valid,
+        expire_time,
+        create_time,
+        update_time
+        FROM
+        tb_client_register
+        WHERE
+        del_flag = 1;
+        <if test="query.where !=null and query.where.length()>0 ">
+            ${query.where}
+        </if>
+    </select>
+</mapper>

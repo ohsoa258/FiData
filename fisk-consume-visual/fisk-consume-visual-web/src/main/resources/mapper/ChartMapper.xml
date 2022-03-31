@@ -1,0 +1,63 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.chartvisual.mapper.ChartMapper">
+
+    <select id="listChartDataByUserId"  resultMap="chartListRead" >
+        select id,
+        fid,
+        name,
+        content,
+        details,
+        create_time,
+        0 as chartType,
+        image,background_image
+        from tb_chart
+        where del_flag = 1
+        <if test=" query.name != null ">
+            and name like concat('%', #{query.name}, '%')
+        </if>
+        <if test=" query.details != null ">
+            and details like concat('%', #{query.details}, '%')
+        </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
+        </if>
+        <if test=" query.folderId != null ">
+            and fid = #{query.folderId}
+        </if>
+        union all
+        select id,
+        fid,
+        name,
+        content,
+        details,
+        create_time,
+        1 as chartType,
+        image,background_image
+        from tb_draft_chart
+        where del_flag = 1
+        <if test=" query.name != null ">
+            and name like concat('%', #{query.name}, '%')
+        </if>
+        <if test=" query.details != null ">
+            and details like concat('%', #{query.details}, '%')
+        </if>
+        <if test=" query.content != null ">
+            and (name like concat('%', #{query.content}, '%') or details like concat('%', #{query.content}, '%'))
+        </if>
+        <if test=" query.folderId != null ">
+            and fid = #{query.folderId}
+        </if>
+    </select>
+    <resultMap id="chartListRead" type="com.fisk.chartvisual.vo.ChartPropertyVO">
+        <result property="backgroundImage" column="background_image" typeHandler="com.fisk.chartvisual.config.BlobTypeHandler"></result>
+        <result property="image" column="image" typeHandler="com.fisk.chartvisual.config.BlobTypeHandler"></result>
+        <result property="fid" column="fid" ></result>
+        <result property="name" column="name" ></result>
+        <result property="content" column="content" ></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="chartType" column="chartType" ></result>
+        <result property="id" column="id" ></result>
+    </resultMap>
+</mapper>

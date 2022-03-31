@@ -1,0 +1,78 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.ApiRegisterMapper">
+    <select id="getAll" resultType="com.fisk.dataservice.vo.api.ApiConfigVO">
+        select api.id,
+        api_name,
+        api_code,
+        api_desc,
+        api_type,
+        datasource_id,
+        table_name,
+        create_sql,
+        api.create_time,
+        create_user
+        -- userinfo.user_account as create_user
+        from tb_api_config as api
+        -- left join dmp_system_db.tb_user_info as userinfo
+        -- ON api.create_user= userinfo.id
+        where api.del_flag=1
+        <if test="query.keyword !=null and query.keyword.length()>0 ">
+            and (api_name like concat('%', #{query.keyword}, '%')
+            or api_desc like concat('%', #{query.keyword}, '%'))
+        </if>
+    </select>
+    <select id="getList" resultType="com.fisk.dataservice.entity.ApiConfigPO">
+        SELECT
+        api.id,
+        api_name,
+        api_code,
+        api_desc,
+        api_type,
+        datasource_id,
+        table_name,
+        create_sql,
+        api.create_time,
+        -- userinfo.user_account AS create_user
+        create_user
+        FROM
+        tb_api_config AS api
+        -- LEFT JOIN dmp_system_db.tb_user_info AS userinfo ON api.create_user = userinfo.id
+        WHERE
+        api.del_flag = 1
+        <if test="keyword !=null and keyword.length()>0 ">
+            and (api_name like concat('%', #{keyword}, '%')
+            or api_desc like concat('%', #{keyword}, '%'))
+        </if>
+        ORDER BY
+        api.create_time DESC
+    </select>
+    <select id="getListByAppApiIds" resultType="com.fisk.dataservice.entity.ApiConfigPO">
+        SELECT
+        api.id,
+        api.api_code,
+        api.api_name,
+        api.api_desc,
+        api.api_type,
+        api.datasource_id,
+        api.create_sql
+        FROM
+        tb_api_config api
+        LEFT JOIN tb_app_api appapi ON api.id = appapi.api_id
+        WHERE
+        api.del_flag = 1
+        AND appapi.del_flag = 1
+        <if test="appId !=null">
+            AND appapi.app_id = #{appId}
+        </if>
+        <if test="null != apiIds and apiIds.size > 0">
+            AND api.id IN
+            <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY
+        appapi.create_time DESC
+    </select>
+</mapper>

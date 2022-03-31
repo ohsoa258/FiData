@@ -1,0 +1,61 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.11.130:3306/dmp_datamodel_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+
+# redis
+  redis:
+    host: 192.168.11.130
+# 防止模板报空错误
+  freemarker:
+    settings:
+      classic_compatible: true
+#授权
+fk:
+  auth:
+    clientId: datamodel-service
+    secret: 1234
+  encoder:
+    crypt:
+      secret: ${random.uuid}
+      strength: 6
+
+mybatis-plus:
+  configuration:
+    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+  global-config:
+    db-config:
+      id-type: auto
+      insert-strategy: not_null
+      logic-delete-field: del_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      update-strategy: not_null
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.fisk.datamodel.entity
+
+#dw配置
+generate:
+  date-dimension:
+    datasource:
+      typeName: MySql
+      driver: org.postgresql.Driver
+      url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
+      userName: postgres
+      password: Password01!
+
+#注册中心
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka
+
+#feign接口超时配置
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 20000
+        readTimeout: 24000

@@ -1,0 +1,156 @@
+server:
+  port: 8083
+
+
+eureka:
+  server:
+    #关闭自我保护模式
+    enable-self-preservation: false
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:8082/eureka #注册中心的地址
+      #eureka客户端发送心跳间隔，默认30秒
+      lease-renewal-interval-in-seconds: 3
+      #eureka服务器在接收到实例的最后一次发出的心跳后，需要等待多久才可以将此实例删除
+      lease-expiration-duration-in-seconds: 3
+
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 20000 # 请求超时时长：6000ms
+
+ribbon:
+  # ribbon请求连接的超时时间- 限制5秒内必须请求到服务，并不限制服务处理的返回时间
+  ConnectTimeout: 5000 # 连接超时时间,毫秒
+  # 请求处理的超时时间 下级服务响应最大时间,超出时间消费方（路由也是消费方）返回timeout,超时时间不可大于断路器的超时时间
+  ReadTimeout: 6000 # 逻辑处理超时时间,毫秒
+
+spring:
+  application:
+    name: fk-gateway
+  # 日志输入环境
+  profiles:
+    active: dev
+  cloud:
+
+    gateway:
+
+      # =============跨域============
+      globalcors: # 全局的跨域处理
+        add-to-simple-url-handler-mapping: true # 是否将当前cors配置加入到SimpleUrlHandlerMapping中，解决options请求被拦截问题
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*" # 允许哪些网站的跨域请求,下面的是例子
+            #              - "http://www.fisksoft.com"
+            allowedMethods: # 允许的跨域ajax的请求方式
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PUT"
+              - "OPTIONS"
+            allowedHeaders: "*" # 允许在请求中携带的头信息
+            allowCredentials: true # 是否允许携带cookie
+            maxAge: 360000 # 这次跨域检测的有效期
+
+      # ============限流令牌桶=================
+      default-filters: # 默认过滤项,作用于所有的路由规则
+        - StripPrefix=1 # 去除路由前缀
+        # ============Hystrix=================
+        - name: Hystrix # 指定过滤工厂名称（可以是任意过滤工厂类型）
+          args: # 指定过滤的参数
+            name: fallbackcmd  # hystrix的指令名
+            fallbackUri: forward:/hystrix/fallback # 失败后的跳转路径
+        # ============限流令牌桶=================
+        - name: RequestRateLimiter #请求数限流 名称固定,不能随便写
+          args:
+            key-resolver: "#{@ipKeyResolver}" # 指定一个key生成器,SPel表达式
+            # 每一个IP地址，每秒钟最多发起2次请求
+            # 每秒钟超过2次请求，则返回429的异常状态码
+            redis-rate-limiter.replenishRate: 500 # 生成令牌的速率
+            redis-rate-limiter.burstCapacity: 10 # 桶的容量
+
+      # 添加网关路由
+      routes:
+
+        - id: auth-service # 授权服务
+          uri: lb://auth-service # 路由的目标微服务地址,lb:代表负载均衡,auth-service:代表服务id
+          predicates: # 断言  判断 前端浏览器发送url和当前path是否匹配
+            - Path=/auth/** # 按照路径匹配的规则
+
+
+        - id: user-service # 用户服务
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+
+        - id: chartvisual-service # 可视化服务
+          uri: lb://chartvisual-service
+          predicates:
+            - Path=/chartvisual/**
+
+        - id: dataAccess-service # 数据接入服务
+          uri: lb://dataAccess-service
+          predicates:
+            - Path=/dataAccess/**
+
+        - id: task-center # 后台服务
+          uri: lb://task-center
+          predicates:
+            - Path=/task/**
+
+        - id: task-center-websocket # websocket
+          uri: lb:ws://task-center
+          predicates:
+            - Path=/task/**
+
+        - id: datamodel-service # 数据建模服务
+          uri: lb://datamodel-service
+          predicates:
+            - Path=/datamodel/**
+
+        - id: dataservice-service # 数据源接入服务
+          uri: lb://dataservice-service
+          predicates:
+            - Path=/dataservice/**
+
+        - id: data-factory # 数据工厂服务
+          uri: lb://data-factory
+          predicates:
+            - Path=/taskschedule/**
+
+        - id: datamanagement-service # 元数据服务
+          uri: lb://datamanagement-service
+          predicates:
+            - Path=/datamanagement/**
+
+        - id: datagovernance-service # 数据治理服务
+          uri: lb://datagovernance-service
+          predicates:
+            - Path=/datagovernance/**
+
+        - id: mdmmodel-service # mdm服务
+          uri: lb://mdmmodel-service
+          predicates:
+            - Path=/mdmmodel/**
+
+
+  redis:
+    host: 192.168.11.130
+#    host: 192.168.21.13
+#    host: 10.220.108.140
+#    port: 16380
+#    password: test123456
+
+
+logging:
+  level:
+    com.fisk: debug
+fk:
+  auth:
+    clientId: api-gateway
+    secret: 1234

@@ -1,0 +1,69 @@
+package com.fisk.dataaccess.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * @author Lock
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("tb_app_datasource")
+public class AppDataSourcePO extends BasePO {
+    /**
+     * tb_app_registration表id
+     */
+    public long appId;
+
+    /**
+     * tb_app_drivetype表type
+     */
+    public String driveType;
+
+    /**
+     * 主机名
+     */
+    public String host;
+
+    /**
+     * 端口号
+     */
+    public String port;
+
+    /**
+     * 数据库名
+     */
+    public String dbName;
+
+    /**
+     * 数据源连接字符串
+     */
+    public String connectStr;
+
+    /**
+     * 连接账号
+     */
+    public String connectAccount;
+
+    /**
+     * 连接密码
+     */
+    public String connectPwd;
+
+    /**
+     * 文件后缀名(1:csv  2:xls&xlsx)
+     */
+    public Integer fileSuffix;
+
+    /**
+     * 验证方式（实时） 登录账号
+     */
+    public String realtimeAccount;
+
+    /**
+     * 验证方式（实时） 登录密码
+     */
+    public String realtimePwd;
+}

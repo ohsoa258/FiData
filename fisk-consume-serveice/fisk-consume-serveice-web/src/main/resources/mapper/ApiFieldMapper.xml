@@ -1,0 +1,23 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.dataservice.mapper.ApiFieldMapper">
+    <select id="getListByApiIds" resultType="com.fisk.dataservice.entity.FieldConfigPO">
+        SELECT
+        id,
+        api_id,
+        field_name,
+        field_type,
+        field_sort,
+        field_desc
+        FROM
+        tb_field_config
+        WHERE del_flag=1
+        <if test="null != apiIds and apiIds.size > 0">
+            AND api_id IN
+            <foreach item="item" index="index" collection="apiIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

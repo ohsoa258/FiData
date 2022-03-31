@@ -1,0 +1,30 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
+        SELECT
+        id,
+        template_id,
+        datasource_id,
+        datasource_type,
+        module_name,
+        filter_step,
+        table_name,
+        pro_table_name,
+        module_rule,
+        run_time_cron,
+        module_exec_sort,
+        module_state,
+        create_time,
+        create_user
+        FROM
+        tb_bizfilter_module
+        WHERE
+        del_flag = 1
+        AND table_name = #{tableName,jdbcType=VARCHAR}
+        <if test="keyword != null and keyword != '' ">
+            AND module_name LIKE concat('%', #{keyword}, '%')
+        </if>
+    </select>
+</mapper>
