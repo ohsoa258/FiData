@@ -156,7 +156,7 @@
     </dependencies>
 
     <build>
-        <finalName>chart-visual</finalName>
+        <finalName>fisk-consume-visual</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
