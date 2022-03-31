@@ -231,7 +231,7 @@
 
 
     <build>
-        <finalName>task</finalName>
+        <finalName>fisk-task-center</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
