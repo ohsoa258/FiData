@@ -25,7 +25,7 @@ public class TablePyhNameDTO extends BaseDTO {
     /**
      * 表架构名称
      */
-    @ApiModelProperty(value = "表架构名称", required = true)
+    @ApiModelProperty(value = "表架构名称")
     public String tableFramework;
 
     /**
@@ -33,6 +33,12 @@ public class TablePyhNameDTO extends BaseDTO {
      */
     @ApiModelProperty(value = "表名", required = true)
     public String tableName;
+
+    /**
+     * 表行数
+     */
+    @ApiModelProperty(value = "表行数")
+    public int rowsCount;
 
     /**
      * 返回给前端的唯一标记
