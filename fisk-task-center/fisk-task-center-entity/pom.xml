@@ -25,13 +25,13 @@
             <artifactId>nifi-api-client-java</artifactId>
             <version>1.0.4</version>
         </dependency>
---><dependency>
-        <groupId>io.github.samuel-davis</groupId>
-        <artifactId>original-swagger-java-client</artifactId>
-        <version>1.0.0</version>
-        <scope>system</scope>
-        <systemPath>${project.basedir}/lib/original-swagger-java-client-1.0.0.jar</systemPath>
-    </dependency>
+-->
+        <dependency>
+            <groupId>io.github.samuel-davis</groupId>
+            <artifactId>original-swagger-java-client</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- 全局工具类 -->
         <dependency>
