@@ -1,8 +1,8 @@
-package com.fisk.common.datadriven.sqlUtils;
+package com.fisk.common.service.dbMeta.utils;
 
-import com.fisk.common.datadriven.sqlDto.DataBaseViewDTO;
-import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
-import com.fisk.common.datadriven.sqlDto.TableStructureDTO;
+import com.fisk.common.service.dbMeta.dto.DataBaseViewDTO;
+import com.fisk.common.service.dbMeta.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMeta.dto.TableStructureDTO;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,11 +14,12 @@ import java.util.List;
 
 /**
  * @author Lock
- * <p>
- * MySQL 获取表及表字段
+ * @version 1.0
+ * @description Oracle工具类
+ * @date 2022/1/10 10:20
  */
 @Slf4j
-public class MysqlConUtils {
+public class OracleUtils {
 
     /**
      * 获取表及表字段
@@ -35,31 +36,27 @@ public class MysqlConUtils {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
-            List<String> tableNames = getTables(conn);
+            List<String> tableNames = getTables(conn,user.toUpperCase());
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
-
-            int tag = 0;
-
             for (String tableName : tableNames) {
+                ResultSet rs = st.executeQuery("select * from " + tableName + " OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
-                List<TableStructureDTO> colNames = getColNames(st, tableName);
-
+                List<TableStructureDTO> colNames = getColNames(rs);
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(colNames);
-
-                tag++;
-                tablePyhNameDTO.setTag(tag);
                 list.add(tablePyhNameDTO);
 
+                rs.close();
             }
+
             st.close();
             conn.close();
         } catch (ClassNotFoundException | SQLException e) {
             log.error("【getTableNameAndColumns】获取表名报错, ex", e);
-            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            return null;
         }
 
         return list;
@@ -84,21 +81,21 @@ public class MysqlConUtils {
             Class.forName(driverTypeEnum.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有视图名称
-            List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, dbName);
+            List<String> viewNameList = loadViewNameList(driverTypeEnum, conn, user.toUpperCase());
             Statement st = conn.createStatement();
 
             list = new ArrayList<>();
 
             for (String viewName : viewNameList) {
-//                ResultSet resultSql = st.executeQuery("select * from " + viewName + ";");
+                ResultSet resultSql = st.executeQuery("SELECT * FROM \"" + user.toUpperCase() + "\".\"" + viewName + "\" OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
-                List<TableStructureDTO> colNames = getColNames(st, viewName);
+                List<TableStructureDTO> colNames = getColNames(resultSql);
 
                 DataBaseViewDTO dto = new DataBaseViewDTO();
                 dto.viewName = viewName;
                 dto.fields = colNames;
                 // 关闭当前结果集
-//                resultSql.close();
+                resultSql.close();
 
                 list.add(dto);
             }
@@ -119,12 +116,13 @@ public class MysqlConUtils {
      * @param conn conn
      * @return 返回值
      */
-    public List<String> getTables(Connection conn) {
-        ArrayList<String> tablesList = null;
+    private List<String> getTables(Connection conn, String user) {
+        ArrayList<String> tablesList;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
-            ResultSet tables = databaseMetaData.getTables(null, null, "%", null);
-            tablesList = new ArrayList<String>();
+            String[] types = {"TABLE"};
+            ResultSet tables = databaseMetaData.getTables(null, user, null, types);
+            tablesList = new ArrayList<>();
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
             }
@@ -143,23 +141,15 @@ public class MysqlConUtils {
      * @params conn
      * @params dbName
      */
-    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum, Connection conn, String dbName) {
+    private List<String> loadViewNameList(DriverTypeEnum driverTypeEnum, Connection conn, String user) {
         ArrayList<String> viewNameList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             String[] types = {"VIEW"};
 
             ResultSet rs = null;
-            switch (driverTypeEnum) {
-                case MYSQL:
-                    rs = databaseMetaData.getTables(null, null, "%", types);
-                    break;
-                case SQLSERVER:
-                    rs = databaseMetaData.getTables(null, null, dbName + "%", types);
-                    break;
-                default:
-                    break;
-            }
+            rs = databaseMetaData.getTables(null, user, null, types);
+
             viewNameList = new ArrayList<>();
             while (rs.next()) {
                 viewNameList.add(rs.getString(3));
@@ -173,16 +163,14 @@ public class MysqlConUtils {
     /**
      * 获取表中所有字段名称
      *
-     * @param tableName tableName
+     * @param rs rs
      */
-    public List<TableStructureDTO> getColNames(Statement st, String tableName) {
-        ResultSet rs = null;
+    private List<TableStructureDTO> getColNames(ResultSet rs) {
         List<TableStructureDTO> colNameList = null;
         try {
-            rs = st.executeQuery("select * from " + tableName + " LIMIT 0,10;");
-
             ResultSetMetaData metaData = rs.getMetaData();
             int count = metaData.getColumnCount();
+
             colNameList = new ArrayList<>();
             for (int i = 1; i <= count; i++) {
                 TableStructureDTO tableStructureDTO = new TableStructureDTO();
@@ -193,15 +181,12 @@ public class MysqlConUtils {
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
                 tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
-
                 colNameList.add(tableStructureDTO);
             }
             rs.close();
         } catch (SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
-
         return colNameList;
     }
-
 }

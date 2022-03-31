@@ -20,7 +20,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.redis",
         "com.fisk.common.core.user",
         "com.fisk.common.framework.mybatis",
-        "com.fisk.common.filter"})
+        "com.fisk.common.service.pageFilter"})
 public class FiskFrameworkAuthorizationApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskFrameworkAuthorizationApplication.class);

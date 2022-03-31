@@ -2,7 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.filter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;

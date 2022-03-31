@@ -1,4 +1,4 @@
-package com.fisk.common.datadriven.sqlDto;
+package com.fisk.common.service.dbMeta.dto;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;

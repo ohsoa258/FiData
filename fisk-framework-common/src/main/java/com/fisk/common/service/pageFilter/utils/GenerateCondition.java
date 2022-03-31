@@ -1,7 +1,7 @@
-package com.fisk.common.filter.method;
+package com.fisk.common.service.pageFilter.utils;
 
-import com.fisk.common.filter.dto.FilterEnum;
-import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.FilterEnum;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

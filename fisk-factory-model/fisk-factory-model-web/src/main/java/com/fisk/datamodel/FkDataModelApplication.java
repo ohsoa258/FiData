@@ -15,7 +15,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
         "com.fisk.common.core.user",
-        "com.fisk.common.filter",
+        "com.fisk.common.service.pageFilter",
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators"},
         exclude = {RabbitAutoConfiguration.class})

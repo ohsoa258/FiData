@@ -1,8 +1,8 @@
-package com.fisk.common.filter.method;
+package com.fisk.common.service.pageFilter.utils;
 
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.filter.dto.FilterFieldDTO;
-import com.fisk.common.filter.dto.MetaDataConfigDTO;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.core.response.ResultEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;

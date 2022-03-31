@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.datasource;
 
-import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
+import com.fisk.common.service.dbMeta.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 

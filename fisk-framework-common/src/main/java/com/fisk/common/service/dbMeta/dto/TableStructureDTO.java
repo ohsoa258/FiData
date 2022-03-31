@@ -1,4 +1,4 @@
-package com.fisk.common.datadriven.sqlDto;
+package com.fisk.common.service.dbMeta.dto;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

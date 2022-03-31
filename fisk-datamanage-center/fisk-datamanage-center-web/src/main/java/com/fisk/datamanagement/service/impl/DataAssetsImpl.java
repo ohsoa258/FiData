@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.filter.method.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;

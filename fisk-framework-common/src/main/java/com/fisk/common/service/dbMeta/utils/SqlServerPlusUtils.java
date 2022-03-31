@@ -1,7 +1,7 @@
-package com.fisk.common.datadriven.sqlUtils;
+package com.fisk.common.service.dbMeta.utils;
 
-import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
-import com.fisk.common.datadriven.sqlDto.TableStructureDTO;
+import com.fisk.common.service.dbMeta.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMeta.dto.TableStructureDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import lombok.extern.slf4j.Slf4j;

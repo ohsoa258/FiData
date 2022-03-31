@@ -1,4 +1,4 @@
-package com.fisk.common.filter.dto;
+package com.fisk.common.service.pageFilter.dto;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

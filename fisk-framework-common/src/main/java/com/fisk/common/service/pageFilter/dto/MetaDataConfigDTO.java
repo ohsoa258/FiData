@@ -1,8 +1,6 @@
-package com.fisk.common.filter.dto;
+package com.fisk.common.service.pageFilter.dto;
 
 import lombok.Data;
-
-import java.util.SplittableRandom;
 
 /**
  * @author JianWenYang

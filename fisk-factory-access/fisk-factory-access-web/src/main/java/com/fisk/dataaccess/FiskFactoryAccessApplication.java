@@ -20,7 +20,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.redis",
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators",
-        "com.fisk.common.filter",
+        "com.fisk.common.service.pageFilter",
         "com.fisk.common.core.user"})
 @MapperScan("com.fisk.dataaccess.mapper")
 @EnableFeignClients(basePackages = {
