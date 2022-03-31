@@ -52,8 +52,6 @@ public class BuildAtlasTableAndColumnTaskListener
     @Resource
     private TableNifiSettingServiceImpl tableNifiSettingService;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.ATLASTABLECOLUMN_MQ_BUILD)
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("进入Atlas生成表和字段");
         log.info("dataInfo:" + dataInfo);

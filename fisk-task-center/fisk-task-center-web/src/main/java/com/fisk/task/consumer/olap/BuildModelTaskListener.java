@@ -66,7 +66,7 @@ public class BuildModelTaskListener {
                 doris.dorisBuildTable(olapPO.createTableSql);
                 log.info("Doris建表结束,开始创建nifi配置");
                 //添加etl日志,加kpi,区分指标与事实维度
-                itbetlIncremental.addEtlIncremental(olapPO.tableName + OlapTableEnum.KPI.getName());
+                itbetlIncremental.addEtlIncremental(olapPO.tableName + OlapTableEnum.KPI.getValue());
                 BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
                 log.info("nifi配置结束,开始创建nifi流程");
                 buildNifiFlowDTO.userId = data.userId;

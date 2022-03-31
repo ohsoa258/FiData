@@ -38,7 +38,7 @@ public class BuildDataInputStgToOdsListener {
     @Resource
     IPostgreBuild pg;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_STGTOODS_FLOW, containerFactory = "batchFactory", groupId = "test")
+
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_STGTOODS_BUILD)
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行更新数据导入log状态");

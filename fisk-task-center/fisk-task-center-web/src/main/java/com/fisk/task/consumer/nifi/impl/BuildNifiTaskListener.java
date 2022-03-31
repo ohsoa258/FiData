@@ -1561,7 +1561,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName);
         if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName + OlapTableEnum.KPI.getName());
+            querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName + OlapTableEnum.KPI.getValue());
         }
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
@@ -1633,7 +1633,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1;
         tableTopicDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
         if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getName();
+            tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getValue();
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = tableTopicDTO.topicName;
@@ -1724,7 +1724,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.name = "queryForPipelineSupervision";
         querySqlDto.details = "queryForPipelineSupervision";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId";
+        querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId"
+                +",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = "1";
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;

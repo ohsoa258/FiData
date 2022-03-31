@@ -25,8 +25,7 @@ public class BuildDorisTaskListener {
     @Resource
     DataAccessClient dc;
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
+
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行Doris");
         log.info("dataInfo:" + dataInfo);

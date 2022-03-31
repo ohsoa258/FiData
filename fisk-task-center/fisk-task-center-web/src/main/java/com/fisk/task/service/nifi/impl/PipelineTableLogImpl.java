@@ -58,7 +58,6 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
         List<PipelineTableLogDTO> pipelineTableLogs = new ArrayList<>();
         for (Long id : componentIds) {
             nifiCustomWorkflowDetailDTO.id = id;
-            //PipelineTableLogPO pipelineTableLog =
             PipelineTableLogDTO pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
 
             if (pipelineTableLog != null) {

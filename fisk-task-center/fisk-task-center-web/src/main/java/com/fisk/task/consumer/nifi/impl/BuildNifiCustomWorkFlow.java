@@ -87,8 +87,7 @@ public class BuildNifiCustomWorkFlow {
     TableTopicImpl tableTopic;
 
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog
+
     public void msg(String data, Acknowledgment acke) {
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
@@ -561,7 +560,7 @@ public class BuildNifiCustomWorkFlow {
                     Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
                     if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                             Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getName();
+                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
                     }
                     BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
                     buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
@@ -591,7 +590,7 @@ public class BuildNifiCustomWorkFlow {
             Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
             if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                     Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getName();
+                Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
             }
             updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                     tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);

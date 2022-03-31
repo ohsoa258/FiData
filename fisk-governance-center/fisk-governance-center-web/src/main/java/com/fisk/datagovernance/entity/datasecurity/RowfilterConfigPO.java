@@ -12,12 +12,12 @@ import lombok.EqualsAndHashCode;
  *
  * @author lock
  * @email feihongz@fisksoft.com.cn
- * @date 2022-03-28 15:47:33
+ * @date 2022-03-30 15:29:16
  */
 @Data
-@TableName("tb_row_user_assignment")
+@TableName("tb_rowfilter_config")
 @EqualsAndHashCode(callSuper = true)
-public class RowUserAssignmentPO extends BasePO {
+public class RowfilterConfigPO extends BasePO {
 
     /**
      * tb_rowsecurity_config表  id
@@ -25,18 +25,28 @@ public class RowUserAssignmentPO extends BasePO {
     public long rowsecurityId;
 
     /**
-     * 类型: 0: 空  1: 用户组  2: 用户
+     * 字段名称
      */
-    public long type;
+    public String fieldName;
 
     /**
-     * 用户id or 用户组id
+     * 运算符:  > = < !=  like
      */
-    public long userId;
+    public String operator;
 
     /**
-     * 权限(0: 空  1: 只读  2: 编辑)
+     * 查询内容
      */
-    public long permission;
+    public String result;
+
+    /**
+     * 查询的链式关系: and or
+     */
+    public String chainRelationship;
+
+    /**
+     * 创建人
+     */
+    public String createUser;
 
 }

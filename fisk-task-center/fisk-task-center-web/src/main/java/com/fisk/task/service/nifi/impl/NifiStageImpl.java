@@ -79,14 +79,14 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             int type = tableNifiSettingPO.type;
             NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineName, type, tableName, tableAccessId);
             //三个阶段,默认正在运行
-            nifiStagePO.insertPhase = NifiStageTypeEnum.RUNNING.getValue();
-            nifiStagePO.queryPhase = NifiStageTypeEnum.RUNNING.getValue();
-            nifiStagePO.transitionPhase = NifiStageTypeEnum.RUNNING.getValue();
             ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNIfiPortHierarchy(nifiGetPortHierarchyDTO);
             NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
             nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             if (nifiStageMessageDTO.message == null || "".equals(nifiStageMessageDTO.message)) {
                 nifiStagePO.comment = "运行成功";
+                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                nifiStagePO.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
             } else {
                 nifiStagePO.comment = nifiStageMessageDTO.message;
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
@@ -100,9 +100,12 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
                         nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
                     } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
+                        nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
                         nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
                         nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
                     } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
+                        nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                        nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
                         nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
                     }
                 }
@@ -131,6 +134,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.NOT_RUN.getValue())) {
                 pipelineTableLogPO.state = NifiStageTypeEnum.NOT_RUN.getValue();
             }
+            pipelineTableLogPO.counts = nifiStageMessageDTO.counts;
+            pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
+            pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
             pipelineTableLog.deleteByComponentId(nifiStagePO.componentId);
             pipelineTableLog.insert(pipelineTableLogPO);
         } catch (ApiException e) {

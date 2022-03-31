@@ -109,8 +109,6 @@ public class BuildDataModelDorisTableListener
     public String tableOutputPortId;
 
 
-    //@KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory", groupId = "test")
-    //@MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
     public void msg(String dataInfo, Acknowledgment acke) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         int id=0;

@@ -35,7 +35,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                 Date endTime = etlIncremental.get(SystemVariableTypeEnum.END_TIME.getName());
                 if (startTime != null) {
                     String startDate = getStringDate(startTime);
-                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'" + startDate + "'");
                     paramMap.put(SystemVariableTypeEnum.START_TIME.getValue(), startDate);
                 } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
@@ -43,7 +43,7 @@ public class TBETLIncrementalImpl extends ServiceImpl<TBETLIncrementalMapper, TB
                 }
                 if (endTime != null) {
                     String endDate = getStringDate(endTime);
-                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
+                    sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'" + endDate + "'");
                     paramMap.put(SystemVariableTypeEnum.END_TIME.getValue(), endDate);
                 } else {
                     sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), NifiConstants.AttrConstants.INITIAL_TIME);
