@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2022-03-28 15:47:33
  */
 @Mapper
-public interface UsergroupInfoMapper extends FKBaseMapper<UserGroupInfoPO> {
+public interface UserGroupInfoMapper extends FKBaseMapper<UserGroupInfoPO> {
 	
 }
