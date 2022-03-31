@@ -14,8 +14,8 @@ public enum TemplateTypeEnum implements BaseEnum {
      */
     NONE(0,"空模板"),
     FIELD_STRONG_RULE_TEMPLATE(100, "字段强规则模板"),
-    FIELD_AGGREGETION_TEMPLATE(101, "字段聚合波动阀值模板"),
-    TABLEROW_THRESHOLD_TEMPLATE(102, "表行数波动阀值模板"),
+    FIELD_AGGREGETION_TEMPLATE(101, "字段聚合波动阈值模板"),
+    TABLEROW_THRESHOLD_TEMPLATE(102, "表行数波动阈值模板"),
     EMPTY_TABLE_CHECK_TEMPLATE(103, "空表校验模板"),
     UPDATE_TABLE_CHECK_TEMPLATE(104, "表更新校验模板"),
     TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE(105, "表血缘断裂校验模板"),

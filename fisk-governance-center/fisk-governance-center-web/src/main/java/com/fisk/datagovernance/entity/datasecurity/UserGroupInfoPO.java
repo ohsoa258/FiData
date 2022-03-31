@@ -1,10 +1,9 @@
-package com.fisk.datagovernance.dto.datasecurity;
+package com.fisk.datagovernance.entity.datasecurity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
-
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <p>
@@ -16,12 +15,9 @@ import lombok.Data;
  * @date 2022-03-28 15:47:33
  */
 @Data
-public class UsergroupInfoDTO {
-
-    /**
-     *
-     */
-    public long id;
+@TableName("tb_usergroup_info")
+@EqualsAndHashCode(callSuper = true)
+public class UserGroupInfoPO extends BasePO {
 
     /**
      * 用户组名称
@@ -32,5 +28,4 @@ public class UsergroupInfoDTO {
      * 用户组描述
      */
     public String userGroupDesc;
-
 }

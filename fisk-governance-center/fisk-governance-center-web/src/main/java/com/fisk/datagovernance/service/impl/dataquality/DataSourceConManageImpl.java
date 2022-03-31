@@ -250,8 +250,21 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 break;
         }
         if (CollectionUtils.isNotEmpty(colNames)) {
+            int rowsCount = 0;
+            try {
+                String tName = tableFramework != null && tableFramework != "" ? tableFramework + "." + tableName : tableName;
+                String sqlCountStr = String.format("select count(*) from %s", tName);
+                PreparedStatement preparedStatement = null;
+                preparedStatement = connection.prepareStatement(sqlCountStr);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                resultSet.next();
+                rowsCount = resultSet.getInt(1);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
             tablePyhNameDTO.setTableName(tableName);
+            tablePyhNameDTO.setRowsCount(rowsCount);
             tablePyhNameDTO.setTableFramework(tableFramework);
             tablePyhNameDTO.setFields(colNames);
             tablePyhNameDTOS.add(tablePyhNameDTO);

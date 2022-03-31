@@ -1,7 +1,11 @@
 package com.fisk.system.client;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserDropDTO;
+import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
+import com.fisk.system.dto.userinfo.UserPowerDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,5 +47,21 @@ public interface UserClient {
 
     @PostMapping("/info/getUserListByIds")
     ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids);
+
+    /**
+     * 用户组筛选系统用户
+     * @param dto
+     * @return
+     */
+    @PostMapping("/auth/userGroupQuery")
+    ResultEntity<Page<UserPowerDTO>> userGroupQuery(@RequestBody UserGroupQueryDTO dto);
+
+    /**
+     * 获取用户下拉数据
+     * @return
+     */
+    @GetMapping("/info/listUserDrops")
+    ResultEntity<List<UserDropDTO>> listUserDrops();
+
 
 }

@@ -1,26 +1,22 @@
-package com.fisk.datagovernance.entity.datasecurity;
+package com.fisk.datagovernance.dto.datasecurity.columnuserassignment;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author lock
  * @email feihongz@fisksoft.com.cn
  * @date 2022-03-28 15:47:33
  */
 @Data
-@TableName("tb_column_user_assignment")
-@EqualsAndHashCode(callSuper = true)
-public class ColumnUserAssignmentPO extends BasePO {
+public class ColumnUserAssignmentDTO {
 
     /**
-     * tb_rowsecurity_config表  id
+     * 主键
+     */
+    public long id;
+
+    /**
+     * tb_columnsecurity_config表  id
      */
     public long columnSecurityId;
 

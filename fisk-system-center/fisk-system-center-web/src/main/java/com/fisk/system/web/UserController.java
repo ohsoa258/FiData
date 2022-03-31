@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.fisk.system.dto.userinfo.UserQueryDTO;
 import com.fisk.system.dto.userinfo.UserValidDTO;
 import com.fisk.system.service.IUserService;
@@ -136,6 +137,12 @@ public class UserController {
     @ApiOperation("批量查询用户信息")
     public ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids) {
         return service.getUserListByIds(ids);
+    }
+
+    @GetMapping("/listUserDrops")
+    @ApiOperation("获取用户下拉数据")
+    public ResultEntity<List<UserDropDTO>> listUserDrops() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listUserDrops());
     }
 
 }

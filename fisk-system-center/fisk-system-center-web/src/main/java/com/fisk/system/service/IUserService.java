@@ -7,10 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserInfoCurrentDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
-import com.fisk.system.dto.userinfo.UserPowerDTO;
-import com.fisk.system.dto.userinfo.UserQueryDTO;
-import com.fisk.system.dto.userinfo.UserValidDTO;
+import com.fisk.system.dto.userinfo.*;
 
 import java.util.List;
 
@@ -130,5 +127,18 @@ public interface IUserService {
      * @return 用户列表
      */
     ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids);
+
+    /**
+     * 根据用户组筛选系统用户
+     * @param dto
+     * @return
+     */
+    Page<UserPowerDTO> userGroupQuery(UserGroupQueryDTO dto);
+
+    /**
+     * 获取系统用户下拉数据
+     * @return
+     */
+    List<UserDropDTO> listUserDrops();
 
 }

@@ -2,6 +2,7 @@ package com.fisk.datagovernance.entity.dataquality;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -67,6 +68,11 @@ public class DataCheckPO extends BasePO {
      * 波动阀值
      */
     public Integer thresholdValue;
+
+    /**
+     * 表行数，实际表行数减去表行数
+     */
+    public Integer rowsValue;
 
     /**
      * 运行时间表达式
