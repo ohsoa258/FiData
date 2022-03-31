@@ -1,8 +1,8 @@
-package com.fisk.common.service.dbMeta.utils;
+package com.fisk.common.service.dbMetaData.utils;
 
-import com.fisk.common.service.dbMeta.dto.DataBaseViewDTO;
-import com.fisk.common.service.dbMeta.dto.TablePyhNameDTO;
-import com.fisk.common.service.dbMeta.dto.TableStructureDTO;
+import com.fisk.common.service.dbMetaData.dto.DataBaseViewDTO;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;

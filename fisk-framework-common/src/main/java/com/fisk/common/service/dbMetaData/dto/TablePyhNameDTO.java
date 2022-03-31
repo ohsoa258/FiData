@@ -1,4 +1,4 @@
-package com.fisk.common.service.dbMeta.dto;
+package com.fisk.common.service.dbMetaData.dto;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
