@@ -171,7 +171,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     case SQLSERVER:
                         // 表结构
                         connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                        tableNames = sqlServerPlusUtils.getTablesPlus(connection);
+                        tableNames = sqlServerPlusUtils.getTablesPlus(connection, conPo.getConDbname());
                         break;
                 }
                 if (CollectionUtils.isNotEmpty(tableNames)) {
@@ -243,10 +243,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 break;
             case SQLSERVER:
                 // 表结构
-                String f = tableFramework == null || tableFramework == "" ? "%" : tableFramework;
                 SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
                 connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                colNames = sqlServerPlusUtils.getColumnsName(connection, tableName, f);
+                colNames = sqlServerPlusUtils.getColumnsName(connection, tableName, tableFramework);
                 break;
         }
         if (CollectionUtils.isNotEmpty(colNames)) {

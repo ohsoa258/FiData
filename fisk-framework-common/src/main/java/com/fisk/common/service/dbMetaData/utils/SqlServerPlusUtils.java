@@ -31,19 +31,19 @@ public class SqlServerPlusUtils {
      * @param tableName tableName
      * @return tableName中的表字段
      */
-    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName) {
+    public List<TableStructureDTO> getColumnsName(Connection conn, String tableName, String tableFramework) {
         List<TableStructureDTO> colNameList = null;
         try {
             colNameList = new ArrayList<>();
-
+            tableFramework = tableFramework == null || tableFramework == "" ? "%" : tableFramework;
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, "%", tableName, "%");
+            ResultSet resultSet = metaData.getColumns(null, tableFramework, tableName, "%");
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-////                dto.fieldType = resultSet.getString("TYPE_NAME");
-////                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
-///               dto.fieldDes = resultSet.getString("REMARKS");
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                dto.fieldLength = Integer.parseInt(resultSet.getString("COLUMN_SIZE"));
+                dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }
 
@@ -159,7 +159,7 @@ public class SqlServerPlusUtils {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
+                List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey(), null);
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
                 tablePyhNameDTO.setFields(columnsName);

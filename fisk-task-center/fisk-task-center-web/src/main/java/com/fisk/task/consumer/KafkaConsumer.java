@@ -344,4 +344,6 @@ public class KafkaConsumer {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return props;
     }
+
+    // 7个模板7个方法
 }
