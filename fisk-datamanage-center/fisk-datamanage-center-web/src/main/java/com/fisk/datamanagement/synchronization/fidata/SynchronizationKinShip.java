@@ -435,7 +435,7 @@ public class SynchronizationKinShip {
         data.typeName=EntityTypeEnum.RDBMS_TABLE.getName();
         list.add(data);
         List<Integer> associateIdList;
-        if (dto.type==3)
+        if (dto.type==TableTypeEnum.DORIS_DIMENSION.getValue())
         {
             associateIdList=dto.fieldList.stream().filter(e->e.associatedDim==true).map(e->e.getAssociatedDimId()).collect(Collectors.toList());
         }else {

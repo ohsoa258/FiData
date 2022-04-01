@@ -98,33 +98,16 @@ public class DataModelTableImpl implements IDataModelTable {
                 dimensionKey.fieldLength=255;
                 dimensionKey.fieldDes="";
                 fieldDtoList.add(dimensionKey);
-
                 for (DimensionAttributePO attributePo:attributePoList)
                 {
-                    SourceFieldDTO field=new SourceFieldDTO();
-                    field.id=attributePo.id;
-                    field.fieldName=attributePo.dimensionFieldEnName;
-                    field.fieldType=attributePo.dimensionFieldType;
-                    field.fieldLength=attributePo.dimensionFieldLength;
-                    field.fieldDes=attributePo.dimensionFieldDes;
-                    field.primaryKey=attributePo.isPrimaryKey;
-                    field.sourceTable=attributePo.sourceTableName;
-                    field.sourceField=attributePo.sourceFieldName;
+                    SourceFieldDTO field=pushField(attributePo);
                     if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0)
                     {
-                        field.associatedDim=true;
-                        field.associatedDimId=attributePo.associateDimensionId;
                         DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
                         if (dimensionPo1==null)
                         {
                             continue;
                         }
-                        field.associatedDimName=dimensionPo1.dimensionTabName;
-                        //查询关联维度字段
-                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
-                        field.associatedDimAttributeId=attributePo.associateDimensionFieldId;
-                        field.associatedDimAttributeName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
-
                         SourceFieldDTO associatedField=new SourceFieldDTO();
                         associatedField.id=attributePo.associateDimensionId;
                         associatedField.fieldName=newFieldName+"key";
@@ -140,6 +123,34 @@ public class DataModelTableImpl implements IDataModelTable {
             }
         }
         return list;
+    }
+
+    public SourceFieldDTO pushField(DimensionAttributePO attributePo){
+        SourceFieldDTO field=new SourceFieldDTO();
+        field.id=attributePo.id;
+        field.fieldName=attributePo.dimensionFieldEnName;
+        field.fieldType=attributePo.dimensionFieldType;
+        field.fieldLength=attributePo.dimensionFieldLength;
+        field.fieldDes=attributePo.dimensionFieldDes;
+        field.primaryKey=attributePo.isPrimaryKey;
+        field.sourceTable=attributePo.sourceTableName;
+        field.sourceField=attributePo.sourceFieldName;
+        if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0)
+        {
+            field.associatedDim=true;
+            field.associatedDimId=attributePo.associateDimensionId;
+            DimensionPO dimensionPo1=dimensionMapper.selectById(attributePo.associateDimensionId);
+            if (dimensionPo1==null)
+            {
+                return field;
+            }
+            field.associatedDimName=dimensionPo1.dimensionTabName;
+            //查询关联维度字段
+            DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+            field.associatedDimAttributeId=attributePo.associateDimensionFieldId;
+            field.associatedDimAttributeName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
+        }
+        return field;
     }
 
     public List<SourceTableDTO> getDwFactTable()
