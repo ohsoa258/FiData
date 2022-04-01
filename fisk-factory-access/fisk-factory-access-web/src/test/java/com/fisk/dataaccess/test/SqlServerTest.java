@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.test;
 
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
@@ -159,14 +159,15 @@ public class SqlServerTest {
             Class.forName(driver);
             Connection conn = DriverManager.getConnection(url, username, password);
             // 获取指定模式下所有表名和视图名
-            ResultSet tables = conn.getMetaData().getTables(conn.getCatalog(), null, null, new String[]{"VIEW"});
+            ResultSet tables = conn.getMetaData().getTables(null, "mdm", null, new String[]{"VIEW"});
             while (tables.next()) {
+                System.out.println(tables.getString(3));
                 // 获取表及视图名称
-                System.out.println(tables.getString(1)+","+
-                        tables.getString(2)+","+
-                        tables.getString(3)+","+
-                        tables.getString(4)+","+
-                        tables.getString(5));
+//                System.out.println(tables.getString(1)+","+
+//                        tables.getString(2)+","+
+//                        tables.getString(3)+","+
+//                        tables.getString(4)+","+
+//                        tables.getString(5));
             }
             conn.close();
         } catch (Exception e) {
