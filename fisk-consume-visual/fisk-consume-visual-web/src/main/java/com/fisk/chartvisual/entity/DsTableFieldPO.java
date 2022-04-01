@@ -2,6 +2,7 @@ package com.fisk.chartvisual.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.chartvisual.enums.DsTableTypeEnum;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 
@@ -32,7 +33,7 @@ public class DsTableFieldPO extends BasePO {
     /**
      * 目标字段类型
      */
-    private String targetFieldType;
+    private DsTableTypeEnum targetFieldType;
     /**
      * 字段描述
      */

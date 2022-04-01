@@ -1,5 +1,6 @@
 package com.fisk.chartvisual.dto.dstable;
 
+import com.fisk.chartvisual.enums.DsTableTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -21,7 +22,7 @@ public class DsTableFieldDTO {
     private String sourceFieldType;
 
     @ApiModelProperty(value = "目标字段类型")
-    private String targetFieldType;
+    private DsTableTypeEnum targetFieldType;
 
     @ApiModelProperty(value = "字段描述")
     private String describe;

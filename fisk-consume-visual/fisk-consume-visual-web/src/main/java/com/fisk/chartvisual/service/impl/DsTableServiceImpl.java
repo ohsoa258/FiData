@@ -172,7 +172,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                 List<DsTableFieldPO> tableFieldList = dsTableFieldMapper.selectList(query);
                 if (CollectionUtils.isNotEmpty(tableFieldList)){
                     List<DsFiledDTO> collect = tableFieldList.stream().filter(Objects::nonNull)
-                            .map(item -> new DsFiledDTO((int) item.getId(), item.getTargetField(), item.getTargetFieldType()))
+                            .map(item -> new DsFiledDTO((int) item.getId(), item.getTargetField(), item.getTargetFieldType().getName()))
                             .collect(Collectors.toList());
                     dto.setChildren(collect);
                 }
@@ -497,7 +497,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
             type = EXIST;
             // 目标字段和目标类型
             dto1.setTargetField(dsTableFieldPo.getTargetField());
-            dto1.setTargetType(dsTableFieldPo.getTargetFieldType());
+            dto1.setTargetType(dsTableFieldPo.getTargetFieldType().getName());
             dto1.setFieldInfo(dsTableFieldPo.getDescribe());
         }
         dto1.setFieldIsExist(type);
