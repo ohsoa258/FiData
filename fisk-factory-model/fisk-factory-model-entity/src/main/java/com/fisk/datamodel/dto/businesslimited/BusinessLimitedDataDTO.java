@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.businessLimited;
+package com.fisk.datamodel.dto.businesslimited;
 
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
 import lombok.Data;
