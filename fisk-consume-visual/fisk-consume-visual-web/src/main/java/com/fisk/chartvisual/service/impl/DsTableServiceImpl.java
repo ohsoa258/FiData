@@ -165,6 +165,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                 DsFiledDTO dto = new DsFiledDTO();
                 dto.setId((int)e.getId());
                 dto.setName(e.getTableName());
+                dto.setTargetName(e.getTableName());
 
                 QueryWrapper<DsTableFieldPO> query = new QueryWrapper<>();
                 query.lambda().
