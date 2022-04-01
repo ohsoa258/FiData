@@ -172,7 +172,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                 List<DsTableFieldPO> tableFieldList = dsTableFieldMapper.selectList(query);
                 if (CollectionUtils.isNotEmpty(tableFieldList)){
                     List<DsFiledDTO> collect = tableFieldList.stream().filter(Objects::nonNull)
-                            .map(item -> new DsFiledDTO((int) item.getId(), item.getTargetField(), item.getTargetFieldType().getName()))
+                            .map(item -> new DsFiledDTO((int) item.getId(),item.getSourceField() ,item.getTargetField(), item.getTargetFieldType().getName()))
                             .collect(Collectors.toList());
                     dto.setChildren(collect);
                 }
