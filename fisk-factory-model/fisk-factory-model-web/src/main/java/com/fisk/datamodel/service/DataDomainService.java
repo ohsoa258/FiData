@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.chartvisual.vo.DataDomainVO;
-import com.fisk.datamodel.dto.DataDomain.AreaBusinessNameDTO;
+import com.fisk.datamodel.dto.datadomain.AreaBusinessNameDTO;
 
 import java.util.List;
 

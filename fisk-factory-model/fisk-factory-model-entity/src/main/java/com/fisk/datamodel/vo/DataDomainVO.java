@@ -1,6 +1,6 @@
 package com.fisk.datamodel.vo;
 
-import com.fisk.datamodel.dto.DataDomain.AreaBusinessDTO;
+import com.fisk.datamodel.dto.datadomain.AreaBusinessDTO;
 import lombok.Data;
 
 import java.util.List;

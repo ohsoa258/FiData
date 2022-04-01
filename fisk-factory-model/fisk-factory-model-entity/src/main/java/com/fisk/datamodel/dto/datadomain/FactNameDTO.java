@@ -1,22 +1,22 @@
-package com.fisk.datamodel.dto.DataDomain;
+package com.fisk.datamodel.dto.datadomain;
 
 import lombok.Data;
 
 /**
  * @author WangYan
- * @date 2021/9/10 14:42
+ * @date 2021/8/16 15:06
  * 事实表 三级
  */
 @Data
-public class FactDimDTO {
+public class FactNameDTO {
     public Long factId;
     public String factTableEnName;
     /**
-     * 7.业务域  8.维度  9.业务过程  10.事实表
+     * 3.业务域 4.业务流程  5.事实表
      */
     public Integer flag;
     /**
-     * 上一级id
+     * 业务过程id
      */
     public Long pid;
 }

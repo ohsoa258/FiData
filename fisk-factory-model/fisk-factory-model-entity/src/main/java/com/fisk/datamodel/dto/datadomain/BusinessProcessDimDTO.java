@@ -1,4 +1,4 @@
-package com.fisk.datamodel.dto.DataDomain;
+package com.fisk.datamodel.dto.datadomain;
 
 import lombok.Data;
 

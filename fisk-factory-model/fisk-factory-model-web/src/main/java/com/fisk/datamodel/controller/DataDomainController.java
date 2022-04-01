@@ -5,7 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.DataDomain.AreaBusinessNameDTO;
+import com.fisk.datamodel.dto.datadomain.AreaBusinessNameDTO;
 import com.fisk.datamodel.service.DataDomainService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
