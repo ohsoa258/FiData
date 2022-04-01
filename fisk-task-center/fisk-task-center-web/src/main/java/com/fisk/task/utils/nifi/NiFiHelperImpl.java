@@ -1,20 +1,20 @@
-package com.fisk.task.service.nifi.impl;
+package com.fisk.task.utils.nifi;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.api.ProcessorsApi;
 import com.davis.client.model.*;
-import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ControllerServiceTypeEnum;
 import com.fisk.common.core.enums.task.nifi.ProcessorTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableBusinessDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.enums.syncModeTypeEnum;
@@ -27,11 +27,12 @@ import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
-import com.fisk.task.po.AppNifiSettingPO;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
+import com.fisk.task.po.AppNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
+import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.TableTopicImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
@@ -58,7 +59,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class NifiComponentsBuildImpl implements INifiComponentsBuild {
+public class NiFiHelperImpl implements INiFiHelper {
 
     @Resource
     RestTemplate httpClient;

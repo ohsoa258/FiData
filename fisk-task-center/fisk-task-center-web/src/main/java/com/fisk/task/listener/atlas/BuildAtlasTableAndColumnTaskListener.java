@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.atlas;
+package com.fisk.task.listener.atlas;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,12 +12,13 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
-import com.fisk.task.enums.*;
+import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import lombok.extern.slf4j.Slf4j;

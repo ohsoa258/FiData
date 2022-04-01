@@ -3,17 +3,16 @@ package task;
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
-import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.enums.task.nifi.StatementSqlTypeEnum;
 import com.fisk.task.FkTaskApplication;
 import com.fisk.task.dto.nifi.ProcessorRunStatusEntity;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
-import com.fisk.task.service.nifi.INifiFlowBuild;
 import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import com.fisk.task.vo.ProcessGroupsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -44,7 +43,7 @@ public class NifiBuildTest {
     private String dorisDriver;
 
     @Resource
-    INifiComponentsBuild service;
+    INiFiHelper service;
 
     @Test
     public void a() {
@@ -179,16 +178,6 @@ public class NifiBuildTest {
     }
 
     //--------------------
-
-    @Resource
-    INifiFlowBuild flowBuild;
-
-    @Test
-    public void buildSourceToTargetDataFlowTest() {
-        for (int i = 0; i < 3; i++) {
-            flowBuild.buildSourceToTargetDataFlow();
-        }
-    }
 
     @Resource
     RestTemplate httpClient;

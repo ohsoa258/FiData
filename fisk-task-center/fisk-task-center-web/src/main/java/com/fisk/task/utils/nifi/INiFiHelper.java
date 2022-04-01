@@ -1,4 +1,4 @@
-package com.fisk.task.service.nifi;
+package com.fisk.task.utils.nifi;
 
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
@@ -7,8 +7,8 @@ import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
-import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.nifi.FunnelDTO;
+import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.vo.ProcessGroupsVO;
 
@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * @author gy
  */
-public interface INifiComponentsBuild {
+public interface INiFiHelper {
 
     /* ===========组=========== */
 

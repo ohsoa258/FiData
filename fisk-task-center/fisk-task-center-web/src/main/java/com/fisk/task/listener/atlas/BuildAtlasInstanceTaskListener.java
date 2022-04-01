@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.atlas;
+package com.fisk.task.listener.atlas;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;

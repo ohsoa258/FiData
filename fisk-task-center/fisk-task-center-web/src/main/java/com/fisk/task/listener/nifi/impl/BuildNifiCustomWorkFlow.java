@@ -1,17 +1,17 @@
-package com.fisk.task.consumer.nifi.impl;
+package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
-import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.factory.PipelineStatuTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.AutoEndBranchTypeEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
@@ -19,7 +19,6 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.*;
@@ -28,15 +27,16 @@ import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
+import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.po.*;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
-import com.fisk.task.service.nifi.impl.NifiComponentsBuildImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.*;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.nifi.INiFiHelper;
+import com.fisk.task.utils.nifi.NiFiHelperImpl;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +54,7 @@ public class BuildNifiCustomWorkFlow {
 
 
     @Resource
-    INifiComponentsBuild componentsBuild;
+    INiFiHelper componentsBuild;
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
     @Resource
@@ -82,7 +82,7 @@ public class BuildNifiCustomWorkFlow {
     @Resource
     OlapMapper olapMapper;
     @Resource
-    NifiComponentsBuildImpl nifiComponentsBuild;
+    NiFiHelperImpl nifiComponentsBuild;
     @Resource
     TableTopicImpl tableTopic;
 

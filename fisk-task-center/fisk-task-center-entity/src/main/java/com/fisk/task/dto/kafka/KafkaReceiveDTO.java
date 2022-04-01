@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.kafka;
+package com.fisk.task.dto.kafka;
 
 import lombok.Data;
 
@@ -11,6 +11,4 @@ public class KafkaReceiveDTO {
     public Integer numbers;
     public String topic;
     public Date endTime;
-
-
 }

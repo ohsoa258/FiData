@@ -1,6 +1,6 @@
-package com.fisk.task.consumer.redis;
+package com.fisk.task.listener.redis;
 
-import com.fisk.task.consumer.kafka.ProducerServer;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 @Component
 public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListener {
     @Resource
-    ProducerServer producerServer;
+    KafkaTemplateHelper kafkaTemplateHelper;
 
     public RedisKeyExpirationListeners(RedisMessageListenerContainer listenerContainer) {
         super(listenerContainer);
@@ -29,6 +29,6 @@ public class RedisKeyExpirationListeners extends KeyExpirationEventMessageListen
         String expiredKey = message.toString();
         System.out.println("即将调用的节点:" + expiredKey);
         //此时,expiredKey就是即将要调用的节点,需要发消息topic_name就是expiredKey
-        producerServer.sendMessageAsync(expiredKey, "即将调用的节点");
+        kafkaTemplateHelper.sendMessageAsync(expiredKey, "即将调用的节点");
     }
 }

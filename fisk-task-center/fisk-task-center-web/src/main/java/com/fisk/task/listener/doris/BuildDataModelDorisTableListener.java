@@ -1,16 +1,16 @@
-package com.fisk.task.consumer.doris;
+package com.fisk.task.listener.doris;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
-import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
@@ -22,10 +22,7 @@ import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.po.NifiConfigPO;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskDwDimPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
@@ -35,20 +32,24 @@ import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.mapper.TaskDwDimMapper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
+import com.fisk.task.po.AppNifiSettingPO;
+import com.fisk.task.po.NifiConfigPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.doris.IDorisBuild;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.service.nifi.ITaskDwDim;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
-import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,7 +79,7 @@ public class BuildDataModelDorisTableListener
     @Resource
     TaskPgTableStructureMapper taskPgTableStructureMapper;
     @Resource
-    INifiComponentsBuild componentsBuild;
+    INiFiHelper componentsBuild;
     @Value("${pgsql-datamodel.url}")
     public String pgsqlDatamodelUrl;
     @Value("${pgsql-datamodel.username}")

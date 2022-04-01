@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.postgre.datainput;
+package com.fisk.task.listener.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;

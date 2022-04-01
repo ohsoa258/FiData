@@ -1,42 +1,39 @@
-package com.fisk.task.consumer.kafka;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package com.fisk.task.consumer;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.task.consumer.atlas.BuildAtlasTableAndColumnTaskListener;
-import com.fisk.task.consumer.doris.BuildDataModelDorisTableListener;
-import com.fisk.task.consumer.doris.BuildDorisTaskListener;
-import com.fisk.task.consumer.nifi.impl.BuildNifiCustomWorkFlow;
-import com.fisk.task.consumer.nifi.impl.BuildNifiTaskListener;
-import com.fisk.task.consumer.nifi.INifiTaskListener;
-import com.fisk.task.consumer.olap.BuildModelTaskListener;
-import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
-import com.fisk.task.consumer.postgre.datainput.BuildDataInputDeletePgTableListener;
-import com.fisk.task.consumer.postgre.datainput.BuildDataInputPgTableListener;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.OlapPO;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
+import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
+import com.fisk.task.listener.doris.BuildDorisTaskListener;
+import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
+import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
+import com.fisk.task.listener.olap.BuildModelTaskListener;
+import com.fisk.task.listener.olap.BuildWideTableTaskListener;
+import com.fisk.task.listener.postgre.datainput.BuildDataInputDeletePgTableListener;
+import com.fisk.task.listener.postgre.datainput.BuildDataInputPgTableListener;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,13 +49,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author cfk
  */
 @Slf4j
 @Component
-public class ConsumerServer {
+public class KafkaConsumer {
     @Resource
     RedisUtil redisUtil;
     @Resource
@@ -109,7 +109,7 @@ public class ConsumerServer {
     @Resource
     INifiTaskListener iNifiTaskListener;
     @Resource
-    INifiComponentsBuild iNifiComponentsBuild;
+    INiFiHelper iNiFiHelper;
 
 
     //这里只用来存放reids
@@ -292,7 +292,7 @@ public class ConsumerServer {
             List<TableNifiSettingDTO> tableNifiSettings = buildTableNifiSettingDTO.tableNifiSettings;
             if (!CollectionUtils.isEmpty(tableNifiSettings)) {
                 for (TableNifiSettingDTO tableNifiSettingDTO : tableNifiSettings) {
-                    iNifiComponentsBuild.immediatelyStart(tableNifiSettingDTO);
+                    iNiFiHelper.immediatelyStart(tableNifiSettingDTO);
                 }
             }
         } catch (Exception e) {

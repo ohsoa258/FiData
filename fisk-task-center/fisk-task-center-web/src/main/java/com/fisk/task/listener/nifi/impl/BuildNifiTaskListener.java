@@ -1,19 +1,19 @@
-package com.fisk.task.consumer.nifi.impl;
+package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
-import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.*;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableBusinessDTO;
@@ -25,25 +25,26 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
-import com.fisk.task.consumer.nifi.INifiTaskListener;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.nifi.*;
-import com.fisk.task.dto.task.*;
+import com.fisk.task.dto.task.BuildNifiFlowDTO;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
+import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
 import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.po.NifiConfigPO;
 import com.fisk.task.po.TableNifiSettingPO;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -96,7 +97,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${nifi.pipeline.topicName}")
     public String pipelineTopicName;
     @Resource
-    INifiComponentsBuild componentsBuild;
+    INiFiHelper componentsBuild;
     @Resource
     DataAccessClient client;
     @Resource

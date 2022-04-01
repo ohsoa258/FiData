@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.olap;
+package com.fisk.task.listener.olap;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;

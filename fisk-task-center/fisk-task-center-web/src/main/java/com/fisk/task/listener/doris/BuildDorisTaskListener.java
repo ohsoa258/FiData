@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.doris;
+package com.fisk.task.listener.doris;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;

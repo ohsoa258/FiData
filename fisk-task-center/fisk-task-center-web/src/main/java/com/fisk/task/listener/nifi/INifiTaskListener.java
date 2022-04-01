@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.nifi;
+package com.fisk.task.listener.nifi;
 
 import org.springframework.kafka.support.Acknowledgment;
 

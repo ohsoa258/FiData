@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.olap;
+package com.fisk.task.listener.olap;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
@@ -12,9 +12,9 @@ import com.fisk.task.entity.OlapPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.service.doris.IDorisBuild;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.ITBETLIncremental;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -42,7 +42,7 @@ public class BuildModelTaskListener {
     @Resource
     IDorisBuild doris;
     @Resource
-    INifiComponentsBuild iNifiComponentsBuild;
+    INiFiHelper iNiFiHelper;
     @Resource
     private ITBETLIncremental itbetlIncremental;
 

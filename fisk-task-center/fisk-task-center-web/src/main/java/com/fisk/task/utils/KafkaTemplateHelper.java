@@ -1,4 +1,4 @@
-package com.fisk.task.consumer.kafka;
+package com.fisk.task.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Service
-public class ProducerServer {
+public class KafkaTemplateHelper {
 
     @Autowired
     private KafkaTemplate kafkaTemplate;

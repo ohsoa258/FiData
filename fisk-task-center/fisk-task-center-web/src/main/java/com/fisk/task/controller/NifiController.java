@@ -6,8 +6,8 @@ import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.po.TableNifiSettingPO;
-import com.fisk.task.service.nifi.INifiComponentsBuild;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.utils.nifi.INiFiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,19 +22,19 @@ import java.util.List;
 @Slf4j
 public class NifiController {
     @Resource
-    INifiComponentsBuild iNifiComponentsBuild;
+    INiFiHelper iNiFiHelper;
     @Resource
     TableNifiSettingServiceImpl tableNifiSettingService;
 
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
-        return ResultEntityBuild.build(iNifiComponentsBuild.modifyScheduling(groupId, ProcessorId, schedulingStrategy, schedulingPeriod));
+        return ResultEntityBuild.build(iNiFiHelper.modifyScheduling(groupId, ProcessorId, schedulingStrategy, schedulingPeriod));
 
     }
 
     @PostMapping("/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO) {
-        return ResultEntityBuild.build(iNifiComponentsBuild.deleteNifiFlow(dataModelVO));
+        return ResultEntityBuild.build(iNiFiHelper.deleteNifiFlow(dataModelVO));
     }
 
     @PostMapping("/getTableNifiSetting")
@@ -49,7 +49,7 @@ public class NifiController {
     @PostMapping("/getSqlForPgOds")
     public ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO) {
         ResultEntity<List<String>> SqlForPgOds = new ResultEntity<>();
-        SqlForPgOds.data = iNifiComponentsBuild.getSqlForPgOds(configDTO);
+        SqlForPgOds.data = iNiFiHelper.getSqlForPgOds(configDTO);
         SqlForPgOds.code = 0;
         return SqlForPgOds;
     }
