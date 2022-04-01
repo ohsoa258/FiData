@@ -2,7 +2,6 @@ package com.fisk.datagovernance.entity.dataquality;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**

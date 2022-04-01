@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.service.dbMetaData.dto.DataBaseViewDTO;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -148,19 +151,21 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return dataSource;
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-
+        List<DataBaseViewDTO> dataBaseViewDTOS = null;
         switch (DataSourceTypeEnum.values()[conPo.conType]) {
             case MYSQL:
                 // 表结构
                 dataSource.tableDtoList = mysqlConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.MYSQL);
                 //视图结构
                 //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                dataBaseViewDTOS = mysqlConUtils.loadViewDetails(DriverTypeEnum.MYSQL, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
             case SQLSERVER:
                 // 表结构
                 dataSource.tableDtoList = sqlServerPlusUtils.getTableNameAndColumnsPlus(conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 // 视图结构
                 //dataSource.viewDtoList = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
+                dataBaseViewDTOS = mysqlConUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
         }
         Connection conn = null;
@@ -185,6 +190,32 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     });
                 }
             });
+        // 演示需要暂时将试图对象也写入到表对象中
+        if (CollectionUtils.isNotEmpty(dataBaseViewDTOS)) {
+            List<TablePyhNameDTO> tableDtoList = new ArrayList<>();
+            dataBaseViewDTOS.forEach(t -> {
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(t.getViewName());
+                if (CollectionUtils.isNotEmpty(t.getFields())) {
+                    List<TableStructureDTO> fields = new ArrayList<>();
+                    t.fields.forEach(s -> {
+                        TableStructureDTO field = new TableStructureDTO();
+                        field.setFieldName(s.getFieldName());
+                        field.setFieldType(s.getFieldType());
+                        field.setFieldLength(s.getFieldLength());
+                        field.setFieldDes(s.getFieldDes());
+                        fields.add(field);
+                    });
+                    tablePyhNameDTO.setFields(fields);
+                }
+                tableDtoList.add(tablePyhNameDTO);
+            });
+            if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
+                dataSource.tableDtoList.addAll(0, tableDtoList);
+            } else {
+                dataSource.tableDtoList = tableDtoList;
+            }
+        }
         dataSource.id = (int) conPo.id;
         dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
         dataSource.name = conPo.name;

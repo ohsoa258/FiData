@@ -148,6 +148,33 @@ public class SqlServerTest {
     }
 
     @Test
+    public  void  getView(){
+
+        try {
+            String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+            String url = "jdbc:sqlserver://192.168.1.35:1433;DatabaseName=DWC_MDS;";
+            String username = "sa";
+            String password = "password01!";
+
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, username, password);
+            // 获取指定模式下所有表名和视图名
+            ResultSet tables = conn.getMetaData().getTables(conn.getCatalog(), null, null, new String[]{"VIEW"});
+            while (tables.next()) {
+                // 获取表及视图名称
+                System.out.println(tables.getString(1)+","+
+                        tables.getString(2)+","+
+                        tables.getString(3)+","+
+                        tables.getString(4)+","+
+                        tables.getString(5));
+            }
+            conn.close();
+        } catch (Exception e) {
+
+        }
+    }
+
+    @Test
     public void testTableFields() {
 
         String appName1 = "NonRealTime";
@@ -186,5 +213,7 @@ public class SqlServerTest {
         System.out.println(list);
 
     }
+
+
 
 }
