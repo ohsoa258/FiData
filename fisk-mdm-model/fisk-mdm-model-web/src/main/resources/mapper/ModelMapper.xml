@@ -1,0 +1,17 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.mdm.mapper.ModelMapper">
+    <select id="getAll" resultType="com.fisk.mdm.vo.model.ModelVO">
+        select model.id,
+        name,
+        display_name,
+        model.desc,
+        log_retention_days,
+        create_time,
+        update_user,
+        update_time
+        from tb_model as model
+        where model.del_flag=1
+    </select>
+</mapper>

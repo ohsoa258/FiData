@@ -1,5 +1,6 @@
 package com.fisk.mdm.config;
 
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.fisk.common.constants.SystemConstants;
 import com.fisk.mdm.FiskMdmModelApplication;
 import org.springframework.context.annotation.Bean;
@@ -71,5 +72,14 @@ public class SwaggerConfig {
                 .description("Create by Lock")
                 .version("1.0.0测试版")
                 .build();
+    }
+
+    /**
+     * 分页插件
+     * @return
+     */
+    @Bean
+    public PaginationInterceptor paginationInterceptor() {
+        return new PaginationInterceptor();
     }
 }
