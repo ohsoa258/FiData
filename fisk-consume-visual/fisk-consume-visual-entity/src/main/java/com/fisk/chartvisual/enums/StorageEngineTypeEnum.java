@@ -1,12 +1,16 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author WangYan
  * @date 2022/1/6 16:11
  */
 public enum StorageEngineTypeEnum implements BaseEnum {
+
+    /**
+     * 数据源类型
+     */
     DMP(1,"白泽数据源"),
     MDX(2,"CUBE"),
     VIEW(3,"视图");

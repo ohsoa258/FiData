@@ -4,14 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.datadriven.sqlDto.TablePyhNameDTO;
-import com.fisk.common.datadriven.sqlDto.TableStructureDTO;
-import com.fisk.common.datadriven.sqlUtils.MysqlConUtils;
-import com.fisk.common.datadriven.sqlUtils.SqlServerPlusUtils;
-import com.fisk.common.enums.task.nifi.DriverTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
+import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
+import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
@@ -24,7 +23,6 @@ import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.FieldInfoVO;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +32,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 数据源接口实现类
@@ -174,7 +171,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     case SQLSERVER:
                         // 表结构
                         connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                        tableNames = sqlServerPlusUtils.getTablesPlus(connection);
+                        tableNames = sqlServerPlusUtils.getTablesPlus(connection, conPo.getConDbname());
                         break;
                 }
                 if (CollectionUtils.isNotEmpty(tableNames)) {
@@ -246,15 +243,27 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 break;
             case SQLSERVER:
                 // 表结构
-                String f = tableFramework == null || tableFramework == "" ? "%" : tableFramework;
                 SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
                 connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                colNames = sqlServerPlusUtils.getColumnsName(connection, tableName, f);
+                colNames = sqlServerPlusUtils.getColumnsName(connection, tableName, tableFramework);
                 break;
         }
         if (CollectionUtils.isNotEmpty(colNames)) {
+            int rowsCount = 0;
+            try {
+                String tName = tableFramework != null && tableFramework != "" ? tableFramework + "." + tableName : tableName;
+                String sqlCountStr = String.format("select count(*) from %s", tName);
+                PreparedStatement preparedStatement = null;
+                preparedStatement = connection.prepareStatement(sqlCountStr);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                resultSet.next();
+                rowsCount = resultSet.getInt(1);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
             tablePyhNameDTO.setTableName(tableName);
+            tablePyhNameDTO.setRowsCount(rowsCount);
             tablePyhNameDTO.setTableFramework(tableFramework);
             tablePyhNameDTO.setFields(colNames);
             tablePyhNameDTOS.add(tablePyhNameDTO);

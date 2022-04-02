@@ -1,8 +1,8 @@
 package com.fisk.task.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.enums.task.MessageLevelEnum;
-import com.fisk.common.enums.task.MessageStatusEnum;
+import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.core.enums.task.MessageStatusEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;

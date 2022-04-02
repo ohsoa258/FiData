@@ -1,11 +1,13 @@
 package com.fisk.datamodel.controller;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.businessLimited.*;
 import com.fisk.datamodel.dto.businesslimitedattribute.BusinessLimitedAttributeDataDTO;
+import com.fisk.datamodel.dto.businesslimited.BusinessLimitedDataAddDTO;
+import com.fisk.datamodel.dto.businesslimited.BusinessLimitedDataDTO;
+import com.fisk.datamodel.dto.businesslimited.BusinessLimitedUpdateDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import com.fisk.datamodel.service.IBusinessLimited;
 import com.fisk.datamodel.service.IBusinessLimitedAttribute;
@@ -51,7 +53,7 @@ public class BusinessLimitedController {
 
     @ApiOperation("添加业务限定")
     @PostMapping("/BusinessLimitedAdd")
-    public ResultEntity<Object> BusinessLimitedAdd(@Validated @RequestBody BusinessLimitedDataAddDTO dto) {
+    public ResultEntity<Object> businessLimitedAdd(@Validated @RequestBody BusinessLimitedDataAddDTO dto) {
         return ResultEntityBuild.build(iBusinessLimited.businessLimitedAdd(dto));
     }
 

@@ -1,10 +1,10 @@
 package com.fisk.datamodel.controller;
 
-import com.fisk.chartvisual.dto.IndicatorDTO;
-import com.fisk.chartvisual.dto.IndicatorFeignDTO;
-import com.fisk.chartvisual.dto.TableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.service.ITableName;
 import org.springframework.web.bind.annotation.*;
 

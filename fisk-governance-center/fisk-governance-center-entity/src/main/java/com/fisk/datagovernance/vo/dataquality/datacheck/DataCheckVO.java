@@ -83,11 +83,18 @@ public class DataCheckVO {
      */
     @ApiModelProperty(value = "校验规则的类型，英文逗号分隔")
     public String checkRuleType;
+
     /**
      * 波动阀值
      */
-    @ApiModelProperty(value = "波动阀值")
+    @ApiModelProperty(value = "波动阈值")
     public Integer thresholdValue;
+
+    /**
+     * 表行数，实际表行数减去表行数
+     */
+    @ApiModelProperty(value = "表行数")
+    public Integer rowsValue;
 
     /**
      * 运行时间表达式

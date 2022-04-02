@@ -2,7 +2,7 @@ package com.fisk.auth.dto.clientregister;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.auth.vo.ClientRegisterVO;
-import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import lombok.Data;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.service;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.TableHistoryDTO;
 
 import java.util.List;

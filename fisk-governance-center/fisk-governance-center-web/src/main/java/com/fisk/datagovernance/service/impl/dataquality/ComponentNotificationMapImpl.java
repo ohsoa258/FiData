@@ -2,7 +2,7 @@ package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
 import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import com.fisk.datagovernance.map.dataquality.ComponentNotificationMap;

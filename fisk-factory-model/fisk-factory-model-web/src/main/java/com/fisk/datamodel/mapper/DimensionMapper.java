@@ -1,6 +1,6 @@
 package com.fisk.datamodel.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.dimension.DimensionTabDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAssociationDTO;
 import com.fisk.datamodel.entity.DimensionPO;

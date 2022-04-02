@@ -11,12 +11,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.system",
-        "com.fisk.common.advice",
-        "com.fisk.common.mybatis",
-        "com.fisk.common.redis",
-        "com.fisk.common.filter",
-        "com.fisk.common.exception",
-        "com.fisk.common.user",})
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.mybatis",
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.service.pageFilter",
+        "com.fisk.common.framework.exception",
+        "com.fisk.common.core.user",})
 @MapperScan("com.fisk.system.mapper")
 @EnableFeignClients(basePackages = "com.fisk.auth.client")
 @EnableJwtVerification

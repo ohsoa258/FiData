@@ -1,8 +1,8 @@
 package com.fisk.dataaccess.utils.ftp;
 
 import com.csvreader.CsvReader;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static com.fisk.common.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
+import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 
 /**
  * @author Lock

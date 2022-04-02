@@ -1,6 +1,6 @@
 package com.fisk.dataservice.controller;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
@@ -9,7 +9,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 

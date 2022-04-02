@@ -3,7 +3,7 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.service.ICategory;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;

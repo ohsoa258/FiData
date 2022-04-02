@@ -1,6 +1,6 @@
 package com.fisk.datamodel.mapper;
 
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.entity.FactAttributePO;
 import org.apache.ibatis.annotations.Mapper;

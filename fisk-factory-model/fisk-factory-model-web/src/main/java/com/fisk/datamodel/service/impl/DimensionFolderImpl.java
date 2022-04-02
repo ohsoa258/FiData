@@ -2,10 +2,10 @@ package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
@@ -285,7 +285,7 @@ public class DimensionFolderImpl
             QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
             queryWrapper.in("id",dto.dimensionIds);
             List<DimensionPO> dimensionPoList=dimensionMapper.selectList(queryWrapper);
-            if (dimensionPoList==null || dimensionPoList.size()==0)
+            if (CollectionUtils.isEmpty(dimensionPoList))
             {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE,"维度表为空");
             }
@@ -319,6 +319,7 @@ public class DimensionFolderImpl
             addTableHistory(dto);
             for (DimensionPO item:dimensionPoList)
             {
+                //拼接数据
                 ModelPublishTableDTO pushDto=new ModelPublishTableDTO();
                 pushDto.tableId=Integer.parseInt(String.valueOf(item.id));
                 pushDto.tableName=item.dimensionTabName;
@@ -345,26 +346,7 @@ public class DimensionFolderImpl
                 List<DimensionAttributePO> attributePoList=dimensionAttributePoList.stream().filter(e->e.dimensionId==item.id).collect(Collectors.toList());
                 for (DimensionAttributePO attributePo:attributePoList)
                 {
-                    ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-                    fieldDTO.fieldId=attributePo.id;
-                    fieldDTO.fieldEnName=attributePo.dimensionFieldEnName;
-                    fieldDTO.fieldType=attributePo.dimensionFieldType;
-                    fieldDTO.fieldLength=attributePo.dimensionFieldLength;
-                    fieldDTO.attributeType=attributePo.attributeType;
-                    fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
-                    fieldDTO.sourceFieldName=attributePo.sourceFieldName;
-                    fieldDTO.associateDimensionId=attributePo.associateDimensionId;
-                    fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
-                    //判断是否关联维度
-                    if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
-                    {
-                        DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
-                        fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
-                        fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
-                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
-                        fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
-                    }
-                    fieldList.add(fieldDTO);
+                    fieldList.add(pushField(attributePo));
                 }
                 pushDto.fieldList=fieldList;
                 dimensionList.add(pushDto);
@@ -378,6 +360,29 @@ public class DimensionFolderImpl
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    public ModelPublishFieldDTO pushField(DimensionAttributePO attributePo){
+        ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+        fieldDTO.fieldId=attributePo.id;
+        fieldDTO.fieldEnName=attributePo.dimensionFieldEnName;
+        fieldDTO.fieldType=attributePo.dimensionFieldType;
+        fieldDTO.fieldLength=attributePo.dimensionFieldLength;
+        fieldDTO.attributeType=attributePo.attributeType;
+        fieldDTO.isPrimaryKey=attributePo.isPrimaryKey;
+        fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+        fieldDTO.associateDimensionId=attributePo.associateDimensionId;
+        fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
+        //判断是否关联维度
+        if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
+        {
+            DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
+            fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+            fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
+            DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+            fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
+        }
+        return fieldDTO;
     }
 
     private void addTableHistory(DimensionFolderPublishQueryDTO dto)

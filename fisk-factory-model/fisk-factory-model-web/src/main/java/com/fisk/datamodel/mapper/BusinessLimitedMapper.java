@@ -1,9 +1,9 @@
 package com.fisk.datamodel.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedDTO;
-import com.fisk.datamodel.dto.businessLimited.BusinessLimitedQueryDTO;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datamodel.dto.businesslimited.BusinessLimitedDTO;
+import com.fisk.datamodel.dto.businesslimited.BusinessLimitedQueryDTO;
 import com.fisk.datamodel.entity.BusinessLimitedPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

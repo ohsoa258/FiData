@@ -1,8 +1,7 @@
 package com.fisk.dataaccess.vo;
 
-import com.fisk.common.dto.BaseDTO;
-import com.fisk.common.entity.BaseEntity;
-import com.fisk.common.vo.BaseVO;
+import com.fisk.common.core.baseObject.entity.BaseEntity;
+import com.fisk.common.core.baseObject.vo.BaseVO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

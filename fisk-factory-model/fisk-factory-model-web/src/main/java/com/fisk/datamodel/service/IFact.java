@@ -1,7 +1,7 @@
 package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;

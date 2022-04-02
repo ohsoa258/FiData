@@ -1,8 +1,7 @@
 package com.fisk.datamodel.dto.businessarea;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.filter.dto.FilterQueryDTO;
-import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import lombok.Data;
 
 import java.util.List;

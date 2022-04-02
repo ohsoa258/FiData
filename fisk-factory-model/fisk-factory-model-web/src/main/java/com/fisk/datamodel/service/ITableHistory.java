@@ -1,6 +1,6 @@
 package com.fisk.datamodel.service;
 
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
 

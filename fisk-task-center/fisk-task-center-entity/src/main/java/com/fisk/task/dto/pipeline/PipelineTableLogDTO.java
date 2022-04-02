@@ -1,6 +1,6 @@
 package com.fisk.task.dto.pipeline;
 
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Date;

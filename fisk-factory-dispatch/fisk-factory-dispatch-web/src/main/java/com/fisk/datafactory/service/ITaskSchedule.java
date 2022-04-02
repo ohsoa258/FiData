@@ -1,7 +1,7 @@
 package com.fisk.datafactory.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.taskschedule.TaskCronDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskScheduleDTO;
 import com.fisk.datafactory.entity.TaskSchedulePO;

@@ -3,7 +3,9 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.chartvisual.ObtainTableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableInfoDTO;
+import com.fisk.chartvisual.dto.dstable.*;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.entity.DsTableFieldPO;
 import com.fisk.chartvisual.entity.DsTablePO;
@@ -18,10 +20,10 @@ import com.fisk.chartvisual.service.DsTableService;
 import com.fisk.chartvisual.util.dbhelper.AbstractDbHelper;
 import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,6 +165,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                 DsFiledDTO dto = new DsFiledDTO();
                 dto.setId((int)e.getId());
                 dto.setName(e.getTableName());
+                dto.setTargetName(e.getTableName());
 
                 QueryWrapper<DsTableFieldPO> query = new QueryWrapper<>();
                 query.lambda().
@@ -170,7 +173,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                 List<DsTableFieldPO> tableFieldList = dsTableFieldMapper.selectList(query);
                 if (CollectionUtils.isNotEmpty(tableFieldList)){
                     List<DsFiledDTO> collect = tableFieldList.stream().filter(Objects::nonNull)
-                            .map(item -> new DsFiledDTO((int) item.getId(), item.getTargetField(), item.getTargetFieldType()))
+                            .map(item -> new DsFiledDTO((int) item.getId(),item.getSourceField() ,item.getTargetField(), item.getTargetFieldType().getName()))
                             .collect(Collectors.toList());
                     dto.setChildren(collect);
                 }
@@ -408,6 +411,8 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
                         case SQLSERVER:
                             dto1.setTargetType(SqlServerFieldTypeMappingEnum.getTargetTypeBySourceType(item.getType()));
                             break;
+                        default:
+                            throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
                     }
                 } catch (Exception exception) {
                     exception.printStackTrace();
@@ -493,7 +498,7 @@ public class DsTableServiceImpl extends ServiceImpl<DsTableFieldMapper, DsTableF
             type = EXIST;
             // 目标字段和目标类型
             dto1.setTargetField(dsTableFieldPo.getTargetField());
-            dto1.setTargetType(dsTableFieldPo.getTargetFieldType());
+            dto1.setTargetType(dsTableFieldPo.getTargetFieldType().getName());
             dto1.setFieldInfo(dsTableFieldPo.getDescribe());
         }
         dto1.setFieldIsExist(type);

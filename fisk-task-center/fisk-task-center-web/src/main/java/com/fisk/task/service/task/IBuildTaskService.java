@@ -1,8 +1,7 @@
 package com.fisk.task.service.task;
 
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.task.dto.MQBaseDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
 
 /**
  * @author gy

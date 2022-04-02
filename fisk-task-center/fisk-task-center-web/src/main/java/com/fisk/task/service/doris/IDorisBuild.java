@@ -1,6 +1,6 @@
 package com.fisk.task.service.doris;
 
-import com.fisk.common.entity.BusinessResult;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 
 /**
  * @author yhxu

@@ -11,9 +11,10 @@ import com.fisk.datamodel.mapper.DimensionMapper;
 import com.fisk.datamodel.mapper.FactAttributeMapper;
 import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.service.IDataService;
-import com.fisk.chartvisual.dto.IsDimensionDTO;
+import com.fisk.chartvisual.dto.chartvisual.IsDimensionDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -47,13 +48,11 @@ public class DataServiceImpl implements IDataService {
                 return false;
             }
             QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-            queryWrapper.select("dimension_id").lambda()
-                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo.dimensionId);
+            queryWrapper.select("dimension_id").lambda().eq(DimensionAttributePO::getDimensionId,dimensionAttributePo.dimensionId);
             List<Integer> dimensionIds1=(List)dimensionAttributeMapper.selectObjs(queryWrapper);
-            if (dimensionIds1 !=null && dimensionIds1.size()>0)
+            if (!CollectionUtils.isEmpty(dimensionIds1))
             {
-                dimensionIds1=dimensionIds1.stream()
-                    .distinct().collect(Collectors.toList());
+                dimensionIds1=dimensionIds1.stream().distinct().collect(Collectors.toList());
             }
             if (dto.dimensionTwo==1)
             {
@@ -63,18 +62,16 @@ public class DataServiceImpl implements IDataService {
                     return false;
                 }
                 QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
-                queryWrapper1.select("associate_dimension_id").lambda()
-                        .ne(DimensionAttributePO::getAssociateDimensionId,0)
+                queryWrapper1.select("associate_dimension_id").lambda().ne(DimensionAttributePO::getAssociateDimensionId,0)
                         .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo1.dimensionId);
                 List<Integer> dimensionIds2=(List)dimensionAttributeMapper.selectObjs(queryWrapper1);
-                if (dimensionIds2 !=null && dimensionIds2.size()>0)
+                if (!CollectionUtils.isEmpty(dimensionIds2))
                 {
-                    dimensionIds2=dimensionIds2.stream()
-                            .distinct().collect(Collectors.toList());
+                    dimensionIds2=dimensionIds2.stream().distinct().collect(Collectors.toList());
                 }
                 //取交集
                 dimensionIds1.retainAll(dimensionIds2);
-                if (dimensionIds1 !=null && dimensionIds1.size()>0)
+                if (!CollectionUtils.isEmpty(dimensionIds1))
                 {
                     return true;
                 }
@@ -85,63 +82,54 @@ public class DataServiceImpl implements IDataService {
                     return false;
                 }
                 QueryWrapper<FactAttributePO> factAttributePoQueryWrapper=new QueryWrapper();
-                factAttributePoQueryWrapper.select("associate_dimension_id").lambda()
-                        .ne(FactAttributePO::getAssociateDimensionId,0)
+                factAttributePoQueryWrapper.select("associate_dimension_id").lambda().ne(FactAttributePO::getAssociateDimensionId,0)
                         .eq(FactAttributePO::getFactId,indicatorsPo.factId);
                 List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
-                if (factIds !=null && factIds.size()>0)
+                if (!CollectionUtils.isEmpty(factIds))
                 {
-                    factIds=factIds.stream()
-                            .distinct().collect(Collectors.toList());
+                    factIds=factIds.stream().distinct().collect(Collectors.toList());
                 }
                 //取交集
                 dimensionIds1.retainAll(factIds);
-                if (dimensionIds1 !=null && dimensionIds1.size()>0)
+                if (!CollectionUtils.isEmpty(dimensionIds1))
                 {
                     return true;
                 }
             }
             return false;
-
         }else {
             //不是维度直接返回，因为事实与事实不存在关联
             if (dto.dimensionTwo!=1)
             {
                 return false;
             }
-
             DimensionAttributePO dimensionAttributePo1=dimensionAttributeMapper.selectById(dto.fieldIdTwo);
             if (dimensionAttributePo1==null)
             {
                 return false;
             }
             QueryWrapper<DimensionAttributePO> queryWrapper1=new QueryWrapper<>();
-            queryWrapper1.select("dimension_id").lambda()
-                    .eq(DimensionAttributePO::getDimensionId,dimensionAttributePo1.dimensionId);
+            queryWrapper1.select("dimension_id").lambda().eq(DimensionAttributePO::getDimensionId,dimensionAttributePo1.dimensionId);
             List<Integer> dimensionIds=(List)dimensionAttributeMapper.selectObjs(queryWrapper1);
-            if (dimensionIds !=null && dimensionIds.size()>0)
+            if (!CollectionUtils.isEmpty(dimensionIds))
             {
-                dimensionIds=dimensionIds.stream()
-                        .distinct().collect(Collectors.toList());
+                dimensionIds=dimensionIds.stream().distinct().collect(Collectors.toList());
             }
-
             IndicatorsPO indicatorsPo=indicatorsMapper.selectById(dto.fieldIdOne);
             if (indicatorsPo ==null)
             {
                 return false;
             }
             QueryWrapper<FactAttributePO> factAttributePoQueryWrapper=new QueryWrapper();
-            factAttributePoQueryWrapper.select("associate_dimension_id").lambda()
-                    .eq(FactAttributePO::getFactId,indicatorsPo.factId);
+            factAttributePoQueryWrapper.select("associate_dimension_id").lambda().eq(FactAttributePO::getFactId,indicatorsPo.factId);
             List<Integer> factIds=(List)factAttributeMapper.selectObjs(factAttributePoQueryWrapper);
-            if (factIds !=null && factIds.size()>0)
+            if (!CollectionUtils.isEmpty(factIds))
             {
-                factIds=factIds.stream()
-                        .distinct().collect(Collectors.toList());
+                factIds=factIds.stream().distinct().collect(Collectors.toList());
             }
             //取交集
             dimensionIds.retainAll(factIds);
-            if (dimensionIds !=null && dimensionIds.size()>0)
+            if (!CollectionUtils.isEmpty(dimensionIds))
             {
                 return true;
             }

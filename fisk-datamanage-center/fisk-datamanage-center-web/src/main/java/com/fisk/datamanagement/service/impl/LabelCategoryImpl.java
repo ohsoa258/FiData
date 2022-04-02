@@ -1,14 +1,13 @@
 package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDataDTO;
 import com.fisk.datamanagement.entity.CategoryPO;
 import com.fisk.datamanagement.map.LabelCategoryMap;
 import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.service.ILabelCategory;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

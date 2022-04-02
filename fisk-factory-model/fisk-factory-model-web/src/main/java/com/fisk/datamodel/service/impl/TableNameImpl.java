@@ -1,16 +1,16 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.entity.*;
 import com.fisk.datamodel.enums.FactAttributeEnum;
 import com.fisk.datamodel.enums.IndicatorsTypeEnum;
 import com.fisk.datamodel.mapper.*;
-import com.fisk.chartvisual.dto.IndicatorDTO;
-import com.fisk.chartvisual.dto.IndicatorFeignDTO;
-import com.fisk.chartvisual.dto.TableDataDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorDTO;
+import com.fisk.chartvisual.dto.chartvisual.IndicatorFeignDTO;
+import com.fisk.chartvisual.dto.chartvisual.TableDataDTO;
 import com.fisk.datamodel.service.ITableName;
 import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;

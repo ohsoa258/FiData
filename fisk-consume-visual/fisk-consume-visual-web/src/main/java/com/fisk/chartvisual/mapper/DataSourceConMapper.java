@@ -1,10 +1,10 @@
 package com.fisk.chartvisual.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.chartvisual.dto.DataSourceConQuery;
+import com.fisk.chartvisual.dto.datasource.DataSourceConQuery;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

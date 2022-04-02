@@ -2,16 +2,16 @@ package com.fisk.chartvisual.util.dbhelper.buildsql;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.chartvisual.dto.ChartQueryFilter;
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.common.constants.SystemConstants;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.enums.chartvisual.TableOrderEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryFilter;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ColumnDetails;
+import com.fisk.chartvisual.dto.chartvisual.SlicerQueryObject;
+import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.enums.chartvisual.TableOrderEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;

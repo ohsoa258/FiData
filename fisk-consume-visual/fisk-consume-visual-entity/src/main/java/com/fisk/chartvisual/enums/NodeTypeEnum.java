@@ -1,12 +1,16 @@
 package com.fisk.chartvisual.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * 维度类型
  * @author JinXingWang
  */
 public enum NodeTypeEnum implements BaseEnum {
+
+    /**
+     * 维度类型
+     */
     MEASURE(0,"度量"),
     OTHER(1,"维度"),
     BUSINESS_DOMAIN(2,"业务域"),

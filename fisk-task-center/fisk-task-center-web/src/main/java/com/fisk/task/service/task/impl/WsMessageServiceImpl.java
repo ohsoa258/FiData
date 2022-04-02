@@ -2,11 +2,11 @@ package com.fisk.task.service.task.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.enums.task.MessageLevelEnum;
-import com.fisk.common.enums.task.MessageStatusEnum;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.core.enums.task.MessageStatusEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.entity.MessageLogPO;
 import com.fisk.task.map.WsMessageLogMap;

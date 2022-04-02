@@ -1,10 +1,10 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.enums.task.BusinessTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
 import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;

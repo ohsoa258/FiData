@@ -24,10 +24,10 @@ public class RowSecurityConfigDTO {
     public long defaultConfig;
 
     @ApiModelProperty(value = "数据源id", required = true)
-    public long datasourceId;
+    public String datasourceId;
 
     @ApiModelProperty(value = "表id", required = true)
-    public long tableId;
+    public String tableId;
 
     @ApiModelProperty(value = "权限名称", required = true)
     public String permissionsName;

@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.dto;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.filter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import lombok.Data;
 

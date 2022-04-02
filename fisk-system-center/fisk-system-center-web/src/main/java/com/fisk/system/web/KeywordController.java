@@ -1,8 +1,8 @@
 package com.fisk.system.web;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.KeywordTypeDTO;
 import com.fisk.system.service.IKeywordService;

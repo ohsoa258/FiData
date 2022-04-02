@@ -2,7 +2,7 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleEditDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleQueryDTO;

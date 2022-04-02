@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceFieldDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
@@ -435,7 +435,7 @@ public class SynchronizationKinShip {
         data.typeName=EntityTypeEnum.RDBMS_TABLE.getName();
         list.add(data);
         List<Integer> associateIdList;
-        if (dto.type==3)
+        if (dto.type==TableTypeEnum.DORIS_DIMENSION.getValue())
         {
             associateIdList=dto.fieldList.stream().filter(e->e.associatedDim==true).map(e->e.getAssociatedDimId()).collect(Collectors.toList());
         }else {

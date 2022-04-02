@@ -1,7 +1,7 @@
 package com.fisk.task.service.task;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.MessageLogQuery;
 import com.fisk.task.vo.WsMessageLogVO;
 

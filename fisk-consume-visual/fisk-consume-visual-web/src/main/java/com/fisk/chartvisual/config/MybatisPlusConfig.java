@@ -16,7 +16,10 @@ public class MybatisPlusConfig {
     @Value("${database.type}")
     private DbType dbType;
 
-    // 最新版
+    /**
+     * mybatis-Plus配置数据库类型
+     * @return
+     */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();

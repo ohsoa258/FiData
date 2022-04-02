@@ -1,9 +1,11 @@
 package com.fisk.datagovernance.service.datasecurity;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
 import com.fisk.datagovernance.entity.datasecurity.RowSecurityConfigPO;
+
+import java.util.List;
 
 /**
  * @author lock
@@ -51,5 +53,12 @@ public interface RowSecurityConfigService extends IService<RowSecurityConfigPO> 
      * @return 执行结果
      */
     ResultEnum editDefaultConfig(long defaultConfig);
+
+    /**
+     * 获取行级安全列表
+     *
+     * @return list
+     */
+    List<RowSecurityConfigDTO> getList();
 }
 

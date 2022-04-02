@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.dto.QueryDTO;
@@ -241,25 +241,7 @@ public class BusinessProcessImpl
                 List<FactAttributePO> attributePoList=factAttributePoList.stream().filter(e->e.factId==item.id).collect(Collectors.toList());
                 for (FactAttributePO attributePo:attributePoList)
                 {
-                    ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
-                    fieldDTO.fieldId=attributePo.id;
-                    fieldDTO.fieldEnName=attributePo.factFieldEnName;
-                    fieldDTO.fieldType=attributePo.factFieldType;
-                    fieldDTO.fieldLength=attributePo.factFieldLength;
-                    fieldDTO.attributeType=attributePo.attributeType;
-                    fieldDTO.sourceFieldName=attributePo.sourceFieldName;
-                    fieldDTO.associateDimensionId=attributePo.associateDimensionId;
-                    fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
-                    //判断是否关联维度
-                    if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
-                    {
-                        DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
-                        fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
-                        fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
-                        DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
-                        fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
-                    }
-                    fieldList.add(fieldDTO);
+                    fieldList.add(pushField(attributePo));
                 }
                 pushDto.fieldList=fieldList;
                 factList.add(pushDto);
@@ -273,6 +255,28 @@ public class BusinessProcessImpl
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    public ModelPublishFieldDTO pushField(FactAttributePO attributePo){
+        ModelPublishFieldDTO fieldDTO=new ModelPublishFieldDTO();
+        fieldDTO.fieldId=attributePo.id;
+        fieldDTO.fieldEnName=attributePo.factFieldEnName;
+        fieldDTO.fieldType=attributePo.factFieldType;
+        fieldDTO.fieldLength=attributePo.factFieldLength;
+        fieldDTO.attributeType=attributePo.attributeType;
+        fieldDTO.sourceFieldName=attributePo.sourceFieldName;
+        fieldDTO.associateDimensionId=attributePo.associateDimensionId;
+        fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
+        //判断是否关联维度
+        if (attributePo.associateDimensionId !=0 && attributePo.associateDimensionFieldId !=0 )
+        {
+            DimensionPO dimensionPo=dimensionMapper.selectById(attributePo.associateDimensionId);
+            fieldDTO.associateDimensionName=dimensionPo==null?"":dimensionPo.dimensionTabName;
+            fieldDTO.associateDimensionSqlScript=dimensionPo==null?"":dimensionPo.sqlScript;
+            DimensionAttributePO dimensionAttributePo=dimensionAttributeMapper.selectById(attributePo.associateDimensionFieldId);
+            fieldDTO.associateDimensionFieldName=dimensionAttributePo==null?"":dimensionAttributePo.dimensionFieldEnName;
+        }
+        return fieldDTO;
     }
 
     private void addTableHistory(BusinessProcessPublishQueryDTO dto)

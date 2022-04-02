@@ -1,7 +1,7 @@
 package com.fisk.task.service.task.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.constants.NifiConstants;
+import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.mapper.TBETLIncrementalMapper;

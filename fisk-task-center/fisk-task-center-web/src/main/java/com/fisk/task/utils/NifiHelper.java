@@ -4,7 +4,7 @@ import com.davis.client.ApiClient;
 import com.davis.client.api.*;
 import com.davis.client.model.ConnectableDTO;
 import com.davis.client.model.RevisionDTO;
-import com.fisk.common.constants.NifiConstants;
+import com.fisk.common.core.constants.NifiConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;

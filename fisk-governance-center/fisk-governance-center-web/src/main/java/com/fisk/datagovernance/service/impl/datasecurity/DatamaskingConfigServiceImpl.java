@@ -2,9 +2,10 @@ package com.fisk.datagovernance.service.impl.datasecurity;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.datasecurity.DatamaskingConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.DatamaskingConfigPO;
 import com.fisk.datagovernance.map.datasecurity.DatamaskingConfigMap;
 import com.fisk.datagovernance.mapper.datasecurity.DatamaskingConfigMapper;
@@ -92,9 +93,12 @@ public class DatamaskingConfigServiceImpl extends ServiceImpl<DatamaskingConfigM
     }
 
     @Override
-    public List<DatamaskingConfigDTO> getList() {
+    public List<DatamaskingConfigDTO> getList(DataSourceIdDTO dto) {
 
-        List<DatamaskingConfigPO> listPo = this.query().orderByDesc("create_time").list();
+        List<DatamaskingConfigPO> listPo = this.query()
+                .eq("datasource_id", dto.datasourceId)
+                .eq("table_id", dto.tableId)
+                .orderByDesc("create_time").list();
 
         return DatamaskingConfigMap.INSTANCES.listPoToDto(listPo);
     }

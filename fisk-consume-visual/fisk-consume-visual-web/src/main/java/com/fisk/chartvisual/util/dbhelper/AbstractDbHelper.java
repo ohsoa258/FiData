@@ -1,9 +1,9 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.utils.BeanHelper;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.BeanHelper;
+import com.fisk.common.framework.exception.FkException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 

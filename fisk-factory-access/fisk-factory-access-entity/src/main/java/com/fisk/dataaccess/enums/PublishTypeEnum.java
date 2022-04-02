@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.enums;
 
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 
 /**
  * @author cfk

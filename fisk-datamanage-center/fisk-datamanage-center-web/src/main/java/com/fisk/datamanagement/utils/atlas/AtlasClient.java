@@ -1,8 +1,8 @@
 package com.fisk.datamanagement.utils.atlas;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamanagement.vo.ResultErrorDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,6 @@ import sun.misc.BASE64Encoder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
 
 /**
  * @author JianWenYang

@@ -27,7 +27,7 @@ public class BuildMatrixMdx  extends  BaseBuildMdx{
         DataServiceResult rs=new DataServiceResult();
         List<Map<String,Object>> mapList=new ArrayList<>();
         for (Position row :cellSet.getAxes().get(1)){
-            Map<String,Object> map=new HashMap<>();
+            Map<String,Object> map=new HashMap<>(16);
             //行标签
             List<Member> rowMembers=row.getMembers();
             for (int i=0;i<rowMembers.size();i++){

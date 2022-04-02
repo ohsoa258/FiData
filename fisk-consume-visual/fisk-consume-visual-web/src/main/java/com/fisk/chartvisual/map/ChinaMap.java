@@ -1,6 +1,6 @@
 package com.fisk.chartvisual.map;
 
-import com.fisk.chartvisual.dto.ChinaMapDTO;
+import com.fisk.chartvisual.dto.contentsplit.ChinaMapDTO;
 import com.fisk.chartvisual.entity.ProvincialPO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;

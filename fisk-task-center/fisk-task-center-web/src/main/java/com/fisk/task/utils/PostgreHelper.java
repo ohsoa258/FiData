@@ -1,7 +1,7 @@
 package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSONArray;
-import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

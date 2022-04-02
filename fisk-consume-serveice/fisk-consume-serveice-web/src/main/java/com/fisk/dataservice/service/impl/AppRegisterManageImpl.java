@@ -5,16 +5,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.constants.FilterSqlConstants;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.filter.dto.FilterFieldDTO;
-import com.fisk.common.filter.method.GenerateCondition;
-import com.fisk.common.filter.method.GetMetadata;
-import com.fisk.common.pdf.component.PDFHeaderFooter;
-import com.fisk.common.pdf.component.PDFKit;
-import com.fisk.common.pdf.exception.PDFException;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.utils.EnCryptUtils;
+import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
+import com.fisk.common.core.utils.office.pdf.component.PDFKit;
+import com.fisk.common.core.utils.office.pdf.exception.PDFException;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.EnCryptUtils;
 import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
@@ -25,7 +25,6 @@ import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.constants.ApiConstants.DATASERVICE_APIBASICINFO;
+import static com.fisk.common.core.constants.ApiConstants.DATASERVICE_APIBASICINFO;
 
 /**
  * 应用接口实现类

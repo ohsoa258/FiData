@@ -1,6 +1,6 @@
 package com.fisk.task.extend.aop;
 
-import com.fisk.common.mdc.TraceTypeEnum;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
 
 import java.lang.annotation.*;
 

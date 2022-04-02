@@ -1,9 +1,9 @@
 package com.fisk.task.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
-import com.fisk.common.enums.task.MessageLevelEnum;
-import com.fisk.common.enums.task.MessageStatusEnum;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.enums.task.MessageLevelEnum;
+import com.fisk.common.core.enums.task.MessageStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

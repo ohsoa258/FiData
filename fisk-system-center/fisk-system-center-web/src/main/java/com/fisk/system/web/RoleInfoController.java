@@ -1,10 +1,9 @@
 package com.fisk.system.web;
 
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
-import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.service.IRoleInfoService;

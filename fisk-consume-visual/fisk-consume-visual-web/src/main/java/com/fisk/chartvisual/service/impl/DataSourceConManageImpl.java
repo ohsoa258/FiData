@@ -3,12 +3,16 @@ package com.fisk.chartvisual.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.chartvisual.dto.*;
+import com.fisk.chartvisual.dto.contentsplit.DataDomainDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConEditDTO;
+import com.fisk.chartvisual.dto.datasource.DataSourceConQuery;
+import com.fisk.chartvisual.dto.datasource.TestConnectionDTO;
 import com.fisk.chartvisual.entity.CubePO;
 import com.fisk.chartvisual.entity.DataSourceConPO;
 import com.fisk.chartvisual.enums.NodeTypeEnum;
 import com.fisk.chartvisual.map.DataSourceConMap;
-import com.fisk.chartvisual.map.SSASMap;
+import com.fisk.chartvisual.map.SsasMap;
 import com.fisk.chartvisual.mapper.DataSourceConMapper;
 import com.fisk.chartvisual.service.IDataService;
 import com.fisk.chartvisual.service.IDataSourceConManageService;
@@ -18,14 +22,14 @@ import com.fisk.chartvisual.util.dbhelper.DbHelperFactory;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.mdc.TraceType;
-import com.fisk.common.mdc.TraceTypeEnum;
-import com.fisk.common.response.ResultEntity;
-import com.fisk.common.response.ResultEntityBuild;
-import com.fisk.common.response.ResultEnum;
-import com.fisk.common.user.UserHelper;
-import com.fisk.common.user.UserInfo;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,8 +39,8 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.constants.SSASConstant.Measures_Name;
-import static com.fisk.common.constants.SSASConstant.Measures_UniqueName;
+import static com.fisk.common.core.constants.SSASConstant.Measures_Name;
+import static com.fisk.common.core.constants.SSASConstant.Measures_UniqueName;
 
 /**
  * 数据源管理实现类
@@ -161,7 +165,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public ResultEntity<List<DataDomainVO>> SSASDataStructure(int id) {
+    public ResultEntity<List<DataDomainVO>> ssasDataStructure(int id) {
         //获取连接信息
         List<DataDomainVO> dimensionVOList = new ArrayList<>();
         DataSourceConVO model = mapper.getDataSourceConByUserId(id);
@@ -172,20 +176,20 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             try {
                 CubePO modelStructure = cubeHelper.getModelStructure(model.conDbname, model.conCube);
                 //度量
-                DataDomainVO dimensionVO_Mea = new DataDomainVO();
-                dimensionVO_Mea.name = Measures_Name;
-                dimensionVO_Mea.uniqueName = Measures_UniqueName;
-                dimensionVO_Mea.dimensionType = NodeTypeEnum.MEASURE;
-                dimensionVO_Mea.children=  SSASMap.INSTANCES.measurePoToVo(modelStructure.measures);
-                dimensionVOList.add(dimensionVO_Mea);
+                DataDomainVO dimensionVoMea = new DataDomainVO();
+                dimensionVoMea.name = Measures_Name;
+                dimensionVoMea.uniqueName = Measures_UniqueName;
+                dimensionVoMea.dimensionType = NodeTypeEnum.MEASURE;
+                dimensionVoMea.children=  SsasMap.INSTANCES.measurePoToVo(modelStructure.measures);
+                dimensionVOList.add(dimensionVoMea);
                 //维度
                 modelStructure.dimensions.forEach(d -> {
-                    DataDomainVO dimensionVO_Dim = new DataDomainVO();
-                    dimensionVO_Dim.name = d.name;
-                    dimensionVO_Dim.uniqueName = d.uniqueName;
-                    dimensionVO_Dim.dimensionType = NodeTypeEnum.OTHER;
-                    dimensionVO_Dim.children=SSASMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
-                    dimensionVOList.add(dimensionVO_Dim);
+                    DataDomainVO dimensionVoDim = new DataDomainVO();
+                    dimensionVoDim.name = d.name;
+                    dimensionVoDim.uniqueName = d.uniqueName;
+                    dimensionVoDim.dimensionType = NodeTypeEnum.OTHER;
+                    dimensionVoDim.children= SsasMap.INSTANCES.hierarchiesPoToVo(d.hierarchies);
+                    dimensionVOList.add(dimensionVoDim);
                 });
 
             } catch (Exception e) {

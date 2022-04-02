@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.entity.datasecurity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fisk.common.entity.BasePO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -22,7 +22,7 @@ public class ColumnUserAssignmentPO extends BasePO {
     /**
      * tb_rowsecurity_config表  id
      */
-    public long rowsecurityId;
+    public long columnSecurityId;
 
     /**
      * 类型: 0: 用户组  1: 用户

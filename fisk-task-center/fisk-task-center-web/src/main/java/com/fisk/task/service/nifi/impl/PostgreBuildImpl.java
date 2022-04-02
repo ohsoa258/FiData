@@ -1,19 +1,14 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSONArray;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.fisk.common.entity.BusinessResult;
-import com.fisk.common.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.utils.PostgreHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.sql.CallableStatement;
-import java.sql.Connection;
 
 @Service
 @Slf4j

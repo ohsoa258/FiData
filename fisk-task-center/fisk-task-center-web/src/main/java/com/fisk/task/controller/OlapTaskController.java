@@ -1,17 +1,16 @@
 package com.fisk.task.controller;
 
-import com.alibaba.fastjson.JSON;
-import com.fisk.common.constants.MqConstants;
-import com.fisk.common.enums.task.TaskTypeEnum;
-import com.fisk.common.response.ResultEntity;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.TaskTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
-import com.fisk.task.consumer.olap.BuildModelTaskListener;
-import com.fisk.task.consumer.olap.BuildWideTableTaskListener;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.listener.olap.BuildModelTaskListener;
+import com.fisk.task.listener.olap.BuildWideTableTaskListener;
+import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
-import com.fisk.task.service.nifi.IOlap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

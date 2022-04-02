@@ -1,10 +1,10 @@
 package com.fisk.chartvisual.util.dbhelper;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
 import com.fisk.chartvisual.util.dbhelper.buildsql.IBuildSqlCommand;
 import com.fisk.chartvisual.vo.DataServiceResult;
 import com.fisk.chartvisual.vo.DataSourceConVO;
-import com.fisk.common.enums.chartvisual.InteractiveTypeEnum;
+import com.fisk.common.core.enums.chartvisual.InteractiveTypeEnum;
 
 import java.sql.Connection;
 import java.util.List;

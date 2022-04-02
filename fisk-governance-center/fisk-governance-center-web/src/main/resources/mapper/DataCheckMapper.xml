@@ -16,6 +16,7 @@
         field_aggregate,
         check_rule_type,
         threshold_value,
+        rows_value,
         run_time_cron,
         check_consanguinity,
         module_type,

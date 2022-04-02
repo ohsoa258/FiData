@@ -1,12 +1,12 @@
 package com.fisk.chartvisual.util.dbhelper.buildsql;
 
-import com.fisk.chartvisual.dto.ChartQueryObject;
-import com.fisk.chartvisual.dto.ColumnDetails;
-import com.fisk.chartvisual.dto.SlicerQueryObject;
-import com.fisk.common.enums.chartvisual.ColumnTypeEnum;
-import com.fisk.common.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.exception.FkException;
-import com.fisk.common.response.ResultEnum;
+import com.fisk.chartvisual.dto.chartvisual.ChartQueryObject;
+import com.fisk.chartvisual.dto.chartvisual.ColumnDetails;
+import com.fisk.chartvisual.dto.chartvisual.SlicerQueryObject;
+import com.fisk.common.core.enums.chartvisual.ColumnTypeEnum;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.core.response.ResultEnum;
 
 /**
  * @author gy

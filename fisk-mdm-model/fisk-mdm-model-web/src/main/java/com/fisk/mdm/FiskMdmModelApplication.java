@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.mdm",
-        "com.fisk.common.advice",
-        "com.fisk.common.mdc",
+        "com.fisk.common.framework.advice",
+        "com.fisk.common.framework.mdc",
         "com.fisk.mdm.config",
-        "com.fisk.common.redis",
-        "com.fisk.common.feign",
-        "com.fisk.common.user",
-        "com.fisk.common.actuators"})
+        "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.feign",
+        "com.fisk.common.core.user",
+        "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.mdm.mapper")
 @EnableFeignClients(basePackages = {"com.fisk.auth.client"})
 public class FiskMdmModelApplication {

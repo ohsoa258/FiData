@@ -1,6 +1,6 @@
 package com.fisk.datafactory.enums;
 
-import com.fisk.common.enums.BaseEnum;
+import com.fisk.common.core.enums.BaseEnum;
 import com.fisk.task.enums.OlapTableEnum;
 
 /**

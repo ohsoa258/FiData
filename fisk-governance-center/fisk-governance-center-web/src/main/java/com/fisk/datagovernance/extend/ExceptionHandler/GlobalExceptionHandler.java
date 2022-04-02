@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.extend.ExceptionHandler;
 
-import com.fisk.common.exception.AbstractGlobalExceptionHandler;
+import com.fisk.common.framework.exception.AbstractGlobalExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**

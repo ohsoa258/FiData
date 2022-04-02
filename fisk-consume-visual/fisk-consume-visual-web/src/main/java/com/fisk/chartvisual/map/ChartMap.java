@@ -1,12 +1,12 @@
 package com.fisk.chartvisual.map;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.chartvisual.dto.ChartPropertyEditDTO;
-import com.fisk.chartvisual.dto.ChildvisualDTO;
-import com.fisk.chartvisual.contentSplit.ContentDTO;
-import com.fisk.chartvisual.dto.ReleaseChart;
+import com.fisk.chartvisual.dto.chartvisual.ChartPropertyEditDTO;
+import com.fisk.chartvisual.dto.contentsplit.ChildvisualDTO;
+import com.fisk.chartvisual.dto.contentsplit.ContentDTO;
+import com.fisk.chartvisual.dto.chartvisual.ReleaseChart;
 import com.fisk.chartvisual.entity.*;
-import com.fisk.chartvisual.stringInterception.ContextDTO;
+import com.fisk.chartvisual.dto.stringinterception.ContextDTO;
 import com.fisk.chartvisual.vo.ChartPropertyVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
