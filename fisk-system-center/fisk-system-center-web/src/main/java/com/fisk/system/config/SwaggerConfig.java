@@ -29,6 +29,7 @@ public class SwaggerConfig {
     public static final String SERVICE_REGISTRY = "service-registry-controller";
     public static final String USER = "user-controller";
     public static final String KEYWORD = "keywords-controller";
+    public static final String UPLOAD = "upload-controller";
 
     @Bean
     public Docket createRestApi() {
@@ -45,6 +46,7 @@ public class SwaggerConfig {
                 .tags(new Tag(USER,"用户中心服务"))
                 .tags(new Tag(DATAVIEW,"视图过滤"))
                 .tags(new Tag(KEYWORD,"SQL关键字管理"))
+                .tags(new Tag(UPLOAD,"上传管理"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 
