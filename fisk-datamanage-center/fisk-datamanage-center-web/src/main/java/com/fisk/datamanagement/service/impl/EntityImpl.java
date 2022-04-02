@@ -393,7 +393,7 @@ public class EntityImpl implements IEntity {
             {
                 return dto;
             }
-            List<LineAgeRelationsDTO> lineAgeRelationsDtoListtream = relationsDtoList.stream()
+            List<LineAgeRelationsDTO> lineAgeRelationsDtoListStream = relationsDtoList.stream()
                     .filter(e -> e.toEntityId.equals(guid))
                     .collect(Collectors.toList());
             List<LineAgeRelationsDTO> relations=new ArrayList<>();
@@ -402,11 +402,11 @@ public class EntityImpl implements IEntity {
             while (flat)
             {
                 ids.clear();
-                if (CollectionUtils.isEmpty(lineAgeRelationsDtoListtream))
+                if (CollectionUtils.isEmpty(lineAgeRelationsDtoListStream))
                 {
                     flat=false;
                 }
-                for (LineAgeRelationsDTO item :lineAgeRelationsDtoListtream)
+                for (LineAgeRelationsDTO item :lineAgeRelationsDtoListStream)
                 {
                     String  jsonObj1String = guidEntityMapJson.getString(item.fromEntityId);
                     JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
@@ -455,15 +455,15 @@ public class EntityImpl implements IEntity {
                     jsonArrayList.add(entityDetailJson1);
                     ids.add(item.fromEntityId);
                 }
-                lineAgeRelationsDtoListtream.clear();
+                lineAgeRelationsDtoListStream.clear();
                 if (!CollectionUtils.isNotEmpty(ids))
                 {
                     flat=false;
                 }
-                lineAgeRelationsDtoListtream=relationsDtoList.stream()
+                lineAgeRelationsDtoListStream=relationsDtoList.stream()
                         .filter(e->ids.contains(e.toEntityId))
                         .collect(Collectors.toList());
-                if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoListtream))
+                if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoListStream))
                 {
                     flat=false;
                 }
