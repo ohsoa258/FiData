@@ -1,7 +1,7 @@
 package com.fisk.mdm.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.mybatis.FKBaseMapper;
+import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.vo.model.ModelVO;
