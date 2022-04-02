@@ -138,7 +138,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         // 用户组
         if (accessType == 1) {
             UserGroupInfoPO userGroupInfoPo = userGroupInfoServiceImpl.query().eq("id", userGroupId).one();
-            return userGroupInfoPo == null ? "当前用户(组)不存在" : userGroupInfoPo.userGroupName;
+            return userGroupInfoPo == null ? "当前用户组不存在" : userGroupInfoPo.userGroupName;
             // 用户
         } else if (accessType == 2) {
             try {
@@ -151,7 +151,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
                 }
             } catch (Exception e) {
                 log.error("远程调用失败，方法名：【user-service:listUserDrops】");
-                return "当前用户(组)不存在";
+                return "当前用户不存在";
             }
         }
         return null;
