@@ -25,7 +25,7 @@ public class UploadController {
     UploadService uploadService;
 
     @ApiOperation("图片上传到服务器")
-    @PostMapping("/upload")
+    @PostMapping("/imageUpload")
     @ResponseBody
     public ResultEntity<String> upload(@RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, uploadService.upload(file));
