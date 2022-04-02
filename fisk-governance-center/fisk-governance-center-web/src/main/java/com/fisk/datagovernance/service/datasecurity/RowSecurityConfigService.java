@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.datasecurity;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.RowSecurityConfigPO;
 
 import java.util.List;
@@ -59,6 +60,6 @@ public interface RowSecurityConfigService extends IService<RowSecurityConfigPO> 
      *
      * @return list
      */
-    List<RowSecurityConfigDTO> getList();
+    List<RowSecurityConfigDTO> getList(DataSourceIdDTO dto);
 }
 

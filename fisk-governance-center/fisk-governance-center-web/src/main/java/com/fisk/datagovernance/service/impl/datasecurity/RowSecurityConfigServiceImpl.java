@@ -10,6 +10,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowUserAssignmentDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowfilterConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.RowSecurityConfigPO;
 import com.fisk.datagovernance.entity.datasecurity.RowUserAssignmentPO;
 import com.fisk.datagovernance.entity.datasecurity.RowfilterConfigPO;
@@ -253,10 +254,14 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
     }
 
     @Override
-    public List<RowSecurityConfigDTO> getList() {
+    public List<RowSecurityConfigDTO> getList(DataSourceIdDTO dto) {
 
         QueryWrapper<RowSecurityConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().select(RowSecurityConfigPO::getId).orderByDesc(RowSecurityConfigPO::getCreateTime);
+        queryWrapper.lambda()
+                .eq(RowSecurityConfigPO::getDatasourceId, dto.datasourceId)
+                .eq(RowSecurityConfigPO::getTableId, dto.tableId)
+                .select(RowSecurityConfigPO::getId)
+                .orderByDesc(RowSecurityConfigPO::getCreateTime);
 
         List<RowSecurityConfigPO> idList = baseMapper.selectList(queryWrapper);
         System.out.println("idList = " + idList);

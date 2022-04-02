@@ -3,7 +3,10 @@ package com.fisk.datagovernance.service.datasecurity;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.datasecurity.TablesecurityConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.TablesecurityConfigPO;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -51,7 +54,7 @@ public interface TableSecurityConfigService extends IService<TablesecurityConfig
      *
      * @return list
      */
-    List<TablesecurityConfigDTO> getList();
+    List<TablesecurityConfigDTO> getList(@Validated @RequestBody DataSourceIdDTO dto);
 
     /**
      * 修改表级缺省配置
