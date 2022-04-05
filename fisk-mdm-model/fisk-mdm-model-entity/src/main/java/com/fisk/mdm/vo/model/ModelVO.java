@@ -1,9 +1,11 @@
 package com.fisk.mdm.vo.model;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 public class ModelVO {
 
 
@@ -21,6 +23,9 @@ public class ModelVO {
 
     @ApiModelProperty(value = "model日志保存天数")
     public int logRetentionDays;
+
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
 
     @ApiModelProperty(value = "创建时间")
     public LocalDateTime createTime;

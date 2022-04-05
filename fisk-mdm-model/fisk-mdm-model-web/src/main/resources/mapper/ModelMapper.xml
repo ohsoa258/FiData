@@ -8,10 +8,12 @@
         display_name,
         model.desc,
         log_retention_days,
+        create_user,
         create_time,
         update_user,
         update_time
         from tb_model as model
         where model.del_flag=1
     </select>
+
 </mapper>

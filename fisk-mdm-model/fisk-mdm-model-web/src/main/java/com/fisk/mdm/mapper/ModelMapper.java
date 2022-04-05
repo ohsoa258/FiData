@@ -18,5 +18,4 @@ public interface ModelMapper extends FKBaseMapper<ModelPO> {
      * @return
      */
     Page<ModelVO> getAll(Page<ModelVO> page, @Param("query") ModelQueryDTO query);
-
 }

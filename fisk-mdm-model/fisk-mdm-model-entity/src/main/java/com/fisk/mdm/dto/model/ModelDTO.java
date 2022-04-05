@@ -1,10 +1,12 @@
 package com.fisk.mdm.dto.model;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
 
+@Data
 public class ModelDTO {
 
     @ApiModelProperty(value = "modelID")
@@ -32,6 +34,6 @@ public class ModelDTO {
 
     @ApiModelProperty(value = "logo保存地址")
     @NotNull()
-    @Length(min = 0, max = 50, message = "长度最多50")
+    @Length(min = 0, max = 100, message = "长度最多100")
     public String logoPath;
 }

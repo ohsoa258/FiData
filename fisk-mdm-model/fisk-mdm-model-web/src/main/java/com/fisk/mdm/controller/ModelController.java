@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
+/**
+ * @author chenYa
+ */
 @RestController
 @RequestMapping("/model")
 public class ModelController {

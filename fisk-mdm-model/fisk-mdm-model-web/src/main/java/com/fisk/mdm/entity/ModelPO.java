@@ -60,4 +60,5 @@ public class ModelPO extends BasePO {
      * 属性日志表名
      */
     public String attributeLogName;
+
 }
