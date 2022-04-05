@@ -39,3 +39,7 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka
+
+# 图片上传
+file:
+  uploadurl: /root/nginx/app/file/dmp/images

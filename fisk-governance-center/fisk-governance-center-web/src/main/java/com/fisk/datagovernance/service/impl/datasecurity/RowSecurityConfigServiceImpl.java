@@ -10,6 +10,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.datasecurity.RowSecurityConfigDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowUserAssignmentDTO;
 import com.fisk.datagovernance.dto.datasecurity.RowfilterConfigDTO;
+import com.fisk.datagovernance.dto.datasecurity.datamasking.DataSourceIdDTO;
 import com.fisk.datagovernance.entity.datasecurity.RowSecurityConfigPO;
 import com.fisk.datagovernance.entity.datasecurity.RowUserAssignmentPO;
 import com.fisk.datagovernance.entity.datasecurity.RowfilterConfigPO;
@@ -48,6 +49,9 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
     @Resource
     private RowUserAssignmentMapper rowUserAssignmentMapper;
 
+    @Resource
+    private TablesecurityConfigServiceImpl tablesecurityConfigServiceImpl;
+
     @Override
     public RowSecurityConfigDTO getData(long id) {
 
@@ -66,6 +70,8 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
         // 查询tb_row_user_assignment表数据集合
         List<RowUserAssignmentPO> rowUserAssignmentPoList = rowUserAssignmentServiceImpl.query().eq("rowsecurity_id", id).list();
         rowSecurityConfigDTO.rowUserAssignmentDTOList = RowUserAssignmentMap.INSTANCES.listPoToDto(rowUserAssignmentPoList);
+        // 获取对应的用户(组)名称
+        rowSecurityConfigDTO.rowUserAssignmentDTOList.forEach(e -> e.name = tablesecurityConfigServiceImpl.getUserGroupNameOrUserName(e.type, e.userId));
 
         return rowSecurityConfigDTO;
     }
@@ -253,10 +259,14 @@ public class RowSecurityConfigServiceImpl extends ServiceImpl<RowSecurityConfigM
     }
 
     @Override
-    public List<RowSecurityConfigDTO> getList() {
+    public List<RowSecurityConfigDTO> getList(DataSourceIdDTO dto) {
 
         QueryWrapper<RowSecurityConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().select(RowSecurityConfigPO::getId).orderByDesc(RowSecurityConfigPO::getCreateTime);
+        queryWrapper.lambda()
+                .eq(RowSecurityConfigPO::getDatasourceId, dto.datasourceId)
+                .eq(RowSecurityConfigPO::getTableId, dto.tableId)
+                .select(RowSecurityConfigPO::getId)
+                .orderByDesc(RowSecurityConfigPO::getCreateTime);
 
         List<RowSecurityConfigPO> idList = baseMapper.selectList(queryWrapper);
         System.out.println("idList = " + idList);

@@ -685,7 +685,6 @@ public class SynchronizationData {
                 String length=fieldDTO.fieldLength+"";
                 if (!fieldDTO.fieldName.equals(attribute.getString("name"))
                         || !po.qualifiedName.equals(attribute.getString("qualifiedName"))
-                        //|| !field.fieldDes.equals(attribute1.getString("description"))
                         || !length.equals(attribute.getString("length"))
                         || !fieldDTO.fieldType.equals(attribute.getString("data_type")))
                 {
