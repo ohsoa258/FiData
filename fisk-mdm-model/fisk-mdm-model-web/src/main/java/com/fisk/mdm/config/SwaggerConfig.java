@@ -24,14 +24,14 @@ import java.util.List;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    public static final String TAG_1 = "Test-Controller";
+    public static final String TAG_1 = "Entity-Controller";
 
     @Bean
     public Docket createRestApi() {
         String basePck = FiskMdmModelApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1, "应用注册"))
+                .tags(new Tag(TAG_1, "实体管理API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
