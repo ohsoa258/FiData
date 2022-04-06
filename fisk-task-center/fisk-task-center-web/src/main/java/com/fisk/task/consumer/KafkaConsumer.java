@@ -21,6 +21,7 @@ import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
@@ -110,6 +111,8 @@ public class KafkaConsumer {
     INifiTaskListener iNifiTaskListener;
     @Resource
     INiFiHelper iNiFiHelper;
+    @Resource
+    ITriggerScheduling iTriggerScheduling;
 
 
     //这里只用来存放reids
@@ -282,6 +285,12 @@ public class KafkaConsumer {
     @MQConsumerLog
     public void buildWideTableTaskListener(String dataInfo, Acknowledgment acke) {
         buildWideTableTaskListener.msg(dataInfo, acke);
+    }
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW, containerFactory = "batchFactory", groupId = "test")
+    @MQConsumerLog
+    public void buildUnifiedControlTaskListener(String dataInfo, Acknowledgment acke) {
+        iTriggerScheduling.unifiedControl(dataInfo, acke);
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW, containerFactory = "batchFactory", groupId = "test")

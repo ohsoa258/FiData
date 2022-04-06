@@ -53,6 +53,8 @@ public enum ComponentIdTypeEnum implements BaseEnum {
     * */
     PIPELINE_NIFI_FLOW_GROUP_ID(6,"pipelineNifiFlowGroupId"),
 
+    TRIGGERSCHEDULING_NIFI_FLOW_GROUP_ID(19,"triggerSchedulingNifiFlowGroupId"),
+
     KAFKA_BROKERS(19,"KAFKA_BROKERS"),
 
     DRAFT(1,"草稿");

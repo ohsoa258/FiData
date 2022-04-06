@@ -13,10 +13,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
-import com.fisk.task.dto.task.BuildNifiFlowDTO;
-import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
-import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -221,10 +218,20 @@ public interface PublishTaskClient {
 
     /**
      * 立即重启
+     *
      * @param buildTableNifiSettingDTO
      * @return
      */
     @PostMapping("/immediatelyStart")
     public ResultEntity<Object> immediatelyStart(@RequestBody BuildTableNifiSettingDTO buildTableNifiSettingDTO);
+
+    /**
+     * 统一调度
+     *
+     * @param unifiedControlDTO unifiedControlDTO
+     * @return
+     */
+    @PostMapping("/publishBuildunifiedControlTask")
+    public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
 }
