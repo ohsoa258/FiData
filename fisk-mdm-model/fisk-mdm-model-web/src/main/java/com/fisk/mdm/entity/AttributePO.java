@@ -1,6 +1,9 @@
 package com.fisk.mdm.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.MdmTypeEnum;
 import com.fisk.mdm.enums.WhetherTypeEnum;
 import lombok.Data;
@@ -9,6 +12,7 @@ import lombok.Data;
  * @author WangYan
  * @date 2022/4/5 12:11
  */
+@TableName("tb_attribute")
 @Data
 public class AttributePO extends BasePO {
 
@@ -30,6 +34,7 @@ public class AttributePO extends BasePO {
     /**
      * 描述
      */
+    @TableField(value = "`desc`")
     private String desc;
 
     /**
@@ -40,7 +45,7 @@ public class AttributePO extends BasePO {
     /**
      * 数据类型
      */
-    private int dataType;
+    private DataTypeEnum dataType;
 
     /**
      * 数据类型长度

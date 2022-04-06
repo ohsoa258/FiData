@@ -63,6 +63,7 @@ mybatis-plus:
       logic-not-delete-value: 1
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
+  type-enums-package: com.fisk.mdm.enums
 
 # spring配置
 spring:
