@@ -10,17 +10,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.framework.mdc.TraceType;
-import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
@@ -153,7 +153,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableNameVO.appId = tableAccessDTO.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
-            return ResultEnum.Table_NAME_EXISTS;
+            return ResultEnum.TABLE_NAME_EXISTS;
         }
 
         if (tableAccessDTO.appId < 0) {
@@ -221,7 +221,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableNameVO.appId = tableAccessNonDTO.appId;
         tableNameVO.tableName = tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {
-            return ResultEntityBuild.build(ResultEnum.Table_NAME_EXISTS);
+            return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS);
         }
 
         if (tableAccessNonDTO.appId < 0) {
@@ -1203,7 +1203,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 同一应用下表名不可重复
         boolean flag = this.checkTableName(dto);
         if (flag) {
-            return ResultEnum.Table_NAME_EXISTS;
+            return ResultEnum.TABLE_NAME_EXISTS;
         }
 
         return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

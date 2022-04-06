@@ -13,7 +13,7 @@ public enum ResultEnum {
      */
     SUCCESS(0, "成功"),
     REQUEST_SUCCESS(200, "请求成功"),
-    UNAUTHORIZED(401, "未授权"),
+    UNAUTHENTICATE(401, "认证失败"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
     TIMEOUT(504, "请求超时"),
@@ -33,14 +33,14 @@ public enum ResultEnum {
     REMOTE_SERVICE_CALLFAILED(1009, "远程服务调用失败"),
     SERVER_FUSE(1010, "服务熔断"),
     PARAMTER_NOTNULL(1011, "参数不能为空"),
-    Table_NAME_EXISTS(1012, "表名已存在"),
-    NOTFOUND_REQUEST(1013, "未找到请求"),
+    TABLE_NAME_EXISTS(1012, "表名已存在"),
+    NOTFOUND_REQUEST_ATTR(1013, "错误的请求头"),
     NIFI_NOT_FIND_DATA(1014, "nifi查不到数据"),
-    LOGIN_ACCOUNT_DISABLED(1015,"该登录账号已被禁用"),
-    TOKEN_EXCEPTION(1016,"该登录账号仅用于推送数据,无权访问其他服务"),
-    GET_TOKEN_ERROR(1017,"获取token失败,请联系管理员"),
-    API_ISEMPTY(1018,"获取api对象失败"),
-    CLIENT_ISEMPTY(1019,"客户端已删除"),
+    LOGIN_ACCOUNT_DISABLED(1015, "该登录账号已被禁用"),
+    TOKEN_EXCEPTION(1016, "该登录账号仅用于推送数据,无权访问其他服务"),
+    GET_TOKEN_ERROR(1017, "获取token失败,请联系管理员"),
+    API_ISEMPTY(1018, "获取api对象失败"),
+    CLIENT_ISEMPTY(1019, "客户端已删除"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -56,17 +56,16 @@ public enum ResultEnum {
      * 授权中心
      */
     AUTH_CLIENTINFO_ERROR(3001, ""),
-    AUTH_SECRET_ERROR(3002, "客户端的信息有误,secret错误"),
-    AUTH_JWT_ERROR(3003, "JWT无效或已过期"),
-    AUTH_USER_NOTLOGIN(3004, "用户未登录"),
+    AUTH_SECRET_ERROR(3002, "客户端的信息有误，secret错误"),
+    AUTH_LOGIN_INFO_INVALID(3003, "登录信息无效或已过期，请重新登录"),
     AUTH_TOKEN_PARSER_ERROR(3005, "token解析失败"),
-    AUTH_TOKEN_IS_NOTNULL(3006, "token不能为空"),
+    AUTH_TOKEN_IS_NOTNULL(3006, "token为空"),
 
     /**
      * 用户中心
      */
     USER_ACCOUNTPASSWORD_ERROR(4001, "用户名或密码不正确"),
-    ORIGINAL_PASSWORD_ERROR(4002,"用户原密码错误"),
+    ORIGINAL_PASSWORD_ERROR(4002, "用户原密码错误"),
 
     /**
      * 数据接入模块
