@@ -6,10 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.email.dto.MailSenderDTO;
+import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
+import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
+import com.fisk.datagovernance.enums.dataquality.EmailServerTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.NoticeTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
 import com.fisk.datagovernance.map.dataquality.NoticeMap;
@@ -142,7 +146,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
-                notificationVO.id= id[0];
+                notificationVO.id = id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
@@ -168,7 +172,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
-                notificationVO.id= id[0];
+                notificationVO.id = id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
@@ -194,7 +198,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                         }
                     }
                 }
-                notificationVO.id= id[0];
+                notificationVO.id = id[0];
                 notificationVO.moduleId = Math.toIntExact(e.getId());
                 notificationVO.templateId = e.getTemplateId();
                 notificationVO.moduleName = e.getModuleName();
@@ -262,8 +266,28 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (emailServerPO == null) {
             return ResultEnum.PARAMTER_ERROR;
         }
-
-        //第二步：调用邮件发送方法
+        MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
+        mailServeiceDTO.setOpenAuth(true);
+        mailServeiceDTO.setOpenDebug(true);
+        mailServeiceDTO.setHost(emailServerPO.getEmailServer());
+//        boolean openSsl = emailServerPO.getEnableSsl() != null && emailServerPO.getEnableSsl() == 1 ? true : false;
+//        mailServeiceDTO.setOpenSsl(openSsl);
+        mailServeiceDTO.setProtocol(EmailServerTypeEnum.getEnum(emailServerPO.getEmailServerType()).getName());
+        mailServeiceDTO.setUser(emailServerPO.getEmailServerAccount());
+        mailServeiceDTO.setPassword(emailServerPO.getEmailServerPwd());
+        mailServeiceDTO.setPort(mailServeiceDTO.getPort());
+        MailSenderDTO mailSenderDTO = new MailSenderDTO();
+        mailSenderDTO.setUser(emailServerPO.getEmailServerAccount());
+        mailSenderDTO.setSubject(dto.emailSubject);
+        mailSenderDTO.setBody(dto.body);
+        mailSenderDTO.setToAddress(dto.emailConsignee);
+        mailSenderDTO.setToCc(dto.emailCc);
+        try {
+            //第二步：调用邮件发送方法
+            MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return ResultEnum.SUCCESS;
     }
 }

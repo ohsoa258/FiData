@@ -64,7 +64,7 @@ public class DataCheckPO extends BasePO {
     public String checkRuleType;
 
     /**
-     * 波动阀值
+     * 波动阈值
      */
     public Integer thresholdValue;
 
