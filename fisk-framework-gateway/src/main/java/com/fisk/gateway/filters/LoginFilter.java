@@ -83,7 +83,8 @@ public class LoginFilter implements GlobalFilter, Ordered {
                 // 3.3获取用户信息
                 UserDetail userInfo = payload.getUserDetail();
                 // 报表永久token
-                if (userInfo.getId() == 102) {
+                int permanentToken = 102;
+                if (userInfo.getId() == permanentToken) {
                     // 不需要刷新token过期时间,直接放行
                     return chain.filter(exchange);
                     // 推送数据的请求路径判断
