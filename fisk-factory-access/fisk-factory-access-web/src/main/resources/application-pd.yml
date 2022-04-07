@@ -26,30 +26,6 @@ dataservice:
   pdf:
     path: /data/java/fisk-factory-access/pdf
 
-#授权
-fk:
-  auth:
-    clientId: dataAccess-service
-    secret: 1234
-  encoder:
-    crypt:
-      secret: ${random.uuid}
-      strength: 6
-
-mybatis-plus:
-  configuration:
-    default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
-  global-config:
-    db-config:
-      id-type: auto
-      insert-strategy: not_null
-      logic-delete-field: del_flag
-      logic-delete-value: 0
-      logic-not-delete-value: 1
-      update-strategy: not_null
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.fisk.dataaccess.entity
-
 # pg数据源配置
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
@@ -60,18 +36,3 @@ pgsql-ods:
   url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified
   username: adminuser
   password: .FdF_r&tj4)+
-
-
-#注册中心
-eureka:
-  client:
-    service-url:
-      defaultZone: http://127.0.0.1:8082/eureka
-
-#feign接口超时配置
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 10000
-        readTimeout: 12000
