@@ -29,7 +29,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.task.client",
         "com.fisk.datamodel.client"
 })
-//@EnableApolloConfig
 public class FiskFactoryDispatchApplication {
 
     public static void main(String[] args) {

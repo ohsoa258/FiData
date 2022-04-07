@@ -59,17 +59,17 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(NifiGetPortHierarchyDTO dto) {
+    public ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(NifiGetPortHierarchyDTO dto) {
         if (dto.nifiCustomWorkflowDetailId != null) {
             return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(dto.nifiCustomWorkflowDetailId));
         } else {
-            NifiCustomWorkflowPO customWorkflowPO = nifiCustomWorkflowImpl.query().eq("workflow_name", dto.workflowName).one();
-            if (customWorkflowPO == null) {
+            NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("workflow_name", dto.workflowName).one();
+            if (customWorkflowPo == null) {
                 // 当前管道已删除
                 return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
             }
             List<NifiCustomWorkflowDetailPO> detailList = nifiCustomWorkflowDetailImpl.query()
-                    .eq("workflow_id", customWorkflowPO.workflowId).eq("component_type", dto.channelDataEnum.getName()).list();
+                    .eq("workflow_id", customWorkflowPo.workflowId).eq("component_type", dto.channelDataEnum.getName()).list();
             if (CollectionUtils.isEmpty(detailList)) {
                 // 当前管道下没有组件
                 return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOWDETAIL_NOT_EXISTS);
@@ -81,8 +81,8 @@ public class DataFactoryImpl implements IDataFactory {
                 return ResultEntityBuild.build(ResultEnum.FLOW_TABLE_NOT_EXISTS);
             }
             // 原则上同一管道下,物理表只允许绑定一次,即newList里的参数只有一个
-            NifiCustomWorkflowDetailPO detailPO = newList.get(0);
-            return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(detailPO.id));
+            NifiCustomWorkflowDetailPO detailPo = newList.get(0);
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(detailPo.id));
         }
 
     }

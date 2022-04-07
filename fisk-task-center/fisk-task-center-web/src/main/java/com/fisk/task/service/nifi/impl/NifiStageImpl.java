@@ -14,13 +14,13 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.utils.NifiHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +79,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             int type = tableNifiSettingPO.type;
             NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineName, type, tableName, tableAccessId);
             //三个阶段,默认正在运行
-            ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNIfiPortHierarchy(nifiGetPortHierarchyDTO);
+            ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
             NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
             nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
             if (nifiStageMessageDTO.message == null || "".equals(nifiStageMessageDTO.message)) {

@@ -49,5 +49,5 @@ public interface DataFactoryClient {
 
     @PostMapping("/dataFactory/getNIfiPortHierarchy")
     @ApiOperation(value = "获取管道层级关系")
-    ResultEntity<NifiPortsHierarchyDTO> getNIfiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
+    ResultEntity<NifiPortsHierarchyDTO> getNifiPortHierarchy(@Validated @RequestBody NifiGetPortHierarchyDTO dto);
 }

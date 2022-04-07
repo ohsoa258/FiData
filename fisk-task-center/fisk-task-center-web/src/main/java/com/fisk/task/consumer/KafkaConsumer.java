@@ -164,7 +164,7 @@ public class KafkaConsumer {
                                 break;
                         }
 
-                        ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNIfiPortHierarchy(nifiGetPortHierarchyDTO);
+                        ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
                         NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
                         //本节点
                         NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
