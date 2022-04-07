@@ -134,6 +134,12 @@ public class DataCheckVO {
     public List<Integer> noticeIds;
 
     /**
+     * 数据校验模块下相似度组件扩展属性
+     */
+    @ApiModelProperty(value = "数据校验模块下相似度组件扩展属性")
+    public List<SimilarityExtendVO> similarityExtendVOS;
+
+    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")

@@ -26,6 +26,11 @@ public class MailServeiceDTO {
     public String host;
 
     /**
+     * 发件端口
+     */
+    public int port;
+
+    /**
      * 邮件协议
      */
     public  String protocol;

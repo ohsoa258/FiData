@@ -33,4 +33,12 @@ public enum EmailServerTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static EmailServerTypeEnum  getEnum(int value){
+        for (EmailServerTypeEnum e:EmailServerTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return EmailServerTypeEnum.SMTP;
+    }
 }

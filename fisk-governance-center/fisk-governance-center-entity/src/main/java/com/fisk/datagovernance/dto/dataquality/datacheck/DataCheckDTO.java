@@ -130,4 +130,11 @@ public class DataCheckDTO {
      */
     @ApiModelProperty(value = "组件通知关联DTO")
     public List<ComponentNotificationDTO> componentNotificationDTOS;
+
+    /**
+     * 数据校验模块下相似度组件扩展属性
+     */
+    @ApiModelProperty(value = "数据校验模块下相似度组件扩展属性")
+    public List<SimilarityExtendDTO> similarityExtendDTOS;
+
 }
