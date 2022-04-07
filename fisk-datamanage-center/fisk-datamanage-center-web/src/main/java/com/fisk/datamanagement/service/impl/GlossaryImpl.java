@@ -6,6 +6,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.IGlossary;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -35,9 +36,9 @@ public class GlossaryImpl implements IGlossary {
         List<GlossaryAttributeDTO> list;
         try {
             ResultDataDTO<String> result = atlasClient.get(glossary);
-            if (result.code != ResultEnum.REQUEST_SUCCESS)
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
-                throw new FkException(result.code);
+                throw new FkException(ResultEnum.BAD_REQUEST);
             }
             list=JSONObject.parseArray(result.data, GlossaryAttributeDTO.class);
         }
@@ -55,7 +56,7 @@ public class GlossaryImpl implements IGlossary {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(glossary,jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -70,7 +71,7 @@ public class GlossaryImpl implements IGlossary {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(glossary+"/"+dto.guid,jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
 }

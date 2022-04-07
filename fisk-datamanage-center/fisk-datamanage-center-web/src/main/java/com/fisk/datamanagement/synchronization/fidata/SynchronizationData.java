@@ -14,6 +14,7 @@ import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.metadatamapatlas.UpdateMetadataMapAtlasDTO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
@@ -478,7 +479,7 @@ public class SynchronizationData {
             for (MetadataMapAtlasPO item:delList )
             {
                 ResultDataDTO<String> delAtlas = atlasClient.delete(entityByGuid + "/" + item.atlasGuid);
-                if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
+                if (delAtlas.code !=AtlasResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
                 }
@@ -518,7 +519,7 @@ public class SynchronizationData {
             for (MetadataMapAtlasPO mapAtlasPo :delColumnList)
             {
                 ResultDataDTO<String> delAtlas = atlasClient.delete(entityByGuid + "/" + mapAtlasPo.atlasGuid);
-                if (delAtlas.code !=ResultEnum.REQUEST_SUCCESS)
+                if (delAtlas.code != AtlasResultEnum.REQUEST_SUCCESS)
                 {
                     continue;
                 }
@@ -606,7 +607,7 @@ public class SynchronizationData {
         String jsonParameter= JSONArray.toJSON(entityDTO).toString();
         //调用atlas添加实例
         ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
-        return addResult.code==ResultEnum.REQUEST_SUCCESS?addResult.data:"";
+        return addResult.code==AtlasResultEnum.REQUEST_SUCCESS?addResult.data:"";
     }
 
     /**
@@ -627,7 +628,7 @@ public class SynchronizationData {
     {
         boolean change=false;
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + po.atlasGuid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }
@@ -708,7 +709,7 @@ public class SynchronizationData {
         jsonObj.put("entity",entityObject);
         String jsonParameter=JSONArray.toJSON(jsonObj).toString();
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        if (result.code !=ResultEnum.REQUEST_SUCCESS)
+        if (result.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }
@@ -775,7 +776,7 @@ public class SynchronizationData {
     public void setRedis(String guid)
     {
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + guid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }

@@ -9,3 +9,17 @@ spring:
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
+
+  mybatis-plus:
+    configuration:
+      default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
+    global-config:
+      db-config:
+        id-type: auto
+        insert-strategy: not_null
+        logic-delete-field: del_flag
+        logic-delete-value: 0
+        logic-not-delete-value: 1
+        update-strategy: not_null
+    mapper-locations: classpath:mapper/*.xml
+    type-aliases-package: com.fisk.datamanagement.entity

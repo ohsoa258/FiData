@@ -9,6 +9,7 @@ import com.fisk.datamanagement.dto.entity.EntityDTO;
 import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.process.*;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IProcess;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationKinShip;
@@ -45,7 +46,7 @@ public class ProcessImpl implements IProcess {
     {
         ProcessDTO dto=new ProcessDTO();
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + processGuid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
             return dto;
         }
@@ -89,7 +90,7 @@ public class ProcessImpl implements IProcess {
     {
         //获取实体详情
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + dto.outGuid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -138,7 +139,7 @@ public class ProcessImpl implements IProcess {
         String jsonParameter= JSONArray.toJSON(entityDTO).toString();
         //调用atlas添加血缘
         ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
-        return addResult.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return addResult.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -166,7 +167,7 @@ public class ProcessImpl implements IProcess {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         //调用atlas修改实例
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
     }
 
     public ProcessDTO editProcessParameter(ProcessDTO dto,int parameterType,List<String> guidList){

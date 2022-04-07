@@ -7,6 +7,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.service.ITerm;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -39,7 +40,7 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(term,jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -47,9 +48,9 @@ public class TermImpl implements ITerm {
     {
         TermDTO dto=new TermDTO();
         ResultDataDTO<String> result = atlasClient.get(term + "/" + guid);
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
-            throw new FkException(result.code);
+            throw new FkException(ResultEnum.BAD_REQUEST);
         }
         dto= JSONObject.parseObject(result.data, TermDTO.class);
         return dto;
@@ -60,7 +61,7 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.put(term + "/" + dto.guid,jsonParameter);
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -88,10 +89,10 @@ public class TermImpl implements ITerm {
     {
         String jsonParameter= JSONArray.toJSON(dto.dto).toString();
         ResultDataDTO<String> result = atlasClient.put(terms + "/" + dto.termGuid+"/assignedEntities",jsonParameter);
-        if (result.code == ResultEnum.BAD_REQUEST)
+        if (result.code == AtlasResultEnum.BAD_REQUEST)
         {
             JSONObject msg= JSON.parseObject(result.data);
-            throw new FkException(result.code,msg.getString("errorMessage"));
+            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
         }
         return atlasClient.newResultEnum(result);
     }

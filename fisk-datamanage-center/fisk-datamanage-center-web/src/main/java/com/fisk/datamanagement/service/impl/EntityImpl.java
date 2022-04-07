@@ -10,6 +10,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.synchronization.fidata.SynchronizationData;
@@ -40,8 +41,6 @@ public class EntityImpl implements IEntity {
     UserHelper userHelper;
     @Resource
     private RedisTemplate redisTemplate;
-    @Resource
-    SynchronizationData synchronizationPgData;
 
     @Value("${atlas.searchBasic}")
     private String searchBasic;
@@ -83,9 +82,9 @@ public class EntityImpl implements IEntity {
         List<EntityTreeDTO> list=new ArrayList<>();
         try {
             ResultDataDTO<String> data = atlasClient.get(searchBasic + "?typeName=rdbms_instance");
-            if (data.code != ResultEnum.REQUEST_SUCCESS)
+            if (data.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
-                throw new FkException(data.code);
+                throw new FkException(ResultEnum.BAD_REQUEST);
             }
             JSONObject jsonObj = JSON.parseObject(data.data);
             JSONArray array = jsonObj.getJSONArray("entities");
@@ -103,9 +102,9 @@ public class EntityImpl implements IEntity {
                 entityParentDTO.parentId="-1";
                 //查询实例下db/table/column
                 ResultDataDTO<String> attribute=atlasClient.get(entityByGuid+"/"+entityParentDTO.id);
-                if (attribute.code != ResultEnum.REQUEST_SUCCESS)
+                if (attribute.code != AtlasResultEnum.REQUEST_SUCCESS)
                 {
-                    throw new FkException(data.code);
+                    throw new FkException(ResultEnum.BAD_REQUEST);
                 }
                 JSONObject jsonObj1 = JSON.parseObject(attribute.data);
                 //获取referredEntities
@@ -221,7 +220,7 @@ public class EntityImpl implements IEntity {
                 log.error("parsing data failure:"+e);
             }
         }
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -234,7 +233,7 @@ public class EntityImpl implements IEntity {
         {
             redisTemplate.delete("metaDataEntityData:"+guid);
         }
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -246,9 +245,9 @@ public class EntityImpl implements IEntity {
             return JSON.parseObject(data);
         }
         ResultDataDTO<String> result = atlasClient.get(entityByGuid + "/" + guid);
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
-            throw new FkException(result.code);
+            throw new FkException(ResultEnum.BAD_REQUEST);
         }
         return JSON.parseObject(result.data);
     }
@@ -273,7 +272,7 @@ public class EntityImpl implements IEntity {
         {
             e.printStackTrace();
         }
-        return result.code==ResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:result.code;
+        return result.code== AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.BAD_REQUEST;
     }
 
     @Override
@@ -281,7 +280,7 @@ public class EntityImpl implements IEntity {
     {
         try {
             ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" +guid);
-            if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+            if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
@@ -311,10 +310,10 @@ public class EntityImpl implements IEntity {
     {
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(searchBasic, jsonParameter);
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(result.code,msg.getString("errorMessage"));
+            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
         }
         return JSON.parseObject(result.data);
     }
@@ -324,9 +323,9 @@ public class EntityImpl implements IEntity {
     {
         List<EntityAuditsDTO> data;
         ResultDataDTO<String> result = atlasClient.get(entity + "/" + guid + "/audit");
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
-            throw new FkException(result.code);
+            throw new FkException(ResultEnum.BAD_REQUEST);
         }
         data=JSONObject.parseArray(result.data,EntityAuditsDTO.class);
         return data;
@@ -364,9 +363,9 @@ public class EntityImpl implements IEntity {
         try {
             LineAgeDTO dto=new LineAgeDTO();
             ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid);
-            if (result.code != ResultEnum.REQUEST_SUCCESS)
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
-                throw new FkException(result.code);
+                throw new FkException(ResultEnum.BAD_REQUEST);
             }
             List<JSONObject> jsonArrayList=new ArrayList<>();
             //解析数据
@@ -588,7 +587,7 @@ public class EntityImpl implements IEntity {
     {
         try {
             ResultDataDTO<String> result = atlasClient.get(relationship + "/guid/" + guid);
-            if (result.code != ResultEnum.REQUEST_SUCCESS)
+            if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
                 return false;
             }
@@ -614,10 +613,10 @@ public class EntityImpl implements IEntity {
     public JSONObject searchQuick(String query,int limit,int offset)
     {
         ResultDataDTO<String> result = atlasClient.get(searchQuick + "?query=" + query + "&limit=" + limit + "&offset=" + offset);
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(result.code,msg.getString("errorMessage"));
+            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
         }
         return JSON.parseObject(result.data);
     }
@@ -626,10 +625,10 @@ public class EntityImpl implements IEntity {
     public JSONObject searchSuggestions(String prefixString)
     {
         ResultDataDTO<String> result = atlasClient.get(searchSuggestions + "?prefixString=" + prefixString);
-        if (result.code != ResultEnum.REQUEST_SUCCESS)
+        if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
         {
             JSONObject msg=JSON.parseObject(result.data);
-            throw new FkException(result.code,msg.getString("errorMessage"));
+            throw new FkException(ResultEnum.BAD_REQUEST,msg.getString("errorMessage"));
         }
         return JSON.parseObject(result.data);
     }
@@ -637,7 +636,7 @@ public class EntityImpl implements IEntity {
     public void setRedis(String guid)
     {
         ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + guid);
-        if (getDetail.code !=ResultEnum.REQUEST_SUCCESS)
+        if (getDetail.code !=AtlasResultEnum.REQUEST_SUCCESS)
         {
             return;
         }

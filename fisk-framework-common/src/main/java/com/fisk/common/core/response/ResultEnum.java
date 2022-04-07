@@ -12,7 +12,7 @@ public enum ResultEnum {
      * 返回码
      */
     SUCCESS(0, "成功"),
-    REQUEST_SUCCESS(200, "请求成功"),
+    REQUEST_SUCCESS(200,"请求成功"),
     UNAUTHENTICATE(401, "认证失败"),
     NOTFOUND(404, "未找到资源"),
     ERROR(500, "系统报错"),
@@ -154,14 +154,6 @@ public enum ResultEnum {
     CUSTOMWORKFLOWDETAIL_NOT_EXISTS(9007,"当前管道下不存在组件,请检查参数"),
     FLOW_TABLE_NOT_EXISTS(9008,"当前管道下不存在组件,请检查参数"),
 
-
-    /**
-     * 元数据
-     */
-    BAD_REQUEST(400,"错误请求"),
-    NO_CONTENT(204,"没有内容"),
-    NOT_SUPPORT(205,"暂不支持该类型数据查询"),
-
     /**
      * 数据服务
      */
@@ -200,7 +192,14 @@ public enum ResultEnum {
      * 数据安全
      */
     FIELD_NAME_IS_SELECTED(12001,"当前字段已被设置,请重新选择"),
-    ROW_SECURITYNAME_EXISTS(12002,"当前权限名称已存在");
+    ROW_SECURITYNAME_EXISTS(12002,"当前权限名称已存在"),
+
+    /**
+     * 元数据
+     */
+    BAD_REQUEST(13001,"请求错误"),
+    NO_CONTENT(13002,"没有内容"),
+    NOT_SUPPORT(13003,"暂不支持该类型数据查询");
 
     ResultEnum(int code, String msg) {
         this.code = code;
