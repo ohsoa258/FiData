@@ -40,6 +40,7 @@ public class UserHelper {
 
     /**
      * 获取当前登录的用户
+     * 获取不到用户信息抛出异常
      *
      * @return 用户信息
      */
@@ -82,6 +83,20 @@ public class UserHelper {
             throw new FkException(ResultEnum.UNAUTHENTICATE, ResultEnum.AUTH_LOGIN_INFO_INVALID.getMsg());
         }
         return userInfo;
+    }
+
+    /**
+     * 获取当前登录的用户（mybatis的填充策略使用，获取不到用户信息会返回null）
+     * 获取不到用户信息返回null
+     *
+     * @return 用户信息
+     */
+    public UserInfo getLoginUserInfoNotThrowError() {
+        try {
+            return getLoginUserInfo();
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
