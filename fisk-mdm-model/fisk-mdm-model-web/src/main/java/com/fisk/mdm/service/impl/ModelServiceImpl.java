@@ -50,7 +50,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         wrapper.eq("name",model.name);
         ModelPO modelPO = baseMapper.selectOne(wrapper);
         if(modelPO != null){
-            return ResultEnum.DATA_EXISTS;
+            return ResultEnum.NAME_EXISTS;
         }
 
         boolean isInsert = baseMapper.insert(ModelMap.INSTANCES.dtoToPo(model)) > 0;

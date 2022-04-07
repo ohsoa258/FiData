@@ -43,6 +43,8 @@ public class MqConstants {
 
         public static final String BUILD_IMMEDIATELYSTART_FLOW="task.build.immediatelyStart.flow";
 
+        public static final String BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW="task.build.nifi.dispatch.flow";
+
     }
 
     public static final class RouterConstants{

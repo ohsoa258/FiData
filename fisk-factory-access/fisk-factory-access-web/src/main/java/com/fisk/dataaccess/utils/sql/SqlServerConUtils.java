@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +108,6 @@ public class SqlServerConUtils {
                 tablePyhNameDTO.setFields(columnsName);
 
                 tag++;
-                //tablePyhNameDTO.setTag(tag);
                 list.add(tablePyhNameDTO);
             }
 

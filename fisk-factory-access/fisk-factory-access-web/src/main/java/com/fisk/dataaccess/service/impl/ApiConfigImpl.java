@@ -99,7 +99,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 根据api_id查询物理表集合
         List<TableAccessPO> poList = getListTableAccessByApiId(id);
         // 根据table_id查询出表详情,并赋值给apiConfigDTO
-        apiConfigDTO.list = poList.stream().map(tableAccessPO -> tableAccessImpl.getData(tableAccessPO.id)).collect(Collectors.toList());
+        apiConfigDTO.list = poList.stream().map(e -> tableAccessImpl.getData(e.id)).collect(Collectors.toList());
         return apiConfigDTO;
     }
 
@@ -234,7 +234,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum generateAppPDFDoc(List<GenerateDocDTO> list, HttpServletResponse response) {
+    public ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response) {
 
         List<ApiConfigDTO> dtoList = new ArrayList<>();
         list.forEach(generateDocDTO -> {
@@ -254,18 +254,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 系统时间戳
         long timeMillis = System.currentTimeMillis();
         String fileName = "APIServiceDoc" + timeMillis + ".pdf";
-//        GenerateDocDTO generateDocDTO = list.get(0);
-//        if (generateDocDTO != null) {
-//            ApiConfigPO apiConfigPO = this.query().eq("id", generateDocDTO.apiId).one();
-//            if (apiConfigPO != null) {
-//                AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPO.appId).one();
-//                if (app != null) {
-//                     fileName = app.appName + "接口文档.pdf";
-//                }
-//            }
-//        } else {
-//            fileName = "APIServiceDoc" + "接口文档.pdf";
-//        }
+
         // 生成PDF文件
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
                 templatePath, fileName, "FiData接口文档", docDTO, response);
@@ -289,22 +278,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushDataStgToOds(dto.apiId, 0);
 
             // 根据api_id查询所有物理表
-            List<TableAccessPO> accessPOList = tableAccessImpl.query().eq("api_id", dto.apiId).list();
-            if (CollectionUtils.isEmpty(accessPOList)) {
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiId).list();
+            if (CollectionUtils.isEmpty(accessPoList)) {
                 return ResultEnum.TABLE_NOT_EXIST;
             }
             // 获取所有表数据
-            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPOList);
+            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
             apiTableDtoList.forEach(System.out::println);
 
-            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPOList.get(0).appId).one();
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
             if (modelApp == null) {
                 return ResultEnum.APP_NOT_EXIST;
             }
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            pushPgSQL(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
+            pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
 
             // TODO stg同步到ods(联调task)
             pushDataStgToOds(dto.apiId, 1);
@@ -318,14 +307,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEntity<String> getToken(ApiUserDTO dto) {
 
         // 根据账号名称查询对应的app_id下
-        AppDataSourcePO dataSourcePO = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).one();
-        if (!dataSourcePO.realtimeAccount.equals(dto.getUseraccount()) || !dataSourcePO.realtimePwd.equals(dto.getPassword())) {
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).one();
+        if (!dataSourcePo.realtimeAccount.equals(dto.getUseraccount()) || !dataSourcePo.realtimePwd.equals(dto.getPassword())) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR, ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR.getMsg());
         }
         UserAuthDTO userAuthDTO = new UserAuthDTO();
         userAuthDTO.setUserAccount(dto.useraccount);
         userAuthDTO.setPassword(dto.password);
-        userAuthDTO.setTemporaryId(RedisTokenKey.DATA_ACCESS_TOKEN + dataSourcePO.id);
+        userAuthDTO.setTemporaryId(RedisTokenKey.DATA_ACCESS_TOKEN + dataSourcePo.id);
 
         ResultEntity<String> result = authClient.getToken(userAuthDTO);
         if (result.code == ResultEnum.SUCCESS.getCode()) {
@@ -371,9 +360,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params accessPOList 物理表集合
      */
-    private List<ApiTableDTO> getApiTableDtoList(List<TableAccessPO> accessPOList) {
+    private List<ApiTableDTO> getApiTableDtoList(List<TableAccessPO> accessPoList) {
         // 根据table_id获取物理表详情
-        List<TableAccessNonDTO> poList = accessPOList.stream().map(e -> tableAccessImpl.getData(e.id)).collect(Collectors.toList());
+        List<TableAccessNonDTO> poList = accessPoList.stream().map(e -> tableAccessImpl.getData(e.id)).collect(Collectors.toList());
 
         List<ApiTableDTO> apiTableDTOList = new ArrayList<>();
         poList.forEach(e -> {
@@ -405,7 +394,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params apiTableDtoList
      * @params tablePrefixName pg中的物理表名
      */
-    private void pushPgSQL(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName) {
+    private void pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName) {
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
@@ -443,12 +432,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private void pushDataStgToOds(Long apiId, int flag) {
 
         // 1.根据apiId获取api所有信息
-        ApiConfigPO apiConfigPO = baseMapper.selectById(apiId);
-        if (apiConfigPO == null) {
+        ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
+        if (apiConfigPo == null) {
             throw new FkException(ResultEnum.API_NOT_EXIST);
         }
         // 2.根据appId获取app所有信息
-        AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPO.appId).one();
+        AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
         if (app == null) {
             throw new FkException(ResultEnum.APP_NOT_EXIST);
         }
@@ -562,7 +551,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         BigDecimal catalogueIndex = new BigDecimal("2.4");
 
         // API基本信息对象
-        List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
+        List<ApiBasicInfoDTO> apiBasicInfoDtoS = new ArrayList<>();
         List<TableAccessNonDTO> tableAccessDtoList = dto.list;
         if (CollectionUtils.isEmpty(tableAccessDtoList)) {
             return apiDocDTO;
@@ -593,7 +582,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiBasicInfoDTO.apiUnique = String.valueOf(dto.id);
 
         // 设置API请求参数(2.5.7 参数body)
-        List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+        List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
         ApiRequestDTO apiId = new ApiRequestDTO();
         apiId.parmName = "apiId";
         apiId.isRequired = "是";
@@ -606,16 +595,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         pushData.parmType = "String";
         pushData.parmDesc = "json序列化数据(参数格式及字段类型参考2.6.0&2.6.1)";
         pushData.trStyle = "background-color: #f8f8f8";
-        apiRequestDTOS.add(apiId);
-        apiRequestDTOS.add(pushData);
-        apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
+        apiRequestDtoS.add(apiId);
+        apiRequestDtoS.add(pushData);
+        apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
         apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
                 " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
                 " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
                 "}", addIndex + ".7");
 
         // 参数(body)表格(2.5.9返回参数说明)
-        List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
+        List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
         ApiResponseDTO code = new ApiResponseDTO();
         code.parmName = "code";
         code.parmType = "int";
@@ -628,10 +617,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         data.parmName = "data";
         data.parmType = "String";
         data.parmDesc = "返回的数据";
-        apiResponseDTOS.add(code);
-        apiResponseDTOS.add(msg);
-        apiResponseDTOS.add(data);
-        apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
+        apiResponseDtoS.add(code);
+        apiResponseDtoS.add(msg);
+        apiResponseDtoS.add(data);
+        apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
         //设置API返回参数,即返回示例(3)
         apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
@@ -691,9 +680,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
         /* 设置API目录 end */
 
-        apiBasicInfoDTOS.add(apiBasicInfoDTO);
+        apiBasicInfoDtoS.add(apiBasicInfoDTO);
 
-        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
+        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDtoS);
         return apiDocDTO;
     }
 
@@ -722,7 +711,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         BigDecimal catalogueIndex = new BigDecimal("2.4");
 
         // API基本信息对象
-        List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
+        List<ApiBasicInfoDTO> apiBasicInfoDtoS = new ArrayList<>();
 
         for (int i = 0; i < dtoList.size(); i++) {
             ApiConfigDTO dto = dtoList.get(i);
@@ -755,7 +744,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiBasicInfoDTO.apiHeader = "Authorization: Bearer {token}";
 
             // 设置API请求参数(2.5.7 参数body)
-            List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+            List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
             ApiRequestDTO apiId = new ApiRequestDTO();
             apiId.parmName = "apiId";
             apiId.isRequired = "是";
@@ -768,16 +757,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushData.parmType = "String";
             pushData.parmDesc = "json序列化数据(参数格式及字段类型参考本小节【pushData json格式】及【json字段描述】)";
             pushData.trStyle = "background-color: #f8f8f8";
-            apiRequestDTOS.add(apiId);
-            apiRequestDTOS.add(pushData);
-            apiBasicInfoDTO.apiRequestDTOS = apiRequestDTOS;
+            apiRequestDtoS.add(apiId);
+            apiRequestDtoS.add(pushData);
+            apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
             apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
                     " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
                     " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
                     "}", addIndex + ".7");
 
             // 参数(body)表格(2.5.9返回参数说明)
-            List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
+            List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
             ApiResponseDTO code = new ApiResponseDTO();
             code.parmName = "code";
             code.parmType = "int";
@@ -790,10 +779,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             data.parmName = "data";
             data.parmType = "String";
             data.parmDesc = "返回的数据";
-            apiResponseDTOS.add(code);
-            apiResponseDTOS.add(msg);
-            apiResponseDTOS.add(data);
-            apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
+            apiResponseDtoS.add(code);
+            apiResponseDtoS.add(msg);
+            apiResponseDtoS.add(data);
+            apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
             //设置API返回参数,即返回示例(3)
             apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
@@ -853,10 +842,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
             /* 设置API目录 end */
 
-            apiBasicInfoDTOS.add(apiBasicInfoDTO);
+            apiBasicInfoDtoS.add(apiBasicInfoDTO);
         }
 
-        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
+        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDtoS);
         return apiDocDTO;
     }
 

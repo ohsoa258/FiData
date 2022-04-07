@@ -46,20 +46,20 @@ public class EntityController {
     @PutMapping("/updateData")
     @ResponseBody
     public ResultEntity<ResultEnum> updateData(@Validated @RequestBody UpdateEntityDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,entityService.updateData(dto));
+        return ResultEntityBuild.build(entityService.updateData(dto));
     }
 
     @ApiOperation("删除实体")
     @DeleteMapping("/deleteData")
     @ResponseBody
     public ResultEntity<ResultEnum> deleteData(Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,entityService.deleteData(id));
+        return ResultEntityBuild.build(entityService.deleteData(id));
     }
 
     @ApiOperation("创建实体")
-    @PutMapping("/saveEntity")
+    @PostMapping("/saveEntity")
     @ResponseBody
     public ResultEntity<ResultEnum> saveEntity(@RequestBody EntityDTO dto) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.saveEntity(dto));
+        return ResultEntityBuild.build(entityService.saveEntity(dto));
     }
 }

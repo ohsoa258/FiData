@@ -115,6 +115,6 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param response response
      * @return 执行结果
      */
-    ResultEnum generateAppPDFDoc(List<GenerateDocDTO> list, HttpServletResponse response);
+    ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response);
 }
 

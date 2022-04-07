@@ -1,6 +1,6 @@
 package com.fisk.mdm.dto.entity;
 
-import com.fisk.mdm.enums.WhetherTypeEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -13,5 +13,6 @@ import javax.validation.constraints.NotNull;
 public class UpdateEntityDTO extends EntityDTO {
 
     @NotNull
+    @ApiModelProperty(value = "id",required = true)
     private Integer id;
 }

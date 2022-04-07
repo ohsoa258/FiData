@@ -11,6 +11,8 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 
 /**
+ * mybatis 填充策略
+ *
  * @author gy
  */
 @Component
@@ -29,7 +31,7 @@ public class BaseMetaObjectHandler implements MetaObjectHandler {
         this.setFieldValByName("createTime", LocalDateTime.now(), metaObject);
         this.setFieldValByName("delFlag", Integer.parseInt(SqlConstants.NOT_DEL), metaObject);
         if (userHelper != null) {
-            UserInfo user = userHelper.getLoginUserInfo();
+            UserInfo user = userHelper.getLoginUserInfoNotThrowError();
             if(user != null && user.id != null){
                 this.setFieldValByName("createUser", user.id.toString(), metaObject);
             }
@@ -45,7 +47,7 @@ public class BaseMetaObjectHandler implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
         this.setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
         if (userHelper != null) {
-            UserInfo user = userHelper.getLoginUserInfo();
+            UserInfo user = userHelper.getLoginUserInfoNotThrowError();
             if(user != null && user.id != null){
                 this.setFieldValByName("updateUser", user.id.toString(), metaObject);
             }

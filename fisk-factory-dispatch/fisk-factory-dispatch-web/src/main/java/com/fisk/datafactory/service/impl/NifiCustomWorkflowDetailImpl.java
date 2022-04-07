@@ -3,12 +3,12 @@ package com.fisk.datafactory.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
@@ -124,10 +124,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         // 前端有时会传入已经删除的组件,后端使用入库后的数据
-        List<NifiCustomWorkflowDetailPO> workflowDetailPOList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
+        List<NifiCustomWorkflowDetailPO> workflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
-        if (CollectionUtils.isNotEmpty(workflowDetailPOList)) {
-            List<NifiCustomWorkflowDetailDTO> workflowDetailDTOList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(workflowDetailPOList);
+        if (CollectionUtils.isNotEmpty(workflowDetailPoList)) {
+            List<NifiCustomWorkflowDetailDTO> workflowDetailDTOList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(workflowDetailPoList);
             // nifi
             workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, workflowDetailDTOList);
         }
@@ -361,12 +361,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         List<NifiCustomWorkflowDetailDTO> collect1 = collect.stream().filter(item -> item.pid == 0L).collect(Collectors.toList());
         // 子
         List<NifiCustomWorkflowDetailDTO> collect2 = collect.stream().filter(item -> item.pid != 0L).collect(Collectors.toList());
-        Map<Map, Map> structure = new HashMap<>();
+        Map<Map, Map> structure = new HashMap<>(1000);
         for (NifiCustomWorkflowDetailDTO dto1 : collect1) {
             // 父
-            Map<Long, String> structure1 = new HashMap<>();
+            Map<Long, String> structure1 = new HashMap<>(1000);
             // 子
-            Map<Long, String> structure2 = new HashMap<>();
+            Map<Long, String> structure2 = new HashMap<>(1000);
             for (NifiCustomWorkflowDetailDTO dto2 : collect2) {
                 if (dto1.id == dto2.pid) {
                     structure1.put(dto1.id, dto1.componentName);
@@ -393,11 +393,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         List<NifiCustomWorkflowDetailDTO> collect = list.stream()
                 .filter(item -> item.pid == 0 && componentType.equalsIgnoreCase(item.componentType))
                 .collect(Collectors.toList());
-        Map<Map, Map> structure = new HashMap<>();
-        Map structure1 = new HashMap();
+        Map<Map, Map> structure = new HashMap<>(1000);
+        Map structure1 = new HashMap(1000);
         structure1.put(workflowPo.workflowId, workflowPo.workflowName);
 
-        Map<Long, String> map = new HashMap<>();
+        Map<Long, String> map = new HashMap<>(1000);
         for (NifiCustomWorkflowDetailDTO dto : collect) {
             map.put(dto.id, dto.componentName);
         }

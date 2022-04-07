@@ -3,9 +3,9 @@ package com.fisk.gateway.filters;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.auth.client.AuthClient;
-import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.dto.Payload;
 import com.fisk.auth.dto.UserDetail;
+import com.fisk.auth.dto.clientregister.ClientRegisterDTO;
 import com.fisk.auth.utils.JwtUtils;
 import com.fisk.common.core.constants.RedisTokenKey;
 import com.fisk.common.core.constants.SystemConstants;
@@ -83,7 +83,8 @@ public class LoginFilter implements GlobalFilter, Ordered {
                 // 3.3获取用户信息
                 UserDetail userInfo = payload.getUserDetail();
                 // 报表永久token
-                if (userInfo.getId() == 102) {
+                int permanentToken = 102;
+                if (userInfo.getId() == permanentToken) {
                     // 不需要刷新token过期时间,直接放行
                     return chain.filter(exchange);
                     // 推送数据的请求路径判断
@@ -169,7 +170,7 @@ public class LoginFilter implements GlobalFilter, Ordered {
         httpHeaders.add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         ResultEntity<Object> res = new ResultEntity<>();
         res.msg = str;
-        res.code = ResultEnum.UNAUTHORIZED.getCode();
+        res.code = ResultEnum.UNAUTHENTICATE.getCode();
         return response.bufferFactory().wrap(JSON.toJSONString(res).getBytes());
     }
 

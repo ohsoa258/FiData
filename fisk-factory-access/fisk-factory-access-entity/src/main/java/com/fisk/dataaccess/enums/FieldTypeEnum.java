@@ -2,11 +2,29 @@ package com.fisk.dataaccess.enums;
 
 import com.fisk.common.core.enums.BaseEnum;
 
+/**
+ * @author Lock
+ */
 public enum FieldTypeEnum implements BaseEnum {
+    /**
+     * 数值类型
+     */
     INT(1, "INT"),
+    /**
+     * 字符类型
+     */
     STRING1(2, "VARCHAR"),
+    /**
+     * 时间戳类型
+     */
     DATETIME(3, "TIMESTAMP"),
+    /**
+     * 文本类型
+     */
     STRING2(4, "TEXT"),
+    /**
+     * 其他类型
+     */
     OTHER(0, "其他类型");
 
     FieldTypeEnum(int value, String name) {

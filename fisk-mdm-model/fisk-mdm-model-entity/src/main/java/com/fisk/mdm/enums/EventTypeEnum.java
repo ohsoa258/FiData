@@ -7,18 +7,18 @@ import com.fisk.common.core.enums.BaseEnum;
  * @author WangYan
  * @date 2022/4/5 12:11
  */
-public enum MdmTypeEnum implements BaseEnum {
+public enum EventTypeEnum implements BaseEnum {
 
     /**
-     * mdm类型
+     * 事件类型
      */
-    CODE(0,"code"),
+    SAVE(0,"新增"),
 
-    NAME(1,"name"),
+    UPDATE(1,"修改"),
 
-    BUSINESSFIELD(2,"业务字段");
+    DELETE(2,"删除");
 
-    MdmTypeEnum(int value, String name) {
+    EventTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }

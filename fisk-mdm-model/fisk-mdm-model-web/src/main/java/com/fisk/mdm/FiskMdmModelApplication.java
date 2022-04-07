@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.mdm",
         "com.fisk.common.framework.advice",
         "com.fisk.common.framework.mdc",
-        "com.fisk.mdm.config",
+        "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
         "com.fisk.common.framework.feign",
         "com.fisk.common.core.user",

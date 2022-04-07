@@ -111,15 +111,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             UserInfo userInfo = userHelper.getLoginUserInfo();
             if (userInfo == null) {
-                resultEnum = ResultEnum.AUTH_TOKEN_IS_NOTNULL;
-                return ResultEntityBuild.buildData(ResultEnum.AUTH_TOKEN_IS_NOTNULL, responseVO);
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
             }
 
             // 第一步：验证是否已进行授权认证
             appAccount = userInfo.username;
             if (appAccount == null || appAccount.isEmpty()) {
-                resultEnum = ResultEnum.AUTH_JWT_ERROR;
-                return ResultEntityBuild.buildData(ResultEnum.AUTH_JWT_ERROR, responseVO);
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
             }
 
             // 第二步：验证当前应用（下游系统）是否有效

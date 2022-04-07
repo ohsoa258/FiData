@@ -10,6 +10,7 @@ public enum DataClassifyEnum  implements BaseEnum {
     DATAACCESS(1,"数据接入"),
     DATAMODELKPL(2,"数据建模-指标"),
     DATAMODELWIDETABLE(9,"数据建模-宽表"),
+    UNIFIEDCONTROL(10,"统一调度"),
     //管道服务
     CUSTOMWORKDATAMODELING(3,"管道服务-数据建模-维度事实"),
     CUSTOMWORKDATAMODELDIMENSIONKPL(4,"管道服务-数据建模-维度指标"),

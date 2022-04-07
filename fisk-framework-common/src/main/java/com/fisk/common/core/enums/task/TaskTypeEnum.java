@@ -59,7 +59,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /*
      * 创建宽表
      * */
-    BUILD_WIDE_TABLE_TASK(11, "创建宽表");
+    BUILD_WIDE_TABLE_TASK(11, "创建宽表"),
+    /*
+     * 统一调度
+     * */
+    BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12,"统一调度");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

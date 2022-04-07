@@ -198,6 +198,11 @@ public interface DataAccessClient {
     @GetMapping("/dataAccessTree/getDataAccessMetaData")
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 
+    /**
+     * 修改api发布状态
+     *
+     * @param dto dto
+     */
     @ApiOperation("修改api发布状态")
     @PutMapping("/apiConfig/updateApiPublishStatus")
     public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto);

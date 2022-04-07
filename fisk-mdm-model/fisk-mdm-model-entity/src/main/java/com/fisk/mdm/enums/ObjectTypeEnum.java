@@ -1,5 +1,6 @@
 package com.fisk.mdm.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fisk.common.core.enums.BaseEnum;
 
 /**
@@ -22,6 +23,7 @@ public enum ObjectTypeEnum implements BaseEnum {
         this.value = value;
     }
 
+    @EnumValue
     private final int value;
     private final String name;
 

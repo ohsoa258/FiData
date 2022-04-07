@@ -1,5 +1,6 @@
 package com.fisk.mdm.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.WhetherTypeEnum;
@@ -31,6 +32,7 @@ public class EntityPO extends BasePO {
     /**
      * 描述
      */
+    @TableField(value = "`desc`")
     private String desc;
 
     /**
