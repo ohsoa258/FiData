@@ -128,6 +128,30 @@ public class DataCheckVO {
     public ModuleStateEnum moduleState;
 
     /**
+     * 模板名称
+     */
+    @ApiModelProperty(value = "模板名称")
+    public String templatenName;
+
+    /**
+     * 模板模块
+     */
+    @ApiModelProperty(value = "模板模块")
+    public TemplateModulesTypeEnum templateModules;
+
+    /**
+     * 模板类型
+     */
+    @ApiModelProperty(value = "模板类型")
+    public TemplateTypeEnum templateType;
+
+    /**
+     * 模板描述
+     */
+    @ApiModelProperty(value = "模板描述")
+    public String templateDesc;
+
+    /**
      * 通知id集合
      */
     @ApiModelProperty(value = "通知id集合")

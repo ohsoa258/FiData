@@ -20,9 +20,9 @@ import com.fisk.datagovernance.map.dataquality.NoticeMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
 import com.fisk.datagovernance.vo.dataquality.emailserver.EmailServerVO;
-import com.fisk.datagovernance.vo.dataquality.notice.AddNoticeVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeModule;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,8 +120,8 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     }
 
     @Override
-    public AddNoticeVO getNotificationInfo() {
-        AddNoticeVO addNoticeVO = new AddNoticeVO();
+    public NoticeDetailVO getNotificationInfo() {
+        NoticeDetailVO noticeDetailVO = new NoticeDetailVO();
         List<ComponentNotificationVO> notificationVOS = new ArrayList<>();
         //第一步：查询模板组件关联信息
         QueryWrapper<ComponentNotificationPO> notificationPOQueryWrapper = new QueryWrapper<>();
@@ -221,42 +221,42 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
                 emailServerVOS.add(emailServerVO);
             });
         }
-        addNoticeVO.notificationVOList = notificationVOS;
-        addNoticeVO.emailServerVOS = emailServerVOS;
-        return addNoticeVO;
+        noticeDetailVO.notificationVOList = notificationVOS;
+        noticeDetailVO.emailServerVOS = emailServerVOS;
+        return noticeDetailVO;
     }
 
     @Override
-    public List<NoticeModule> getModuleNoticeList() {
-        List<NoticeModule> noticeModules = new ArrayList<>();
-        NoticeModule noticeModule_email = new NoticeModule();
-        noticeModule_email.setNoticeName("邮件通知");
-        NoticeModule noticeModule_system = new NoticeModule();
-        noticeModule_system.setNoticeName("系统通知");
+    public List<NoticeModuleVO> getModuleNoticeList() {
+        List<NoticeModuleVO> noticeModuleVOS = new ArrayList<>();
+        NoticeModuleVO noticeModule_VO_email = new NoticeModuleVO();
+        noticeModule_VO_email.setNoticeName("邮件通知");
+        NoticeModuleVO noticeModule_VO_system = new NoticeModuleVO();
+        noticeModule_VO_system.setNoticeName("系统通知");
 
-        List<NoticeModule> noticeModules_email = new ArrayList<>();
-        List<NoticeModule> noticeModules_system = new ArrayList<>();
+        List<NoticeModuleVO> noticeModules_emailVO = new ArrayList<>();
+        List<NoticeModuleVO> noticeModules_systemVO = new ArrayList<>();
 
         QueryWrapper<NoticePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(NoticePO::getDelFlag, 1);
         List<NoticePO> noticePOS = baseMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(noticePOS)) {
             noticePOS.forEach(e -> {
-                NoticeModule noticeModule = new NoticeModule();
-                noticeModule.setNoticeId(Math.toIntExact(e.getId()));
-                noticeModule.setNoticeName(e.getModuleName());
+                NoticeModuleVO noticeModuleVO = new NoticeModuleVO();
+                noticeModuleVO.setNoticeId(Math.toIntExact(e.getId()));
+                noticeModuleVO.setNoticeName(e.getModuleName());
                 if (e.getNoticeType() == NoticeTypeEnum.EMAIL_NOTICE.getValue()) {
-                    noticeModules_email.add(noticeModule);
+                    noticeModules_emailVO.add(noticeModuleVO);
                 } else if (e.getNoticeType() == NoticeTypeEnum.SYSTEM_NOTICE.getValue()) {
-                    noticeModules_system.add(noticeModule);
+                    noticeModules_systemVO.add(noticeModuleVO);
                 }
             });
         }
-        noticeModule_email.setNoticeModules(noticeModules_email);
-        noticeModule_system.setNoticeModules(noticeModules_system);
-        noticeModules.add(noticeModule_email);
-        noticeModules.add(noticeModule_system);
-        return noticeModules;
+        noticeModule_VO_email.setNoticeModuleVOS(noticeModules_emailVO);
+        noticeModule_VO_system.setNoticeModuleVOS(noticeModules_systemVO);
+        noticeModuleVOS.add(noticeModule_VO_email);
+        noticeModuleVOS.add(noticeModule_VO_system);
+        return noticeModuleVOS;
     }
 
     @Override

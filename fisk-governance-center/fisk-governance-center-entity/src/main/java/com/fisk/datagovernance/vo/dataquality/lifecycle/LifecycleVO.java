@@ -1,8 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.lifecycle;
 
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
-import com.fisk.datagovernance.enums.dataquality.TableStateTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -112,6 +110,30 @@ public class LifecycleVO {
      */
     @ApiModelProperty(value = "组件状态")
     public ModuleStateEnum moduleState;
+
+    /**
+     * 模板名称
+     */
+    @ApiModelProperty(value = "模板名称")
+    public String templatenName;
+
+    /**
+     * 模板模块
+     */
+    @ApiModelProperty(value = "模板模块")
+    public TemplateModulesTypeEnum templateModules;
+
+    /**
+     * 模板类型
+     */
+    @ApiModelProperty(value = "模板类型")
+    public TemplateTypeEnum templateType;
+
+    /**
+     * 模板描述
+     */
+    @ApiModelProperty(value = "模板描述")
+    public String templateDesc;
 
     /**
      * 通知id集合

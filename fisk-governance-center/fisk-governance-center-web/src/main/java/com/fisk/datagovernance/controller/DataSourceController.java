@@ -73,7 +73,7 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(tableName));
     }
 
-    @GetMapping("/getTableFieldAll")
+    @PostMapping("/getTableFieldAll")
     @ApiOperation("获取表字段信息")
     public ResultEntity<DataSourceVO> getTableFieldAll(@Validated @RequestBody TableFieldQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));

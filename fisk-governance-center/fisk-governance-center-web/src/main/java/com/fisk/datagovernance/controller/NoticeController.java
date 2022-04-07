@@ -9,8 +9,8 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
-import com.fisk.datagovernance.vo.dataquality.notice.AddNoticeVO;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeModule;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -58,13 +58,13 @@ public class NoticeController {
 
     @ApiOperation("查询告警通知应用情况")
     @GetMapping("/getNotificationInfo")
-    public ResultEntity<AddNoticeVO> getNotificationInfo() {
+    public ResultEntity<NoticeDetailVO> getNotificationInfo() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNotificationInfo());
     }
 
     @ApiOperation("获取组件通知列表")
     @GetMapping("/getModuleNoticeList")
-    public ResultEntity< List<NoticeModule>> getModuleNoticeList() {
+    public ResultEntity< List<NoticeModuleVO>> getModuleNoticeList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModuleNoticeList());
     }
 

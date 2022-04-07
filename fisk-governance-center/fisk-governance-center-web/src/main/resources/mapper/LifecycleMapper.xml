@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.LifecycleMapper">
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.lifecycle.LifecycleVO">
         SELECT
-        id,
+        t1.id,
         template_id,
         datasource_id,
         datasource_type,
@@ -20,12 +20,17 @@
         run_time_cron,
         table_state,
         module_state,
-        create_time,
-        create_user
+        t2.templaten_name,
+        t2.template_modules,
+        t2.template_type,
+        t2.template_desc,
+        t1.create_time,
+        t1.create_user
         FROM
-        tb_lifecycle_module
+        tb_lifecycle_module t1
+        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
         WHERE
-        del_flag = 1
+        t1.del_flag = 1
         AND table_name = #{tableName,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
             AND module_name LIKE concat('%', #{keyword}, '%')

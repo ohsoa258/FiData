@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.NoticeMapper">
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.notice.NoticeVO">
         SELECT
-        id,
+        t1.id,
         template_id,
         email_server_id,
         module_name,
@@ -14,12 +14,17 @@
         email_cc,
         body,
         module_state,
-        create_time,
-        create_user
+        t2.templaten_name,
+        t2.template_modules,
+        t2.template_type,
+        t2.template_desc,
+        t1.create_time,
+        t1.create_user
         FROM
-        tb_notice_module
+        tb_notice_module t1
+        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
         WHERE
-        del_flag = 1
+        t1.del_flag = 1
         <if test="keyword != null and keyword != '' ">
             AND module_name LIKE concat('%', #{keyword}, '%')
         </if>

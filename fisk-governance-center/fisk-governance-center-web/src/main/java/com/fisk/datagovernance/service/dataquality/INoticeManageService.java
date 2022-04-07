@@ -7,8 +7,8 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.NoticePO;
-import com.fisk.datagovernance.vo.dataquality.notice.AddNoticeVO;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeModule;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
+import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 
 import java.util.List;
@@ -59,14 +59,14 @@ public interface INoticeManageService extends IService<NoticePO> {
 //     * @param typeEnum   模块类型
      * @return 执行结果
      */
-    AddNoticeVO getNotificationInfo();
+    NoticeDetailVO getNotificationInfo();
 
     /**
      * 获取组件通知
      *
      * @return 查询结果
      */
-    List<NoticeModule> getModuleNoticeList();
+    List<NoticeModuleVO> getModuleNoticeList();
 
     /**
      * 测试发送邮件通知

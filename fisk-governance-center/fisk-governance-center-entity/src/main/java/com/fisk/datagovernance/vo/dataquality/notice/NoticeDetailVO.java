@@ -13,7 +13,7 @@ import java.util.List;
  * @date 2022/3/22 15:38
  */
 @Data
-public class AddNoticeVO {
+public class NoticeDetailVO {
     /**
      * 组件通知列表
      */

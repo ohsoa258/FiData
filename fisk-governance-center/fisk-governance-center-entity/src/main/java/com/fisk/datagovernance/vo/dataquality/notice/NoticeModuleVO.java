@@ -12,7 +12,7 @@ import java.util.List;
  * @date 2022/3/25 22:07
  */
 @Data
-public class NoticeModule {
+public class NoticeModuleVO {
     /**
      * 通知id
      */
@@ -29,5 +29,5 @@ public class NoticeModule {
      * 通知组件
      */
     @ApiModelProperty(value = "通知组件")
-    public List<NoticeModule> noticeModules;
+    public List<NoticeModuleVO> noticeModuleVOS;
 }
