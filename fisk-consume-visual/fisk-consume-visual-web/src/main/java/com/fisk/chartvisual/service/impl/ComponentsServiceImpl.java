@@ -286,6 +286,31 @@ public class ComponentsServiceImpl implements ComponentsService {
         return uploadAddress;
     }
 
+    @Override
+    public ComponentsDTO selectComponentById(Integer id) {
+        QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsPO::getId,id);
+        ComponentsPO componentsPo = componentsMapper.selectOne(queryWrapper);
+        if (componentsPo == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 查询子版本信息
+        List<ComponentsOptionDTO> optionData = this.getOptionData((int) componentsPo.getId());
+
+        ComponentsDTO dto = new ComponentsDTO();
+        dto.setId((int) componentsPo.getId());
+        dto.setClassId(componentsPo.getClassId().intValue());
+        dto.setName(componentsPo.getName());
+        dto.setIcon(componentsPo.getIcon());
+        if (CollectionUtils.isNotEmpty(optionData)) {
+            dto.setOptionList(optionData);
+        }
+
+        return dto;
+    }
+
     /**
      * 删除组件配置
      * @param id

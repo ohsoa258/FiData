@@ -90,4 +90,11 @@ public class ComponentsController {
     public ResultEntity<String> uploadNewVersion( SaveComponentsOptionDTO dto, @RequestParam("file") MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponentsOption(dto,file));
     }
+
+    @ApiOperation("根据id查询组件版本信息")
+    @GetMapping("/selectComponentById")
+    @ResponseBody
+    public ResultEntity<ComponentsDTO> selectComponentById(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.selectComponentById(id));
+    }
 }
