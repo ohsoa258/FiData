@@ -36,7 +36,7 @@ public class Home {
         targetTable.forEach(System.out::println);
         // 获取Json的schema信息
         List<JsonSchema> schemas = getJsonSchema();
-//        schemas.forEach(System.out::println);
+////        schemas.forEach(System.out::println);
         // json根节点处理
         rootNodeHandler(schemas, data, targetTable);
         targetTable.forEach(System.out::println);
@@ -79,8 +79,9 @@ public class Home {
      * @params targetTable 最终处理结果
      */
     private void dataNodeHandler(List<JsonSchema> schemas, JSONArray data, List<JsonTableData> targetTable) throws Exception {
-        if (data == null)
+        if (data == null) {
             return;
+        }
         for (JsonTableData item : targetTable) {
             List<JsonSchema> tableSchema = schemas.stream()
                     .filter(e -> StringUtils.hasLength(e.targetTableName) && e.targetTableName.equals(item.table))

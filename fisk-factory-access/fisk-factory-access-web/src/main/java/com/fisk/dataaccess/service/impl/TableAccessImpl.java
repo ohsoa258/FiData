@@ -480,7 +480,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setTableSyncmodeDTO(sdto);
 
         // 只有存在业务时间覆盖时,才会给前端展示
-        if (modelSync != null && modelSync.syncMode == 4) {
+        int businessTimeType = 4;
+        if (modelSync != null && modelSync.syncMode == businessTimeType) {
             // 查询tb_table_business
             QueryWrapper<TableBusinessPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(TableBusinessPO::getAccessId, id);
@@ -568,7 +569,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case "mysql":
                 // 3.调用MysqlConUtils,连接远程数据库,获取所有表及对应字段
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
-//                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
+////                list = mysqlConUtils.getTableNameAndColumns(url, user, pwd);
                 break;
             case "sqlserver":
                 list = new SqlServerConUtils().getTableNameAndColumns(url, user, pwd, dbName);
@@ -646,7 +647,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 查询tb_table_syncmode
         TableSyncmodePO modelSync = this.syncmodeMapper.getData(id);
-        if (modelSync != null && modelSync.syncMode == 4) {
+        int businessTimeType = 4;
+        if (modelSync != null && modelSync.syncMode == businessTimeType) {
             TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
             if (modelBusiness != null) {
                 int deleteBusiness = businessMapper.deleteByIdWithFill(modelBusiness);
@@ -692,7 +694,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         dto = new AtlasEntityDbTableColumnDTO();
-//        dto.dbId = modelDataSource.getAtlasDbId();
+////        dto.dbId = modelDataSource.getAtlasDbId();
         dto.tableName = modelAccess.getTableName();
         dto.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型(改为枚举类型)
@@ -750,7 +752,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 atlasEntityColumnDTO.setDataType(po.getFieldType() + "(" + po.fieldLength + ")");
             }
             atlasEntityColumnDTO.setIsKey("" + po.getIsPrimarykey() + "");
-//            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
+////            atlasEntityColumnDTO.setGuid(po.atlasFieldId);
 
             columns.add(atlasEntityColumnDTO);
         }
@@ -769,13 +771,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelReg == null || modelDataSource == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-//        dto.appId = modelReg.atlasInstanceId;
-//        dto.atlasTableId = modelDataSource.atlasDbId;
+////        dto.appId = modelReg.atlasInstanceId;
+////        dto.atlasTableId = modelDataSource.atlasDbId;
         // 查询tb_table_access
         TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
-//        dto.tableId = modelAccess.atlasTableId;
+////        dto.tableId = modelAccess.atlasTableId;
         AtlasEntityDbTableColumnDTO atlasDTO = new AtlasEntityDbTableColumnDTO();
-//        atlasDTO.dbId = modelDataSource.getAtlasDbId();
+////        atlasDTO.dbId = modelDataSource.getAtlasDbId();
         atlasDTO.tableName = modelAccess.getTableName();
         atlasDTO.createUser = modelAccess.getCreateUser();
         // TODO:驱动类型
@@ -847,7 +849,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 return ResultEnum.DATA_NOTEXISTS;
             }
             // 回写的字段GUID
-//            modelFields.atlasFieldId = columnDTO.getGuid();
+////            modelFields.atlasFieldId = columnDTO.getGuid();
             // 更新tb_table_fields表数据
             updateField = this.tableFieldsImpl.updateById(modelFields);
             if (!updateField) {
@@ -1476,10 +1478,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<String> charType = new ArrayList<>();
         charType.add("");
 
-//        List<String> timeType = new ArrayList<>();
-//        timeType.add("datetime");
-//        timeType.add("");
-//        timeType.add("");
+////        List<String> timeType = new ArrayList<>();
+////        timeType.add("datetime");
+////        timeType.add("");
+////        timeType.add("");
 
         // Number型
         // 整型

@@ -13,7 +13,7 @@ import java.util.List;
  * @date 2022/1/21 11:51
  */
 @Data
-public class ApiTableDTO02 {
+public class ApiTableExtendDTO {
     @ApiModelProperty(value = "api下的表")
     public String tableName;
 
@@ -34,5 +34,5 @@ public class ApiTableDTO02 {
     /**
      * 子级表名
      */
-    public List<ApiTableDTO02> childTable;
+    public List<ApiTableExtendDTO> childTable;
 }

@@ -3,19 +3,19 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.baseObject.dto.PageDTO;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.framework.mdc.TraceType;
-import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.mdc.TraceType;
+import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
@@ -232,8 +232,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (po.appType == 0) {
             QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
             wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, appDatasourceDTO.realtimeAccount);
-            AppDataSourcePO appDataSourcePO = appDataSourceMapper.selectOne(wrapper);
-            if (appDataSourcePO != null && appDataSourcePO.id != appDatasourceDTO.id) {
+            AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
+            if (appDataSourcePo != null && appDataSourcePo.id != appDatasourceDTO.id) {
                 return ResultEnum.REALTIME_ACCOUNT_ISEXIST;
             }
         }
@@ -301,12 +301,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(accessList)) {
             // 删表之前,要将所有的数据提前查出来,不然会导致空指针异常
             tableIdList = accessList.stream().map(TableAccessPO::getId).collect(Collectors.toList());
-//            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
+////            List<String> atlasTableIdList = accessList.stream().map(TableAccessPO::getAtlasTableId).collect(Collectors.toList());
 
             for (Long tableId : tableIdList) {
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
-//                tableVO.tableAtlasId = po.atlasTableId;
+////                tableVO.tableAtlasId = po.atlasTableId;
                 tableVO.tableName = po.tableName;
                 tableList.add(tableVO);
             }

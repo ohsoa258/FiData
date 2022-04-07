@@ -2,8 +2,8 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -114,11 +114,9 @@ public class PgsqlUtils {
         //这里必须设置为false，我们手动批量提交
         con.setAutoCommit(false);
         //这里需要注意，SQL语句的格式必须是预处理的这种，就是values(?,?,...,?)，否则批处理不起作用
-        //PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
+        ////PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
 
-        /*JSONObject json = JSON.parseObject(jsonStr);
         // TODO 调用JsonUtils获取表对象集合
-        List<JsonTableData> res = home.get(json);*/
         int countSql = 0;
         try {
             for (JsonTableData re : res) {
