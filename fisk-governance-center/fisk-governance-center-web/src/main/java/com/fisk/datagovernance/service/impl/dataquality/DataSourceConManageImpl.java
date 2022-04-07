@@ -11,13 +11,11 @@ import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
@@ -209,20 +207,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public DataSourceVO getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe,
-                                         String tableName, String tableFramework) {
+    public DataSourceVO getTableFieldAll(TableFieldQueryDTO dto) {
         DataSourceVO dataSourceVO = new DataSourceVO();
-        if (datasourceId == 0 || tableName == null || tableName == "") {
+        if (dto == null) {
             return dataSourceVO;
         }
         DataSourceConPO conPo = null;
-        switch (datasourceTyoe) {
+        switch (dto.datasourceTyoe) {
             case METADATA:
                 // 调用元数据接口，根据datasourceId查询数据源信息
                 conPo = null;
                 break;
             case DATAQUALITY:
-                conPo = mapper.selectById(datasourceId);
+                conPo = mapper.selectById(dto.datasourceId);
                 break;
         }
         List<TablePyhNameDTO> tablePyhNameDTOS = new ArrayList<>();
@@ -239,32 +236,36 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                colNames = mysqlConUtils.getColNames(st, tableName);
+                colNames = mysqlConUtils.getColNames(st, dto.tableName);
                 break;
             case SQLSERVER:
                 // 表结构
                 SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
                 connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                colNames = sqlServerPlusUtils.getColumnsName(connection, tableName, tableFramework);
+                colNames = sqlServerPlusUtils.getColumnsName(connection, dto.tableName, dto.tableFramework);
                 break;
         }
         if (CollectionUtils.isNotEmpty(colNames)) {
-//            int rowsCount = 0;
-//            try {
-//                String tName = tableFramework != null && tableFramework != "" ? tableFramework + "." + tableName : tableName;
-//                String sqlCountStr = String.format("select count(*) from %s", tName);
-//                PreparedStatement preparedStatement = null;
-//                preparedStatement = connection.prepareStatement(sqlCountStr);
-//                ResultSet resultSet = preparedStatement.executeQuery();
-//                resultSet.next();
-//                rowsCount = resultSet.getInt(1);
-//            } catch (SQLException e) {
-//                e.printStackTrace();
-//            }
+            int rowsCount = 0;
+            // 表行数波动阈值模板才计算行数
+            if (dto.templateTypeEnum == TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE) {
+                try {
+                    String tName = dto.tableFramework != null && dto.tableFramework != ""
+                            ? dto.tableFramework + "." + dto.tableName : dto.tableName;
+                    String sqlCountStr = String.format("select count(*) from %s", tName);
+                    PreparedStatement preparedStatement = null;
+                    preparedStatement = connection.prepareStatement(sqlCountStr);
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    resultSet.next();
+                    rowsCount = resultSet.getInt(1);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-            tablePyhNameDTO.setTableName(tableName);
-//            tablePyhNameDTO.setRowsCount(rowsCount);
-            tablePyhNameDTO.setTableFramework(tableFramework);
+            tablePyhNameDTO.setTableName(dto.tableName);
+            tablePyhNameDTO.setRowsCount(rowsCount);
+            tablePyhNameDTO.setTableFramework(dto.tableFramework);
             tablePyhNameDTO.setFields(colNames);
             tablePyhNameDTOS.add(tablePyhNameDTO);
             dataSourceVO.tableDtoList = tablePyhNameDTOS;

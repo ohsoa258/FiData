@@ -3,10 +3,7 @@ package com.fisk.datagovernance.service.dataquality;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
@@ -68,8 +65,8 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     List<DataSourceVO> getMeta(String tableName);
 
     /**
-     * 获取元数据资产管理下的表信息
+     * 获取表字段信息
      * @return 查询结果
      */
-    DataSourceVO getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe, String tableName,String tableFramework);
+    DataSourceVO getTableFieldAll(TableFieldQueryDTO dto);
 }

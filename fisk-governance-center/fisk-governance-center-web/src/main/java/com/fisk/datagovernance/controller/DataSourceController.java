@@ -5,10 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
@@ -78,8 +75,7 @@ public class DataSourceController {
 
     @GetMapping("/getTableFieldAll")
     @ApiOperation("获取表字段信息")
-    public ResultEntity<DataSourceVO> getTableFieldAll(int datasourceId, ModuleDataSourceTypeEnum datasourceTyoe,
-                                                       String tableName,String tableFramework) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(datasourceId,datasourceTyoe,tableName,tableFramework));
+    public ResultEntity<DataSourceVO> getTableFieldAll(@Validated @RequestBody TableFieldQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
     }
 }

@@ -211,11 +211,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 //强类型模板规则
                 rule = createField_StrongRule(dataSourceTypeEnum, tableName, fieldName, dto.fieldLength, dto.checkRuleType);
                 break;
-            case FIELD_AGGREGETION_TEMPLATE:
+            case FIELD_AGGREGATE_THRESHOLD_TEMPLATE:
                 //字段聚合波动阈值模板
                 rule = createField_AggregetionRule(tableName, tableName, dto.fieldAggregate, dto.thresholdValue);
                 break;
-            case TABLEROW_THRESHOLD_TEMPLATE:
+            case ROWCOUNT_THRESHOLD_TEMPLATE:
                 //表行数波动阈值模板
                 rule = createTableRow_ThresholdRule(tableName);
                 break;
