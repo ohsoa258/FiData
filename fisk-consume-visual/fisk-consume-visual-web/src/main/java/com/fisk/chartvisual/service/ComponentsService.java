@@ -85,4 +85,11 @@ public interface ComponentsService {
      * @return
      */
     String saveComponentsOption(SaveComponentsOptionDTO dto, MultipartFile file);
+
+    /**
+     * 根据id查询组件版本信息
+     * @param id
+     * @return
+     */
+    ComponentsDTO selectComponentById(Integer id);
 }
