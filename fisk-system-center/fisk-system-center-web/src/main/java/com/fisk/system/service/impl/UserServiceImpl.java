@@ -4,16 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.constants.FilterSqlConstants;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
-import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
+import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.QueryDTO;
@@ -154,17 +154,17 @@ public class UserServiceImpl implements IUserService {
         //查询点击角色下所有用户
         if (dto.roleId != 0) {
             //获取已选中用户
-            QueryWrapper<UserPO> userPOQueryWrapper = new QueryWrapper<>();
+            QueryWrapper<UserPO> userPoQueryWrapper = new QueryWrapper<>();
             if (dto != null && StringUtils.isNotEmpty(dto.name)) {
-                userPOQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+                userPoQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
             }
             QueryWrapper<RoleUserAssignmentPO> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.select("user_id").lambda().eq(RoleUserAssignmentPO::getRoleId, dto.roleId);
             List<Object> list = roleUserAssignmentMapper.selectObjs(queryWrapper1);
             List<Integer> ids = (List<Integer>) (List) list;
             if (ids != null && ids.size() > 0) {
-                userPOQueryWrapper.in("id", ids).orderByDesc("create_time");
-                List<UserPO> userPo = mapper.selectList(userPOQueryWrapper);
+                userPoQueryWrapper.in("id", ids).orderByDesc("create_time");
+                List<UserPO> userPo = mapper.selectList(userPoQueryWrapper);
                 if (userPo != null || userPo.size() > 0) {
                     data.addAll(userPo);
                 }
@@ -200,15 +200,14 @@ public class UserServiceImpl implements IUserService {
         {
             queryWrapper.lambda().like(UserPO::getUsername,dto.name);
         }
-        if (!CollectionUtils.isEmpty(dto.userIdList))
-        {
+        if (!CollectionUtils.isEmpty(dto.userIdList)) {
             //获取已选中用户
-            QueryWrapper<UserPO> userPOQueryWrapper = new QueryWrapper<>();
+            QueryWrapper<UserPO> userPoQueryWrapper = new QueryWrapper<>();
             if (dto != null && StringUtils.isNotEmpty(dto.name)) {
-                userPOQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
+                userPoQueryWrapper.lambda().like(UserPO::getUserAccount, dto.name);
             }
-            userPOQueryWrapper.in("id", dto.userIdList).orderByDesc("create_time");
-            List<UserPO> userPo = mapper.selectList(userPOQueryWrapper);
+            userPoQueryWrapper.in("id", dto.userIdList).orderByDesc("create_time");
+            List<UserPO> userPo = mapper.selectList(userPoQueryWrapper);
             if (userPo != null || userPo.size() > 0) {
                 data.addAll(userPo);
             }
@@ -345,24 +344,26 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public ResultEnum updatePassword(ChangePasswordDTO dto) {
-        UserPO userPO = mapper.selectById(dto.id);
-        if (userPO == null) {
+        UserPO userPo = mapper.selectById(dto.id);
+        if (userPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        if (!passwordEncoder.matches(dto.originalPassword, userPO.getPassword())) {
+        if (!passwordEncoder.matches(dto.originalPassword, userPo.getPassword())) {
             return ResultEnum.ORIGINAL_PASSWORD_ERROR;
         }
-        userPO.password = passwordEncoder.encode(dto.password);
-        return mapper.updateById(userPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        userPo.password = passwordEncoder.encode(dto.password);
+        return mapper.updateById(userPo) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEntity<List<UserDTO>> getUserListByIds(List<Long> ids) {
-        List<UserDTO> userDTOS = new ArrayList<>();
-        if (CollectionUtils.isEmpty(ids))
-            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDTOS);
-        userDTOS = mapper.getUserListByIds(ids);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDTOS);
+        List<UserDTO> userDtos = new ArrayList<>();
+        if (CollectionUtils.isEmpty(ids)) {
+
+            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, userDtos);
+        }
+        userDtos = mapper.getUserListByIds(ids);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDtos);
     }
 
     @Override

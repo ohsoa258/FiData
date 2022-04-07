@@ -98,21 +98,21 @@ public class DataviewServiceImpl implements DataviewService {
         // 判断是否已经存在
         QueryWrapper<DataviewPO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(DataviewPO::getViewName,dto.getViewName())
+                .eq(DataviewPO::getViewName, dto.getViewName())
                 .last("limit 1");
         DataviewPO po = dataviewMapper.selectOne(query);
-        if (po != null){
+        if (po != null) {
             return ResultEnum.DATA_EXISTS;
         }
 
         // 不存在进行保存
-        DataviewPO dataviewPO = DataviewMap.INSTANCES.dtoToPo(dto);
-        int insert = dataviewMapper.insert(dataviewPO);
-        if (insert <= 0){
+        DataviewPO dataviewPo = DataviewMap.INSTANCES.dtoToPo(dto);
+        int insert = dataviewMapper.insert(dataviewPo);
+        if (insert <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        return this.saveFilter(DataviewMap.INSTANCES.filterDtoToPo(dto.getFilterDTO()),(int)dataviewPO.getId());
+        return this.saveFilter(DataviewMap.INSTANCES.filterDtoToPo(dto.getFilterDTO()), (int) dataviewPo.getId());
     }
 
     @Override
@@ -142,10 +142,10 @@ public class DataviewServiceImpl implements DataviewService {
      * @param id 数据视图id
      */
     public ResultEnum saveFilter(List<DataviewFilterPO> viewFilterList,Integer id){
-        if (CollectionUtils.isNotEmpty(viewFilterList)){
-            for (DataviewFilterPO filterPO : viewFilterList) {
-                filterPO.setDataviewId(id);
-                int insert = dataviewFilterMapper.insert(filterPO);
+        if (CollectionUtils.isNotEmpty(viewFilterList)) {
+            for (DataviewFilterPO filterPo : viewFilterList) {
+                filterPo.setDataviewId(id);
+                int insert = dataviewFilterMapper.insert(filterPo);
                 if (insert <= 0) {
                     return ResultEnum.SAVE_DATA_ERROR;
                 }
