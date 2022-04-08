@@ -1,6 +1,7 @@
 package com.fisk.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -98,12 +99,18 @@ public class RoleServiceAssignmentImpl
         QueryWrapper<RoleServiceAssignmentPO> serviceData = new QueryWrapper<>();
         serviceData.in("role_id",idList.toArray()).select("service_id");
         List<Object> serviceIds = serviceMapper.selectObjs(serviceData).stream().distinct().collect(Collectors.toList());
-
+        if (CollectionUtils.isEmpty(serviceIds))
+        {
+            return dtoList;
+        }
         /*根据服务id集合获取服务列表*/
         QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("id",serviceIds.toArray());
         List<ServiceRegistryPO> list = serviceRegistryMapper.selectList(queryWrapper);
-
+        if (CollectionUtils.isEmpty(list))
+        {
+            return dtoList;
+        }
         /*查询所有父节点*/
         String code="1";
         List<ServiceRegistryPO> listParent=list.stream().sorted(Comparator.comparing(ServiceRegistryPO::getSequenceNo)).filter(e->code.equals(e.getParentServeCode()))
