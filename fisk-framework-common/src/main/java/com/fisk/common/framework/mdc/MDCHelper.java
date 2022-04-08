@@ -4,6 +4,8 @@ package com.fisk.common.framework.mdc;
 import com.fisk.common.core.constants.TraceConstant;
 import org.slf4j.MDC;
 
+import java.util.UUID;
+
 /**
  * @author gy
  */
@@ -21,5 +23,11 @@ public class MDCHelper {
         MDC.put(TraceConstant.APP_CLASS, name);
     }
 
+    public static void setTraceId() {
+        MDC.put(TraceConstant.TRACE_ID, UUID.randomUUID().toString());
+    }
 
+    public static void clear() {
+        MDC.clear();
+    }
 }
