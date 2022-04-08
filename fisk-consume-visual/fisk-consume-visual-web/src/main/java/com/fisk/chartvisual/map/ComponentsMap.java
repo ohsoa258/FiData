@@ -83,6 +83,19 @@ public interface ComponentsMap {
     /**
      * dto => po
      * @param dto
+     * @param uploadAddress
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "uploadAddress",target = "path"),
+            @Mapping(source = "dto.componentId",target = "id"),
+            @Mapping(target = "componentId",ignore = true)
+    })
+    ComponentsOptionPO optionEditDtoToPo(SaveComponentsOptionDTO dto,String uploadAddress);
+
+    /**
+     * dto => po
+     * @param dto
      * @return
      */
     ComponentsPO compEditDtoToPo(ComponentsEditDTO dto);
