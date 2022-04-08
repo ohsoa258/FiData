@@ -103,6 +103,7 @@ public class RoleServiceAssignmentImpl
         {
             return dtoList;
         }
+
         /*根据服务id集合获取服务列表*/
         QueryWrapper<ServiceRegistryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("id",serviceIds.toArray());
