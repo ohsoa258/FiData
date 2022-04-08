@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 public class SaveComponentsOptionDTO {
 
     @NotNull
+    private Integer id;
     private Integer componentId;
     private String description;
     private String version;

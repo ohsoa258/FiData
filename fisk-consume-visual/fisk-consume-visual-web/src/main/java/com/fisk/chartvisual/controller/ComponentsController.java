@@ -84,10 +84,11 @@ public class ComponentsController {
         return ResultEntityBuild.build(componentsService.deleteComponentsClass(id));
     }
 
-    @ApiOperation("上传新版本组件")
+    @ApiOperation("上传或修改版本组件")
     @PostMapping("/uploadNewVersion")
     @ResponseBody
-    public ResultEntity<String> uploadNewVersion( SaveComponentsOptionDTO dto, @RequestParam("file") MultipartFile file) {
+    public ResultEntity<String> uploadNewVersion( SaveComponentsOptionDTO dto,
+                                                  @RequestParam(value = "file" , required = false) MultipartFile file) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,componentsService.saveComponentsOption(dto,file));
     }
 

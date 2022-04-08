@@ -264,7 +264,7 @@ public class ComponentsServiceImpl implements ComponentsService {
         // 判断组件是否存在
         QueryWrapper<ComponentsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ComponentsPO::getId,dto.getComponentId());
+                .eq(ComponentsPO::getId,dto.getId());
         ComponentsPO componentsPo = componentsMapper.selectOne(queryWrapper);
         if (componentsPo == null){
             return ResultEnum.DATA_NOTEXISTS.getMsg();
@@ -273,16 +273,29 @@ public class ComponentsServiceImpl implements ComponentsService {
         // 判断组件配置表是否有重复数据
         QueryWrapper<ComponentsOptionPO> query = new QueryWrapper<>();
         query.lambda()
-                .eq(ComponentsOptionPO::getComponentId,dto.getComponentId())
+                .eq(ComponentsOptionPO::getComponentId,dto.getId())
                 .eq(ComponentsOptionPO::getVersion,dto.getVersion())
                 .last("limit 1");
         ComponentsOptionPO optionPo = optionMapper.selectOne(query);
+
+        String uploadAddress = null;
         if (optionPo != null){
-            return ResultEnum.DATA_EXISTS.getMsg();
+            // 修改组件
+
+            ComponentsOptionPO optionPo1 = null;
+            if (file == null){
+                optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto);
+            }else {
+                uploadAddress = this.uploadZip(file);
+                optionPo1 = ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress);
+            }
+            optionMapper.updateById(optionPo1);
+        }else {
+            // 保存组件
+            uploadAddress = this.uploadZip(file);
+            optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
         }
 
-        String uploadAddress = this.uploadZip(file);
-        optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
         return uploadAddress;
     }
 

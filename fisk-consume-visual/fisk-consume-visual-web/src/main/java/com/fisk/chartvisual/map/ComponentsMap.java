@@ -72,6 +72,17 @@ public interface ComponentsMap {
      * @param dto
      * @return
      */
+    @Mappings({
+            @Mapping(source = "componentId",target = "id"),
+            @Mapping(target = "componentId",ignore = true)
+    })
+    ComponentsOptionPO optionEditDtoToPo(SaveComponentsOptionDTO dto);
+
+    /**
+     * dto => po
+     * @param dto
+     * @return
+     */
     ComponentsPO compEditDtoToPo(ComponentsEditDTO dto);
 
     /**

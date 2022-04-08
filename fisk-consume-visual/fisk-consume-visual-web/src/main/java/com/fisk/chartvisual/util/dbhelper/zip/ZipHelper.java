@@ -45,8 +45,8 @@ public class ZipHelper {
             }else{
                 throw new FkException(ResultEnum.VISUAL_FOLDER_ERROR);
             }
+        }else {
+            throw new FkException(ResultEnum.VISUAL_FOLDER_ERROR);
         }
-
-        return false;
     }
 }
