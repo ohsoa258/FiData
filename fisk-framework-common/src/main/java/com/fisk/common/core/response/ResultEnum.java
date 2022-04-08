@@ -190,15 +190,16 @@ public enum ResultEnum {
     /**
      * 数据安全
      */
-    FIELD_NAME_IS_SELECTED(12001,"当前字段已被设置,请重新选择"),
-    ROW_SECURITYNAME_EXISTS(12002,"当前权限名称已存在"),
+    FIELD_NAME_IS_SELECTED(12001, "当前字段已被设置,请重新选择"),
+    ROW_SECURITYNAME_EXISTS(12002, "当前权限名称已存在"),
+    USERGROUP_PERMISSION_ONLY(12003, "用户(组)已设置过权限,不允许设置两种,请检查参数"),
 
     /**
      * 元数据
      */
-    BAD_REQUEST(13001,"请求错误"),
-    NO_CONTENT(13002,"没有内容"),
-    NOT_SUPPORT(13003,"暂不支持该类型数据查询");
+    BAD_REQUEST(13001, "请求错误"),
+    NO_CONTENT(13002, "没有内容"),
+    NOT_SUPPORT(13003, "暂不支持该类型数据查询");
 
     ResultEnum(int code, String msg) {
         this.code = code;
