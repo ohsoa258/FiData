@@ -1,6 +1,8 @@
 package com.fisk.datagovernance.service.impl.datasecurity;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -68,8 +70,39 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
+        // 同一用户(组)只允许选择一个权限
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnly(dto);
+        if (usergroupPermissionOnly != null) {
+            return usergroupPermissionOnly;
+        }
+
         // 保存主表数据
         return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 校验表级用户(组)权限是否唯一
+     *
+     * @return com.fisk.common.core.response.ResultEnum
+     * @description 校验表级用户(组)权限是否唯一
+     * @author Lock
+     * @date 2022/4/8 17:44
+     * @version v1.0
+     * @params dto 前端入参
+     */
+    private ResultEnum validateTableUserGroupPermissonOnly(TablesecurityConfigDTO dto) {
+        QueryWrapper<TablesecurityConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().
+                select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
+        List<TablesecurityConfigPO> tablesecurityConfigPoList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(tablesecurityConfigPoList)) {
+            for (TablesecurityConfigPO e : tablesecurityConfigPoList) {
+                if (e.accessType == dto.accessType && e.userGroupId == dto.userGroupId && e.id != dto.id) {
+                    return ResultEnum.USERGROUP_PERMISSION_ONLY;
+                }
+            }
+        }
+        return null;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -81,6 +114,13 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        // 同一用户(组)只允许选择一个权限
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnly(dto);
+        if (usergroupPermissionOnly != null) {
+            return usergroupPermissionOnly;
+        }
+
         // dto -> po
         // 执行修改
         return this.updateById(TableSecurityConfigMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
