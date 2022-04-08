@@ -23,6 +23,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.fisk.datagovernance.mapper")
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
+        "com.fisk.task.client",
         "com.fisk.system.client"
 })
 public class FkDataGovernanceApplication {

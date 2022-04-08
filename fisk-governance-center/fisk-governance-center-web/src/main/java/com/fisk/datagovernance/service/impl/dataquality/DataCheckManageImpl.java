@@ -107,7 +107,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         //第一步：根据配置的校验条件生成校验规则
         ResultEntity<String> role = createRole(dto, templatePO);
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
-            return ResultEnum.values()[role.code];
+            return ResultEnum.getEnum(role.getCode());
         }
         dto.moduleRule = role.data;
         //第二步：转换DTO对象为PO对象
@@ -166,7 +166,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (templatePO.getTemplateType() == TemplateTypeEnum.SIMILARITY_TEMPLATE.getValue()) {
             similarityExtendManageImpl.saveBatchById(dto.similarityExtendDTOS, dataCheckPO.getId(), true);
         }
-        //第六步：根据组件状态&Corn表达式，调整调度任务
+        //第六步：根据组件状态&Corn调度任务
+
         return resultEnum;
     }
 
@@ -197,7 +198,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         String tableName = dto.checkStep == CheckStepTypeEnum.TABLE_FRONT ? dto.proTableName : dto.tableName;
-        String fieldName = null;
+        String fieldName = dto.fieldName;
         if (dto.fieldName != null && !dto.fieldName.isEmpty()) {
             if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                 fieldName = "`" + fieldName + "`";
@@ -213,7 +214,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 break;
             case FIELD_AGGREGATE_THRESHOLD_TEMPLATE:
                 //字段聚合波动阈值模板
-                rule = createField_AggregetionRule(tableName, tableName, dto.fieldAggregate, dto.thresholdValue);
+                rule = createField_AggregateRule(tableName, fieldName, dto.fieldAggregate, dto.thresholdValue);
                 break;
             case ROWCOUNT_THRESHOLD_TEMPLATE:
                 //表行数波动阈值模板
@@ -389,9 +390,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params fieldAggregate 字段聚合函数
      * @params thresholdValue 波动阈值
      */
-    public ResultEntity<String> createField_AggregetionRule(String tableName, String fieldName, String fieldAggregate, Integer thresholdValue) {
+    public ResultEntity<String> createField_AggregateRule(String tableName, String fieldName, String fieldAggregate, Integer thresholdValue) {
         if (tableName == null || tableName.isEmpty() ||
                 fieldName == null || fieldName.isEmpty() ||
+                fieldAggregate == null || fieldAggregate.isEmpty() ||
                 thresholdValue == null) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
@@ -431,7 +433,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
          * 逻辑：
          * 通过调度任务实时查询处理
          * 1、实时查询的的表行数 减去 记录的表行数 大于或小于 波动阀值，发送邮件；
-         * 2、更新配置表记录的表行数，赋值为实时查询的的表行数，这一步待确认
+         * 2、更新配置表记录的表行数，赋值为实时查询的的表行数
          * */
         if (tableName == null || tableName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
@@ -500,7 +502,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         /*
          * 逻辑
          * 任务调度
-         * 存在更新的数据，发送邮件后。配置表重新生成SQL检查规则，因为要更新参照时间，待确定
+         * 存在更新的数据，发送邮件后。配置表重新生成SQL检查规则，因为要更新参照时间
          * */
         String sql = "SELECT\n" +
                 "\t* \n" +

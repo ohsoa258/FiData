@@ -11,9 +11,11 @@ import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleEditDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import com.fisk.datagovernance.entity.dataquality.LifecyclePO;
+import com.fisk.datagovernance.entity.dataquality.TemplatePO;
 import com.fisk.datagovernance.map.dataquality.LifecycleMap;
 import com.fisk.datagovernance.mapper.dataquality.ComponentNotificationMapper;
 import com.fisk.datagovernance.mapper.dataquality.LifecycleMapper;
+import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ILifecycleManageService;
 import com.fisk.datagovernance.vo.dataquality.lifecycle.LifecycleVO;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,9 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
 
     @Resource
     private ComponentNotificationMapImpl componentNotificationMapImpl;
+
+    @Resource
+    private TemplateMapper templateMapper;
 
     @Resource
     UserHelper userHelper;
@@ -70,6 +75,11 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(LifecycleDTO dto) {
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
         //第一步：转换DTO对象为PO对象
         LifecyclePO lifecyclePO = LifecycleMap.INSTANCES.dtoToPo(dto);
         if (lifecyclePO == null) {
@@ -91,6 +101,11 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(LifecycleEditDTO dto) {
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
         LifecyclePO lifecyclePO = baseMapper.selectById(dto.id);
         if (lifecyclePO == null) {
             return ResultEnum.DATA_NOTEXISTS;

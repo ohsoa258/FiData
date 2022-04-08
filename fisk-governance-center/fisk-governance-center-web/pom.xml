@@ -77,6 +77,18 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- task服务 -->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-task-center-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-task-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
         <!--中英文转换-->
         <dependency>
             <groupId>com.belerweb</groupId>
@@ -93,12 +105,6 @@
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
             <version>1.2.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fisk-system-center-entity</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

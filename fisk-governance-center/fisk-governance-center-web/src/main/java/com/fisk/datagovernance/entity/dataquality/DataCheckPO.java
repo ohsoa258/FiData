@@ -66,12 +66,12 @@ public class DataCheckPO extends BasePO {
     /**
      * 波动阈值
      */
-    public Integer thresholdValue;
+    public int thresholdValue;
 
     /**
      * 表行数，实际表行数减去表行数
      */
-    public Integer rowsValue;
+    public int rowsValue;
 
     /**
      * 运行时间表达式
@@ -81,7 +81,7 @@ public class DataCheckPO extends BasePO {
     /**
      * 上下游血缘关系范围
      */
-    public Integer checkConsanguinity;
+    public int checkConsanguinity;
 
     /**
      * 组件规则类型

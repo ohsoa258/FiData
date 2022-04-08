@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
@@ -13,9 +15,7 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.datagovernance.enums.dataquality.EmailServerTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.NoticeTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.NoticeMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
@@ -24,6 +24,9 @@ import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
 import com.fisk.datagovernance.vo.dataquality.notice.ComponentNotificationVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.UnifiedControlDTO;
+import com.fisk.task.enums.DataClassifyEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +64,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     private EmailServerMapper emailServerMapper;
 
     @Resource
+    private TemplateMapper templateMapper;
+
+    @Resource
     UserHelper userHelper;
+
+    @Resource
+    PublishTaskClient publishTaskClient;
 
     @Override
     public Page<NoticeVO> getAll(NoticeQueryDTO query) {
@@ -71,6 +80,11 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(NoticeDTO dto) {
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
         //第一步：转换DTO对象为PO对象
         NoticePO noticePO = NoticeMap.INSTANCES.dtoToPo(dto);
         if (noticePO == null) {
@@ -91,6 +105,11 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(NoticeEditDTO dto) {
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(dto.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
         NoticePO noticePO = baseMapper.selectById(dto.id);
         if (noticePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -289,5 +308,50 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             e.printStackTrace();
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * @return ResultEnum
+     * @description 调用task服务提供的API，创建调度任务
+     * @author dick
+     * @date 2022/4/8 10:59
+     * @version v1.0
+     * @params id 组件id
+     * @params typeEnum 模块类型
+     * @params templateTypeEnum 模板类型
+     * @params stateEnum 状态
+     * @params topicName 统一队列名称
+     * @params templateTopicName 模板队列名称
+     */
+    public ResultEnum publishBuildunifiedControlTask(int id, TemplateModulesTypeEnum typeEnum,
+                                                     TemplateTypeEnum templateTypeEnum, ModuleStateEnum stateEnum,
+                                                     String topicName, String templateTopicName) {
+        /*
+         * 逻辑：
+         * 1、数据校验、业务清洗、生命周期都通过此方法生成调度任务
+         * 2、Task接口会生成相应的调度任务和nifi组件
+         * 3、在Task服务中的KafkaConsumer类中定义对应每个模板的消费类
+         * */
+        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+        //调用task服务提供的API生成调度任务
+        if (id == 0 || typeEnum == TemplateModulesTypeEnum.NONE
+                || topicName == null || topicName.isEmpty()
+                || templateTopicName == null || templateTopicName.isEmpty()) {
+            return ResultEnum.SAVE_VERIFY_ERROR;
+        }
+        long userId = userHelper.getLoginUserInfo().getId();
+        boolean isDelTask = stateEnum != ModuleStateEnum.Enable;
+        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+        unifiedControlDTO.setUserId(userId);
+        unifiedControlDTO.setId(id);
+        unifiedControlDTO.setTemplateModulesType(typeEnum);
+        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+        unifiedControlDTO.setTopic(templateTypeEnum.getTopic());
+        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+        if (result != null) {
+            resultEnum = ResultEnum.getEnum(result.getCode());
+        }
+        return resultEnum;
     }
 }

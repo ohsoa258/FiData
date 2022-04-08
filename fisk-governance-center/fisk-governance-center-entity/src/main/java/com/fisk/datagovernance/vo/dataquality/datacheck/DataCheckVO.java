@@ -88,13 +88,13 @@ public class DataCheckVO {
      * 波动阀值
      */
     @ApiModelProperty(value = "波动阈值")
-    public Integer thresholdValue;
+    public int thresholdValue;
 
     /**
      * 表行数，实际表行数减去表行数
      */
     @ApiModelProperty(value = "表行数")
-    public Integer rowsValue;
+    public int rowsValue;
 
     /**
      * 运行时间表达式
@@ -107,7 +107,7 @@ public class DataCheckVO {
      * 1、上游 2、下游 3、上下游
      */
     @ApiModelProperty(value = "上下游血缘关系范围 1、上游 2、下游 3、上下游")
-    public Integer checkConsanguinity;
+    public int checkConsanguinity;
 
     /**
      * 组件规则类型
