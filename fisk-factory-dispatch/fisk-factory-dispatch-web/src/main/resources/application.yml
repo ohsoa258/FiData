@@ -24,6 +24,8 @@ mybatis-plus:
   type-aliases-package: com.fisk.datafactory.entity
 
 fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
     clientId: data-factory
     secret: 1234

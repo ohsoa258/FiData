@@ -42,6 +42,8 @@ feign:
 
 # 授权
 fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
     clientId: dataservice-service
     secret: 1234

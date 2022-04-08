@@ -151,6 +151,8 @@ logging:
   level:
     com.fisk: debug
 fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   auth:
     clientId: api-gateway
     secret: 1234

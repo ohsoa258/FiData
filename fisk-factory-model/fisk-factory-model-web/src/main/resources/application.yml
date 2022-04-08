@@ -23,3 +23,7 @@ mybatis-plus:
       update-strategy: not_null
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.fisk.datamodel.entity
+
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

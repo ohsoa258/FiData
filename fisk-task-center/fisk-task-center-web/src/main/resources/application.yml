@@ -9,3 +9,6 @@ spring:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
 
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

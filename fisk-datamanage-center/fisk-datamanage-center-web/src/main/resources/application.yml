@@ -23,3 +23,7 @@ spring:
         update-strategy: not_null
     mapper-locations: classpath:mapper/*.xml
     type-aliases-package: com.fisk.datamanagement.entity
+
+fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥

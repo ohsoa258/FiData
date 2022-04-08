@@ -8,6 +8,8 @@ spring:
     active: dev
 
 fk:
+  jwt:
+    key: helloWorldJavaLeyouAuthServiceSecretKey # 私钥
   encoder:
     crypt:
       secret: ${random.uuid} # 随机的密钥，使用uuid

@@ -14,6 +14,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -33,7 +34,8 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class UserHelper {
 
-    private final String secret = "helloWorldJavaLeyouAuthServiceSecretKey";
+    @Value("${fk.jwt.key}")
+    String secret;
 
     @Resource
     RedisUtil redis;
