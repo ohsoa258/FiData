@@ -44,7 +44,11 @@ public interface UserClient {
     @GetMapping("/attribute/getServiceRegistryList")
     ResultEntity<Object> getServiceRegistryList();
 
-
+    /**
+     * 获取系统用户集合
+     * @param ids
+     * @return
+     */
     @PostMapping("/info/getUserListByIds")
     ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids);
 
