@@ -287,7 +287,7 @@ public class ComponentsServiceImpl implements ComponentsService {
                 optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto);
             }else {
                 uploadAddress = this.uploadZip(file);
-                optionPo1 = ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress);
+                optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto,uploadAddress);
             }
             optionMapper.updateById(optionPo1);
         }else {
