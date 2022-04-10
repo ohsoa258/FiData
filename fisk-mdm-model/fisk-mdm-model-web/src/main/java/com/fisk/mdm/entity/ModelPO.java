@@ -16,11 +16,6 @@ import lombok.Data;
 public class ModelPO extends BasePO {
 
     /**
-     * modelID
-     */
-    public long id;
-
-    /**
      * model名称
      */
     public String name;

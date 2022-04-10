@@ -9,10 +9,6 @@ import javax.validation.constraints.NotNull;
 @Data
 public class ModelDTO {
 
-    @ApiModelProperty(value = "modelID")
-    @NotNull()
-    public int id;
-
     @ApiModelProperty(value = "model名称")
     @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")

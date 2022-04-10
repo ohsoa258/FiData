@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
@@ -26,10 +27,10 @@ public interface IModelService extends IService<ModelPO> {
 
     /**
      * 编辑
-     * @param model
+     * @param modelUpdateDTO
      * @return
      */
-    ResultEnum editData(ModelDTO model);
+    ResultEnum editData(ModelUpdateDTO modelUpdateDTO);
 
     /**
      * 删除
