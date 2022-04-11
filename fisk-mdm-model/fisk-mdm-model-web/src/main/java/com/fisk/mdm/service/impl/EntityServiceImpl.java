@@ -79,14 +79,10 @@ public class EntityServiceImpl implements EntityService {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId(id);
-        eventLog.setObjectType(ObjectTypeEnum.ENTITY);
-        eventLog.setEventType(EventTypeEnum.DELETE);
-        eventLog.setDesc("修改一个实体,id:" + id);
+        String desc = "修改一个实体,id:" + id;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog(eventLog);
+        ResultEnum resultEnum = logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
         if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -109,14 +105,10 @@ public class EntityServiceImpl implements EntityService {
         // 删除实体下的属性
         this.deleteAttrByEntityId(id);
 
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId(id);
-        eventLog.setObjectType(ObjectTypeEnum.ENTITY);
-        eventLog.setEventType(EventTypeEnum.DELETE);
-        eventLog.setDesc("删除了一个实体,id:" + id);
+        String desc = "删除了一个实体,id:" + id;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog(eventLog);
+        ResultEnum resultEnum = logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
         if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -147,35 +139,32 @@ public class EntityServiceImpl implements EntityService {
         // 保存属性信息
         int entityId = (int)entityPo.getId();
         List<AttributePO> attributePoList = new ArrayList<>();
-        AttributePO attributePo = new AttributePO();
-        attributePo.setEntityId(entityId);
-        attributePo.setName(MdmTypeEnum.CODE.getName());
-        attributePo.setDisplayName("字典编码");
-        attributePo.setDataType(DataTypeEnum.TEXT);
-        attributePo.setDataTypeLength(50);
-        attributePoList.add(attributePo);
+        AttributePO attributeCode = new AttributePO();
+        attributeCode.setEntityId(entityId);
+        attributeCode.setName(MdmTypeEnum.CODE.getName());
+        attributeCode.setDisplayName("字典编码");
+        attributeCode.setDataType(DataTypeEnum.TEXT);
+        attributeCode.setDataTypeLength(50);
+        attributePoList.add(attributeCode);
 
-        AttributePO attributePo1 = new AttributePO();
-        attributePo1.setEntityId(entityId);
-        attributePo1.setName(MdmTypeEnum.NAME.getName());
-        attributePo1.setDisplayName("字典名称");
-        attributePo1.setDataType(DataTypeEnum.TEXT);
-        attributePo1.setDataTypeLength(50);
-        attributePoList.add(attributePo1);
+        AttributePO attributePoName = new AttributePO();
+        attributePoName.setEntityId(entityId);
+        attributePoName.setName(MdmTypeEnum.NAME.getName());
+        attributePoName.setDisplayName("字典名称");
+        attributePoName.setDataType(DataTypeEnum.TEXT);
+        attributePoName.setDataTypeLength(50);
+        attributePoList.add(attributePoName);
 
         boolean saveBatch = attributeService.saveBatch(attributePoList);
         if (saveBatch == false){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId((int)entityPo.getId());
-        eventLog.setObjectType(ObjectTypeEnum.ENTITY);
-        eventLog.setEventType(EventTypeEnum.SAVE);
-        eventLog.setDesc("创建了一个实体,id:" + entityId);
+        String desc = "创建了一个实体,id:" + entityId;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog(eventLog);
+        ResultEnum resultEnum = logService.saveEventLog((int)entityPo.getId(),ObjectTypeEnum.ENTITY,
+                EventTypeEnum.SAVE,desc);
         if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }

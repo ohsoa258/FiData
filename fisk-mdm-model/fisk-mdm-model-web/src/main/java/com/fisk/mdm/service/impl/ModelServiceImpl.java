@@ -83,12 +83,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         }
 
         // 记录日志
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId((int)modelPO.getId());
-        eventLog.setObjectType(ObjectTypeEnum.MODEL);
-        eventLog.setEventType(EventTypeEnum.SAVE);
-        eventLog.setDesc("新增一个模型,id:" + modelPO.getId());
-        if (logService.saveEventLog(eventLog) == ResultEnum.SAVE_DATA_ERROR){
+       String desc = "新增一个模型,id:" + modelPO.getId();
+        if (logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.SAVE,desc) == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -126,12 +122,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         }
 
         // 记录日志
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId((int)modelPO.getId());
-        eventLog.setObjectType(ObjectTypeEnum.MODEL);
-        eventLog.setEventType(EventTypeEnum.UPDATE);
-        eventLog.setDesc("修改一个模型,id:" + modelUpdateDTO.getId());
-        if (logService.saveEventLog(eventLog) == ResultEnum.SAVE_DATA_ERROR){
+        String desc = "修改一个模型,id:" + modelUpdateDTO.getId();
+
+        if (logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.UPDATE,desc) == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -157,12 +150,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         }
 
         // 记录日志
-        EventLogDTO eventLog = new EventLogDTO();
-        eventLog.setObjectId(id);
-        eventLog.setObjectType(ObjectTypeEnum.MODEL);
-        eventLog.setEventType(EventTypeEnum.DELETE);
-        eventLog.setDesc("删除一个模型,id:" + id);
-        if (logService.saveEventLog(eventLog) == ResultEnum.SAVE_DATA_ERROR){
+        String desc = "删除一个模型,id:" + id;
+
+        if (logService.saveEventLog(id,ObjectTypeEnum.MODEL,EventTypeEnum.DELETE,desc) == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
