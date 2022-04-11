@@ -54,7 +54,7 @@ public class TriggerScheduling implements ITriggerScheduling {
             UnifiedControlDTO unifiedControlDTO = JSON.parseObject(data, UnifiedControlDTO.class);
             int id = unifiedControlDTO.id;
             //流程type
-            DataClassifyEnum unifiedcontrol = unifiedControlDTO.dataClassifyEnum;
+            int unifiedcontrol = unifiedControlDTO.templateModulesType.getValue();
             String topic = unifiedControlDTO.topic;
             String dzGroupId = "";
             //1.创建大组
@@ -79,7 +79,7 @@ public class TriggerScheduling implements ITriggerScheduling {
                 }
             }
             //2.创建小组
-            TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.getByTableId(id, unifiedcontrol.getValue());
+            TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.getByTableId(id, unifiedcontrol);
             if (tableNifiSettingPO != null) {
                 List<ProcessorEntity> entities = new ArrayList<>();
                 ProcessorEntity dispatchComponentProcessor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.dispatchComponentId);
@@ -92,39 +92,42 @@ public class TriggerScheduling implements ITriggerScheduling {
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
                 tableNifiSettingService.removeById(tableNifiSettingPO.id);
             }
-            //配置库
-            NifiConfigPO nifiConfigPO1 = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
-            if (nifiConfigPO1 != null) {
-                log.info("配置库连接成功");
-            } else {
-                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "未创建配置库连接池");
-            }
-            BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
-            dto.name = "统一调度";
-            dto.details = "统一调度";
-            dto.groupId = dzGroupId;
-            //根据组个数，定义坐标
-            int count = componentsBuild.getGroupCount(dzGroupId);
-            dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
-            //创建组件
-            BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
-            if (res.success) {
-                ProcessGroupEntity data1 = res.data;
-                List<ProcessorEntity> entityList = new ArrayList<>();
-                ProcessorEntity processorEntity = queryDispatchProcessor(data1.getId(), nifiConfigPO1.componentId,unifiedControlDTO);
-                ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(data1.getId(), topic);
-                entityList.add(publishKafkaProcessor);
-                entityList.add(processorEntity);
-                componentsBuild.buildConnectProcessors(data1.getId(), processorEntity.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                componentsBuild.enabledProcessor(data1.getId(), entityList);
-                TableNifiSettingPO tableNifiSettingPO1 = new TableNifiSettingPO();
-                tableNifiSettingPO1.tableAccessId = id;
-                tableNifiSettingPO1.type = unifiedcontrol.getValue();
-                tableNifiSettingPO1.dispatchComponentId = processorEntity.getId();
-                tableNifiSettingPO1.publishKafkaProcessorId = publishKafkaProcessor.getId();
-                tableNifiSettingService.save(tableNifiSettingPO1);
-            } else {
-                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+            //如果是禁用或者删除,就不会重新创建
+            if (!unifiedControlDTO.deleted) {
+                //配置库
+                NifiConfigPO nifiConfigPO1 = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
+                if (nifiConfigPO1 != null) {
+                    log.info("配置库连接成功");
+                } else {
+                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "未创建配置库连接池");
+                }
+                BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+                dto.name = "统一调度";
+                dto.details = "统一调度";
+                dto.groupId = dzGroupId;
+                //根据组个数，定义坐标
+                int count = componentsBuild.getGroupCount(dzGroupId);
+                dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+                //创建组件
+                BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+                if (res.success) {
+                    ProcessGroupEntity data1 = res.data;
+                    List<ProcessorEntity> entityList = new ArrayList<>();
+                    ProcessorEntity processorEntity = queryDispatchProcessor(data1.getId(), nifiConfigPO1.componentId, unifiedControlDTO);
+                    ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(data1.getId(), topic);
+                    entityList.add(publishKafkaProcessor);
+                    entityList.add(processorEntity);
+                    componentsBuild.buildConnectProcessors(data1.getId(), processorEntity.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    componentsBuild.enabledProcessor(data1.getId(), entityList);
+                    TableNifiSettingPO tableNifiSettingPO1 = new TableNifiSettingPO();
+                    tableNifiSettingPO1.tableAccessId = id;
+                    tableNifiSettingPO1.type = unifiedcontrol;
+                    tableNifiSettingPO1.dispatchComponentId = processorEntity.getId();
+                    tableNifiSettingPO1.publishKafkaProcessorId = publishKafkaProcessor.getId();
+                    tableNifiSettingService.save(tableNifiSettingPO1);
+                } else {
+                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+                }
             }
         } catch (ApiException e) {
             e.printStackTrace();
@@ -140,12 +143,12 @@ public class TriggerScheduling implements ITriggerScheduling {
      * @param cfgDbPoolId 增量配置库连接池id
      * @return 组件对象
      */
-    private ProcessorEntity queryDispatchProcessor(String groupId, String cfgDbPoolId,UnifiedControlDTO unifiedControlDTO) {
+    private ProcessorEntity queryDispatchProcessor(String groupId, String cfgDbPoolId, UnifiedControlDTO unifiedControlDTO) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "queryDispatchProcessor";
         querySqlDto.details = "queryDispatchProcessor";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select "+unifiedControlDTO.id+" as id, "+ unifiedControlDTO.templateModulesType+ " as templateModulesType";
+        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = unifiedControlDTO.scheduleExpression;
         querySqlDto.scheduleType = unifiedControlDTO.scheduleType;

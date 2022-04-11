@@ -32,7 +32,10 @@ public class UnifiedControlDTO extends MQBaseDTO {
      * 类型：数据接入/数据建模/统一调度
      */
     public DataClassifyEnum dataClassifyEnum;
-
+    /**
+     * 是否禁用删除true删除/false不删除
+     */
+    public boolean deleted;
 
 
 }
