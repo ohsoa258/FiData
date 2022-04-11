@@ -12,5 +12,6 @@ public class ComponentsOptionDTO {
     private Integer id;
     private String description;
     private String version;
+    private String path;
     private String fileName;
 }
