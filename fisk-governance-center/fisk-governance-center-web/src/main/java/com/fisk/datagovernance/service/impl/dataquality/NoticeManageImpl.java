@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -135,6 +136,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (noticePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        componentNotificationMapImpl.updateDelFlag(noticePO.getId(),0,0);
         return baseMapper.deleteByIdWithFill(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -156,13 +158,10 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             dataCheckPOS.forEach(e -> {
                 ComponentNotificationVO notificationVO = new ComponentNotificationVO();
                 if (CollectionUtils.isNotEmpty(componentNotificationPOS)) {
-                    Optional<ComponentNotificationPO> first = componentNotificationPOS.stream().filter(
-                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).findFirst();
-                    if (first.isPresent()) {
-                        ComponentNotificationPO componentNotificationPO = first.get();
-                        if (componentNotificationPO != null) {
-                            notificationVO.noticeId = componentNotificationPO.getNoticeId();
-                        }
+                    List<ComponentNotificationPO> collect = componentNotificationPOS.stream().filter(
+                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(collect)) {
+                        notificationVO.noticeIds = collect.stream().map(ComponentNotificationPO::getNoticeId);
                     }
                 }
                 notificationVO.id = id[0];
@@ -182,13 +181,10 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             businessFilterPOS.forEach(e -> {
                 ComponentNotificationVO notificationVO = new ComponentNotificationVO();
                 if (CollectionUtils.isNotEmpty(componentNotificationPOS)) {
-                    Optional<ComponentNotificationPO> first = componentNotificationPOS.stream().filter(
-                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).findFirst();
-                    if (first.isPresent()) {
-                        ComponentNotificationPO componentNotificationPO = first.get();
-                        if (componentNotificationPO != null) {
-                            notificationVO.noticeId = componentNotificationPO.getNoticeId();
-                        }
+                    List<ComponentNotificationPO> collect = componentNotificationPOS.stream().filter(
+                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(collect)) {
+                        notificationVO.noticeIds = collect.stream().map(ComponentNotificationPO::getNoticeId);
                     }
                 }
                 notificationVO.id = id[0];
@@ -208,13 +204,10 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             lifecyclePOS.forEach(e -> {
                 ComponentNotificationVO notificationVO = new ComponentNotificationVO();
                 if (CollectionUtils.isNotEmpty(componentNotificationPOS)) {
-                    Optional<ComponentNotificationPO> first = componentNotificationPOS.stream().filter(
-                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).findFirst();
-                    if (first.isPresent()) {
-                        ComponentNotificationPO componentNotificationPO = first.get();
-                        if (componentNotificationPO != null) {
-                            notificationVO.noticeId = componentNotificationPO.getNoticeId();
-                        }
+                    List<ComponentNotificationPO> collect = componentNotificationPOS.stream().filter(
+                            item -> item.getModuleId() == e.getId() && item.getTemplateId() == e.getTemplateId()).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(collect)) {
+                        notificationVO.noticeIds = collect.stream().map(ComponentNotificationPO::getNoticeId);
                     }
                 }
                 notificationVO.id = id[0];

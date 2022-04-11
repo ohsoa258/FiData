@@ -172,11 +172,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(int id) {
         DataCheckPO dataCheckPO = baseMapper.selectById(id);
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        componentNotificationMapImpl.updateDelFlag(0, dataCheckPO.getTemplateId(), dataCheckPO.getId());
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

@@ -3,6 +3,8 @@ package com.fisk.datagovernance.vo.dataquality.notice;
 import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.stream.Stream;
+
 /**
  * @author dick
  * @version 1.0
@@ -21,6 +23,12 @@ public class ComponentNotificationVO {
      */
     @ApiModelProperty(value = "组件id")
     public int moduleId;
+
+    /**
+     * 组件下所有的通知id
+     */
+    @ApiModelProperty(value = "组件下所有的通知id")
+    public Stream<Integer> noticeIds;
 
     /**
      * 通知id

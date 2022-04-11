@@ -8,10 +8,12 @@ import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import com.fisk.datagovernance.map.dataquality.ComponentNotificationMap;
 import com.fisk.datagovernance.mapper.dataquality.ComponentNotificationMapper;
 import com.fisk.datagovernance.service.dataquality.IComponentNotificationManageService;
+import io.swagger.models.auth.In;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,11 +43,15 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             if (isDel) {
-                List<Integer> noticeIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(noticeIds)) {
-                    baseMapper.updateBy(templateId, moduleIdValue, noticeIds);
+//                List<Integer> noticeIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
+//                if (CollectionUtils.isNotEmpty(noticeIds)) {
+                    List<Integer> templateIds = new ArrayList<>();
+                    templateIds.add(templateId);
+                    List<Integer> moduleIds = new ArrayList<>();
+                    moduleIds.add(moduleIdValue);
+                    baseMapper.updateBy(null, templateIds, moduleIds);
                 }
-            }
+//            }
             boolean b = componentNotificationMapImpl.saveBatch(componentNotificationPOS);
             if (!b) {
                 return ResultEnum.SAVE_DATA_ERROR;
@@ -67,16 +73,37 @@ public class ComponentNotificationMapImpl extends ServiceImpl<ComponentNotificat
                 return ResultEnum.SAVE_DATA_ERROR;
             }
             if (isDel) {
-                List<Integer> moduleIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getModuleId).distinct().collect(Collectors.toList());
-                List<Integer> templateIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getTemplateId).distinct().collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(moduleIds) && CollectionUtils.isNotEmpty(templateIds)) {
-                    baseMapper.updateByModuleIds(noticeIdValue, templateIds, moduleIds);
+//                List<Integer> moduleIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getModuleId).distinct().collect(Collectors.toList());
+//                List<Integer> templateIds = componentNotificationPOS.stream().map(ComponentNotificationPO::getTemplateId).distinct().collect(Collectors.toList());
+//                if (CollectionUtils.isNotEmpty(moduleIds) && CollectionUtils.isNotEmpty(templateIds)) {
+                    List<Integer> noticeIds = new ArrayList<>();
+                    noticeIds.add(noticeIdValue);
+                    baseMapper.updateBy(noticeIds, null, null);
                 }
-            }
+//            }
             boolean b = componentNotificationMapImpl.saveBatch(componentNotificationPOS);
             if (!b) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum updateDelFlag(long noticeId, int templateId, long moduleId) {
+        List<Integer> templateIds = new ArrayList<>();
+        List<Integer> moduleIds = new ArrayList<>();
+        List<Integer> noticeIds = new ArrayList<>();
+        if (noticeId != 0) {
+            noticeIds.add(Math.toIntExact(noticeId));
+        } else if (templateId != 0 && moduleId != 0) {
+            templateIds.add(templateId);
+            moduleIds.add(Math.toIntExact(moduleId));
+        }
+        if (CollectionUtils.isNotEmpty(noticeIds) ||
+                (CollectionUtils.isNotEmpty(templateIds) && CollectionUtils.isNotEmpty(moduleIds))) {
+            baseMapper.updateBy(noticeIds, templateIds, moduleIds);
         }
         return ResultEnum.SUCCESS;
     }

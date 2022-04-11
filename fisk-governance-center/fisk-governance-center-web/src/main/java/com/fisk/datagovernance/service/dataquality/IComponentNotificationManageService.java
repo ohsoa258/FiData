@@ -28,10 +28,20 @@ public interface IComponentNotificationManageService extends IService<ComponentN
     /**
      * 添加数据
      *
-     * @param noticeId   通知id
-     * @param dto        关联通知集合
-     * @param isDel      是否先置为无效
+     * @param noticeId 通知id
+     * @param dto      关联通知集合
+     * @param isDel    是否先置为无效
      * @return 执行结果
      */
     ResultEnum saveNoticeData(long noticeId, List<ComponentNotificationDTO> dto, boolean isDel);
+
+    /**
+     * 修改有效性
+     *
+     * @param noticeId   通知id
+     * @param templateId 模板id
+     * @param moduleId   组件id
+     * @return 执行结果
+     */
+    ResultEnum updateDelFlag(long noticeId, int templateId, long moduleId);
 }

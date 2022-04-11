@@ -127,11 +127,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(int id) {
         LifecyclePO lifecyclePO = baseMapper.selectById(id);
         if (lifecyclePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        componentNotificationMapImpl.updateDelFlag(0, lifecyclePO.getTemplateId(), lifecyclePO.getId());
         return baseMapper.deleteByIdWithFill(lifecyclePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

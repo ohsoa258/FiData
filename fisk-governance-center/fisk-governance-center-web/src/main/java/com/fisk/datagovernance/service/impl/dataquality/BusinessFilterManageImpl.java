@@ -135,11 +135,13 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteData(int id) {
         BusinessFilterPO businessFilterPO = baseMapper.selectById(id);
         if (businessFilterPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        componentNotificationMapImpl.updateDelFlag(0, businessFilterPO.getTemplateId(), businessFilterPO.getId());
         return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
