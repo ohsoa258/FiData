@@ -41,7 +41,7 @@ public enum ResultEnum {
     GET_TOKEN_ERROR(1017, "获取token失败,请联系管理员"),
     API_ISEMPTY(1018, "获取api对象失败"),
     CLIENT_ISEMPTY(1019, "客户端已删除"),
-    FILENAME_EXISTS(1019, "文件名称已存在"),
+    FILENAME_EXISTS(1020, "文件名称已存在"),
 
     /**
      * 报表可视化服务，错误码从2000开始
