@@ -168,7 +168,11 @@ public class ComponentsServiceImpl implements ComponentsService {
             return ResultEnum.DATA_EXISTS.getMsg();
         }
 
-        String uploadAddress = this.uploadZip(file);
+        if (this.queryFileName(dto.getOption().getFileName()) == false){
+            return ResultEnum.FILENAME_EXISTS.getMsg();
+        }
+
+        String uploadAddress = this.uploadZip(file,dto.getOption().getFileName());
         // 保存组件表
         ComponentsPO po = ComponentsMap.INSTANCES.compDtoToPo(dto);
         componentsMapper.insert(po);
@@ -270,6 +274,10 @@ public class ComponentsServiceImpl implements ComponentsService {
             return ResultEnum.DATA_NOTEXISTS.getMsg();
         }
 
+        if (this.queryFileName(dto.getFileName()) == false){
+            return ResultEnum.FILENAME_EXISTS.getMsg();
+        }
+
         // 判断组件配置表是否有重复数据
         QueryWrapper<ComponentsOptionPO> query = new QueryWrapper<>();
         query.lambda()
@@ -286,13 +294,13 @@ public class ComponentsServiceImpl implements ComponentsService {
             if (file == null){
                 optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto);
             }else {
-                uploadAddress = this.uploadZip(file);
+                uploadAddress = this.uploadZip(file,dto.getFileName());
                 optionPo1 = ComponentsMap.INSTANCES.optionEditDtoToPo(dto,uploadAddress);
             }
             optionMapper.updateById(optionPo1);
         }else {
             // 保存组件
-            uploadAddress = this.uploadZip(file);
+            uploadAddress = this.uploadZip(file,dto.getFileName());
             optionMapper.insert(ComponentsMap.INSTANCES.optionDtoToPo(dto,uploadAddress));
         }
 
@@ -405,7 +413,7 @@ public class ComponentsServiceImpl implements ComponentsService {
      * @param zipFile
      * @return
      */
-    public String uploadZip(MultipartFile zipFile){
+    public String uploadZip(MultipartFile zipFile,String fileName){
         boolean zip = isZip(zipFile);
         if (zip){
             File file = new File(uploadPath);
@@ -413,14 +421,14 @@ public class ComponentsServiceImpl implements ComponentsService {
             if (!file.exists()) {
                 file.mkdir();
             }
-            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+
             //获取文件名（包括后缀）
             String filename = zipFile.getOriginalFilename();
-            String pathName = uploadPath + uuid + "-" + filename;
+            String pathName = uploadPath + fileName + "-" + filename;
             try {
                 File dest = new File(pathName);
                 zipFile.transferTo(dest);
-                String destDirPath = uploadPath + uuid;
+                String destDirPath = uploadPath + fileName;
                 // 解压文件
                 ZipUtils.unZip(dest, destDirPath);
                 // 删除临时文件
@@ -429,10 +437,28 @@ public class ComponentsServiceImpl implements ComponentsService {
                 e.printStackTrace();
             }
 
-            String address = accessAddress + uuid;
+            String address = accessAddress + fileName;
             return address;
         }
 
         return null;
+    }
+
+    /**
+     * 查询文件名称是否存在
+     * @param fileName
+     * @return
+     */
+    public boolean queryFileName(String fileName){
+        QueryWrapper<ComponentsOptionPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ComponentsOptionPO::getFileName,fileName)
+                .last("limit 1");
+        ComponentsOptionPO optionPo = optionMapper.selectOne(queryWrapper);
+        if (optionPo != null){
+            return false;
+        }
+
+        return true;
     }
 }

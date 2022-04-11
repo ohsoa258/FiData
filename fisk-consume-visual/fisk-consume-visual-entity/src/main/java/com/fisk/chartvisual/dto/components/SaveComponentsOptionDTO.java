@@ -16,5 +16,5 @@ public class SaveComponentsOptionDTO {
     private Integer componentId;
     private String description;
     private String version;
-    private String path;
+    private String fileName;
 }
