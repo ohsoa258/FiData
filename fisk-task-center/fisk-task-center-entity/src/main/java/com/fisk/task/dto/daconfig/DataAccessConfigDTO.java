@@ -51,7 +51,14 @@ public class DataAccessConfigDTO {
     public String businessKeyAppend;
 
     /*
-    * 建模字段详情list
-    * */
+     * 建模字段详情list
+     * */
     public List<ModelPublishFieldDTO> modelPublishFieldDTOList;
+
+    /*
+     * ftp配置信息
+     * */
+    public FtpConfig ftpConfig;
+
+
 }
