@@ -200,7 +200,8 @@ public enum ResultEnum {
      */
     BAD_REQUEST(13001, "请求错误"),
     NO_CONTENT(13002, "没有内容"),
-    NOT_SUPPORT(13003, "暂不支持该类型数据查询");
+    NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
+    DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

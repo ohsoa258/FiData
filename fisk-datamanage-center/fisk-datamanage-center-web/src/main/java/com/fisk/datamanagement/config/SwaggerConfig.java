@@ -30,6 +30,7 @@ public class SwaggerConfig {
     public static final String GLOSSARY="glossary-controller";
     public static final String BUSINESS_META_DATA="business-meta-data-controller";
     public static final String DATA_ASSETS="data_assets-controller";
+    public static final String DATA_QUALITY="data-quality-controller";
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -47,6 +48,7 @@ public class SwaggerConfig {
                 .tags(new Tag(GLOSSARY,"术语库"))
                 .tags(new Tag(BUSINESS_META_DATA,"业务元数据"))
                 .tags(new Tag(DATA_ASSETS,"数据资产"))
+                .tags(new Tag(DATA_QUALITY,"数据质量"))
                 .securityContexts(securityContexts());
     }
 
