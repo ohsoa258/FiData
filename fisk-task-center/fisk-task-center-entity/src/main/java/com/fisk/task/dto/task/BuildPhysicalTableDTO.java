@@ -56,4 +56,9 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      * api id
      */
     public Long apiId;
+
+    /**
+     * 是否是表格同步
+     */
+    public boolean excelFlow;
 }
