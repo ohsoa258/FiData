@@ -35,8 +35,10 @@ public class FtpConfig {
      * 是否启用utf-8
      * */
     public boolean ftpUseUtf8;
-
-
+    /*
+     * 第一个sheet页名称
+     * */
+    public String sheetName;
 
 
 }
