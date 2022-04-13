@@ -80,7 +80,8 @@ public class UserHelper {
         }
         UserInfo userInfo = (UserInfo) redisData;
         // 如果请求中的token和redis中存储的token不一样，说明用户账号已经在其他地方重新登录，token已过期。
-        if (!StringUtils.equals(userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, ""), token)) {
+        String loginToken = userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        if (!loginToken.equals(token)) {
             log.error("token验证失败，错误原因：请求中的token与redis不一致。");
             throw new FkException(ResultEnum.UNAUTHENTICATE, ResultEnum.AUTH_LOGIN_INFO_INVALID.getMsg());
         }
