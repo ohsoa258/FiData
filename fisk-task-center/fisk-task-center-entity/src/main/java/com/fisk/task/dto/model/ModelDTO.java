@@ -11,10 +11,6 @@ import lombok.Data;
 public class ModelDTO extends MQBaseDTO {
 
     /**
-     * 模型主键id
-     */
-    private Integer id;
-    /**
      * 属性日志表名
      */
     private String attributeLogName;
