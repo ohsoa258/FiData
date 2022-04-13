@@ -77,5 +77,11 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public Boolean openTransmission;
 
+    /**
+     * 是否是表格同步
+     */
+    public boolean excelFlow;
+
+
 
 }

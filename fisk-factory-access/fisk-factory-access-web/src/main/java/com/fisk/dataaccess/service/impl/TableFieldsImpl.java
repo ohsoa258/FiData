@@ -336,6 +336,9 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     // 非实时物理表发布
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
+                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType)) {
+                        data.excelFlow = true;
+                    }
                     // 生成nifi流程
                     publishTaskClient.publishBuildAtlasTableTask(data);
                 }

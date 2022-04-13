@@ -20,6 +20,7 @@ import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
+import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
@@ -113,6 +114,8 @@ public class KafkaConsumer {
     INiFiHelper iNiFiHelper;
     @Resource
     ITriggerScheduling iTriggerScheduling;
+    @Resource
+    BuildModelListener buildModelListener;
 
 
     //这里只用来存放reids
@@ -432,5 +435,11 @@ public class KafkaConsumer {
     }
 
     // 7个模板7个方法
+
+
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory" ,groupId = "test")
+    public void buildModelListener(String dataInfo, Acknowledgment acke) {
+        buildModelListener.msg(dataInfo, acke);
+    }
 
 }

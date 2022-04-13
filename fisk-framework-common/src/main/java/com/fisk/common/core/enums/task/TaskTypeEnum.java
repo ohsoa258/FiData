@@ -63,7 +63,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /*
      * 统一调度
      * */
-    BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12,"统一调度");
+    BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12,"统一调度"),
+    /**
+     * 投递模型
+     */
+    DELIVERY_MODEL(13,"投递模型");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

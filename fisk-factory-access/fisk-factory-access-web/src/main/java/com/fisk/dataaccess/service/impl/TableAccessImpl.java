@@ -115,6 +115,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private GetMetadata getMetadata;
     @Resource
     private TableSyncmodeImpl tableSyncmodeImpl;
+    @Resource
+    private FtpImpl ftpImpl;
     @Value("${pgsql-datamodel.url}")
     public String pgsqlDatamodelUrl;
     @Value("${pgsql-datamodel.username}")
@@ -865,6 +867,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         String mysqlType = "mysql";
         String sqlserverType = "sqlserver";
         String postgresqlType = "postgresql";
+        String ftpType = "ftp";
         // 增量
         int syncModel = 4;
         DataAccessConfigDTO dto = new DataAccessConfigDTO();
@@ -880,6 +883,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         DataSourceConfig cfgDsConfig = new DataSourceConfig();
         // 表及表sql
         ProcessorConfig processorConfig = new ProcessorConfig();
+        // ftp连接信息
+        FtpConfig ftpConfig = new FtpConfig();
         // 1.app组配置
         // select * from tb_app_registration where id=id and del_flag=1;
         AppRegistrationPO modelReg = this.appRegistrationImpl.query().eq("id", appid).eq("del_flag", 1).one();
@@ -890,7 +895,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         groupConfig.setAppDetails(modelReg.getAppDes());
         //3.数据源jdbc配置
         AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
-        if (modelDataSource == null) {
+        TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
+        if (modelDataSource == null || modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         sourceDsConfig.setJdbcStr(modelDataSource.getConnectStr());
@@ -901,6 +907,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             sourceDsConfig.setType(DriverTypeEnum.MYSQL);
         } else if (Objects.equals(modelDataSource.driveType, postgresqlType)) {
             sourceDsConfig.setType(DriverTypeEnum.POSTGRESQL);
+        } else if (Objects.equals(modelDataSource.driveType, ftpType)) {
+            dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess);
         }
         sourceDsConfig.setUser(modelDataSource.getConnectAccount());
         sourceDsConfig.setPassword(modelDataSource.getConnectPwd());
@@ -916,13 +924,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             TableBusinessPO modelBusiness = businessImpl.query().eq("access_id", id).one();
             dto.businessDTO = TableBusinessMap.INSTANCES.poToDto(modelBusiness);
         }
-        TableAccessPO modelAccess = this.query().eq("id", id).eq("app_id", appid).eq("del_flag", 1).one();
         // 2.任务组配置
         taskGroupConfig.setAppName(modelAccess.getTableName());
         taskGroupConfig.setAppDetails(modelAccess.getTableDes());
-        if (modelAccess == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
-        }
+
         // corn_expression
         processorConfig.scheduleExpression = modelSync.getCornExpression();
 
@@ -966,9 +971,35 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
-    public TableAccessPO insertTableAccessPo(TableAccessPO tableAccessPo) {
-        accessMapper.insertTableAccessPo(tableAccessPo);
-        return tableAccessPo;
+    /**
+     * 构建ftp数据源信息
+     *
+     * @return com.fisk.task.dto.daconfig.FtpConfig
+     * @description 构建ftp数据源信息
+     * @author Lock
+     * @date 2022/4/12 16:47
+     * @version v1.0
+     * @params ftpConfig
+     * @params modelDataSource
+     * @params modelAccess
+     */
+    private FtpConfig buildFtpConfig(FtpConfig ftpConfig, AppDataSourcePO modelDataSource, TableAccessPO modelAccess) {
+
+        if (StringUtils.isNotBlank(modelAccess.sqlScript)) {
+            List<String> list = ftpImpl.encapsulationExcelParam(modelAccess.sqlScript);
+            // 去掉最后一位 '/'
+            ftpConfig.remotePath = list.get(0).substring(0, list.get(0).length() - 1);
+            ftpConfig.fileFilterRegex = list.get(1);
+        }
+
+        ftpConfig.hostname = modelDataSource.host;
+        ftpConfig.port = modelDataSource.port;
+        ftpConfig.username = modelDataSource.connectAccount;
+        ftpConfig.password = modelDataSource.connectPwd;
+        ftpConfig.ftpUseUtf8 = true;
+        ftpConfig.sheetName = modelAccess.sheet;
+
+        return ftpConfig;
     }
 
     @Override
@@ -1576,7 +1607,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             array = resultSetToJsonArrayDataAccess(rs);
             rs.close();
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e.getMessage());
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
         }
         return array;
     }
@@ -1595,7 +1626,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
         }
         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
-        dto.syncMode=tableSyncmodePo.syncMode;
+        dto.syncMode = tableSyncmodePo.syncMode;
         DbTypeEnum dbTypeEnum = DbTypeEnum.getValue(dataSourcePo.driveType);
         switch (dbTypeEnum) {
             case sqlserver:
@@ -1606,6 +1637,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 break;
             case oracle:
                 dto.driveType = DbTypeEnum.oracle;
+                break;
+            case ftp:
+                dto.driveType = DbTypeEnum.ftp;
+                break;
             default:
                 break;
         }
@@ -1617,8 +1652,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = sql;
-            dto.queryStartTime=converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
-            dto.queryEndTime=converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+            dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
+            dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);

@@ -10,6 +10,7 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
@@ -234,4 +235,11 @@ public interface PublishTaskClient {
     @PostMapping("/publishBuildunifiedControlTask")
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
+    /**
+     * 模型信息投递到队列
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/pushModel")
+    public ResultEntity<Object> pushModel(@RequestBody ModelDTO data);
 }

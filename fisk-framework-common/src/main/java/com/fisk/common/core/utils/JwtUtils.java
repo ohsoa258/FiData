@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
  * @description jwt帮助类
  * @date 2022/4/8 17:48
  */
+@Slf4j
 public class JwtUtils {
 
     /**
@@ -30,6 +32,7 @@ public class JwtUtils {
         try {
             claimsJws = parser.parseClaimsJws(token);
         } catch (Exception ex) {
+            log.error("解析Token失败，Token: " + token, ex);
             return 0L;
         }
         Claims claims = claimsJws.getBody();
