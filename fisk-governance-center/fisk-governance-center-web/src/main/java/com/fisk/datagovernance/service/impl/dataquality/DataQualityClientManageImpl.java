@@ -106,19 +106,23 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，执行校验规则查询无结果");
             }
             // 循环校验结果，拼接提示语句
-            StringBuilder stringBuilder = new StringBuilder();
-            for (DataCheckResultVO resultVO : resultVOS) {
-                if (resultVO.getCheckResult() != "success") {
-                    stringBuilder.append(String.format("数据库名称：%s，表名称：%s，%s字段执行%s不通过，请检查表字段数据是否符合规范", // &nbsp;<br/>
-                            resultVO.getCheckDataBase(), resultVO.getCheckTable(), resultVO.getCheckField(), resultVO.getCheckDesc()));
-                }
-            }
+//            StringBuilder stringBuilder = new StringBuilder();
+//            for (DataCheckResultVO resultVO : resultVOS) {
+//                if (resultVO.getCheckResult() != "success") {
+//                    stringBuilder.append(String.format("数据库名称：%s，表名称：%s，%s字段执行%s不通过，请检查表字段数据是否符合规范", // &nbsp;<br/>
+//                            resultVO.getCheckDataBase(), resultVO.getCheckTable(), resultVO.getCheckField(), resultVO.getCheckDesc()));
+//                }
+//            }
+            List<DataCheckResultVO> collect = resultVOS.stream().filter(t -> t.getCheckResult() == "fail").collect(Collectors.toList());
             // 检查结果无异常，返回操作结果
-            if (stringBuilder == null && stringBuilder.length() == 0) {
+            if (CollectionUtils.isEmpty(collect)) {
                 return result;
             }
+//            if (stringBuilder == null && stringBuilder.length() == 0) {
+//                return result;
+//            }
             // 检查结果有异常，发送通知
-            sendNotice(dataCheckPO.getTemplateId(),dataCheckPO.getId(),stringBuilder.toString());
+            sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), "");
 
         } catch (Exception ex) {
             return ResultEntityBuild.buildData(ResultEnum.ERROR, ex.getMessage());
@@ -187,6 +191,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
      * @description 发送告警通知
      * @author dick
      * @date 2022/4/12 20:54
@@ -194,9 +199,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params templateId
      * @params moduleId
      * @params body
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
      */
-    public ResultEntity<Object> sendNotice(int templateId, long moduleId,String body) {
+    public ResultEntity<Object> sendNotice(int templateId, long moduleId, String body) {
         // 检查结果异常，发送提示邮件
         QueryWrapper<ComponentNotificationPO> notificationPOQueryWrapper = new QueryWrapper<>();
         notificationPOQueryWrapper.lambda().eq(ComponentNotificationPO::getDelFlag, 1)
@@ -221,16 +225,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         List<NoticePO> systemNoticePOS = noticePOS.stream().filter(t -> t.getNoticeType() == 2).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(emailNoticePOS)) {
             for (NoticePO emailNoticePO : emailNoticePOS) {
-                NoticeDTO noticeDTO=new NoticeDTO();
-                noticeDTO.emailServerId=emailNoticePO.getEmailServerId();
-                noticeDTO.emailSubject=emailNoticePO.getEmailSubject();
-                noticeDTO.body=emailNoticePO.getBody();
-                noticeDTO.emailConsignee=emailNoticePO.getEmailConsignee();
-                noticeDTO.emailCc=emailNoticePO.getEmailCc();
+                NoticeDTO noticeDTO = new NoticeDTO();
+                noticeDTO.emailServerId = emailNoticePO.getEmailServerId();
+                noticeDTO.emailSubject = emailNoticePO.getEmailSubject();
+                noticeDTO.body = emailNoticePO.getBody();
+                noticeDTO.emailConsignee = emailNoticePO.getEmailConsignee();
+                noticeDTO.emailCc = emailNoticePO.getEmailCc();
                 noticeManageImpl.sendEmialNotice(noticeDTO);
             }
         }
-        if (CollectionUtils.isNotEmpty(systemNoticePOS)){
+        if (CollectionUtils.isNotEmpty(systemNoticePOS)) {
             noticeManageImpl.sendSystemNotice(systemNoticePOS);
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "强类型模板规则消费成功");
