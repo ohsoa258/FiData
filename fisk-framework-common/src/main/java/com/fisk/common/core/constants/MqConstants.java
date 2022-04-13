@@ -71,6 +71,8 @@ public class MqConstants {
 
         public static final String BUILD_GOVERNANCE_DATA_BLOOD_KINSHIP_RECOVERY_TEMPLATE_FLOW = "task.build.governance.dataBloodKinshipRecovery.template.flow";
 
+        public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
+
     }
 
     public static final class RouterConstants {
