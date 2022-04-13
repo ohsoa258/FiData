@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
     <!-- 定义变量，下方可通过${}引用 -->
-    <property name="LOG_HOME" value="./logs/chartVisual" />
+    <property name="LOG_HOME" value="./logs/chartVisual"/>
     <property name="appName" value="chartVisual"/>
     <contextName>${appName}</contextName>
 
@@ -75,29 +75,30 @@
     -->
 
     <!-- 根据application.yml文件中的spring.profile.active配置，设置日志输出 -->
-    <!--    <springProfile name="dev">-->
-    <!--        &lt;!&ndash;-->
-    <!--        logger: 指定java包的输出级别-->
-    <!--        &ndash;&gt;-->
-
-    <!--        <logger level="org" name="info">-->
-    <!--            <appender-ref ref="Console"/>-->
-    <!--        </logger>-->
-
-    <!--        <logger name="com.fisk" level="info">-->
-    <!--            <appender-ref ref="Console"/>-->
-    <!--        </logger>-->
-
-    <!--        &lt;!&ndash;-->
-    <!--        root: 设置输出级别，只有一个level属性-->
-    <!--        root.level: 输出级别，默认是debug-->
-    <!--        <root level="info">-->
-    <!--            <appender-ref ref="Console"/>-->
-    <!--        </root>-->
-    <!--        &ndash;&gt;-->
-    <!--    </springProfile>-->
-
     <springProfile name="dev">
+        <!--
+        logger: 指定java包的输出级别
+        -->
+
+        <logger level="org" name="info">
+            <appender-ref ref="Console"/>
+        </logger>
+
+        <logger name="com.fisk">
+            <level value="DEBUG"/>
+            <appender-ref ref="Console"/>
+        </logger>
+
+        <!--
+        root: 设置输出级别，只有一个level属性
+        root.level: 输出级别，默认是debug
+        <root level="info">
+            <appender-ref ref="Console"/>
+        </root>
+        -->
+    </springProfile>
+
+    <springProfile name="uat,test,pd">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>
