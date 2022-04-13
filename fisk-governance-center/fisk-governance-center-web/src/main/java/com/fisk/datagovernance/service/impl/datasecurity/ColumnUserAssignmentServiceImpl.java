@@ -43,11 +43,14 @@ public class ColumnUserAssignmentServiceImpl
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
-        dtoList.stream().map(e->e.columnSecurityId=columnSecurityId).collect(Collectors.toList());;
-        List<ColumnUserAssignmentPO> data = ColumnUserAssignmentMap.INSTANCES.listDtoToListPo(dtoList);
-        if (!this.saveBatch(data))
+        if (!CollectionUtils.isEmpty(dtoList))
         {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            dtoList.stream().map(e->e.columnSecurityId=columnSecurityId).collect(Collectors.toList());;
+            List<ColumnUserAssignmentPO> data = ColumnUserAssignmentMap.INSTANCES.listDtoToListPo(dtoList);
+            if (!CollectionUtils.isEmpty(dtoList) && !this.saveBatch(data))
+            {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
         }
         return ResultEnum.SUCCESS;
     }

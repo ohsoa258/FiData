@@ -27,12 +27,12 @@ public class ColumnSecurityConfigDTO {
     /**
      * 数据源id
      */
-    public long datasourceId;
+    public String datasourceId;
 
     /**
      * 表id
      */
-    public long tableId;
+    public String tableId;
 
     /**
      * 权限名称

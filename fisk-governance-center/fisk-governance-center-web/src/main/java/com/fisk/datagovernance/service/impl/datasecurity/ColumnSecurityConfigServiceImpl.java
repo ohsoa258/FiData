@@ -12,10 +12,14 @@ import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
 import com.fisk.datagovernance.map.datasecurity.ColumnSecurityConfigMap;
 import com.fisk.datagovernance.mapper.datasecurity.ColumnSecurityConfigMapper;
 import com.fisk.datagovernance.service.datasecurity.ColumnSecurityConfigService;
+import org.junit.Test;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lock
@@ -64,6 +68,16 @@ public class ColumnSecurityConfigServiceImpl
         ColumnSecurityConfigUserAssignmentDTO data = ColumnSecurityConfigMap.INSTANCES.poToAssignmentDto(po);
         data.assignmentDtoList=columnUserAssignmentService.listColumnUserAssignment(po.id);
         return data;
+    }
+
+    @Override
+    public List<ColumnSecurityConfigUserAssignmentDTO> listColumnSecurityConfig(String tableId)
+    {
+        QueryWrapper<ColumnSecurityConfigPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("id").lambda().eq(ColumnSecurityConfigPO::getTableId,tableId)
+                .orderByDesc(ColumnSecurityConfigPO::getCreateTime);
+        List<Integer> poIds=(List)mapper.selectObjs(queryWrapper);
+        return poIds.stream().map(e->this.getData(e)).collect(Collectors.toList());
     }
 
     @Transactional(rollbackFor = Exception.class)

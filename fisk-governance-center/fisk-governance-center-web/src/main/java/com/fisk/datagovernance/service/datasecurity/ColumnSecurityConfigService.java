@@ -7,6 +7,8 @@ import com.fisk.datagovernance.dto.datasecurity.columnsecurityconfig.ColumnSecur
 import com.fisk.datagovernance.dto.datasecurity.columnsecurityconfig.ColumnSecurityConfigValidDTO;
 import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
 
+import java.util.List;
+
 /**
  * @author lock
  * @email feihongz@fisksoft.com.cn
@@ -14,6 +16,12 @@ import com.fisk.datagovernance.entity.datasecurity.ColumnSecurityConfigPO;
  */
 public interface ColumnSecurityConfigService extends IService<ColumnSecurityConfigPO> {
 
+    /**
+     * 获取列级配置列表
+     * @param tableId
+     * @return
+     */
+    List<ColumnSecurityConfigUserAssignmentDTO> listColumnSecurityConfig(String tableId);
 
     /**
      * 添加列级配置

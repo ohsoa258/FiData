@@ -29,7 +29,16 @@ public class ColumnSecurityConfigController {
     private ColumnSecurityConfigService service;
 
     /**
-     * 保存
+     * 获取列级配置列表
+     */
+    @GetMapping("/getList/{tableId}")
+    @ApiOperation(value = "获取列级配置列表")
+    public ResultEntity<Object> getData(@PathVariable("tableId") String tableId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listColumnSecurityConfig(tableId));
+    }
+
+    /**
+     * 添加
      */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
