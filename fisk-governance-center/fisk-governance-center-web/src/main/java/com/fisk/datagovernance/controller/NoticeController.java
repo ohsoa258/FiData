@@ -25,7 +25,7 @@ import java.util.List;
  * @description 告警通知
  * @date 2022/3/22 16:15
  */
-@Api(tags = {SwaggerConfig.TAG_6})
+@Api(tags = {SwaggerConfig.NOTICE_CONTROLLER})
 @RestController
 @RequestMapping("/notice")
 public class NoticeController {
@@ -71,6 +71,6 @@ public class NoticeController {
     @ApiOperation("测试发送邮件通知")
     @PostMapping("/testSend")
     public ResultEntity<Object> testSend(@RequestBody NoticeDTO dto) {
-        return ResultEntityBuild.build(service.testSend(dto));
+        return service.sendEmialNotice(dto);
     }
 }

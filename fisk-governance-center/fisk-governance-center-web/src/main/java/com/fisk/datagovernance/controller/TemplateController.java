@@ -19,7 +19,7 @@ import java.util.List;
  * @description 模板配置
  * @date 2022/3/22 16:14
  */
-@Api(tags = {SwaggerConfig.TAG_7})
+@Api(tags = {SwaggerConfig.TEMPLATE_CONTROLLER})
 @RestController
 @RequestMapping("/template")
 public class TemplateController {

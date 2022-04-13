@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 
@@ -62,7 +63,7 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * 获取数据源下的表
      * @return 查询结果
      */
-    List<DataSourceVO> getMeta(String tableName);
+    List<DataExampleSourceVO> getMeta(String tableName);
 
     /**
      * 获取表字段信息

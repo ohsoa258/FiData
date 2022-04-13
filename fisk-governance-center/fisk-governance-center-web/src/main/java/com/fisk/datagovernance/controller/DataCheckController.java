@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @description 数据校验
  * @date 2022/3/22 16:17
  */
-@Api(tags = {SwaggerConfig.TAG_2})
+@Api(tags = {SwaggerConfig.DATA_CHECK_CONTROLLER})
 @RestController
 @RequestMapping("/datacheck")
 public class DataCheckController {

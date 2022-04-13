@@ -19,6 +19,8 @@ import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataBaseSourceVO;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 import lombok.SneakyThrows;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 数据源接口实现类
@@ -138,13 +141,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 //        return mapper.getAll();
 //    }
     @Override
-    public List<DataSourceVO> getMeta(String tableName) {
+    public List<DataExampleSourceVO> getMeta(String tableName) {
+        List<DataExampleSourceVO> dataSourceList=new ArrayList<>();
         List<DataSourceVO> dataSources = new ArrayList<>();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourceConPO::getDelFlag, 1);
         List<DataSourceConPO> dataSourceConPOS = mapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(dataSourceConPOS)) {
-            return dataSources;
+            return dataSourceList;
         }
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
@@ -203,7 +207,39 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 continue;
             }
         }
-        return dataSources;
+        dataSourceList= getDataSourceList(dataSources);
+        return dataSourceList;
+    }
+
+    public List<DataExampleSourceVO> getDataSourceList(List<DataSourceVO> dataSources) {
+        List<DataExampleSourceVO> dataExampleSourceVOS = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(dataSources)) {
+            // 实例信息
+            List<String> conIps = dataSources.stream().map(DataSourceVO::getConIp).distinct().collect(Collectors.toList());
+            for (String conIp : conIps) {
+                DataExampleSourceVO dataExampleSourceVO = null;
+                List<DataBaseSourceVO> dataBaseSourceVOS=new ArrayList<>();
+                for (DataSourceVO dataSourceVO : dataSources) {
+                    if (dataSourceVO.getConIp().equals(conIp)) {
+                        if (dataExampleSourceVO == null) {
+                            dataExampleSourceVO = new DataExampleSourceVO();
+                            dataExampleSourceVO.setId(dataSourceVO.getId());
+                            dataExampleSourceVO.setConIp(dataSourceVO.getConIp());
+                            dataExampleSourceVO.setConPort(dataSourceVO.getConPort());
+                            dataExampleSourceVO.setConType(dataSourceVO.getConType());
+                            dataExampleSourceVO.setName(dataSourceVO.getName());
+                        }
+                        DataBaseSourceVO dataBaseSourceVO=new DataBaseSourceVO();
+                        dataBaseSourceVO.setConDbname(dataSourceVO.getConDbname());
+                        dataBaseSourceVO.setChildren(dataSourceVO.getTableDtoList());
+                        dataBaseSourceVOS.add(dataBaseSourceVO);
+                    }
+                }
+                dataExampleSourceVO.setChildren(dataBaseSourceVOS);
+                dataExampleSourceVOS.add(dataExampleSourceVO);
+            }
+        }
+        return dataExampleSourceVOS;
     }
 
     @Override
@@ -280,6 +316,31 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     /**
+     * @return com.fisk.datagovernance.entity.dataquality.DataSourceConPO
+     * @description 查询数据源信息
+     * @author dick
+     * @date 2022/3/25 14:11
+     * @version v1.0
+     * @params id
+     * @params dataSourceTypeEnum
+     */
+    public DataSourceConPO getDataSourceConPO(int id, ModuleDataSourceTypeEnum dataSourceTypeEnum) {
+        DataSourceConPO dataSourceConPO = null;
+        if (dataSourceTypeEnum == ModuleDataSourceTypeEnum.NONE) {
+            return dataSourceConPO;
+        }
+        switch (dataSourceTypeEnum) {
+            case DATAQUALITY:
+                dataSourceConPO = baseMapper.selectById(id);
+                break;
+            case METADATA:
+                // 调用元数据接口，获取数据源的基础信息
+                break;
+        }
+        return dataSourceConPO;
+    }
+
+    /**
      * 连接数据库
      *
      * @param driver   driver
@@ -288,13 +349,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @param password password
      * @return statement
      */
-    private Connection getStatement(String driver, String url, String username, String password) {
+    public static Connection getStatement(String driver, String url, String username, String password) {
         Connection conn;
         try {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR);
+            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
         }
         return conn;
     }

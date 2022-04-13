@@ -187,6 +187,7 @@ public enum ResultEnum {
     DATA_QUALITY_TEMPLATE_EXISTS(11001, "模板信息不存在"),
     DATA_QUALITY_DATASOURCE_EXISTS(11002, "数据源不存在"),
     DATA_QUALITY_REQUESTSORT_ERROR(11003, "参数异常，执行顺序调整失败"),
+    DATA_QUALITY_CREATESTATEMENT_ERROR(11004, "数据库连接建立失败"),
 
     /**
      * 数据安全

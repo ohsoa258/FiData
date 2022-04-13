@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.datasource;
 
-import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -9,13 +8,12 @@ import java.util.List;
 
 /**
  * @author dick
- * @version v1.0
- * @description 数据源
- * @date 2022/3/22 14:51
+ * @version 1.0
+ * @description 数据源实例
+ * @date 2022/4/13 11:24
  */
 @Data
-public class DataSourceVO
-{
+public class DataExampleSourceVO {
     /**
      * 数据源id
      */
@@ -35,12 +33,6 @@ public class DataSourceVO
     public String name;
 
     /**
-     * 数据库名称
-     */
-    @ApiModelProperty(value = "数据库名称")
-    public String conDbname;
-
-    /**
      * IP
      */
     @ApiModelProperty(value = "IP")
@@ -53,14 +45,8 @@ public class DataSourceVO
     public int conPort;
 
     /**
-     * 表
+     * 实例下数据库
      */
-    @ApiModelProperty(value = "表")
-    public List<TablePyhNameDTO> tableDtoList;
-
-    /**
-     * 视图
-     */
-    //@ApiModelProperty(value = "视图")
-    //public List<DataBaseViewDTO> viewDtoList;
+    @ApiModelProperty(value = "实例下数据库")
+    public List<DataBaseSourceVO> children;
 }

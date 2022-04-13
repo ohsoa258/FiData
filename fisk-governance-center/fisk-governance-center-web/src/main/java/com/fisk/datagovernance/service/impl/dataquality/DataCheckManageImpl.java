@@ -42,7 +42,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private TemplateMapper templateMapper;
 
     @Resource
-    private DataSourceConMapper dataSourceConMapper;
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private ComponentNotificationMapper componentNotificationMapper;
@@ -193,10 +193,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      */
     public ResultEntity<String> createRole(DataCheckDTO dto, TemplatePO templatePO) {
         //查询数据源
-        DataSourceConPO dataSourceConPO = getDataSourceConPO(dto.datasourceId, dto.datasourceType);
+        DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dto.datasourceId, dto.datasourceType);
         if (dataSourceConPO == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, "");
         }
+        // 待确定元数据返回的类型是几
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         String tableName = dto.checkStep == CheckStepTypeEnum.TABLE_FRONT ? dto.proTableName : dto.tableName;
@@ -212,27 +213,27 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         switch (templateTypeEnum) {
             case FIELD_STRONG_RULE_TEMPLATE:
                 //强类型模板规则
-                rule = createField_StrongRule(dataSourceTypeEnum, tableName, fieldName, dto.fieldLength, dto.checkRuleType);
+                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName, dto.fieldLength, dto.checkRuleType);
                 break;
             case FIELD_AGGREGATE_THRESHOLD_TEMPLATE:
                 //字段聚合波动阈值模板
-                rule = createField_AggregateRule(tableName, fieldName, dto.fieldAggregate, dto.thresholdValue);
+                rule = createField_AggregateRule(dataSourceConPO.conDbname, tableName, fieldName, dto.fieldAggregate, dto.thresholdValue);
                 break;
             case ROWCOUNT_THRESHOLD_TEMPLATE:
                 //表行数波动阈值模板
-                rule = createTableRow_ThresholdRule(tableName);
+                rule = createTableRow_ThresholdRule(dataSourceConPO.conDbname, tableName);
                 break;
             case EMPTY_TABLE_CHECK_TEMPLATE:
                 //空表校验模板
-                rule = createEmptyTable_CheckRule(dataSourceTypeEnum, tableName);
+                rule = createEmptyTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
                 break;
             case UPDATE_TABLE_CHECK_TEMPLATE:
                 //表更新校验模板
-                rule = createUpdateTable_CheckRule(dataSourceTypeEnum, tableName, fieldName);
+                rule = createUpdateTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
                 break;
             case TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE:
                 //表血缘断裂校验模板
-                rule = createTableBloodKinship_CheckRule(dto.datasourceId, dto.datasourceType, tableName, dto.checkConsanguinity);
+                rule = createTableBloodKinship_CheckRule();
                 break;
             case BUSINESS_CHECK_TEMPLATE:
                 rule = createBusiness_CheckRule();
@@ -247,33 +248,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     /**
-     * @return com.fisk.datagovernance.entity.dataquality.DataSourceConPO
-     * @description 查询数据源信息
-     * @author dick
-     * @date 2022/3/25 14:11
-     * @version v1.0
-     * @params id
-     * @params dataSourceTypeEnum
-     */
-    public DataSourceConPO getDataSourceConPO(int id, ModuleDataSourceTypeEnum dataSourceTypeEnum) {
-        DataSourceConPO dataSourceConPO = new DataSourceConPO();
-        switch (dataSourceTypeEnum) {
-            case DATAQUALITY:
-                dataSourceConPO = dataSourceConMapper.selectById(id);
-                break;
-            case METADATA:
-                // 调用元数据接口，获取数据源的基础信息
-                break;
-        }
-        return dataSourceConPO;
-    }
-
-    /**
      * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
      * @description 生成数据校验强规则
      * @author dick
      * @date 2022/3/25 13:59
      * @version v1.0
+     * @params dataBase 数据库名称
      * @params dataSourceTypeEnum 数据源类型
      * @params tableName 表名称
      * @params fieldName 字段名称
@@ -283,7 +263,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * 2、非空校验
      * 3、长度校验
      */
-    public ResultEntity<String> createField_StrongRule(DataSourceTypeEnum dataSourceTypeEnum, String tableName, String fieldName, int fieldLength, String checkRuleType) {
+    public ResultEntity<String> createField_StrongRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
+                                                       String tableName, String fieldName,
+                                                       int fieldLength, String checkRuleType) {
         StringBuilder stringBuilder = new StringBuilder();
         if (tableName == null || tableName.isEmpty() ||
                 fieldName == null || fieldName.isEmpty() ||
@@ -313,6 +295,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
+                                    "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
                                     "\t\t%s AS 'checkType',\n" +
@@ -323,7 +306,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T1 ",
-                            tableName, fieldNameParam,
+                            dataBase, tableName, fieldNameParam,
                             CheckRuleTypeEnum.UNIQUE_CHECK.getValue(),
                             CheckRuleTypeEnum.UNIQUE_CHECK.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
@@ -337,6 +320,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
+                                    "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
                                     "\t\t%s AS 'checkType',\n" +
@@ -346,7 +330,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE %s IS NULL OR %s = '' ) temp )> 0 THEN\n" +
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
-                                    "\t) T2", tableName, fieldNameParam,
+                                    "\t) T2", dataBase, tableName, fieldNameParam,
                             CheckRuleTypeEnum.NONEMPTY_CHECK.getValue(),
                             CheckRuleTypeEnum.NONEMPTY_CHECK.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
@@ -360,6 +344,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
+                                    "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
                                     "\t\t%s AS 'checkType',\n" +
@@ -369,7 +354,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE %s( %s )> %s ) temp )> 0 THEN\n" +
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
-                                    "\t) T3\n", tableName, fieldNameParam,
+                                    "\t) T3\n", dataBase, tableName, fieldNameParam,
                             CheckRuleTypeEnum.LENGTH_CHECK.getValue(),
                             CheckRuleTypeEnum.LENGTH_CHECK.getName(),
                             fieldNameParam, tableName, fieldLengthFunParm, fieldNameParam, fieldLength));
@@ -392,14 +377,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params fieldAggregate 字段聚合函数
      * @params thresholdValue 波动阈值
      */
-    public ResultEntity<String> createField_AggregateRule(String tableName, String fieldName, String fieldAggregate, Integer thresholdValue) {
+    public ResultEntity<String> createField_AggregateRule(String dataBase, String tableName, String fieldName,
+                                                          String fieldAggregate, Integer thresholdValue) {
         if (tableName == null || tableName.isEmpty() ||
                 fieldName == null || fieldName.isEmpty() ||
                 fieldAggregate == null || fieldAggregate.isEmpty() ||
                 thresholdValue == null) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
-        String sql = "SELECT %s FROM %s;";
+        String sql = String.format("SELECT  '%s' AS checkDataBase, '%s' AS checkTable,  %s AS checkResult FROM %s;", dataBase, tableName);
         switch (fieldAggregate) {
             case "SUM":
                 sql = String.format(sql, "SUM(" + fieldName + ")", tableName);
@@ -408,7 +394,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 sql = String.format(sql, "COUNT(" + fieldName + ")", tableName);
                 break;
             case "AVG":
-                sql = String.format(sql, "AVG(CAST(" + fieldName + " AS decimal(10, 2))) AS " + fieldName + "", tableName);
+                sql = String.format(sql, "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", tableName);
                 break;
             case "MAX":
                 sql = String.format(sql, "MAX(" + fieldName + ")", tableName);
@@ -430,7 +416,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @version v1.0
      * @params tableName 表名称
      */
-    public ResultEntity<String> createTableRow_ThresholdRule(String tableName) {
+    public ResultEntity<String> createTableRow_ThresholdRule(String dataBase, String tableName) {
         /*
          * 逻辑：
          * 通过调度任务实时查询处理
@@ -440,7 +426,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (tableName == null || tableName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
-        String sql = String.format("SELECT COUNT(*) FROM %s", tableName);
+        String sql = String.format("SELECT '%s' AS checkDataBase, '%s' AS checkTable, COUNT(*) AS checkResult FROM %s", dataBase, tableName, tableName);
         ResultEntity<String> result = new ResultEntity<>();
         result.setCode(0);
         result.setData(sql);
@@ -456,7 +442,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataSourceTypeEnum 数据源类型
      * @params tableName 表名称
      */
-    public ResultEntity<String> createEmptyTable_CheckRule(DataSourceTypeEnum dataSourceTypeEnum, String tableName) {
+    public ResultEntity<String> createEmptyTable_CheckRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum, String tableName) {
         if (tableName == null || tableName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
@@ -465,6 +451,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "FROM\n" +
                 "\t(\n" +
                 "\tSELECT\n" +
+                "\t\t'%s' AS 'checkDataBase',\n" +
                 "\t\t'%s' AS 'checkTable',\n" +
                 "\t\t'检查表是否存在数据，fail表示不存在，success表示存在' AS 'checkDesc',\n" +
                 "\tCASE\n" +
@@ -475,10 +462,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t) T1";
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, tableName, "", tableName, "LIMIT 1 ");
+                sql = String.format(sql, dataBase, tableName, "", tableName, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, tableName, "TOP 1 ", tableName, "");
+                sql = String.format(sql, dataBase, tableName, "TOP 1 ", tableName, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -496,7 +483,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params tableName 表名称
      * @params fieldName 更新依据字段
      */
-    public ResultEntity<String> createUpdateTable_CheckRule(DataSourceTypeEnum dataSourceTypeEnum, String tableName, String fieldName) {
+    public ResultEntity<String> createUpdateTable_CheckRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
+                                                            String tableName, String fieldName) {
         if (tableName == null || tableName.isEmpty()
                 || fieldName == null || fieldName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
@@ -511,6 +499,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "FROM\n" +
                 "\t(\n" +
                 "\tSELECT\n" +
+                "\t\t'%s' AS 'checkDataBase',\n" +
                 "\t\t'%s' AS 'checkTable',\n" +
                 "\t\t'检查表数据是否更新，fail表示未更新，success表示有更新' AS 'checkDesc',\n" +
                 "\tCASE\n" +
@@ -524,10 +513,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String format = df.format(new Date());// new Date()为获取当前系统时间
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, tableName, "", tableName, fieldName, format, "LIMIT 1 ");
+                sql = String.format(sql, dataBase, tableName, "", tableName, fieldName, format, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, tableName, "TOP 1 ", tableName, fieldName, format, "");
+                sql = String.format(sql, dataBase, tableName, "TOP 1 ", tableName, fieldName, format, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -546,11 +535,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params tableName 表名称
      * @params checkConsanguinity  血缘检查范围：1、上游 2、下游 3、上下游
      */
-    public ResultEntity<String> createTableBloodKinship_CheckRule(int datasourceId, ModuleDataSourceTypeEnum datasourceType, String tableName, Integer checkConsanguinity) {
-        if (tableName == null || tableName.isEmpty()
-                || checkConsanguinity == null || datasourceType != ModuleDataSourceTypeEnum.METADATA) {
-            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
-        }
+    public ResultEntity<String> createTableBloodKinship_CheckRule() {
         /*
          * 逻辑：
          * 无规则。数据调度实时调用元数据接口检查表血缘是否存在

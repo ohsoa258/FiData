@@ -2,6 +2,7 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
@@ -74,5 +75,5 @@ public interface INoticeManageService extends IService<NoticePO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum testSend(NoticeDTO dto);
+    ResultEntity<Object> sendEmialNotice(NoticeDTO dto);
 }

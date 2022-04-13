@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @description 邮件服务器
  * @date 2022/3/22 16:16
  */
-@Api(tags = {SwaggerConfig.TAG_4})
+@Api(tags = {SwaggerConfig.EMAIL_SERVER_CONTROLLER})
 @RestController
 @RequestMapping("/emailserver")
 public class EmailServerController {

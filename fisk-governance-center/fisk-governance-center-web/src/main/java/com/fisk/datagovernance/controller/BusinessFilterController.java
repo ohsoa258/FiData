@@ -24,7 +24,7 @@ import java.util.List;
  * @description 业务清洗
  * @date 2022/3/22 16:15
  */
-@Api(tags = {SwaggerConfig.TAG_1})
+@Api(tags = {SwaggerConfig.BUSINESS_FILTER_CONTROLLER})
 @RestController
 @RequestMapping("/businessfilter")
 public class BusinessFilterController {

@@ -22,7 +22,7 @@ import javax.annotation.Resource;
  * @description 生命周期
  * @date 2022/3/22 16:15
  */
-@Api(tags = {SwaggerConfig.TAG_5})
+@Api(tags = {SwaggerConfig.LIFECYCLE_CONTROLLER})
 @RestController
 @RequestMapping("/lifecycle")
 public class LifecycleController {

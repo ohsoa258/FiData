@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
@@ -136,7 +137,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         if (noticePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        componentNotificationMapImpl.updateDelFlag(noticePO.getId(),0,0);
+        componentNotificationMapImpl.updateDelFlag(noticePO.getId(), 0, 0);
         return baseMapper.deleteByIdWithFill(noticePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -272,11 +273,11 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     }
 
     @Override
-    public ResultEnum testSend(NoticeDTO dto) {
+    public ResultEntity<Object> sendEmialNotice(NoticeDTO dto) {
         //第一步：查询邮件服务器设置
         EmailServerPO emailServerPO = emailServerMapper.selectById(dto.emailServerId);
         if (emailServerPO == null) {
-            return ResultEnum.PARAMTER_ERROR;
+            return ResultEntityBuild.buildData(ResultEnum.ERROR, "邮件服务器不存在");
         }
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
         mailServeiceDTO.setOpenAuth(true);
@@ -297,10 +298,22 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         try {
             //第二步：调用邮件发送方法
             MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            return ResultEntityBuild.buildData(ResultEnum.ERROR, ex.getMessage());
         }
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "发送完成");
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
+     * @description 发送系统消息通知
+     * @author dick
+     * @date 2022/4/12 20:38
+     * @version v1.0
+     * @params noticePOS
+     */
+    public ResultEntity<Object> sendSystemNotice(List<NoticePO> noticePOS) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 
     /**

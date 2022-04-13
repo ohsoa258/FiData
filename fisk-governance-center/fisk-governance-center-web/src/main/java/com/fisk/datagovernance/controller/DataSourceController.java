@@ -8,6 +8,7 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
 import io.swagger.annotations.Api;
@@ -24,7 +25,7 @@ import java.util.List;
  * @description 数据源配置
  * @date 2022/3/22 16:14
  */
-@Api(tags = {SwaggerConfig.TAG_3})
+@Api(tags = {SwaggerConfig.DATASOURCE_CONTROLLER})
 @RestController
 @RequestMapping("/datasource")
 public class DataSourceController {
@@ -68,8 +69,8 @@ public class DataSourceController {
 //    }
 
     @GetMapping("/getTableAll")
-    @ApiOperation("获取全部表字段信息")
-    public ResultEntity<List<DataSourceVO>> getTableAll(String tableName) {
+    @ApiOperation("获取全部表信息")
+    public ResultEntity<List<DataExampleSourceVO>> getTableAll(String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(tableName));
     }
 

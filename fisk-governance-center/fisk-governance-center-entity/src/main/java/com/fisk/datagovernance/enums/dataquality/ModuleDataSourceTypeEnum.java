@@ -12,6 +12,7 @@ public enum ModuleDataSourceTypeEnum implements BaseEnum {
     /**
      * 组件数据源类型
      */
+    NONE(0, "空数据源"),
     DATAQUALITY(1, "数据质量"),
     METADATA(2, "元数据");
 
@@ -31,5 +32,13 @@ public enum ModuleDataSourceTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static ModuleDataSourceTypeEnum getEnum(int value) {
+        for (ModuleDataSourceTypeEnum e : ModuleDataSourceTypeEnum.values()) {
+            if (e.getValue() == value)
+                return e;
+        }
+        return ModuleDataSourceTypeEnum.NONE;
     }
 }
