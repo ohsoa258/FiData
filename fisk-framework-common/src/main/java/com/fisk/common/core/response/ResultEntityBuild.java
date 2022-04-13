@@ -73,7 +73,12 @@ public class ResultEntityBuild {
         }
         ResultEntity<T> res = new ResultEntity<T>();
         res.code = enums.getCode();
-        res.msg = enums.getMsg() + "。错误信息：" + msg;
+        /**
+         * 历史版本：
+         * res.msg = enums.getMsg() + "。错误信息：" + msg;
+         * 历史版本的错误信息可能返回冗余提示
+         */
+        res.msg = msg;
 
         return res;
     }

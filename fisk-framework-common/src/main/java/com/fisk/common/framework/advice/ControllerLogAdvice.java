@@ -1,6 +1,7 @@
 package com.fisk.common.framework.advice;
 
 import com.fisk.common.core.constants.SystemConstants;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.JwtUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -34,7 +35,7 @@ public class ControllerLogAdvice {
     @Around("within(@org.springframework.web.bind.annotation.RestController *)")
     public Object handleLog(ProceedingJoinPoint jp) throws Throwable {
         // 设置TraceID
-        MDCHelper.setTraceId();
+        String traceId = MDCHelper.setTraceId();
         try {
             // get token
             ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -50,12 +51,16 @@ public class ControllerLogAdvice {
             long execTime = System.currentTimeMillis();
             // 调用切点方法
             Object result = jp.proceed();
+            if (result instanceof ResultEntity) {
+                ResultEntity resultEntity = (ResultEntity) result;
+                resultEntity.traceId = traceId;
+            }
             log.debug("控制器【{}】调用成功，执行耗时: {} ms", jp.getSignature(), System.currentTimeMillis() - execTime);
             MDCHelper.clear();
             return result;
         } catch (Throwable throwable) {
             log.debug("控制器【{}】执行失败，原因：{}", jp.getSignature(), throwable.toString(), throwable);
-            MDCHelper.clear();
+            //出现异常不清楚mdc，等待全局异常拦截处清理
             if (throwable instanceof FkException) {
                 throw throwable;
             } else {

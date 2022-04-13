@@ -23,8 +23,10 @@ public class MDCHelper {
         MDC.put(TraceConstant.APP_CLASS, name);
     }
 
-    public static void setTraceId() {
-        MDC.put(TraceConstant.TRACE_ID, UUID.randomUUID().toString());
+    public static String setTraceId() {
+        String traceId = UUID.randomUUID().toString();
+        MDC.put(TraceConstant.TRACE_ID, traceId);
+        return traceId;
     }
 
     public static void clear() {

@@ -3,6 +3,7 @@ package com.fisk.common.framework.exception;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.mdc.MDCHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -21,8 +22,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @ResponseBody
 @Slf4j
 public abstract class AbstractGlobalExceptionHandler {
-
-    //TODO: 缺少日志记录
 
     /**
      * 模型验证报错
@@ -53,7 +52,8 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = FkException.class)
     public ResultEntity<Object> handle1(FkException ex) {
-        log.error(ex.getErrorMsg());
+        log.error("全局异常拦截：" + ex.toString());
+        MDCHelper.clear();
         if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
             return ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
         }
@@ -68,8 +68,9 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public ResultEntity<Object> handle1(Exception ex) {
-        log.error(ex.toString());
-        return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
+        log.error("全局异常拦截：" + ex.toString());
+        MDCHelper.clear();
+        return ResultEntityBuild.build(ResultEnum.ERROR, ex.getMessage());
     }
 
 }
