@@ -1637,6 +1637,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 break;
             case oracle:
                 dto.driveType = DbTypeEnum.oracle;
+                break;
+            case ftp:
+                dto.driveType = DbTypeEnum.ftp;
+                break;
             default:
                 break;
         }
