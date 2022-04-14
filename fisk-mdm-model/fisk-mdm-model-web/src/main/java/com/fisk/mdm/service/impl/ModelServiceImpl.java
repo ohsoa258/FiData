@@ -6,15 +6,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.mdm.dto.eventlog.EventLogDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.entity.ModelPO;
+import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.enums.ModelVersionTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ModelMap;
+import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.service.IModelService;
@@ -23,6 +24,7 @@ import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.service.IModelVersionService;
 import com.fisk.mdm.vo.model.ModelVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Objects;
@@ -55,6 +57,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @param modelDTO
      * @return
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum addData(ModelDTO modelDTO) {
 
@@ -78,9 +81,17 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         modelVersionDTO.setDesc("新增模型生成的默认版本");
         modelVersionDTO.setStatus(ModelVersionStatusEnum.OPEN);
         modelVersionDTO.setType(ModelVersionTypeEnum.SYSTEM_CREAT);
-        if(iModelVersionService.addData(modelVersionDTO) == ResultEnum.SAVE_DATA_ERROR){
+        ModelVersionPO modelVersionPO = ModelVersionMap.INSTANCES.dtoToPo(modelVersionDTO);
+        if(iModelVersionService.save(modelVersionPO) == false){
             return ResultEnum.SAVE_DATA_ERROR;
         }
+
+        modelPO.setCurrentVersionId((int)modelVersionPO.getId());
+        modelPO.setAttributeLogName("tb_attribute_log_"+modelPO.getId());
+        if(baseMapper.updateById(modelPO) <= 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        };
+
 
         // 记录日志
        String desc = "新增一个模型,id:" + modelPO.getId();
