@@ -7,7 +7,7 @@ import com.fisk.task.FkTaskApplication;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
-import com.fisk.common.service.mdmBEBuild.IBuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,7 +45,7 @@ public class TestBuildModel {
     @Test
     public void Test2() throws SQLException {
         String tableName = "txy11";
-        IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getDBCommand(type);
+        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
         AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
         Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);

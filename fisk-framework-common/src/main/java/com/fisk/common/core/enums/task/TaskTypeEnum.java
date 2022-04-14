@@ -67,7 +67,11 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * 投递模型
      */
-    DELIVERY_MODEL(13,"投递模型");
+    DELIVERY_MODEL(13,"投递模型"),
+    /**
+     * mdm创建后台表生成任务
+     */
+    BACKGROUND_TABLE_TASK_CREATION(14,"mdm创建后台表生成任务");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

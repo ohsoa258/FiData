@@ -6,7 +6,7 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
-import com.fisk.common.service.mdmBEBuild.IBuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -36,7 +36,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             String tableName = model.getAttributeLogName();
 
             // 工厂
-            IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getDBCommand(type);
+            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);

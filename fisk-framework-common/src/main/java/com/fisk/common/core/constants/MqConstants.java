@@ -73,6 +73,8 @@ public class MqConstants {
 
         public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
 
+        public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
+
     }
 
     public static final class RouterConstants {

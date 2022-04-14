@@ -8,6 +8,7 @@ import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
+import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
@@ -220,6 +221,15 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.DELIVERY_MODEL.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA,
+                dto);
+    }
+
+    @PostMapping("/createBackendTable")
+    @ApiOperation(value = "创建任务后台表")
+    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO dto){
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_TABLE_TASK_CREATION.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA,
                 dto);
     }
 }
