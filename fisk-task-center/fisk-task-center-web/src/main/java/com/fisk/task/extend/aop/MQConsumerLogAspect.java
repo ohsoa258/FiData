@@ -112,6 +112,7 @@ public class MQConsumerLogAspect {
         if (sendMsg) {
             WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
         }
+        MDCHelper.clear();
         return res;
     }
 
