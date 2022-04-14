@@ -1,4 +1,4 @@
-package com.fisk.task.utils;
+package com.fisk.common.service.mdmBEBuild;
 
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;

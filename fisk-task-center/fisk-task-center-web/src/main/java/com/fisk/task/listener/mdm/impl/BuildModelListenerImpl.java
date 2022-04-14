@@ -2,11 +2,11 @@ package com.fisk.task.listener.mdm.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
-import com.fisk.task.utils.AbstractDbHelper;
-import com.fisk.task.utils.IBuildFactoryHelper;
-import com.fisk.task.utils.buildSql.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.mdmBEBuild.IBuildFactoryHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -36,12 +36,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
             String tableName = model.getAttributeLogName();
 
             // 工厂
-            IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getSqlBuilder(type);
+            IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getDBCommand(type);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
             // 执行sql
-            abstractDbHelper.executeSql(sqlBuilder.buildAttributeLog(tableName), connection);
+            abstractDbHelper.executeSql(sqlBuilder.buildAttributeLogTable(tableName), connection);
             log.info("创建属性日志表名:" + tableName);
         } catch (Exception e) {
             log.error("创建属性日志表名");

@@ -1,4 +1,4 @@
-package com.fisk.task.utils.buildSql;
+package com.fisk.common.service.mdmBEBuild;
 
 /**
  * @author WangYan
@@ -12,5 +12,5 @@ public interface IBuildSqlCommand {
      * @param tableName
      * @return
      */
-    String buildAttributeLog(String tableName);
+    String buildAttributeLogTable(String tableName);
 }
