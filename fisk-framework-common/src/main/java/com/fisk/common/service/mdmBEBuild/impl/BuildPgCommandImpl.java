@@ -1,6 +1,6 @@
-package com.fisk.task.utils.buildSql.impl;
+package com.fisk.common.service.mdmBEBuild.impl;
 
-import com.fisk.task.utils.buildSql.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 
 /**
  * @author WangYan
@@ -9,7 +9,7 @@ import com.fisk.task.utils.buildSql.IBuildSqlCommand;
 public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
-    public String buildAttributeLog(String tableName) {
+    public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
         str.append("ID int4 NOT NULL,");
@@ -19,10 +19,10 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("member_id int4 NULL,");
         str.append("batch_id int4 NULL,");
         str.append("version_id int4 NULL,");
-        str.append("old_code VARCHAR ( 50 ) NULL,");
-        str.append("old_value VARCHAR ( 50 ) NULL,");
-        str.append("new_code VARCHAR ( 50 ) NULL,");
-        str.append("new_value VARCHAR ( 50 ) NULL");
+        str.append("old_code VARCHAR ( 200 ) NULL,");
+        str.append("old_value VARCHAR ( 200 ) NULL,");
+        str.append("new_code VARCHAR ( 200 ) NULL,");
+        str.append("new_value VARCHAR ( 200 ) NULL");
         str.append(");");
         return str.toString();
     }

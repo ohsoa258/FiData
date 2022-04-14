@@ -1,11 +1,10 @@
-package com.fisk.task.utils;
+package com.fisk.common.service.mdmBEBuild;
 
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.task.utils.buildSql.IBuildSqlCommand;
-import com.fisk.task.utils.buildSql.impl.BuildPgCommandImpl;
-import com.fisk.task.utils.buildSql.impl.BuildSqlServerCommandImpl;
+import com.fisk.common.service.mdmBEBuild.impl.BuildPgCommandImpl;
+import com.fisk.common.service.mdmBEBuild.impl.BuildSqlServerCommandImpl;
 
 /**
  * @author WangYan
@@ -14,7 +13,7 @@ import com.fisk.task.utils.buildSql.impl.BuildSqlServerCommandImpl;
  */
 public class IBuildFactoryHelper {
 
-    public static IBuildSqlCommand getSqlBuilder(DataSourceTypeEnum type){
+    public static IBuildSqlCommand getDBCommand(DataSourceTypeEnum type){
         switch (type){
             case SQLSERVER:
                 return new BuildSqlServerCommandImpl();

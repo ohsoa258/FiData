@@ -2,12 +2,12 @@ package task;
 
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.task.FkTaskApplication;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.model.ModelDTO;
-import com.fisk.task.utils.AbstractDbHelper;
-import com.fisk.task.utils.IBuildFactoryHelper;
-import com.fisk.task.utils.buildSql.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.mdmBEBuild.IBuildFactoryHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,7 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -46,11 +45,11 @@ public class TestBuildModel {
     @Test
     public void Test2() throws SQLException {
         String tableName = "txy11";
-        IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getSqlBuilder(type);
+        IBuildSqlCommand sqlBuilder = IBuildFactoryHelper.getDBCommand(type);
 
         AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
         Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
-        String sql = sqlBuilder.buildAttributeLog(tableName);
+        String sql = sqlBuilder.buildAttributeLogTable(tableName);
         abstractDbHelper.executeSql(sql, connection);
         System.out.println("kkt创建成功！");
     }

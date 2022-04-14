@@ -15,10 +15,12 @@ public class MDCHelper {
         MDC.put(TraceConstant.APP_LOGTYPE, type.getName());
     }
 
+    @Deprecated
     public static void setFunction(String name) {
         MDC.put(TraceConstant.APP_FUNCTION, name);
     }
 
+    @Deprecated
     public static void setClass(String name) {
         MDC.put(TraceConstant.APP_CLASS, name);
     }

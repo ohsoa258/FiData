@@ -12,4 +12,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface MQConsumerLog {
     TraceTypeEnum type() default TraceTypeEnum.UNKNOWN;
+
+    boolean sendMsg() default true;
 }
