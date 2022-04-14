@@ -3,6 +3,7 @@ package com.fisk.mdm.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.mdm.enums.MdmStatusTypeEnum;
 import com.fisk.mdm.enums.WhetherTypeEnum;
 import lombok.Data;
 
@@ -28,6 +29,11 @@ public class EntityPO extends BasePO {
      * 展示名称
      */
     private String displayName;
+
+    /**
+     * 状态：0：未创建  1：创建成功 2：创建失败
+     */
+    private MdmStatusTypeEnum status;
 
     /**
      * 描述

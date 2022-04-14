@@ -11,10 +11,7 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.dto.eventlog.EventLogDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.enums.MdmTypeEnum;
-import com.fisk.mdm.enums.ObjectTypeEnum;
+import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -131,6 +128,7 @@ public class EntityServiceImpl implements EntityService {
 
         // 保存实体信息
         EntityPO entityPo = EntityMap.INSTANCES.DtoToPo(dto);
+        entityPo.setStatus(MdmStatusTypeEnum.NOT_CREATED);
         int insert = entityMapper.insert(entityPo);
         if (insert <= 0){
             return ResultEnum.SAVE_DATA_ERROR;

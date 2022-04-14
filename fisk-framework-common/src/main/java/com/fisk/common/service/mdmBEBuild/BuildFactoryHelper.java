@@ -11,7 +11,7 @@ import com.fisk.common.service.mdmBEBuild.impl.BuildSqlServerCommandImpl;
  * @date 2022/4/13 18:25
  * 工厂类
  */
-public class IBuildFactoryHelper {
+public class BuildFactoryHelper {
 
     public static IBuildSqlCommand getDBCommand(DataSourceTypeEnum type){
         switch (type){
