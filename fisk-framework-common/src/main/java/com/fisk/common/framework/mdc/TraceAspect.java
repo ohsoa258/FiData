@@ -37,7 +37,7 @@ public class TraceAspect {
             ex.printStackTrace();
         }
         Object res = joinPoint.proceed();
-        MDCHelper.clear();
+        MDCHelper.removeLogType();
         return res;
     }
 }

@@ -11,6 +11,10 @@ import java.util.UUID;
  */
 public class MDCHelper {
 
+    public static String get(String key) {
+        return MDC.get(key);
+    }
+
     public static void setAppLogType(TraceTypeEnum type) {
         MDC.put(TraceConstant.APP_LOGTYPE, type.getName());
     }
@@ -29,6 +33,18 @@ public class MDCHelper {
         String traceId = UUID.randomUUID().toString();
         MDC.put(TraceConstant.TRACE_ID, traceId);
         return traceId;
+    }
+
+    public static void remove(String key) {
+        MDC.remove(key);
+    }
+
+    public static void removeLogType() {
+        MDC.remove(TraceConstant.APP_LOGTYPE);
+    }
+
+    public static void removeTraceId() {
+        MDC.remove(TraceConstant.TRACE_ID);
     }
 
     public static void clear() {

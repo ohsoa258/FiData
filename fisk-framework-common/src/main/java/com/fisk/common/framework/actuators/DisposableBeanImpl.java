@@ -20,6 +20,6 @@ public class DisposableBeanImpl implements DisposableBean {
         DiscoveryManager.getInstance().shutdownComponent();
         MDCHelper.setAppLogType(TraceTypeEnum.PROJECT_SHUTDOWN);
         log.info("------------【" + DateTimeUtils.getNow() + "】项目停止运行------------");
-        MDCHelper.clear();
+        MDCHelper.removeLogType();
     }
 }

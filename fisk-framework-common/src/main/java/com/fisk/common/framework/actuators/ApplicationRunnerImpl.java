@@ -19,6 +19,6 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         MDCHelper.setAppLogType(TraceTypeEnum.PROJECT_START);
         log.info("------------【" + DateTimeUtils.getNow() + "】项目开始运行------------");
-        MDCHelper.clear();
+        MDCHelper.removeLogType();
     }
 }

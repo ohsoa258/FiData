@@ -206,6 +206,6 @@ public class WsSessionManager {
                 log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + DateTimeUtils.getNow() + "】，错误信息：", e);
             }
         }
-        MDCHelper.clear();
+        MDCHelper.removeLogType();
     }
 }
