@@ -13,9 +13,6 @@ folder:
 logging:
   config: classpath:logback-spring.xml
   level:
-    com:
-      fisk:
-        chartvisual: debug
     org:
       springframework:
         orm:
