@@ -90,7 +90,7 @@
     </dependencies>
 
     <build>
-        <finalName>mdm-model</finalName>
+        <finalName>fisk-mdm-model</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
