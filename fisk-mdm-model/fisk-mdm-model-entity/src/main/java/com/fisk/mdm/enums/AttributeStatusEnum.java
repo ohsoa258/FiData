@@ -6,20 +6,22 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * @author ChenYa
  */
-public enum ModelVersionTypeEnum implements BaseEnum {
+public enum AttributeStatusEnum  implements BaseEnum {
 
     /**
-     * 版本创建类型
+     * 属性状态
      */
-    USER_CREAT(1,"用户手动创建"),
+    INSERT(0,"待新增"),
+    UPDATE(1,"待修改"),
+    SUBMITTED(2,"已提交");
 
-    SYSTEM_CREAT(2,"系统job自动创建");
 
     @EnumValue
     private final int value;
     private final String name;
 
-    ModelVersionTypeEnum(int value, String name) {
+
+    AttributeStatusEnum(int value, String name) {
         this.value=value;
         this.name=name;
     }

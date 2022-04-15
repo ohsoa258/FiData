@@ -1,13 +1,17 @@
 package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.enums.EventTypeEnum;
@@ -23,12 +27,23 @@ import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.service.IModelVersionService;
 import com.fisk.mdm.vo.model.ModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fisk.system.dto.userinfo.UserDTO;
+
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * @author ChenYa
+ */
 @Service
 public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implements IModelService {
 
@@ -37,6 +52,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     IModelVersionService iModelVersionService;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private UserHelper userHelper;
+
+    @Resource
+    private UserClient userClient;
 
     /**
      * 根据id查询
@@ -90,11 +114,18 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         modelPO.setAttributeLogName("tb_attribute_log_"+modelPO.getId());
         if(baseMapper.updateById(modelPO) <= 0){
             return ResultEnum.SAVE_DATA_ERROR;
-        };
+        }
+
+        //提交创建属性日志表任务
+        com.fisk.task.dto.model.ModelDTO dto = new com.fisk.task.dto.model.ModelDTO();
+        dto.setAttributeLogName(modelPO.attributeLogName);
+        dto.setUserId(userHelper.getLoginUserInfo().getId());
+        dto.setSendTime(modelPO.getCreateTime());
+        publishTaskClient.pushModelByName(dto);
 
 
         // 记录日志
-       String desc = "新增一个模型,id:" + modelPO.getId();
+        String desc = "新增一个模型,id:" + modelPO.getId();
         if (logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.SAVE,desc) == ResultEnum.SAVE_DATA_ERROR){
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -126,6 +157,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //把DTO转化到查询出来的PO上
         modelPO = ModelMap.INSTANCES.updateDtoToPo(modelUpdateDTO);
+
 
         //修改数据
         if (baseMapper.updateById(modelPO) <= 0) {
@@ -180,6 +212,27 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     public Page<ModelVO> getAll(ModelQueryDTO query) {
 
         Page<ModelVO> all = baseMapper.getAll(query.page, query);
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            List<Long> userIds = all.getRecords()
+                    .stream()
+                    .map(ModelVO::getCreateUser)
+                    .map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds != null) {
+                List<UserDTO> userDTOS = userListByIds.getData();
+                if (CollectionUtils.isNotEmpty(userDTOS)) {
+                    all.getRecords().forEach(e -> {
+                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
+                        if (first.isPresent()) {
+                            UserDTO userDTO = first.get();
+                            if (userDTO != null) {
+                                e.createUser = userDTO.userAccount;
+                            }
+                        }
+                    });
+                }
+            }
+        }
 
         return all;
     }

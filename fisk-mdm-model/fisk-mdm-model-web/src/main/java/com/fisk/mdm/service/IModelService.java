@@ -10,6 +10,9 @@ import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.vo.model.ModelVO;
 
+/**
+ * @author ChenYa
+ */
 public interface IModelService extends IService<ModelPO> {
     /**
      * 根据id查询

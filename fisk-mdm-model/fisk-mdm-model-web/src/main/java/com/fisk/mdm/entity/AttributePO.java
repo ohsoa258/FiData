@@ -3,9 +3,7 @@ package com.fisk.mdm.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.MdmTypeEnum;
-import com.fisk.mdm.enums.WhetherTypeEnum;
+import com.fisk.mdm.enums.*;
 import lombok.Data;
 
 /**
@@ -40,7 +38,22 @@ public class AttributePO extends BasePO {
     /**
      * 列名（底层表中通过编码规则创建出来的列名）
      */
-    private String cloumnName;
+    private String columnName;
+
+    /**
+     *状态： 0：待新增 ，1：待修改 ， 2：已提交
+     */
+    private AttributeStatusEnum status;
+
+    /**
+     * 提交状态：0：提交失败 1：提交成功
+     */
+    private AttributeSyncStatusEnum syncStatus;
+
+    /**
+     * 提交失败描述
+     */
+    private String errorMsg;
 
     /**
      * 数据类型
@@ -75,12 +88,12 @@ public class AttributePO extends BasePO {
     /**
      * 是否开启属性日志 0：false 1:true
      */
-    private WhetherTypeEnum enableAttribuleLog;
+    private WhetherTypeEnum enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
-    private WhetherTypeEnum enableReadonaly;
+    private WhetherTypeEnum enableReadonly;
 
     /**
      * 是否必填 0：false 1:true

@@ -15,7 +15,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.core.user",
         "com.fisk.common.framework.actuators"})
 @MapperScan("com.fisk.mdm.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.auth.client","com.fisk.system.client"})
+@EnableFeignClients(basePackages = {
+        "com.fisk.auth.client",
+        "com.fisk.task.client",
+        "com.fisk.system.client"
+})
 public class FiskMdmModelApplication {
 
     public static void main(String[] args) {

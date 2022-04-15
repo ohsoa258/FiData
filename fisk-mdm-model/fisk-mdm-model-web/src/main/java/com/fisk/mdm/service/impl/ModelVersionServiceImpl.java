@@ -10,6 +10,9 @@ import com.fisk.mdm.service.IModelVersionService;
 import org.springframework.stereotype.Service;
 
 
+/**
+ * @author ChenYa
+ */
 @Service
 public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, ModelVersionPO> implements IModelVersionService {
 

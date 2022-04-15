@@ -1,16 +1,13 @@
-package com.fisk.mdm.dto.model;
+package com.fisk.mdm.dto.attribute;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.mdm.vo.model.ModelVO;
+import com.fisk.mdm.vo.attribute.AttributeVO;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
 
 /**
  * @author ChenYa
  */
-@Data
-public class ModelQueryDTO {
+public class AttributeQueryDTO {
     /**
      * 搜索条件
      */
@@ -21,5 +18,5 @@ public class ModelQueryDTO {
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")
-    public Page<ModelVO> page;
+    public Page<AttributeVO> page;
 }

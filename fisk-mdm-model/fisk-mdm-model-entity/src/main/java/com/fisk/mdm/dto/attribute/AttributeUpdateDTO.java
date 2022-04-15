@@ -1,4 +1,4 @@
-package com.fisk.mdm.dto.model;
+package com.fisk.mdm.dto.attribute;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
  * @author ChenYa
  */
 @Data
-public class ModelUpdateDTO extends ModelDTO{
+public class AttributeUpdateDTO extends AttributeDTO{
     @NotNull
     @ApiModelProperty(value = "id",required = true)
     private Integer id;
