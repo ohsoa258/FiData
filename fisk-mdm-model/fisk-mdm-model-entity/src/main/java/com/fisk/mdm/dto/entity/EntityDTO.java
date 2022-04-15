@@ -4,6 +4,8 @@ import com.fisk.mdm.enums.WhetherTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author WangYan
  * @date 2022/4/2 18:17
@@ -37,4 +39,16 @@ public class EntityDTO {
 
     @ApiModelProperty(value = "派生层级表id",required = true)
     private Integer hierarchyId;
+
+    @ApiModelProperty(value = "创建时间",required = true)
+    public LocalDateTime createTime;
+
+    @ApiModelProperty(value = "创建人",required = true)
+    public String createUser;
+
+    @ApiModelProperty(value = "更新时间",required = true)
+    public LocalDateTime updateTime;
+
+    @ApiModelProperty(value = "更新人",required = true)
+    public String updateUser;
 }

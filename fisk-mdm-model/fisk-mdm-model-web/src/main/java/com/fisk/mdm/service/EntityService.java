@@ -3,6 +3,7 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.entity.EntityDTO;
+import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.EntityPO;
 
@@ -21,11 +22,10 @@ public interface EntityService {
 
     /**
      * 分页查询实体
-     * @param page
-     * @param name
+     * @param dto
      * @return
      */
-    Page<EntityDTO> listData(Page<EntityPO> page,String name);
+    Page<EntityDTO> listData(EntityPageDTO dto);
 
     /**
      * 修改实体

@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.entity.EntityDTO;
+import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.dto.eventlog.EventLogDTO;
 import com.fisk.mdm.entity.AttributePO;
@@ -17,6 +19,8 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,8 @@ public class EntityServiceImpl implements EntityService {
     AttributeService attributeService;
     @Resource
     EventLogService logService;
+    @Resource
+    UserClient userClient;
 
 
     @Override
@@ -49,18 +55,23 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public Page<EntityDTO> listData(Page<EntityPO> page,String name) {
+    public Page<EntityDTO> listData(EntityPageDTO dto) {
+
+        // page转换
+        Page<EntityPO> poPage = EntityMap.INSTANCES.dtoToPoPage(dto.getPage());
+
         QueryWrapper<EntityPO> query = new QueryWrapper<>();
         query.lambda()
                 .orderByDesc(EntityPO::getCreateTime);
 
+        String name = dto.getName();
         if (StringUtils.isNotBlank(name)) {
             query.lambda()
                     .like(EntityPO::getName, name);
-            return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(page, query));
+            return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(poPage, query));
         }
 
-        return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(page, query));
+        return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(poPage, query));
     }
 
     @Override
