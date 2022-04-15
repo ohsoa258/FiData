@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.mdm.enums.WhetherTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -43,12 +44,14 @@ public class EntityDTO {
     @ApiModelProperty(value = "派生层级表id",required = true)
     private Integer hierarchyId;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",required = true)
     public LocalDateTime createTime;
 
     @ApiModelProperty(value = "创建人",required = true)
     public String createUser;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "更新时间",required = true)
     public LocalDateTime updateTime;
 
