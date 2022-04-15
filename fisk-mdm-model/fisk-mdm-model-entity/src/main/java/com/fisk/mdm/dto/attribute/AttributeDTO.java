@@ -1,8 +1,6 @@
 package com.fisk.mdm.dto.attribute;
 
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.MdmTypeEnum;
-import com.fisk.mdm.enums.WhetherTypeEnum;
+import com.fisk.mdm.enums.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -82,6 +80,28 @@ public class AttributeDTO {
     @ApiModelProperty(value = "排序序号")
     @NotNull()
     private int sortWieght;
+
+    /**
+     *状态： 0：待新增 ，1：待修改 ， 2：已提交
+     */
+    @ApiModelProperty(value = "状态")
+    @NotNull()
+    private AttributeStatusEnum status;
+
+    /**
+     * 提交状态：0：提交失败 1：提交成功
+     */
+    @ApiModelProperty(value = "提交状态")
+    @NotNull()
+    private AttributeSyncStatusEnum syncStatus;
+
+    /**
+     * 提交失败描述
+     */
+    @ApiModelProperty(value = "提交失败描述")
+    @NotNull()
+    @Length(min = 0, max = 200, message = "长度最多200")
+    private String errorMsg;
 
     /**
      * 是否开启属性日志 0：false 1:true
