@@ -290,6 +290,7 @@ public class BuildAtlasTableAndColumnTaskListener
         bfd.queryStartTime=buildPhysicalTableDTO.queryStartTime;
         bfd.queryEndTime=buildPhysicalTableDTO.queryEndTime;
         bfd.openTransmission=buildPhysicalTableDTO.openTransmission;
+        bfd.excelFlow=buildPhysicalTableDTO.excelFlow;
         log.info("nifi传入参数："+JSON.toJSONString(bfd));
         pc.publishBuildNifiFlowTask(bfd);
         log.info("执行完成");

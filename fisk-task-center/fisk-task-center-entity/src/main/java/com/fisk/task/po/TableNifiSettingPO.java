@@ -53,5 +53,9 @@ public class TableNifiSettingPO extends BasePO {
     public String queryForSupervisionProcessorId;
     public String convertJsonForSupervisionProcessorId;
     public String publishKafkaForSupervisionProcessorId;
+    public String csvReaderId;
+    public String getFtpProcessorId;
+    public String convertExcelToCsvProcessorId;
+    public String convertRecordProcessorId;
 
 }
