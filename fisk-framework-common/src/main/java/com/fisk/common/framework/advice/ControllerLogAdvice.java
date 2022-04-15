@@ -37,16 +37,25 @@ public class ControllerLogAdvice {
         // 设置TraceID
         String traceId = MDCHelper.setTraceId();
         try {
+            long userId = 0L;
+            int remotePort = 0;
+            String remoteAddr = "",
+                    requestUrl = "",
+                    token = "";
             // get token
             ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            HttpServletRequest request = requestAttributes.getRequest();
-            String token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
-            long userId = 0L;
-            if (StringUtils.isNotEmpty(token)) {
-                userId = JwtUtils.getUserIdByToken(secret, token);
+            if (requestAttributes != null) {
+                HttpServletRequest request = requestAttributes.getRequest();
+                token = request.getHeader(SystemConstants.HTTP_HEADER_AUTH);
+                if (StringUtils.isNotEmpty(token)) {
+                    userId = JwtUtils.getUserIdByToken(secret, token);
+                }
+                remoteAddr = request.getRemoteAddr();
+                remotePort = request.getRemotePort();
+                requestUrl = request.getRequestURI();
             }
             // log
-            log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", request.getRemoteAddr(), request.getRemotePort(), request.getRequestURL(), userId, token);
+            log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
             log.debug("控制器【{}】准备调用，参数: {}", jp.getSignature(), Arrays.toString(jp.getArgs()));
             long execTime = System.currentTimeMillis();
             // 调用切点方法
