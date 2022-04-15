@@ -212,27 +212,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     public Page<ModelVO> getAll(ModelQueryDTO query) {
 
         Page<ModelVO> all = baseMapper.getAll(query.page, query);
-        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords()
-                    .stream()
-                    .map(ModelVO::getCreateUser)
-                    .map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    all.getRecords().forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null) {
-                                e.createUser = userDTO.userAccount;
-                            }
-                        }
-                    });
-                }
-            }
-        }
+
 
         return all;
     }
