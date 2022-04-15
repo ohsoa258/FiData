@@ -4,13 +4,11 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
-import com.fisk.mdm.dto.eventlog.EventLogDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.*;
@@ -68,10 +66,87 @@ public class EntityServiceImpl implements EntityService {
         if (StringUtils.isNotBlank(name)) {
             query.lambda()
                     .like(EntityPO::getName, name);
-            return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(poPage, query));
+            Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
+
+            // 查创建人信息
+            Page<EntityPO> queryCreateUser = this.queryCreateUser(entityPoPage);
+            return EntityMap.INSTANCES.poToDtoPage(this.queryUpdateUser(queryCreateUser));
         }
 
-        return EntityMap.INSTANCES.poToDtoPage(entityMapper.selectPage(poPage, query));
+        Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
+
+        // 查创建人信息
+        Page<EntityPO> queryCreateUser = this.queryCreateUser(entityPoPage);
+        return EntityMap.INSTANCES.poToDtoPage(this.queryUpdateUser(queryCreateUser));
+    }
+
+    /**
+     * 查询创建人信息
+     * @param entityPoPage
+     * @return
+     */
+    public Page<EntityPO> queryCreateUser(Page<EntityPO> entityPoPage){
+        List<EntityPO> records = entityPoPage.getRecords();
+        if (CollectionUtils.isNotEmpty(records)){
+            List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getCreateUser())).map(e -> Long.parseLong(e.getCreateUser())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(userIds)){
+                // 查询用户名
+                List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
+
+                List<EntityPO> entityPoList = new ArrayList<>();
+                for (EntityPO record : records) {
+                    List<EntityPO> collect = dtoList.stream().filter(item -> item.getId().toString().equals(record.getCreateUser())).map(item -> {
+                        record.setCreateUser(item.getUserAccount());
+                        return record;
+                    }).collect(Collectors.toList());
+
+                    entityPoList.addAll(collect);
+                }
+
+                return entityPoPage.setRecords(entityPoList);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 查询更新人信息
+     * @param entityPoPage
+     * @return
+     */
+    public Page<EntityPO> queryUpdateUser(Page<EntityPO> entityPoPage){
+        List<EntityPO> records = entityPoPage.getRecords();
+        if (CollectionUtils.isNotEmpty(records)){
+
+            List<EntityPO> pagePoList = new ArrayList<>();
+
+            // 没有更新人
+            List<EntityPO> notUpdateUserList = records.stream().filter(e -> StringUtils.isBlank(e.getUpdateUser())).collect(Collectors.toList());
+            pagePoList.addAll(notUpdateUserList);
+
+            List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getUpdateUser())).map(e -> Long.parseLong(e.getUpdateUser())).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(userIds)){
+                // 查询用户名
+                List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
+
+                List<EntityPO> entityPoList = new ArrayList<>();
+                for (EntityPO record : records) {
+                    List<EntityPO> collect = dtoList.stream().filter(item -> item.getId().toString().equals(record.getUpdateUser())).map(item -> {
+                        record.setUpdateUser(item.getUserAccount());
+                        return record;
+                    }).collect(Collectors.toList());
+
+                    entityPoList.addAll(collect);
+                }
+
+                pagePoList.addAll(entityPoList);
+            }
+
+            return entityPoPage.setRecords(pagePoList);
+        }
+
+        return entityPoPage;
     }
 
     @Override

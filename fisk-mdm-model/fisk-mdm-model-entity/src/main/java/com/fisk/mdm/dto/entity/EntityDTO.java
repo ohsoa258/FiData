@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 @Data
 public class EntityDTO {
 
+    @ApiModelProperty(value = "主键id",required = true)
+    private Integer id;
+
     @ApiModelProperty(value = "模型id",required = true)
     private Integer modelId;
 
