@@ -87,7 +87,7 @@
         logger: 指定java包的输出级别
         -->
 
-        <logger level="org" name="info">
+        <logger name="org" level="info">
             <appender-ref ref="Console"/>
         </logger>
 
