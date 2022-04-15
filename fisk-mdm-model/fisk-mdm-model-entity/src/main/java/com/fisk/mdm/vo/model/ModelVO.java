@@ -1,5 +1,7 @@
 package com.fisk.mdm.vo.model;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -37,11 +39,13 @@ public class ModelVO {
     public String createUser;
 
     @ApiModelProperty(value = "创建时间")
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime createTime;
 
     @ApiModelProperty(value = "更新人")
     public String updateUser;
 
     @ApiModelProperty(value = "更新时间")
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime updateTime;
 }

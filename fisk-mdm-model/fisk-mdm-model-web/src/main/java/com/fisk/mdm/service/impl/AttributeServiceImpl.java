@@ -1,6 +1,7 @@
 package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -21,10 +22,15 @@ import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author WangYan
@@ -35,6 +41,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Resource
     EventLogService logService;
+
+    @Resource
+    private UserClient userClient;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -134,6 +143,28 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         Page<AttributeVO> all = baseMapper.getAll(query.page, query);
 
+        //获取创建人名称
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            List<Long> userIds = all.getRecords()
+                    .stream()
+                    .map(AttributeVO::getCreateUser)
+                    .map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            if (userListByIds != null) {
+                List<UserDTO> userDTOS = userListByIds.getData();
+                if (CollectionUtils.isNotEmpty(userDTOS)) {
+                    all.getRecords().forEach(e -> {
+                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
+                        if (first.isPresent()) {
+                            UserDTO userDTO = first.get();
+                            if (userDTO != null) {
+                                e.setCreateUser(userDTO.userAccount);
+                            }
+                        }
+                    });
+                }
+            }
+        }
 
         return all;
     }
