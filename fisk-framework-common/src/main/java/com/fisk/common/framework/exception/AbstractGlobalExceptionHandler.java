@@ -31,6 +31,7 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResultEntity<Object> handle1(MethodArgumentNotValidException ex) {
+        ResultEntity<Object> res;
         BeanPropertyBindingResult bindingResult = (BeanPropertyBindingResult) ex.getBindingResult();
         if (bindingResult.hasErrors()) {
             StringBuilder str = new StringBuilder();
@@ -38,10 +39,13 @@ public abstract class AbstractGlobalExceptionHandler {
                 str.append("字段：【").append(allError.getField()).append("】，").append("错误信息：【").append(allError.getDefaultMessage()).append("】。");
             }
             log.error(str.toString());
-            return ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR, str.toString());
+            res = ResultEntityBuild.build(ResultEnum.SAVE_VERIFY_ERROR, str.toString());
         } else {
-            return ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
+            res = ResultEntityBuild.build(ResultEnum.ERROR, ex.toString());
         }
+        res.traceId = MDCHelper.getTraceId();
+        MDCHelper.clear();
+        return res;
     }
 
     /**
@@ -52,12 +56,17 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = FkException.class)
     public ResultEntity<Object> handle1(FkException ex) {
+        String traceId = MDCHelper.getTraceId();
         log.error("全局异常拦截：" + ex.toString());
         MDCHelper.clear();
         if (StringUtils.isNotEmpty(ex.getErrorMsg())) {
-            return ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
+            ResultEntity<Object> res = ResultEntityBuild.build(ex.getResultEnum(), ex.getErrorMsg());
+            res.traceId = traceId;
+            return res;
         }
-        return ResultEntityBuild.build(ex.getResultEnum());
+        ResultEntity<Object> res = ResultEntityBuild.build(ex.getResultEnum());
+        res.traceId = traceId;
+        return res;
     }
 
     /**
@@ -68,9 +77,12 @@ public abstract class AbstractGlobalExceptionHandler {
      */
     @ExceptionHandler(value = Exception.class)
     public ResultEntity<Object> handle1(Exception ex) {
+        String traceId = MDCHelper.getTraceId();
         log.error("全局异常拦截：" + ex.toString());
         MDCHelper.clear();
-        return ResultEntityBuild.build(ResultEnum.ERROR, ex.getMessage());
+        ResultEntity<Object> res = ResultEntityBuild.build(ResultEnum.ERROR, ex.getMessage());
+        res.traceId = traceId;
+        return res;
     }
 
 }

@@ -35,6 +35,10 @@ public class MDCHelper {
         return traceId;
     }
 
+    public static String getTraceId() {
+        return MDC.get(TraceConstant.TRACE_ID);
+    }
+
     public static void remove(String key) {
         MDC.remove(key);
     }
