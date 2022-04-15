@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
 import com.fisk.datamanagement.service.IDataAssets;
@@ -128,6 +128,7 @@ public class DataAssetsImpl implements IDataAssets {
         switch (rdbmsType)
         {
             case "mysql":
+            case "doris":
                 driver="com.mysql.jdbc.Driver";
                 url="jdbc:mysql://"+hostname+":"+port+"/"+dbName;
                 break;
@@ -142,10 +143,6 @@ public class DataAssetsImpl implements IDataAssets {
             case "postgresql":
                 driver="org.postgresql.Driver";
                 url="jdbc:postgresql://"+hostname+":"+port+"/"+dbName;
-                break;
-            case "doris":
-                driver="com.mysql.jdbc.Driver";
-                url="jdbc:mysql://"+hostname+":"+port+"/"+dbName;
                 break;
             default:
                 throw new FkException(ResultEnum.NOT_SUPPORT);
