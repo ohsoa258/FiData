@@ -1,0 +1,32 @@
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org:
+      springframework:
+        orm:
+          jpa: debug
+management:
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+# spring配置
+spring:
+  application:
+    name: mdmmodel-service
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: root123
+    url: jdbc:mysql://192.168.11.130:3306/dmp_mdm_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  redis:
+    host: 192.168.11.130
