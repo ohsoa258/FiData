@@ -12,6 +12,7 @@ public enum CheckStepTypeEnum implements BaseEnum {
     /**
      * 校验步骤
      */
+    NONE(0, "空"),
     TABLE_FRONT(1, "进表前"),
     TABLE_AFTER(2, "进表后");
 
@@ -31,5 +32,13 @@ public enum CheckStepTypeEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static CheckStepTypeEnum getEnum(int value) {
+        for (CheckStepTypeEnum e : CheckStepTypeEnum.values()) {
+            if (e.getValue() == value)
+                return e;
+        }
+        return CheckStepTypeEnum.NONE;
     }
 }

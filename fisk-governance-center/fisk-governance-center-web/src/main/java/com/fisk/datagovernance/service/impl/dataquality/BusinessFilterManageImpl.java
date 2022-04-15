@@ -57,7 +57,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
     @Override
     public Page<BusinessFilterVO> getAll(BusinessFilterQueryDTO query) {
-        Page<BusinessFilterVO> all = baseMapper.getAll(query.page, query.tableName, query.keyword);
+        Page<BusinessFilterVO> all = baseMapper.getAll(query.page,query.conIp,query.conDbname, query.tableName, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> collect = all.getRecords().stream().map(BusinessFilterVO::getId).distinct().collect(Collectors.toList());
             List<Integer> collect1 = all.getRecords().stream().map(BusinessFilterVO::getTemplateId).distinct().collect(Collectors.toList());

@@ -25,7 +25,11 @@ public interface BusinessFilterMapper extends FKBaseMapper<BusinessFilterPO> {
      * @param tableName 表名称
      * @return 查询结果
      */
-    Page<BusinessFilterVO> getAll(Page<BusinessFilterVO> page, @Param("tableName") String tableName, @Param("keyword") String keyword);
+    Page<BusinessFilterVO> getAll(Page<BusinessFilterVO> page,
+                                  @Param("conIp") String conIp,
+                                  @Param("conDbname") String conDbname,
+                                  @Param("tableName") String tableName,
+                                  @Param("keyword") String keyword);
 
     /**
      * 新增一条数据并返回生成的主键id

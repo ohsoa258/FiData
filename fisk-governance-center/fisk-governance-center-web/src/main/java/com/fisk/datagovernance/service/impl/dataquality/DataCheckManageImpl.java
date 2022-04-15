@@ -61,8 +61,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.tableName, query.keyword);
-
+        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.conIp, query.conDbname, query.tableName, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             // 查询告警通知
             List<Integer> collect = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
@@ -105,7 +104,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
         //第一步：根据配置的校验条件生成校验规则
-        ResultEntity<String> role = createRole(dto, templatePO);
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+        ResultEntity<String> role = createRole(dto, templateTypeEnum);
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.getEnum(role.getCode());
         }
@@ -145,7 +145,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
         //第一步：根据配置的校验条件生成校验规则
-        ResultEntity<String> role = createRole(dto, templatePO);
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+        ResultEntity<String> role = createRole(dto, templateTypeEnum);
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.values()[role.code];
         }
@@ -189,9 +190,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @date 2022/4/2 15:51
      * @version v1.0
      * @params dto
-     * @params templatePO
+     * @params templateTypeEnum
      */
-    public ResultEntity<String> createRole(DataCheckDTO dto, TemplatePO templatePO) {
+    public ResultEntity<String> createRole(DataCheckDTO dto, TemplateTypeEnum templateTypeEnum) {
         //查询数据源
         DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dto.datasourceId, dto.datasourceType);
         if (dataSourceConPO == null) {
@@ -199,7 +200,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         // 待确定元数据返回的类型是几
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
-        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+
         String tableName = dto.checkStep == CheckStepTypeEnum.TABLE_FRONT ? dto.proTableName : dto.tableName;
         String fieldName = dto.fieldName;
         if (dto.fieldName != null && !dto.fieldName.isEmpty()) {
@@ -243,6 +244,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 //相似度模板
                 rule = createSimilarity_Rule();
                 break;
+            default:
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
         }
         return rule;
     }
@@ -298,7 +301,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t%s AS 'checkType',\n" +
+                                    "\t\t'%s' AS 'checkType',\n" +
                                     "\t\t'%s' AS 'checkDesc',\n" +
                                     "\tCASE\n" +
                                     "\t\t\t\n" +
@@ -307,8 +310,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T1 ",
                             dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.UNIQUE_CHECK.getValue(),
                             CheckRuleTypeEnum.UNIQUE_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
                     break;
                 case NONEMPTY_CHECK:
@@ -323,7 +326,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t%s AS 'checkType',\n" +
+                                    "\t\t'%s' AS 'checkType',\n" +
                                     "\t\t'%s' AS 'checkDesc',\n" +
                                     "\tCASE\n" +
                                     "\t\t\t\n" +
@@ -331,8 +334,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T2", dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.NONEMPTY_CHECK.getValue(),
                             CheckRuleTypeEnum.NONEMPTY_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
                     break;
                 case LENGTH_CHECK:
@@ -347,7 +350,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t'%s' AS 'checkDataBase',\n" +
                                     "\t\t'%s' AS 'checkTable',\n" +
                                     "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t%s AS 'checkType',\n" +
+                                    "\t\t'%s' AS 'checkType',\n" +
                                     "\t\t'%s' AS 'checkDesc',\n" +
                                     "\tCASE\n" +
                                     "\t\t\t\n" +
@@ -355,8 +358,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T3\n", dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.LENGTH_CHECK.getValue(),
                             CheckRuleTypeEnum.LENGTH_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldLengthFunParm, fieldNameParam, fieldLength));
                     break;
                 default:
@@ -378,29 +381,41 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params thresholdValue 波动阈值
      */
     public ResultEntity<String> createField_AggregateRule(String dataBase, String tableName, String fieldName,
-                                                          String fieldAggregate, Integer thresholdValue) {
+                                                          String fieldAggregate, int thresholdValue) {
         if (tableName == null || tableName.isEmpty() ||
                 fieldName == null || fieldName.isEmpty() ||
                 fieldAggregate == null || fieldAggregate.isEmpty() ||
-                thresholdValue == null) {
+                thresholdValue == 0) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
-        String sql = String.format("SELECT  '%s' AS checkDataBase, '%s' AS checkTable,  %s AS checkResult FROM %s;", dataBase, tableName);
+        String sql = String.format("SELECT\n" +
+                "\t'%s' AS checkDataBase,\n" +
+                "\t'%s' AS checkTable,\n" +
+                "\t'%s' AS checkField,\n" +
+                "\t'%s' AS checkDesc,\n" +
+                "\t'%s' AS checkType,\n" +
+                "CASE\n" +
+                "\t\t\n" +
+                "\t\tWHEN %s >= %s THEN\n" +
+                "\t\t'fail' ELSE 'success' \n" +
+                "\tEND AS checkResult \n" +
+                "FROM\n" +
+                "\t'%s';", dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName());
         switch (fieldAggregate) {
             case "SUM":
-                sql = String.format(sql, "SUM(" + fieldName + ")", tableName);
+                sql = String.format(sql, "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "COUNT":
-                sql = String.format(sql, "COUNT(" + fieldName + ")", tableName);
+                sql = String.format(sql, "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "AVG":
-                sql = String.format(sql, "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", tableName);
+                sql = String.format(sql, "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
                 break;
             case "MAX":
-                sql = String.format(sql, "MAX(" + fieldName + ")", tableName);
+                sql = String.format(sql, "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "MIN":
-                sql = String.format(sql, "MIN(" + fieldName + ")", tableName);
+                sql = String.format(sql, "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -420,13 +435,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         /*
          * 逻辑：
          * 通过调度任务实时查询处理
-         * 1、实时查询的的表行数 减去 记录的表行数 大于或小于 波动阀值，发送邮件；
+         * 1、实时查询的的表行数 减去 记录的表行数 大于 波动阀值，发送邮件；
          * 2、更新配置表记录的表行数，赋值为实时查询的的表行数
          * */
         if (tableName == null || tableName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
-        String sql = String.format("SELECT '%s' AS checkDataBase, '%s' AS checkTable, COUNT(*) AS checkResult FROM %s", dataBase, tableName, tableName);
+        String sql = String.format("SELECT\n" +
+                "\t'%s' AS checkDataBase,\n" +
+                "\t'%s' AS checkTable,\n" +
+                "\t'%s' AS checkDesc,\n" +
+                "\t'%s' AS checkType,\n" +
+                "\tCOUNT( * ) AS checkResult\n" +
+                "FROM\n" +
+                "\t%s;", dataBase, tableName, TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE.getName(), "COUNT", tableName);
         ResultEntity<String> result = new ResultEntity<>();
         result.setCode(0);
         result.setData(sql);
@@ -453,7 +475,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\tSELECT\n" +
                 "\t\t'%s' AS 'checkDataBase',\n" +
                 "\t\t'%s' AS 'checkTable',\n" +
-                "\t\t'检查表是否存在数据，fail表示不存在，success表示存在' AS 'checkDesc',\n" +
+                "\t\t'%s' AS 'checkDesc',\n" +
                 "\tCASE\n" +
                 "\t\t\t\n" +
                 "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s * FROM %s %s) temp )= 0 THEN\n" +
@@ -462,10 +484,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t) T1";
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, dataBase, tableName, "", tableName, "LIMIT 1 ");
+                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "", tableName, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, dataBase, tableName, "TOP 1 ", tableName, "");
+                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -492,7 +514,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         /*
          * 逻辑
          * 任务调度
-         * 存在更新的数据，发送邮件后。配置表重新生成SQL检查规则，因为要更新参照时间
+         * 存在更新的数据，发送邮件后。重新生成SQL检查规则并保存到配置表，因为要更新参照时间
          * */
         String sql = "SELECT\n" +
                 "\t* \n" +
@@ -501,7 +523,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\tSELECT\n" +
                 "\t\t'%s' AS 'checkDataBase',\n" +
                 "\t\t'%s' AS 'checkTable',\n" +
-                "\t\t'检查表数据是否更新，fail表示未更新，success表示有更新' AS 'checkDesc',\n" +
+                "\t\t'%s' AS 'checkDesc',\n" +
                 "\tCASE\n" +
                 "\t\t\t\n" +
                 "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s * FROM %s WHERE %s>='%s' %s ) temp )= 0 THEN\n" +
@@ -513,10 +535,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String format = df.format(new Date());// new Date()为获取当前系统时间
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, dataBase, tableName, "", tableName, fieldName, format, "LIMIT 1 ");
+                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "", tableName, fieldName, format, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, dataBase, tableName, "TOP 1 ", tableName, fieldName, format, "");
+                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, fieldName, format, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");

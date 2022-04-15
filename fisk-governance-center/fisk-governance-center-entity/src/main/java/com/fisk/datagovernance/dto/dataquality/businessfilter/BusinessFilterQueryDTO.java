@@ -18,6 +18,18 @@ public class BusinessFilterQueryDTO {
     public String keyword;
 
     /**
+     * IP
+     */
+    @ApiModelProperty(value = "IP")
+    public String conIp;
+
+    /**
+     * 数据库名称
+     */
+    @ApiModelProperty(value = "数据库名称")
+    public String conDbname;
+
+    /**
      * 表名称
      */
     @ApiModelProperty(value = "表名称")

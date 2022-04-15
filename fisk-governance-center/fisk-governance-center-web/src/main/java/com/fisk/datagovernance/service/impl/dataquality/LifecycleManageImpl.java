@@ -45,11 +45,14 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     private TemplateMapper templateMapper;
 
     @Resource
+    private DataSourceConManageImpl dataSourceConManageImpl;
+
+    @Resource
     UserHelper userHelper;
 
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
-        Page<LifecycleVO> all = baseMapper.getAll(query.page, query.tableName, query.keyword);
+        Page<LifecycleVO> all = baseMapper.getAll(query.page, query.conIp, query.conDbname, query.tableName, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> collect = all.getRecords().stream().map(LifecycleVO::getId).distinct().collect(Collectors.toList());
             List<Integer> collect1 = all.getRecords().stream().map(LifecycleVO::getTemplateId).distinct().collect(Collectors.toList());

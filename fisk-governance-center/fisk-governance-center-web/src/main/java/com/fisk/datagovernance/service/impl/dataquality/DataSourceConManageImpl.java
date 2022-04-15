@@ -142,7 +142,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 //    }
     @Override
     public List<DataExampleSourceVO> getMeta(String tableName) {
-        List<DataExampleSourceVO> dataSourceList=new ArrayList<>();
+        List<DataExampleSourceVO> dataSourceList = new ArrayList<>();
         List<DataSourceVO> dataSources = new ArrayList<>();
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourceConPO::getDelFlag, 1);
@@ -207,7 +207,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 continue;
             }
         }
-        dataSourceList= getDataSourceList(dataSources);
+        dataSourceList = getDataSourceList(dataSources);
         return dataSourceList;
     }
 
@@ -218,7 +218,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             List<String> conIps = dataSources.stream().map(DataSourceVO::getConIp).distinct().collect(Collectors.toList());
             for (String conIp : conIps) {
                 DataExampleSourceVO dataExampleSourceVO = null;
-                List<DataBaseSourceVO> dataBaseSourceVOS=new ArrayList<>();
+                List<DataBaseSourceVO> dataBaseSourceVOS = new ArrayList<>();
                 for (DataSourceVO dataSourceVO : dataSources) {
                     if (dataSourceVO.getConIp().equals(conIp)) {
                         if (dataExampleSourceVO == null) {
@@ -229,7 +229,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                             dataExampleSourceVO.setConType(dataSourceVO.getConType());
                             dataExampleSourceVO.setName(dataSourceVO.getName());
                         }
-                        DataBaseSourceVO dataBaseSourceVO=new DataBaseSourceVO();
+                        DataBaseSourceVO dataBaseSourceVO = new DataBaseSourceVO();
                         dataBaseSourceVO.setConDbname(dataSourceVO.getConDbname());
                         dataBaseSourceVO.setChildren(dataSourceVO.getTableDtoList());
                         dataBaseSourceVOS.add(dataBaseSourceVO);
@@ -337,6 +337,28 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 // 调用元数据接口，获取数据源的基础信息
                 break;
         }
+        return dataSourceConPO;
+    }
+
+    /**
+     * @description 根据数据源配置信息查询数据源
+     * @author dick
+     * @date 2022/4/15 11:59
+     * @version v1.0
+     * @params conIp
+     * @params conPort
+     * @params conDbname
+     * @return com.fisk.datagovernance.entity.dataquality.DataSourceConPO
+     */
+    public DataSourceConPO getDataSourceInfo(String conIp, int conPort, String conDbname) {
+        DataSourceConPO dataSourceConPO = null;
+        QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
+        dataSourceConPOQueryWrapper.lambda().eq(DataSourceConPO::getConIp, conIp)
+                .eq(DataSourceConPO::getConIp, conIp)
+                .eq(DataSourceConPO::getConPort, conPort)
+                .eq(DataSourceConPO::getConDbname, conDbname)
+                .eq(DataSourceConPO::getDelFlag, 1);
+        dataSourceConPO = baseMapper.selectOne(dataSourceConPOQueryWrapper);
         return dataSourceConPO;
     }
 

@@ -3,6 +3,7 @@ package com.fisk.datagovernance.dto.dataquality.datacheck;
 import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
 import com.fisk.datagovernance.enums.dataquality.*;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * @description 数据校验DTO
  * @date 2022/3/24 13:27
  */
+@Data
 public class DataCheckDTO {
     /**
      * 模板id

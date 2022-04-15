@@ -9,15 +9,15 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.datagovernance.enums.dataquality.DataQualityRequestDTO;
-import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.notice.SystemNoticeVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
  * @date 2022/4/12 13:47
  */
 @Service
+@Slf4j
 public class DataQualityClientManageImpl implements IDataQualityClientManageService {
 
     @Resource
@@ -49,6 +50,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     DataCheckMapper dataCheckMapper;
+
+    @Resource
+    DataCheckManageImpl dataCheckManageImpl;
 
     @Resource
     BusinessFilterMapper businessFilterMapper;
@@ -73,91 +77,444 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Override
     public ResultEntity<Object> buildFieldStrongRule(DataQualityRequestDTO requestDTO) {
-        // 第一步：验证请求参数是否合法
         ResultEntity<Object> result = null;
         try {
-            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE);
-            if (result.code != 0) {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
                 return result;
             }
             // 第二步：查询配置的强类型校验规则
             DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
             if (dataCheckPO == null) {
-                return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，模板组件规则不存在");
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段强规则模板规则已消费，模板组件规则不存在");
+                return result;
             }
             TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
             if (templatePO == null) {
-                return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，模板不存在");
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段强规则模板规则已消费，模板不存在");
+                return result;
             }
             // 第三步:查询数据源信息，执行校验语句
             ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
             DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
             if (dataSourceConPO == null) {
-                return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，数据源不存在");
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段强规则模板规则已消费，数据源不存在");
+                return result;
             }
             // 校验语句
             String moduleRuleSql = dataCheckPO.getModuleRule();
             if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
-                return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，校验规则不存在");
-            }
-            // 获取校验结果
-            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql);
-            if (CollectionUtils.isEmpty(resultVOS)) {
-                return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，执行校验规则查询无结果");
-            }
-            // 循环校验结果，拼接提示语句
-//            StringBuilder stringBuilder = new StringBuilder();
-//            for (DataCheckResultVO resultVO : resultVOS) {
-//                if (resultVO.getCheckResult() != "success") {
-//                    stringBuilder.append(String.format("数据库名称：%s，表名称：%s，%s字段执行%s不通过，请检查表字段数据是否符合规范", // &nbsp;<br/>
-//                            resultVO.getCheckDataBase(), resultVO.getCheckTable(), resultVO.getCheckField(), resultVO.getCheckDesc()));
-//                }
-//            }
-            List<DataCheckResultVO> collect = resultVOS.stream().filter(t -> t.getCheckResult() == "fail").collect(Collectors.toList());
-            // 检查结果无异常，返回操作结果
-            if (CollectionUtils.isEmpty(collect)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段强规则模板规则已消费，校验规则不存在");
                 return result;
             }
-//            if (stringBuilder == null && stringBuilder.length() == 0) {
-//                return result;
-//            }
+            // 获取校验结果
+            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE);
+            if (CollectionUtils.isEmpty(resultVOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段强规则模板规则已消费，执行校验规则查询无结果");
+                return result;
+            }
+            List<DataCheckResultVO> checkResult = resultVOS.stream().filter(t -> t.getCheckResult() == "fail").collect(Collectors.toList());
+            // 检查结果无异常，返回操作结果
+            if (CollectionUtils.isEmpty(checkResult)) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("字段强规则模板规则已消费，校验通过");
+                return result;
+            }
             // 检查结果有异常，发送通知
-            sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), "");
-
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE);
         } catch (Exception ex) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, ex.getMessage());
+            log.error("buildFieldStrongRule消费时触发异常，请求参数:", String.format("模板类型：字段强规则模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildFieldStrongRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【字段强规则模板】：" + ex);
         }
         return result;
     }
 
     @Override
     public ResultEntity<Object> buildFieldAggregateRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 校验语句
+            String moduleRuleSql = dataCheckPO.getModuleRule();
+            if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，校验规则不存在");
+                return result;
+            }
+            // 获取校验结果
+            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE);
+            if (CollectionUtils.isEmpty(resultVOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，执行校验规则查询无结果");
+                return result;
+            }
+            List<DataCheckResultVO> checkResult = resultVOS.stream().filter(t -> t.getCheckResult() == "fail").collect(Collectors.toList());
+            // 检查结果无异常，返回操作结果
+            if (CollectionUtils.isEmpty(checkResult)) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("字段聚合波动阈值模板规则已消费，校验通过");
+                return result;
+            }
+            // 检查结果有异常，发送通知
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE);
+        } catch (Exception ex) {
+            log.error("buildFieldAggregateRule消费时触发异常，请求参数:", String.format("模板类型：字段聚合波动阈值模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildFieldAggregateRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【字段聚合波动阈值模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
     public ResultEntity<Object> buildTableRowThresholdRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        /*
+         * 1、实时查询的的表行数 减去 记录的表行数 大于等于 波动阀值，发送邮件；
+         * 2、更新配置表记录的表行数，赋值为实时查询的的表行数;更新配置表记录的表行数前提是 记录的表行数 大于等于 波动阀值
+         * */
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 校验语句
+            String moduleRuleSql = dataCheckPO.getModuleRule();
+            if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，校验规则不存在");
+                return result;
+            }
+            // 获取校验结果
+            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE);
+            if (CollectionUtils.isEmpty(resultVOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，执行校验规则查询无结果");
+                return result;
+            }
+            DataCheckResultVO dataCheckResultVO = resultVOS.get(0);
+            int tableRowCount = Integer.parseInt(dataCheckResultVO.getCheckResult().toString());
+            boolean checkResult = tableRowCount - dataCheckPO.rowsValue < dataCheckPO.thresholdValue;
+            // 检查结果无异常，返回操作结果
+            if (checkResult) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("表行数波动阈值模板规则已消费，校验通过");
+                return result;
+            }
+            // 检查结果有异常，发送通知并更新配置表记录的表行数
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE);
+            if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
+                dataCheckPO.setRowsValue(tableRowCount);
+                int i = dataCheckMapper.updateById(dataCheckPO);
+                if (i <= 0) {
+                    return ResultEntityBuild.buildData(ResultEnum.ERROR, "表行数波动阈值模板规则已消费，更新配置表记录的表行数失败");
+                }
+            }
+        } catch (Exception ex) {
+            log.error("buildTableRowThresholdRule消费时触发异常，请求参数:", String.format("模板类型：表行数波动阈值模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildTableRowThresholdRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【表行数波动阈值模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
     public ResultEntity<Object> buildEmptyTableCheckRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("空表校验模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("空表校验模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("空表校验模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 校验语句
+            String moduleRuleSql = dataCheckPO.getModuleRule();
+            if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("空表校验模板规则已消费，校验规则不存在");
+                return result;
+            }
+            // 获取校验结果
+            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE);
+            if (CollectionUtils.isEmpty(resultVOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("空表校验模板规则已消费，执行校验规则查询无结果");
+                return result;
+            }
+            List<DataCheckResultVO> checkResult = resultVOS.stream().filter(t -> t.getCheckResult() == "fail").collect(Collectors.toList());
+            // 检查结果无异常，返回操作结果
+            if (CollectionUtils.isEmpty(checkResult)) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("空表校验模板规则已消费，校验通过");
+                return result;
+            }
+            // 检查结果有异常，发送通知
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE);
+        } catch (Exception ex) {
+            log.error("buildEmptyTableCheckRule消费时触发异常，请求参数:", String.format("模板类型：空表校验模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildEmptyTableCheckRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【空表校验模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
     public ResultEntity<Object> buildUpdateTableRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表更新校验模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表更新校验模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表更新校验模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 校验语句
+            String moduleRuleSql = dataCheckPO.getModuleRule();
+            if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表更新校验模板规则已消费，校验规则不存在");
+                return result;
+            }
+            // 获取校验结果
+            List<DataCheckResultVO> resultVOS = resultSetToJsonArray(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE);
+            if (CollectionUtils.isEmpty(resultVOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表更新校验模板规则已消费，执行校验规则查询无结果");
+                return result;
+            }
+            List<DataCheckResultVO> checkResult = resultVOS.stream().filter(t -> t.getCheckResult() == "success").collect(Collectors.toList());
+            // 检查结果无异常，返回操作结果
+            if (CollectionUtils.isEmpty(checkResult)) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("表更新校验模板规则已消费，校验通过");
+                return result;
+            }
+            // 检查结果发现表存在更新，发送通知&重新生成SQL检查规则并保存到配置表，因为要更新参照时间
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE);
+            if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
+                DataCheckDTO dataCheckDTO = new DataCheckDTO();
+                dataCheckDTO.setDatasourceId(dataCheckPO.getDatasourceId());
+                dataCheckDTO.setDatasourceType(ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType()));
+                dataCheckDTO.setCheckStep(CheckStepTypeEnum.getEnum(dataCheckPO.getCheckStep()));
+                dataCheckDTO.setTableName(dataCheckPO.getTableName());
+                dataCheckDTO.setProTableName(dataCheckPO.getProTableName());
+                dataCheckDTO.setFieldName(dataCheckPO.getFieldName());
+                ResultEntity<String> roleResult = dataCheckManageImpl.createRole(dataCheckDTO, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE);
+                if (roleResult != null && roleResult.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    dataCheckPO.setModuleRule(roleResult.getData());
+                    int i = dataCheckMapper.updateById(dataCheckPO);
+                    if (i <= 0) {
+                        result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                        result.setMsg("表更新校验模板规则已消费，更新配置表的更新校验规则失败");
+                        return result;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("buildUpdateTableRule消费时触发异常，请求参数:", String.format("模板类型：表更新校验模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildUpdateTableRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【表更新校验模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
     public ResultEntity<Object> buildTableBloodKinshipRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表血缘断裂校验模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表血缘断裂校验模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("表血缘断裂校验模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 调用元数据接口，查询表是否存在上下游血缘
+            boolean isExist = true;
+            // 检查结果无异常，返回操作结果
+            if (isExist) {
+                result.setCode(ResultEnum.SUCCESS.getCode());
+                result.setMsg("表血缘断裂校验模板规则已消费，校验通过");
+                return result;
+            }
+            // 检查结果有异常，发送通知
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE);
+        } catch (Exception ex) {
+            log.error("buildTableBloodKinshipRule消费时触发异常，请求参数:", String.format("模板类型：表血缘断裂校验模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildTableBloodKinshipRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【表血缘断裂校验模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
     public ResultEntity<Object> buildBusinessCheckRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            // 第一步：验证请求参数是否合法
+            result = paramterVerification(requestDTO, TemplateModulesTypeEnum.DATACHECK_MODULE, TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                return result;
+            }
+            // 第二步：查询配置的强类型校验规则
+            DataCheckPO dataCheckPO = dataCheckMapper.selectById(requestDTO.getId());
+            if (dataCheckPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("业务验证模板规则已消费，模板组件规则不存在");
+                return result;
+            }
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("业务验证模板规则已消费，模板不存在");
+                return result;
+            }
+            // 第三步:查询数据源信息，执行校验语句
+            ModuleDataSourceTypeEnum dataSourceTypeEnum = ModuleDataSourceTypeEnum.getEnum(dataCheckPO.getDatasourceType());
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dataCheckPO.getDatasourceId(), dataSourceTypeEnum);
+            if (dataSourceConPO == null) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("业务验证模板规则已消费，数据源不存在");
+                return result;
+            }
+            // 校验语句
+            String moduleRuleSql = dataCheckPO.getModuleRule();
+            if (moduleRuleSql == null || moduleRuleSql.isEmpty()) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("业务验证模板规则已消费，校验规则不存在");
+                return result;
+            }
+            // 读取校验结果
+
+            // 发送校验附件保存，发送校验报告（含附件）
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE);
+        } catch (Exception ex) {
+            log.error("buildBusinessCheckRule消费时触发异常，请求参数:", String.format("模板类型：业务验证模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType()));
+            log.error("buildBusinessCheckRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【业务验证模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
@@ -196,11 +553,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @author dick
      * @date 2022/4/12 20:54
      * @version v1.0
-     * @params templateId
-     * @params moduleId
-     * @params body
+     * @params templateId 模板id
+     * @params moduleId 组件id
+     * @params templateTypeEnum 模板类型
+     * @params body 正文内容
      */
-    public ResultEntity<Object> sendNotice(int templateId, long moduleId, String body) {
+    public ResultEntity<Object> sendNotice(int templateId, long moduleId, String userId,
+                                           TemplateTypeEnum templateTypeEnum) {
+        ResultEntity<Object> result = new ResultEntity<>();
+        List<SystemNoticeVO> systemNoticeVOS = new ArrayList<>();
         // 检查结果异常，发送提示邮件
         QueryWrapper<ComponentNotificationPO> notificationPOQueryWrapper = new QueryWrapper<>();
         notificationPOQueryWrapper.lambda().eq(ComponentNotificationPO::getDelFlag, 1)
@@ -208,7 +569,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 .eq(ComponentNotificationPO::getModuleId, moduleId);
         List<ComponentNotificationPO> componentNotificationPOS = componentNotificationMapper.selectList(notificationPOQueryWrapper);
         if (CollectionUtils.isEmpty(componentNotificationPOS)) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，校验结果已生成，但未配置告警通知");
+            result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+            result.setMsg(templateTypeEnum.getName() + "规则已消费，未配置告警通知");
+            return result;
         }
         // 查询告警通知方式
         List<Integer> noticeIdList = componentNotificationPOS.stream().map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
@@ -217,7 +580,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 .in(NoticePO::getId, noticeIdList);
         List<NoticePO> noticePOS = noticeMapper.selectList(noticePOQueryWrapper);
         if (CollectionUtils.isEmpty(noticePOS)) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，校验结果已生成，告警方式不存在");
+            result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+            result.setMsg(templateTypeEnum.getName() + "规则已消费，告警方式不存在");
+            return result;
         }
         // 邮件通知
         List<NoticePO> emailNoticePOS = noticePOS.stream().filter(t -> t.getNoticeType() == 1).collect(Collectors.toList());
@@ -231,13 +596,27 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 noticeDTO.body = emailNoticePO.getBody();
                 noticeDTO.emailConsignee = emailNoticePO.getEmailConsignee();
                 noticeDTO.emailCc = emailNoticePO.getEmailCc();
-                noticeManageImpl.sendEmialNotice(noticeDTO);
+                ResultEntity<Object> sendEmialNotice = noticeManageImpl.sendEmialNotice(noticeDTO);
+                if (sendEmialNotice != null && sendEmialNotice.getCode() == ResultEnum.DATA_NOTEXISTS.getCode()) {
+                    // 邮件服务器不存在不直接抛出异常
+                    log.info(String.format("【%s】:邮件服务器不存在，通知id：%s，邮件服务器id：%s",
+                            templateTypeEnum.getName(), emailNoticePO.getId(), emailNoticePO.getEmailServerId()));
+                }
             }
         }
-        if (CollectionUtils.isNotEmpty(systemNoticePOS)) {
-            noticeManageImpl.sendSystemNotice(systemNoticePOS);
+        if (CollectionUtils.isNotEmpty(systemNoticePOS) && userId != null && !userId.isEmpty()) {
+            // 返回系统通知消息，在task中调用站内消息提醒
+            for (NoticePO t : systemNoticePOS) {
+                SystemNoticeVO systemNoticeVO = new SystemNoticeVO();
+                systemNoticeVO.userId = Integer.parseInt(userId);
+                systemNoticeVO.msg = t.getBody();
+                systemNoticeVOS.add(systemNoticeVO);
+            }
+            result.setData(systemNoticeVOS);
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "强类型模板规则消费成功");
+        result.setCode(ResultEnum.SUCCESS.getCode());
+        result.setMsg(templateTypeEnum.getName() + "规则已消费，已执行告警通知");
+        return result;
     }
 
     /**
@@ -249,7 +628,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataSourceConPO
      * @params sql
      */
-    public List<DataCheckResultVO> resultSetToJsonArray(DataSourceConPO dataSourceConPO, String sql) {
+    public List<DataCheckResultVO> resultSetToJsonArray(DataSourceConPO dataSourceConPO, String
+            sql, TemplateTypeEnum templateTypeEnum) {
         List<DataCheckResultVO> resultVOS = new ArrayList<>();
         try {
             JSONArray array = new JSONArray();
@@ -278,7 +658,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 resultVOS = array.toJavaList(DataCheckResultVO.class);
             }
         } catch (Exception ex) {
-            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, ex.getMessage());
+            log.error("resultSetToJsonArray触发异常，请求参数:", String.format("模板类型：%s，数据源id:%s，数据源类型：%s，连接字符串：%s，sql：%s",
+                    templateTypeEnum.getName(), dataSourceConPO.getId(), dataSourceConPO.getConType(), dataSourceConPO.getConStr(), sql));
+            log.error("resultSetToJsonArray触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
         }
         return resultVOS;
     }
@@ -292,11 +675,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params requestDTO
      * @params typeEnum
      */
-    public ResultEntity<Object> paramterVerification(DataQualityRequestDTO requestDTO, TemplateModulesTypeEnum typeEnum) {
+    public ResultEntity<Object> paramterVerification(DataQualityRequestDTO requestDTO,
+                                                     TemplateModulesTypeEnum typeEnum,
+                                                     TemplateTypeEnum templateTypeEnum) {
         if (requestDTO == null || requestDTO.getId() == 0
                 || requestDTO.getTemplateModulesType() != typeEnum) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, "强类型模板规则消费失败，请求参数异常");
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL, templateTypeEnum.getName() + "规则消费失败，请求参数异常");
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "强类型模板规则消费成功");
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, templateTypeEnum.getName() + "规则消费成功，请求参数正常");
     }
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
@@ -28,6 +29,7 @@ import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.UnifiedControlDTO;
 import com.fisk.task.enums.DataClassifyEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -277,7 +279,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         //第一步：查询邮件服务器设置
         EmailServerPO emailServerPO = emailServerMapper.selectById(dto.emailServerId);
         if (emailServerPO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, "邮件服务器不存在");
+            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, "邮件服务器不存在");
         }
         MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
         mailServeiceDTO.setOpenAuth(true);
@@ -299,7 +301,7 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
             //第二步：调用邮件发送方法
             MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
         } catch (Exception ex) {
-            return ResultEntityBuild.buildData(ResultEnum.ERROR, ex.getMessage());
+            throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "发送完成");
     }
@@ -323,15 +325,18 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
      * @date 2022/4/8 10:59
      * @version v1.0
      * @params id 组件id
+     * @params userId 创建人id
      * @params typeEnum 模块类型
      * @params templateTypeEnum 模板类型
      * @params stateEnum 状态
      * @params topicName 统一队列名称
      * @params templateTopicName 模板队列名称
+     * @params cron 表达式
      */
-    public ResultEnum publishBuildunifiedControlTask(int id, TemplateModulesTypeEnum typeEnum,
+    public ResultEnum publishBuildunifiedControlTask(int id, long userId, TemplateModulesTypeEnum typeEnum,
                                                      TemplateTypeEnum templateTypeEnum, ModuleStateEnum stateEnum,
-                                                     String topicName, String templateTopicName) {
+                                                     String topicName, String templateTopicName,
+                                                     String cron) {
         /*
          * 逻辑：
          * 1、数据校验、业务清洗、生命周期都通过此方法生成调度任务
@@ -342,18 +347,20 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         //调用task服务提供的API生成调度任务
         if (id == 0 || typeEnum == TemplateModulesTypeEnum.NONE
                 || topicName == null || topicName.isEmpty()
-                || templateTopicName == null || templateTopicName.isEmpty()) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
+                || templateTopicName == null || templateTopicName.isEmpty()
+                || cron == null || cron.isEmpty()) {
+            return ResultEnum.DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR;
         }
-        long userId = userHelper.getLoginUserInfo().getId();
         boolean isDelTask = stateEnum != ModuleStateEnum.Enable;
         UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
         unifiedControlDTO.setUserId(userId);
         unifiedControlDTO.setId(id);
+        unifiedControlDTO.setDeleted(isDelTask);
         unifiedControlDTO.setTemplateModulesType(typeEnum);
         unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
         unifiedControlDTO.setTopic(templateTypeEnum.getTopic());
         unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+        unifiedControlDTO.setScheduleExpression(cron);
         ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
         if (result != null) {
             resultEnum = ResultEnum.getEnum(result.getCode());

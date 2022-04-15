@@ -25,7 +25,11 @@ public interface LifecycleMapper extends FKBaseMapper<LifecyclePO> {
      * @param tableName 表名称
      * @return 查询结果
      */
-    Page<LifecycleVO> getAll(Page<LifecycleVO> page, @Param("tableName") String tableName, @Param("keyword") String keyword);
+    Page<LifecycleVO> getAll(Page<LifecycleVO> page,
+                             @Param("conIp") String conIp,
+                             @Param("conDbname") String conDbname,
+                             @Param("tableName") String tableName,
+                             @Param("keyword") String keyword);
 
     /**
      * 新增一条数据并返回生成的主键id
