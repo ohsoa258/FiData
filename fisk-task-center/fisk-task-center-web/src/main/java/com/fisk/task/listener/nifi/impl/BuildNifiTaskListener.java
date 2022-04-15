@@ -131,7 +131,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public void msg(String data, Acknowledgment ack) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
-        log.info("创建nifi流程发布参数:"+data);
+        log.info("创建nifi流程发布参数:" + data);
         try {
             BuildNifiFlowDTO dto = JSON.parseObject(data, BuildNifiFlowDTO.class);
             modelPublishStatusDTO.tableId = dto.id;
@@ -185,7 +185,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 appGroupId = dto.groupStructureId;
             }
             List<ControllerServiceEntity> dbPool = buildDsConnectionPool(dto.synchronousTypeEnum, configDTO, appGroupId, dto);
-            appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
+            String sourceId="";
+           if(!dto.excelFlow){
+               appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
+               sourceId=dbPool.get(0).getId();
+           }
             appNifiSettingPO.targetDbPoolComponentId = dbPool.get(1).getId();
 
             //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
@@ -226,7 +230,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             taskGroupEntityId = taskGroupEntity.getId();
 
             //5. 创建组件
-            List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), dbPool.get(0).getId(), dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
+
+            List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
 
             enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size() - 1));
             //7. 如果是接入,同步一次,然后把调度组件停掉
@@ -288,6 +293,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         GroupConfig groupConfig = new GroupConfig();
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
         DataSourceConfig sourceDsConfig = new DataSourceConfig();
+        FtpConfig ftpConfig = new FtpConfig();
         DataSourceConfig cfgDsConfig = new DataSourceConfig();
         TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
         ProcessorConfig processorConfig = new ProcessorConfig();
@@ -390,6 +396,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 targetDbPoolConfig.syncMode = res.data.targetDsConfig.syncMode;
             }
             sourceDsConfig = res.data.sourceDsConfig;
+            ftpConfig=res.data.ftpConfig;
             //pg_dw----doris_olap
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             if (appNifiSettingPO != null && appNifiSettingPO.appComponentId != null) {
@@ -465,6 +472,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         data.targetDsConfig = targetDbPoolConfig;
         data.sourceDsConfig = sourceDsConfig;
         data.processorConfig = processorConfig;
+        data.ftpConfig=ftpConfig;
         return data;
     }
 
@@ -598,6 +606,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 targetRes = componentsBuild.buildDbControllerService(targetDto);
             }
             //来源库
+            if(!buildNifiFlowDTO.excelFlow){
             if (nifiSourceConfigPo != null) {
                 ControllerServiceEntity data = new ControllerServiceEntity();
                 data.setId(nifiSourceConfigPo.componentId);
@@ -605,7 +614,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             } else {
                 BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE, synchronousTypeEnum);
                 sourceRes = componentsBuild.buildDbControllerService(sourceDto);
-            }
+            }}
             if (targetRes.success && sourceRes.success) {
                 list.add(sourceRes.data);
                 list.add(targetRes.data);
@@ -614,7 +623,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "【target】" + targetRes.msg + ",【source】" + sourceRes.msg);
             }
         } else {
-            ControllerServiceEntity sourceControllerService = componentsBuild.getDbControllerService(config.sourceDsConfig.componentId);
+            ControllerServiceEntity sourceControllerService = new ControllerServiceEntity();
+            if(!buildNifiFlowDTO.excelFlow){
+            sourceControllerService=componentsBuild.getDbControllerService(config.sourceDsConfig.componentId);}
             ControllerServiceEntity targetResControllerService = componentsBuild.getDbControllerService(config.targetDsConfig.componentId);
             if (sourceControllerService != null && targetResControllerService != null) {
                 list.add(sourceControllerService);
@@ -796,29 +807,44 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         //执行查询组件
         ProcessorEntity executeSQLRecord = new ProcessorEntity();
+        //pg2doris不需要调用存储过程
+        ProcessorEntity processorEntity1 = new ProcessorEntity();
+        List<ProcessorEntity> excelProcessorEntity = new ArrayList<>();
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
-            executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
-        }
+            if (dto.excelFlow) {
+                excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums);
+                res.addAll(excelProcessorEntity);
+            } else {
+                executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+            }
 
-        tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
-        //连接器
-        componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        }
+        if (executeSQLRecord.getId() == null) {
+            //连接器
+            ProcessorEntity processorEntity = excelProcessorEntity.get(0);
+            componentConnector(groupId, delSqlRes.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            processorEntity1 = excelProcessorEntity.get(excelProcessorEntity.size()-1);
+        } else {
+            tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
+            //连接器
+            componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            processorEntity1 = executeSQLRecord;
+        }
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
 
-        String lastId = executeSQLRecord.getId();
+        String lastId = "";
         Boolean isLastId = true;
 
-        //pg2doris不需要调用存储过程
-        ProcessorEntity processorEntity1 = executeSQLRecord;
+
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             //字段映射转换
             ProcessorEntity updateField = createUpdateField(appGroupId, config, groupId, dto, tableNifiSettingPO);
             tableNifiSettingPO.updateFieldProcessorId = updateField.getId();
-            componentConnector(groupId, executeSQLRecord.getId(), updateField.getId(), AutoEndBranchTypeEnum.SUCCESS);
-            componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
+            componentConnector(groupId, processorEntity1.getId(), updateField.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
             //数据入库
             ProcessorEntity putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
             tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
@@ -963,7 +989,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(evaluateJson);
         res.add(logProcessor);
         res.add(delSqlRes);
-        res.add(executeSQLRecord);
+        if(executeSQLRecord.getId()!=null){
+            res.add(executeSQLRecord);
+        }
         res.addAll(processorEntities);
         if (dto.groupStructureId == null) {
             tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
@@ -992,6 +1020,134 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, convertJsonForSupervision.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntityList.add(publishKafkaForSupervisionProcessor);
         return processorEntityList;
+    }
+
+    public List<ProcessorEntity> createExcelProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums) {
+        List<ProcessorEntity> processorEntities = new ArrayList<>();
+        //getftp组件
+        ProcessorEntity getFTPProcessor = createFetchFTPProcessor(groupId, config.ftpConfig);
+        //componentsConnector(groupId, getFTPProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
+        tableNifiSettingPO.getFtpProcessorId = getFTPProcessor.getId();
+        //ToCSV
+        ProcessorEntity convertExcelToCSVProcessor = createConvertExcelToCSVProcessor(groupId);
+        componentsConnector(groupId, convertExcelToCSVProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
+        tableNifiSettingPO.convertExcelToCsvProcessorId = convertExcelToCSVProcessor.getId();
+        //连接器
+        componentConnector(groupId, getFTPProcessor.getId(), convertExcelToCSVProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        //创建csvreader
+        ControllerServiceEntity csvReaderProcessor = createCSVReaderControllerService(appGroupId, config);
+        tableNifiSettingPO.csvReaderId = csvReaderProcessor.getId();
+        //创建AvroRecordSetWriter
+        ControllerServiceEntity avroRecordSetWriterControllerService = createAvroRecordSetWriterControllerService(appGroupId, config);
+        tableNifiSettingPO.avroRecordSetWriterId = avroRecordSetWriterControllerService.getId();
+        //创建ConvertRecord
+        ProcessorEntity convertRecordProcessor = createConvertRecordProcessor(groupId, csvReaderProcessor.getId(), avroRecordSetWriterControllerService.getId());
+        componentsConnector(groupId, convertRecordProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
+        tableNifiSettingPO.convertRecordProcessorId = convertRecordProcessor.getId();
+        //连接器
+        componentConnector(groupId, convertExcelToCSVProcessor.getId(), convertRecordProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        processorEntities.add(getFTPProcessor);
+        processorEntities.add(convertExcelToCSVProcessor);
+        processorEntities.add(convertRecordProcessor);
+        return processorEntities;
+    }
+
+    public ProcessorEntity createGetFTPProcessor(String groupId, FtpConfig ftpConfig) {
+        BuildGetFTPProcessorDTO buildGetFTPProcessorDTO = new BuildGetFTPProcessorDTO();
+        buildGetFTPProcessorDTO.groupId = groupId;
+        buildGetFTPProcessorDTO.name = "GETFTP";
+        buildGetFTPProcessorDTO.details = "query_phase";
+        buildGetFTPProcessorDTO.fileFilterRegex = ftpConfig.fileFilterRegex;
+        buildGetFTPProcessorDTO.ftpUseUtf8 = ftpConfig.ftpUseUtf8;
+        buildGetFTPProcessorDTO.hostname = ftpConfig.hostname;
+        buildGetFTPProcessorDTO.password = ftpConfig.password;
+        buildGetFTPProcessorDTO.port = ftpConfig.port;
+        buildGetFTPProcessorDTO.remotePath = ftpConfig.remotePath;
+        buildGetFTPProcessorDTO.username = ftpConfig.username;
+        buildGetFTPProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildGetFTPProcess(buildGetFTPProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    public ProcessorEntity createFetchFTPProcessor(String groupId, FtpConfig ftpConfig) {
+        BuildFetchFTPProcessorDTO buildFetchFTPProcessorDTO = new BuildFetchFTPProcessorDTO();
+        buildFetchFTPProcessorDTO.groupId = groupId;
+        buildFetchFTPProcessorDTO.name = "FetchFTP";
+        buildFetchFTPProcessorDTO.details = "query_phase";
+        buildFetchFTPProcessorDTO.ftpUseUtf8 = ftpConfig.ftpUseUtf8;
+        buildFetchFTPProcessorDTO.hostname = ftpConfig.hostname;
+        buildFetchFTPProcessorDTO.password = ftpConfig.password;
+        buildFetchFTPProcessorDTO.port = ftpConfig.port;
+        buildFetchFTPProcessorDTO.remoteFile=ftpConfig.remotePath+"/"+ftpConfig.fileFilterRegex;
+        buildFetchFTPProcessorDTO.username = ftpConfig.username;
+        buildFetchFTPProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildFetchFTPProcess(buildFetchFTPProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    public ProcessorEntity createConvertExcelToCSVProcessor(String groupId) {
+        BuildConvertExcelToCSVProcessorDTO buildConvertExcelToCSVrocessorDTO = new BuildConvertExcelToCSVProcessorDTO();
+        buildConvertExcelToCSVrocessorDTO.csvFormat = "excel";
+        buildConvertExcelToCSVrocessorDTO.formatCellValues = true;
+        buildConvertExcelToCSVrocessorDTO.includeHeaderLine = true;
+        buildConvertExcelToCSVrocessorDTO.numberOfRowsToSkip = 1;
+        buildConvertExcelToCSVrocessorDTO.details = "transition_phase";
+        buildConvertExcelToCSVrocessorDTO.groupId = groupId;
+        buildConvertExcelToCSVrocessorDTO.name = "ConvertExcelToCSV";
+        buildConvertExcelToCSVrocessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConvertExcelToCSVProcess(buildConvertExcelToCSVrocessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    public ControllerServiceEntity createCSVReaderControllerService(String groupId, DataAccessConfigDTO config) {
+        BuildCSVReaderProcessorDTO buildCSVReaderProcessorDTO = new BuildCSVReaderProcessorDTO();
+        buildCSVReaderProcessorDTO.schemaAccessStrategy = "schema-text-property";
+        buildCSVReaderProcessorDTO.groupId = groupId;
+        buildCSVReaderProcessorDTO.name = "CSVReader";
+        buildCSVReaderProcessorDTO.details = "CSVReader";
+        List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        buildCSVReaderProcessorDTO.schemaText = schemaArchitecture;
+        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildCSVReaderService(buildCSVReaderProcessorDTO);
+        if (controllerServiceEntityBusinessResult.success) {
+            ControllerServiceEntity data = controllerServiceEntityBusinessResult.data;
+            return data;
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+        }
+    }
+
+    public ControllerServiceEntity createAvroRecordSetWriterControllerService(String groupId, DataAccessConfigDTO config) {
+        BuildAvroRecordSetWriterServiceDTO buildCSVReaderProcessorDTO = new BuildAvroRecordSetWriterServiceDTO();
+        buildCSVReaderProcessorDTO.groupId = groupId;
+        buildCSVReaderProcessorDTO.name = "AvroRecordSetWriter";
+        buildCSVReaderProcessorDTO.details = "AvroRecordSetWriter";
+        List<String> sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        buildCSVReaderProcessorDTO.schemaArchitecture = schemaArchitecture;
+        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(buildCSVReaderProcessorDTO);
+        if (controllerServiceEntityBusinessResult.success) {
+            ControllerServiceEntity data = controllerServiceEntityBusinessResult.data;
+            return data;
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+        }
+    }
+
+    public ProcessorEntity createConvertRecordProcessor(String groupId, String csvId, String avroId) {
+        BuildConvertRecordProcessorDTO buildConvertRecordProcessorDTO = new BuildConvertRecordProcessorDTO();
+        buildConvertRecordProcessorDTO.recordReader = csvId;
+        buildConvertRecordProcessorDTO.recordWriter = avroId;
+        buildConvertRecordProcessorDTO.name = "ConvertRecord";
+        buildConvertRecordProcessorDTO.details = "transition_phase";
+        buildConvertRecordProcessorDTO.groupId = groupId;
+        buildConvertRecordProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-3, 9);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConvertRecordProcess(buildConvertRecordProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
     }
 
     private String buildSchemaArchitecture(List<String> tableFieldsList, String schemaName) {
@@ -1059,7 +1215,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildCallDbProcedureProcessorDTO.executsql = config.processorConfig.sourceExecSqlQuery;
         buildCallDbProcedureProcessorDTO.details = "query_phase";
         buildCallDbProcedureProcessorDTO.name = "executeSql";
-        buildCallDbProcedureProcessorDTO.groupId=groupId;
+        buildCallDbProcedureProcessorDTO.groupId = groupId;
         buildCallDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(buildCallDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1386,9 +1542,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
-        if(Objects.equals(dto.type,OlapTableEnum.WIDETABLE)){
+        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE)) {
             querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time from " + config.processorConfig.targetTableName;
-        }else{
+        } else {
             querySqlDto.querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time from " + config.processorConfig.targetTableName;
         }
 
@@ -1726,7 +1882,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.details = "queryForPipelineSupervision";
         querySqlDto.groupId = groupId;
         querySqlDto.querySql = "select '${executesql.error.message}' as message,'${kafka.topic}' as topic,'" + groupId + "' as groupId"
-                +",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts";
+                + ",'${start_time}' as startTime, '${end_time}' as endTime ,'${numbers}' counts";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = "1";
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;

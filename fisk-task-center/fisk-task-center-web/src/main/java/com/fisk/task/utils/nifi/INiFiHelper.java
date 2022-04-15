@@ -481,9 +481,9 @@ public interface INiFiHelper {
     /**
      * assemblySql
      *
-     * @param config 配置信息
+     * @param config              配置信息
      * @param synchronousTypeEnum synchronousTypeEnum
-     * @param funcName funcName
+     * @param funcName            funcName
      * @return String
      */
     String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName);
@@ -495,6 +495,46 @@ public interface INiFiHelper {
      * @return String
      */
     void immediatelyStart(TableNifiSettingDTO tableNifiSettingDTO);
+
+    /**
+     * buildGetFTPProcess
+     *
+     * @param data 配置信息
+     * @return ProcessorEntity
+     */
+    BusinessResult<ProcessorEntity> buildGetFTPProcess(BuildGetFTPProcessorDTO data);
+
+    /**
+     * buildConvertExcelToCSVProcess
+     *
+     * @param data 配置信息
+     * @return ProcessorEntity
+     */
+    BusinessResult<ProcessorEntity> buildConvertExcelToCSVProcess(BuildConvertExcelToCSVProcessorDTO data);
+
+    /**
+     * buildCSVReaderService
+     *
+     * @param data 配置信息
+     * @return ControllerServiceEntity
+     */
+    BusinessResult<ControllerServiceEntity> buildCSVReaderService(BuildCSVReaderProcessorDTO data);
+
+    /**
+     * buildConvertRecordProcess
+     *
+     * @param data 配置信息
+     * @return ProcessorEntity
+     */
+    BusinessResult<ProcessorEntity> buildConvertRecordProcess(BuildConvertRecordProcessorDTO data);
+
+    /**
+     * buildFetchFTPProcess
+     *
+     * @param data 配置信息
+     * @return ProcessorEntity
+     */
+    BusinessResult<ProcessorEntity> buildFetchFTPProcess(BuildFetchFTPProcessorDTO data);
 
 
 }

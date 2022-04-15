@@ -2,10 +2,12 @@ package com.fisk.mdm.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
-import com.fisk.mdm.entity.EntityPO;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -47,4 +49,11 @@ public interface EntityService {
      * @return
      */
     ResultEnum saveEntity(EntityDTO dto);
+
+    /**
+     * 根据实体id查询属性
+     * @param id
+     * @return
+     */
+    List<AttributeDTO> getAttributeById(Integer id);
 }

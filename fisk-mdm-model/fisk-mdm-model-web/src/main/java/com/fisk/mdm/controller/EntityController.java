@@ -5,10 +5,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
-import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.service.EntityService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author WangYan
@@ -62,5 +63,12 @@ public class EntityController {
     @ResponseBody
     public ResultEntity<ResultEnum> saveEntity(@RequestBody EntityDTO dto) {
         return ResultEntityBuild.build(entityService.saveEntity(dto));
+    }
+
+    @ApiOperation("根据实体id获取属性")
+    @GetMapping("/getAttributeById")
+    @ResponseBody
+    public ResultEntity<List<AttributeDTO>> getAttributeById(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
     }
 }

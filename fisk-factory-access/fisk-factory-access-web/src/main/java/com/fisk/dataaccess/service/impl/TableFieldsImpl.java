@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -125,7 +126,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
         Long tableAccessId = listPo.get(0).tableAccessId;
         TableSyncmodePO syncmodePo = syncmodeDto.toEntity(TableSyncmodePO.class);
         syncmodePo.id = tableAccessId;
-        success = syncmodeImpl.save(syncmodePo);
+        success = syncmodeImpl.saveOrUpdate(syncmodePo);
 
         TableAccessPO accessPo = tableAccessImpl.query().eq("id", tableAccessId).one();
         if (accessPo == null) {
@@ -340,6 +341,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                         data.excelFlow = true;
                     }
                     // 生成nifi流程
+                    log.info(JSON.toJSONString(data));
                     publishTaskClient.publishBuildAtlasTableTask(data);
                 }
             } catch (Exception e) {
