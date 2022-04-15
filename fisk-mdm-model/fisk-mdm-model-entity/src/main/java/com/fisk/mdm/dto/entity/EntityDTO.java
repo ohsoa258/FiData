@@ -29,6 +29,9 @@ public class EntityDTO {
     @ApiModelProperty(value = "描述",required = true)
     private String desc;
 
+    @ApiModelProperty(value = "状态",required = true)
+    private String status;
+
     @ApiModelProperty(value = "表名",required = true)
     private String tableName;
 
