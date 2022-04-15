@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AttributeMap {
     AttributeMap INSTANCES = Mappers.getMapper(AttributeMap.class);
@@ -32,4 +34,18 @@ public interface AttributeMap {
      * @return
      */
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
+
+    /**
+     * po => dto
+     * @param dto
+     * @return
+     */
+    AttributeDTO poToDto(AttributePO dto);
+
+    /**
+     * po => dto list
+     * @param list
+     * @return
+     */
+    List<AttributeDTO> poToDtoList(List<AttributePO> list);
 }

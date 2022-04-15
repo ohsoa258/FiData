@@ -6,13 +6,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.*;
+import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
@@ -44,7 +47,8 @@ public class EntityServiceImpl implements EntityService {
     EventLogService logService;
     @Resource
     UserClient userClient;
-
+    @Resource
+    AttributeMapper attributeMapper;
 
     @Override
     public EntityDTO getDataById(Integer id) {
@@ -254,6 +258,24 @@ public class EntityServiceImpl implements EntityService {
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<AttributeDTO> getAttributeById(Integer id) {
+        boolean entity = this.isExistEntity(id);
+        if (entity == false){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributePO::getEntityId,id);
+        List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(attributePoList)){
+            return AttributeMap.INSTANCES.poToDtoList(attributePoList);
+        }
+
+        return null;
     }
 
     /**
