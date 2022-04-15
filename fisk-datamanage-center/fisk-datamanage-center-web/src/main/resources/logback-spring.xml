@@ -8,8 +8,8 @@
     <!-- Print the log to the console -->
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] [%highlight(%-5level)] [%green(%logger{50})]
-                [%highlight([%file:%line])] - %msg %n
+            <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
+                [%thread] [%highlight(%-5level)] [%green(%logger{50})] [%highlight([%file:%line])] - %msg %n
             </pattern>
         </encoder>
     </appender>
@@ -41,7 +41,9 @@
             %msg 日志信息
             %n 换行符
             -->
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n</Pattern>
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
+                [ThreadID: %thread] [LogLevel: %-5level] [Logger: %logger{50}] [File: %file:%line] - %msg%n
+            </Pattern>
         </encoder>
         <!-- 过滤级别 -->
         <!-- <filter class="ch.qos.logback.classic.filter.LevelFilter"> -->
@@ -49,45 +51,6 @@
         <!--     <onMatch>ACCEPT</onMatch> -->
         <!--     <onMismatch>DENY</onMismatch> -->
         <!-- </filter> -->
-    </appender>
-
-    <!-- 文件日志 -->
-    <appender name="DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 日志文件名 -->
-        <file>${LOG_HOME}/${appName}-debug.log</file>
-        <!-- 日志文件滚动策略，按日期和大小分片 -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- 日志文件名格式 -->
-            <fileNamePattern>${LOG_HOME}/${appName}-debug-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
-            <!-- 日志保留最大日期 -->
-            <MaxHistory>30</MaxHistory>
-            <!-- 单个文件最大大小 -->
-            <maxFileSize>100MB</maxFileSize>
-            <!-- 日志文件总大小 -->
-            <totalSizeCap>3GB</totalSizeCap>
-        </rollingPolicy>
-        <!-- 日志文件输出格式 -->
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 日志格式
-            %d 时间格式
-            %thread 线程名称
-            %-5level 级别从左显示5个字符宽度
-            %logger{50} logger名称最长50个字符，超过按照句号分割
-            %file 文件名
-            %line 行号
-            %msg 日志信息
-            %n 换行符
-            -->
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [ThreadID: %thread] [LogLevel: %-5level]
-                [Logger: %logger{50}] [File: %file:%line] - %msg%n
-            </Pattern>
-        </encoder>
-        <!-- 过滤级别 -->
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>DEBUG</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
 
     <!-- ELK
@@ -128,7 +91,8 @@
             <appender-ref ref="Console"/>
         </logger>
 
-        <logger name="com.fisk" level="info">
+        <logger name="com.fisk">
+            <level value="DEBUG"/>
             <appender-ref ref="Console"/>
         </logger>
 
@@ -147,15 +111,11 @@
             <appender-ref ref="FILE"/>
         </logger>
 
-        <logger name="com.fisk" level="info">
+        <logger name="com.fisk">
+            <level value="DEBUG"/>
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>
         </logger>
 
-        <logger name="com.fisk" level="debug">
-            <appender-ref ref="Console"/>
-            <appender-ref ref="DEBUG"/>
-        </logger>
     </springProfile>
-
 </configuration>

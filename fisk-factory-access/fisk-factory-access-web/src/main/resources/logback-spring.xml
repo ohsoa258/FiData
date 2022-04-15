@@ -9,8 +9,7 @@
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS}) [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
-                [%thread] [%highlight(%-5level)]
-                [%green(%logger{50})] [%highlight([%file:%line])] - %msg %n
+                [%thread] [%highlight(%-5level)] [%green(%logger{50})] [%highlight([%file:%line])] - %msg %n
             </pattern>
         </encoder>
     </appender>
@@ -42,9 +41,8 @@
             %msg 日志信息
             %n 换行符
             -->
-            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}] [ThreadID:
-                %thread] [LogLevel: %-5level]
-                [Logger: %logger{50}] [File: %file:%line] - %msg%n
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [TraceID: %X{TraceID}] [App_LogType: %X{App_LogType}]
+                [ThreadID: %thread] [LogLevel: %-5level] [Logger: %logger{50}] [File: %file:%line] - %msg%n
             </Pattern>
         </encoder>
     </appender>
