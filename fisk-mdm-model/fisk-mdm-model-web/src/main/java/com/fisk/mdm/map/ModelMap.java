@@ -1,5 +1,6 @@
 package com.fisk.mdm.map;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
@@ -37,4 +38,11 @@ public interface ModelMap {
      * @return
      */
     ModelPO updateDtoToPo(ModelUpdateDTO dto);
+
+    /**
+     * voPage => poPage
+     * @param voPage
+     * @return
+     */
+    Page<ModelPO> voToPoPage(Page<ModelVO> voPage);
 }

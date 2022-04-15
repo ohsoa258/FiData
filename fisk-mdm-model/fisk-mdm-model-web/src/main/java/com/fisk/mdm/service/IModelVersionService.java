@@ -5,7 +5,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
 
-
+/**
+ * @author ChenYa
+ */
 public interface IModelVersionService extends IService<ModelVersionPO> {
     /**
      * 新增模型版本

@@ -1,16 +1,12 @@
 package com.fisk.mdm.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.enums.ModelVersionTypeEnum;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotNull;
 
 @Data
 @TableName("tb_model_version")

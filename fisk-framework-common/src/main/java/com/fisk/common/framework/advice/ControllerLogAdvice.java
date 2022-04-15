@@ -56,11 +56,11 @@ public class ControllerLogAdvice {
                 resultEntity.traceId = traceId;
             }
             log.debug("控制器【{}】调用成功，执行耗时: {} ms", jp.getSignature(), System.currentTimeMillis() - execTime);
-            MDCHelper.clear();
+            MDCHelper.removeTraceId();
             return result;
         } catch (Throwable throwable) {
             log.debug("控制器【{}】执行失败，原因：{}", jp.getSignature(), throwable.toString(), throwable);
-            //出现异常不清楚mdc，等待全局异常拦截处清理
+            //出现异常不清除mdc，等待全局异常拦截处清理
             if (throwable instanceof FkException) {
                 throw throwable;
             } else {

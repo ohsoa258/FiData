@@ -26,6 +26,7 @@ public class JwtUtils {
      * @return id
      */
     public static long getUserIdByToken(String secret, String token) {
+        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
         Jws<Claims> claimsJws;

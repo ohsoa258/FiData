@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.entity.EntityDTO;
+import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.service.EntityService;
@@ -36,10 +37,10 @@ public class EntityController {
     }
 
     @ApiOperation("分页查询实体")
-    @GetMapping("/listData")
+    @PostMapping("/listData")
     @ResponseBody
-    public ResultEntity<Page<EntityDTO>> listData(Page<EntityPO> page, String name) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.listData(page,name));
+    public ResultEntity<Page<EntityDTO>> listData(@Validated @RequestBody EntityPageDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.listData(dto));
     }
 
     @ApiOperation("修改实体")

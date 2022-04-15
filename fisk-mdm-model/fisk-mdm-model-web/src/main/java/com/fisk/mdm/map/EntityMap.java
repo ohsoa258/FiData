@@ -43,4 +43,11 @@ public interface EntityMap {
      * @return
      */
     EntityPO updateDtoToPo(UpdateEntityDTO dto);
+
+    /**
+     * dtoPage => poPage
+     * @param page
+     * @return
+     */
+    Page<EntityPO> dtoToPoPage(Page<EntityDTO> page);
 }

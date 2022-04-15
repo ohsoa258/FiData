@@ -2,11 +2,15 @@ package com.fisk.mdm.vo.model;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
+
+/**
+ * @author ChenYa
+ * @date 2022/4/14 20:35
+ */
 @Data
 public class ModelVO {
 

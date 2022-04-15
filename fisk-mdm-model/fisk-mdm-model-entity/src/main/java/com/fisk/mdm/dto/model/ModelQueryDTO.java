@@ -7,10 +7,7 @@ import lombok.Data;
 
 
 /**
- * @author dick
- * @version v1.0
- * @description API查询 DTO
- * @date 2022/1/6 14:51
+ * @author ChenYa
  */
 @Data
 public class ModelQueryDTO {

@@ -26,7 +26,7 @@ fk:
 generate:
   date-dimension:
     datasource:
-      typeName: MySql
+      typeName: PostgreSql
       driver: org.postgresql.Driver
       url: jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified
       userName: postgres

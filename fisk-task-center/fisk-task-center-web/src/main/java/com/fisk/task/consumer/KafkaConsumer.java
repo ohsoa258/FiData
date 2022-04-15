@@ -436,7 +436,7 @@ public class KafkaConsumer {
 
     // 7个模板7个方法
 
-
+    @MQConsumerLog
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory" ,groupId = "test")
     public void buildModelListener(String dataInfo, Acknowledgment acke) {
         buildModelListener.msg(dataInfo, acke);

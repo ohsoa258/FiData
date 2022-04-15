@@ -3,6 +3,9 @@ package com.fisk.mdm.enums;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fisk.common.core.enums.BaseEnum;
 
+/**
+ * @author ChenYa
+ */
 public enum ModelVersionTypeEnum implements BaseEnum {
 
     /**

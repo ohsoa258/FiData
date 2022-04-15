@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 
 /**
+ * 根据注解中的参数，设置方法的MDC类型
+ *
  * @author gy
  */
 @Aspect
@@ -31,11 +33,11 @@ public class TraceAspect {
             //获得该注解
             TraceType ano = method.getAnnotation(TraceType.class);
             MDCHelper.setAppLogType(ano.type());
-            MDCHelper.setFunction(name);
-            MDCHelper.setClass(tClass.getName());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return joinPoint.proceed();
+        Object res = joinPoint.proceed();
+        MDCHelper.removeLogType();
+        return res;
     }
 }

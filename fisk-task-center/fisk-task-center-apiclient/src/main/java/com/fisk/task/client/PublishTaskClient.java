@@ -236,10 +236,10 @@ public interface PublishTaskClient {
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
     /**
-     * 模型信息投递到队列
+     * 模型日志表名投递到队列
      * @param data
      * @return
      */
-    @PostMapping("/publishTask/pushModel")
-    public ResultEntity<Object> pushModel(@RequestBody ModelDTO data);
+    @PostMapping("/publishTask/pushModelByName")
+    public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO data);
 }

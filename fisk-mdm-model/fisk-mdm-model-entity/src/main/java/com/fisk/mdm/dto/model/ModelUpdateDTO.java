@@ -5,6 +5,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * @author ChenYa
+ */
 @Data
 public class ModelUpdateDTO extends ModelDTO{
     @NotNull
