@@ -194,6 +194,7 @@ public class EntityImpl implements IEntity {
         dto.entity.attributes.owner=userHelper.getLoginUserInfo().username;
         if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName()))
         {
+            dto.entity.attributes.qualifiedName+=":"+dto.entity.attributes.port;
             dto.entity.attributes.comment=dto.entity.attributes.userName+"&"+dto.entity.attributes.password;
         }
         String jsonParameter=JSONArray.toJSON(dto).toString();
@@ -362,12 +363,13 @@ public class EntityImpl implements IEntity {
     {
         try {
             LineAgeDTO dto=new LineAgeDTO();
+            dto.relations=new ArrayList<>();
+            dto.guidEntityMap=new ArrayList<>();
             ResultDataDTO<String> result = atlasClient.get(lineage + "/" + guid);
             if (result.code != AtlasResultEnum.REQUEST_SUCCESS)
             {
                 throw new FkException(ResultEnum.BAD_REQUEST);
             }
-            List<JSONObject> jsonArrayList=new ArrayList<>();
             //解析数据
             JSONObject jsonObj = JSON.parseObject(result.data);
             //判断是否存在血缘关系
@@ -382,7 +384,7 @@ public class EntityImpl implements IEntity {
             JSONObject guidEntityMapJson = JSON.parseObject(jsonObj.getString("guidEntityMap"));
             String entityDetail = guidEntityMapJson.getString(guid);
             JSONObject entityDetailJson = JSON.parseObject(entityDetail);
-            jsonArrayList.add(entityDetailJson);
+            dto.guidEntityMap.add(entityDetailJson);
             String typeName=entityDetailJson.getString("typeName");
 
             List<LineAgeRelationsDTO> relationsDtoList;
@@ -392,87 +394,20 @@ public class EntityImpl implements IEntity {
             {
                 return dto;
             }
-            List<LineAgeRelationsDTO> lineAgeRelationsDtoListStream = relationsDtoList.stream()
-                    .filter(e -> e.toEntityId.equals(guid))
-                    .collect(Collectors.toList());
-            List<LineAgeRelationsDTO> relations=new ArrayList<>();
-            List<String> ids=new ArrayList<>();
-            boolean flat=true;
-            while (flat)
+            //获取输出数据
+            LineAgeDTO inData=getInPutData(guid,relationsDtoList,guidEntityMapJson,typeName);
+            if (!CollectionUtils.isEmpty(inData.relations))
             {
-                ids.clear();
-                if (CollectionUtils.isEmpty(lineAgeRelationsDtoListStream))
-                {
-                    flat=false;
-                }
-                for (LineAgeRelationsDTO item :lineAgeRelationsDtoListStream)
-                {
-                    String  jsonObj1String = guidEntityMapJson.getString(item.fromEntityId);
-                    JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
-                    if (!jsonObj2.getString("typeName").equals(typeName)
-                            && !"process".equals(jsonObj2.getString("typeName").toLowerCase()))
-                    {
-                        continue;
-                    }
-                    boolean isExist=true;
-                    //判断process上一级typeName是否一致
-                    if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
-                    {
-                        List<LineAgeRelationsDTO> higherLevelLineAge = relationsDtoList.stream()
-                                .filter(e -> e.toEntityId.equals(item.fromEntityId))
-                                .collect(Collectors.toList());
-                        if (!CollectionUtils.isNotEmpty(higherLevelLineAge))
-                        {
-                            continue;
-                        }
-                        for (LineAgeRelationsDTO lineAge:higherLevelLineAge)
-                        {
-                            String  higher = guidEntityMapJson.getString(lineAge.fromEntityId);
-                            JSONObject higherJson = JSON.parseObject(higher);
-                            if (!higherJson.getString("typeName").equals(typeName))
-                            {
-                                isExist=false;
-                            }
-                        }
-                    }
-                    if (!isExist)
-                    {
-                        continue;
-                    }
-                    //判断relation是否删除
-                    if (!getRelationShip(item.relationshipId)) {
-                        continue;
-                    }
-                    String entityDetail1 = guidEntityMapJson.getString(item.fromEntityId);
-                    JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
-                    //判断实体是否删除
-                    if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
-                    {
-                        continue;
-                    }
-                    relations.add(item);
-                    jsonArrayList.add(entityDetailJson1);
-                    ids.add(item.fromEntityId);
-                }
-                lineAgeRelationsDtoListStream.clear();
-                if (!CollectionUtils.isNotEmpty(ids))
-                {
-                    flat=false;
-                }
-                lineAgeRelationsDtoListStream=relationsDtoList.stream()
-                        .filter(e->ids.contains(e.toEntityId))
-                        .collect(Collectors.toList());
-                if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoListStream))
-                {
-                    flat=false;
-                }
+                dto.guidEntityMap.addAll(inData.guidEntityMap);
+                dto.relations.addAll(inData.relations);
             }
-            dto.guidEntityMap=jsonArrayList;
-            dto.relations=relations;
             //获取输出数据
             LineAgeDTO outData=getOutPutData(guid,relationsDtoList,guidEntityMapJson,typeName);
-            dto.guidEntityMap.addAll(outData.guidEntityMap);
-            dto.relations.addAll(outData.relations);
+            if (!CollectionUtils.isEmpty(outData.relations))
+            {
+                dto.guidEntityMap.addAll(outData.guidEntityMap);
+                dto.relations.addAll(outData.relations);
+            }
             return dto;
         }
         catch (Exception e)
@@ -481,6 +416,93 @@ public class EntityImpl implements IEntity {
             log.error("getMetaDataKinship ex:"+e);
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
+    }
+
+    public LineAgeDTO getInPutData(String guid,
+                                   List<LineAgeRelationsDTO> relationsDtoList,
+                                   JSONObject guidEntityMapJson,
+                                   String typeName)
+    {
+        LineAgeDTO dto=new LineAgeDTO();
+        List<LineAgeRelationsDTO> lineAgeRelationsDtoListStream = relationsDtoList.stream()
+                .filter(e -> e.toEntityId.equals(guid))
+                .collect(Collectors.toList());
+        List<JSONObject> jsonArrayList=new ArrayList<>();
+        List<LineAgeRelationsDTO> relations=new ArrayList<>();
+        List<String> ids=new ArrayList<>();
+        boolean flat=true;
+        while (flat)
+        {
+            ids.clear();
+            if (CollectionUtils.isEmpty(lineAgeRelationsDtoListStream))
+            {
+                flat=false;
+            }
+            for (LineAgeRelationsDTO item :lineAgeRelationsDtoListStream)
+            {
+                String  jsonObj1String = guidEntityMapJson.getString(item.fromEntityId);
+                JSONObject jsonObj2 = JSON.parseObject(jsonObj1String);
+                if (!jsonObj2.getString("typeName").equals(typeName)
+                        && !"process".equals(jsonObj2.getString("typeName").toLowerCase()))
+                {
+                    continue;
+                }
+                boolean isExist=true;
+                //判断process上一级typeName是否一致
+                if ("process".equals(jsonObj2.getString("typeName").toLowerCase()))
+                {
+                    List<LineAgeRelationsDTO> higherLevelLineAge = relationsDtoList.stream()
+                            .filter(e -> e.toEntityId.equals(item.fromEntityId))
+                            .collect(Collectors.toList());
+                    if (!CollectionUtils.isNotEmpty(higherLevelLineAge))
+                    {
+                        continue;
+                    }
+                    for (LineAgeRelationsDTO lineAge:higherLevelLineAge)
+                    {
+                        String  higher = guidEntityMapJson.getString(lineAge.fromEntityId);
+                        JSONObject higherJson = JSON.parseObject(higher);
+                        if (!higherJson.getString("typeName").equals(typeName))
+                        {
+                            isExist=false;
+                        }
+                    }
+                }
+                if (!isExist)
+                {
+                    continue;
+                }
+                //判断relation是否删除
+                if (!getRelationShip(item.relationshipId)) {
+                    continue;
+                }
+                String entityDetail1 = guidEntityMapJson.getString(item.fromEntityId);
+                JSONObject entityDetailJson1 = JSON.parseObject(entityDetail1);
+                //判断实体是否删除
+                if (EntityTypeEnum.DELETED.getName().equals(entityDetailJson1.getString("status")))
+                {
+                    continue;
+                }
+                relations.add(item);
+                jsonArrayList.add(entityDetailJson1);
+                ids.add(item.fromEntityId);
+            }
+            lineAgeRelationsDtoListStream.clear();
+            if (!CollectionUtils.isNotEmpty(ids))
+            {
+                flat=false;
+            }
+            lineAgeRelationsDtoListStream=relationsDtoList.stream()
+                    .filter(e->ids.contains(e.toEntityId))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isNotEmpty(lineAgeRelationsDtoListStream))
+            {
+                flat=false;
+            }
+        }
+        dto.guidEntityMap=jsonArrayList;
+        dto.relations=relations;
+        return dto;
     }
 
     /**

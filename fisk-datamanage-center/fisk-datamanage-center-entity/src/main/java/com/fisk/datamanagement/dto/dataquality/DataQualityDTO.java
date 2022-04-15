@@ -6,12 +6,8 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class UpperLowerBloodParameterDTO {
+public class DataQualityDTO {
 
-    /**
-     * 1:上游、2：下游、3：上下血缘
-     */
-    public int checkConsanguinity;
     /**
      * 实例名
      */
@@ -23,6 +19,10 @@ public class UpperLowerBloodParameterDTO {
     /**
      * 表名
      */
-    public String tableName;
+    public String port;
+    /**
+     * 数据库类型
+     */
+    public String rdbmsType;
 
 }

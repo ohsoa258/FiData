@@ -1,6 +1,8 @@
 package com.fisk.datamanagement.service;
 
+import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.DataSourceConfigDTO;
+import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 
 /**
  * @author JianWenYang
@@ -8,10 +10,17 @@ import com.fisk.datamanagement.dto.dataquality.DataSourceConfigDTO;
 public interface IDataQuality {
 
     /**
-     * 根据配置文件索引，获取数据源配置信息
-     * @param index
+     * 是否存在atlas
+     * @param dto
      * @return
      */
-    DataSourceConfigDTO getDataSourceConfig(int index);
+    boolean existAtlas(DataQualityDTO dto);
+
+    /**
+     * 上下血缘是否存在
+     * @param dto
+     * @return
+     */
+    boolean existUpperLowerBlood(UpperLowerBloodParameterDTO dto);
 
 }

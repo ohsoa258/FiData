@@ -4,13 +4,13 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
+import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import com.fisk.datamanagement.service.IDataQuality;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -25,10 +25,16 @@ public class DataQualityController {
     @Resource
     IDataQuality service;
 
-    @ApiOperation("根据配置文件索引id,获取数据源配置信息")
-    @GetMapping("/getDataSourceConfig/{index}")
-    public ResultEntity<Object> getDataSourceConfig(@PathVariable("index") int index) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceConfig(index));
+    @ApiOperation("是否存在atlas")
+    @PostMapping("/existAtlas")
+    public ResultEntity<Object> existAtlas(@Validated @RequestBody DataQualityDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.existAtlas(dto));
+    }
+
+    @ApiOperation("是否存在上下血缘")
+    @PostMapping("/existUpperLowerBlood")
+    public ResultEntity<Object> existUpperLowerBlood(@Validated @RequestBody UpperLowerBloodParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.existUpperLowerBlood(dto));
     }
 
 }

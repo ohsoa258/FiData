@@ -108,7 +108,7 @@ public class DataAssetsImpl implements IDataAssets {
         }
         catch (Exception e)
         {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e.getMessage());
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
         return data;
     }
@@ -179,9 +179,8 @@ public class DataAssetsImpl implements IDataAssets {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
-        return null;
     }
 
     /**
@@ -199,7 +198,7 @@ public class DataAssetsImpl implements IDataAssets {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
         return conn;
     }
