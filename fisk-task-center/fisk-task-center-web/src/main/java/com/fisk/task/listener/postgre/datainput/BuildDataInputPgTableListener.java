@@ -68,17 +68,17 @@ public class BuildDataInputPgTableListener {
             //ods与stg类型不变,不然有的值,类型转换不来
             tableFieldsDTOS.forEach((l) -> {
                 if (l.fieldType.contains("FLOAT")) {
-                    sqlFileds.append("" + l.fieldName + " " + " numeric ,");
+                    sqlFileds.append("\"" + l.fieldName + "\" " + " numeric ,");
                 } else if (l.fieldType.contains("INT")) {
-                    sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+                    sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
                 } else if (l.fieldType.contains("TEXT")) {
-                    sqlFileds.append(l.fieldName + " " + l.fieldType.toLowerCase() + ",");
+                    sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + ",");
                 } else {
-                    sqlFileds.append("" + l.fieldName + " " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
+                    sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
                 }
-                stgSql.append("" + l.fieldName + " text,");
+                stgSql.append("\"" + l.fieldName + "\" text,");
                 if (l.isPrimarykey == 1) {
-                    pksql.append(l.fieldName + ",");
+                    pksql.append("\"" + l.fieldName + "\",");
                 }
 
             });

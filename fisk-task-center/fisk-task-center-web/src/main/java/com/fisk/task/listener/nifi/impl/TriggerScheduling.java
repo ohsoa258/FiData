@@ -148,7 +148,7 @@ public class TriggerScheduling implements ITriggerScheduling {
         querySqlDto.name = "queryDispatchProcessor";
         querySqlDto.details = "queryDispatchProcessor";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType";
+        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType," +unifiedControlDTO.userId +" as userId";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = unifiedControlDTO.scheduleExpression;
         querySqlDto.scheduleType = unifiedControlDTO.scheduleType;
