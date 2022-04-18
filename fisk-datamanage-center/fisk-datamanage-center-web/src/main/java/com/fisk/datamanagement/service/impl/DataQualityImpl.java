@@ -7,6 +7,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import com.fisk.datamanagement.dto.entity.EntityTreeDTO;
@@ -16,6 +18,7 @@ import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.UpperLowerBloodEnum;
 import com.fisk.datamanagement.service.IDataQuality;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
+import com.fisk.datamanagement.vo.ConnectionInformationDTO;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,13 +42,13 @@ public class DataQualityImpl implements IDataQuality {
     AtlasClient atlasClient;
     @Resource
     EntityImpl entityImpl;
+    @Resource
+    DataAssetsImpl dataAssetImpl;
 
     @Value("${spring.metadataentity}")
     private String metaDataEntity;
     @Value("${atlas.lineage}")
     private String lineage;
-    @Value("${atlas.entityByGuid}")
-    private String entityByGuid;
 
     @Override
     public boolean existAtlas(DataQualityDTO dto)

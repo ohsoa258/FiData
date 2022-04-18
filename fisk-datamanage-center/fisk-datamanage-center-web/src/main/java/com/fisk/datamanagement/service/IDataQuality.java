@@ -1,7 +1,6 @@
 package com.fisk.datamanagement.service;
 
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
-import com.fisk.datamanagement.dto.dataquality.DataSourceConfigDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 
 /**

@@ -1,12 +1,11 @@
-package com.fisk.datamodel.dto.datamasking;
+package com.fisk.datamanagement.dto.datamasking;
 
 import lombok.Data;
 
 /**
- * @author Lock
- * @version 1.3
- * @description 数据脱敏出参
- * @date 2022/4/15 14:03
+ * @author JianWenYang
+ * @description 数据脱敏出参dto
+ * @date 2022/4/15 14:00
  */
 @Data
 public class DataMaskingTargetDTO {

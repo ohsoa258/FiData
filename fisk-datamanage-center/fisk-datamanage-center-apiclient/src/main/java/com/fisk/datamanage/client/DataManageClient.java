@@ -3,6 +3,7 @@ package com.fisk.datamanage.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import io.swagger.annotations.ApiOperation;
@@ -34,5 +35,14 @@ public interface DataManageClient {
      */
     @PostMapping("/DataQuality/existUpperLowerBlood")
     ResultEntity<Object> existUpperLowerBlood(@Validated @RequestBody UpperLowerBloodParameterDTO dto);
+
+    /**
+     * 是否存在上下血缘
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataMasking/getSourceDataConfig")
+    ResultEntity<Object> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto);
+
 
 }
