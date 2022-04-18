@@ -1,5 +1,6 @@
 package com.fisk.common.framework.advice;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -11,13 +12,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author guoyu
@@ -37,6 +40,7 @@ public class ControllerLogAdvice {
         // 设置TraceID
         String traceId = MDCHelper.setTraceId();
         try {
+            // log var
             long userId = 0L;
             int remotePort = 0;
             String remoteAddr = "",
@@ -56,10 +60,18 @@ public class ControllerLogAdvice {
             }
             // log
             log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
-            log.debug("控制器【{}】准备调用，参数: {}", jp.getSignature(), Arrays.toString(jp.getArgs()));
+            // get method params
+            Map<String, Object> args = new HashMap<>();
+            String[] argNames = ((MethodSignature) jp.getSignature()).getParameterNames();
+            for (int i = 0; i < argNames.length; i++) {
+                args.put(argNames[i] + "参数", jp.getArgs()[i]);
+            }
+            log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
+
             long execTime = System.currentTimeMillis();
             // 调用切点方法
             Object result = jp.proceed();
+            // 拦截返回值，设置TraceID
             if (result instanceof ResultEntity) {
                 ResultEntity resultEntity = (ResultEntity) result;
                 resultEntity.traceId = traceId;
