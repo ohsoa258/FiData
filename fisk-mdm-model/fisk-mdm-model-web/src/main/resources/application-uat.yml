@@ -22,7 +22,7 @@ spring:
     name: mdmmodel-service
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.21.13:3306/dmp_mdm_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    url: jdbc:mysql://192.168.21.13:3306/dmp_mdm_db_UAT?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
     username: root
     password: Password01!
   jackson:
