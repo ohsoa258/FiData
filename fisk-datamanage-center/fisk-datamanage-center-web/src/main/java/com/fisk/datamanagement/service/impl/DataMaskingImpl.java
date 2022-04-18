@@ -2,12 +2,21 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
+import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
+import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
+import com.fisk.datamanagement.enums.DataTypeEnum;
+import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.TableTypeEnum;
+import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IDataMasking;
 import com.fisk.datamanagement.vo.ConnectionInformationDTO;
+import com.fisk.task.enums.OlapTableEnum;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +32,8 @@ public class DataMaskingImpl implements IDataMasking {
     EntityImpl entityImpl;
     @Resource
     DataAssetsImpl dataAssetImpl;
+    @Resource
+    MetadataMapAtlasMapper mapper;
 
     @Override
     public DataMaskingTargetDTO getSourceDataConfig(DataMaskingSourceDTO dto)
@@ -39,7 +50,8 @@ public class DataMaskingImpl implements IDataMasking {
             //获取attributes
             JSONObject attributes=JSON.parseObject(entity.getString("attributes"));
             //拼接连接字符串
-            ConnectionInformationDTO connectionInformationDTO = dataAssetImpl.jointConnection(attributes.getString("rdbms_type"),
+            ConnectionInformationDTO connectionInformationDTO = dataAssetImpl.jointConnection(
+                    attributes.getString("rdbms_type").toLowerCase(),
                     attributes.getString("hostname"),
                     attributes.getString("port"), dbAndTableName[0]);
             data.url=connectionInformationDTO.url;
@@ -71,6 +83,41 @@ public class DataMaskingImpl implements IDataMasking {
         //获取表名
         strArray[1]=attributes.getString("name");
         return strArray;
+    }
+
+    @Override
+    public SourceTableDataDTO getTableData(SourceTableDataDTO dto)
+    {
+        try {
+            //判断guid是否为空
+            if (!StringUtils.isEmpty(dto.tableGuid))
+            {
+                QueryWrapper<MetadataMapAtlasPO> queryWrapper=new QueryWrapper<>();
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getAtlasGuid,dto.tableGuid);
+                MetadataMapAtlasPO po=mapper.selectOne(queryWrapper);
+                if (po==null)
+                {
+                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                }
+                dto.tableId=po.tableId;
+                dto.tableName=getDbAndTableName(dto.tableGuid)[1];
+                dto.tableTypeEnum=TableTypeEnum.getEnum(po.tableType);
+            }
+            else {
+                QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(MetadataMapAtlasPO::getTableId, dto.tableId)
+                        .eq(MetadataMapAtlasPO::getTableType,dto.tableTypeEnum.getValue())
+                        .eq(MetadataMapAtlasPO::getType,EntityTypeEnum.RDBMS_TABLE.getValue())
+                        .eq(MetadataMapAtlasPO::getColumnId, 0);
+                MetadataMapAtlasPO po = mapper.selectOne(queryWrapper);
+                dto.tableGuid = po.atlasGuid;
+            }
+            return dto;
+        }
+        catch (Exception e)
+        {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
+        }
     }
 
 }

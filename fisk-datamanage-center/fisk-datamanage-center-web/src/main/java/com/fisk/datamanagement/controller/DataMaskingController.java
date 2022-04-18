@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.service.IDataMasking;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,6 +32,12 @@ public class DataMaskingController {
     @PostMapping("/getSourceDataConfig")
     public ResultEntity<Object> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceDataConfig(dto));
+    }
+
+    @ApiOperation("根据guid获取表信息")
+    @PostMapping("/getTableData")
+    public ResultEntity<Object> getTableData(@Validated @RequestBody SourceTableDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableData(dto));
     }
 
 }
