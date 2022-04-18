@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.service.IDataMasking;
 import io.swagger.annotations.Api;
@@ -30,7 +31,7 @@ public class DataMaskingController {
 
     @ApiOperation("获取数据源配置")
     @PostMapping("/getSourceDataConfig")
-    public ResultEntity<Object> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto) {
+    public ResultEntity<DataMaskingTargetDTO> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceDataConfig(dto));
     }
 

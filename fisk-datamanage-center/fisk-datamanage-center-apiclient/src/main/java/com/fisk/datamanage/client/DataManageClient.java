@@ -1,19 +1,15 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.List;
 
 /**
  * @author JianWenYang
@@ -39,11 +35,12 @@ public interface DataManageClient {
 
     /**
      * 数据脱敏，根据guid提供数据源信息
+     *
      * @param dto
      * @return
      */
     @PostMapping("/DataMasking/getSourceDataConfig")
-    ResultEntity<Object> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto);
+    ResultEntity<DataMaskingTargetDTO> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto);
 
     /**
      * 根据guid获取数据工厂表信息
