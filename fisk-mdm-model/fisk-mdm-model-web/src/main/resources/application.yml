@@ -41,7 +41,7 @@ feign:
 # mybatis-plus 配置
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     default-enum-type-handler: com.fisk.common.framework.mybatis.config.BaseEnumTypeHandler
   global-config:
     db-config:
