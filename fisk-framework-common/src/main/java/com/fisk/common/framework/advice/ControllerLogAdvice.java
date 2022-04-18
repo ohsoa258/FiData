@@ -66,7 +66,7 @@ public class ControllerLogAdvice {
             for (int i = 0; i < argNames.length; i++) {
                 args.put(argNames[i] + "参数", jp.getArgs()[i]);
             }
-            log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
+            // log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
 
             long execTime = System.currentTimeMillis();
             // 调用切点方法
