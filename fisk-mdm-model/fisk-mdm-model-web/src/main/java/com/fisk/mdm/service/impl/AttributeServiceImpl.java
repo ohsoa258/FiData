@@ -11,25 +11,22 @@ import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
-import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
-import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
-import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +45,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
         AttributeVO attributeVO = AttributeMap.INSTANCES.poToVo(baseMapper.selectById(id));
-        if(Objects.isNull(attributeVO)){
+        if (Objects.isNull(attributeVO)) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, attributeVO);
@@ -58,8 +55,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     public ResultEnum addData(AttributeDTO attributeDTO) {
         //判断名称是否存在
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",attributeDTO.getName());
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", attributeDTO.getName());
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -72,7 +69,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         // 记录日志
         String desc = "新增一个属性,id:" + attributePO.getId();
-        if (logService.saveEventLog((int)attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE,desc) == ResultEnum.SAVE_DATA_ERROR){
+        if (logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE, desc) == ResultEnum.SAVE_DATA_ERROR) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -85,14 +82,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         AttributePO attributePO = baseMapper.selectById(attributeUpdateDTO.getId());
 
         //判断数据是否存在
-        if (attributePO == null){
+        if (attributePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         //判断修改后的名称是否存在
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",attributeUpdateDTO.getName());
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", attributeUpdateDTO.getName());
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -107,7 +104,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         // 记录日志
         String desc = "修改一个属性,id:" + attributeUpdateDTO.getId();
-        if (logService.saveEventLog((int)attributePO.getId(),ObjectTypeEnum.ATTRIBUTES,EventTypeEnum.UPDATE,desc) == ResultEnum.SAVE_DATA_ERROR){
+        if (logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.UPDATE, desc) == ResultEnum.SAVE_DATA_ERROR) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -118,7 +115,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum deleteDataById(Integer id) {
         //判断数据是否存在
-        if (baseMapper.selectById(id) == null){
+        if (baseMapper.selectById(id) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -130,7 +127,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         // 记录日志
         String desc = "删除一个属性,id:" + id;
 
-        if (logService.saveEventLog(id,ObjectTypeEnum.ATTRIBUTES,EventTypeEnum.DELETE,desc) == ResultEnum.SAVE_DATA_ERROR){
+        if (logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc) == ResultEnum.SAVE_DATA_ERROR) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
@@ -147,22 +144,19 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords()
                     .stream()
-                    .map(AttributeVO::getCreateUser)
-                    .map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+                    .filter(e -> StringUtils.isNotEmpty(e.createUser))
+                    .map(e -> Long.valueOf(e.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    all.getRecords().forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null) {
-                                e.setCreateUser(userDTO.userAccount);
-                            }
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
+                all.getRecords().forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
 
