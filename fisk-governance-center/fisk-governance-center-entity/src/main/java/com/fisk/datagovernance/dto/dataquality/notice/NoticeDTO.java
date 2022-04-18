@@ -68,6 +68,24 @@ public class NoticeDTO {
     public ModuleStateEnum moduleState;
 
     /**
+     * 是否发送附件
+     */
+    @ApiModelProperty(value = "是否发送附件")
+    public boolean sendAttachment;
+
+    /**
+     * 附件名称
+     */
+    @ApiModelProperty(value = "附件名称")
+    public String attachmentName;
+
+    /**
+     * 附件地址
+     */
+    @ApiModelProperty(value = "附件地址")
+    public String attachmentPath;
+
+    /**
      * 组件通知关联DTO
      */
     @ApiModelProperty(value = "组件通知关联DTO")

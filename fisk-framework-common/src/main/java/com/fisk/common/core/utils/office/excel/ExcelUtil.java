@@ -1,15 +1,20 @@
 package com.fisk.common.core.utils.office.excel;
 
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -31,7 +36,8 @@ public class ExcelUtil {
      * @param fileName 文件名
      * @param dataList 导出的数据
      */
-    public static void uploadExcelAboutUser(HttpServletResponse response, String fileName, List<Map<String, Object>> dataList) {
+    public static void uploadExcelAboutUser(HttpServletResponse response, String fileName,
+                                            List<Map<String, Object>> dataList) {
         //声明输出流
         OutputStream os = null;
         try {
@@ -106,6 +112,125 @@ public class ExcelUtil {
                 log.error("Excel导出 流关闭失败，ex", e);
             }
         }
+    }
+
+    /**
+     * @return java.io.InputStream
+     * @description 创建保存excel
+     * @author dick
+     * @date 2022/4/15 17:22
+     * @version v1.0
+     * @params fileName
+     * @params filePath
+     * @params dataList
+     */
+    public static ResultEnum createSaveExcel(String fileName, String filePath, String sheetName,
+                                             List<Map<String, Object>> dataList) {
+        if (fileName == null || fileName.isEmpty() ||
+                filePath == null || filePath.isEmpty() ||
+                dataList == null || dataList.size() <= 0) {
+            return ResultEnum.PARAMTER_ERROR;
+        }
+        if (sheetName == null || sheetName.isEmpty()) {
+            sheetName = "sheet1";
+        }
+        OutputStream outputStreamExcel = null;
+        try {
+            File tmpFile = new File(filePath);
+            if (!tmpFile.getParentFile().exists()) {
+                tmpFile.getParentFile().mkdirs();//创建目录
+            }
+            if (!tmpFile.exists()) {
+                try {
+                    tmpFile.createNewFile();//创建文件
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            //创建Workbook对象(excel的文档对象) 导出的Excel行数为104万行，是操作Excel2007后的版本，扩展名是.xlsx；
+            XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+            XSSFSheet sheet = xssfWorkbook.createSheet(sheetName);
+
+            // 设置通用样式
+            XSSFCellStyle style = xssfWorkbook.createCellStyle();
+            style.setAlignment(HorizontalAlignment.CENTER); //居中
+            style.setBorderBottom(HSSFCellStyle.BORDER_THIN); //下边框
+            style.setBorderLeft(HSSFCellStyle.BORDER_THIN);//左边框
+            style.setBorderTop(HSSFCellStyle.BORDER_THIN);//上边框
+            style.setBorderRight(HSSFCellStyle.BORDER_THIN);//右边框
+            style.setWrapText(true); //自动换行
+            style.setHidden(true);//高度自动
+            style.setFillBackgroundColor(HSSFColor.PALE_BLUE.index); //背景颜色
+            XSSFFont font = xssfWorkbook.createFont();
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            font.setFontHeight(11);
+            style.setFont(font);
+            sheet.setDefaultColumnWidth(10); //设置宽度
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            //获取字段信息
+            Map<String, Class<?>> columnType = getColumnType(dataList.get(0));
+
+            //写入表头
+            int excelRow = 0;
+            XSSFRow headerRow = sheet.createRow(excelRow++);
+            int index = 0;
+            for (String headerName : columnType.keySet()) {
+                XSSFCell cell = headerRow.createCell(index);
+                cell.setCellValue(headerName);
+                cell.setCellStyle(style);
+                index++;
+            }
+
+            //写入数据
+            for (Map<String, Object> row : dataList) {
+                Row dataRow = sheet.createRow(excelRow++);
+                //内层for循环创建每行对应的列，并赋值
+                int columnIndex = 0;
+                for (Map.Entry<String, Object> item : row.entrySet()) {
+                    Cell cell = dataRow.createCell(columnIndex);
+                    columnIndex++;
+                    if (item.getValue() == null) {
+                        continue;
+                    }
+                    Class<?> type = columnType.get(item.getKey());
+                    if (Integer.class.equals(type)) {
+                        cell.setCellValue(((Integer) item.getValue()).doubleValue());
+                    } else if (Long.class.equals(type)) {
+                        cell.setCellValue(new Double((Long) item.getValue()));
+                    } else if (String.class.equals(type)) {
+                        cell.setCellValue((String) item.getValue());
+                    } else if (Date.class.equals(type)) {
+                        cell.setCellValue((Date) item.getValue());
+                    } else if (Timestamp.class.equals(type)) {
+                        cell.setCellValue(sdf.format((Timestamp) item.getValue()));
+                    } else if (BigDecimal.class.equals(type)) {
+                        cell.setCellValue(((BigDecimal) item.getValue()).doubleValue());
+                    } else if (Double.class.equals(type)) {
+                        cell.setCellValue((Double) item.getValue());
+                    }
+                }
+            }
+
+            //写入流到文件
+            outputStreamExcel = new FileOutputStream(tmpFile);
+            xssfWorkbook.write(outputStreamExcel);
+        } catch (Exception ex) {
+            log.error("CreateSaveExcel异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        } finally {
+            try {
+                // 关闭输出流
+                if (outputStreamExcel != null) {
+                    outputStreamExcel.flush();
+                    outputStreamExcel.close();
+                }
+            } catch (IOException ex) {
+                log.error("CreateSaveExcel 流关闭异常：", ex);
+            }
+        }
+        return ResultEnum.SUCCESS;
     }
 
     /**

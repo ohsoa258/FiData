@@ -4,9 +4,10 @@ import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.sun.mail.util.MailSSLSocketFactory;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import javax.mail.internet.*;
 import java.util.Date;
 import java.util.Properties;
 
@@ -88,6 +89,20 @@ public class MailSenderUtils {
         mimeMessage.setSubject(senderDTO.getSubject());
         // 7. 设置邮件正文
         mimeMessage.setText(senderDTO.getBody());
+
+        if (senderDTO.sendAttachment && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty() &&
+                senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
+            MimeMultipart multipart = new MimeMultipart();
+            MimeBodyPart file1 = new MimeBodyPart();
+            DataHandler handler = new DataHandler(new FileDataSource("文件路径"));
+            file1.setDataHandler(handler);
+            //对文件名进行编码，防止出现乱码
+            String fileName = MimeUtility.encodeWord("文件名", "utf-8", "B");
+            file1.setFileName(fileName);
+            multipart.addBodyPart(file1);
+            mimeMessage.setContent(multipart);
+        }
+
         // 8. 设置发件时间
         mimeMessage.setSentDate(new Date());
         // 9. 保存上面的所有设置

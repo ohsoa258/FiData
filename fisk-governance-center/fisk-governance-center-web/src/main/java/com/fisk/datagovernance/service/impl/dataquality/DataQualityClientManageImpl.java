@@ -17,13 +17,16 @@ import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.notice.SystemNoticeVO;
+import com.fisk.datamanage.client.DataManageClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +77,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     ComponentNotificationMapper componentNotificationMapper;
+
+    @Resource
+    DataManageClient dataManageClient;
 
     @Override
     public ResultEntity<Object> buildFieldStrongRule(DataQualityRequestDTO requestDTO) {
@@ -639,6 +645,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             Statement st = null;
             Connection conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
                     dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
+            // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
@@ -664,6 +671,93 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
         }
         return resultVOS;
+    }
+
+    /**
+     * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
+     * @description 根据SQL查询，转Map
+     * @author dick
+     * @date 2022/4/18 11:00
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params sql
+     * @params templateTypeEnum
+     */
+    public List<Map<String, Object>> resultSetToMap(DataSourceConPO dataSourceConPO, String
+            sql, TemplateTypeEnum templateTypeEnum) {
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        try {
+            // 数据源类型
+            DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
+            // 数据库连接对象
+            Statement st = null;
+            Connection conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
+                    dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
+            // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            assert st != null;
+            ResultSet rs = st.executeQuery(sql);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next()) {
+                Map<String, Object> objectMap = new IdentityHashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Object value = rs.getObject(columnName);
+                    objectMap.put(columnName, value);
+                }
+                mapList.add(objectMap);
+            }
+            rs.close();
+        } catch (Exception ex) {
+            log.error("resultSetToMap触发异常，请求参数:", String.format("模板类型：%s，数据源id:%s，数据源类型：%s，连接字符串：%s，sql：%s",
+                    templateTypeEnum.getName(), dataSourceConPO.getId(), dataSourceConPO.getConType(), dataSourceConPO.getConStr(), sql));
+            log.error("resultSetToMap触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
+        }
+        return mapList;
+    }
+
+    /**
+     * @return int
+     * @description 执行sql，返回结果
+     * @author dick
+     * @date 2022/4/18 11:15
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params sql
+     * @params templateTypeEnum
+     */
+    public int executeSql(DataSourceConPO dataSourceConPO, String
+            sql, TemplateTypeEnum templateTypeEnum) {
+        int affectedCount = 0;
+        try {
+            // 数据源类型
+            DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
+            // 数据库连接对象
+            Statement st = null;
+            Connection conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
+                    dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
+            st = conn.createStatement();
+            assert st != null;
+            /*
+              boolean execute(String sql)
+              允许执行查询语句、更新语句、DDL语句。
+              返回值为true时，表示执行的是查询语句，可以通过getResultSet方法获取结果；
+              返回值为false时，执行的是更新语句或DDL语句，getUpdateCount方法获取更新的记录数量。
+
+              int executeUpdate(String sql)
+              执行给定 SQL 语句，该语句可能为 INSERT、UPDATE 或 DELETE 语句，或者不返回任何内容的 SQL 语句（如 SQL DDL 语句）。
+              返回值是更新的记录数量
+             */
+            affectedCount = st.executeUpdate(sql);
+        } catch (Exception ex) {
+            log.error("executeSql触发异常，请求参数:", String.format("模板类型：%s，数据源id:%s，数据源类型：%s，连接字符串：%s，sql：%s",
+                    templateTypeEnum.getName(), dataSourceConPO.getId(), dataSourceConPO.getConType(), dataSourceConPO.getConStr(), sql));
+            log.error("executeSql触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
+        }
+        return affectedCount;
     }
 
     /**
