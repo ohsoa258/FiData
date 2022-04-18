@@ -8,6 +8,8 @@ import com.fisk.mdm.vo.attribute.AttributeVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @author WangYan
  * @date 2022/4/5 12:30
@@ -22,4 +24,6 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
      * @return
      */
     Page<AttributeVO> getAll(Page<AttributeVO> page, @Param("query") AttributeQueryDTO query);
+
+    List<String> getER(int entityId);
 }

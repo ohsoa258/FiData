@@ -56,7 +56,6 @@ public class AttributeDTO {
      * 数据格式id
      */
     @ApiModelProperty(value = "数据格式id")
-    @NotNull()
     private int dataTypeFormatId;
 
     /**

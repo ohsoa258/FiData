@@ -14,6 +14,8 @@ import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
 
+import java.util.List;
+
 /**
  * @author WangYan
  * @date 2022/4/5 14:48
@@ -43,14 +45,23 @@ public interface AttributeService extends IService<AttributePO> {
     /**
      * 删除
      * @param id
-     * @return
+     * @return ResultEnum
      */
     ResultEnum deleteDataById(Integer id);
 
     /**
      * 分页查询所有属性
-     * @param query
-     * @return
+     * @return {@link Page}<{@link AttributeVO}>
      */
     Page<AttributeVO> getAll(AttributeQueryDTO query);
+
+
+    /**
+     * 提交待添加、待修改数据
+     *
+     * @return {@link List}<{@link AttributePO}>
+     */
+    List<AttributePO> getNotSubmittedData();
+
+    List<String> getER(int entityId);
 }

@@ -62,10 +62,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Resource
     private UserClient userClient;
 
+
     /**
-     * 根据id查询
-     * @param id
-     * @return
+     * 通过id查询
+     *
+     * @param id id
+     * @return {@link ResultEntity}<{@link ModelVO}>
      */
     @Override
     public ResultEntity<ModelVO> getById(Integer id) {

@@ -11,6 +11,7 @@ import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
+import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
@@ -20,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author ChenYa
@@ -60,6 +62,18 @@ public class AttributeController {
     @DeleteMapping("/delete/{id}")
     public ResultEntity<ResultEnum> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteDataById(id));
+    }
+
+    @ApiOperation("提交待添加和待修改的属性")
+    @GetMapping("/getNotSubmittedData")
+    public ResultEntity<List<AttributePO>> getNotSubmittedData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getNotSubmittedData());
+    }
+
+    @ApiOperation("获取实体下的属性名称")
+    @GetMapping("/getER/{entityId}")
+    public ResultEntity<List<String>> getER(@PathVariable("entityId") int entityId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER(entityId));
     }
 
 }
