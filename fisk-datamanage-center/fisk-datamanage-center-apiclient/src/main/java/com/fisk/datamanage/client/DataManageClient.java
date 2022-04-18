@@ -37,7 +37,7 @@ public interface DataManageClient {
     ResultEntity<Object> existUpperLowerBlood(@Validated @RequestBody UpperLowerBloodParameterDTO dto);
 
     /**
-     * 是否存在上下血缘
+     * 数据脱敏，根据guid提供数据源信息
      * @param dto
      * @return
      */
