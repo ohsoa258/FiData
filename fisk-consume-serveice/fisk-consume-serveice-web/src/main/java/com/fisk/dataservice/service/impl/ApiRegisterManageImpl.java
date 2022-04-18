@@ -155,8 +155,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (dataSourceConPO == null)
             return ResultEnum.DS_DATASOURCE_EXISTS;
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
-        //apiConfigPO.setApiCode(apiCode);
-        //apiConfigPO.setCreateTime(LocalDateTime.now());
+        apiConfigPO.setApiCode(apiCode);
+        apiConfigPO.setCreateTime(LocalDateTime.now());
         //apiConfigPO.setCreateUser("lijiawen");
         Long id = userHelper.getLoginUserInfo().getId();
         apiConfigPO.setCreateUser(id.toString());
