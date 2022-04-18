@@ -1,8 +1,7 @@
 dataservice:
   pdf:
     # pdf文档模板路径
-    path: /root/java/fisk-consume-serveice/pdf
-   # path: D:/Work/java/Fisk.DMP.Project/fisk-consume-serveice/fisk-consume-serveice-web/target/classes
+    path: D:/Work/java/Fisk.DMP.Project/fisk-consume-serveice/fisk-consume-serveice-web/target/classes
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
