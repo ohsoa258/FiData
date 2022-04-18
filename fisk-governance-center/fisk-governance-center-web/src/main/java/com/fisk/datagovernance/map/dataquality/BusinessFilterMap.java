@@ -25,7 +25,7 @@ public interface BusinessFilterMap {
      */
     @Mappings({
             @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            //@Mapping(source = "filterStep.value", target = "checkStep"),
+            @Mapping(source = "filterStep.value", target = "filterStep"),
             @Mapping(source = "moduleState.value", target = "moduleState")
             //@Mapping(target = "componentNotificationDTOS", ignore = true)
     })
@@ -39,7 +39,7 @@ public interface BusinessFilterMap {
      */
     @Mappings({
             @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            //@Mapping(source = "filterStep.value", target = "checkStep"),
+            @Mapping(source = "filterStep.value", target = "filterStep"),
             @Mapping(source = "moduleState.value", target = "moduleState")
             //@Mapping(target = "componentNotificationDTOS", ignore = true)
     })

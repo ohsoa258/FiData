@@ -1,3 +1,7 @@
+dataquality:
+  excel:
+    # excel保存路径
+    path: /data/java/fisk-governance-center/dataquality/excel
 spring:
   application:
     name: datagovernance-service

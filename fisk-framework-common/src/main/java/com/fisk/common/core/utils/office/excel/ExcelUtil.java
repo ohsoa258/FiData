@@ -120,14 +120,12 @@ public class ExcelUtil {
      * @author dick
      * @date 2022/4/15 17:22
      * @version v1.0
-     * @params fileName
-     * @params filePath
+     * @params filePath 文件全路径，含文件名称
      * @params dataList
      */
-    public static ResultEnum createSaveExcel(String fileName, String filePath, String sheetName,
+    public static ResultEnum createSaveExcel(String filePath, String sheetName,
                                              List<Map<String, Object>> dataList) {
-        if (fileName == null || fileName.isEmpty() ||
-                filePath == null || filePath.isEmpty() ||
+        if (filePath == null || filePath.isEmpty() ||
                 dataList == null || dataList.size() <= 0) {
             return ResultEnum.PARAMTER_ERROR;
         }

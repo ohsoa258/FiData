@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
 import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
+import com.fisk.datagovernance.enums.dataquality.CheckStepTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
 import io.swagger.annotations.ApiModelProperty;
@@ -42,7 +43,7 @@ public class BusinessFilterDTO {
      * 清洗步骤
      */
     @ApiModelProperty(value = "清洗步骤 1：进表前 2：进表后")
-    public int filterStep;
+    public CheckStepTypeEnum filterStep;
 
     /**
      * 表名称

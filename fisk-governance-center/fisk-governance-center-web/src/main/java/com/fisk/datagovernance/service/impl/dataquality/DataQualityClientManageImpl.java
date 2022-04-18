@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.office.excel.ExcelUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
@@ -18,10 +19,13 @@ import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageServi
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.notice.SystemNoticeVO;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -81,6 +85,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     @Resource
     DataManageClient dataManageClient;
 
+    @Value("${dataquality.excel.path}")
+    private String excelPath;
+
     @Override
     public ResultEntity<Object> buildFieldStrongRule(DataQualityRequestDTO requestDTO) {
         ResultEntity<Object> result = null;
@@ -134,7 +141,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
             // 检查结果有异常，发送通知
             result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
-                    TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE);
+                    TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE, null, null, null);
         } catch (Exception ex) {
             log.error("buildFieldStrongRule消费时触发异常，请求参数:", String.format("模板类型：字段强规则模板，id：%s，templateModulesType:%s",
                     requestDTO.getId(), requestDTO.getTemplateModulesType()));
@@ -196,7 +203,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 检查结果有异常，发送通知
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE);
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE, null, null, null);
         } catch (Exception ex) {
             log.error("buildFieldAggregateRule消费时触发异常，请求参数:", String.format("模板类型：字段聚合波动阈值模板，id：%s，templateModulesType:%s",
                     requestDTO.getId(), requestDTO.getTemplateModulesType()));
@@ -264,7 +272,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 检查结果有异常，发送通知并更新配置表记录的表行数
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE);
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE, null, null, null);
             if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
                 dataCheckPO.setRowsValue(tableRowCount);
                 int i = dataCheckMapper.updateById(dataCheckPO);
@@ -333,7 +342,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 检查结果有异常，发送通知
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE);
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE, null, null, null);
         } catch (Exception ex) {
             log.error("buildEmptyTableCheckRule消费时触发异常，请求参数:", String.format("模板类型：空表校验模板，id：%s，templateModulesType:%s",
                     requestDTO.getId(), requestDTO.getTemplateModulesType()));
@@ -395,7 +405,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 检查结果发现表存在更新，发送通知&重新生成SQL检查规则并保存到配置表，因为要更新参照时间
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE);
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE, null, null, null);
             if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
                 DataCheckDTO dataCheckDTO = new DataCheckDTO();
                 dataCheckDTO.setDatasourceId(dataCheckPO.getDatasourceId());
@@ -455,15 +466,26 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 调用元数据接口，查询表是否存在上下游血缘
-            boolean isExist = true;
+            UpperLowerBloodParameterDTO bloodParameterDTO = new UpperLowerBloodParameterDTO();
+            bloodParameterDTO.setInstanceName(dataSourceConPO.getConIp());
+            bloodParameterDTO.setDbName(dataSourceConPO.getConDbname());
+            String tableName = CheckStepTypeEnum.getEnum(dataCheckPO.checkStep) == CheckStepTypeEnum.TABLE_FRONT ? dataCheckPO.proTableName : dataCheckPO.tableName;
+            bloodParameterDTO.setTableName(tableName);
+            bloodParameterDTO.setCheckConsanguinity(dataCheckPO.getCheckConsanguinity());
+            ResultEntity<Object> bloodResult = dataManageClient.existUpperLowerBlood(bloodParameterDTO);
+            boolean isExistBlood = true;
+            if (bloodResult != null && bloodResult.getCode() == ResultEnum.SUCCESS.getCode()) {
+                isExistBlood = Boolean.valueOf(bloodResult.getData().toString());
+            }
             // 检查结果无异常，返回操作结果
-            if (isExist) {
+            if (isExistBlood) {
                 result.setCode(ResultEnum.SUCCESS.getCode());
                 result.setMsg("表血缘断裂校验模板规则已消费，校验通过");
                 return result;
             }
             // 检查结果有异常，发送通知
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE);
+            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(),
+                    TemplateTypeEnum.TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE, null, null, null);
         } catch (Exception ex) {
             log.error("buildTableBloodKinshipRule消费时触发异常，请求参数:", String.format("模板类型：表血缘断裂校验模板，id：%s，templateModulesType:%s",
                     requestDTO.getId(), requestDTO.getTemplateModulesType()));
@@ -511,9 +533,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return result;
             }
             // 读取校验结果
-
-            // 发送校验附件保存，发送校验报告（含附件）
-            result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(), dataCheckPO.getCreateUser(), TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE);
+            List<Map<String, Object>> mapList = resultSetToMap(dataSourceConPO, moduleRuleSql, TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE);
+            if (mapList != null && mapList.size() > 0 && excelPath != null && !excelPath.isEmpty()) {
+                // 发送校验附件保存，发送校验报告（含附件）
+                String fileName = "业务验证模板执行结果.xlsx";
+                String filePaht = excelPath + File.separator + "businessCheckFile";
+                result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(),
+                        dataCheckPO.getCreateUser(), TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE, fileName, filePaht, mapList);
+            }
         } catch (Exception ex) {
             log.error("buildBusinessCheckRule消费时触发异常，请求参数:", String.format("模板类型：业务验证模板，id：%s，templateModulesType:%s",
                     requestDTO.getId(), requestDTO.getTemplateModulesType()));
@@ -563,9 +590,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params moduleId 组件id
      * @params templateTypeEnum 模板类型
      * @params body 正文内容
+     * @params fileName 文件名称
+     * @params filePath 文件全路径，含文件名称
+     * @params mapList 附件数据
      */
     public ResultEntity<Object> sendNotice(int templateId, long moduleId, String userId,
-                                           TemplateTypeEnum templateTypeEnum) {
+                                           TemplateTypeEnum templateTypeEnum, String fileName, String filePath,
+                                           List<Map<String, Object>> mapList) {
         ResultEntity<Object> result = new ResultEntity<>();
         List<SystemNoticeVO> systemNoticeVOS = new ArrayList<>();
         // 检查结果异常，发送提示邮件
@@ -594,7 +625,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         List<NoticePO> emailNoticePOS = noticePOS.stream().filter(t -> t.getNoticeType() == 1).collect(Collectors.toList());
         // 系统通知
         List<NoticePO> systemNoticePOS = noticePOS.stream().filter(t -> t.getNoticeType() == 2).collect(Collectors.toList());
+
         if (CollectionUtils.isNotEmpty(emailNoticePOS)) {
+            boolean sendAttachment = false;
+            if (TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE == templateTypeEnum
+                    && mapList != null && mapList.size() > 0) {
+                // 验证业务模板才有附件
+                ExcelUtil.createSaveExcel(filePath, null, mapList);
+                sendAttachment = true;
+            }
             for (NoticePO emailNoticePO : emailNoticePOS) {
                 NoticeDTO noticeDTO = new NoticeDTO();
                 noticeDTO.emailServerId = emailNoticePO.getEmailServerId();
@@ -602,6 +641,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 noticeDTO.body = emailNoticePO.getBody();
                 noticeDTO.emailConsignee = emailNoticePO.getEmailConsignee();
                 noticeDTO.emailCc = emailNoticePO.getEmailCc();
+                noticeDTO.sendAttachment = sendAttachment;
+                noticeDTO.attachmentName = fileName;
+                noticeDTO.attachmentPath = filePath;
                 ResultEntity<Object> sendEmialNotice = noticeManageImpl.sendEmialNotice(noticeDTO);
                 if (sendEmialNotice != null && sendEmialNotice.getCode() == ResultEnum.DATA_NOTEXISTS.getCode()) {
                     // 邮件服务器不存在不直接抛出异常
