@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
+import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
 import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import io.swagger.annotations.ApiOperation;
@@ -43,6 +44,14 @@ public interface DataManageClient {
      */
     @PostMapping("/DataMasking/getSourceDataConfig")
     ResultEntity<Object> getSourceDataConfig(@Validated @RequestBody DataMaskingSourceDTO dto);
+
+    /**
+     * 根据guid获取数据工厂表信息
+     * @param dto
+     * @return
+     */
+    @PostMapping("/DataMasking/getTableData")
+    ResultEntity<Object> getTableData(@Validated @RequestBody SourceTableDataDTO dto);
 
 
 }
