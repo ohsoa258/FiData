@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -80,20 +81,21 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords().stream().map(ApiConfigVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            List<Long> userIds = all.getRecords().stream()
+                    .filter(x -> !StringUtils.isEmpty(x.createUser))
+                    .map(x -> Long.valueOf(x.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    all.getRecords().forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null)
-                                e.createUser = userDTO.userAccount;
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+                    && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+                all.getRecords().forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
         return all;
@@ -109,29 +111,31 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             List<AppApiPO> subscribeListByAppId = appApiMapper.getSubscribeListByAppId(dto.appId);
             if (CollectionUtils.isNotEmpty(subscribeListByAppId)) {
                 apiSubVOS.forEach(e -> {
-                    Optional<AppApiPO> first = subscribeListByAppId.stream().filter(item -> item.getApiId() == e.id).findFirst();
-                    if (first.isPresent()) {
-                        e.apiSubState = 1;
-                    }
+                    subscribeListByAppId
+                            .stream()
+                            .filter(item -> item.getApiId() == e.id)
+                            .findFirst()
+                            .ifPresent(user -> e.apiSubState = 1);
                 });
             }
             pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
             dto.current = dto.current - 1;
             apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
-            List<Long> userIds = apiSubVOS.stream().map(ApiSubVO::getCreateUser).map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+            List<Long> userIds = apiSubVOS.stream()
+                    .filter(x -> !StringUtils.isEmpty(x.createUser))
+                    .map(x -> Long.valueOf(x.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    apiSubVOS.forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null)
-                                e.createUser = userDTO.userAccount;
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+                    && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+                apiSubVOS.forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
         pageDTO.setItems(apiSubVOS);
@@ -151,10 +155,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (dataSourceConPO == null)
             return ResultEnum.DS_DATASOURCE_EXISTS;
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
-        apiConfigPO.setApiCode(apiCode);
-        apiConfigPO.setCreateTime(LocalDateTime.now());
+        //apiConfigPO.setApiCode(apiCode);
+        //apiConfigPO.setCreateTime(LocalDateTime.now());
         //apiConfigPO.setCreateUser("lijiawen");
-        apiConfigPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+        Long id = userHelper.getLoginUserInfo().getId();
+        apiConfigPO.setCreateUser(id.toString());
         isInsert = baseMapper.insertOne(apiConfigPO) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
@@ -391,7 +396,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             apiPreviewVO = resultSetToJsonArray(conn, dataSourceConPO, rs, dto);
             rs.close();
         } catch (Exception e) {
-            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR,e.getMessage());
+            throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
         }
         return apiPreviewVO;
     }

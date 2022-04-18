@@ -8,6 +8,11 @@ spring:
     password: .FdF_r&tj4)+
     url: jdbc:mysql://100.102.201.107:3307/dmp_dataservice_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
+  # redis
+  redis:
+    host: 10.220.108.140
+    port: 16380
+    password: test123456
   # 防止模板报空错误
   freemarker:
     settings:

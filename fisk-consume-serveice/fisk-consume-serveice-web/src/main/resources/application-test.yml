@@ -9,6 +9,9 @@ spring:
     password: root123
     url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?uuseUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
+  # redis
+  redis:
+    host: 192.168.11.130
   # 防止模板报空错误
   freemarker:
     settings:
