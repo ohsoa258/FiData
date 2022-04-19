@@ -20,6 +20,7 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
@@ -261,21 +262,25 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public List<AttributeDTO> getAttributeById(Integer id) {
-        boolean entity = this.isExistEntity(id);
-        if (entity == false){
+    public EntityVO getAttributeById(Integer id) {
+        EntityPO entityPo = entityMapper.selectById(id);
+        if (entityPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // 实体信息
+        EntityVO entityVo = AttributeMap.INSTANCES.poToEntityVo(entityPo);
 
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributePO::getEntityId,id);
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){
-            return AttributeMap.INSTANCES.poToDtoList(attributePoList);
+            entityVo.setAttributeList(AttributeMap.INSTANCES.poToDtoList(attributePoList));
+            return entityVo;
         }
 
-        return null;
+        return entityVo;
     }
 
     /**

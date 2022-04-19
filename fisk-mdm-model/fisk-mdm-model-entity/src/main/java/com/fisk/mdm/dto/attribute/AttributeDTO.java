@@ -13,6 +13,11 @@ import javax.validation.constraints.NotNull;
 @Data
 public class AttributeDTO {
 
+    /**
+     * id
+     */
+    private Integer id;
+
     @ApiModelProperty(value = "实体id")
     @NotNull()
     private Integer entityId;
@@ -37,6 +42,11 @@ public class AttributeDTO {
     @NotNull()
     @Length(min = 0, max = 200, message = "长度最多50")
     private String desc;
+
+    /**
+     * 描述
+     */
+    private String columnName;
 
     /**
      * 数据类型
@@ -131,6 +141,9 @@ public class AttributeDTO {
     @NotNull()
     private MdmTypeEnum mdmType;
 
-
+    /**
+     * 数据域id（相当于外键）
+     */
+    private Integer domainId;
 
 }

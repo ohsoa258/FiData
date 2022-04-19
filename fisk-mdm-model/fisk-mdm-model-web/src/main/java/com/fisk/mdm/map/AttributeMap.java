@@ -3,7 +3,9 @@ package com.fisk.mdm.map;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -48,4 +50,11 @@ public interface AttributeMap {
      * @return
      */
     List<AttributeDTO> poToDtoList(List<AttributePO> list);
+
+    /**
+     * po => vo
+     * @param po
+     * @return
+     */
+    EntityVO poToEntityVo(EntityPO po);
 }

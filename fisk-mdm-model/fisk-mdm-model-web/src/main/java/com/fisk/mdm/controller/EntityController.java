@@ -10,6 +10,7 @@ import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.vo.entity.EntityVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -68,7 +69,7 @@ public class EntityController {
     @ApiOperation("根据实体id获取属性")
     @GetMapping("/getAttributeById")
     @ResponseBody
-    public ResultEntity<List<AttributeDTO>> getAttributeById(Integer id) {
+    public ResultEntity<EntityVO> getAttributeById(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
     }
 }

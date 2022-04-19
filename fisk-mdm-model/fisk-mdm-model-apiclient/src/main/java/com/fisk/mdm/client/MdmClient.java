@@ -2,8 +2,10 @@ package com.fisk.mdm.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -19,6 +21,6 @@ public interface MdmClient {
      * @param id
      * @return
      */
-    @GetMapping("/getAttributeById")
-    ResultEntity<List<AttributeDTO>> getAttributeById(Integer id);
+    @GetMapping("/entity/getAttributeById")
+    ResultEntity<EntityVO> getAttributeById(@RequestParam("id") Integer id);
 }

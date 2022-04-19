@@ -6,6 +6,7 @@ import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.vo.entity.EntityVO;
 
 import java.util.List;
 
@@ -55,5 +56,5 @@ public interface EntityService {
      * @param id
      * @return
      */
-    List<AttributeDTO> getAttributeById(Integer id);
+    EntityVO getAttributeById(Integer id);
 }
