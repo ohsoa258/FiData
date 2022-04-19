@@ -28,6 +28,10 @@ public class BusinessLimitedAttributePO extends BasePO {
      *计算值
      */
     public String calculationValue;
+    /**
+     * 连接条件 or或and
+     */
+    public String joinCondition;
 
 
 

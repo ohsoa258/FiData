@@ -16,17 +16,17 @@ import java.util.List;
 public interface BusinessLimitedAttributeMap {
     BusinessLimitedAttributeMap INSTANCES = Mappers.getMapper(BusinessLimitedAttributeMap.class);
     /**
-     * dtoTopo
+     * dtoToPo
      * @param businessLimitedAttributeDto
      * @return
      */
-    BusinessLimitedAttributePO dtoTopo(BusinessLimitedAttributeDTO businessLimitedAttributeDto);
+    BusinessLimitedAttributePO dtoToPo(BusinessLimitedAttributeDTO businessLimitedAttributeDto);
     /**
-     * poTodto
+     * poToDto
      * @param businessLimitedAttributePo
      * @return
      */
-    //BusinessLimitedAttributeDTO poTodto(BusinessLimitedAttributePO businessLimitedAttributePo);
+    BusinessLimitedAttributeDTO poToDto(BusinessLimitedAttributePO businessLimitedAttributePo);
 
     /**
      * poList==>Dto
