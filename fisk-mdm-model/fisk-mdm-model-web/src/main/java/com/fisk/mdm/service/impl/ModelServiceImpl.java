@@ -128,9 +128,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         // 记录日志
         String desc = "新增一个模型,id:" + modelPO.getId();
-        if (logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.SAVE,desc) == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.SAVE,desc);
 
         //创建成功
         return ResultEnum.SUCCESS;
@@ -152,7 +150,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //判断修改后的名称是否存在
         QueryWrapper<ModelPO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",modelUpdateDTO.getName());
+        wrapper.eq("name",modelUpdateDTO.getName())
+                .ne("id",modelUpdateDTO.getId());
         if(baseMapper.selectOne(wrapper) != null){
             return ResultEnum.NAME_EXISTS;
         }
@@ -168,10 +167,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         // 记录日志
         String desc = "修改一个模型,id:" + modelUpdateDTO.getId();
-
-        if (logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.UPDATE,desc) == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        logService.saveEventLog((int)modelPO.getId(),ObjectTypeEnum.MODEL,EventTypeEnum.UPDATE,desc);
 
         //添加成功
         return ResultEnum.SUCCESS;
@@ -196,10 +192,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         // 记录日志
         String desc = "删除一个模型,id:" + id;
-
-        if (logService.saveEventLog(id,ObjectTypeEnum.MODEL,EventTypeEnum.DELETE,desc) == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        logService.saveEventLog(id,ObjectTypeEnum.MODEL,EventTypeEnum.DELETE,desc);
 
         //删除成功
         return ResultEnum.SUCCESS;
@@ -219,22 +212,19 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords()
                     .stream()
-                    .map(ModelVO::getCreateUser)
-                    .map(x -> Long.valueOf(x)).distinct().collect(Collectors.toList());
+                    .filter(e -> StringUtils.isNotEmpty(e.createUser))
+                    .map(e -> Long.valueOf(e.createUser))
+                    .distinct()
+                    .collect(Collectors.toList());
             ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds != null) {
-                List<UserDTO> userDTOS = userListByIds.getData();
-                if (CollectionUtils.isNotEmpty(userDTOS)) {
-                    all.getRecords().forEach(e -> {
-                        Optional<UserDTO> first = userDTOS.stream().filter(item -> item.getId().toString().equals(e.createUser)).findFirst();
-                        if (first.isPresent()) {
-                            UserDTO userDTO = first.get();
-                            if (userDTO != null) {
-                                e.setCreateUser(userDTO.userAccount);
-                            }
-                        }
-                    });
-                }
+            if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
+                all.getRecords().forEach(e -> {
+                    userListByIds.getData()
+                            .stream()
+                            .filter(user -> user.getId().toString().equals(e.createUser))
+                            .findFirst()
+                            .ifPresent(user -> e.createUser = user.userAccount);
+                });
             }
         }
 
