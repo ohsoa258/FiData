@@ -58,6 +58,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum addData(AttributeDTO attributeDTO) {
 
+        //判断同实体下是否存在重复名称
+        QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
+        wrapper.eq("name",attributeDTO.getName())
+                .eq("entity_id",attributeDTO.getEntityId());
+        if(baseMapper.selectOne(wrapper) != null){
+            return ResultEnum.NAME_EXISTS;
+        }
+
         //添加数据
         AttributePO attributePO = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
         attributePO.setStatus(AttributeStatusEnum.INSERT);
