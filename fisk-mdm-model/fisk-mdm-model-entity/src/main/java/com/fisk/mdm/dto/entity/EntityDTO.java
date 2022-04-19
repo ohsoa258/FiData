@@ -1,6 +1,7 @@
 package com.fisk.mdm.dto.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.mdm.enums.MdmStatusTypeEnum;
 import com.fisk.mdm.enums.WhetherTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -30,7 +31,7 @@ public class EntityDTO {
     private String desc;
 
     @ApiModelProperty(value = "状态",required = true)
-    private String status;
+    private MdmStatusTypeEnum status;
 
     @ApiModelProperty(value = "表名",required = true)
     private String tableName;

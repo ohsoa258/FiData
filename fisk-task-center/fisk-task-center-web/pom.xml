@@ -228,6 +228,13 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
+        <!--mdm的api-->
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-mdm-model-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 

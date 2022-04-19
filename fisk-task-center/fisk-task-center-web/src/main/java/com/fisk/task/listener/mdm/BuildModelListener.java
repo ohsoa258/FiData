@@ -9,9 +9,16 @@ import org.springframework.kafka.support.Acknowledgment;
 public interface BuildModelListener {
 
     /**
-     * 消费模型队列
+     * 创建属性日志表
      * @param dataInfo
      * @param acke
      */
     void msg(String dataInfo, Acknowledgment acke);
+
+    /**
+     * 创建后台任务表
+     * @param dataInfo
+     * @param acke
+     */
+    void backgroundCreateTasks(String dataInfo, Acknowledgment acke);
 }
