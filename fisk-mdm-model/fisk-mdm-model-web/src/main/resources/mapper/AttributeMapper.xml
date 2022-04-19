@@ -26,4 +26,8 @@
         where attribute.del_flag=1
     </select>
 
+    <select id="getER" resultType="String">
+        select attribute.name from tb_attribute as attribute where attribute.del_flag=1 and entity_id = #{entityId}
+    </select>
+
 </mapper>

@@ -57,7 +57,7 @@ public class MQConsumerLogAspect {
         }
 
         //设置TraceID
-        MDCHelper.setTraceId();
+        String traceId = MDCHelper.setTraceId();
 
         TaskLogPO model = null;
         MQBaseDTO data = null;
@@ -89,7 +89,7 @@ public class MQConsumerLogAspect {
         }
 
         if (sendMsg) {
-            WsSessionManager.sendMsgById("【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
+            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务开始处理", data.userId, MessageLevelEnum.MEDIUM);
         }
 
         log.info("【{}】开始执行", name);
@@ -110,7 +110,7 @@ public class MQConsumerLogAspect {
         }
 
         if (sendMsg) {
-            WsSessionManager.sendMsgById("【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
+            WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + statusEnum.getName() + "】", data.userId, MessageLevelEnum.HIGH);
         }
         MDCHelper.clear();
         return res;
