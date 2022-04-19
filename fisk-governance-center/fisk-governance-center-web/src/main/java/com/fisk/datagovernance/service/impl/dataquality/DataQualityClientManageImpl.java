@@ -769,9 +769,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             sql, TemplateTypeEnum templateTypeEnum) {
         List<DataCheckResultVO> resultVOS = new ArrayList<>();
         try {
-            // 考虑到生命周期可以删除表，所有在验证表数据时，先验证下表是否存在
-//            SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name ='查询的表名';
-//            select top 1 * from sysObjects where Id=OBJECT_ID(N'UserInfos') and xtype='U'
             JSONArray array = new JSONArray();
             // 数据源类型
             DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];

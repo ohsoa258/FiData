@@ -31,6 +31,19 @@ public class AppRegisterController {
     @Resource
     private IAppRegisterManageService service;
 
+    // 基于构造器注入
+    private final HttpServletResponse response;
+
+    public AppRegisterController(HttpServletResponse response) {
+        this.response = response;
+    }
+
+    /*
+        基于字段注入，IDEA有警告提醒:不建议使用基于字段注入，调整成基于构造器注入
+        @Autowired
+        private HttpServletResponse response;
+     */
+
     @ApiOperation(value = "查询下游系统总数")
     @GetMapping("/getAppCount")
     public ResultEntity<Object> getAppCount() {
@@ -87,7 +100,7 @@ public class AppRegisterController {
 
     @ApiOperation("生成文档")
     @PostMapping("/createDoc")
-    public ResultEntity<Object> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto, HttpServletResponse response) {
+    public ResultEntity<Object> createDoc(@Validated @RequestBody CreateAppApiDocDTO dto) {
         return ResultEntityBuild.build(service.createDoc(dto,response));
     }
 
