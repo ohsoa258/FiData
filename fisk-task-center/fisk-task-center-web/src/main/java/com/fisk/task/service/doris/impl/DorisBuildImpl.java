@@ -61,7 +61,7 @@ public class DorisBuildImpl implements IDorisBuild {
 
         } catch (Exception e) {
             //捕捉错误
-            log.error(e.getMessage());
+            e.printStackTrace();
             msg = e.getMessage();
         } finally {
             //关闭操作对象

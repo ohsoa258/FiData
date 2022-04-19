@@ -230,7 +230,8 @@ public class KafkaConsumer {
 
             log.info("消费消息:end");
         } catch (Exception e) {
-            log.error("管道调度报错:" + e.getMessage());
+            log.error("管道调度报错");
+            e.printStackTrace();
         } finally {
             ack.acknowledge();
         }

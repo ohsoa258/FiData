@@ -36,43 +36,46 @@ public class BuildDataInputDeletePgTableListener {
     public void msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
-        StringBuilder buildDelSqlStr=new StringBuilder("DROP TABLE IF EXISTS ");
-        PgsqlDelTableDTO inputData= JSON.parseObject(dataInfo,PgsqlDelTableDTO.class);
-        HashMap<String, Object> conditionHashMap = new HashMap<>();
-        if(Objects.equals(inputData.businessTypeEnum,BusinessTypeEnum.DATAINPUT)){
-            List<String> atlasEntityId=new ArrayList();;
-            inputData.tableList.forEach((t)->{
-                buildDelSqlStr.append("stg_"+t.tableName+",ods_"+t.tableName+", ");
-                atlasEntityId.add(t.tableAtlasId);
-                conditionHashMap.put("table_name","stg_"+t.tableName);
-                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-                conditionHashMap.put("table_name","ods_"+t.tableName);
-                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-            });
-            String delSqlStr=buildDelSqlStr.toString();
-            delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
-            PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAINPUT);
-            log.info("delsql:"+delSqlStr);
-            log.info("执行pg delete table 完成");
-//        log.info("开始删除atals实例");
-            atlasEntityId.forEach((a)->{
-                //AtlasEntityDeleteDTO ad= JSON.parseObject(a, AtlasEntityDeleteDTO.class);
-                //BusinessResult resDel=atlas.atlasEntityDelete(ad);
-            });
-//        log.info("Atlas实例删除完成");
-        }else{
-            inputData.tableList.forEach((t)->{
-                buildDelSqlStr.append(t.tableName+", ");
-                conditionHashMap.put("table_name",t.tableName);
-                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-            });
-            String delSqlStr=buildDelSqlStr.toString();
-            delSqlStr=delSqlStr.substring(0,delSqlStr.lastIndexOf(","))+" ;";
-            PostgreHelper.postgreExecuteSql(delSqlStr,BusinessTypeEnum.DATAMODEL);
-            doris.dorisBuildTable(delSqlStr);
-            log.info("delsql:"+delSqlStr);
-            log.info("执行pg delete table 完成");
+        try {
+            StringBuilder buildDelSqlStr = new StringBuilder("DROP TABLE IF EXISTS ");
+            PgsqlDelTableDTO inputData = JSON.parseObject(dataInfo, PgsqlDelTableDTO.class);
+            if (inputData.tableList != null && inputData.tableList.size() != 0) {
+                HashMap<String, Object> conditionHashMap = new HashMap<>();
+                if (Objects.equals(inputData.businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
+                    List<String> atlasEntityId = new ArrayList();
+                    ;
+                    inputData.tableList.forEach((t) -> {
+                        buildDelSqlStr.append("stg_" + t.tableName + ",ods_" + t.tableName + ", ");
+                        atlasEntityId.add(t.tableAtlasId);
+                        conditionHashMap.put("table_name", "stg_" + t.tableName);
+                        taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                        conditionHashMap.put("table_name", "ods_" + t.tableName);
+                        taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                    });
+                    String delSqlStr = buildDelSqlStr.toString();
+                    delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
+                    PostgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                    log.info("delsql:" + delSqlStr);
+                    log.info("执行pg delete table 完成");
+                } else {
+                    inputData.tableList.forEach((t) -> {
+                        buildDelSqlStr.append(t.tableName + ", ");
+                        conditionHashMap.put("table_name", t.tableName);
+                        taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                    });
+                    String delSqlStr = buildDelSqlStr.toString();
+                    delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
+                    PostgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
+                    doris.dorisBuildTable(delSqlStr);
+                    log.info("delsql:" + delSqlStr);
+                    log.info("执行pg delete table 完成");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            acke.acknowledge();
         }
-        acke.acknowledge();
+
     }
 }

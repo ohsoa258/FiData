@@ -54,6 +54,7 @@ public class MQConsumerLogAspect {
             sendMsg = ano.sendMsg();
         } catch (Exception ex) {
             log.error("方法元数据获取失败");
+            ex.printStackTrace();
         }
 
         //设置TraceID
@@ -77,6 +78,7 @@ public class MQConsumerLogAspect {
             }
         } catch (Exception ex) {
             log.error("任务状态更新失败", ex);
+            ex.printStackTrace();
         }
         if (data == null || data.userId == null) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
@@ -100,6 +102,7 @@ public class MQConsumerLogAspect {
             isSuccess = true;
         } catch (Exception ex) {
             log.error("消费者处理报错，", ex);
+            ex.printStackTrace();
         }
         log.info("【{}】执行结束，执行结果【{}】", name, isSuccess);
 

@@ -118,7 +118,8 @@ public class BuildDataInputPgTableListener {
         } catch (Exception e) {
             modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
             dc.updateApiPublishStatus(modelPublishStatusDTO);
-            log.error("创建表失败:" + e.getMessage());
+            log.error("创建表失败:");
+            e.printStackTrace();
         } finally {
             acke.acknowledge();
         }

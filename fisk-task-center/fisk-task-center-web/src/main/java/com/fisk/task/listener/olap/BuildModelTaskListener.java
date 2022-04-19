@@ -101,6 +101,7 @@ public class BuildModelTaskListener {
                 modelPublishStatusDTO.id = Math.toIntExact(tableId);
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
+            e.printStackTrace();
         } finally {
             acke.acknowledge();
         }

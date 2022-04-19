@@ -259,7 +259,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             modelPublishStatusDTO.publish = 2;
             client.updateTablePublishStatus(modelPublishStatusDTO);
             e.printStackTrace();
-            log.error("nifi流程创建失败" + e.getMessage());
+            log.error("nifi流程创建失败");
+            e.printStackTrace();
         } finally {
             ack.acknowledge();
         }

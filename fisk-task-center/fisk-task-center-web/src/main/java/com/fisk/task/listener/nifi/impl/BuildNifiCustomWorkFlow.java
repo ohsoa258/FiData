@@ -87,30 +87,29 @@ public class BuildNifiCustomWorkFlow {
     TableTopicImpl tableTopic;
 
 
-
     public void msg(String data, Acknowledgment acke) {
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
-        nifiCustomWorkflowDTO.id=dto.pipelineId;
-        nifiCustomWorkflowDTO.status= PipelineStatuTypeEnum.success_publish.getValue();
+        nifiCustomWorkflowDTO.id = dto.pipelineId;
+        nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.success_publish.getValue();
         try {
-        // 组里共用port,用漏斗连接共同使用,这样向外提供的连接点就只有一个
-        log.info("管道参数:" + JSON.toJSONString(dto));
-        dto.structure = stringToMap(dto.structure1);
-        dto.externalStructure = stringToMap(dto.externalStructure1);
-        //多次发布,重建管道
-        deleteCustomWorkNifiFlow(dto);
-        //1.建组结构--对应表tb_app_nifi_setting存组结构
-        String groupStructure = createGroupStructure(dto);
-        //2.建立流程--根据类别建立对应的流程
-        createCustomWorkNifiFlowVersion2(dto, groupStructure);
-        //先外部后里面
+            // 组里共用port,用漏斗连接共同使用,这样向外提供的连接点就只有一个
+            log.info("管道参数:" + JSON.toJSONString(dto));
+            dto.structure = stringToMap(dto.structure1);
+            dto.externalStructure = stringToMap(dto.externalStructure1);
+            //多次发布,重建管道
+            deleteCustomWorkNifiFlow(dto, nifiCustomWorkflowDTO);
+            //1.建组结构--对应表tb_app_nifi_setting存组结构
+            String groupStructure = createGroupStructure(dto);
+            //2.建立流程--根据类别建立对应的流程
+            createCustomWorkNifiFlowVersion2(dto, groupStructure, nifiCustomWorkflowDTO);
+            //先外部后里面
         /*createNotifyProcessor(groupStructure, dto.externalStructure, 1);
         createNotifyProcessor(groupStructure, dto.structure, 2);
         //4.连线--根据流程关系连线
         createConnectingLine(dto);*/
 
-        //启动
+            //启动
             ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
@@ -122,16 +121,17 @@ public class BuildNifiCustomWorkFlow {
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             }
         } catch (ApiException | InterruptedException e) {
-            nifiCustomWorkflowDTO.status=PipelineStatuTypeEnum.failure_publish.getValue();
+            nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
-            log.info("此组启动失败:" + e.getMessage());
-        }finally {
+            log.info("此组启动失败");
+            e.printStackTrace();
+        } finally {
             acke.acknowledge();
         }
 
     }
 
-    private void deleteCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO) {
+    private void deleteCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
         //tb_app_nifi_setting. tb_table_nifi_setting. tb_nifi_scheduling_component. tb_pipeline_configuration
         //重复发布需要处理这四张表里的老数据
         //暂停原流程
@@ -151,7 +151,10 @@ public class BuildNifiCustomWorkFlow {
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
             NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
             //清空队列
-            nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
+            ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
+            if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
+                throw new ApiException("清空队列失败");
+            }
             //获取大组的控制器服务   includeancestorgroups includedescendantgroups
             ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
             NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
@@ -160,6 +163,9 @@ public class BuildNifiCustomWorkFlow {
             //emptyNifiConnectionQueue
         } catch (ApiException e) {
             log.info("此组删除失败:" + appComponentId);
+            e.printStackTrace();
+            nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
+            dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
         }
 
         List<AppNifiSettingPO> appNifiSettingPOS = appNifiSettingService.query().eq("nifi_custom_workflow_id", nifiCustomWorkListDTO.nifiCustomWorkflowId)
@@ -226,20 +232,20 @@ public class BuildNifiCustomWorkFlow {
         dto.name = nifiCustomWorkListDTO.pipelineName;
         //问题一
         NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName()).one();
-        if(nifiConfigPO!=null){
-            dto.groupId=nifiConfigPO.componentId;
-        }else{
+        if (nifiConfigPO != null) {
+            dto.groupId = nifiConfigPO.componentId;
+        } else {
             BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
-            buildProcessGroupDTO.name=ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
-            buildProcessGroupDTO.details=ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
+            buildProcessGroupDTO.name = ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
+            buildProcessGroupDTO.details = ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
             int groupCount = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
             buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(groupCount);
             BusinessResult<ProcessGroupEntity> processGroupEntityBusinessResult = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
             if (processGroupEntityBusinessResult.success) {
-                dto.groupId=processGroupEntityBusinessResult.data.getId();
+                dto.groupId = processGroupEntityBusinessResult.data.getId();
                 NifiConfigPO nifiConfigPO1 = new NifiConfigPO();
-                nifiConfigPO1.componentId=dto.groupId;
-                nifiConfigPO1.componentKey=ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
+                nifiConfigPO1.componentId = dto.groupId;
+                nifiConfigPO1.componentKey = ComponentIdTypeEnum.PIPELINE_NIFI_FLOW_GROUP_ID.getName();
                 nifiConfigService.save(nifiConfigPO1);
             } else {
                 throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processGroupEntityBusinessResult.msg);
@@ -393,7 +399,7 @@ public class BuildNifiCustomWorkFlow {
                 tableNifiSettingPO.selectSql = one1.selectSql;
                 tableNifiSettingPO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.workflowDetailId);
                 tableNifiSettingPO.type = OlapTableEnum.CUSTOMWORKPHYSICS.getValue();
-                tableNifiSettingPO.syncMode=one1.syncMode;
+                tableNifiSettingPO.syncMode = one1.syncMode;
                 tableNifiSettingService.save(tableNifiSettingPO);
                 buildNifiFlowDTO.id = Long.valueOf(nifiNode.tableId);
                 buildNifiFlowDTO.appId = Long.valueOf(one1.appId);
@@ -418,16 +424,16 @@ public class BuildNifiCustomWorkFlow {
                 }
                 //-------------------------------------------------
                 BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
-                buildNifiFlowDTO.userId=nifiCustomWorkListDTO.userId;
-                buildNifiFlowDTO.appId= Long.valueOf(one1.appId);
-                buildNifiFlowDTO.synchronousTypeEnum=SynchronousTypeEnum.PGTOPG;
+                buildNifiFlowDTO.userId = nifiCustomWorkListDTO.userId;
+                buildNifiFlowDTO.appId = Long.valueOf(one1.appId);
+                buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
                 //来源为数据接入
-                buildNifiFlowDTO.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-                buildNifiFlowDTO.id=Long.parseLong(nifiNode.tableId);
-                buildNifiFlowDTO.tableName=one1.tableName;
-                buildNifiFlowDTO.selectSql=one1.selectSql;
-                buildNifiFlowDTO.synMode=one1.syncMode;
-                buildNifiFlowDTO.type=OlapTableEnum.getNameByValue(one1.type);
+                buildNifiFlowDTO.dataClassifyEnum = DataClassifyEnum.DATAMODELING;
+                buildNifiFlowDTO.id = Long.parseLong(nifiNode.tableId);
+                buildNifiFlowDTO.tableName = one1.tableName;
+                buildNifiFlowDTO.selectSql = one1.selectSql;
+                buildNifiFlowDTO.synMode = one1.syncMode;
+                buildNifiFlowDTO.type = OlapTableEnum.getNameByValue(one1.type);
                 //buildNifiTaskListener.msg(JSON.toJSONString(buildNifiFlowDTO), null, null);
 
                 //-------------------------------------------------
@@ -508,96 +514,97 @@ public class BuildNifiCustomWorkFlow {
         return appNifiSettingDTOS;
     }
 
-    public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkListDTO, String groupStructure) {
+    public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkListDTO, String groupStructure, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
         BuildNifiCustomWorkFlowDTO nifiNode = new BuildNifiCustomWorkFlowDTO();
         String TopicName = "dmp.datafactory.nifi." + nifiCustomWorkListDTO.pipelineName;
         //1.找到在哪个组下面
         List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkListDTO.nifiCustomWorkDTOS;
-        //----------------------------------------------------------------------------------
-        for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-            if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
-                continue;
-            }
-            nifiNode = nifiCustomWorkDTO.NifiNode;
-            //组id在这里
-            log.info("父级id:" + nifiNode.groupId);
-            if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
-                //调度组件,在对应组下创建.
-                BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
-                querySqlDto.name = nifiNode.nifiCustomWorkflowName;
-                querySqlDto.details = nifiNode.nifiCustomWorkflowName;
-                querySqlDto.groupId = groupStructure;
-                querySqlDto.querySql = "select count(1) as nums from tb_etl_Incremental";
-                //配置库
-                NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
-                if (nifiConfigPO != null) {
-                    querySqlDto.dbConnectionId = nifiConfigPO.componentId;
-                } else {
-                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "未创建配置库连接池");
-                }
-                querySqlDto.scheduleExpression = nifiNode.scheduleExpression;
-                querySqlDto.scheduleType = nifiNode.scheduleType;
-                querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
-                if (!querySqlRes.success) {
-                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, querySqlRes.msg);
-                }
-                //保存组件信息
-                NifiSchedulingComponentPO nifiSchedulingComponentPO = new NifiSchedulingComponentPO();
-                nifiSchedulingComponentPO.componentId = querySqlRes.data.getId();
-                nifiSchedulingComponentPO.groupComponentId = groupStructure;
-                nifiSchedulingComponentPO.name = nifiNode.nifiCustomWorkflowName;
-                nifiSchedulingComponentPO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.nifiCustomWorkflowId);
-                nifiSchedulingComponent.save(nifiSchedulingComponentPO);
-                Map<String, String> variable = new HashMap<>();
-                variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
-                componentsBuild.buildNifiGlobalVariable(variable);
-                //拿到与调度组件直连的组件,创建另外的topic
-                List<BuildNifiCustomWorkFlowDTO> outputDucts = nifiCustomWorkDTO.outputDucts;
-                for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
-                    TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
-                    String Topic = TopicName;
-                    Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
-                    if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
-                            Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
-                    }
-                    BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
-                    buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-                    buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
-                    buildPublishKafkaProcessorDTO.groupId = groupStructure;
-                    buildPublishKafkaProcessorDTO.name = "PublishKafka";
-                    buildPublishKafkaProcessorDTO.details = "PublishKafka";
-                    buildPublishKafkaProcessorDTO.UseTransactions = "false";
-                    buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                    buildPublishKafkaProcessorDTO.TopicName = Topic;
-                    BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-                    componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                }
-            }
-        }
-        //--------------------------------------------------------------------------
-        for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-            if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
-                    Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
-                continue;
-            }
-            String Topic = TopicName;
-            nifiNode = nifiCustomWorkDTO.NifiNode;
-            log.info("父级id:" + nifiNode.groupId);
-            //2.拼装参数,三类nifi流程,3.调用方法生成流程
-            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
-            Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
-            if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
-                    Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
-            }
-            updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
-                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
-
-        }
-        //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
         try {
+            //----------------------------------------------------------------------------------
+            for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
+                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
+                    continue;
+                }
+                nifiNode = nifiCustomWorkDTO.NifiNode;
+                //组id在这里
+                log.info("父级id:" + nifiNode.groupId);
+                if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
+                    //调度组件,在对应组下创建.
+                    BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+                    querySqlDto.name = nifiNode.nifiCustomWorkflowName;
+                    querySqlDto.details = nifiNode.nifiCustomWorkflowName;
+                    querySqlDto.groupId = groupStructure;
+                    querySqlDto.querySql = "select count(1) as nums from tb_etl_Incremental";
+                    //配置库
+                    NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID.getName()).one();
+                    if (nifiConfigPO != null) {
+                        querySqlDto.dbConnectionId = nifiConfigPO.componentId;
+                    } else {
+                        throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "未创建配置库连接池");
+                    }
+                    querySqlDto.scheduleExpression = nifiNode.scheduleExpression;
+                    querySqlDto.scheduleType = nifiNode.scheduleType;
+                    querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+                    BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+                    if (!querySqlRes.success) {
+                        throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, querySqlRes.msg);
+                    }
+                    //保存组件信息
+                    NifiSchedulingComponentPO nifiSchedulingComponentPO = new NifiSchedulingComponentPO();
+                    nifiSchedulingComponentPO.componentId = querySqlRes.data.getId();
+                    nifiSchedulingComponentPO.groupComponentId = groupStructure;
+                    nifiSchedulingComponentPO.name = nifiNode.nifiCustomWorkflowName;
+                    nifiSchedulingComponentPO.nifiCustomWorkflowDetailId = String.valueOf(nifiNode.nifiCustomWorkflowId);
+                    nifiSchedulingComponent.save(nifiSchedulingComponentPO);
+                    Map<String, String> variable = new HashMap<>();
+                    variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+                    componentsBuild.buildNifiGlobalVariable(variable);
+                    //拿到与调度组件直连的组件,创建另外的topic
+                    List<BuildNifiCustomWorkFlowDTO> outputDucts = nifiCustomWorkDTO.outputDucts;
+                    for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
+                        TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
+                        String Topic = TopicName;
+                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
+                        if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
+                                Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
+                            Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
+                        }
+                        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
+                        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+                        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
+                        buildPublishKafkaProcessorDTO.groupId = groupStructure;
+                        buildPublishKafkaProcessorDTO.name = "PublishKafka";
+                        buildPublishKafkaProcessorDTO.details = "PublishKafka";
+                        buildPublishKafkaProcessorDTO.UseTransactions = "false";
+                        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+                        buildPublishKafkaProcessorDTO.TopicName = Topic;
+                        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+                        componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    }
+                }
+            }
+            //--------------------------------------------------------------------------
+            for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
+                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
+                    continue;
+                }
+                String Topic = TopicName;
+                nifiNode = nifiCustomWorkDTO.NifiNode;
+                log.info("父级id:" + nifiNode.groupId);
+                //2.拼装参数,三类nifi流程,3.调用方法生成流程
+                TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
+                Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
+                if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
+                        Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
+                    Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
+                }
+                updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
+                        tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);
+
+            }
+            //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
+
             ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
@@ -606,13 +613,17 @@ public class BuildNifiCustomWorkFlow {
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
         } catch (ApiException e) {
-            log.error("组id:" + groupStructure + "停止失败" + e.getMessage());
+            log.error("组id:" + groupStructure + "停止失败");
+            e.printStackTrace();
+            nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
+            dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
         }
     }
 
 
     public TableNifiSettingPO getTableNifiSettingPO(BuildNifiCustomWorkFlowDTO nifiNode) {
-        TableNifiSettingPO tableNifiSettingPO =new TableNifiSettingPO();
+        nifiNode = new BuildNifiCustomWorkFlowDTO();
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         log.info("父级id:" + nifiNode.groupId);
         //2.拼装参数,三类nifi流程,3.调用方法生成流程
         if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAACCESS)) {
@@ -641,7 +652,7 @@ public class BuildNifiCustomWorkFlow {
                 log.error("未找到对应指标表" + nifiNode.type + "表id" + nifiNode.tableId);
             }
             log.info("表类别:" + nifiNode.type + "表id:" + nifiNode.tableId + "表信息" + olapPO);
-             tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
+            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
         } else if (Objects.equals(nifiNode.type, DataClassifyEnum.DATAMODELWIDETABLE)) {
             tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.WIDETABLE.getValue()).eq("del_flag", 1).one();
         }

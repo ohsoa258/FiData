@@ -1150,9 +1150,14 @@ public class NiFiHelperImpl implements INiFiHelper {
      * */
     @Override
     public ResultEnum emptyNifiConnectionQueue(String groupId) {
-        String url = basePath + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
-        ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.POST, null, String.class);
-        return ResultEnum.SUCCESS;
+        try {
+            String url = basePath + NifiConstants.ApiConstants.EMPTY_ALL_CONNECTIONS_REQUESTS.replace("{id}", groupId);
+            ResponseEntity<String> response = httpClient.exchange(url, HttpMethod.POST, null, String.class);
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("调度修改失败: ", e);
+            return ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR;
+        }
     }
 
     /*
