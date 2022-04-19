@@ -443,4 +443,10 @@ public class KafkaConsumer {
         buildModelListener.msg(dataInfo, acke);
     }
 
+    @MQConsumerLog
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory" ,groupId = "test")
+    public void buildEntityListener(String dataInfo, Acknowledgment acke) {
+        buildModelListener.backgroundCreateTasks(dataInfo, acke);
+    }
+
 }

@@ -13,5 +13,5 @@ public class EntityDTO extends MQBaseDTO {
     /**
      * 实体id
      */
-    private String entityId;
+    private Integer entityId;
 }

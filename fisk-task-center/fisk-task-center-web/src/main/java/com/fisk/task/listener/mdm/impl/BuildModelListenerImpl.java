@@ -1,28 +1,23 @@
 package com.fisk.task.listener.mdm.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
-import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.enums.MdmStatusTypeEnum;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
-import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
-import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.task.utils.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.NOT_CREATED;
 
 /**
@@ -36,6 +31,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     DataSourceTypeEnum type = DataSourceTypeEnum.PG;
     String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm_attributeLog?stringtype=unspecified";
+    String connectionStr1 = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm_backstageTable?stringtype=unspecified";
     String acc = "postgres";
     String pwd = "Password01!";
 
@@ -66,6 +62,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void backgroundCreateTasks(String dataInfo, Acknowledgment acke) {
 
@@ -73,11 +70,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
             EntityDTO dto = JSON.parseObject(dataInfo, EntityDTO.class);
             // 获取实体信息
             EntityVO entityVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
-            List<AttributeDTO> attributeList = entityVo.getAttributeList();
             MdmStatusTypeEnum status = entityVo.getStatus();
             if (status.equals(NOT_CREATED)){
                 // 实体未创建
-                // 工厂
                 IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
                 // todo 保证事务一致性
@@ -87,6 +82,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 String buildMdmTableSql = sqlBuilder.buildMdmTable(entityVo);
                 // 创建view视图
                 String buildViewTableSql = sqlBuilder.buildViewTable(entityVo);
+
+                AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+                Connection connection = abstractDbHelper.connection(connectionStr1, acc, pwd, type);
+                // 执行sql
+                abstractDbHelper.executeSql(buildStgTableSql, connection);
+                abstractDbHelper.executeSql(buildMdmTableSql, connection);
+                abstractDbHelper.executeSql(buildViewTableSql, connection);
             }
 
         } catch (Exception ex) {
