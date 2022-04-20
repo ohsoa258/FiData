@@ -60,7 +60,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * 通过id查询
      *
      * @param id id
-     * @return {@link ResultEntity}<{@link ModelVO}>
+     * @return ModelVO
      */
     @Override
     public ResultEntity<ModelVO> getById(Integer id) {
@@ -68,7 +68,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         if(Objects.isNull(modelVO)){
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, modelVO);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,modelVO);
     }
 
     /**

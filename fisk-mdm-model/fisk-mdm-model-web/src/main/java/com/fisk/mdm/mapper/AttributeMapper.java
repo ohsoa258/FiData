@@ -25,5 +25,4 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
      */
     Page<AttributeVO> getAll(Page<AttributeVO> page, @Param("query") AttributeQueryDTO query);
 
-    List<String> getER(int entityId);
 }

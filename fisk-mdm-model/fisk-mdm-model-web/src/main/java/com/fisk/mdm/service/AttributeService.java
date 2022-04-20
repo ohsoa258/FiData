@@ -63,5 +63,4 @@ public interface AttributeService extends IService<AttributePO> {
      */
     ResultEnum getNotSubmittedData();
 
-    List<String> getER(int entityId);
 }

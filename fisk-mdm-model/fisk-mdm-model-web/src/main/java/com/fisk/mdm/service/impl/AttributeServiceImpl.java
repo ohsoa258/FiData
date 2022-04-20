@@ -155,6 +155,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         Page<AttributeVO> all = baseMapper.getAll(query.page, query);
 
+
         //获取创建人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords()
@@ -179,7 +180,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 提交创建后台表
+     * 提交待添加、待修改数据
      *
      * @return {@link List}<{@link AttributePO}>
      */
@@ -214,15 +215,5 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return ResultEnum.SUCCESS;
     }
 
-    /**
-     * 返回实体字段
-     *
-     * @param entityId 实体id
-     * @return {@link List}<{@link String}>
-     */
-    @Override
-    public List<String> getER(int entityId) {
 
-        return baseMapper.getER(entityId);
-    }
 }

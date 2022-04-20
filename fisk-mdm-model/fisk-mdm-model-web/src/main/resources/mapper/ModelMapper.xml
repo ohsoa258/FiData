@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.mdm.mapper.ModelMapper">
     <select id="getAll" resultType="com.fisk.mdm.vo.model.ModelVO">
         select model.id,
-        name,
+        model.name,
         display_name,
         model.desc,
         log_retention_days,
@@ -15,6 +15,9 @@
         update_time
         from tb_model as model
         where model.del_flag=1
+        <if test=" query.keyword !=null and query.keyword.length()>0 ">
+            and model.name like concat('%', #{query.keyword}, '%')
+        </if>
     </select>
 
 </mapper>

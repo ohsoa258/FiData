@@ -24,10 +24,9 @@
                update_time
         from tb_attribute as attribute
         where attribute.del_flag=1
-    </select>
-
-    <select id="getER" resultType="String">
-        select attribute.name from tb_attribute as attribute where attribute.del_flag=1 and entity_id = #{entityId}
+        <if test="query.keyword !=null and query.keyword.length()>0 ">
+            and (name like concat('%', #{query.keyword}, '%')
+        </if>
     </select>
 
 </mapper>

@@ -70,10 +70,4 @@ public class AttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getNotSubmittedData());
     }
 
-    @ApiOperation("获取实体下的属性名称")
-    @GetMapping("/getER/{entityId}")
-    public ResultEntity<List<String>> getER(@PathVariable("entityId") int entityId){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER(entityId));
-    }
-
 }

@@ -48,4 +48,11 @@ public interface ModelMap {
      * @return
      */
     Page<ModelPO> voToPoPage(Page<ModelVO> voPage);
+
+    /**
+     * poPage => voPage
+     * @param poPage
+     * @return
+     */
+    Page<ModelVO> poToVoPage(Page<ModelPO> poPage);
 }
