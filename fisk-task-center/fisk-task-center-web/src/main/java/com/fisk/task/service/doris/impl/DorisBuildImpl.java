@@ -1,6 +1,8 @@
 package com.fisk.task.service.doris.impl;
 
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.task.service.doris.IDorisBuild;
 import com.fisk.task.utils.DorisHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +65,7 @@ public class DorisBuildImpl implements IDorisBuild {
             //捕捉错误
             e.printStackTrace();
             msg = e.getMessage();
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         } finally {
             //关闭操作对象
             DorisHelper.closeStatement(stmt);

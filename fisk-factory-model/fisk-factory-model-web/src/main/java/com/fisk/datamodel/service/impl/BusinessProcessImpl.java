@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -248,6 +249,7 @@ public class BusinessProcessImpl
                 data.dimensionList=factList;
                 data.openTransmission=dto.openTransmission;
                 //发送消息
+                log.info(JSON.toJSONString(data));
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
             }
         } catch (FkException ex) {

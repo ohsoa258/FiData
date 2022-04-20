@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -88,7 +89,10 @@ public class BuildDataInputPgTableListener {
             String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             String stg_sql2 = stgSql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
-            pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
+            BusinessResult Result = pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
+            if(!Result.success){
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
                 pg.postgreBuildTable(stg_sql1, BusinessTypeEnum.DATAINPUT);
                 log.info("【PGSTG】" + stg_sql1);
@@ -118,7 +122,7 @@ public class BuildDataInputPgTableListener {
         } catch (Exception e) {
             modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
             dc.updateApiPublishStatus(modelPublishStatusDTO);
-            log.error("创建表失败:");
+            log.error("创建表失败");
             e.printStackTrace();
         } finally {
             acke.acknowledge();

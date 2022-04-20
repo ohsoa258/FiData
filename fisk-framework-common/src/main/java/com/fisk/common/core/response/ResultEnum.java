@@ -116,6 +116,8 @@ public enum ResultEnum {
     TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
     TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     TASK_TABLE_NOT_EXIST(6008,"表不存在"),
+    TASK_TABLE_CREATE_FAIL(6009,"表创建失败"),
+
     /**
      * 数据域接入模块
      *

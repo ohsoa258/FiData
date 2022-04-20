@@ -1,7 +1,10 @@
 package com.fisk.task.listener.olap;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
@@ -50,7 +53,10 @@ public class BuildWideTableTaskListener {
             modelPublishStatusDTO.id = wideTableFieldConfigDTO.id;
             String createTableSql = buildWideTableSql(wideTableFieldConfigDTO);
             log.info("宽表建表语句:" + createTableSql);
-            doris.dorisBuildTable(createTableSql);
+            BusinessResult businessResult = doris.dorisBuildTable(createTableSql);
+            if (!businessResult.success) {
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
             BuildNifiFlowDTO buildNifiFlowDTO = new BuildNifiFlowDTO();
             log.info("nifi配置结束,开始创建nifi流程");
             buildNifiFlowDTO.userId = wideTableFieldConfigDTO.userId;

@@ -1,7 +1,10 @@
 package com.fisk.task.listener.olap;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
@@ -62,7 +65,10 @@ public class BuildModelTaskListener {
                 tableType = olapPO.type.getValue();
                 log.info("Doris建表开始:" + olapPO.tableName);
                 doris.dorisBuildTable("DROP TABLE IF EXISTS " + olapPO.tableName);
-                doris.dorisBuildTable(olapPO.createTableSql);
+                BusinessResult businessResult = doris.dorisBuildTable(olapPO.createTableSql);
+                if (!businessResult.success) {
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                }
                 log.info("Doris建表结束,开始创建nifi配置");
                 //添加etl日志,加kpi,区分指标与事实维度
                 itbetlIncremental.addEtlIncremental(olapPO.tableName + OlapTableEnum.KPI.getValue());
@@ -77,7 +83,7 @@ public class BuildModelTaskListener {
                 buildNifiFlowDTO.synchronousTypeEnum = SynchronousTypeEnum.PGTODORIS;
                 buildNifiFlowDTO.tableName = olapPO.tableName;
                 buildNifiFlowDTO.selectSql = olapPO.selectDataSql;
-                buildNifiFlowDTO.openTransmission=true;
+                buildNifiFlowDTO.openTransmission = true;
                 pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
                 //1是维度
                 if (tableType == 1) {
