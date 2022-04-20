@@ -8,6 +8,9 @@ import com.fisk.mdm.vo.model.ModelVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+/**
+ * @author chenYa
+ */
 @Mapper
 public interface ModelMapper extends FKBaseMapper<ModelPO> {
 

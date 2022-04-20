@@ -25,9 +25,12 @@ import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.model.EntityDTO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +48,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private PublishTaskClient publishTaskClient;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -173,16 +179,39 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 没有提交数据
+     * 提交创建后台表
      *
      * @return {@link List}<{@link AttributePO}>
      */
     @Override
-    public List<AttributePO> getNotSubmittedData() {
+    public ResultEnum getNotSubmittedData() {
+        //获取需要提交的属性
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("status",AttributeStatusEnum.INSERT).or()
                 .eq("status",AttributeStatusEnum.UPDATE);
-        return baseMapper.selectList(wrapper);
+        List<AttributePO> attributePOS = baseMapper.selectList(wrapper);
+
+        if(attributePOS == null || attributePOS.size() == 0){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        //获取需要提交的属性的实体id
+        List<Integer> entityIds = new ArrayList<>();
+        for (AttributePO attributePO:attributePOS) {
+            entityIds.add(attributePO.getEntityId());
+        }
+
+        //去重
+        List<Integer> collect = entityIds.stream().distinct().collect(Collectors.toList());
+
+        //提交
+        EntityDTO entityDTO = new EntityDTO();
+        for (int entityId : collect) {
+            entityDTO.setEntityId(entityId);
+            publishTaskClient.createBackendTable(entityDTO);
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**

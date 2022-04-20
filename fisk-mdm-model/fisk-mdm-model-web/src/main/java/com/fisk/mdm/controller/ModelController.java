@@ -36,8 +36,8 @@ public class ModelController {
 
 
     @ApiOperation("根据id查询model")
-    @GetMapping("/get/{id}")
-    public ResultEntity<ModelVO> detail(@PathVariable("id") int id) {
+    @GetMapping("/get")
+    public ResultEntity<ModelVO> detail(Integer id) {
         return service.getById(id);
     }
 
@@ -54,8 +54,8 @@ public class ModelController {
     }
 
     @ApiOperation("删除model")
-    @DeleteMapping("/delete/{id}")
-    public ResultEntity<ResultEnum> deleteData(@PathVariable("id") int id) {
+    @DeleteMapping("/delete")
+    public ResultEntity<ResultEnum> deleteData(Integer id) {
         return ResultEntityBuild.build(service.deleteDataById(id));
     }
 

@@ -12,6 +12,9 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
+/**
+ * @author chenYa
+ */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AttributeMap {
     AttributeMap INSTANCES = Mappers.getMapper(AttributeMap.class);
