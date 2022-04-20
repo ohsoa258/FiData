@@ -9,6 +9,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * @author chenYa
+ */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ModelMap {
     ModelMap INSTANCES = Mappers.getMapper(ModelMap.class);

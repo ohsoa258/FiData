@@ -8,6 +8,7 @@
         display_name,
         model.desc,
         log_retention_days,
+        logo_path,
         create_user,
         create_time,
         update_user,

@@ -8,7 +8,6 @@ import lombok.Data;
 /**
  * @author chenYa
  * @version v1.0
- * @description model实体类
  * @date 2022/3/31 11:14
  */
 @Data

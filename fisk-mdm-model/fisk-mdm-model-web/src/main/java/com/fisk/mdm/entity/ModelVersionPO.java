@@ -7,7 +7,10 @@ import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.enums.ModelVersionTypeEnum;
 import lombok.Data;
 
-
+/**
+ * @author chenYa
+ * @version v1.0
+ */
 @Data
 @TableName("tb_model_version")
 public class ModelVersionPO extends BasePO {

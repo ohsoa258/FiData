@@ -41,8 +41,8 @@ public class AttributeController {
     }
 
     @ApiOperation("根据id查询attribute")
-    @GetMapping("/get/{id}")
-    public ResultEntity<AttributeVO> detail(@PathVariable("id") int id) {
+    @GetMapping("/get")
+    public ResultEntity<AttributeVO> detail(Integer id) {
         return service.getById(id);
     }
 
@@ -59,14 +59,14 @@ public class AttributeController {
     }
 
     @ApiOperation("删除attribute")
-    @DeleteMapping("/delete/{id}")
-    public ResultEntity<ResultEnum> deleteData(@PathVariable("id") int id) {
+    @DeleteMapping("/delete")
+    public ResultEntity<ResultEnum> deleteData(Integer id) {
         return ResultEntityBuild.build(service.deleteDataById(id));
     }
 
     @ApiOperation("提交待添加和待修改的属性")
     @GetMapping("/getNotSubmittedData")
-    public ResultEntity<List<AttributePO>> getNotSubmittedData() {
+    public ResultEntity<ResultEnum> getNotSubmittedData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getNotSubmittedData());
     }
 
