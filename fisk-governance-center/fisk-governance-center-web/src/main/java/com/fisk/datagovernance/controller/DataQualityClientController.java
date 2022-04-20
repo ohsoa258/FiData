@@ -2,7 +2,7 @@ package com.fisk.datagovernance.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.enums.dataquality.DataQualityRequestDTO;
+import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

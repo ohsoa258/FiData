@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -121,34 +120,36 @@ public class EntityServiceImpl implements EntityService {
      * @return
      */
     public Page<EntityPO> queryUpdateUser(Page<EntityPO> entityPoPage){
-        List<EntityPO> records = entityPoPage.getRecords();
-        if (CollectionUtils.isNotEmpty(records)){
+        if (entityPoPage != null){
+            List<EntityPO> records = entityPoPage.getRecords();
+            if (CollectionUtils.isNotEmpty(records)){
 
-            List<EntityPO> pagePoList = new ArrayList<>();
+                List<EntityPO> pagePoList = new ArrayList<>();
 
-            // 没有更新人
-            List<EntityPO> notUpdateUserList = records.stream().filter(e -> StringUtils.isBlank(e.getUpdateUser())).collect(Collectors.toList());
-            pagePoList.addAll(notUpdateUserList);
+                // 没有更新人
+                List<EntityPO> notUpdateUserList = records.stream().filter(e -> StringUtils.isBlank(e.getUpdateUser())).collect(Collectors.toList());
+                pagePoList.addAll(notUpdateUserList);
 
-            List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getUpdateUser())).map(e -> Long.parseLong(e.getUpdateUser())).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(userIds)){
-                // 查询用户名
-                List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
+                List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getUpdateUser())).map(e -> Long.parseLong(e.getUpdateUser())).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(userIds)){
+                    // 查询用户名
+                    List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
 
-                List<EntityPO> entityPoList = new ArrayList<>();
-                for (EntityPO record : records) {
-                    List<EntityPO> collect = dtoList.stream().filter(item -> item.getId().toString().equals(record.getUpdateUser())).map(item -> {
-                        record.setUpdateUser(item.getUserAccount());
-                        return record;
-                    }).collect(Collectors.toList());
+                    List<EntityPO> entityPoList = new ArrayList<>();
+                    for (EntityPO record : records) {
+                        List<EntityPO> collect = dtoList.stream().filter(item -> item.getId().toString().equals(record.getUpdateUser())).map(item -> {
+                            record.setUpdateUser(item.getUserAccount());
+                            return record;
+                        }).collect(Collectors.toList());
 
-                    entityPoList.addAll(collect);
+                        entityPoList.addAll(collect);
+                    }
+
+                    pagePoList.addAll(entityPoList);
                 }
 
-                pagePoList.addAll(entityPoList);
+                return entityPoPage.setRecords(pagePoList);
             }
-
-            return entityPoPage.setRecords(pagePoList);
         }
 
         return entityPoPage;
@@ -170,10 +171,7 @@ public class EntityServiceImpl implements EntityService {
         String desc = "修改一个实体,id:" + id;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
-        if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
 
         return ResultEnum.SUCCESS;
     }
@@ -196,10 +194,7 @@ public class EntityServiceImpl implements EntityService {
         String desc = "删除了一个实体,id:" + id;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
-        if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
 
         return ResultEnum.SUCCESS;
     }
@@ -252,11 +247,8 @@ public class EntityServiceImpl implements EntityService {
         String desc = "创建了一个实体,id:" + entityId;
 
         // 记录日志
-        ResultEnum resultEnum = logService.saveEventLog((int)entityPo.getId(),ObjectTypeEnum.ENTITY,
+        logService.saveEventLog((int)entityPo.getId(),ObjectTypeEnum.ENTITY,
                 EventTypeEnum.SAVE,desc);
-        if (resultEnum == ResultEnum.SAVE_DATA_ERROR){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
 
         return ResultEnum.SUCCESS;
     }

@@ -1,7 +1,7 @@
 package com.fisk.task.listener.governance;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.datagovernance.enums.dataquality.DataQualityRequestDTO;
+import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
 import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;

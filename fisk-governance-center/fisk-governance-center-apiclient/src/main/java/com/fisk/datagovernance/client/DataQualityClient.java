@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.datagovernance.enums.dataquality.DataQualityRequestDTO;
+import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.service.dataquality;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.datagovernance.enums.dataquality.DataQualityRequestDTO;
+import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
 
 /**
  * @author dick

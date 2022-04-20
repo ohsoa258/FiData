@@ -20,6 +20,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.task.client",
         "com.fisk.system.client"
 })
+/**
+ * @author WangYan
+ * @date 2022/4/13 10:10
+ */
 public class FiskMdmModelApplication {
 
     public static void main(String[] args) {
