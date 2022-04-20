@@ -141,7 +141,10 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         if (businessFilterPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        // 删除关联通知
         componentNotificationMapImpl.updateDelFlag(0, businessFilterPO.getTemplateId(), businessFilterPO.getId());
+        // 删除调度任务
+
         return baseMapper.deleteByIdWithFill(businessFilterPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

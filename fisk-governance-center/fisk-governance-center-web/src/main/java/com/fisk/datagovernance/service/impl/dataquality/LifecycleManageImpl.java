@@ -136,7 +136,10 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (lifecyclePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        // 删除关联通知
         componentNotificationMapImpl.updateDelFlag(0, lifecyclePO.getTemplateId(), lifecyclePO.getId());
+        // 删除调度任务
+
         return baseMapper.deleteByIdWithFill(lifecyclePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
