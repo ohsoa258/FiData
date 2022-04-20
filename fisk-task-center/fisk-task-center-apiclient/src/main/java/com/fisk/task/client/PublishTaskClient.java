@@ -10,6 +10,7 @@ import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
@@ -242,4 +243,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/pushModelByName")
     public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO data);
+
+    /**
+     * 创建任务后台表
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/createBackendTable")
+    public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO data);
 }
