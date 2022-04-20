@@ -21,6 +21,9 @@ public class AttributeVO {
     @ApiModelProperty(value = "实体id")
     private Integer entityId;
 
+    @ApiModelProperty(value = "模型id")
+    private Integer modelId;
+
     @ApiModelProperty(value = "属性名称")
     private String name;
 
@@ -29,6 +32,9 @@ public class AttributeVO {
 
     @ApiModelProperty(value = "描述")
     private String desc;
+
+    @ApiModelProperty(value = "底层表名")
+    private String columnName;
 
     @ApiModelProperty(value = "数据类型")
     private DataTypeEnum dataType;

@@ -12,6 +12,7 @@ import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
@@ -19,6 +20,7 @@ import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -52,12 +54,22 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Resource
     private PublishTaskClient publishTaskClient;
 
+    @Resource
+    private EntityMapper entityMapper;
+
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
         AttributeVO attributeVO = AttributeMap.INSTANCES.poToVo(baseMapper.selectById(id));
         if(Objects.isNull(attributeVO)){
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+
+        // 查询出模型id
+        QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(EntityPO::getId,attributeVO.getEntityId());
+        EntityPO entityPO = entityMapper.selectOne(queryWrapper);
+        attributeVO.setModelId(entityPO.getModelId());
         return ResultEntityBuild.build(ResultEnum.SUCCESS, attributeVO);
     }
 
