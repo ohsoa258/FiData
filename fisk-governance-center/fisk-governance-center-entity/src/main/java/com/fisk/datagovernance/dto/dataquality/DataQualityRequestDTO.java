@@ -1,5 +1,6 @@
-package com.fisk.datagovernance.enums.dataquality;
+package com.fisk.datagovernance.dto.dataquality;
 
+import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
 import lombok.Data;
 
 /**

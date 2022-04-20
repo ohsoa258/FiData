@@ -12,8 +12,9 @@ public enum ModuleTypeEnum implements BaseEnum {
     /**
      * 组件规则类型
      */
+    NONE(0, "空"),
     STRONG_RULE(1, "强规则"),
-    WEAK_RULE(3, "弱规则");
+    WEAK_RULE(2, "弱规则");
 
     ModuleTypeEnum(int value, String name) {
         this.name = name;

@@ -12,7 +12,7 @@ public enum ModuleDataSourceTypeEnum implements BaseEnum {
     /**
      * 组件数据源类型
      */
-    NONE(0, "空数据源"),
+    NONE(0, "空"),
     DATAQUALITY(1, "数据质量"),
     METADATA(2, "元数据");
 
