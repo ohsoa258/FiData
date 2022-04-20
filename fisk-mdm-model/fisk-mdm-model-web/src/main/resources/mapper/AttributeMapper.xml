@@ -5,7 +5,7 @@
     <select id="getAll" resultType="com.fisk.mdm.vo.attribute.AttributeVO">
         select attribute.id,
                entity_id,
-               name,
+               attribute.name,
                display_name,
                attribute.desc,
                data_type,
@@ -25,7 +25,7 @@
         from tb_attribute as attribute
         where attribute.del_flag=1
         <if test="query.keyword !=null and query.keyword.length()>0 ">
-            and (name like concat('%', #{query.keyword}, '%')
+            and attribute.name like concat('%', #{query.keyword}, '%')
         </if>
     </select>
 
