@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
@@ -179,7 +180,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        // 删除关联通知
         componentNotificationMapImpl.updateDelFlag(0, dataCheckPO.getTemplateId(), dataCheckPO.getId());
+        // 删除调度任务
+
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -531,8 +535,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t\tEND AS 'checkResult' \n" +
                 "\t) T1\n" +
                 "\t";
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式 yyyy-MM-dd HH:mm:ss
-        String format = df.format(new Date());// new Date()为获取当前系统时间
+        String format = DateTimeUtils.getNowToShortDate();
         switch (dataSourceTypeEnum) {
             case MYSQL:
                 sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "", tableName, fieldName, format, "LIMIT 1 ");
