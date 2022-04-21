@@ -360,7 +360,7 @@ public class BusinessAreaImpl
         }
         //获取事实表名称集合
         QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
-        factPoQueryWrapper.select("fact_table_en_name").lambda().eq(FactPO::getBusinessId,businessAreaId);
+        factPoQueryWrapper.select("fact_tab_name").lambda().eq(FactPO::getBusinessId,businessAreaId);
         List<String> factNameList=(List) factMapper.selectObjs(factPoQueryWrapper);
         if (!CollectionUtils.isEmpty(factNameList))
         {
