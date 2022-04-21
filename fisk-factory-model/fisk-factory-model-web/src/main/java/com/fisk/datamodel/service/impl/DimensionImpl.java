@@ -424,7 +424,7 @@ public class DimensionImpl implements IDimension {
             Class.forName(driver);
             conn = DriverManager.getConnection(url, username, password);
         } catch (Exception e) {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
         }
         return conn;
     }
