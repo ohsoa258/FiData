@@ -311,21 +311,16 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     @Override
-    public OlapPO selectOlapPO(int id, int type) {
+    public OlapPO selectOlapPO(int id) {
         HashMap<String, Object> conditionHashMap = new HashMap<>();
         OlapPO olapPO = new OlapPO();
         conditionHashMap.put("del_flag", 1);
         conditionHashMap.put("id", id);
-        if (Objects.equals(type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL)) {
-            conditionHashMap.put("type", 1);
-        } else {
-            conditionHashMap.put("type", 0);
-        }
         List<OlapPO> olapPOS = mapper.selectByMap(conditionHashMap);
         if (olapPOS.size() > 0) {
             olapPO = olapPOS.get(0);
         } else {
-            log.error("未找到对应指标表" + type + "表id" + id);
+            log.error("未找到对应指标表,id" + id);
         }
         return olapPO;
     }

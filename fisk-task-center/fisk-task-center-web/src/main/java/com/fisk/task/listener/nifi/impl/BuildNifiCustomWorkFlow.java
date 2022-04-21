@@ -516,7 +516,7 @@ public class BuildNifiCustomWorkFlow {
 
     public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkListDTO, String groupStructure, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
         BuildNifiCustomWorkFlowDTO nifiNode = new BuildNifiCustomWorkFlowDTO();
-        String TopicName = "dmp.datafactory.nifi." + nifiCustomWorkListDTO.pipelineName;
+        String TopicName = "dmp.datafactory.nifi." + nifiCustomWorkListDTO.pipelineId;
         //1.找到在哪个组下面
         List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkListDTO.nifiCustomWorkDTOS;
         try {
@@ -564,10 +564,10 @@ public class BuildNifiCustomWorkFlow {
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
                         TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
                         String Topic = TopicName;
-                        Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
+                        Topic += "." + tableNifiSettingPO.type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
                         if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                                 Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                            Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
+                            Topic += "." + OlapTableEnum.KPI.getValue() + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
                         }
                         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
                         buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
@@ -594,10 +594,10 @@ public class BuildNifiCustomWorkFlow {
                 log.info("父级id:" + nifiNode.groupId);
                 //2.拼装参数,三类nifi流程,3.调用方法生成流程
                 TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
-                Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".");
+                Topic += "." + tableNifiSettingPO.type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
                 if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
                         Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                    Topic += "." + tableNifiSettingPO.tableName.replaceFirst("_", ".") + OlapTableEnum.KPI.getValue();
+                    Topic += "." + OlapTableEnum.KPI.getValue() + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
                 }
                 updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
                         tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId);

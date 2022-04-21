@@ -185,11 +185,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 appGroupId = dto.groupStructureId;
             }
             List<ControllerServiceEntity> dbPool = buildDsConnectionPool(dto.synchronousTypeEnum, configDTO, appGroupId, dto);
-            String sourceId="";
-           if(!dto.excelFlow){
-               appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
-               sourceId=dbPool.get(0).getId();
-           }
+            String sourceId = "";
+            if (!dto.excelFlow) {
+                appNifiSettingPO.sourceDbPoolComponentId = dbPool.get(0).getId();
+                sourceId = dbPool.get(0).getId();
+            }
             appNifiSettingPO.targetDbPoolComponentId = dbPool.get(1).getId();
 
             //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
@@ -397,7 +397,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 targetDbPoolConfig.syncMode = res.data.targetDsConfig.syncMode;
             }
             sourceDsConfig = res.data.sourceDsConfig;
-            ftpConfig=res.data.ftpConfig;
+            ftpConfig = res.data.ftpConfig;
             //pg_dw----doris_olap
         } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             if (appNifiSettingPO != null && appNifiSettingPO.appComponentId != null) {
@@ -473,7 +473,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         data.targetDsConfig = targetDbPoolConfig;
         data.sourceDsConfig = sourceDsConfig;
         data.processorConfig = processorConfig;
-        data.ftpConfig=ftpConfig;
+        data.ftpConfig = ftpConfig;
         return data;
     }
 
@@ -607,15 +607,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 targetRes = componentsBuild.buildDbControllerService(targetDto);
             }
             //来源库
-            if(!buildNifiFlowDTO.excelFlow){
-            if (nifiSourceConfigPo != null) {
-                ControllerServiceEntity data = new ControllerServiceEntity();
-                data.setId(nifiSourceConfigPo.componentId);
-                sourceRes.data = data;
-            } else {
-                BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE, synchronousTypeEnum);
-                sourceRes = componentsBuild.buildDbControllerService(sourceDto);
-            }}
+            if (!buildNifiFlowDTO.excelFlow) {
+                if (nifiSourceConfigPo != null) {
+                    ControllerServiceEntity data = new ControllerServiceEntity();
+                    data.setId(nifiSourceConfigPo.componentId);
+                    sourceRes.data = data;
+                } else {
+                    BuildDbControllerServiceDTO sourceDto = buildDbControllerServiceDTO(config, groupId, DbPoolTypeEnum.SOURCE, synchronousTypeEnum);
+                    sourceRes = componentsBuild.buildDbControllerService(sourceDto);
+                }
+            }
             if (targetRes.success && sourceRes.success) {
                 list.add(sourceRes.data);
                 list.add(targetRes.data);
@@ -625,8 +626,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             }
         } else {
             ControllerServiceEntity sourceControllerService = new ControllerServiceEntity();
-            if(!buildNifiFlowDTO.excelFlow){
-            sourceControllerService=componentsBuild.getDbControllerService(config.sourceDsConfig.componentId);}
+            if (!buildNifiFlowDTO.excelFlow) {
+                sourceControllerService = componentsBuild.getDbControllerService(config.sourceDsConfig.componentId);
+            }
             ControllerServiceEntity targetResControllerService = componentsBuild.getDbControllerService(config.targetDsConfig.componentId);
             if (sourceControllerService != null && targetResControllerService != null) {
                 list.add(sourceControllerService);
@@ -826,7 +828,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //连接器
             ProcessorEntity processorEntity = excelProcessorEntity.get(0);
             componentConnector(groupId, delSqlRes.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
-            processorEntity1 = excelProcessorEntity.get(excelProcessorEntity.size()-1);
+            processorEntity1 = excelProcessorEntity.get(excelProcessorEntity.size() - 1);
         } else {
             tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
             //连接器
@@ -990,7 +992,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(evaluateJson);
         res.add(logProcessor);
         res.add(delSqlRes);
-        if(executeSQLRecord.getId()!=null){
+        if (executeSQLRecord.getId() != null) {
             res.add(executeSQLRecord);
         }
         res.addAll(processorEntities);
@@ -1080,7 +1082,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildFetchFTPProcessorDTO.hostname = ftpConfig.hostname;
         buildFetchFTPProcessorDTO.password = ftpConfig.password;
         buildFetchFTPProcessorDTO.port = ftpConfig.port;
-        buildFetchFTPProcessorDTO.remoteFile=ftpConfig.remotePath+"/"+ftpConfig.fileFilterRegex;
+        buildFetchFTPProcessorDTO.remoteFile = ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex;
         buildFetchFTPProcessorDTO.username = ftpConfig.username;
         buildFetchFTPProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildFetchFTPProcess(buildFetchFTPProcessorDTO);
@@ -1788,10 +1790,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         TableTopicDTO tableTopicDTO = new TableTopicDTO();
         tableTopicDTO.tableId = Math.toIntExact(dto.id);
         tableTopicDTO.tableType = dto.type.getValue();
-        tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1;
+        tableTopicDTO.topicName = "dmp.datafactory.nifi." + dto.type.getValue() + "." + dto.appId + "." + dto.id;
         tableTopicDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
         if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            tableTopicDTO.topicName = "dmp.datafactory.nifi." + s[0] + "." + s1 + OlapTableEnum.KPI.getValue();
+            tableTopicDTO.topicName = "dmp.datafactory.nifi." + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
         }
         tableTopicService.updateTableTopic(tableTopicDTO);
         buildPublishKafkaProcessorDTO.TopicName = tableTopicDTO.topicName;

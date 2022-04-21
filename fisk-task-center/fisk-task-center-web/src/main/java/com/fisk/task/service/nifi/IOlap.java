@@ -42,10 +42,9 @@ public interface IOlap {
      * 查找该业务域下所有的表
      *
      * @param id   id
-     * @param type type
      * @return
      */
-    OlapPO selectOlapPO(int id, int type);
+    OlapPO selectOlapPO(int id);
 
     /**
      * getNifiGetPortHierarchy
