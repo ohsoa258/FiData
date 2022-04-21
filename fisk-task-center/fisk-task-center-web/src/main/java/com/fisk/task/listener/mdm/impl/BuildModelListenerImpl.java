@@ -7,12 +7,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeSyncStatusEnum;
-import com.fisk.mdm.enums.MdmStatusTypeEnum;
-import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
@@ -21,7 +20,6 @@ import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -43,8 +41,7 @@ import static com.fisk.mdm.enums.MdmStatusTypeEnum.NOT_CREATED;
 public class BuildModelListenerImpl implements BuildModelListener {
 
     DataSourceTypeEnum type = DataSourceTypeEnum.PG;
-    String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm_attributeLog?stringtype=unspecified";
-    String connectionStr1 = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm_backstageTable?stringtype=unspecified";
+    String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified";
     String acc = "postgres";
     String pwd = "Password01!";
 
@@ -75,19 +72,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    //@Transactional(rollbackFor = Exception.class)
     @Override
     public void backgroundCreateTasks(String dataInfo, Acknowledgment acke) {
 
         try {
             EntityDTO dto = JSON.parseObject(dataInfo, EntityDTO.class);
             // 获取实体信息
-            EntityVO entityVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
-            MdmStatusTypeEnum status = entityVo.getStatus();
+            EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
+            String status = entityInfoVo.getStatus();
             if (status.equals(NOT_CREATED)){
                 // 实体未创建
                 // 执行创建表任务
-                this.createTable(entityVo);
+                this.createTable(entityInfoVo);
             }
 
         } catch (Exception ex) {
@@ -100,27 +97,27 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     /**
      * 执行创建表任务
-     * @param entityVo
+     * @param entityInfoVo
      */
-    public void createTable(EntityVO entityVo){
+    public void createTable(EntityInfoVO entityInfoVo){
         try{
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
-            Connection connection = abstractDbHelper.connection(connectionStr1, acc, pwd, type);
+            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
             // 1.创建Stg表
-            this.createStgTable(abstractDbHelper,sqlBuilder, connection,entityVo);
+            this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
             // 2.创建mdm表
-            this.createMdmTable(abstractDbHelper,sqlBuilder, connection,entityVo);
+            this.createMdmTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
             // 3.回写属性状态
-            this.writableAttributeStatus(entityVo.getAttributeList());
+            this.writableAttributeStatus(entityInfoVo.getAttributeList());
             // 4.创建view视图
-            this.createViwTable(abstractDbHelper,sqlBuilder, connection,entityVo);
+            this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
             // 5.回写实体状态
-            this.writableEntityStatus(entityVo);
+            this.writableEntityStatus(entityInfoVo);
         }catch (Exception ex){
             UpdateEntityDTO dto = new UpdateEntityDTO();
-            dto.setId(entityVo.getId());
-            dto.setStatus(MdmStatusTypeEnum.CREATED_FAIL);
+//            dto.setId(entityInfoVo.getId());
+//            dto.setStatus(MdmStatusTypeEnum.CREATED_FAIL);
             // todo
             mdmClient.updateData(dto);
 
@@ -131,19 +128,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
     /**
      * 回写实体状态
-     * @param entityVo
+     * @param entityInfoVo
      */
-    public void writableEntityStatus(EntityVO entityVo){
+    public void writableEntityStatus(EntityInfoVO entityInfoVo){
         UpdateEntityDTO dto = new UpdateEntityDTO();
-        dto.setId(entityVo.getId());
-        dto.setStatus(MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
+        dto.setId(entityInfoVo.getId());
+        dto.setStatus(1);
         mdmClient.updateData(dto);
     }
 
     /**
      * 回写属性状态
      */
-    public void writableAttributeStatus(List<AttributeDTO> attributeList){
+    public void writableAttributeStatus(List<AttributeInfoDTO> attributeList){
         List<AttributeUpdateDTO> dtoList = attributeList.stream().filter(Objects::nonNull)
                 .map(e -> {
                     AttributeUpdateDTO dto = new AttributeUpdateDTO();
@@ -169,13 +166,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param abstractDbHelper
      * @param sqlBuilder
      * @param connection
-     * @param entityVo
+     * @param entityInfoVo
      */
-    public void createStgTable(AbstractDbHelper abstractDbHelper,IBuildSqlCommand sqlBuilder,
-                      Connection connection,EntityVO entityVo){
+    public void createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+                               Connection connection, EntityInfoVO entityInfoVo){
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildStgTable(entityVo);
+            String buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
@@ -189,23 +186,23 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param abstractDbHelper
      * @param sqlBuilder
      * @param connection
-     * @param entityVo
+     * @param entityInfoVo
      */
-    public void createMdmTable(AbstractDbHelper abstractDbHelper,IBuildSqlCommand sqlBuilder,
-                               Connection connection,EntityVO entityVo){
+    public void createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+                               Connection connection, EntityInfoVO entityInfoVo){
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildMdmTable(entityVo);
+            String buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
             // 回写属性失败状态
-            entityVo.getAttributeList().stream().filter(Objects::nonNull)
+            entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
                     .forEach(e -> {
                         AttributeUpdateDTO dto = new AttributeUpdateDTO();
                         dto.setId(e.getId());
                         dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
-                        dto.setStatus(e.getStatus());
+                        //dto.setStatus(e.getStatus());
                         dto.setSyncStatus(AttributeSyncStatusEnum.ERROR);
                         dto.setErrorMsg(ex.getMessage());
                     });
@@ -220,13 +217,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param abstractDbHelper
      * @param sqlBuilder
      * @param connection
-     * @param entityVo
+     * @param entityInfoVo
      */
-    public void createViwTable(AbstractDbHelper abstractDbHelper,IBuildSqlCommand sqlBuilder,
-                               Connection connection,EntityVO entityVo){
+    public void createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+                               Connection connection, EntityInfoVO entityInfoVo){
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildViewTable(entityVo);
+            String buildStgTableSql = sqlBuilder.buildViewTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){

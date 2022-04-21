@@ -1,6 +1,6 @@
 package com.fisk.task.utils.mdmBEBuild.impl;
 
-import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 
 /**
@@ -29,17 +29,17 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildStgTable(EntityVO entityVo) {
+    public String buildStgTable(EntityInfoVO entityInfoVo) {
         return null;
     }
 
     @Override
-    public String buildMdmTable(EntityVO entityVo) {
+    public String buildMdmTable(EntityInfoVO entityInfoVo) {
         return null;
     }
 
     @Override
-    public String buildViewTable(EntityVO entityVo) {
+    public String buildViewTable(EntityInfoVO entityInfoVo) {
         return null;
     }
 }
