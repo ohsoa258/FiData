@@ -63,7 +63,7 @@ public class DataFactoryImpl implements IDataFactory {
         if (dto.nifiCustomWorkflowDetailId != null) {
             return ResultEntityBuild.build(ResultEnum.SUCCESS, buildNifiPortsHierarchyDTO(dto.nifiCustomWorkflowDetailId));
         } else {
-            NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("workflow_name", dto.workflowName).one();
+            NifiCustomWorkflowPO customWorkflowPo = nifiCustomWorkflowImpl.query().eq("id", dto.workflowId).one();
             if (customWorkflowPo == null) {
                 // 当前管道已删除
                 return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
