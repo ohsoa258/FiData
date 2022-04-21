@@ -2,9 +2,9 @@ package com.fisk.task.utils.mdmBEBuild.impl;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.client.MdmClient;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
-import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 
@@ -48,21 +48,21 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildStgTable(EntityVO entityVo) {
+    public String buildStgTable(EntityInfoVO entityInfoVo) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append("stg_" + entityVo.getModelId() + "_" + entityVo.getId()).append("(");
+        str.append("stg_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId()).append("(");
 
         // 拼接Stg表基础字段
         str.append(this.splicingStgTable());
 
         // 字段sql
-        String fieldSql = entityVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
                 .map(e -> {
 
                     // 判断数据类型
                     switch (e.getDataType()) {
-                        case TEXT:
+                        case "文本":
                             str.append(e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL");
                             break;
                         default:
@@ -79,29 +79,29 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildMdmTable(EntityVO entityVo) {
+    public String buildMdmTable(EntityInfoVO entityInfoVo) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append("mdm_" + entityVo.getModelId() + "_" + entityVo.getId()).append("(");
+        str.append("mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId()).append("(");
 
         // 拼接mdm表基础字段拼接
         str.append(this.splicingMdmTable());
 
         // 字段sql
-        String fieldSql = entityVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
                 .map(e -> {
 
-                    String name = "column_" + entityVo.getId() + "_" + e.getId();
+                    String name = "column_" + entityInfoVo.getId() + "_" + e.getId();
                     // 判断数据类型
                     switch (e.getDataType()) {
-                        case NUMERICAL:
-                        case DOMAIN:
+                        case "数值":
+                        case "域字段":
                             str.append(name + " int4 " + "NULL");
-                        case DATE:
+                        case "时间":
                             str.append(name + " date " + "NULL");
-                        case FLOAT:
+                        case "浮点型":
                             str.append(name + " float4 " + "NULL");
-                        case TEXT:
+                        case "文本":
                         default:
                             str.append(name + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL");
                     }
@@ -115,14 +115,14 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildViewTable(EntityVO entityVo) {
+    public String buildViewTable(EntityInfoVO entityInfoVo) {
         StringBuilder str = new StringBuilder();
-        String vSTableName = "mdm_" + entityVo.getModelId() + "_" + entityVo.getId();
+        String vSTableName = "mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append("viw_" + entityVo.getModelId() + "_" + entityVo.getId());
+        str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
         str.append(" AS (").append("SELECT ");
 
-        List<AttributeDTO> attributeList = entityVo.getAttributeList();
+        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
         // 属性外键数据
         List<AttributeVO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
             ResultEntity<AttributeVO> result = mdmClient.get(e.getDomainId());
@@ -149,7 +149,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             str.append(this.splicingViewTable(foreignFiled));
 
             // 字段Sql
-            String collect = entityVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
+            String collect = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
                     .map(e -> {
 
                         String name = e.getColumnName() + " AS " + e.getName();
@@ -163,7 +163,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             str.append(this.splicingViewTable(foreignFiled));
 
             // 没有外键的字段Sql
-            String collect = entityVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
+            String collect = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
                     .map(e -> {
 
                         String name = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();

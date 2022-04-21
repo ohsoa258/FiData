@@ -1,6 +1,6 @@
 package com.fisk.task.utils.mdmBEBuild;
 
-import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 
 /**
  * @author WangYan
@@ -18,22 +18,22 @@ public interface IBuildSqlCommand {
 
     /**
      * 创建Stg表sql
-     * @param entityVo
+     * @param entityInfoVo
      * @return
      */
-    String buildStgTable(EntityVO entityVo);
+    String buildStgTable(EntityInfoVO entityInfoVo);
 
     /**
      * 创建表mdm
-     * @param entityVo
+     * @param entityInfoVo
      * @return
      */
-    String buildMdmTable(EntityVO entityVo);
+    String buildMdmTable(EntityInfoVO entityInfoVo);
 
     /**
      * 创建视图view
-     * @param entityVo
+     * @param entityInfoVo
      * @return
      */
-    String buildViewTable(EntityVO entityVo);
+    String buildViewTable(EntityInfoVO entityInfoVo);
 }
