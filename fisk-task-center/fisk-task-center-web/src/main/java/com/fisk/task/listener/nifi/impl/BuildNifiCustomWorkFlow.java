@@ -120,7 +120,7 @@ public class BuildNifiCustomWorkFlow {
                 Thread.sleep(200);
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             }
-        } catch (ApiException | InterruptedException e) {
+        } catch (Exception e) {
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
             log.info("此组启动失败");
@@ -622,7 +622,6 @@ public class BuildNifiCustomWorkFlow {
 
 
     public TableNifiSettingPO getTableNifiSettingPO(BuildNifiCustomWorkFlowDTO nifiNode) {
-        nifiNode = new BuildNifiCustomWorkFlowDTO();
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         log.info("父级id:" + nifiNode.groupId);
         //2.拼装参数,三类nifi流程,3.调用方法生成流程
@@ -690,6 +689,7 @@ public class BuildNifiCustomWorkFlow {
             componentsBuild.enabledProcessor(processor.getId(), processor);
         } catch (ApiException e) {
             e.printStackTrace();
+            throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
     }
 
