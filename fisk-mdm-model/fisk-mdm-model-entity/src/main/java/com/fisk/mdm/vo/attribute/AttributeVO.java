@@ -1,7 +1,6 @@
 package com.fisk.mdm.vo.attribute;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.mdm.enums.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -76,19 +75,19 @@ public class AttributeVO {
      * 是否开启属性日志 0：false 1:true
      */
     @ApiModelProperty(value = "是否开启属性日志")
-    private String enableAttributeLog;
+    private Boolean enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
     @ApiModelProperty(value = "是否只读")
-    private Integer enableReadonly;
+    private Boolean enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
     @ApiModelProperty(value = "是否必填")
-    private String enableRequired;
+    private Boolean enableRequired;
 
     /**
      * 类型：

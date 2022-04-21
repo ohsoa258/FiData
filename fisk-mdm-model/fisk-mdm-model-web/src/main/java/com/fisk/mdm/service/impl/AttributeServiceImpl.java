@@ -8,28 +8,32 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
+import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.model.EntityDTO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -57,6 +61,12 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Resource
     private EntityMapper entityMapper;
+
+    @Resource
+    private EntityService entityService;
+
+    @Resource
+    private UserHelper userHelper;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -198,31 +208,25 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @return {@link List}<{@link AttributePO}>
      */
     @Override
-    public ResultEnum getNotSubmittedData() {
-        //获取需要提交的属性
-        QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("status",AttributeStatusEnum.INSERT).or()
-                .eq("status",AttributeStatusEnum.UPDATE);
-        List<AttributePO> attributePOS = baseMapper.selectList(wrapper);
+    public ResultEnum getNotSubmittedData(Integer entityId) {
 
-        if(attributePOS == null || attributePOS.size() == 0){
+        if(entityService.getDataById(entityId) == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        //获取需要提交的属性的实体id
-        List<Integer> entityIds = new ArrayList<>();
-        for (AttributePO attributePO:attributePOS) {
-            entityIds.add(attributePO.getEntityId());
+        QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
+        wrapper.eq("entity_id",entityId)
+                .eq("status",AttributeStatusEnum.INSERT).or()
+                .eq("status", AttributeStatusEnum.UPDATE);
+        if(baseMapper.selectList(wrapper) == null || baseMapper.selectList(wrapper).size() == 0){
+            return ResultEnum.NO_DATA_TO_SUBMIT;
         }
 
-        //去重
-        List<Integer> collect = entityIds.stream().distinct().collect(Collectors.toList());
-
-        //提交
-        EntityDTO entityDTO = new EntityDTO();
-        for (int entityId : collect) {
-            entityDTO.setEntityId(entityId);
-            publishTaskClient.createBackendTable(entityDTO);
+        com.fisk.task.dto.model.EntityDTO entityDTO = new com.fisk.task.dto.model.EntityDTO();
+        entityDTO.setEntityId(entityId);
+        entityDTO.setUserId(userHelper.getLoginUserInfo().getId());
+        if(publishTaskClient.createBackendTable(entityDTO).getCode() != ResultEnum.SUCCESS.getCode()){
+            return ResultEnum.DATA_SUBMIT_ERROR;
         }
 
         return ResultEnum.SUCCESS;

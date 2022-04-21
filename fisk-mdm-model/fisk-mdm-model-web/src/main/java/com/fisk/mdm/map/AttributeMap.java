@@ -58,44 +58,24 @@ public interface AttributeMap {
     })
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
 
-    /**
-     * po => dto
-     * @param dto
-     * @return
-     */
-    @Mappings({
-            @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
-            @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
-            @Mapping(source = "enableRequired" ,target = "enableRequired")
-    })
-    AttributeDTO poToDto(AttributePO dto);
 
     /**
-     * po => dto
-     * @param dto
-     * @return
-     */
-    @Mappings({
-            @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
-            @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
-            @Mapping(source = "enableRequired" ,target = "enableRequired")
-    })
-    AttributeInfoDTO poToInfoDto(AttributePO dto);
-
-    /**
-     * po => dto list
-     * @param list
-     * @return
+     * poList => DtoList
+     *
+     * @param list 列表
+     * @return {@link List}<{@link AttributeInfoDTO}>
      */
     List<AttributeInfoDTO> poToDtoList(List<AttributePO> list);
 
     /**
-     * po => vo
-     * @param po
-     * @return
+     * entityPo => EntityInfoVO
+     *
+     * @param entityPo 实体po
+     * @return {@link EntityInfoVO}
      */
-    @Mappings({
-            @Mapping(source = "enableMemberLog" ,target = "enableMemberLog")
-    })
-    EntityInfoVO poToEntityVo(EntityPO po);
+    EntityInfoVO poToEntityVo(EntityPO entityPo);
+
 }
+
+
+

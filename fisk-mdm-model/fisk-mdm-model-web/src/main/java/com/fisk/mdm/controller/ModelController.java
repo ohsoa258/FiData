@@ -9,6 +9,7 @@ import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,6 +58,13 @@ public class ModelController {
     @DeleteMapping("/delete")
     public ResultEntity<ResultEnum> deleteData(Integer id) {
         return ResultEntityBuild.build(service.deleteDataById(id));
+    }
+
+    @ApiOperation("根据模型id获取实体")
+    @GetMapping("/getEntityById")
+    @ResponseBody
+    public ResultEntity<ModelInfoVO> getEntityById(Integer id){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getEntityById(id));
     }
 
 }

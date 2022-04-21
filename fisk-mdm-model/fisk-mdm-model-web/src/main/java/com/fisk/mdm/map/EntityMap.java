@@ -9,6 +9,8 @@ import org.mapstruct.*;
 import com.fisk.mdm.utlis.BooleanToIntUtils;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 /**
  * @author WangYan
  * @date 2022/3/9 17:20
@@ -63,4 +65,6 @@ public interface EntityMap {
      * @return
      */
     Page<EntityPO> voToPoPage(Page<EntityVO> page);
+
+    List<EntityVO> poToVoList(List<EntityPO> entityPOS);
 }

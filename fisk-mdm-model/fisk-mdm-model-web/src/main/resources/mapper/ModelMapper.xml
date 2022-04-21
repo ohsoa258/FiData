@@ -18,6 +18,7 @@
         <if test=" query.keyword !=null and query.keyword.length()>0 ">
             and model.name like concat('%', #{query.keyword}, '%')
         </if>
+        order by create_time desc
     </select>
 
 </mapper>

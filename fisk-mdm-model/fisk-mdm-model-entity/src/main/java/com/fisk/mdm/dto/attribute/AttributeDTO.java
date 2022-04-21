@@ -112,21 +112,21 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "是否开启属性日志")
     @NotNull()
-    private String enableAttributeLog;
+    private Boolean enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
     @ApiModelProperty(value = "是否只读")
     @NotNull()
-    private String enableReadonly;
+    private Boolean enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
     @ApiModelProperty(value = "是否必填")
     @NotNull()
-    private String enableRequired;
+    private Boolean enableRequired;
 
     /**
      * 类型：

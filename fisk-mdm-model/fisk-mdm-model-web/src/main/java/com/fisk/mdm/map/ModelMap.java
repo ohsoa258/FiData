@@ -3,11 +3,16 @@ package com.fisk.mdm.map;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
+import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author chenYa
@@ -55,4 +60,14 @@ public interface ModelMap {
      * @return
      */
     Page<ModelVO> poToVoPage(Page<ModelPO> poPage);
+
+    /**
+     * po => InfoVO
+     *
+     * @param modelPO
+     * @return {@link ModelInfoVO}
+     */
+    ModelInfoVO poToInfoVO(ModelPO modelPO);
+
+
 }

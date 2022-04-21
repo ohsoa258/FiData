@@ -62,7 +62,7 @@ public interface AttributeService extends IService<AttributePO> {
      *
      * @return {@link List}<{@link AttributePO}>
      */
-    ResultEnum getNotSubmittedData();
+    ResultEnum getNotSubmittedData(Integer entityId);
 
 
     /**

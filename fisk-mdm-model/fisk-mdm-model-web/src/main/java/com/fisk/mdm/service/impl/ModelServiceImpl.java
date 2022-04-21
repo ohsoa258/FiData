@@ -8,22 +8,28 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ModelVersionStatusEnum;
 import com.fisk.mdm.enums.ModelVersionTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.map.ModelVersionMap;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
+import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.task.client.PublishTaskClient;
@@ -45,6 +51,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     EventLogService logService;
+
+    @Resource
+    EntityMapper entityMapper;
 
     @Resource
     IModelVersionService iModelVersionService;
@@ -220,5 +229,29 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         }
 
         return all;
+    }
+
+    /**
+     * 通过模型id获取实体
+     *
+     * @param modelId 模型id
+     * @return {@link ModelInfoVO}
+     */
+    @Override
+    public ModelInfoVO getEntityById(Integer modelId) {
+        ModelPO modelPo = baseMapper.selectById(modelId);
+        if(modelPo == null){
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
+        QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("model_id",modelId);
+
+        List<EntityPO> entityPOS = entityMapper.selectList(wrapper);
+        if(CollectionUtils.isNotEmpty(entityPOS)){
+            modelInfoVO.setEntityVOList(EntityMap.INSTANCES.poToVoList(entityPOS));
+        }
+        return modelInfoVO;
     }
 }

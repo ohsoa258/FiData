@@ -42,6 +42,8 @@ public enum ResultEnum {
     API_ISEMPTY(1018, "获取api对象失败"),
     CLIENT_ISEMPTY(1019, "客户端已删除"),
     FILENAME_EXISTS(1020, "文件名称已存在"),
+    NO_DATA_TO_SUBMIT(1021,"暂无可提交数据"),
+    DATA_SUBMIT_ERROR(1022,"数据提交失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始

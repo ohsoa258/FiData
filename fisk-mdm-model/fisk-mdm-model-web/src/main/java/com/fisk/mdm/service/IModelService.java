@@ -8,6 +8,7 @@ import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
+import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 
 /**
@@ -48,5 +49,13 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     Page<ModelVO> getAll(ModelQueryDTO query);
+
+    /**
+     * 通过模型id获取实体
+     *
+     * @param modelId 模型id
+     * @return {@link ModelInfoVO}
+     */
+    ModelInfoVO getEntityById(Integer modelId);
 
 }
