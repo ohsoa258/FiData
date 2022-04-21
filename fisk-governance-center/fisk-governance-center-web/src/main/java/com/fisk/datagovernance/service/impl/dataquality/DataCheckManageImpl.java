@@ -392,7 +392,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 thresholdValue == 0) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
-        String sql = String.format("SELECT\n" +
+        String sql = "SELECT\n" +
                 "\t'%s' AS checkDataBase,\n" +
                 "\t'%s' AS checkTable,\n" +
                 "\t'%s' AS checkField,\n" +
@@ -404,22 +404,27 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t\t'fail' ELSE 'success' \n" +
                 "\tEND AS checkResult \n" +
                 "FROM\n" +
-                "\t'%s';", dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName());
+                "\t'%s';";
         switch (fieldAggregate) {
             case "SUM":
-                sql = String.format(sql, "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                        "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "COUNT":
-                sql = String.format(sql, "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                        "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "AVG":
-                sql = String.format(sql, "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                        "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
                 break;
             case "MAX":
-                sql = String.format(sql, "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                        "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "MIN":
-                sql = String.format(sql, "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                        "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
