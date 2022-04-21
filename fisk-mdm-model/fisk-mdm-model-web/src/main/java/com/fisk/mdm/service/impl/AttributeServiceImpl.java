@@ -12,6 +12,7 @@ import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
@@ -225,6 +226,17 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+
+    /**
+     * 获取实体、属性信息
+     *
+     * @return {@link List}<{@link Entity}>
+     */
+    @Override
+    public List<Entity> getER() {
+        return baseMapper.getER();
     }
 
 

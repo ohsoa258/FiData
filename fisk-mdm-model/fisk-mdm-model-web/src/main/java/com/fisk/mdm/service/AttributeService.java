@@ -11,6 +11,7 @@ import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
 
@@ -62,5 +63,13 @@ public interface AttributeService extends IService<AttributePO> {
      * @return {@link List}<{@link AttributePO}>
      */
     ResultEnum getNotSubmittedData();
+
+
+    /**
+     * 获取实体、属性信息
+     *
+     * @return {@link List}<{@link Entity}>
+     */
+    List<Entity> getER();
 
 }

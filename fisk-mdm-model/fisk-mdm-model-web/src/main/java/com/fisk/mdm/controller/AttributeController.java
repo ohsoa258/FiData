@@ -12,6 +12,7 @@ import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.model.ModelVO;
@@ -68,6 +69,12 @@ public class AttributeController {
     @GetMapping("/getNotSubmittedData")
     public ResultEntity<ResultEnum> getNotSubmittedData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getNotSubmittedData());
+    }
+
+    @ApiOperation("获取实体、属性信息")
+    @GetMapping("/getER")
+    public ResultEntity<List<Entity>> getER() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER());
     }
 
 }

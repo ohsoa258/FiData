@@ -29,4 +29,24 @@
         </if>
     </select>
 
+    <select id="getER" resultMap="entityMap">
+        select entity.name,
+               entity.display_name,
+               attribute.name as aName,
+               attribute.display_name as aDisplayName,
+               attribute.data_type
+        from tb_attribute as attribute
+        right join tb_entity as entity on entity.id = attribute.entity_id
+        where attribute.del_flag=1 and entity.del_flag=1
+    </select>
+    <resultMap id="entityMap" type="com.fisk.mdm.entity.Entity">
+        <result property="name" column="name"/>
+        <result property="displayName" column="display_name"/>
+        <collection property="columns" ofType="com.fisk.mdm.entity.Column">
+            <result property="name" column="aName"/>
+            <result property="displayName" column="aDisplayName"/>
+            <result property="dataType" column="data_type"/>
+        </collection>
+    </resultMap>
+
 </mapper>

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -24,5 +25,12 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
      * @return
      */
     Page<AttributeVO> getAll(Page<AttributeVO> page, @Param("query") AttributeQueryDTO query);
+
+    /**
+     * 获取实体、属性信息
+     *
+     * @return {@link List}<{@link Entity}>
+     */
+    List<Entity> getER();
 
 }

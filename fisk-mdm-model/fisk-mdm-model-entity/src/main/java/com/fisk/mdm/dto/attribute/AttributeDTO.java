@@ -43,9 +43,7 @@ public class AttributeDTO {
     @Length(min = 0, max = 200, message = "长度最多50")
     private String desc;
 
-    /**
-     * 描述
-     */
+
     private String columnName;
 
     /**
@@ -94,21 +92,18 @@ public class AttributeDTO {
      *状态： 0：待新增 ，1：待修改 ， 2：已提交
      */
     @ApiModelProperty(value = "状态")
-    @NotNull()
     private AttributeStatusEnum status;
 
     /**
      * 提交状态：0：提交失败 1：提交成功
      */
     @ApiModelProperty(value = "提交状态")
-    @NotNull()
     private AttributeSyncStatusEnum syncStatus;
 
     /**
      * 提交失败描述
      */
     @ApiModelProperty(value = "提交失败描述")
-    @NotNull()
     @Length(min = 0, max = 200, message = "长度最多200")
     private String errorMsg;
 
@@ -138,7 +133,6 @@ public class AttributeDTO {
      * 0:code 1:name 2:业务字段
      */
     @ApiModelProperty(value = "类型")
-    @NotNull()
     private MdmTypeEnum mdmType;
 
     /**
