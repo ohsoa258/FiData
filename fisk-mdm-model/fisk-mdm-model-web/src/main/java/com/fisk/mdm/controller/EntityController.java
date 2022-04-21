@@ -33,7 +33,7 @@ public class EntityController {
     @ApiOperation("根据id获取实体")
     @GetMapping("/getDataById")
     @ResponseBody
-    public ResultEntity<EntityDTO> getDataById(Integer id) {
+    public ResultEntity<EntityVO> getDataById(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getDataById(id));
     }
 

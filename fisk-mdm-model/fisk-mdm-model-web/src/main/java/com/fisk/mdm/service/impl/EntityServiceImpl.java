@@ -52,9 +52,9 @@ public class EntityServiceImpl implements EntityService {
     AttributeMapper attributeMapper;
 
     @Override
-    public EntityDTO getDataById(Integer id) {
+    public EntityVO getDataById(Integer id) {
         EntityPO entityPo = entityMapper.selectById(id);
-        return entityPo == null ? null : EntityMap.INSTANCES.poToDto(entityPo);
+        return entityPo == null ? null : EntityMap.INSTANCES.poToVo(entityPo);
     }
 
     @Override
@@ -230,6 +230,9 @@ public class EntityServiceImpl implements EntityService {
         attributeCode.setDisplayName("字典编码");
         attributeCode.setDataType(DataTypeEnum.TEXT);
         attributeCode.setDataTypeLength(50);
+        attributeCode.setEnableAttributeLog(0);
+        attributeCode.setEnableReadonly(0);
+        attributeCode.setEnableRequired(0);
         attributePoList.add(attributeCode);
 
         AttributePO attributePoName = new AttributePO();
@@ -238,6 +241,9 @@ public class EntityServiceImpl implements EntityService {
         attributePoName.setDisplayName("字典名称");
         attributePoName.setDataType(DataTypeEnum.TEXT);
         attributePoName.setDataTypeLength(50);
+        attributePoName.setEnableAttributeLog(0);
+        attributePoName.setEnableReadonly(0);
+        attributePoName.setEnableRequired(0);
         attributePoList.add(attributePoName);
 
         boolean saveBatch = attributeService.saveBatch(attributePoList);

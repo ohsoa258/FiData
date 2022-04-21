@@ -56,11 +56,24 @@ public class BooleanToIntUtils {
     public Integer typeEnumToInt(MdmStatusTypeEnum type){
         switch (type){
             case NOT_CREATED :
-                return 0;
+                return MdmStatusTypeEnum.NOT_CREATED.getValue();
             case CREATED_SUCCESSFULLY:
-                return 1;
+                return MdmStatusTypeEnum.CREATED_SUCCESSFULLY.getValue();
             case CREATED_FAIL:
-                return 2;
+                return MdmStatusTypeEnum.CREATED_FAIL.getValue();
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public String typeEnumToString(MdmStatusTypeEnum type){
+        switch (type){
+            case NOT_CREATED :
+                return MdmStatusTypeEnum.NOT_CREATED.getName();
+            case CREATED_SUCCESSFULLY:
+                return MdmStatusTypeEnum.CREATED_SUCCESSFULLY.getName();
+            case CREATED_FAIL:
+                return MdmStatusTypeEnum.CREATED_FAIL.getName();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

@@ -27,7 +27,7 @@ public interface EntityMap {
             @Mapping(source = "enableMemberLog" ,target = "enableMemberLog"),
             @Mapping(source = "status" ,target = "status")
     })
-    EntityDTO poToDto(EntityPO po);
+    EntityVO poToVo(EntityPO po);
 
     /**
      * dto => ppo

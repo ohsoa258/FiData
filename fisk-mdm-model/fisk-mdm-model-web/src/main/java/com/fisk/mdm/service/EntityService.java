@@ -19,7 +19,7 @@ public interface EntityService {
      * @param id
      * @return
      */
-    EntityDTO getDataById(Integer id);
+    EntityVO getDataById(Integer id);
 
     /**
      * 分页查询实体
