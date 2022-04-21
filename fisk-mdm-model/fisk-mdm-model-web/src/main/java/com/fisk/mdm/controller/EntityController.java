@@ -40,21 +40,21 @@ public class EntityController {
     @ApiOperation("分页查询实体")
     @PostMapping("/list")
     @ResponseBody
-    public ResultEntity<Page<EntityVO>> listData(@Validated @RequestBody EntityPageDTO dto) {
+    public ResultEntity<Page<EntityVO>> list(@Validated @RequestBody EntityPageDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.listData(dto));
     }
 
     @ApiOperation("修改实体")
-    @PutMapping("/updateData")
+    @PutMapping("/update")
     @ResponseBody
-    public ResultEntity<ResultEnum> updateData(@Validated @RequestBody UpdateEntityDTO dto) {
+    public ResultEntity<ResultEnum> update(@Validated @RequestBody UpdateEntityDTO dto) {
         return ResultEntityBuild.build(entityService.updateData(dto));
     }
 
     @ApiOperation("删除实体")
-    @DeleteMapping("/deleteData")
+    @DeleteMapping("/delete")
     @ResponseBody
-    public ResultEntity<ResultEnum> deleteData(Integer id) {
+    public ResultEntity<ResultEnum> delete(Integer id) {
         return ResultEntityBuild.build(entityService.deleteData(id));
     }
 
