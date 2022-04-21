@@ -74,6 +74,11 @@ public class LifecyclePO extends BasePO {
     public int checkConsanguinityDay;
 
     /**
+     * 上下游血缘关系范围：1、上游 2、下游 3、上下游
+     */
+    public int checkConsanguinity;
+
+    /**
      * 运行时间表达式
      */
     public String runTimeCron;
@@ -82,6 +87,11 @@ public class LifecyclePO extends BasePO {
      * 表状态
      */
     public int tableState;
+
+    /**
+     * 组件规则
+     */
+    public String moduleRule;
 
     /**
      * 组件状态

@@ -241,7 +241,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 rule = createTableBloodKinship_CheckRule();
                 break;
             case BUSINESS_CHECK_TEMPLATE:
-                rule = createBusiness_CheckRule();
+                rule = createBusiness_CheckRule(dto.getModuleRule());
                 //业务验证模板
                 break;
             case SIMILARITY_TEMPLATE:
@@ -579,12 +579,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @version v1.0
      * @params
      */
-    public ResultEntity<String> createBusiness_CheckRule() {
+    public ResultEntity<String> createBusiness_CheckRule(String moduleRule) {
         /*
          * 逻辑：
          * 高级业务清洗为用户自定义sql规则，此处无需生成规则
          * */
         ResultEntity<String> result = new ResultEntity<>();
+        result.setData(moduleRule);
         result.setCode(0);
         return result;
     }

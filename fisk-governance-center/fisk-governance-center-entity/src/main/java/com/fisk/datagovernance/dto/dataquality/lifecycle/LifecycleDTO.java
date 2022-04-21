@@ -88,6 +88,12 @@ public class LifecycleDTO {
     public int checkConsanguinityDay;
 
     /**
+     * 上下游血缘关系范围：1、上游 2、下游 3、上下游
+     */
+    @ApiModelProperty(value = "上下游血缘关系范围：1、上游 2、下游 3、上下游")
+    public int checkConsanguinity;
+
+    /**
      * 运行时间表达式
      */
     @ApiModelProperty(value = "运行时间表达式")
@@ -98,6 +104,12 @@ public class LifecycleDTO {
      */
     @ApiModelProperty(value = "表状态")
     public TableStateTypeEnum tableState;
+
+    /**
+     * 组件规则
+     */
+    @ApiModelProperty(value = "组件规则")
+    public String moduleRule;
 
     /**
      * 组件状态

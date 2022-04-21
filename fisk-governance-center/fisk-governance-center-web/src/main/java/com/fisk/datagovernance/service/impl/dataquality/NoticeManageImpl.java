@@ -310,18 +310,6 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
     }
 
     /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
-     * @description 发送系统消息通知
-     * @author dick
-     * @date 2022/4/12 20:38
-     * @version v1.0
-     * @params noticePOS
-     */
-    public ResultEntity<Object> sendSystemNotice(List<NoticePO> noticePOS) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
-    }
-
-    /**
      * @return ResultEnum
      * @description 调用task服务提供的API，创建调度任务
      * @author dick

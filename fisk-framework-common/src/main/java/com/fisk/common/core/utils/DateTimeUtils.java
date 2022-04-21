@@ -3,6 +3,7 @@ package com.fisk.common.core.utils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -50,5 +51,27 @@ public class DateTimeUtils {
             throw new FkException(ResultEnum.ERROR, "【getTimeDifference_Day】：" + ex);
         }
         return days;
+    }
+
+    /**
+     * @description 指定日期加多少天
+     * @author dick
+     * @date 2022/4/21 18:38
+     * @version v1.0
+     * @params date
+     * @params day
+     * @return java.lang.String
+     */
+    public static String getDateAddDay(String date, int day) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar cd = Calendar.getInstance();//获取一个Calendar对象
+        try {
+            cd.setTime(sdf.parse(date));//设置calendar日期
+        } catch (ParseException ex) {
+            throw new FkException(ResultEnum.ERROR, "【getNowAddDay】：" + ex);
+        }
+        cd.add(Calendar.DATE, day);//增加n天
+        String format = sdf.format(cd.getTime());
+        return format;
     }
 }
