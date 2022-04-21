@@ -1,6 +1,7 @@
 package com.fisk.mdm.dto.entity;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.mdm.vo.entity.EntityVO;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,6 @@ import javax.validation.constraints.NotNull;
 public class EntityPageDTO {
 
     @NotNull
-    private Page<EntityDTO> page;
+    private Page<EntityVO> page;
     private String name;
 }

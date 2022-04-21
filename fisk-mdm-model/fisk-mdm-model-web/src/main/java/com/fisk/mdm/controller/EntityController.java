@@ -5,11 +5,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,7 +17,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author WangYan
@@ -39,9 +38,9 @@ public class EntityController {
     }
 
     @ApiOperation("分页查询实体")
-    @PostMapping("/listData")
+    @PostMapping("/list")
     @ResponseBody
-    public ResultEntity<Page<EntityDTO>> listData(@Validated @RequestBody EntityPageDTO dto) {
+    public ResultEntity<Page<EntityVO>> listData(@Validated @RequestBody EntityPageDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.listData(dto));
     }
 
@@ -69,7 +68,7 @@ public class EntityController {
     @ApiOperation("根据实体id获取属性")
     @GetMapping("/getAttributeById")
     @ResponseBody
-    public ResultEntity<EntityVO> getAttributeById(Integer id) {
+    public ResultEntity<EntityInfoVO> getAttributeById(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
     }
 }

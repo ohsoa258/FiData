@@ -76,19 +76,19 @@ public class AttributeVO {
      * 是否开启属性日志 0：false 1:true
      */
     @ApiModelProperty(value = "是否开启属性日志")
-    private WhetherTypeEnum enableAttributeLog;
+    private String enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
     @ApiModelProperty(value = "是否只读")
-    private WhetherTypeEnum enableReadonly;
+    private Integer enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
     @ApiModelProperty(value = "是否必填")
-    private WhetherTypeEnum enableRequired;
+    private String enableRequired;
 
     /**
      * 类型：

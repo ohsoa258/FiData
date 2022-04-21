@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.MdmStatusTypeEnum;
-import com.fisk.mdm.enums.WhetherTypeEnum;
 import lombok.Data;
 
 /**
@@ -49,7 +48,7 @@ public class EntityPO extends BasePO {
     /**
      * 是否开启成员日志 0：false 1:true
      */
-    private WhetherTypeEnum enableMemberLog;
+    private Integer enableMemberLog;
 
     /**
      * 审批规则表id

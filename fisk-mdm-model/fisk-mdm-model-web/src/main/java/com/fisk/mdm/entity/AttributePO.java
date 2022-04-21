@@ -88,17 +88,17 @@ public class AttributePO extends BasePO {
     /**
      * 是否开启属性日志 0：false 1:true
      */
-    private WhetherTypeEnum enableAttributeLog;
+    private Integer enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
-    private WhetherTypeEnum enableReadonly;
+    private Integer enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
-    private WhetherTypeEnum enableRequired;
+    private Integer enableRequired;
 
     /**
      * 类型：

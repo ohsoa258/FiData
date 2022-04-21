@@ -4,15 +4,17 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.EntityPO;
-import org.mapstruct.Mapper;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.fisk.mdm.vo.entity.EntityVO;
+import org.mapstruct.*;
+import com.fisk.mdm.utlis.BooleanToIntUtils;
 import org.mapstruct.factory.Mappers;
 
 /**
  * @author WangYan
  * @date 2022/3/9 17:20
  */
-@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+
+@Mapper(uses = { BooleanToIntUtils.class },nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EntityMap {
     EntityMap INSTANCES = Mappers.getMapper(EntityMap.class);
 
@@ -21,6 +23,10 @@ public interface EntityMap {
      * @param po
      * @return
      */
+    @Mappings({
+            @Mapping(source = "enableMemberLog" ,target = "enableMemberLog"),
+            @Mapping(source = "status" ,target = "status")
+    })
     EntityDTO poToDto(EntityPO po);
 
     /**
@@ -28,26 +34,33 @@ public interface EntityMap {
      * @param dto
      * @return
      */
+    @Mappings({
+            @Mapping(source = "enableMemberLog" ,target = "enableMemberLog")
+    })
     EntityPO DtoToPo(EntityDTO dto);
 
     /**
-     * poPage => dtoPage
+     * poPage => voPage
      * @param page
      * @return
      */
-    Page<EntityDTO> poToDtoPage(Page<EntityPO> page);
+    Page<EntityVO> poToVoPage(Page<EntityPO> page);
 
     /**
      * dto => po
      * @param dto
      * @return
      */
+    @Mappings({
+            @Mapping(source = "enableMemberLog" ,target = "enableMemberLog"),
+            @Mapping(source = "status" ,target = "status")
+    })
     EntityPO updateDtoToPo(UpdateEntityDTO dto);
 
     /**
-     * dtoPage => poPage
+     * voPage => poPage
      * @param page
      * @return
      */
-    Page<EntityPO> dtoToPoPage(Page<EntityDTO> page);
+    Page<EntityPO> voToPoPage(Page<EntityVO> page);
 }

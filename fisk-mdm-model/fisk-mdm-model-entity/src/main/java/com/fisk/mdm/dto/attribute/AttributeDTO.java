@@ -112,21 +112,21 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "是否开启属性日志")
     @NotNull()
-    private WhetherTypeEnum enableAttributeLog;
+    private String enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
     @ApiModelProperty(value = "是否只读")
     @NotNull()
-    private WhetherTypeEnum enableReadonly;
+    private String enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
     @ApiModelProperty(value = "是否必填")
     @NotNull()
-    private WhetherTypeEnum enableRequired;
+    private String enableRequired;
 
     /**
      * 类型：

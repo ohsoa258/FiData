@@ -19,6 +19,7 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -57,10 +58,10 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public Page<EntityDTO> listData(EntityPageDTO dto) {
+    public Page<EntityVO> listData(EntityPageDTO dto) {
 
         // page转换
-        Page<EntityPO> poPage = EntityMap.INSTANCES.dtoToPoPage(dto.getPage());
+        Page<EntityPO> poPage = EntityMap.INSTANCES.voToPoPage(dto.getPage());
 
         QueryWrapper<EntityPO> query = new QueryWrapper<>();
         query.lambda()
@@ -74,14 +75,14 @@ public class EntityServiceImpl implements EntityService {
 
             // 查创建人信息
             Page<EntityPO> queryCreateUser = this.queryCreateUser(entityPoPage);
-            return EntityMap.INSTANCES.poToDtoPage(this.queryUpdateUser(queryCreateUser));
+            return EntityMap.INSTANCES.poToVoPage(this.queryUpdateUser(queryCreateUser));
         }
 
         Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
 
         // 查创建人信息
         Page<EntityPO> queryCreateUser = this.queryCreateUser(entityPoPage);
-        return EntityMap.INSTANCES.poToDtoPage(this.queryUpdateUser(queryCreateUser));
+        return EntityMap.INSTANCES.poToVoPage(this.queryUpdateUser(queryCreateUser));
     }
 
     /**
@@ -254,25 +255,25 @@ public class EntityServiceImpl implements EntityService {
     }
 
     @Override
-    public EntityVO getAttributeById(Integer id) {
+    public EntityInfoVO getAttributeById(Integer id) {
         EntityPO entityPo = entityMapper.selectById(id);
         if (entityPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 实体信息
-        EntityVO entityVo = AttributeMap.INSTANCES.poToEntityVo(entityPo);
+        EntityInfoVO entityInfoVo = AttributeMap.INSTANCES.poToEntityVo(entityPo);
 
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributePO::getEntityId,id);
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){
-            entityVo.setAttributeList(AttributeMap.INSTANCES.poToDtoList(attributePoList));
-            return entityVo;
+            entityInfoVo.setAttributeList(AttributeMap.INSTANCES.poToDtoList(attributePoList));
+            return entityInfoVo;
         }
 
-        return entityVo;
+        return entityInfoVo;
     }
 
     /**
