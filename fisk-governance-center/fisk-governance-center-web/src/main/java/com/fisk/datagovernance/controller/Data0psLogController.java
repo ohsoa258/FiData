@@ -27,7 +27,7 @@ public class Data0psLogController {
     @Resource
     private IDataOpsLogManageService service;
 
-    @ApiOperation("分页查询告警通知模板组件")
+    @ApiOperation("分页查询数据运维执行的日志")
     @PostMapping("/page")
     public ResultEntity<Page<DataOpsLogVO>> getAll(@RequestBody DataOpsLogQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll(dto));
