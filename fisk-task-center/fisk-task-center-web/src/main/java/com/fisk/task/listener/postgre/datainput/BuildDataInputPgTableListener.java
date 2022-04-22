@@ -89,12 +89,12 @@ public class BuildDataInputPgTableListener {
             String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             String stg_sql2 = stgSql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
-            BusinessResult Result = pg.postgreBuildTable(stg_sql2, BusinessTypeEnum.DATAINPUT);
+            BusinessResult Result = pg.postgreBuildTable(stg_sql2.toLowerCase(), BusinessTypeEnum.DATAINPUT);
             if(!Result.success){
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                pg.postgreBuildTable(stg_sql1, BusinessTypeEnum.DATAINPUT);
+                pg.postgreBuildTable(stg_sql1.toLowerCase(), BusinessTypeEnum.DATAINPUT);
                 log.info("【PGSTG】" + stg_sql1);
                 log.info("pg：建表完成");
             }

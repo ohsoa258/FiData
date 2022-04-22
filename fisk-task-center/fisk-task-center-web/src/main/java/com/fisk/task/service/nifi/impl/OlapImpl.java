@@ -326,20 +326,18 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
     }
 
     @Override
-    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineName,int type,String tableName,int tableAccessId) {
+    public NifiGetPortHierarchyDTO getNifiGetPortHierarchy(String pipelineId,int type,String tableName,int tableAccessId) {
         NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
-        nifiGetPortHierarchyDTO.workflowName = pipelineName;
+        nifiGetPortHierarchyDTO.workflowId = pipelineId;
         OlapTableEnum nameByValue = OlapTableEnum.getNameByValue(type);
         switch (nameByValue) {
             case KPI:
-                if (tableName.contains("dim")) {
+                OlapPO olapPO = this.query().eq("id", tableAccessId).one();
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                if (olapPO.tableName.contains("dim")) {
                     nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
-                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
-                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
                 } else {
                     nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
-                    OlapPO olapPO = this.query().eq("id", tableAccessId).one();
-                    nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
                 }
                 break;
             case DIMENSION:
@@ -354,6 +352,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
                 nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
                 break;
+            case WIDETABLE:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
             default:
                 break;
         }

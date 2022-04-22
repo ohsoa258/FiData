@@ -129,12 +129,15 @@ public class BuildDataModelDorisTableListener
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
                 //生成建表语句
                 List<String> pgdbTable2 = createPgdbTable2(modelPublishTableDTO);
-                BusinessResult businessResult = iPostgreBuild.postgreBuildTable("create", BusinessTypeEnum.DATAMODEL);
+                BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0).toLowerCase(), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
                 if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                    iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
+                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1).toLowerCase(), BusinessTypeEnum.DATAMODEL);
+                    if (!businessResult1.success) {
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    }
                 }
                 //生成函数,并执行
             /*String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);

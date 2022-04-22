@@ -67,17 +67,17 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             NifiStageMessageDTO nifiStageMessageDTO = JSON.parseObject(data, NifiStageMessageDTO.class);
             String topicName = nifiStageMessageDTO.topic;
             String[] topic = topicName.split("\\.");
-            if (topic.length == 5) {
+            if (topic.length == 6) {
                 return null;
             }
-            String pipelineName = topic[3];
+            String pipelineId = topic[3];
             TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query()
                     .eq("table_component_id", nifiStageMessageDTO.groupId).eq("del_flag", 1).one();
             //通过应用简称+表类别+表id,查到组件id
             String tableName = tableNifiSettingPO.tableName;
             Integer tableAccessId = tableNifiSettingPO.tableAccessId;
             int type = tableNifiSettingPO.type;
-            NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineName, type, tableName, tableAccessId);
+            NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = olap.getNifiGetPortHierarchy(pipelineId, type, tableName, tableAccessId);
             //三个阶段,默认正在运行
             ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
             NifiCustomWorkflowDetailDTO itselfPort = nIfiPortHierarchy.data.itselfPort;
