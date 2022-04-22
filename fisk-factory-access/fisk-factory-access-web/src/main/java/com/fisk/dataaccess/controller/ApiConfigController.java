@@ -33,6 +33,15 @@ public class ApiConfigController {
     @Resource
     private IApiConfig service;
 
+    /**
+     * 基于构造器注入
+     */
+    private final HttpServletResponse response;
+
+    public ApiConfigController(HttpServletResponse response) {
+        this.response = response;
+    }
+
     @GetMapping("/get/{id}")
     @ApiOperation(value = "回显: 根据id查询数据")
     public ResultEntity<ApiConfigDTO> getData(@PathVariable("id") long id) {
