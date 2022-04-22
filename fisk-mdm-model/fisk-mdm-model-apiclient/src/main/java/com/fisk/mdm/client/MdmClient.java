@@ -36,7 +36,7 @@ public interface MdmClient {
     ResultEntity<AttributeVO> get(@RequestParam("id") Integer id);
 
     /**
-     * 根据id查询查询属性
+     * 修改属性
      * @param attributeUpdateDTO
      * @return
      */
@@ -48,6 +48,6 @@ public interface MdmClient {
      * @param dto
      * @return
      */
-    @PostMapping("/entity/updateData")
-    ResultEntity<ResultEnum> updateData(@RequestBody UpdateEntityDTO dto);
+    @PostMapping("/entity/update")
+    ResultEntity<ResultEnum> update(@RequestBody UpdateEntityDTO dto);
 }
