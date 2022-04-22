@@ -251,6 +251,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         List<EntityPO> entityPOS = entityMapper.selectList(wrapper);
         if(CollectionUtils.isNotEmpty(entityPOS)){
             modelInfoVO.setEntityVOList(EntityMap.INSTANCES.poToVoList(entityPOS));
+            return modelInfoVO;
         }
         return modelInfoVO;
     }

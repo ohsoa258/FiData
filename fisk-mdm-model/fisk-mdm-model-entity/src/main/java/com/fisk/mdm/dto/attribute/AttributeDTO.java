@@ -51,27 +51,33 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "数据类型")
     @NotNull()
-    private DataTypeEnum dataType;
+    private Integer dataType;
 
     /**
      * 数据类型长度
      */
     @ApiModelProperty(value = "数据类型长度")
     @NotNull()
-    private int dataTypeLength;
+    private Integer dataTypeLength;
+
+    /**
+     * 数据类型小数点长度
+     */
+    @ApiModelProperty(value = "数据类型小数点长度")
+    private Integer dataTypeDecimalLength;
 
     /**
      * 数据格式id
      */
     @ApiModelProperty(value = "数据格式id")
-    private int dataTypeFormatId;
+    private Integer dataTypeFormatId;
 
     /**
      * 展示宽度
      */
     @ApiModelProperty(value = "展示宽度")
     @NotNull()
-    private int displayWidth;
+    private Integer displayWidth;
 
     /**
      * 表单框提示内容
@@ -86,19 +92,19 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "排序序号")
     @NotNull()
-    private int sortWieght;
+    private Integer sortWieght;
 
     /**
      *状态： 0：待新增 ，1：待修改 ， 2：已提交
      */
     @ApiModelProperty(value = "状态")
-    private AttributeStatusEnum status;
+    private Integer status;
 
     /**
      * 提交状态：0：提交失败 1：提交成功
      */
     @ApiModelProperty(value = "提交状态")
-    private AttributeSyncStatusEnum syncStatus;
+    private Integer syncStatus;
 
     /**
      * 提交失败描述
@@ -133,7 +139,7 @@ public class AttributeDTO {
      * 0:code 1:name 2:业务字段
      */
     @ApiModelProperty(value = "类型")
-    private MdmTypeEnum mdmType;
+    private Integer mdmType;
 
     /**
      * 数据域id（相当于外键）

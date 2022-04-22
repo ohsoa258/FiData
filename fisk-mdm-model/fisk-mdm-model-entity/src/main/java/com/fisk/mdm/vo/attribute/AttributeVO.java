@@ -42,10 +42,16 @@ public class AttributeVO extends BaseUserInfoVO {
     private String columnName;
 
     @ApiModelProperty(value = "数据类型")
-    private DataTypeEnum dataType;
+    private String dataType;
 
     @ApiModelProperty(value = "数据类型长度")
     private int dataTypeLength;
+
+    /**
+     * 数据类型小数点长度
+     */
+    @ApiModelProperty(value = "数据类型小数点长度")
+    private int dataTypeDecimalLength;
 
     @ApiModelProperty(value = "数据格式id")
     private int dataTypeFormatId;
@@ -63,13 +69,13 @@ public class AttributeVO extends BaseUserInfoVO {
      *状态： 0：待新增 ，1：待修改 ， 2：已提交
      */
     @ApiModelProperty(value = "状态")
-    private AttributeStatusEnum status;
+    private String status;
 
     /**
      * 提交状态：0：提交失败 1：提交成功
      */
     @ApiModelProperty(value = "提交状态")
-    private AttributeSyncStatusEnum syncStatus;
+    private String syncStatus;
 
     /**
      * 提交失败描述
@@ -100,7 +106,7 @@ public class AttributeVO extends BaseUserInfoVO {
      * 0:code 1:name 2:业务字段
      */
     @ApiModelProperty(value = "类型")
-    private MdmTypeEnum mdmType;
+    private String mdmType;
 
     @ApiModelProperty(value = "数据域id（相当于外键）")
     private int domainId;

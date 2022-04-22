@@ -16,7 +16,7 @@ public enum MdmTypeEnum implements BaseEnum {
 
     NAME(1,"name"),
 
-    BUSINESSFIELD(2,"业务字段");
+    BUSINESS_FIELD(2,"业务字段");
 
     MdmTypeEnum(int value, String name) {
         this.name = name;

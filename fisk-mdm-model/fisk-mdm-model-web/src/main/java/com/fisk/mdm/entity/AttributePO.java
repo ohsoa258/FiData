@@ -66,6 +66,11 @@ public class AttributePO extends BasePO {
     private int dataTypeLength;
 
     /**
+     * 数据类型小数点长度
+     */
+    private int dataTypeDecimalLength;
+
+    /**
      * 数据格式id
      */
     private int dataTypeFormatId;

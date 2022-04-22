@@ -31,7 +31,10 @@ public interface AttributeMap {
     @Mappings({
             @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
-            @Mapping(source = "enableRequired" ,target = "enableRequired")
+            @Mapping(source = "enableRequired" ,target = "enableRequired"),
+            @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "dataType" , target = "dataType"),
+            @Mapping(source = "status" ,target = "status")
     })
     AttributePO dtoToPo(AttributeDTO dto);
 
@@ -43,7 +46,10 @@ public interface AttributeMap {
     @Mappings({
             @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
             @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
-            @Mapping(source = "enableRequired" ,target = "enableRequired")
+            @Mapping(source = "enableRequired" ,target = "enableRequired"),
+            @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "dataType" , target = "dataType"),
+            @Mapping(source = "status" ,target = "status")
     })
     AttributeVO poToVo(AttributePO po);
 
@@ -53,8 +59,12 @@ public interface AttributeMap {
      * @return
      */
     @Mappings({
-            @Mapping(source = "enableReadonly" ,target = "enableAttributeLog"),
-            @Mapping(source = "enableRequired" ,target = "enableRequired")
+            @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
+            @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
+            @Mapping(source = "enableRequired" ,target = "enableRequired"),
+            @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "dataType" , target = "dataType"),
+            @Mapping(source = "status" ,target = "status")
     })
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
 
@@ -75,6 +85,14 @@ public interface AttributeMap {
      * @param list 列表
      * @return {@link List}<{@link AttributeInfoDTO}>
      */
+    @Mappings({
+            @Mapping(source = "enableAttributeLog" ,target = "enableAttributeLog"),
+            @Mapping(source = "enableReadonly" ,target = "enableReadonly"),
+            @Mapping(source = "enableRequired" ,target = "enableRequired"),
+            @Mapping(source = "mdmType" , target = "mdmType"),
+            @Mapping(source = "dataType" , target = "dataType"),
+            @Mapping(source = "status" ,target = "status")
+    })
     List<AttributeInfoDTO> poToDtoList(List<AttributePO> list);
 
     /**
