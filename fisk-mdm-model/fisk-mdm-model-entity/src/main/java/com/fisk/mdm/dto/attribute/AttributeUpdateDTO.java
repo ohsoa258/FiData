@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
  * @author ChenYa
  */
 @Data
-public class AttributeUpdateDTO extends AttributeDTO{
+public class AttributeUpdateDTO {
     @NotNull
     @ApiModelProperty(value = "id",required = true)
     private Integer id;

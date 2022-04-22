@@ -77,4 +77,10 @@ public class AttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER());
     }
 
+    @ApiOperation("根据id集合查询属性信息")
+    @PostMapping("/getByIds")
+    public ResultEntity<List<AttributeVO>> getByIds(@RequestBody List<Integer> ids) {
+        return service.getByIds(ids);
+    }
+
 }

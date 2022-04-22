@@ -72,4 +72,11 @@ public interface AttributeService extends IService<AttributePO> {
      */
     List<Entity> getER();
 
+    /**
+     * 根据ids 查询属性信息
+     * @param ids
+     * @return
+     */
+    ResultEntity<List<AttributeVO>> getByIds(List<Integer> ids);
+
 }

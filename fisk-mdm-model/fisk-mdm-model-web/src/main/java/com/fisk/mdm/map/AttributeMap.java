@@ -107,6 +107,13 @@ public interface AttributeMap {
     Page<AttributeDTO> voToDtoPage(Page<AttributeVO> voPage);
 
     Page<AttributeVO> dtoToVoPage(Page<AttributeDTO> dtoPage);
+
+    /**
+     * po => vo list
+     * @param po
+     * @return
+     */
+    List<AttributeVO> poToVoList(List<AttributePO> po);
 }
 
 

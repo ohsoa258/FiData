@@ -221,7 +221,14 @@ public enum ResultEnum {
     PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常"),
     DATA_OPS_SQL_EXECUTE_ERROR(14005, "SQL执行异常"),
     DATA_OPS_CLOSESTATEMENT_ERROR(14006, "数据库连接关闭失败"),
-    DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败");
+    DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败"),
+
+    /**
+     * mdm
+     */
+    CREATE_STG_TABLE(15001, "Stg表创建失败"),
+    CREATE_MDM_TABLE(15002, "Mdm表创建失败"),
+    CREATE_VIW_TABLE(15003, "Viw视图创建失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;
