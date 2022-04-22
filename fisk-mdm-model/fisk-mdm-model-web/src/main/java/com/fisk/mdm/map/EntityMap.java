@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.entity.EntityVO;
 import org.mapstruct.*;
-import com.fisk.mdm.utlis.BooleanToIntUtils;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  * @date 2022/3/9 17:20
  */
 
-@Mapper(uses = { BooleanToIntUtils.class },nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(uses = { TypeConversionUtils.class },nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EntityMap {
     EntityMap INSTANCES = Mappers.getMapper(EntityMap.class);
 

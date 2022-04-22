@@ -5,7 +5,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.utlis.BooleanToIntUtils;
+import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.mapstruct.Mapper;
@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * @author chenYa
  */
-@Mapper( uses = { BooleanToIntUtils.class } , nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper( uses = { TypeConversionUtils.class } , nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AttributeMap {
     AttributeMap INSTANCES = Mappers.getMapper(AttributeMap.class);
 
@@ -58,6 +58,16 @@ public interface AttributeMap {
     })
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
 
+    /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    @Mappings({
+            @Mapping(source = "status" ,target = "status"),
+            @Mapping(source = "syncStatus" ,target = "syncStatus")
+    })
+    AttributeInfoDTO poToInfoDto(AttributePO po);
 
     /**
      * poList => DtoList

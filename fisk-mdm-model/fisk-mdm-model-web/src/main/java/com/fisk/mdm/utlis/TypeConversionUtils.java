@@ -2,6 +2,8 @@ package com.fisk.mdm.utlis;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.MdmStatusTypeEnum;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Component;
  * 类型转换器
  */
 @Component
-public class BooleanToIntUtils {
+public class TypeConversionUtils {
 
     /**
      *  0：false 1:true
@@ -94,6 +96,48 @@ public class BooleanToIntUtils {
                 return MdmStatusTypeEnum.CREATED_SUCCESSFULLY.getName();
             case CREATED_FAIL:
                 return MdmStatusTypeEnum.CREATED_FAIL.getName();
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    /**
+     * 属性:状态转换 status
+     * @param type
+     * @return
+     */
+    public String typeEnumAttrToString(AttributeStatusEnum type){
+        if (type == null){
+            return null;
+        }
+
+        switch (type){
+            case INSERT:
+                return AttributeStatusEnum.INSERT.getName();
+            case UPDATE:
+                return AttributeStatusEnum.UPDATE.getName();
+            case SUBMITTED:
+                return AttributeStatusEnum.SUBMITTED.getName();
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    /**
+     * 属性: 同步状态转换 syncStatus
+     * @param type
+     * @return
+     */
+    public String typeEnumAttrSyToString(AttributeSyncStatusEnum type){
+        if (type == null){
+            return null;
+        }
+
+        switch (type){
+            case SUCCESS:
+                return AttributeSyncStatusEnum.SUCCESS.getName();
+            case ERROR:
+                return AttributeSyncStatusEnum.ERROR.getName();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
