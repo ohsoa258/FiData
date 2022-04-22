@@ -2,7 +2,6 @@ package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -12,36 +11,28 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
-import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
-import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
-import com.fisk.mdm.map.EntityMap;
-import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
-import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author WangYan
@@ -71,14 +62,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
         AttributeVO attributeVO = AttributeMap.INSTANCES.poToVo(baseMapper.selectById(id));
-        if(Objects.isNull(attributeVO)){
+        if (Objects.isNull(attributeVO)) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询出模型id
         QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(EntityPO::getId,attributeVO.getEntityId());
+                .eq(EntityPO::getId, attributeVO.getEntityId());
         EntityPO entityPO = entityMapper.selectOne(queryWrapper);
         attributeVO.setModelId(entityPO.getModelId());
         return ResultEntityBuild.build(ResultEnum.SUCCESS, attributeVO);
@@ -89,9 +80,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //判断同实体下是否存在重复名称
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",attributeDTO.getName())
-                .eq("entity_id",attributeDTO.getEntityId());
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", attributeDTO.getName())
+                .eq("entity_id", attributeDTO.getEntityId());
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -104,7 +95,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         // 记录日志
         String desc = "新增一个属性,id:" + attributePO.getId();
-        logService.saveEventLog((int)attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE,desc);
+        logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE, desc);
 
         //创建成功
         return ResultEnum.SUCCESS;
@@ -121,15 +112,15 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         AttributePO attributePO = baseMapper.selectById(attributeUpdateDTO.getId());
 
         //判断数据是否存在
-        if (attributePO == null){
+        if (attributePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         //判断修改后的名称是否存在
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name",attributeUpdateDTO.getName())
-                .ne("id",attributeUpdateDTO.getId());
-        if(baseMapper.selectOne(wrapper) != null){
+        wrapper.eq("name", attributeUpdateDTO.getName())
+                .ne("id", attributeUpdateDTO.getId());
+        if (baseMapper.selectOne(wrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
@@ -147,7 +138,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         // 记录日志
         String desc = "修改一个属性,id:" + attributeUpdateDTO.getId();
-        logService.saveEventLog((int)attributePO.getId(),ObjectTypeEnum.ATTRIBUTES,EventTypeEnum.UPDATE,desc);
+        logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.UPDATE, desc);
 
         //添加成功
         return ResultEnum.SUCCESS;
@@ -156,7 +147,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum deleteDataById(Integer id) {
         //判断数据是否存在
-        if (baseMapper.selectById(id) == null){
+        if (baseMapper.selectById(id) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -167,7 +158,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         // 记录日志
         String desc = "删除一个属性,id:" + id;
-        logService.saveEventLog(id,ObjectTypeEnum.ATTRIBUTES,EventTypeEnum.DELETE,desc);
+        logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
 
         //删除成功
         return ResultEnum.SUCCESS;
@@ -181,22 +172,23 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //获取创建人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords()
-                    .stream()
-                    .filter(e -> StringUtils.isNotEmpty(e.createUser))
-                    .map(e -> Long.valueOf(e.createUser))
-                    .distinct()
-                    .collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
-                all.getRecords().forEach(e -> {
-                    userListByIds.getData()
-                            .stream()
-                            .filter(user -> user.getId().toString().equals(e.createUser))
-                            .findFirst()
-                            .ifPresent(user -> e.createUser = user.userAccount);
-                });
-            }
+            // List<Long> userIds = all.getRecords()
+            //         .stream()
+            //         .filter(e -> StringUtils.isNotEmpty(e.createUser))
+            //         .map(e -> Long.valueOf(e.createUser))
+            //         .distinct()
+            //         .collect(Collectors.toList());
+            // ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+            // if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
+            //     all.getRecords().forEach(e -> {
+            //         userListByIds.getData()
+            //                 .stream()
+            //                 .filter(user -> user.getId().toString().equals(e.createUser))
+            //                 .findFirst()
+            //                 .ifPresent(user -> e.createUser = user.userAccount);
+            //     });
+            // }
+            ReplenishUserInfo.replenishUserName(all.getRecords(), userClient, UserFieldEnum.USER_ACCOUNT);
         }
 
         return all;
@@ -210,22 +202,22 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum getNotSubmittedData(Integer entityId) {
 
-        if(entityService.getDataById(entityId) == null){
+        if (entityService.getDataById(entityId) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("entity_id",entityId)
-                .eq("status",AttributeStatusEnum.INSERT).or()
+        wrapper.eq("entity_id", entityId)
+                .eq("status", AttributeStatusEnum.INSERT).or()
                 .eq("status", AttributeStatusEnum.UPDATE);
-        if(baseMapper.selectList(wrapper) == null || baseMapper.selectList(wrapper).size() == 0){
+        if (baseMapper.selectList(wrapper) == null || baseMapper.selectList(wrapper).size() == 0) {
             return ResultEnum.NO_DATA_TO_SUBMIT;
         }
 
         com.fisk.task.dto.model.EntityDTO entityDTO = new com.fisk.task.dto.model.EntityDTO();
         entityDTO.setEntityId(entityId);
         entityDTO.setUserId(userHelper.getLoginUserInfo().getId());
-        if(publishTaskClient.createBackendTable(entityDTO).getCode() != ResultEnum.SUCCESS.getCode()){
+        if (publishTaskClient.createBackendTable(entityDTO).getCode() != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.DATA_SUBMIT_ERROR;
         }
 
