@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author WangYan
@@ -235,6 +236,25 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public List<Entity> getER() {
         return baseMapper.getER();
+    }
+
+    @Override
+    public ResultEntity<List<AttributeVO>> getByIds(List<Integer> ids) {
+        List<AttributeVO> list = AttributeMap.INSTANCES.poToVoList(baseMapper.selectBatchIds(ids));
+        if (Objects.isNull(list)) {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        // 查询出模型id
+        List<AttributeVO> collect = list.stream().filter(e -> e.getEntityId() != null).map(e -> {
+            QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(EntityPO::getId, e.getEntityId());
+            EntityPO entityPO = entityMapper.selectOne(queryWrapper);
+            e.setModelId(entityPO.getModelId());
+            return e;
+        }).collect(Collectors.toList());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, collect);
     }
 
 

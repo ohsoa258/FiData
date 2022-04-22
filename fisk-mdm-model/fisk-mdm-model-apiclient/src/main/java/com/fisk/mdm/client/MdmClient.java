@@ -7,10 +7,9 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -40,7 +39,7 @@ public interface MdmClient {
      * @param attributeUpdateDTO
      * @return
      */
-    @PostMapping("/attribute/update")
+    @PutMapping("/attribute/update")
     ResultEntity<ResultEnum> update(@RequestBody AttributeUpdateDTO attributeUpdateDTO);
 
     /**
@@ -48,6 +47,14 @@ public interface MdmClient {
      * @param dto
      * @return
      */
-    @PostMapping("/entity/update")
+    @PutMapping("/entity/update")
     ResultEntity<ResultEnum> update(@RequestBody UpdateEntityDTO dto);
+
+    /**
+     * 根据id集合查询属性信息
+     * @param ids
+     * @return
+     */
+    @PostMapping("/attribute/getByIds")
+    ResultEntity<List<AttributeVO>> getByIds(@RequestBody List<Integer> ids);
 }
