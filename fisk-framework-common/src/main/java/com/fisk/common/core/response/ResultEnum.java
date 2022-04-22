@@ -209,7 +209,15 @@ public enum ResultEnum {
     BAD_REQUEST(13001, "请求错误"),
     NO_CONTENT(13002, "没有内容"),
     NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
-    DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败");
+    DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败"),
+
+    /**
+     * 数据运维
+     */
+    DATA_OPS_CONFIG_EXISTS(14001, "数据运维数据源配置不存在"),
+    PG_CONNECT_ERROR(14002, "Postgres数据库连接异常"),
+    PG_READ_TABLE_ERROR(14003, "Postgres读取表信息异常"),
+    PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常");
 
     ResultEnum(int code, String msg) {
         this.code = code;

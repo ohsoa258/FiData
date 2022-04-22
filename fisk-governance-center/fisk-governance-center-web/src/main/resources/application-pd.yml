@@ -15,3 +15,22 @@ spring:
     host: 10.220.108.140
     port: 16380
     password: test123456
+# pg数据源配置
+pgsql-dw:
+  id: 1
+  ip: 100.102.201.107
+  port: 5433
+  dbName: dmp_dw
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
+  username: adminuser
+  password: .FdF_r&tj4)+
+  driverClassName: org.postgresql.Driver
+pgsql-ods:
+  id: 2
+  ip: 100.102.201.107
+  port: 5433
+  dbName: dmp_ods
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified
+  username: adminuser
+  password: .FdF_r&tj4)+
+  driverClassName: org.postgresql.Driver

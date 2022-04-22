@@ -15,12 +15,6 @@ import java.util.List;
 @Data
 public class DataExampleSourceVO {
     /**
-     * 数据源id
-     */
-    @ApiModelProperty(value = "数据源id")
-    public int id;
-
-    /**
      * 数据源类型
      */
     @ApiModelProperty(value = "数据源类型")

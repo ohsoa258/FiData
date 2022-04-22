@@ -15,6 +15,12 @@ import java.util.List;
 @Data
 public class DataBaseSourceVO {
     /**
+     * 数据源id
+     */
+    @ApiModelProperty(value = "数据源id")
+    public int id;
+
+    /**
      * 数据库名称
      */
     @ApiModelProperty(value = "数据库名称")

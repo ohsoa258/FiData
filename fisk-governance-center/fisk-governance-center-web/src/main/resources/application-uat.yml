@@ -12,3 +12,22 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
   redis:
     host: 192.168.21.13
+# pg数据源配置
+pgsql-dw:
+  id: 1
+  ip: 192.168.21.13
+  port: 5432
+  dbName: dmp_dw_UAT
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_dw_UAT?stringtype=unspecified
+  username: postgres
+  password: PgPassword01!
+  driverClassName: org.postgresql.Driver
+pgsql-ods:
+  id: 2
+  ip: 192.168.21.13
+  port: 5432
+  dbName: dmp_ods_UAT
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
+  username: postgres
+  password: PgPassword01!
+  driverClassName: org.postgresql.Driver

@@ -17,9 +17,11 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     SQLSERVER(1, "SQLSERVER", "com.microsoft.sqlserver.jdbc.SQLServerDriver"),
 
-    CUBE(2,"CUBE","org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+    CUBE(2, "CUBE", "org.olap4j.driver.xmla.XmlaOlap4jDriver"),
 
-    TABULAR(3,"TABULAR","org.olap4j.driver.xmla.XmlaOlap4jDriver");
+    TABULAR(3, "TABULAR", "org.olap4j.driver.xmla.XmlaOlap4jDriver"),
+
+    POSTGRE(4, "POSTGRE", "org.postgresql.Driver");
 
     DataSourceTypeEnum(int value, String name, String driverName) {
         this.driverName = driverName;
@@ -43,5 +45,13 @@ public enum DataSourceTypeEnum implements BaseEnum {
     @Override
     public int getValue() {
         return value;
+    }
+
+    public static DataSourceTypeEnum getEnumByDriverName(String driverName) {
+        for (DataSourceTypeEnum e : DataSourceTypeEnum.values()) {
+            if (e.getDriverName() == driverName)
+                return e;
+        }
+        return DataSourceTypeEnum.MYSQL;
     }
 }
