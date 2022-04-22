@@ -1,5 +1,6 @@
 package com.fisk.mdm.map;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
@@ -103,6 +104,9 @@ public interface AttributeMap {
      */
     EntityInfoVO poToEntityVo(EntityPO entityPo);
 
+    Page<AttributeDTO> voToDtoPage(Page<AttributeVO> voPage);
+
+    Page<AttributeVO> dtoToVoPage(Page<AttributeDTO> dtoPage);
 }
 
 

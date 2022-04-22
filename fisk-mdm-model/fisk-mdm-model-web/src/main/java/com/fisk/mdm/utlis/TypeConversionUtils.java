@@ -98,12 +98,15 @@ public class TypeConversionUtils {
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
-
+    
 
     /**
      * 属性状态转换
      */
     public AttributeStatusEnum intToAttributeStatusEnum(Integer value){
+        if (value == null){
+            return null;
+        }
         switch (value){
             case 0 :
                 return AttributeStatusEnum.INSERT;
@@ -117,6 +120,9 @@ public class TypeConversionUtils {
     }
 
     public Integer attributeStatusEnumToInt(AttributeStatusEnum attributeStatusEnum){
+        if (attributeStatusEnum == null){
+            return null;
+        }
         switch (attributeStatusEnum){
             case INSERT :
                 return AttributeStatusEnum.INSERT.getValue();
@@ -130,6 +136,9 @@ public class TypeConversionUtils {
     }
 
     public String attributeStatusEnumToString(AttributeStatusEnum attributeStatusEnum){
+        if (attributeStatusEnum == null){
+            return null;
+        }
         switch (attributeStatusEnum){
             case INSERT :
                 return AttributeStatusEnum.INSERT.getName();
@@ -146,6 +155,9 @@ public class TypeConversionUtils {
      * 属性提交状态转换
      */
     public AttributeSyncStatusEnum intToAttributeSyncStatusEnum(Integer value){
+        if (value == null){
+            return null;
+        }
         switch (value){
             case 0 :
                 return AttributeSyncStatusEnum.SUCCESS;
@@ -157,6 +169,9 @@ public class TypeConversionUtils {
     }
 
     public Integer attributeSyncStatusEnumToInt(AttributeSyncStatusEnum attributeSyncStatusEnum){
+        if (attributeSyncStatusEnum == null){
+            return null;
+        }
         switch (attributeSyncStatusEnum){
             case SUCCESS :
                 return AttributeSyncStatusEnum.SUCCESS.getValue();
@@ -168,6 +183,9 @@ public class TypeConversionUtils {
     }
 
     public String attributeSyncStatusEnumToString(AttributeSyncStatusEnum attributeSyncStatusEnum){
+        if (attributeSyncStatusEnum == null){
+            return null;
+        }
         switch (attributeSyncStatusEnum){
             case SUCCESS :
                 return AttributeSyncStatusEnum.SUCCESS.getName();
@@ -183,6 +201,9 @@ public class TypeConversionUtils {
      */
 
     public DataTypeEnum intToDataTypeEnum(Integer value){
+        if (value == null){
+            return null;
+        }
         switch (value){
             case 0 :
                 return DataTypeEnum.TEXT;
@@ -208,6 +229,9 @@ public class TypeConversionUtils {
     }
 
     public Integer dataTypeEnumToInt(DataTypeEnum dataTypeEnum){
+        if (dataTypeEnum == null){
+            return null;
+        }
         switch (dataTypeEnum){
             case TEXT :
                 return DataTypeEnum.TEXT.getValue();
@@ -233,6 +257,9 @@ public class TypeConversionUtils {
     }
 
     public String dataTypeEnumToString(DataTypeEnum dataTypeEnum){
+        if (dataTypeEnum == null){
+            return null;
+        }
         switch (dataTypeEnum){
             case TEXT :
                 return DataTypeEnum.TEXT.getName();
@@ -261,6 +288,10 @@ public class TypeConversionUtils {
      * mdm类型枚举转换
      */
     public MdmTypeEnum intToMdmTypeEnum(Integer value){
+
+        if (value == null){
+            return null;
+        }
         switch (value){
             case 0 :
                 return MdmTypeEnum.CODE;
@@ -274,6 +305,9 @@ public class TypeConversionUtils {
     }
 
     public String mdmTypeEnumToString(MdmTypeEnum mdmTypeEnum){
+        if (mdmTypeEnum == null){
+            return null;
+        }
         switch (mdmTypeEnum){
             case CODE :
                 return MdmTypeEnum.CODE.getName();

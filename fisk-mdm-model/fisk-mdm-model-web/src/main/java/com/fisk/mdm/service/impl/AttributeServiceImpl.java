@@ -167,8 +167,10 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public Page<AttributeVO> getAll(AttributeQueryDTO query) {
 
-        Page<AttributeVO> all = baseMapper.getAll(query.page, query);
-
+        //部分字段枚举类型转换
+        Page<AttributeVO> voPage = baseMapper.getAll(query.page, query);
+        Page<AttributeDTO> dtoPage = AttributeMap.INSTANCES.voToDtoPage(voPage);
+        Page<AttributeVO> all = AttributeMap.INSTANCES.dtoToVoPage(dtoPage);
 
         //获取创建人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
