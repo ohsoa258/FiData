@@ -16,7 +16,6 @@ import javax.validation.constraints.NotNull;
 public class NifiGetPortHierarchyDTO {
 
     @ApiModelProperty(value = "管道名称", required = true)
-    @NotNull
     public String workflowName;
 
     @ApiModelProperty(value = "管道id", required = true)
