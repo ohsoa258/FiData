@@ -20,4 +20,9 @@ public interface IDataOpsLogManageService extends IService<DataOpsLogPO> {
      * @return 分页列表
      */
     Page<DataOpsLogVO> getAll(DataOpsLogQueryDTO query);
+
+    /**
+     * 保存日志
+     */
+    void saveLog(DataOpsLogPO po);
 }

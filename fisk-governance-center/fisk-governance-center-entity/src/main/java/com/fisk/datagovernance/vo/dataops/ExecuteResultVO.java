@@ -14,16 +14,28 @@ import java.util.List;
  */
 @Data
 public class ExecuteResultVO {
+
+    /**
+     * 查询/修改
+     */
+    @ApiModelProperty(value = "true:查询 false:修改")
+    public boolean query;
+
     /**
      * 查询数据集
      */
     @ApiModelProperty(value = "查询数据集")
     public JSONArray dataArray;
 
+    /**
+     * 受影响行数
+     */
+    @ApiModelProperty(value = "受影响行数")
+    public int affectedCount;
 
     /**
      * 表字段集合
      */
     @ApiModelProperty(value = "表字段集合")
-    public List<FieldVO> fieldVO;
+    public List<DataOpsTableFieldVO> dataOpsTableFieldVO;
 }

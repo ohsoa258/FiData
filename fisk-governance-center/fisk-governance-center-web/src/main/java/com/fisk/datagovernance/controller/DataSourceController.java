@@ -10,6 +10,8 @@ import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
+import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
@@ -87,10 +89,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
     }
 
-    @GetMapping("/getDataOpsSourceAll")
-    @ApiOperation("获取数据运维全部数据源信息")
-    public ResultEntity<List<DataExampleSourceVO>> getDataOpsSourceAll() {
-        return dataOpsDataSourceManageService.getDataOpsSourceAll();
+    @PostMapping("/getDataOpsTableAll")
+    @ApiOperation("获取数据源的实例信息")
+    public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll() {
+        return dataOpsDataSourceManageService.getDataOpsTableAll();
+    }
+
+    @GetMapping("/getDataOpsTableFieldAll")
+    @ApiOperation("获取数据源的表字段信息")
+    public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName) {
+        return dataOpsDataSourceManageService.getDataOpsTableFieldAll(datasourceId, tableName);
     }
 
     @PostMapping("/executeDataOpsSql")

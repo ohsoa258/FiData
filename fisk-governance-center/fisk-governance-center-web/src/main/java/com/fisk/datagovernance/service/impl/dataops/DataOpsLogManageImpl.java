@@ -2,11 +2,13 @@ package com.fisk.datagovernance.service.impl.dataops;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataops.DataOpsLogQueryDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.datagovernance.mapper.dataops.DataOpsLogMapper;
 import com.fisk.datagovernance.service.dataops.IDataOpsLogManageService;
 import com.fisk.datagovernance.vo.dataops.DataOpsLogVO;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,5 +22,11 @@ public class DataOpsLogManageImpl extends ServiceImpl<DataOpsLogMapper, DataOpsL
     @Override
     public Page<DataOpsLogVO> getAll(DataOpsLogQueryDTO query) {
         return baseMapper.getAll(query.page, query.keyword);
+    }
+
+    @Async
+    @Override
+    public void saveLog(DataOpsLogPO po) {
+        baseMapper.insert(po);
     }
 }

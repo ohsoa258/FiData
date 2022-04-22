@@ -193,8 +193,9 @@ public enum ResultEnum {
     DATA_QUALITY_DATASOURCE_EXISTS(11002, "数据源不存在"),
     DATA_QUALITY_REQUESTSORT_ERROR(11003, "参数异常，执行顺序调整失败"),
     DATA_QUALITY_CREATESTATEMENT_ERROR(11004, "数据库连接建立失败"),
-    DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR(11005, "调度任务参数异常，创建失败"),
-    DATA_QUALITY_SCHEDULE_TASK_FAIL(11006, "调度任务执行失败"),
+    DATA_QUALITY_CLOSESTATEMENT_ERROR(11005, "数据库连接关闭失败"),
+    DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR(11006, "调度任务参数异常，创建失败"),
+    DATA_QUALITY_SCHEDULE_TASK_FAIL(11007, "调度任务执行失败"),
 
     /**
      * 数据安全
@@ -217,7 +218,10 @@ public enum ResultEnum {
     DATA_OPS_CONFIG_EXISTS(14001, "数据运维数据源配置不存在"),
     PG_CONNECT_ERROR(14002, "Postgres数据库连接异常"),
     PG_READ_TABLE_ERROR(14003, "Postgres读取表信息异常"),
-    PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常");
+    PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常"),
+    DATA_OPS_SQL_EXECUTE_ERROR(14005, "SQL执行异常"),
+    DATA_OPS_CLOSESTATEMENT_ERROR(14006, "数据库连接关闭失败"),
+    DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

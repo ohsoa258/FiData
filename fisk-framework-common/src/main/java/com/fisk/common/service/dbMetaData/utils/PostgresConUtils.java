@@ -69,6 +69,54 @@ public class PostgresConUtils {
     /**
      * 获取数据库中所有表名称
      *
+     * @return 返回值
+     */
+    public List<String> getTableList(String url, String user, String password, String driver) {
+        List<String> tableNames = null;
+        try {
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, user, password);
+            tableNames = getTables(conn);
+            conn.close();
+        } catch (ClassNotFoundException e) {
+            System.out.println("找不到驱动程序类 ，加载驱动失败！");
+            throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
+        } catch (SQLException e) {
+            log.error("【PostgresConUtils/getTableList】建立pg数据库连接异常, ex", e);
+            throw new FkException(ResultEnum.PG_READ_TABLE_ERROR);
+        }
+        return tableNames;
+    }
+
+    /**
+     * 获取数据库某张表的字段
+     *
+     * @return 返回值
+     */
+    public List<TableStructureDTO> getTableColumnList(String url, String user,
+                                                      String password, String driver, String tableName) {
+        List<TableStructureDTO> colNames = null;
+        try {
+            Class.forName(driver);
+            Connection conn = DriverManager.getConnection(url, user, password);
+            Statement st = conn.createStatement();
+            colNames = getColNames(st, tableName);
+            st.close();
+            conn.close();
+        } catch (ClassNotFoundException e) {
+            System.out.println("找不到驱动程序类 ，加载驱动失败！");
+            throw new FkException(ResultEnum.CREATE_PG_CONNECTION);
+        } catch (SQLException e) {
+            log.error("【PostgresConUtils/getTableColumnList】建立pg数据库连接异常, ex", e);
+            throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
+        }
+        return colNames;
+    }
+
+
+    /**
+     * 获取数据库中所有表名称
+     *
      * @param conn conn
      * @return 返回值
      */
@@ -81,6 +129,7 @@ public class PostgresConUtils {
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
             }
+            tables.close();
         } catch (SQLException e) {
             log.error("【PostgresConUtils/getTables】读取表信息异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_TABLE_ERROR);
@@ -116,7 +165,7 @@ public class PostgresConUtils {
             }
             rs.close();
         } catch (SQLException e) {
-            log.error("【PostgresConUtils/getTables】读取字段信息异常, ex", e);
+            log.error("【PostgresConUtils/getColNames】读取字段信息异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
         }
 
@@ -126,50 +175,29 @@ public class PostgresConUtils {
     /**
      * 获取指定表的字段信息（包括字段名称，字段类型，字段长度，备注）
      *
-     * @param driver
-     * @param url
-     * @param user
-     * @param pwd
      * @param tableName
      * @return
      */
-    public List<Object[]> getTableColumns(String driver, String url, String user, String pwd, String tableName) {
-        List<Object[]> result = new ArrayList();
-        Connection conn = null;
+    public List<TableStructureDTO> getTableColumns(Connection conn, String tableName) {
+        List<TableStructureDTO> colNameList = new ArrayList<>();
         try {
-            Class.forName(driver);
-            conn = DriverManager.getConnection(url, user, pwd);
             ResultSet rs = conn.getMetaData().getColumns(null, "%", tableName, "%");
             while (rs.next()) {
-                Object[] objects = new Object[4];
+                TableStructureDTO tableStructureDTO = new TableStructureDTO();
                 //字段名称
-                String colName = rs.getString("COLUMN_NAME");
-                objects[0] = colName;
+                tableStructureDTO.setFieldName(rs.getString("COLUMN_NAME"));
                 //字段类型
-                String dbType = rs.getString("TYPE_NAME");
-                objects[1] = dbType;
+                tableStructureDTO.setFieldType(rs.getString("TYPE_NAME"));
                 //字段长度
-                int columnSize = rs.getInt("COLUMN_SIZE");
-                objects[2] = columnSize;
+                //tableStructureDTO.setFieldLength(Integer.parseInt(rs.getString("COLUMN_SIZE")));
                 //备注
-                String remarks = rs.getString("REMARKS");
-                if (remarks == null || remarks.equals("")) {
-                    remarks = "";
-                }
-                objects[3] = remarks;
-                result.add(objects);
+                //tableStructureDTO.setFieldDes(rs.getString("REMARKS"));
+                colNameList.add(tableStructureDTO);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            log.error("【PostgresConUtils/getTableColumns】读取字段信息异常, ex", e);
+            throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
         }
-        return result;
+        return colNameList;
     }
 }

@@ -2,6 +2,8 @@ package com.fisk.datagovernance.service.dataops;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
+import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
+import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 
@@ -16,13 +18,22 @@ import java.util.List;
 public interface IDataOpsDataSourceManageService {
 
     /**
-     * 获取数据运维全部数据源信息
+     * 获取数据运维数据源中的 实例、库、表信息
+     *
      * @return 查询结果
      */
-    ResultEntity< List<DataExampleSourceVO> > getDataOpsSourceAll();
+    ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll();
+
+    /**
+     * 获取数据运维数据源中表字段信息
+     *
+     * @return 查询结果
+     */
+    ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName);
 
     /**
      * executeDataOpsSql
+     *
      * @return 查询结果
      */
     ResultEntity<ExecuteResultVO> executeDataOpsSql(ExecuteDataOpsSqlDTO dto);

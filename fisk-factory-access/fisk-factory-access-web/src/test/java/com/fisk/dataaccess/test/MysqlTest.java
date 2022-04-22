@@ -26,10 +26,11 @@ public class MysqlTest {
     @Test
     public  void testpg(){
         PostgresConUtils postgresConUtils = new PostgresConUtils();
-        //postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
-          //      "postgres", "Password01!", "org.postgresql.Driver");
-        List<Object[]> tableColumns = postgresConUtils.getTableColumns("org.postgresql.Driver", "jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
-                "postgres", "Password01!", "dim__timing_consumerrole");
+        List<TablePyhNameDTO> postgres = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
+                "postgres", "Password01!", "org.postgresql.Driver");
+        List<TablePyhNameDTO> postgres_ods = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified",
+                "postgres", "Password01!", "org.postgresql.Driver");
+        int code=200;
     }
     
     @Test

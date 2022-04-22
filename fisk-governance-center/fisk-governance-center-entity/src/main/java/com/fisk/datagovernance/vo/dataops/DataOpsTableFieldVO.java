@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.vo.dataops;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -8,7 +9,8 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 字段信息
  * @date 2022/4/22 13:02
  */
-public class FieldVO {
+@Data
+public class DataOpsTableFieldVO {
     /**
      * 字段名称
      */
@@ -20,4 +22,16 @@ public class FieldVO {
      */
     @ApiModelProperty(value = "字段类型")
     public String fieldType;
+
+    /**
+     * 字段长度
+     */
+    @ApiModelProperty(value = "字段长度")
+    public int fieldLength;
+
+    /**
+     * 字段描述
+     */
+    @ApiModelProperty(value = "字段描述")
+    public String fieldDes;
 }

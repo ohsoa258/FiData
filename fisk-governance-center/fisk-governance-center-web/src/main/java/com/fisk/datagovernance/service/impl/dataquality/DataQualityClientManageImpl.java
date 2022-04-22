@@ -755,7 +755,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     conn.close();
                 }
             } catch (SQLException ex) {
-                throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
+                throw new FkException(ResultEnum.DATA_QUALITY_CLOSESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
             }
         }
         return resultVOS;
@@ -816,7 +816,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     conn.close();
                 }
             } catch (SQLException ex) {
-                throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
+                throw new FkException(ResultEnum.DATA_QUALITY_CLOSESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
             }
         }
         return mapList;
@@ -875,7 +875,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     conn.close();
                 }
             } catch (SQLException ex) {
-                throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
+                throw new FkException(ResultEnum.DATA_QUALITY_CLOSESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
             }
         }
         return affectedCount;
