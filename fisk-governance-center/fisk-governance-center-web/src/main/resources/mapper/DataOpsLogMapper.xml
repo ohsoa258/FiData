@@ -1,0 +1,32 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataops.DataOpsLogMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataops.DataOpsLogVO">
+        SELECT
+        id,
+        con_ip,
+        con_dbname,
+        execute_sql,
+        execute_result,
+        execute_msg,
+        execute_user,
+        create_time,
+        create_user
+        FROM
+        tb_dataops_logs
+        WHERE
+        del_flag =1
+        <if test="keyword != null and keyword != '' ">
+            AND con_dbname LIKE concat('%', #{keyword}, '%')
+            OR execute_sql LIKE concat('%', #{keyword}, '%')
+            OR execute_user LIKE concat('%', #{keyword}, '%')
+            <if test="query.keyword =='成功' ">
+                or execute_result = 200
+            </if>
+            <if test="query.keyword =='失败' ">
+                or execute_result = 500
+            </if>
+        </if>
+    </select>
+</mapper>

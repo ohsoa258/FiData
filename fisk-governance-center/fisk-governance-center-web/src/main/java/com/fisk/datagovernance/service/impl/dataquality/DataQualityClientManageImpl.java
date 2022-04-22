@@ -82,12 +82,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     NoticeManageImpl noticeManageImpl;
 
     @Resource
-    EmailServerMapper emailServerMapper;
-
-    @Resource
-    EmailServerManageImpl emailServerManageImpl;
-
-    @Resource
     ComponentNotificationMapper componentNotificationMapper;
 
     @Resource

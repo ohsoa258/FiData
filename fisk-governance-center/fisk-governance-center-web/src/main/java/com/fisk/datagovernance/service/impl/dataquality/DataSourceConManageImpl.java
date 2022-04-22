@@ -10,7 +10,6 @@ import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
@@ -44,9 +43,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     DataSourceConMapper mapper;
-
-    @Resource
-    UserHelper userHelper;
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
@@ -223,13 +219,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     if (dataSourceVO.getConIp().equals(conIp)) {
                         if (dataExampleSourceVO == null) {
                             dataExampleSourceVO = new DataExampleSourceVO();
-                            dataExampleSourceVO.setId(dataSourceVO.getId());
                             dataExampleSourceVO.setConIp(dataSourceVO.getConIp());
                             dataExampleSourceVO.setConPort(dataSourceVO.getConPort());
                             dataExampleSourceVO.setConType(dataSourceVO.getConType());
                             dataExampleSourceVO.setName(dataSourceVO.getName());
                         }
                         DataBaseSourceVO dataBaseSourceVO = new DataBaseSourceVO();
+                        dataBaseSourceVO.setId(dataSourceVO.getId());
                         dataBaseSourceVO.setConDbname(dataSourceVO.getConDbname());
                         dataBaseSourceVO.setChildren(dataSourceVO.getTableDtoList());
                         dataBaseSourceVOS.add(dataBaseSourceVO);

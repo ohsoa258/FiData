@@ -31,13 +31,14 @@ public class SwaggerConfig {
     public static final String LIFECYCLE_CONTROLLER = "lifecycle-controller";
     public static final String NOTICE_CONTROLLER = "notice-controller";
     public static final String TEMPLATE_CONTROLLER = "template-controller";
+    public static final String DATA0PSLOG_CONTROLLER = "data_ops_log-controller";
     public static final String DATA_QUALITY_CLIENT_CONTROLLER = "data-quality-client-controller";
     public static final String TABLE_SECURITY_CONFIG_CONTROLLER = "table-security-config-controller";
     public static final String DATA_MASKING_CONFIG_CONTROLLER = "data_masking_config_controller";
     public static final String ROW_SECURITY_CONFIG_CONTROLLER = "row_security_config_controller";
-    public static final String USER_GROUP_INFO="user-group-info-controller";
-    public static final String USER_GROUP_ASSIGNMENT="user-group-assignment-controller";
-    public static final String COLUMN_SECURITY_CONFIG="column-security-config-controller\n";
+    public static final String USER_GROUP_INFO = "user-group-info-controller";
+    public static final String USER_GROUP_ASSIGNMENT = "user-group-assignment-controller";
+    public static final String COLUMN_SECURITY_CONFIG = "column-security-config-controller\n";
 
 
     @Bean
@@ -53,13 +54,14 @@ public class SwaggerConfig {
                 .tags(new Tag(LIFECYCLE_CONTROLLER, "生命周期API"))
                 .tags(new Tag(NOTICE_CONTROLLER, "告警通知API"))
                 .tags(new Tag(TEMPLATE_CONTROLLER, "模板配置API"))
+                .tags(new Tag(DATA0PSLOG_CONTROLLER, "数据运维日志API"))
                 .tags(new Tag(DATA_QUALITY_CLIENT_CONTROLLER, "数据质量服务接口API"))
                 .tags(new Tag(TABLE_SECURITY_CONFIG_CONTROLLER, "表级安全API"))
                 .tags(new Tag(DATA_MASKING_CONFIG_CONTROLLER, "数据脱敏API"))
                 .tags(new Tag(ROW_SECURITY_CONFIG_CONTROLLER, "行级安全API"))
-                .tags(new Tag(USER_GROUP_INFO,"用户组"))
-                .tags(new Tag(USER_GROUP_ASSIGNMENT,"用户组用户"))
-                .tags(new Tag(COLUMN_SECURITY_CONFIG,"列级安全"))
+                .tags(new Tag(USER_GROUP_INFO, "用户组"))
+                .tags(new Tag(USER_GROUP_ASSIGNMENT, "用户组用户"))
+                .tags(new Tag(COLUMN_SECURITY_CONFIG, "列级安全"))
 
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))

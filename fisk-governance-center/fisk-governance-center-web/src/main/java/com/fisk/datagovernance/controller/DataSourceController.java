@@ -5,9 +5,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
+import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
+import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
+import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceVO;
@@ -29,8 +32,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/datasource")
 public class DataSourceController {
+
     @Resource
     private IDataSourceConManageService service;
+
+    @Resource
+    private IDataOpsDataSourceManageService dataOpsDataSourceManageService;
 
     @PostMapping("/page")
     @ApiOperation("获取所有数据源连接信息")
@@ -78,5 +85,17 @@ public class DataSourceController {
     @ApiOperation("获取表字段信息")
     public ResultEntity<DataSourceVO> getTableFieldAll(@Validated @RequestBody TableFieldQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
+    }
+
+    @GetMapping("/getDataOpsSourceAll")
+    @ApiOperation("获取数据运维全部数据源信息")
+    public ResultEntity<List<DataExampleSourceVO>> getDataOpsSourceAll() {
+        return dataOpsDataSourceManageService.getDataOpsSourceAll();
+    }
+
+    @PostMapping("/executeDataOpsSql")
+    @ApiOperation("执行sql")
+    public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
+        return dataOpsDataSourceManageService.executeDataOpsSql(dto);
     }
 }
