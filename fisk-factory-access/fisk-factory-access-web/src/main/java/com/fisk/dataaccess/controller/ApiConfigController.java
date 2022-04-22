@@ -94,14 +94,14 @@ public class ApiConfigController {
 
     @PostMapping("/generatePDFDocument")
     @ApiOperation(value = "生成api文档(以api为单位)")
-    public ResultEntity<Object> generateDoc(@Validated @RequestBody GenerateDocDTO dto, HttpServletResponse response) {
+    public ResultEntity<Object> generateDoc(@Validated @RequestBody GenerateDocDTO dto) {
         return ResultEntityBuild.build(service.generateDoc(dto, response));
     }
 
 
     @PostMapping("/generateAppPDFDocument")
     @ApiOperation(value = "生成api文档(以应用为单位)")
-    public ResultEntity<Object> generateAppPdfDoc(@Validated @RequestBody List<GenerateDocDTO> list, HttpServletResponse response) {
+    public ResultEntity<Object> generateAppPdfDoc(@Validated @RequestBody List<GenerateDocDTO> list) {
         return ResultEntityBuild.build(service.generateAppPdfDoc(list, response));
     }
 
