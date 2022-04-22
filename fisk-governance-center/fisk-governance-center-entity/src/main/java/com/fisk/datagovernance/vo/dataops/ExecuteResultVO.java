@@ -28,14 +28,14 @@ public class ExecuteResultVO {
     public JSONArray dataArray;
 
     /**
-     * 受影响行数
-     */
-    @ApiModelProperty(value = "受影响行数")
-    public int affectedCount;
-
-    /**
      * 表字段集合
      */
     @ApiModelProperty(value = "表字段集合")
     public List<DataOpsTableFieldVO> dataOpsTableFieldVO;
+
+    /**
+     * 受影响行数
+     */
+    @ApiModelProperty(value = "受影响行数")
+    public int affectedCount;
 }

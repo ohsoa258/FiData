@@ -8,7 +8,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
@@ -20,10 +19,7 @@ import com.fisk.datagovernance.vo.dataops.DataOpsDataBaseVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataBaseSourceVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -230,6 +226,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 }
             } else {
                 executeResultVO.query = false;
+                // 如果执行的是TRUNCATE、DROP等类似语句不返回行数。在数据库中执行此语句也并不会返回
+                // 执行 INSERT、UPDATE、DELETE 将返回受影响行数
                 affectedCount = st.getUpdateCount();
                 executeResultVO.setAffectedCount(affectedCount);
             }
@@ -266,12 +264,13 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 dataOpsLogPO.setExecuteSql(dto.executeSql);
                 dataOpsLogPO.setExecuteResult(executeResult.getCode());
                 dataOpsLogPO.setExecuteMsg(executeMsg);
-                List<Long> userIds = new ArrayList<>();
-                userIds.add(userHelper.getLoginUserInfo().getId());
-                ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-                if (userListByIds != null && CollectionUtils.isNotEmpty(userListByIds.getData())) {
-                    dataOpsLogPO.setExecuteUser(userListByIds.getData().get(0).getUserAccount());
-                }
+                dataOpsLogPO.setExecuteUser(userHelper.getLoginUserInfo().getUsername());
+//                List<Long> userIds = new ArrayList<>();
+//                userIds.add(userHelper.getLoginUserInfo().getId());
+//                ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+//                if (userListByIds != null && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+//                    dataOpsLogPO.setExecuteUser(userListByIds.getData().get(0).getUserAccount());
+//                }
                 dataOpsLogManageImpl.saveLog(dataOpsLogPO);
             } catch (Exception ex) {
                 log.error("executeDataOpsSql日志保存失败：", ex);
@@ -291,16 +290,16 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
      */
     public List<PostgreDTO> getPostgreDTOList() {
         List<PostgreDTO> postgreDTOList = new ArrayList<>();
-//        PostgreDTO postgreDTO_dw = new PostgreDTO();
-//        postgreDTO_dw.setId(pgsqlDwId);
-//        postgreDTO_dw.setPort(pgsqlDwPort);
-//        postgreDTO_dw.setIp(pgsqlDwIp);
-//        postgreDTO_dw.setDbName(pgsqlDwDbName);
-//        postgreDTO_dw.setDataSourceTypeEnum(DataSourceTypeEnum.getEnumByDriverName(pgsqlDwDriverClassName));
-//        postgreDTO_dw.setPgsqlUrl(pgsqlDwUrl);
-//        postgreDTO_dw.setPgsqlUsername(pgsqlDwUsername);
-//        postgreDTO_dw.setPgsqlPassword(pgsqlDwPassword);
-//        postgreDTOList.add(postgreDTO_dw);
+        PostgreDTO postgreDTO_dw = new PostgreDTO();
+        postgreDTO_dw.setId(pgsqlDwId);
+        postgreDTO_dw.setPort(pgsqlDwPort);
+        postgreDTO_dw.setIp(pgsqlDwIp);
+        postgreDTO_dw.setDbName(pgsqlDwDbName);
+        postgreDTO_dw.setDataSourceTypeEnum(DataSourceTypeEnum.getEnumByDriverName(pgsqlDwDriverClassName));
+        postgreDTO_dw.setPgsqlUrl(pgsqlDwUrl);
+        postgreDTO_dw.setPgsqlUsername(pgsqlDwUsername);
+        postgreDTO_dw.setPgsqlPassword(pgsqlDwPassword);
+        postgreDTOList.add(postgreDTO_dw);
         PostgreDTO postgreDTO_ods = new PostgreDTO();
         postgreDTO_ods.setId(pgsqlOdsId);
         postgreDTO_ods.setPort(pgsqlOdsPort);

@@ -5,7 +5,6 @@ import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
-import com.fisk.datagovernance.vo.dataquality.datasource.DataExampleSourceVO;
 
 import java.util.List;
 

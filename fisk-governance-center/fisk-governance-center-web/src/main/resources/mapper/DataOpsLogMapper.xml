@@ -21,10 +21,10 @@
             AND con_dbname LIKE concat('%', #{keyword}, '%')
             OR execute_sql LIKE concat('%', #{keyword}, '%')
             OR execute_user LIKE concat('%', #{keyword}, '%')
-            <if test="query.keyword =='成功' ">
+            <if test="keyword =='成功' ">
                 or execute_result = 200
             </if>
-            <if test="query.keyword =='失败' ">
+            <if test="keyword =='失败' ">
                 or execute_result = 500
             </if>
         </if>

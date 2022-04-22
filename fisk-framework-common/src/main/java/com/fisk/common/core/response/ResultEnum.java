@@ -215,7 +215,7 @@ public enum ResultEnum {
     /**
      * 数据运维
      */
-    DATA_OPS_CONFIG_EXISTS(14001, "数据运维数据源配置不存在"),
+    DATA_OPS_CONFIG_EXISTS(14001, "数据源配置不存在"),
     PG_CONNECT_ERROR(14002, "Postgres数据库连接异常"),
     PG_READ_TABLE_ERROR(14003, "Postgres读取表信息异常"),
     PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常"),
