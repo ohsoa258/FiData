@@ -233,6 +233,7 @@ public class EntityServiceImpl implements EntityService {
         attributeCode.setEnableAttributeLog(0);
         attributeCode.setEnableReadonly(0);
         attributeCode.setEnableRequired(0);
+        attributeCode.setSortWieght(1);
         attributePoList.add(attributeCode);
 
         AttributePO attributePoName = new AttributePO();
@@ -244,6 +245,7 @@ public class EntityServiceImpl implements EntityService {
         attributePoName.setEnableAttributeLog(0);
         attributePoName.setEnableReadonly(0);
         attributePoName.setEnableRequired(0);
+        attributePoName.setSortWieght(2);
         attributePoList.add(attributePoName);
 
         boolean saveBatch = attributeService.saveBatch(attributePoList);
