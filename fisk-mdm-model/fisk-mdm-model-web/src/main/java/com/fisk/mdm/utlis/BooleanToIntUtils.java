@@ -19,7 +19,11 @@ public class BooleanToIntUtils {
      * @param disabled
      * @return
      */
-    public int toInt(Boolean disabled){
+    public Integer toInt(Boolean disabled){
+        if (disabled == null){
+            return null;
+        }
+
         if (disabled == true){
             return 1;
         }
@@ -28,6 +32,10 @@ public class BooleanToIntUtils {
     }
 
     public Boolean toBoolean(Integer disabled){
+        if (disabled == null){
+            return null;
+        }
+
         if (disabled.equals(1)){
             return true;
         }else {
@@ -41,6 +49,10 @@ public class BooleanToIntUtils {
      * @return
      */
     public MdmStatusTypeEnum intToTypeEnum(Integer status){
+        if (status == null){
+            return null;
+        }
+
         switch (status){
             case 0 :
                 return MdmStatusTypeEnum.NOT_CREATED;
@@ -54,6 +66,10 @@ public class BooleanToIntUtils {
     }
 
     public Integer typeEnumToInt(MdmStatusTypeEnum type){
+        if (type == null){
+            return null;
+        }
+
         switch (type){
             case NOT_CREATED :
                 return MdmStatusTypeEnum.NOT_CREATED.getValue();
@@ -67,6 +83,10 @@ public class BooleanToIntUtils {
     }
 
     public String typeEnumToString(MdmStatusTypeEnum type){
+        if (type == null){
+            return null;
+        }
+
         switch (type){
             case NOT_CREATED :
                 return MdmStatusTypeEnum.NOT_CREATED.getName();
