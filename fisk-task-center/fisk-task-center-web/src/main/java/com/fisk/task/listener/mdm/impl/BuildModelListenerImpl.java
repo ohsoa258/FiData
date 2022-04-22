@@ -10,7 +10,7 @@ import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
-import com.fisk.mdm.enums.AttributeSyncStatusEnum;
+import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -20,6 +20,7 @@ import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
@@ -27,8 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.fisk.mdm.enums.AttributeStatusEnum.SUBMITTED;
-import static com.fisk.mdm.enums.AttributeSyncStatusEnum.SUCCESS;
+import static ch.qos.logback.core.db.DBHelper.closeConnection;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.NOT_CREATED;
 
 /**
@@ -72,7 +72,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         }
     }
 
-    //@Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void backgroundCreateTasks(String dataInfo, Acknowledgment acke) {
 
@@ -81,7 +81,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 获取实体信息
             EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
             String status = entityInfoVo.getStatus();
-            if (status.equals(NOT_CREATED)){
+            if (status.equals(NOT_CREATED.getName())){
                 // 实体未创建
                 // 执行创建表任务
                 this.createTable(entityInfoVo);
@@ -108,7 +108,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
             // 2.创建mdm表
             this.createMdmTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-            // 3.回写属性状态
+            // 3.回写成功属性状态
             this.writableAttributeStatus(entityInfoVo.getAttributeList());
             // 4.创建view视图
             this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
@@ -116,10 +116,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.writableEntityStatus(entityInfoVo);
         }catch (Exception ex){
             UpdateEntityDTO dto = new UpdateEntityDTO();
-//            dto.setId(entityInfoVo.getId());
-//            dto.setStatus(MdmStatusTypeEnum.CREATED_FAIL);
-            // todo
-            mdmClient.updateData(dto);
+            dto.setId(entityInfoVo.getId());
+            dto.setStatus(2);
+            mdmClient.update(dto);
 
             log.error("创建实体失败,异常信息:" + ex);
             ex.printStackTrace();
@@ -134,11 +133,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
         UpdateEntityDTO dto = new UpdateEntityDTO();
         dto.setId(entityInfoVo.getId());
         dto.setStatus(1);
-        mdmClient.updateData(dto);
+        mdmClient.update(dto);
     }
 
     /**
-     * 回写属性状态
+     * 回写成功属性状态
      */
     public void writableAttributeStatus(List<AttributeInfoDTO> attributeList){
         List<AttributeUpdateDTO> dtoList = attributeList.stream().filter(Objects::nonNull)
@@ -146,8 +145,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     AttributeUpdateDTO dto = new AttributeUpdateDTO();
                     dto.setId(e.getId());
                     dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
-                    dto.setStatus(SUBMITTED);
-                    dto.setSyncStatus(SUCCESS);
+                    dto.setStatus(2);
+                    dto.setSyncStatus(1);
 
                     return dto;
                 }).collect(Collectors.toList());
@@ -176,6 +175,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
+            closeConnection(connection);
             log.error("创建Stg表失败,异常信息:" + ex);
             ex.printStackTrace();
         }
@@ -196,19 +196,39 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
+            closeConnection(connection);
             // 回写属性失败状态
             entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
                     .forEach(e -> {
                         AttributeUpdateDTO dto = new AttributeUpdateDTO();
                         dto.setId(e.getId());
                         dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
-                        //dto.setStatus(e.getStatus());
-                        dto.setSyncStatus(AttributeSyncStatusEnum.ERROR);
+                        dto.setStatus(this.stringToStatusInt(e.getStatus()));
+                        dto.setSyncStatus(1);
                         dto.setErrorMsg(ex.getMessage());
+                        mdmClient.update(dto);
                     });
 
             log.error("创建Mdm表失败,异常信息:" + ex);
             ex.printStackTrace();
+        }
+    }
+
+    /**
+     * 属性状态转换: status
+     * @param status
+     * @return
+     */
+    public Integer stringToStatusInt(String status){
+        switch (status){
+            case "待新增":
+                return AttributeStatusEnum.INSERT.getValue();
+            case "待修改":
+                return AttributeStatusEnum.UPDATE.getValue();
+            case "已提交":
+                return AttributeStatusEnum.SUBMITTED.getValue();
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
 
@@ -227,6 +247,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
+            closeConnection(connection);
             log.error("创建Viw视图表失败,异常信息:" + ex);
             ex.printStackTrace();
         }

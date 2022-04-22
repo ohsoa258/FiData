@@ -92,7 +92,7 @@ public class AbstractDbHelper {
      *
      * @param st Statement对象
      */
-    public void closeStatement(Statement st) {
+    public static void closeStatement(Statement st) {
         if (st != null) {
             try {
                 st.close();
@@ -123,7 +123,6 @@ public class AbstractDbHelper {
             throw new FkException(ResultEnum.VISUAL_CREATE_ERROR, ex.getLocalizedMessage());
         }finally {
             closeStatement(statement);
-            closeConnection(connection);
             stopWatch.stop();
             log.info("【execCreate】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }

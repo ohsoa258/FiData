@@ -57,20 +57,22 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(this.splicingStgTable());
 
         // 字段sql
-        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
                 .map(e -> {
+
+                    String str1 = null;
 
                     // 判断数据类型
                     switch (e.getDataType()) {
                         case "文本":
-                            str.append(e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL");
+                            str1 = e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL";
                             break;
                         default:
-                            str.append(e.getName() + " VARCHAR( 200 )" + "NULL");
+                            str1 = e.getName() + " VARCHAR( 200 )" + "NULL";
                             break;
                     }
 
-                    return str;
+                    return str1;
                 }).collect(Collectors.joining(","));
 
         str.append(fieldSql);
@@ -88,25 +90,30 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(this.splicingMdmTable());
 
         // 字段sql
-        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT))
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
                 .map(e -> {
 
+                    String str1 = null;
                     String name = "column_" + entityInfoVo.getId() + "_" + e.getId();
                     // 判断数据类型
                     switch (e.getDataType()) {
                         case "数值":
                         case "域字段":
-                            str.append(name + " int4 " + "NULL");
+                            str1 = name + " int4 " + "NULL";
+                            break;
                         case "时间":
-                            str.append(name + " date " + "NULL");
+                            str1 = name + " date " + "NULL";
+                            break;
                         case "浮点型":
-                            str.append(name + " float4 " + "NULL");
+                            str1 = name + " float4 " + "NULL";
+                            break;
                         case "文本":
                         default:
-                            str.append(name + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL");
+                            str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL";
+                            break;
                     }
 
-                    return str;
+                    return str1;
                 }).collect(Collectors.joining(","));
 
         str.append(fieldSql);
@@ -216,7 +223,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingStgTable(){
         StringBuilder str = new StringBuilder();
-        str.append("id int4 NOT NULL").append(",");
+        str.append("id serial NOT NULL").append(",");
         str.append("import_type int4 NULL").append(",");
         str.append("batch_id int4 NULL").append(",");
         str.append("version_id int4 NULL").append(",");
@@ -231,7 +238,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingMdmTable(){
         StringBuilder str = new StringBuilder();
-        str.append("id int4 NOT NULL").append(",");
+        str.append("id serial NOT NULL").append(",");
         str.append("version_id int4 NULL").append(",");
         str.append("lock_tag int4 NULL").append(",");
         return str.toString();
