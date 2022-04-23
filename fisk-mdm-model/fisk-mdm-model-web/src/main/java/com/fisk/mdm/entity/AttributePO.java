@@ -114,5 +114,5 @@ public class AttributePO extends BasePO {
     /**
      * 数据域id（相当于外键）
      */
-    private int domainId;
+    private Integer domainId;
 }
