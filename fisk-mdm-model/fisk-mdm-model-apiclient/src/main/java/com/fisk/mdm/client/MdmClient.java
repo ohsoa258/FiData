@@ -2,6 +2,7 @@ package com.fisk.mdm.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -58,4 +59,12 @@ public interface MdmClient {
      */
     @PostMapping("/attribute/getByIds")
     ResultEntity<List<AttributeInfoDTO>> getByIds(@RequestBody List<Integer> ids);
+
+    /**
+     * 根据domainId查询属性
+     * @param dto
+     * @return
+     */
+    @PostMapping("/attribute/getByDomainId")
+    ResultEntity<AttributeInfoDTO> getByDomainId(@RequestBody AttributeDomainDTO dto);
 }

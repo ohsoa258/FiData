@@ -1,5 +1,6 @@
 package com.fisk.task.utils.mdmBEBuild.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -7,10 +8,13 @@ import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
@@ -19,6 +23,7 @@ import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
  * @author WangYan
  * @date 2022/4/13 18:06
  */
+@Component
 public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Resource
@@ -26,7 +31,6 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     public static final String PUBLIC = "PUBLIC";
     public static final String PRIMARY_TABLE = "a";
-    public static final String ACCESSORY_TABLE = "b";
 
     @Override
     public String buildAttributeLogTable(String tableName) {
@@ -124,97 +128,96 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildViewTable(EntityInfoVO entityInfoVo) {
         StringBuilder str = new StringBuilder();
-        String vSTableName = "mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
         str.append("CREATE VIEW " + PUBLIC + ".");
         str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
-        str.append(" AS (").append("SELECT ");
+        str.append(" AS ").append("SELECT ");
 
-        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
-        // 属性外键数据
-        List<AttributeVO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
-            ResultEntity<AttributeVO> result = mdmClient.get(e.getDomainId());
-            return result.data;
-        }).collect(Collectors.toList());
+        List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
+        List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
+        // 存在外键数据
+        List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
+        // 不存在外键数据
+        List<AttributeInfoDTO> noForeignList = attributeList.stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
 
-        // 属性外键: select b.column_6_9 AS Class
-        String foreignFiled = attributeList.stream().filter(e -> e.getDomainId() != null)
-                .map(e -> {
-                    ResultEntity<AttributeVO> result = mdmClient.get(e.getDomainId());
-                    if (result != null) {
-                        AttributeVO data = result.getData();
-                        String fieldName = ACCESSORY_TABLE + "." + "column_" + data.getEntityId() + "_"
-                                + data.getId()+1 + " AS " + e.getName();
-                        return fieldName;
-                    }
-
-                    return null;
-                }).collect(Collectors.joining(","));
-
-        if (StringUtils.isBlank(foreignFiled)){
-            // 没有关联关系
-            // 拼接mdm表基础字段拼接
-            str.append(this.splicingViewTable(foreignFiled));
-
-            // 字段Sql
-            String collect = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
-                    .map(e -> {
-
-                        String name = e.getColumnName() + " AS " + e.getName();
-                        return name;
-                    }).collect(Collectors.joining(","));
-
-            str.append(collect);
-        }else{
-            // 存在关联关系
-            // 拼接mdm表基础字段拼接
-            str.append(this.splicingViewTable(foreignFiled));
-
-            // 没有外键的字段Sql
-            String collect = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null)
-                    .map(e -> {
-
-                        String name = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
-                        return name;
-                    }).collect(Collectors.joining(","));
-
-            str.append(collect);
-            str.append(foreignFiled);
+        // 先去判断属性有没有外键
+        if (CollectionUtils.isEmpty(foreignList)){
+            // 不存在外键
+            str.append(this.noDomainSplicing(noForeignList));
+        }else {
+            // 存在外键
+            str.append(this.domainSplicing(foreignList,noForeignList));
         }
 
-
-        str.append(" FROM " + vSTableName);
-
-        if (StringUtils.isNotBlank(foreignFiled)){
-            // 存在外键关系,LEFT JOIN 从表
-            String leftJoin = this.appendLeftJoin(foreignFiled, foreignList);
-            str.append(PRIMARY_TABLE + leftJoin);
-        }
-        str.append(")");
         return str.toString();
     }
 
     /**
-     * 追加Left join
-     * @param foreignFiled
+     * 存在域字段
      * @param foreignList
+     * @param noForeignList
+     */
+    public String domainSplicing(List<AttributeInfoDTO> foreignList,List<AttributeInfoDTO> noForeignList){
+        StringBuilder str = new StringBuilder();
+
+        // 不存在域字段的属性
+        String noForeign = noForeignList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+            String str1 = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        // 存在域字段的属性
+        List<Integer> domainIds = foreignList.stream().filter(e -> e.getDomainId() != null).map(e -> e.getDomainId() + 1).collect(Collectors.toList());
+        List<AttributeInfoDTO> list = mdmClient.getByIds(domainIds).getData();
+
+        AtomicInteger amount = new AtomicInteger(1);
+        String foreign = list.stream().filter(e -> e.getName() != null).map(e -> {
+            String str1 = PRIMARY_TABLE + amount.incrementAndGet() + "." + e.getColumnName() + " AS " + e.getName();
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        // 获取主表表名
+        AttributeInfoDTO dto = noForeignList.get(1);
+        str.append(this.splicingViewTable(true));
+        str.append(noForeign);
+        str.append(foreign);
+        // 主表表名
+        str.append("mdm_" + dto.getModelId() + "_" + dto.getEntityId() + PRIMARY_TABLE);
+
+        AtomicInteger amount1 = new AtomicInteger(1);
+        String leftJoin = foreignList.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId();
+                    String alias = PRIMARY_TABLE + amount1.incrementAndGet() + ".";
+                    String on = " ON " + PRIMARY_TABLE + "." + "version_id" + "=" + alias + "version_id" +
+                            " AND " + PRIMARY_TABLE + "." + e.getColumnName() + "=" + alias + ".id";
+                    String str1 = tableName + alias + on;
+                    return str1;
+                }).collect(Collectors.joining(" LEFT JOIN "));
+
+        str.append(" LEFT JOIN " + leftJoin);
+        return str.toString();
+    }
+
+    /**
+     * 不存在域字段拼接
+     * @param noForeignList
      * @return
      */
-    public String appendLeftJoin(String foreignFiled,List<AttributeVO> foreignList){
-        if (StringUtils.isNotBlank(foreignFiled)){
-            String collect = foreignList.stream().filter(Objects::nonNull)
-                    .map(e -> {
-                        StringBuilder str = new StringBuilder();
-                        str.append(" LEFT JOIN ");
-                        str.append("mdm_" + e.getModelId() + e.getEntityId() + ACCESSORY_TABLE);
-                        str.append(" ON " + PRIMARY_TABLE + ".version_id=").append(ACCESSORY_TABLE + ".version_id");
-                        str.append(" AND " + PRIMARY_TABLE + "." + e.getColumnName()).append(ACCESSORY_TABLE + ".id");
+    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList){
+        StringBuilder str = new StringBuilder();
+        // 视图基础字段
+        str.append(this.splicingViewTable(false));
 
-                        return str.toString();
-                    }).collect(Collectors.joining(" LEFT JOIN "));
-            return collect;
-        }
+        String collect = noForeignList.stream().filter(Objects::nonNull).map(e -> {
+            String str1 = e.getColumnName() + " AS " + e.getName();
+            return str1;
+        }).collect(Collectors.joining(","));
 
-        return null;
+        AttributeInfoDTO infoDto = noForeignList.get(1);
+        // 业务字段
+        str.append(collect);
+        str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
+        return str.toString();
     }
 
     /**
@@ -248,16 +251,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      * View 视图表基础字段拼接
      * @return
      */
-    public String splicingViewTable(String foreignFiled){
+    public String splicingViewTable(boolean isDomain){
         StringBuilder str = new StringBuilder();
-        if (StringUtils.isBlank(foreignFiled)){
+        if (isDomain == false){
             str.append("id").append(",");
             str.append("version_id").append(",");
         }else{
             str.append(PRIMARY_TABLE + "." + "id").append(",");
             str.append(PRIMARY_TABLE + "." + "version_id").append(",");
         }
-
         return str.toString();
     }
 }

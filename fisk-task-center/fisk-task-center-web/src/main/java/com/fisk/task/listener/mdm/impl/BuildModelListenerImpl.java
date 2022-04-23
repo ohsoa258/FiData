@@ -1,12 +1,14 @@
 package com.fisk.task.listener.mdm.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
+import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -26,10 +28,13 @@ import javax.annotation.Resource;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ch.qos.logback.core.db.DBHelper.closeConnection;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.NOT_CREATED;
+import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
+import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.PRIMARY_TABLE;
 
 /**
  * Description: 创建模型日志表
@@ -78,13 +83,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         try {
             EntityDTO dto = JSON.parseObject(dataInfo, EntityDTO.class);
+
+            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            // 获取连接信息
+            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+
             // 获取实体信息
             EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
             String status = entityInfoVo.getStatus();
             if (status.equals(NOT_CREATED.getName())){
-                // 实体未创建
-                // 执行创建表任务
-                this.createTable(entityInfoVo);
+                // 1.执行创建表任务
+                this.createTable(abstractDbHelper,sqlBuilder,connection,entityInfoVo);
+                // 2.回写成功属性状态
+                this.writableAttributeStatus(entityInfoVo.getAttributeList());
+                // 3.创建view视图
+                this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+                // 4.回写实体状态
+                this.writableEntityStatus(entityInfoVo);
             }
 
         } catch (Exception ex) {
@@ -99,30 +115,25 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * 执行创建表任务
      * @param entityInfoVo
      */
-    public void createTable(EntityInfoVO entityInfoVo){
-        try{
-            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
-            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
-            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
-            // 1.创建Stg表
-            this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-            // 2.创建mdm表
-            this.createMdmTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-            // 3.回写成功属性状态
-            this.writableAttributeStatus(entityInfoVo.getAttributeList());
-            // 4.创建view视图
-            this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-            // 5.回写实体状态
-            this.writableEntityStatus(entityInfoVo);
-        }catch (Exception ex){
-            UpdateEntityDTO dto = new UpdateEntityDTO();
-            dto.setId(entityInfoVo.getId());
-            dto.setStatus(2);
-            mdmClient.update(dto);
+    public void createTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+                            Connection connection,EntityInfoVO entityInfoVo) throws Exception {
 
-            log.error("创建实体失败,异常信息:" + ex);
-            ex.printStackTrace();
-        }
+        // 1.创建Stg表
+        this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+        // 2.创建mdm表
+        this.createMdmTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+    }
+
+    /**
+     * 回写实体失败信息
+     * @param entityInfoVo
+     */
+    public void exceptionEntityProcess(EntityInfoVO entityInfoVo,Exception ex){
+        UpdateEntityDTO dto = new UpdateEntityDTO();
+        dto.setId(entityInfoVo.getId());
+        dto.setStatus(2);
+        mdmClient.update(dto);
+        log.error("创建实体失败,异常信息:" + ex);
     }
 
     /**
@@ -176,8 +187,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
             closeConnection(connection);
+
+            // 回写失败信息
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg() + "原因:" + ex);
             log.error("创建Stg表失败,异常信息:" + ex);
-            ex.printStackTrace();
+            throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
     }
 
@@ -197,21 +211,46 @@ public class BuildModelListenerImpl implements BuildModelListener {
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
             closeConnection(connection);
-            // 回写属性失败状态
-            entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
-                    .forEach(e -> {
-                        AttributeUpdateDTO dto = new AttributeUpdateDTO();
-                        dto.setId(e.getId());
-                        dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
-                        dto.setStatus(this.stringToStatusInt(e.getStatus()));
-                        dto.setSyncStatus(1);
-                        dto.setErrorMsg(ex.getMessage());
-                        mdmClient.update(dto);
-                    });
 
+            // 回写失败信息
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_MDM_TABLE.getMsg() + "原因:" + ex);
             log.error("创建Mdm表失败,异常信息:" + ex);
-            ex.printStackTrace();
+            throw new FkException(ResultEnum.CREATE_MDM_TABLE);
         }
+    }
+
+    /**
+     * 回写失败信息
+     * @param entityInfoVo
+     * @param ex
+     */
+    public void exceptionProcess(EntityInfoVO entityInfoVo,Exception ex,String message){
+        // 1.回写属性失败状态
+        this.exceptionAttributeProcess(entityInfoVo.getAttributeList(), message);
+        // 2.回写实体失败状态
+        this.exceptionEntityProcess(entityInfoVo,ex);
+    }
+
+    /**
+     * 回写属性失败状态
+     * @param dtoList
+     * @param message
+     */
+    public void exceptionAttributeProcess(List<AttributeInfoDTO> dtoList, String message){
+        if (CollectionUtils.isEmpty(dtoList)){
+            return;
+        }
+
+        dtoList.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    AttributeUpdateDTO dto = new AttributeUpdateDTO();
+                    dto.setId(e.getId());
+                    dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
+                    dto.setStatus(this.stringToStatusInt(e.getStatus()));
+                    dto.setSyncStatus(1);
+                    dto.setErrorMsg(message);
+                    mdmClient.update(dto);
+                });
     }
 
     /**
@@ -243,13 +282,154 @@ public class BuildModelListenerImpl implements BuildModelListener {
                                Connection connection, EntityInfoVO entityInfoVo){
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildViewTable(entityInfoVo);
+            String buildStgTableSql = this.buildViewTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (Exception ex){
             closeConnection(connection);
-            log.error("创建Viw视图表失败,异常信息:" + ex);
-            ex.printStackTrace();
+
+            // 回写失败信息
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_VIW_TABLE.getMsg() + "原因:" + ex);
+            log.error("创建Stg表失败,异常信息:" + ex);
+            throw new FkException(ResultEnum.CREATE_VIW_TABLE);
         }
+    }
+
+    /**
+     * 创建视图
+     * @param entityInfoVo
+     * @return
+     */
+    public String buildViewTable(EntityInfoVO entityInfoVo) {
+        StringBuilder str = new StringBuilder();
+        str.append("CREATE VIEW " + PUBLIC + ".");
+        str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
+        str.append(" AS ").append("SELECT ");
+
+        List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
+        List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
+        // 存在外键数据
+        List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
+        // 不存在外键数据
+        List<AttributeInfoDTO> noForeignList = attributeList.stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
+
+        // 先去判断属性有没有外键
+        if (CollectionUtils.isEmpty(foreignList)){
+            // 不存在外键
+            str.append(this.noDomainSplicing(noForeignList));
+        }else {
+            // 存在外键
+            str.append(this.domainSplicing(foreignList,noForeignList));
+        }
+
+        return str.toString();
+    }
+
+    /**
+     * 存在域字段
+     * @param foreignList
+     * @param noForeignList
+     */
+    public String domainSplicing(List<AttributeInfoDTO> foreignList,List<AttributeInfoDTO> noForeignList){
+        StringBuilder str = new StringBuilder();
+
+        // 不存在域字段的属性
+        String noForeign = noForeignList.stream().filter(e -> e.getDomainId() == null).map(e -> {
+            String str1 = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        // 存在域字段的属性
+        List<Integer> domainIds = foreignList.stream().filter(e -> e.getDomainId() != null).map(e -> e.getDomainId() + 1).collect(Collectors.toList());
+        List<AttributeInfoDTO> list = mdmClient.getByIds(domainIds).getData();
+
+        AtomicInteger amount = new AtomicInteger(0);
+        String foreign = list.stream().filter(e -> e.getName() != null).map(e -> {
+            // 获取域字段名称
+            AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
+            String str1 = null;
+            if (data != null){
+                str1 = PRIMARY_TABLE + amount.incrementAndGet() + "." + e.getColumnName() + " AS " + data.getName();
+            }
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        // 获取主表表名
+        AttributeInfoDTO dto = noForeignList.get(1);
+        str.append(this.splicingViewTable(true));
+        str.append(noForeign).append(",");
+        str.append(foreign);
+        // 主表表名
+        str.append(" FROM " + "mdm_" + dto.getModelId() + "_" + dto.getEntityId() + " " + PRIMARY_TABLE);
+
+        AtomicInteger amount1 = new AtomicInteger(0);
+        String leftJoin = list.stream().filter(Objects::nonNull)
+                .map(e -> {
+
+                    // 获取域字段名称
+                    AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
+
+                    String alias = PRIMARY_TABLE + amount1.incrementAndGet();
+                    String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId() + " " + alias;
+                    String on = " ON " + PRIMARY_TABLE + "." + "version_id" + " = " + alias + ".version_id" +
+                            " AND " + PRIMARY_TABLE + "." + data.getColumnName() + " = " + alias + ".id";
+                    String str1 = tableName + " " + on;
+                    return str1;
+                }).collect(Collectors.joining(" LEFT JOIN "));
+
+        str.append(" LEFT JOIN " + leftJoin);
+        return str.toString();
+    }
+
+    /**
+     * 获取域字段名称
+     * @param foreignList
+     * @param id
+     * @return
+     */
+    public AttributeInfoDTO getDomainName(List<AttributeInfoDTO> foreignList,Integer id){
+        AttributeDomainDTO dto1 = new AttributeDomainDTO();
+        dto1.setEntityId(foreignList.get(0).getEntityId());
+        dto1.setDomainId(id-1);
+        AttributeInfoDTO data = mdmClient.getByDomainId(dto1).getData();
+        return data;
+    }
+
+    /**
+     * 不存在域字段拼接
+     * @param noForeignList
+     * @return
+     */
+    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList){
+        StringBuilder str = new StringBuilder();
+        // 视图基础字段
+        str.append(this.splicingViewTable(false));
+
+        String collect = noForeignList.stream().filter(Objects::nonNull).map(e -> {
+            String str1 = e.getColumnName() + " AS " + e.getName();
+            return str1;
+        }).collect(Collectors.joining(","));
+
+        AttributeInfoDTO infoDto = noForeignList.get(1);
+        // 业务字段
+        str.append(collect);
+        str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
+        return str.toString();
+    }
+
+    /**
+     * View 视图表基础字段拼接
+     * @return
+     */
+    public String splicingViewTable(boolean isDomain){
+        StringBuilder str = new StringBuilder();
+        if (isDomain == false){
+            str.append("id").append(",");
+            str.append("version_id").append(",");
+        }else{
+            str.append(PRIMARY_TABLE + "." + "id").append(",");
+            str.append(PRIMARY_TABLE + "." + "version_id").append(",");
+        }
+        return str.toString();
     }
 }
