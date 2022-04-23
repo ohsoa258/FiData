@@ -1,6 +1,5 @@
 package com.fisk.mdm.dto.attribute;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -15,6 +14,11 @@ public class AttributeInfoDTO {
      * id
      */
     private Integer id;
+
+    /**
+     * 模型id
+     */
+    private Integer modelId;
 
     /**
      * 实体id

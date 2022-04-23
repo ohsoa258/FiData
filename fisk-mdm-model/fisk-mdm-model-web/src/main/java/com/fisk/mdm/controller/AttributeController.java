@@ -6,16 +6,12 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
-import com.fisk.mdm.dto.model.ModelDTO;
-import com.fisk.mdm.dto.model.ModelQueryDTO;
-import com.fisk.mdm.dto.model.ModelUpdateDTO;
-import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
-import com.fisk.mdm.vo.model.ModelVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -79,7 +75,7 @@ public class AttributeController {
 
     @ApiOperation("根据id集合查询属性信息")
     @PostMapping("/getByIds")
-    public ResultEntity<List<AttributeVO>> getByIds(@RequestBody List<Integer> ids) {
+    public ResultEntity<List<AttributeInfoDTO>> getByIds(@RequestBody List<Integer> ids) {
         return service.getByIds(ids);
     }
 

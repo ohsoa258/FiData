@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
@@ -239,14 +240,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     @Override
-    public ResultEntity<List<AttributeVO>> getByIds(List<Integer> ids) {
-        List<AttributeVO> list = AttributeMap.INSTANCES.poToVoList(baseMapper.selectBatchIds(ids));
+    public ResultEntity<List<AttributeInfoDTO>> getByIds(List<Integer> ids) {
+        List<AttributeInfoDTO> list = AttributeMap.INSTANCES.poToVoList(baseMapper.selectBatchIds(ids));
         if (Objects.isNull(list)) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
         // 查询出模型id
-        List<AttributeVO> collect = list.stream().filter(e -> e.getEntityId() != null).map(e -> {
+        List<AttributeInfoDTO> collect = list.stream().filter(e -> e.getEntityId() != null).map(e -> {
             QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda()
                     .eq(EntityPO::getId, e.getEntityId());

@@ -2,6 +2,7 @@ package com.fisk.mdm.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -56,5 +57,5 @@ public interface MdmClient {
      * @return
      */
     @PostMapping("/attribute/getByIds")
-    ResultEntity<List<AttributeVO>> getByIds(@RequestBody List<Integer> ids);
+    ResultEntity<List<AttributeInfoDTO>> getByIds(@RequestBody List<Integer> ids);
 }

@@ -5,15 +5,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
-import com.fisk.mdm.dto.model.ModelDTO;
-import com.fisk.mdm.dto.model.ModelQueryDTO;
-import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.vo.attribute.AttributeVO;
-import com.fisk.mdm.vo.model.ModelVO;
 
 import java.util.List;
 
@@ -77,6 +74,6 @@ public interface AttributeService extends IService<AttributePO> {
      * @param ids
      * @return
      */
-    ResultEntity<List<AttributeVO>> getByIds(List<Integer> ids);
+    ResultEntity<List<AttributeInfoDTO>> getByIds(List<Integer> ids);
 
 }

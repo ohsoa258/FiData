@@ -113,7 +113,7 @@ public interface AttributeMap {
      * @param po
      * @return
      */
-    List<AttributeVO> poToVoList(List<AttributePO> po);
+    List<AttributeInfoDTO> poToVoList(List<AttributePO> po);
 }
 
 
