@@ -247,7 +247,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     dto.setId(e.getId());
                     dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
                     dto.setStatus(this.stringToStatusInt(e.getStatus()));
-                    dto.setSyncStatus(1);
+                    dto.setSyncStatus(0);
                     dto.setErrorMsg(message);
                     mdmClient.update(dto);
                 });
