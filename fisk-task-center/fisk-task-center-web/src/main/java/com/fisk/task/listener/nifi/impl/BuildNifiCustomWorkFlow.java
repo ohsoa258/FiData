@@ -145,20 +145,21 @@ public class BuildNifiCustomWorkFlow {
 
         try {
             //停止
-            ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
-            scheduleComponentsEntity.setId(appComponentId);
-            scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
-            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
-            NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
-            //清空队列
-            ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
-            if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
-                throw new ApiException("清空队列失败");
+            if (appComponentId != "") {
+                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+                scheduleComponentsEntity.setId(appComponentId);
+                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+                scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+                NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
+                //清空队列
+                ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
+                if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
+                    throw new ApiException("清空队列失败");
+                }
+                //获取大组的控制器服务   includeancestorgroups includedescendantgroups
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
             }
-            //获取大组的控制器服务   includeancestorgroups includedescendantgroups
-            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
-            NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
-
 
             //emptyNifiConnectionQueue
         } catch (ApiException e) {
