@@ -8,10 +8,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
@@ -19,6 +16,7 @@ import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -256,6 +254,18 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return e;
         }).collect(Collectors.toList());
         return ResultEntityBuild.build(ResultEnum.SUCCESS, collect);
+    }
+
+    @Override
+    public AttributeInfoDTO getByDomainId(AttributeDomainDTO dto) {
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributePO::getEntityId,dto.getEntityId())
+                .eq(AttributePO::getDomainId,dto.getDomainId())
+                .last("limit 1");
+
+        AttributePO attributePO = baseMapper.selectOne(queryWrapper);
+        return attributePO == null ? null : AttributeMap.INSTANCES.poToInfoDto(attributePO);
     }
 
 

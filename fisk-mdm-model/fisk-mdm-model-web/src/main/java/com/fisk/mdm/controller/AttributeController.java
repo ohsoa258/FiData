@@ -5,10 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -79,4 +76,9 @@ public class AttributeController {
         return service.getByIds(ids);
     }
 
+    @ApiOperation("根据domainId查询属性")
+    @PostMapping("/getByDomainId")
+    public ResultEntity<AttributeInfoDTO> getByDomainId(@RequestBody AttributeDomainDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getByDomainId(dto));
+    }
 }

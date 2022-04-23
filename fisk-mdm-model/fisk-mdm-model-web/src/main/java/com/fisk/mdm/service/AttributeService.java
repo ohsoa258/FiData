@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -76,4 +73,10 @@ public interface AttributeService extends IService<AttributePO> {
      */
     ResultEntity<List<AttributeInfoDTO>> getByIds(List<Integer> ids);
 
+    /**
+     * 根据domainId查询数据
+     * @param dto
+     * @return
+     */
+    AttributeInfoDTO getByDomainId(AttributeDomainDTO dto);
 }
