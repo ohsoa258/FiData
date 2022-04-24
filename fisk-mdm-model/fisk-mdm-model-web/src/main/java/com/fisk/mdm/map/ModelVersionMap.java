@@ -2,14 +2,20 @@ package com.fisk.mdm.map;
 
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
+import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author chenYa
  */
-@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper( uses = { TypeConversionUtils.class } , nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ModelVersionMap {
     ModelVersionMap INSTANCES = Mappers.getMapper(ModelVersionMap.class);
 
@@ -18,5 +24,15 @@ public interface ModelVersionMap {
      * @param dto
      * @return
      */
+    @Mappings({
+            @Mapping(source = "status" ,target = "status"),
+            @Mapping(source = "type" ,target = "type")
+    })
     ModelVersionPO dtoToPo(ModelVersionDTO dto);
+
+    @Mappings({
+            @Mapping(source = "status" ,target = "status"),
+            @Mapping(source = "type" ,target = "type")
+    })
+    List<ModelVersionVO> poToVoList(List<ModelVersionPO> poList);
 }
