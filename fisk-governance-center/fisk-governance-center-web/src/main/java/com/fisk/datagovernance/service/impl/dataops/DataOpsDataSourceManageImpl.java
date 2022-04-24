@@ -19,7 +19,6 @@ import com.fisk.datagovernance.vo.dataops.DataOpsDataBaseVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
-import com.fisk.system.client.UserClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -80,9 +79,6 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     @Resource
     private UserHelper userHelper;
 
-    @Resource
-    private UserClient userClient;
-
     @Override
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll() {
         List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
@@ -129,7 +125,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     @Override
     public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName) {
         List<DataOpsTableFieldVO> dataOpsTableFieldVOList = new ArrayList<>();
-        if (datasourceId==0 || tableName==null || tableName.isEmpty()){
+        if (datasourceId == 0 || tableName == null || tableName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, dataOpsTableFieldVOList);
         }
         // 第一步：读取配置的数据源信息
@@ -166,6 +162,17 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Override
     public ResultEntity<ExecuteResultVO> executeDataOpsSql(ExecuteDataOpsSqlDTO dto) {
+        /*
+        * requset TDD:
+            {
+                "current":"",
+                "datasourceId":1,
+                "executeSql":[
+                    "DROP TABLE IF EXISTS \"public\".\"test0424\";CREATE TABLE \"public\".\"test0424\" (\"pid\" varchar(50) COLLATE \"pg_catalog\".\"default\" NOT NULL,\"pname\" varchar(255) COLLATE \"pg_catalog\".\"default\");ALTER TABLE \"public\".\"test0424\" ADD CONSTRAINT \"test0424_pkey\" PRIMARY KEY (\"pid\");"
+                ],
+                "size":""
+            }
+        * */
         ExecuteResultVO executeResultVO = new ExecuteResultVO();
         PostgreDTO postgreDTO = null;
         Statement st = null;
@@ -188,9 +195,11 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             assert st != null;
             // 返回值为true时，表示执行的是查询语句，可以通过st.getResultSet方法获取结果；
             // 返回值为false时，执行的是更新语句或DDL语句，st.getUpdateCount方法获取更新的记录数量。
+            // 查询时，不能有多个结果集，也就是sql中不能有多个查询结果，否则会直接抛出异常
+            // 修改时，允许新增、修改一起出现，但只会返回第一条sql受影响的行数
             boolean execute = st.execute(dto.executeSql);
             if (execute) {
-                executeResultVO.query = true;
+                executeResultVO.setExecuteType(1);
                 ResultSet rs = st.getResultSet();
                 ResultSetMetaData metaData = rs.getMetaData();
                 int columnCount = metaData.getColumnCount();
@@ -209,9 +218,19 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 }
                 rs.close();
                 if (array != null && array.size() > 0) {
-                    executeResultVO.setDataArray(array);
+                    List<Object> collect = array;
+                    if (dto.current != null && dto.size != null) {
+                        int rowsCount = array.stream().toArray().length;
+                        executeResultVO.setCurrent(dto.current);
+                        executeResultVO.setSize(dto.size);
+                        executeResultVO.setTotal(rowsCount);
+                        executeResultVO.setPage((int) Math.ceil(1.0 * rowsCount / dto.size));
+                        dto.current = dto.current - 1;
+                        collect = array.stream().skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
+                    }
+                    executeResultVO.setDataArray(collect);
                 }
-
+                executeResultVO.setExecuteState(true);
                 // 获取列名、类型
                 List<DataOpsTableFieldVO> dataOpsTableFieldVOList = new ArrayList<>();
                 for (int i = 1; i <= columnCount; i++) {
@@ -225,11 +244,16 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     executeResultVO.setDataOpsTableFieldVO(dataOpsTableFieldVOList);
                 }
             } else {
-                executeResultVO.query = false;
-                // 如果执行的是TRUNCATE、DROP等类似语句不返回行数。在数据库中执行此语句也并不会返回
+                executeResultVO.setExecuteType(2);
                 // 执行 INSERT、UPDATE、DELETE 将返回受影响行数
                 affectedCount = st.getUpdateCount();
+                if (affectedCount < 0) {
+                    // 如果返回的结果是一个结果集对象或没有更多结果，则返回-1。小于0默认未返回结果
+                    // TRUNCATE、DROP、CREATE、ALTER 返回为-1，也就说明未返回结果
+                    executeResultVO.setExecuteType(3);
+                }
                 executeResultVO.setAffectedCount(affectedCount);
+                executeResultVO.setExecuteState(true);
             }
         } catch (Exception ex) {
             executeResult = ResultEnum.ERROR;
