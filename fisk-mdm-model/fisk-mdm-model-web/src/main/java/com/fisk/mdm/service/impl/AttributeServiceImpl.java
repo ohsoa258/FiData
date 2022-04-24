@@ -124,6 +124,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEnum.NAME_EXISTS;
         }
 
+        //维护历史的状态字段，防止保持状态为新增失效
+        attributeUpdateDTO.setStatus(attributePO.getStatus().getValue());
+
         //把DTO转化到查询出来的PO上
         attributePO = AttributeMap.INSTANCES.updateDtoToPo(attributeUpdateDTO);
 
@@ -167,29 +170,15 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public Page<AttributeVO> getAll(AttributeQueryDTO query) {
 
-        //部分字段枚举类型转换
         Page<AttributeVO> voPage = baseMapper.getAll(query.page, query);
-        Page<AttributeDTO> dtoPage = AttributeMap.INSTANCES.voToDtoPage(voPage);
-        Page<AttributeVO> all = AttributeMap.INSTANCES.dtoToVoPage(dtoPage);
+
+        //部分字段枚举类型转换
+        Page<AttributePageDTO> dtoPage = AttributeMap.INSTANCES.voToPageDtoPage(voPage);
+        Page<AttributePO> poPage = AttributeMap.INSTANCES.pageDtoToPoPage(dtoPage);
+        Page<AttributeVO> all = AttributeMap.INSTANCES.poToVoPage(poPage);
 
         //获取创建人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            // List<Long> userIds = all.getRecords()
-            //         .stream()
-            //         .filter(e -> StringUtils.isNotEmpty(e.createUser))
-            //         .map(e -> Long.valueOf(e.createUser))
-            //         .distinct()
-            //         .collect(Collectors.toList());
-            // ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            // if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
-            //     all.getRecords().forEach(e -> {
-            //         userListByIds.getData()
-            //                 .stream()
-            //                 .filter(user -> user.getId().toString().equals(e.createUser))
-            //                 .findFirst()
-            //                 .ifPresent(user -> e.createUser = user.userAccount);
-            //     });
-            // }
             ReplenishUserInfo.replenishUserName(all.getRecords(), userClient, UserFieldEnum.USER_ACCOUNT);
         }
 

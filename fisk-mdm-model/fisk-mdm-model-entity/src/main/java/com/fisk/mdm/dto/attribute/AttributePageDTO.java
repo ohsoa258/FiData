@@ -1,50 +1,67 @@
-package com.fisk.mdm.vo.attribute;
+package com.fisk.mdm.dto.attribute;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
-import com.fisk.mdm.enums.AttributeStatusEnum;
-import com.fisk.mdm.enums.AttributeSyncStatusEnum;
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.MdmTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Length;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-
 /**
+ * 属性页dto
+ * 用于查询所有枚举字段转换
+ *
  * @author ChenYa
- * @date 2022/4/14 20:35
+ * @date 2022/04/24
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class AttributeVO extends BaseUserInfoVO {
-    @ApiModelProperty(value = "主键")
-    public int id;
+public class AttributePageDTO {
+    /**
+     * id
+     */
+    private Integer id;
 
     @ApiModelProperty(value = "实体id")
+    @NotNull()
     private Integer entityId;
 
-    @ApiModelProperty(value = "模型id")
-    private Integer modelId;
-
     @ApiModelProperty(value = "属性名称")
+    @NotNull()
+    @Length(min = 0, max = 50, message = "长度最多50")
     private String name;
 
-    @ApiModelProperty(value = "展示名称")
+    /**
+     * 展示名称
+     */
+    @ApiModelProperty(value = "属性展示名称")
+    @NotNull()
+    @Length(min = 0, max = 50, message = "长度最多50")
     private String displayName;
 
+    /**
+     * 描述
+     */
     @ApiModelProperty(value = "描述")
+    @NotNull()
+    @Length(min = 0, max = 200, message = "长度最多50")
     private String desc;
 
-    @ApiModelProperty(value = "底层表名")
+
     private String columnName;
 
+    /**
+     * 数据类型
+     */
     @ApiModelProperty(value = "数据类型")
-    private String dataType;
+    @NotNull()
+    private Integer dataType;
 
+    /**
+     * 数据类型长度
+     */
     @ApiModelProperty(value = "数据类型长度")
+    @NotNull()
     private Integer dataTypeLength;
 
     /**
@@ -53,52 +70,72 @@ public class AttributeVO extends BaseUserInfoVO {
     @ApiModelProperty(value = "数据类型小数点长度")
     private Integer dataTypeDecimalLength;
 
+    /**
+     * 数据格式id
+     */
     @ApiModelProperty(value = "数据格式id")
     private Integer dataTypeFormatId;
 
+    /**
+     * 展示宽度
+     */
     @ApiModelProperty(value = "展示宽度")
+    @NotNull()
     private Integer displayWidth;
 
+    /**
+     * 表单框提示内容
+     */
     @ApiModelProperty(value = "表单框提示内容")
+    @NotNull()
+    @Length(min = 0, max = 200, message = "长度最多200")
     private String formPrompContent;
 
+    /**
+     * 排序序号
+     */
     @ApiModelProperty(value = "排序序号")
+    @NotNull()
     private Integer sortWieght;
 
     /**
      *状态： 0：待新增 ，1：待修改 ， 2：已提交
      */
     @ApiModelProperty(value = "状态")
-    private String status;
+    private Integer status;
 
     /**
      * 提交状态：0：提交失败 1：提交成功
      */
     @ApiModelProperty(value = "提交状态")
-    private String syncStatus;
+    private Integer syncStatus;
 
     /**
      * 提交失败描述
      */
     @ApiModelProperty(value = "提交失败描述")
+    @Length(min = 0, max = 200, message = "长度最多200")
     private String errorMsg;
 
     /**
      * 是否开启属性日志 0：false 1:true
      */
     @ApiModelProperty(value = "是否开启属性日志")
+    @NotNull()
     private Boolean enableAttributeLog;
 
     /**
      * 是否只读 0：false 1:true
      */
     @ApiModelProperty(value = "是否只读")
+    @NotNull()
     private Boolean enableReadonly;
 
     /**
      * 是否必填 0：false 1:true
      */
     @ApiModelProperty(value = "是否必填")
+    @NotNull()
     private Boolean enableRequired;
 
     /**
@@ -106,9 +143,11 @@ public class AttributeVO extends BaseUserInfoVO {
      * 0:code 1:name 2:业务字段
      */
     @ApiModelProperty(value = "类型")
-    private String mdmType;
+    private Integer mdmType;
 
-    @ApiModelProperty(value = "数据域id（相当于外键）")
+    /**
+     * 数据域id（相当于外键）
+     */
     private Integer domainId;
 
     @ApiModelProperty(value = "创建时间")
@@ -118,4 +157,10 @@ public class AttributeVO extends BaseUserInfoVO {
     @ApiModelProperty(value = "更新时间")
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime updateTime;
+
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
+
+    @ApiModelProperty(value = "更新人")
+    public String updateUser;
 }

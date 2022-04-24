@@ -63,22 +63,22 @@ public class AttributePO extends BasePO {
     /**
      * 数据类型长度
      */
-    private int dataTypeLength;
+    private Integer dataTypeLength;
 
     /**
      * 数据类型小数点长度
      */
-    private int dataTypeDecimalLength;
+    private Integer dataTypeDecimalLength;
 
     /**
      * 数据格式id
      */
-    private int dataTypeFormatId;
+    private Integer dataTypeFormatId;
 
     /**
      * 展示宽度
      */
-    private int displayWidth;
+    private Integer displayWidth;
 
     /**
      * 表单框提示内容
@@ -88,7 +88,7 @@ public class AttributePO extends BasePO {
     /**
      * 排序序号
      */
-    private int sortWieght;
+    private Integer sortWieght;
 
     /**
      * 是否开启属性日志 0：false 1:true
