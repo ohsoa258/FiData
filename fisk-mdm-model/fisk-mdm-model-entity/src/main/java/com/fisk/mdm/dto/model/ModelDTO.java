@@ -23,7 +23,6 @@ public class ModelDTO {
     public String displayName;
 
     @ApiModelProperty(value = "model描述")
-    @NotNull()
     @Length(min = 0, max = 200, message = "长度最多200")
     public String desc;
 

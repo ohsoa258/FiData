@@ -1,8 +1,6 @@
 package com.fisk.mdm.vo.modelVersion;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.fisk.mdm.enums.ModelVersionStatusEnum;
-import com.fisk.mdm.enums.ModelVersionTypeEnum;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -38,13 +36,13 @@ public class ModelVersionVO {
     public String createUser;
 
     @ApiModelProperty(value = "创建时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
 
     @ApiModelProperty(value = "更新人")
     public String updateUser;
 
     @ApiModelProperty(value = "更新时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime updateTime;
 }

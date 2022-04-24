@@ -1,6 +1,6 @@
 package com.fisk.mdm.vo.model;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -36,10 +36,10 @@ public class ModelVO extends BaseUserInfoVO {
     public String logoPath;
 
     @ApiModelProperty(value = "创建时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
 
     @ApiModelProperty(value = "更新时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime updateTime;
 }

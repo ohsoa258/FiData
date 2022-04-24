@@ -120,6 +120,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
+        //回填current_version_id字段、attribute_log_name字段
         modelPO.setCurrentVersionId((int)modelVersionPO.getId());
         modelPO.setAttributeLogName("tb_attribute_log_"+modelPO.getId());
         if(baseMapper.updateById(modelPO) <= 0){
@@ -233,11 +234,13 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      */
     @Override
     public ModelInfoVO getEntityById(Integer modelId) {
+        //判断模型是否存在
         ModelPO modelPo = baseMapper.selectById(modelId);
         if(modelPo == null){
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
+        //查询实体
         ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.eq("model_id",modelId);

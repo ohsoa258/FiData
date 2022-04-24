@@ -1,6 +1,5 @@
 package com.fisk.mdm.dto.attribute;
 
-import com.fisk.mdm.enums.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -39,7 +38,6 @@ public class AttributeDTO {
      * 描述
      */
     @ApiModelProperty(value = "描述")
-    @NotNull()
     @Length(min = 0, max = 200, message = "长度最多50")
     private String desc;
 

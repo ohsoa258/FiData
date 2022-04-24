@@ -16,7 +16,6 @@ import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
-import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -186,17 +185,19 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 提交待添加、待修改数据
+     * 提交待添加、待修改属性
      *
      * @return {@link List}<{@link AttributePO}>
      */
     @Override
     public ResultEnum getNotSubmittedData(Integer entityId) {
 
+        //查询实体是否存在
         if (entityService.getDataById(entityId) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        //查询实体下是否存在可提交的属性
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("entity_id", entityId)
                 .eq("status", AttributeStatusEnum.INSERT).or()
@@ -205,6 +206,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEnum.NO_DATA_TO_SUBMIT;
         }
 
+        //提交
         com.fisk.task.dto.model.EntityDTO entityDTO = new com.fisk.task.dto.model.EntityDTO();
         entityDTO.setEntityId(entityId);
         entityDTO.setUserId(userHelper.getLoginUserInfo().getId());

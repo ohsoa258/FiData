@@ -1,11 +1,7 @@
 package com.fisk.mdm.vo.attribute;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
-import com.fisk.mdm.enums.AttributeStatusEnum;
-import com.fisk.mdm.enums.AttributeSyncStatusEnum;
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.MdmTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -112,10 +108,10 @@ public class AttributeVO extends BaseUserInfoVO {
     private Integer domainId;
 
     @ApiModelProperty(value = "创建时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
 
     @ApiModelProperty(value = "更新时间")
-    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime updateTime;
 }
