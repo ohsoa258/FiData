@@ -3,8 +3,7 @@ package com.fisk.common.core.utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 
 /**
@@ -13,15 +12,16 @@ import org.springframework.scheduling.support.CronSequenceGenerator;
  * @description Cron 表达式工具类
  * @date 2022/4/24 19:36
  */
+@Slf4j
 public class CronUtils {
 
     /**
+     * @return java.lang.String
      * @description 获取cron表达式下次执行时间
      * @author dick
      * @date 2022/4/24 19:48
      * @version v1.0
      * @params jobCronExpress
-     * @return java.lang.String
      */
     public static String getCronExpress(String jobCronExpress) {
         String dateString = null;
@@ -33,7 +33,8 @@ public class CronUtils {
             SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             dateString = dataFormat.format(nextTime);
         } catch (Exception ex) {
-            throw new FkException(ResultEnum.ERROR, "【getCronExpress】：" + ex);
+            log.error("【getCronExpress error】：" + ex);
+            dateString = "cron表达式解析异常";
         }
         return dateString;
     }
