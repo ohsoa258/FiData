@@ -13,6 +13,7 @@ import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
@@ -125,6 +126,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //维护历史的状态字段，防止保持状态为新增失效
         attributeUpdateDTO.setStatus(attributePO.getStatus().getValue());
+
+        //若修改后数据类型不为浮点型，将数据小数点长度修改为0
+        if(attributeUpdateDTO.getDataType() != DataTypeEnum.FLOAT.getValue()){
+            attributeUpdateDTO.setDataTypeDecimalLength(0);
+        }
 
         //把DTO转化到查询出来的PO上
         attributePO = AttributeMap.INSTANCES.updateDtoToPo(attributeUpdateDTO);
