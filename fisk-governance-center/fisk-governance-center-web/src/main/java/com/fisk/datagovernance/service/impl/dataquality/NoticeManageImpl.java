@@ -331,26 +331,28 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
          * 2、Task接口会生成相应的调度任务和nifi组件
          * 3、在Task服务中的KafkaConsumer类中定义对应每个模板的消费类
          * */
-        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
-        //调用task服务提供的API生成调度任务
-        if (id == 0 || typeEnum == TemplateModulesTypeEnum.NONE
-                || cron == null || cron.isEmpty()) {
-            return ResultEnum.DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR;
-        }
-        boolean isDelTask = stateEnum != ModuleStateEnum.Enable;
-        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
-        unifiedControlDTO.setUserId(userId);
-        unifiedControlDTO.setId(Math.toIntExact(id));
-        unifiedControlDTO.setDeleted(isDelTask);
-        unifiedControlDTO.setTemplateModulesType(typeEnum);
-        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
-        unifiedControlDTO.setTopic(templateTypeEnum.getTopic());
-        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
-        unifiedControlDTO.setScheduleExpression(cron);
-        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
-        if (result != null) {
-            resultEnum = ResultEnum.getEnum(result.getCode());
-        }
-        return resultEnum;
+        // 暂时直接返回成功，功能测试阶段再开启如下代码
+        return  ResultEnum.SUCCESS;
+//        ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
+//        //调用task服务提供的API生成调度任务
+//        if (id == 0 || typeEnum == TemplateModulesTypeEnum.NONE
+//                || cron == null || cron.isEmpty()) {
+//            return ResultEnum.DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR;
+//        }
+//        boolean isDelTask = stateEnum != ModuleStateEnum.Enable;
+//        UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
+//        unifiedControlDTO.setUserId(userId);
+//        unifiedControlDTO.setId(Math.toIntExact(id));
+//        unifiedControlDTO.setDeleted(isDelTask);
+//        unifiedControlDTO.setTemplateModulesType(typeEnum);
+//        unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);
+//        unifiedControlDTO.setTopic(templateTypeEnum.getTopic());
+//        unifiedControlDTO.setDataClassifyEnum(DataClassifyEnum.UNIFIEDCONTROL);
+//        unifiedControlDTO.setScheduleExpression(cron);
+//        ResultEntity<Object> result = publishTaskClient.publishBuildunifiedControlTask(unifiedControlDTO);
+//        if (result != null) {
+//            resultEnum = ResultEnum.getEnum(result.getCode());
+//        }
+//        return resultEnum;
     }
 }

@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.test;
 
+import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
@@ -25,11 +26,12 @@ public class MysqlTest {
 
     @Test
     public  void testpg(){
-        PostgresConUtils postgresConUtils = new PostgresConUtils();
-        List<TablePyhNameDTO> postgres = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
-                "postgres", "Password01!", "org.postgresql.Driver");
-        List<TablePyhNameDTO> postgres_ods = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified",
-                "postgres", "Password01!", "org.postgresql.Driver");
+        String cronExpress = CronUtils.getCronExpress("0 0 6 * * ?");
+//        PostgresConUtils p4 ostgresConUtils = new PostgresConUtils();
+//        List<TablePyhNameDTO> postgres = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_dw?stringtype=unspecified",
+//                "postgres", "Password01!", "org.postgresql.Driver");
+//        List<TablePyhNameDTO> postgres_ods = postgresConUtils.getTableNameAndColumns("jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified",
+//                "postgres", "Password01!", "org.postgresql.Driver");
         int code=200;
     }
     
