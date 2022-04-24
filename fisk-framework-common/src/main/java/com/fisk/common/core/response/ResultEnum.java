@@ -228,7 +228,10 @@ public enum ResultEnum {
      */
     CREATE_STG_TABLE(15001, "Stg表创建失败"),
     CREATE_MDM_TABLE(15002, "Mdm表创建失败"),
-    CREATE_VIW_TABLE(15003, "Viw视图创建失败");
+    CREATE_VIW_TABLE(15003, "Viw视图创建失败"),
+    UPDATE_MDM_TABLE(15004, "Mdm表修改失败"),
+    DROP_STG_TABLE(15005, "Stg表删除失败"),
+    DROP_VIW_TABLE(15006, "Viw视图删除失败"),;
 
     ResultEnum(int code, String msg) {
         this.code = code;
