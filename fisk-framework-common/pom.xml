@@ -177,12 +177,13 @@
         </dependency>
         <!--相似度计算-->
 
+        <!--pg数据库驱动-->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.2.5</version>
         </dependency>
-
+        <!--pg数据库驱动-->
     </dependencies>
 
 </project>

@@ -152,6 +152,12 @@ public class DataCheckVO {
     public String templateDesc;
 
     /**
+     * 下次运行时间
+     */
+    @ApiModelProperty(value = "下次运行时间")
+    public String nextTime;
+
+    /**
      * 通知id集合
      */
     @ApiModelProperty(value = "通知id集合")

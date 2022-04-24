@@ -8,6 +8,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
@@ -20,13 +22,12 @@ import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SimilarityExtendVO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private SimilarityExtendManageImpl similarityExtendManageImpl;
+
+    @Resource
+    private NoticeManageImpl noticeManageImpl;
 
     @Resource
     UserHelper userHelper;
@@ -91,6 +95,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     List<SimilarityExtendVO> similarityExtendVOS = SimilarityExtendMap.INSTANCES.poToVo(similarityExtendPOS);
                     e.setSimilarityExtendVOS(similarityExtendVOS);
                 }
+                // cron下次执行时间
+                if (!StringUtils.isEmpty(e.getRunTimeCron())) {
+                    String cronExpress = CronUtils.getCronExpress(e.getRunTimeCron());
+                    e.setNextTime(cronExpress);
+                }
             });
         }
         return all;
@@ -117,8 +126,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第三步：保存数据校验信息
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dataCheckPO.setCreateTime(LocalDateTime.now());
-        dataCheckPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+        dataCheckPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
         int i = baseMapper.insertOne(dataCheckPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -130,6 +140,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             similarityExtendManageImpl.saveBatchById(dto.similarityExtendDTOS, dataCheckPO.getId(), false);
         }
         //第六步：如果设置了调度任务条件，则生成调度任务
+        //设置了调度计划，调用创建调度任务接口
+        if (dataCheckPO.getRunTimeCron() != null && !dataCheckPO.getRunTimeCron().isEmpty()) {
+            ModuleStateEnum moduleStateEnum = ModuleStateEnum.values()[dataCheckPO.getModuleState()];
+            noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
+                    loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
+                    templateTypeEnum, moduleStateEnum, dataCheckPO.getRunTimeCron());
+        }
         return resultEnum;
     }
 
@@ -145,6 +162,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         //第一步：根据配置的校验条件生成校验规则
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         ResultEntity<String> role = createRole(dto, templateTypeEnum);
@@ -169,7 +187,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             similarityExtendManageImpl.saveBatchById(dto.similarityExtendDTOS, dataCheckPO.getId(), true);
         }
         //第六步：根据组件状态&Corn调度任务
-
+        //未设置cron表达式，删除相关任务
+        ModuleStateEnum moduleStateEnum = ModuleStateEnum.Disable;
+        if (dataCheckPO.getRunTimeCron() != null && !dataCheckPO.getRunTimeCron().isEmpty()) {
+            moduleStateEnum = ModuleStateEnum.values()[dataCheckPO.getModuleState()];
+        }
+        noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
+                loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
+                templateTypeEnum, moduleStateEnum, dataCheckPO.getRunTimeCron());
         return resultEnum;
     }
 
@@ -180,10 +205,19 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(dataCheckPO.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         // 删除关联通知
         componentNotificationMapImpl.updateDelFlag(0, dataCheckPO.getTemplateId(), dataCheckPO.getId());
         // 删除调度任务
-
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+        noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
+                loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
+                templateTypeEnum, ModuleStateEnum.Disable, dataCheckPO.getRunTimeCron());
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 

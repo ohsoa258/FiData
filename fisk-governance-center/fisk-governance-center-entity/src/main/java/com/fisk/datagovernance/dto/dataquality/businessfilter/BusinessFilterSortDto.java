@@ -20,6 +20,6 @@ public class BusinessFilterSortDto {
     /**
      * 组件执行顺序
      */
-    @ApiModelProperty(value = "主键id")
+    @ApiModelProperty(value = "组件执行顺序")
     public int moduleExecSort;
 }

@@ -320,13 +320,10 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
      * @params typeEnum 模块类型
      * @params templateTypeEnum 模板类型
      * @params stateEnum 状态
-     * @params topicName 统一队列名称
-     * @params templateTopicName 模板队列名称
      * @params cron 表达式
      */
-    public ResultEnum publishBuildunifiedControlTask(int id, long userId, TemplateModulesTypeEnum typeEnum,
+    public ResultEnum publishBuildunifiedControlTask(long id, long userId, TemplateModulesTypeEnum typeEnum,
                                                      TemplateTypeEnum templateTypeEnum, ModuleStateEnum stateEnum,
-                                                     String topicName, String templateTopicName,
                                                      String cron) {
         /*
          * 逻辑：
@@ -337,15 +334,13 @@ public class NoticeManageImpl extends ServiceImpl<NoticeMapper, NoticePO> implem
         ResultEnum resultEnum = ResultEnum.TASK_NIFI_DISPATCH_ERROR;
         //调用task服务提供的API生成调度任务
         if (id == 0 || typeEnum == TemplateModulesTypeEnum.NONE
-                || topicName == null || topicName.isEmpty()
-                || templateTopicName == null || templateTopicName.isEmpty()
                 || cron == null || cron.isEmpty()) {
             return ResultEnum.DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR;
         }
         boolean isDelTask = stateEnum != ModuleStateEnum.Enable;
         UnifiedControlDTO unifiedControlDTO = new UnifiedControlDTO();
         unifiedControlDTO.setUserId(userId);
-        unifiedControlDTO.setId(id);
+        unifiedControlDTO.setId(Math.toIntExact(id));
         unifiedControlDTO.setDeleted(isDelTask);
         unifiedControlDTO.setTemplateModulesType(typeEnum);
         unifiedControlDTO.setScheduleType(SchedulingStrategyTypeEnum.CRON);

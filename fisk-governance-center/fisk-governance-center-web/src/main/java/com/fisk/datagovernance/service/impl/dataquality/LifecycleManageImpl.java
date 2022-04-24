@@ -8,8 +8,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.DateTimeUtils;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleEditDTO;
 import com.fisk.datagovernance.dto.dataquality.lifecycle.LifecycleQueryDTO;
@@ -17,15 +18,14 @@ import com.fisk.datagovernance.entity.dataquality.ComponentNotificationPO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.entity.dataquality.LifecyclePO;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
-import com.fisk.datagovernance.enums.dataquality.CheckStepTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.LifecycleMap;
 import com.fisk.datagovernance.mapper.dataquality.ComponentNotificationMapper;
 import com.fisk.datagovernance.mapper.dataquality.LifecycleMapper;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ILifecycleManageService;
 import com.fisk.datagovernance.vo.dataquality.lifecycle.LifecycleVO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +56,9 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
+    private NoticeManageImpl noticeManageImpl;
+
+    @Resource
     UserHelper userHelper;
 
     @Override
@@ -76,6 +79,11 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                             .map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(collect2)) {
                         e.setNoticeIds(collect2);
+                    }
+                    // cron下次执行时间
+                    if (!StringUtils.isEmpty(e.getRunTimeCron())) {
+                        String cronExpress = CronUtils.getCronExpress(e.getRunTimeCron());
+                        e.setNextTime(cronExpress);
                     }
                 });
             }
@@ -104,8 +112,9 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第二步：保存数据校验信息
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         lifecyclePO.setCreateTime(LocalDateTime.now());
-        lifecyclePO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
+        lifecyclePO.setCreateUser(String.valueOf(loginUserInfo.getId()));
         int i = baseMapper.insertOne(lifecyclePO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
@@ -113,6 +122,12 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         //第三步：保存数据组件通知信息
         ResultEnum resultEnum = componentNotificationMapImpl.saveData(lifecyclePO.templateId, lifecyclePO.getId(), dto.componentNotificationDTOS, false);
         //第四步：如果设置了调度任务条件，则生成调度任务
+        if (lifecyclePO.getRunTimeCron() != null && !lifecyclePO.getRunTimeCron().isEmpty()) {
+            ModuleStateEnum moduleStateEnum = ModuleStateEnum.values()[lifecyclePO.getModuleState()];
+            noticeManageImpl.publishBuildunifiedControlTask(lifecyclePO.getId(),
+                    loginUserInfo.getId(), TemplateModulesTypeEnum.LIFECYCLE_MODULE,
+                    templateTypeEnum, moduleStateEnum, lifecyclePO.getRunTimeCron());
+        }
         return resultEnum;
     }
 
@@ -135,6 +150,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.getEnum(role.getCode());
         }
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dto.moduleRule = role.data;
         //第一步：转换DTO对象为PO对象
         lifecyclePO = LifecycleMap.INSTANCES.dtoToPo_Edit(dto);
@@ -153,6 +169,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         //第三步：保存数据组件通知信息，先将原来的组件通知关联关系置为无效
         ResultEnum resultEnum = componentNotificationMapImpl.saveData(lifecyclePO.templateId, lifecyclePO.getId(), dto.componentNotificationDTOS, true);
         //第四步：根据组件状态&Corn表达式，调整调度任务
+        ModuleStateEnum moduleStateEnum = ModuleStateEnum.Disable;
+        if (lifecyclePO.getRunTimeCron() != null && !lifecyclePO.getRunTimeCron().isEmpty()) {
+            moduleStateEnum = ModuleStateEnum.values()[lifecyclePO.getModuleState()];
+        }
+        noticeManageImpl.publishBuildunifiedControlTask(lifecyclePO.getId(),
+                loginUserInfo.getId(), TemplateModulesTypeEnum.LIFECYCLE_MODULE,
+                templateTypeEnum, moduleStateEnum, lifecyclePO.getRunTimeCron());
         return resultEnum;
     }
 
@@ -163,10 +186,19 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (lifecyclePO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        //验证模板是否存在
+        TemplatePO templatePO = templateMapper.selectById(lifecyclePO.templateId);
+        if (templatePO == null) {
+            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+        }
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         // 删除关联通知
         componentNotificationMapImpl.updateDelFlag(0, lifecyclePO.getTemplateId(), lifecyclePO.getId());
         // 删除调度任务
-
+        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+        noticeManageImpl.publishBuildunifiedControlTask(lifecyclePO.getId(),
+                loginUserInfo.getId(), TemplateModulesTypeEnum.LIFECYCLE_MODULE,
+                templateTypeEnum, ModuleStateEnum.Disable, lifecyclePO.getRunTimeCron());
         return baseMapper.deleteByIdWithFill(lifecyclePO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -205,11 +237,11 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 break;
             case EMPTY_TABLE_RECOVERY_TEMPLATE:
                 //空表回收模板
-                rule = createEmptyTable_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum,tableName);
+                rule = createEmptyTable_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
                 break;
             case NO_REFRESH_DATA_RECOVERY_TEMPLATE:
                 //数据无刷新回收模板
-                rule = createNoRefreshData_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName,fieldName);
+                rule = createNoRefreshData_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
                 break;
             case DATA_BLOOD_KINSHIP_RECOVERY_TEMPLATE:
                 //数据血缘断裂回收模板
@@ -289,7 +321,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
      * @params fieldName 更新依据字段
      */
     public ResultEntity<String> createNoRefreshData_RecoveryRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
-                                                            String tableName, String fieldName) {
+                                                                 String tableName, String fieldName) {
         if (tableName == null || tableName.isEmpty()
                 || fieldName == null || fieldName.isEmpty()) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);

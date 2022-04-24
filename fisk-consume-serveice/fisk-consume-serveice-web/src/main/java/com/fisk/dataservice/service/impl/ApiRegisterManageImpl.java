@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -30,6 +29,7 @@ import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,7 +82,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords().stream()
-                    .filter(x -> !StringUtils.isEmpty(x.createUser))
+                    .filter(x -> StringUtils.isNotEmpty(x.createUser))
                     .map(x -> Long.valueOf(x.createUser))
                     .distinct()
                     .collect(Collectors.toList());
@@ -122,7 +122,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             dto.current = dto.current - 1;
             apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
             List<Long> userIds = apiSubVOS.stream()
-                    .filter(x -> !StringUtils.isEmpty(x.createUser))
+                    .filter(x -> StringUtils.isNotEmpty(x.createUser))
                     .map(x -> Long.valueOf(x.createUser))
                     .distinct()
                     .collect(Collectors.toList());
