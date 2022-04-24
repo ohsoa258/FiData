@@ -16,16 +16,18 @@ import java.util.List;
 public class ExecuteResultVO {
 
     /**
-     * 查询/修改
+     * 1、select
+     * 2、insert、update、delete
+     * 3.truncate、drop、other
      */
-    @ApiModelProperty(value = "true:查询 false:修改")
-    public boolean query;
+    @ApiModelProperty(value = "1、select 2、insert、update、delete 3.truncate、drop、other")
+    public int executeType;
 
     /**
      * 查询数据集
      */
     @ApiModelProperty(value = "查询数据集")
-    public JSONArray dataArray;
+    public List<Object> dataArray;
 
     /**
      * 表字段集合
@@ -34,8 +36,38 @@ public class ExecuteResultVO {
     public List<DataOpsTableFieldVO> dataOpsTableFieldVO;
 
     /**
-     * 受影响行数
+     * executeType=2才有受影响行数
      */
-    @ApiModelProperty(value = "受影响行数")
+    @ApiModelProperty(value = "executeType=2才有受影响行数")
     public int affectedCount;
+
+    /**
+     * 执行状态 true：成功 false：失败
+     */
+    @ApiModelProperty(value = "执行状态 true：成功 false：失败")
+    public boolean executeState;
+
+    /**
+     * 当前页，起始页为第一页
+     */
+    @ApiModelProperty(value = "当前页")
+    public Integer current;
+
+    /**
+     * 每页大小
+     */
+    @ApiModelProperty(value = "每页大小")
+    public Integer size;
+
+    /**
+     * 总条数
+     */
+    @ApiModelProperty(value = "total")
+    public Integer total;
+
+    /**
+     * 总页数
+     */
+    @ApiModelProperty(value = "page")
+    public Integer page;
 }
