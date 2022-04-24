@@ -115,6 +115,8 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         lifecyclePO.setCreateTime(LocalDateTime.now());
         lifecyclePO.setCreateUser(String.valueOf(loginUserInfo.getId()));
+        //每天晚上12点半执行
+        lifecyclePO.setRunTimeCron("0 30 0 * * ?");
         int i = baseMapper.insertOne(lifecyclePO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
