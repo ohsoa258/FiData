@@ -217,7 +217,7 @@ public enum ResultEnum {
     PG_CONNECT_ERROR(14002, "Postgres数据库连接异常"),
     PG_READ_TABLE_ERROR(14003, "Postgres读取表信息异常"),
     PG_READ_FIELD_ERROR(14004, "Postgres读取字段信息异常"),
-    DATA_OPS_SQL_EXECUTE_ERROR(14005, "SQL执行识别异常，请检查语句"),
+    DATA_OPS_SQL_EXECUTE_ERROR(14005, "SQL执行异常"),
     DATA_OPS_CLOSESTATEMENT_ERROR(14006, "数据库连接关闭失败"),
     DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败"),
     NO_DATA_TO_SUBMIT(14008,"暂无可提交数据"),
@@ -231,7 +231,8 @@ public enum ResultEnum {
     CREATE_VIW_TABLE(15003, "Viw视图创建失败"),
     UPDATE_MDM_TABLE(15004, "Mdm表修改失败"),
     DROP_STG_TABLE(15005, "Stg表删除失败"),
-    DROP_VIW_TABLE(15006, "Viw视图删除失败"),;
+    DROP_VIW_TABLE(15006, "Viw视图删除失败"),
+    CREATE_ATTRIBUTE_LOG_TABLE_ERROR(15007,"创建属性日志表失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

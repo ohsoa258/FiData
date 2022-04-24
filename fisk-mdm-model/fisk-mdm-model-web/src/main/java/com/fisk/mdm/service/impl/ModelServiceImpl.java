@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
@@ -32,6 +33,8 @@ import com.fisk.mdm.service.IModelVersionService;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +66,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private UserHelper userHelper;
 
 
     /**
@@ -123,7 +129,10 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         //提交创建属性日志表任务
         com.fisk.task.dto.model.ModelDTO dto = new com.fisk.task.dto.model.ModelDTO();
         dto.setAttributeLogName(modelPO.attributeLogName);
-        publishTaskClient.pushModelByName(dto);
+        dto.setUserId(userHelper.getLoginUserInfo().getId());
+        if(publishTaskClient.pushModelByName(dto).getCode() != ResultEnum.SUCCESS.getCode()){
+            return ResultEnum.CREATE_ATTRIBUTE_LOG_TABLE_ERROR;
+        }
 
 
         // 记录日志
@@ -210,22 +219,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //获取创建人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            List<Long> userIds = all.getRecords()
-                    .stream()
-                    .filter(e -> StringUtils.isNotEmpty(e.createUser))
-                    .map(e -> Long.valueOf(e.createUser))
-                    .distinct()
-                    .collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds.code == ResultEnum.SUCCESS.getCode() && userListByIds.getData() != null) {
-                all.getRecords().forEach(e -> {
-                    userListByIds.getData()
-                            .stream()
-                            .filter(user -> user.getId().toString().equals(e.createUser))
-                            .findFirst()
-                            .ifPresent(user -> e.createUser = user.userAccount);
-                });
-            }
+            ReplenishUserInfo.replenishUserName(all.getRecords(), userClient, UserFieldEnum.USER_ACCOUNT);
         }
 
         return all;

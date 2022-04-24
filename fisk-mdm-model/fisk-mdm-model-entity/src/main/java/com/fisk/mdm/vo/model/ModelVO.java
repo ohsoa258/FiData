@@ -1,7 +1,7 @@
 package com.fisk.mdm.vo.model;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @date 2022/4/14 20:35
  */
 @Data
-public class ModelVO {
+public class ModelVO extends BaseUserInfoVO {
 
 
     @ApiModelProperty(value = "主键")
@@ -35,15 +35,9 @@ public class ModelVO {
     @ApiModelProperty(value = "logo保存地址")
     public String logoPath;
 
-    @ApiModelProperty(value = "创建人")
-    public String createUser;
-
     @ApiModelProperty(value = "创建时间")
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime createTime;
-
-    @ApiModelProperty(value = "更新人")
-    public String updateUser;
 
     @ApiModelProperty(value = "更新时间")
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
