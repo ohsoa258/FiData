@@ -3,6 +3,7 @@ package com.fisk.mdm.map;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.attribute.AttributePageDTO;
 import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
@@ -104,14 +105,36 @@ public interface AttributeMap {
      */
     EntityInfoVO poToEntityVo(EntityPO entityPo);
 
-    Page<AttributeDTO> voToDtoPage(Page<AttributeVO> voPage);
-
-    Page<AttributeVO> dtoToVoPage(Page<AttributeDTO> dtoPage);
+    /**
+     * vo => pageDto
+     *
+     * @param voPage voPage
+     * @return {@link Page}<{@link AttributePageDTO}>
+     */
+    Page<AttributePageDTO> voToPageDtoPage(Page<AttributeVO> voPage);
 
     /**
-     * po => vo list
-     * @param po
-     * @return
+     * pageDto => vo
+     *
+     * @param pageDTOPage pageDTOPage
+     * @return {@link Page}<{@link AttributePO}>
+     */
+    Page<AttributePO> pageDtoToPoPage(Page<AttributePageDTO> pageDTOPage);
+
+    /**
+     * poPage => voPage
+     *
+     * @param poPage poPage
+     * @return {@link Page}<{@link AttributeVO}>
+     */
+    Page<AttributeVO> poToVoPage(Page<AttributePO> poPage);
+
+
+    /**
+     * po => infoDto
+     *
+     * @param po po
+     * @return {@link List}<{@link AttributeInfoDTO}>
      */
     List<AttributeInfoDTO> poToVoList(List<AttributePO> po);
 }

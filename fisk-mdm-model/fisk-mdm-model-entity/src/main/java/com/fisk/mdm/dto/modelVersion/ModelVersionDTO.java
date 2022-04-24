@@ -30,11 +30,9 @@ public class ModelVersionDTO {
     public String desc;
 
     @ApiModelProperty(value = "版本状态，0 打开、1 锁定、2 已提交")
-    @NotNull()
-    public ModelVersionStatusEnum status;
+    public Integer status;
 
     @ApiModelProperty(value = "版本类型，1 用户创建、2 自动创建")
-    @NotNull()
-    public ModelVersionTypeEnum type;
+    public Integer type;
 
 }

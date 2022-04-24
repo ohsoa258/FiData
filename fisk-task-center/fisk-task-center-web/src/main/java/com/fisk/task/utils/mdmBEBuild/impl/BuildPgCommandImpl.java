@@ -151,6 +151,35 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String modifyFieldType(String tableName, String filedName, String type) {
+        StringBuilder str = new StringBuilder();
+        str.append("alter table ").append(tableName).append(" alter column ").append(filedName);
+        str.append(" type ").append(type).append(" using ").append(filedName).append("::").append(type);
+        return str.toString();
+    }
+
+    @Override
+    public String modifyFieldLength(String tableName, String filedName, String type) {
+        StringBuilder str = new StringBuilder();
+        str.append("alter table ").append(tableName).append(" alter column ").append(filedName).append(" type ").append(type);
+        return str.toString();
+    }
+
+    @Override
+    public String dropTable(String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("DROP TABLE ").append(PUBLIC + ".").append(tableName);
+        return str.toString();
+    }
+
+    @Override
+    public String dropViw(String viwName) {
+        StringBuilder str = new StringBuilder();
+        str.append("DROP VIEW ").append(PUBLIC + ".").append(viwName);
+        return null;
+    }
+
     /**
      * 存在域字段
      * @param foreignList

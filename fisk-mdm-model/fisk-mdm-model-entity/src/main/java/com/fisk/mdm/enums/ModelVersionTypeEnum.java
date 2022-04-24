@@ -11,9 +11,9 @@ public enum ModelVersionTypeEnum implements BaseEnum {
     /**
      * 版本创建类型
      */
-    USER_CREAT(1,"用户手动创建"),
+    USER_CREAT(0,"用户手动创建"),
 
-    SYSTEM_CREAT(2,"系统job自动创建");
+    SYSTEM_CREAT(1,"系统job自动创建");
 
     @EnumValue
     private final int value;

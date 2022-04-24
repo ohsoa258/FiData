@@ -36,4 +36,36 @@ public interface IBuildSqlCommand {
      * @return
      */
     String buildViewTable(EntityInfoVO entityInfoVo);
+
+    /**
+     * 修改字段类型
+     * @param tableName
+     * @param filedName
+     * @param type
+     * @return
+     */
+    String modifyFieldType(String tableName,String filedName,String type);
+
+    /**
+     * 修改字段长度
+     * @param tableName
+     * @param filedName
+     * @param type
+     * @return
+     */
+    String modifyFieldLength(String tableName,String filedName,String type);
+
+    /**
+     * 删除表
+     * @param tableName
+     * @return
+     */
+    String dropTable(String tableName);
+
+    /**
+     * 删除视图
+     * @param viwName
+     * @return
+     */
+    String dropViw(String viwName);
 }

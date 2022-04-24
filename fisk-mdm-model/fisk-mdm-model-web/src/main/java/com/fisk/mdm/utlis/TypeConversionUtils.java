@@ -4,6 +4,7 @@ import com.fisk.common.core.mapstruct.EnumTypeConversionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.enums.*;
+import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,10 +16,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class TypeConversionUtils extends EnumTypeConversionUtils {
 
+
     /**
-     * status 转换
-     * @param status
-     * @return
+     * mdmStatus枚举类型转换
+     *
+     * @param status 状态
+     * @return {@link MdmStatusTypeEnum}
      */
     public MdmStatusTypeEnum intToTypeEnum(Integer status){
         if (status == null){
@@ -128,4 +131,33 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
         }
     }
 
+    public ModelVersionStatusEnum intToModelVersionStatusEnum(Integer value){
+        if (value == null){
+            return null;
+        }
+        switch (value){
+            case 0 :
+                return ModelVersionStatusEnum.OPEN;
+            case 1:
+                return ModelVersionStatusEnum.LOCK;
+            case 2:
+                return ModelVersionStatusEnum.SUBMITTED;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
+
+    public ModelVersionTypeEnum intToModelVersionTypeEnum(Integer value){
+        if (value == null){
+            return null;
+        }
+        switch (value){
+            case 0 :
+                return ModelVersionTypeEnum.USER_CREAT;
+            case 1:
+                return ModelVersionTypeEnum.SYSTEM_CREAT;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+    }
 }

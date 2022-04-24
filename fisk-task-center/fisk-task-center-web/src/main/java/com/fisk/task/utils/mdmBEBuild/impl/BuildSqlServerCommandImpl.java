@@ -42,4 +42,24 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String buildViewTable(EntityInfoVO entityInfoVo) {
         return null;
     }
+
+    @Override
+    public String modifyFieldType(String tableName, String filedName, String type) {
+        return null;
+    }
+
+    @Override
+    public String modifyFieldLength(String tableName, String filedName, String type) {
+        return null;
+    }
+
+    @Override
+    public String dropTable(String tableName) {
+        return null;
+    }
+
+    @Override
+    public String dropViw(String viwName) {
+        return null;
+    }
 }

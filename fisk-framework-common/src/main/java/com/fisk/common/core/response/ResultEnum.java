@@ -42,8 +42,6 @@ public enum ResultEnum {
     API_ISEMPTY(1018, "获取api对象失败"),
     CLIENT_ISEMPTY(1019, "客户端已删除"),
     FILENAME_EXISTS(1020, "文件名称已存在"),
-    NO_DATA_TO_SUBMIT(1021,"暂无可提交数据"),
-    DATA_SUBMIT_ERROR(1022,"数据提交失败"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -222,13 +220,18 @@ public enum ResultEnum {
     DATA_OPS_SQL_EXECUTE_ERROR(14005, "SQL执行识别异常，请检查语句"),
     DATA_OPS_CLOSESTATEMENT_ERROR(14006, "数据库连接关闭失败"),
     DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败"),
+    NO_DATA_TO_SUBMIT(14008,"暂无可提交数据"),
+    DATA_SUBMIT_ERROR(14009,"数据提交失败"),
 
     /**
      * mdm
      */
     CREATE_STG_TABLE(15001, "Stg表创建失败"),
     CREATE_MDM_TABLE(15002, "Mdm表创建失败"),
-    CREATE_VIW_TABLE(15003, "Viw视图创建失败");
+    CREATE_VIW_TABLE(15003, "Viw视图创建失败"),
+    UPDATE_MDM_TABLE(15004, "Mdm表修改失败"),
+    DROP_STG_TABLE(15005, "Stg表删除失败"),
+    DROP_VIW_TABLE(15006, "Viw视图删除失败"),;
 
     ResultEnum(int code, String msg) {
         this.code = code;
