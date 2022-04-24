@@ -1745,18 +1745,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildConsumeKafkaProcessorDTO.details = "query_phase";
         buildConsumeKafkaProcessorDTO.groupId = groupId;
         //管道id
-        buildConsumeKafkaProcessorDTO.GroupID = "dmp.nifi.datafactory.pipeline";
+        buildConsumeKafkaProcessorDTO.GroupId = "dmp.nifi.datafactory.pipeline";
         buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         Map<String, String> variable = new HashMap<>();
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
         componentsBuild.buildNifiGlobalVariable(variable);
-        buildConsumeKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+        buildConsumeKafkaProcessorDTO.kafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+        buildConsumeKafkaProcessorDTO.honorTransactions=false;
         TableTopicDTO tableTopicDTO = new TableTopicDTO();
         tableTopicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
         tableTopicDTO.tableId = Math.toIntExact(dto.id);
         tableTopicDTO.tableType = dto.type.getValue();
         List<TableTopicDTO> tableTopicList = tableTopicService.getTableTopicList(tableTopicDTO);
-        buildConsumeKafkaProcessorDTO.TopicNames = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
+        buildConsumeKafkaProcessorDTO.topicNames = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(" , "));
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConsumeKafkaProcessor(buildConsumeKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;

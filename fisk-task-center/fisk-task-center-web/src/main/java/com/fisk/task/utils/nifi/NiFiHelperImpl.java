@@ -488,9 +488,10 @@ public class NiFiHelperImpl implements INiFiHelper {
 
         //组件属性
         Map<String, String> map = new HashMap<>(5);
-        map.put("bootstrap.servers", data.KafkaBrokers);
-        map.put("topic", data.TopicNames);
-        map.put("group.id", data.GroupID);
+        map.put("bootstrap.servers", data.kafkaBrokers);
+        map.put("topic", data.topicNames);
+        map.put("group.id", data.GroupId);
+        map.put("honor-transactions", String.valueOf(data.honorTransactions));
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);

@@ -9,7 +9,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class BuildConsumeKafkaProcessorDTO extends BaseProcessorDTO {
-    public String KafkaBrokers;
-    public String TopicNames;
-    public String GroupID;
+    public String kafkaBrokers;
+    public String topicNames;
+    public String GroupId;
+    public boolean honorTransactions;
 }

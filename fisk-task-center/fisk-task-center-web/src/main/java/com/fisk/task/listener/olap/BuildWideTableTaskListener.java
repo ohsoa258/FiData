@@ -93,9 +93,9 @@ public class BuildWideTableTaskListener {
             for (WideTableSourceFieldConfigDTO wideTableSourceFieldConfigDTO : columnConfig) {
                 if ("float".equalsIgnoreCase(wideTableSourceFieldConfigDTO.fieldType)) {
                     if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
-                        field += "," + wideTableSourceFieldConfigDTO.alias.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                        field += "," + wideTableSourceFieldConfigDTO.alias.toLowerCase() + " decimal ";
                     } else {
-                        field += "," + wideTableSourceFieldConfigDTO.fieldName.toLowerCase() + " " + wideTableSourceFieldConfigDTO.fieldType + " ";
+                        field += "," + wideTableSourceFieldConfigDTO.fieldName.toLowerCase() + " decimal ";
                     }
                 } else {
                     if (wideTableSourceFieldConfigDTO.alias != null && wideTableSourceFieldConfigDTO.alias.length() > 0) {
