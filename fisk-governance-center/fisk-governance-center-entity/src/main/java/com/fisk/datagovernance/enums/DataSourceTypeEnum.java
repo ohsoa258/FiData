@@ -49,7 +49,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     public static DataSourceTypeEnum getEnumByDriverName(String driverName) {
         for (DataSourceTypeEnum e : DataSourceTypeEnum.values()) {
-            if (e.getDriverName() == driverName)
+            String dName = e.getDriverName();
+            if (dName.equals(driverName))
                 return e;
         }
         return DataSourceTypeEnum.MYSQL;

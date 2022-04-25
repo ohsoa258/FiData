@@ -2,6 +2,9 @@ dataservice:
   pdf:
     # pdf文档模板路径
     path: /data/java/fisk-consume-serveice/pdf
+    # 接口文档中的环境信息
+    uat_address: http://100.102.201.106:8083/{apiaddress}。
+    prd_address: https://prdHost/{apiaddress}。
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
