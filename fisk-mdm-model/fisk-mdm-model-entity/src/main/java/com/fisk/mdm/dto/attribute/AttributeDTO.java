@@ -23,7 +23,7 @@ public class AttributeDTO {
 
     @ApiModelProperty(value = "属性名称")
     @NotNull()
-    @Length(min = 0, max = 50, message = "长度最多50")
+    @Length(max = 50, message = "长度最多50")
     private String name;
 
     /**
@@ -31,14 +31,14 @@ public class AttributeDTO {
      */
     @ApiModelProperty(value = "属性展示名称")
     @NotNull()
-    @Length(min = 0, max = 50, message = "长度最多50")
+    @Length(max = 50, message = "长度最多50")
     private String displayName;
 
     /**
      * 描述
      */
     @ApiModelProperty(value = "描述")
-    @Length(min = 0, max = 200, message = "长度最多50")
+    @Length(max = 200, message = "长度最多50")
     private String desc;
 
 
@@ -55,7 +55,6 @@ public class AttributeDTO {
      * 数据类型长度
      */
     @ApiModelProperty(value = "数据类型长度")
-    @NotNull()
     private Integer dataTypeLength;
 
     /**
@@ -74,15 +73,13 @@ public class AttributeDTO {
      * 展示宽度
      */
     @ApiModelProperty(value = "展示宽度")
-    @NotNull()
     private Integer displayWidth;
 
     /**
      * 表单框提示内容
      */
     @ApiModelProperty(value = "表单框提示内容")
-    @NotNull()
-    @Length(min = 0, max = 200, message = "长度最多200")
+    @Length(max = 200, message = "长度最多200")
     private String formPrompContent;
 
     /**
@@ -108,7 +105,7 @@ public class AttributeDTO {
      * 提交失败描述
      */
     @ApiModelProperty(value = "提交失败描述")
-    @Length(min = 0, max = 200, message = "长度最多200")
+    @Length(max = 200, message = "长度最多200")
     private String errorMsg;
 
     /**
