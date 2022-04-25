@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.vo.dataops;
 
+import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -30,6 +31,17 @@ public class DataOpsLogVO {
      */
     @ApiModelProperty(value = "数据库名称")
     public String conDbname;
+
+    /**
+     * 数据库类型
+     * 0、MYSQL
+     * 1、SQLSERVER
+     * 2、CUBE
+     * 3、TABULAR
+     * 4、POSTGRE
+     */
+    @ApiModelProperty(value = "数据库类型")
+    public DataSourceTypeEnum conDbtype;
 
     /**
      * 执行的sql

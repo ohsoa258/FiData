@@ -7,14 +7,15 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * @author dick
  * @version 1.0
- * @description TDDD
+ * @description 数据运维日志查询DTO
  * @date 2022/4/22 11:47
  */
 public class DataOpsLogQueryDTO {
     /**
      * 搜索条件
      */
-    @ApiModelProperty(value = "搜索条件，支持数据库名称、执行sql、执行结果、执行人")
+    @ApiModelProperty(value = "搜索条件：支持数据库名称、数据库类型（mysql、sqlserver、cube、tabular、postgre、pg）、" +
+            "执行sql、执行结果（成功/失败）、执行人")
     public String keyword;
 
     /**

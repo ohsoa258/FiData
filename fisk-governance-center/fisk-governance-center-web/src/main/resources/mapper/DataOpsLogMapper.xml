@@ -7,6 +7,7 @@
         id,
         con_ip,
         con_dbname,
+        con_dbtype,
         execute_sql,
         execute_result,
         execute_msg,
@@ -26,6 +27,24 @@
             </if>
             <if test="keyword =='失败' ">
                 or execute_result = 500
+            </if>
+            <if test="keyword =='mysql' ">
+                or con_dbtype = 0
+            </if>
+            <if test="keyword =='sqlserver' ">
+                or con_dbtype = 1
+            </if>
+            <if test="keyword =='cube' ">
+                or con_dbtype = 2
+            </if>
+            <if test="keyword =='tabular' ">
+                or con_dbtype = 3
+            </if>
+            <if test="keyword =='postgre' ">
+                or con_dbtype = 4
+            </if>
+            <if test="keyword =='pg' ">
+                or con_dbtype = 4
             </if>
         </if>
     </select>

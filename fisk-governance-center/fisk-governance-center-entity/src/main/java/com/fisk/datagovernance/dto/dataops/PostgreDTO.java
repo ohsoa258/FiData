@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.dto.dataops;
 
-import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
+import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import lombok.Data;
 
 /**

@@ -24,6 +24,16 @@ public class DataOpsLogPO extends BasePO {
     public String conDbname;
 
     /**
+     * 数据库类型
+     * 0、MYSQL
+     * 1、SQLSERVER
+     * 2、CUBE
+     * 3、TABULAR
+     * 4、POSTGRE
+     */
+    public int conDbtype;
+
+    /**
      * 执行的sql
      */
     public String executeSql;

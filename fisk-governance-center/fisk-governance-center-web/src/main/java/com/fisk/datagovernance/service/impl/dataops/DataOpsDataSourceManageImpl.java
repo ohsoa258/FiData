@@ -13,7 +13,7 @@ import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
-import com.fisk.datagovernance.enums.dataquality.DataSourceTypeEnum;
+import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.vo.dataops.DataOpsDataBaseVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
@@ -103,8 +103,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
                             dataOpsSourceVO.setConPort(postgreDTO.getPort());
                         }
-                        List<String> tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
-                                postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
+                        List<String> tableList = new ArrayList<>();
+                        // pg数据库信息读取
+                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
+                            tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
+                                    postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
+                        }
                         DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
                         dataOpsDataBaseVO.setId(postgreDTO.getId());
                         dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
@@ -141,8 +145,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         // 实例信息
         try {
-            List<TableStructureDTO> tableColumnList = postgresConUtils.getTableColumnList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
-                    postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName(), tableName);
+            List<TableStructureDTO> tableColumnList = null;
+            //pg数据库信息
+            if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
+                tableColumnList = postgresConUtils.getTableColumnList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
+                        postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName(), tableName);
+            }
             if (CollectionUtils.isNotEmpty(tableColumnList)) {
                 for (TableStructureDTO tableStructureDTO : tableColumnList) {
                     DataOpsTableFieldVO tableFieldVO = new DataOpsTableFieldVO();
@@ -285,6 +293,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 DataOpsLogPO dataOpsLogPO = new DataOpsLogPO();
                 dataOpsLogPO.setConIp(postgreDTO.getIp());
                 dataOpsLogPO.setConDbname(postgreDTO.getDbName());
+                dataOpsLogPO.setConDbtype(postgreDTO.getDataSourceTypeEnum().getValue());
                 dataOpsLogPO.setExecuteSql(dto.executeSql);
                 dataOpsLogPO.setExecuteResult(executeResult.getCode());
                 dataOpsLogPO.setExecuteMsg(executeMsg);
