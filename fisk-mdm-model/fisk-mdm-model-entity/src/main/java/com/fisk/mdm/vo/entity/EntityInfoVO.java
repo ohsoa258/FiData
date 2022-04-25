@@ -1,9 +1,6 @@
 package com.fisk.mdm.vo.entity;
 
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.enums.MdmStatusTypeEnum;
-import com.fisk.mdm.enums.WhetherTypeEnum;
 import lombok.Data;
 
 import java.util.List;

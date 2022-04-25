@@ -24,6 +24,8 @@ import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -287,6 +289,9 @@ public class EntityServiceImpl implements EntityService {
                         e.setModelId(entityPo.getModelId());
                         return e;
                     }).collect(Collectors.toList());
+
+            // 获取创建人、修改人
+            ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
             entityInfoVo.setAttributeList(dtoList);
             return entityInfoVo;
         }

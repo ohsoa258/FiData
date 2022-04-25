@@ -401,9 +401,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public Integer stringToStatusInt(String status){
         switch (status){
-            case "待新增":
+            case "新增待提交":
                 return AttributeStatusEnum.INSERT.getValue();
-            case "待修改":
+            case "修改待提交":
                 return UPDATE.getValue();
             case "已提交":
                 return AttributeStatusEnum.SUBMITTED.getValue();
