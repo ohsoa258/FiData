@@ -19,6 +19,7 @@ import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.utils.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -499,7 +500,15 @@ public class BuildModelListenerImpl implements BuildModelListener {
         AttributeInfoDTO dto = noForeignList.get(1);
         str.append(this.splicingViewTable(true));
         str.append(noForeign).append(",");
-        str.append(foreign);
+        str.append(foreign).append(",");
+
+        // 追加系统字段
+        str.append(PRIMARY_TABLE + "." + "create_time timestamp(6) NULL").append(",");
+        str.append(PRIMARY_TABLE + "." + "create_user varchar(50) NULL").append(",");
+        str.append(PRIMARY_TABLE + "." + "update_time timestamp(6) NULL").append(",");
+        str.append(PRIMARY_TABLE + "." + "update_user varchar(50) NULL").append(",");
+        str.append(PRIMARY_TABLE + "." + "del_flag int2 NULL");
+
         // 主表表名
         str.append(" FROM " + "mdm_" + dto.getModelId() + "_" + dto.getEntityId() + " " + PRIMARY_TABLE);
 
@@ -551,9 +560,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
             return str1;
         }).collect(Collectors.joining(","));
 
+        BuildPgCommandImpl buildPgCommand = new BuildPgCommandImpl();
         AttributeInfoDTO infoDto = noForeignList.get(1);
         // 业务字段
         str.append(collect);
+        // 追加基础字段
+        str.append(buildPgCommand.commonBaseField());
+        str.deleteCharAt(str.length()-1);
         str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
         return str.toString();
     }

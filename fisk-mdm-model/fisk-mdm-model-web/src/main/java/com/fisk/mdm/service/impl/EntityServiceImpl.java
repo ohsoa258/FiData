@@ -281,7 +281,8 @@ public class EntityServiceImpl implements EntityService {
 
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributePO::getEntityId,id);
+                .eq(AttributePO::getEntityId,id)
+                .orderByAsc(AttributePO::getSortWieght);
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){
             List<AttributeInfoDTO> dtoList = AttributeMap.INSTANCES.poToDtoList(attributePoList).stream().filter(Objects::nonNull)
