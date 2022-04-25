@@ -11,8 +11,8 @@ public enum AttributeStatusEnum  implements BaseEnum {
     /**
      * 属性状态
      */
-    INSERT(0,"待新增"),
-    UPDATE(1,"待修改"),
+    INSERT(0,"新增待提交"),
+    UPDATE(1,"修改待提交"),
     SUBMITTED(2,"已提交");
 
 
