@@ -17,6 +17,7 @@ import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.EventTypeEnum;
 import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeMap;
+import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -263,6 +264,18 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         AttributePO attributePO = baseMapper.selectOne(queryWrapper);
         return attributePO == null ? null : AttributeMap.INSTANCES.poToInfoDto(attributePO);
+    }
+
+    @Override
+    public ResultEnum updateStatus(AttributeStatusDTO statusDto) {
+        AttributePO attributePO = baseMapper.selectById(statusDto.getId());
+        if (attributePO == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        AttributePO statusPo = EntityMap.INSTANCES.dtoToStatusPo(statusDto);
+        int res = baseMapper.updateById(statusPo);
+        return res == 0 ? ResultEnum.SAVE_DATA_ERROR : ResultEnum.SUCCESS;
     }
 
 

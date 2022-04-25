@@ -4,7 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
@@ -37,12 +37,12 @@ public interface MdmClient {
     ResultEntity<AttributeVO> get(@RequestParam("id") Integer id);
 
     /**
-     * 修改属性
-     * @param attributeUpdateDTO
+     * 修改属性状态
+     * @param statusDto
      * @return
      */
-    @PutMapping("/attribute/update")
-    ResultEntity<ResultEnum> update(@RequestBody AttributeUpdateDTO attributeUpdateDTO);
+    @PutMapping("/attribute/updateStatus")
+    ResultEntity<ResultEnum> updateStatus(@RequestBody AttributeStatusDTO statusDto);
 
     /**
      * 修改实体

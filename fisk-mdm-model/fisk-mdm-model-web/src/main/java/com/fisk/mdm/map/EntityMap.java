@@ -1,8 +1,10 @@
 package com.fisk.mdm.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.entity.EntityVO;
@@ -67,4 +69,11 @@ public interface EntityMap {
     Page<EntityPO> voToPoPage(Page<EntityVO> page);
 
     List<EntityVO> poToVoList(List<EntityPO> entityPOS);
+
+    /**
+     * dto => po status
+     * @param dto
+     * @return
+     */
+    AttributePO dtoToStatusPo(AttributeStatusDTO dto);
 }

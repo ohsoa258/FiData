@@ -10,7 +10,7 @@ import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
@@ -292,9 +292,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * 回写成功属性状态
      */
     public void writableAttributeStatus(List<AttributeInfoDTO> attributeList){
-        List<AttributeUpdateDTO> dtoList = attributeList.stream().filter(Objects::nonNull)
+        List<AttributeStatusDTO> dtoList = attributeList.stream().filter(Objects::nonNull)
                 .map(e -> {
-                    AttributeUpdateDTO dto = new AttributeUpdateDTO();
+                    AttributeStatusDTO dto = new AttributeStatusDTO();
                     dto.setId(e.getId());
                     dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
                     dto.setStatus(2);
@@ -304,7 +304,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 }).collect(Collectors.toList());
 
         dtoList.stream().forEach(e -> {
-            ResultEntity<ResultEnum> result = mdmClient.update(e);
+            ResultEntity<ResultEnum> result = mdmClient.updateStatus(e);
             if (result.getData() == ResultEnum.UPDATE_DATA_ERROR){
                 // todo
                 throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
@@ -384,13 +384,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         dtoList.stream().filter(Objects::nonNull)
                 .forEach(e -> {
-                    AttributeUpdateDTO dto = new AttributeUpdateDTO();
+                    AttributeStatusDTO dto = new AttributeStatusDTO();
                     dto.setId(e.getId());
                     dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
                     dto.setStatus(this.stringToStatusInt(e.getStatus()));
                     dto.setSyncStatus(0);
                     dto.setErrorMsg(message);
-                    mdmClient.update(dto);
+                    mdmClient.updateStatus(dto);
                 });
     }
 

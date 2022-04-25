@@ -81,4 +81,10 @@ public class AttributeController {
     public ResultEntity<AttributeInfoDTO> getByDomainId(@RequestBody AttributeDomainDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getByDomainId(dto));
     }
+
+    @ApiOperation("修改属性状态")
+    @PutMapping("/updateStatus")
+    public ResultEntity<ResultEnum> updateStatus(@Validated @RequestBody AttributeStatusDTO statusDto) {
+        return ResultEntityBuild.build(service.updateStatus(statusDto));
+    }
 }

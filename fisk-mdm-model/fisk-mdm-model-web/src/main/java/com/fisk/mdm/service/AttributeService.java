@@ -79,4 +79,11 @@ public interface AttributeService extends IService<AttributePO> {
      * @return
      */
     AttributeInfoDTO getByDomainId(AttributeDomainDTO dto);
+
+    /**
+     * 修改属性状态
+     * @param statusDto
+     * @return
+     */
+    ResultEnum updateStatus(AttributeStatusDTO statusDto);
 }
