@@ -15,10 +15,7 @@ import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
-import com.fisk.datagovernance.vo.dataops.DataOpsDataBaseVO;
-import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
-import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
-import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
+import com.fisk.datagovernance.vo.dataops.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -103,16 +100,24 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
                             dataOpsSourceVO.setConPort(postgreDTO.getPort());
                         }
-                        List<String> tableList = new ArrayList<>();
+                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
                         // pg数据库信息读取
                         if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
-                            tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
+                            List<String>  tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
                                     postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
+                            if (CollectionUtils.isNotEmpty(tableList)){
+                                for (String tableName:tableList){
+                                    DataOpsDataTableVO dataOpsDataTableVO=new DataOpsDataTableVO();
+                                    dataOpsDataTableVO.setTableName(tableName);
+                                    dataOpsDataTableVO.setDatasourceId(postgreDTO.getId());
+                                    dataOpsDataTableVOList.add(dataOpsDataTableVO);
+                                }
+                            }
                         }
                         DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
-                        dataOpsDataBaseVO.setId(postgreDTO.getId());
+                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
                         dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
-                        dataOpsDataBaseVO.setChildren(tableList);
+                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
                         dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
                     }
                 }
@@ -154,6 +159,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             if (CollectionUtils.isNotEmpty(tableColumnList)) {
                 for (TableStructureDTO tableStructureDTO : tableColumnList) {
                     DataOpsTableFieldVO tableFieldVO = new DataOpsTableFieldVO();
+                    tableFieldVO.setDatasourceId(postgreDTO.getId());
                     tableFieldVO.setFieldName(tableStructureDTO.getFieldName());
                     tableFieldVO.setFieldType(tableStructureDTO.getFieldType());
                     tableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());

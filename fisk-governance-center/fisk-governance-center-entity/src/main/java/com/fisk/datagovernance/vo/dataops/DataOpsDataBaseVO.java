@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataops;
 
-import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -18,7 +17,7 @@ public class DataOpsDataBaseVO {
      * 数据源id
      */
     @ApiModelProperty(value = "数据源id")
-    public int id;
+    public int datasourceId;
 
     /**
      * 数据库名称
@@ -30,5 +29,5 @@ public class DataOpsDataBaseVO {
      * 表
      */
     @ApiModelProperty(value = "表")
-    public List<String> children;
+    public List<DataOpsDataTableVO> children;
 }

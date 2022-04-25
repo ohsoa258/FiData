@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.test;
 
+import com.fisk.common.core.utils.similarity.CosineSimilarity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,9 +15,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class DataQualityTest {
-    @Test
-    public  void testpg(){
 
-        int code=200;
+    /**
+     * @return void
+     * @description 相似度规则测试
+     * @author dick
+     * @date 2022/4/25 13:42
+     * @version v1.0
+     * @params
+     */
+    @Test
+    public void similarityTest() {
+        double similarity = CosineSimilarity.getSimilarity("产品销售渠道", "上海农产品销售渠道");
+        System.out.println("相似度i计算比例：" + similarity);
     }
 }
