@@ -121,7 +121,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("name", attributeUpdateDTO.getName())
                 .ne("id", attributeUpdateDTO.getId());
-        if (baseMapper.selectOne(wrapper) != null) {
+        List<AttributePO> list = baseMapper.selectList(wrapper);
+        if ( !Objects.isNull(list) ) {
             return ResultEnum.NAME_EXISTS;
         }
 

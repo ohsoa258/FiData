@@ -11,8 +11,8 @@ public enum AttributeSyncStatusEnum implements BaseEnum {
     /**
      * 提交状态
      */
-    SUCCESS(0,"提交成功"),
-    ERROR(1,"提交失败");
+    ERROR(0,"提交失败"),
+    SUCCESS(1,"提交成功");
 
     @EnumValue
     private final int value;
