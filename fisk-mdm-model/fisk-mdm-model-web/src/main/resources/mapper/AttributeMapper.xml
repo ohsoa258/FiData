@@ -36,22 +36,32 @@
     </select>
 
     <select id="getER" resultMap="entityMap">
-        select entity.name,
+        select entity.id,
+               entity.model_id,
+               entity.name,
                entity.display_name,
+               attribute.id as aId,
+               attribute.entity_id as entityId,
                attribute.name as aName,
                attribute.display_name as aDisplayName,
-               attribute.data_type
+               attribute.data_type,
+               attribute.domain_id
         from tb_attribute as attribute
         right join tb_entity as entity on entity.id = attribute.entity_id
         where attribute.del_flag=1 and entity.del_flag=1
     </select>
-    <resultMap id="entityMap" type="com.fisk.mdm.entity.Entity">
+    <resultMap id="entityMap" type="com.fisk.mdm.vo.entity.EntityMsgVO">
+        <result property="id" column="id"/>
+        <result property="modelId" column="model_id"/>
         <result property="name" column="name"/>
         <result property="displayName" column="display_name"/>
-        <collection property="columns" ofType="com.fisk.mdm.entity.Column">
+        <collection property="attributeMsg" ofType="com.fisk.mdm.vo.attribute.AttributeMsgVO">
+            <result property="id" column="aId"/>
+            <result property="entityId" column="entityId"/>
             <result property="name" column="aName"/>
             <result property="displayName" column="aDisplayName"/>
             <result property="dataType" column="data_type"/>
+            <result property="domainId" column="domain_id"/>
         </collection>
     </resultMap>
 

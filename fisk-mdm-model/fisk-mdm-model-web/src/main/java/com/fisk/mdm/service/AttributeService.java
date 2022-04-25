@@ -6,8 +6,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
-import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityMsgVO;
 
 import java.util.List;
 
@@ -62,9 +62,9 @@ public interface AttributeService extends IService<AttributePO> {
     /**
      * 获取实体、属性信息
      *
-     * @return {@link List}<{@link Entity}>
+     * @return {@link List}<{@link EntityMsgVO}>
      */
-    List<Entity> getER();
+    List<EntityMsgVO> getER();
 
     /**
      * 根据ids 查询属性信息

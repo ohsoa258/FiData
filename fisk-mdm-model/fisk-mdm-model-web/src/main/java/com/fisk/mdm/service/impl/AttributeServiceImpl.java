@@ -10,7 +10,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
-import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.DataTypeEnum;
@@ -24,6 +23,7 @@ import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityMsgVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -226,12 +226,12 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
 
     /**
-     * 获取实体、属性信息
+     * 获取实体ER图信息
      *
-     * @return {@link List}<{@link Entity}>
+     * @return {@link List}<{@link EntityMsgVO}>
      */
     @Override
-    public List<Entity> getER() {
+    public List<EntityMsgVO> getER() {
         return baseMapper.getER();
     }
 

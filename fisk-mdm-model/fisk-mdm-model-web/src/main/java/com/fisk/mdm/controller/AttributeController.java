@@ -6,9 +6,9 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.attribute.*;
-import com.fisk.mdm.entity.Entity;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityMsgVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -66,7 +66,7 @@ public class AttributeController {
 
     @ApiOperation("获取实体、属性信息")
     @GetMapping("/getER")
-    public ResultEntity<List<Entity>> getER() {
+    public ResultEntity<List<EntityMsgVO>> getER() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER());
     }
 
