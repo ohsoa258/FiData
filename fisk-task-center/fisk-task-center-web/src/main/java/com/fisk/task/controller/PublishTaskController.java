@@ -216,9 +216,9 @@ public class PublishTaskController {
 
 
     @PostMapping("/pushModelByName")
-    @ApiOperation(value = "模型日志表名投递到队列")
+    @ApiOperation(value = "创建属性日志表")
     public ResultEntity<Object> pushModelByName(@RequestBody ModelDTO dto){
-        return iBuildKfkTaskService.publishTask(TaskTypeEnum.DELIVERY_MODEL.getName(),
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.CREATE_ATTRIBUTE_TABLE_LOG.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA,
                 dto);

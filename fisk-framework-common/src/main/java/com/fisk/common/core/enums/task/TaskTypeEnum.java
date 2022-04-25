@@ -65,9 +65,9 @@ public enum TaskTypeEnum implements BaseEnum {
      * */
     BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW(12,"统一调度"),
     /**
-     * 投递模型
+     * 创建属性日志表
      */
-    DELIVERY_MODEL(13,"投递模型"),
+    CREATE_ATTRIBUTE_TABLE_LOG(13,"创建属性日志表"),
     /**
      * mdm创建后台表生成任务
      */

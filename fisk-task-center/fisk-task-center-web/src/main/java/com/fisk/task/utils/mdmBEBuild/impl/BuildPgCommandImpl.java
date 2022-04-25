@@ -43,7 +43,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("old_code VARCHAR ( 200 ) NULL,");
         str.append("old_value VARCHAR ( 200 ) NULL,");
         str.append("new_code VARCHAR ( 200 ) NULL,");
-        str.append("new_value VARCHAR ( 200 ) NULL");
+        str.append("new_value VARCHAR ( 200 ) NULL,");
+        str.append(this.commonBaseField());
+        str.deleteCharAt(str.length()-1);
         str.append(");");
         return str.toString();
     }

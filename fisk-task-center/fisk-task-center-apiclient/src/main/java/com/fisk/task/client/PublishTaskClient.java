@@ -237,7 +237,7 @@ public interface PublishTaskClient {
     public ResultEntity<Object> publishBuildunifiedControlTask(@RequestBody UnifiedControlDTO unifiedControlDTO);
 
     /**
-     * 模型日志表名投递到队列
+     * 创建属性日志表
      * @param data
      * @return
      */
