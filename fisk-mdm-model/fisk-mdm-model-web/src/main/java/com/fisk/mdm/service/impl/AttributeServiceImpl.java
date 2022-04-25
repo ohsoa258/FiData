@@ -203,7 +203,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     public ResultEnum getNotSubmittedData(Integer entityId) {
 
         //查询实体是否存在
-        if (entityService.getDataById(entityId) == null) {
+        if (Objects.isNull(entityId) || entityService.getDataById(entityId) == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -212,7 +212,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         wrapper.eq("entity_id", entityId)
                 .eq("status", AttributeStatusEnum.INSERT).or()
                 .eq("status", AttributeStatusEnum.UPDATE);
-        if (baseMapper.selectList(wrapper) == null || baseMapper.selectList(wrapper).size() == 0) {
+        List<AttributePO> attributePoList = baseMapper.selectList(wrapper);
+        if ( Objects.isNull(attributePoList)) {
             return ResultEnum.NO_DATA_TO_SUBMIT;
         }
 
