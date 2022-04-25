@@ -1,15 +1,12 @@
 package com.fisk.task.utils.mdmBEBuild.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -17,7 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
+import static com.fisk.mdm.enums.AttributeStatusEnum.*;
 
 /**
  * @author WangYan
@@ -61,7 +58,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(this.splicingStgTable());
 
         // 字段sql
-        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
+        String fieldSql = entityInfoVo.getAttributeList().stream()
+                .filter(e -> e.getStatus().equals(INSERT.getName()) || e.getStatus().equals(UPDATE.getName()))
                 .map(e -> {
 
                     String str1 = null;
@@ -79,7 +77,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     return str1;
                 }).collect(Collectors.joining(","));
 
-        str.append(fieldSql);
+        if (StringUtils.isNotBlank(fieldSql)){
+            str.append(fieldSql);
+        }else {
+            str.deleteCharAt(str.length()-1);
+        }
+
         str.append(");");
         return str.toString();
     }
@@ -120,7 +123,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     return str1;
                 }).collect(Collectors.joining(","));
 
-        str.append(fieldSql);
+        if (StringUtils.isNotBlank(fieldSql)){
+            str.append(fieldSql);
+        }else {
+            str.deleteCharAt(str.length()-1);
+        }
+
         str.append(");");
         return str.toString();
     }
@@ -177,7 +185,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String dropViw(String viwName) {
         StringBuilder str = new StringBuilder();
         str.append("DROP VIEW ").append(PUBLIC + ".").append(viwName);
-        return null;
+        return str.toString();
     }
 
     /**
