@@ -120,7 +120,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         //判断修改后的名称是否存在
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("name", attributeUpdateDTO.getName())
-                .ne("id", attributeUpdateDTO.getId());
+                .ne("id", attributeUpdateDTO.getId())
+                .ne("entity_id",attributeUpdateDTO.getEntityId());
         List<AttributePO> list = baseMapper.selectList(wrapper);
         if ( !Objects.isNull(list) ) {
             return ResultEnum.NAME_EXISTS;
