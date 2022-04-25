@@ -195,7 +195,6 @@ public class EntityImpl implements IEntity {
         if (dto.entity.typeName.toLowerCase().equals(EntityTypeEnum.RDBMS_INSTANCE.getName()))
         {
             dto.entity.attributes.qualifiedName+=":"+dto.entity.attributes.port;
-            dto.entity.attributes.comment=dto.entity.attributes.userName+"&"+dto.entity.attributes.password;
         }
         String jsonParameter=JSONArray.toJSON(dto).toString();
         ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
