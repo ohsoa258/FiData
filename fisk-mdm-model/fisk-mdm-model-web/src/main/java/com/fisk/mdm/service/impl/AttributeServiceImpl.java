@@ -126,10 +126,12 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         //维护历史的状态字段，防止保持状态为新增失效
-        attributeUpdateDTO.setStatus(attributePO.getStatus().getValue());
+        if(!Objects.isNull(attributePO.getStatus())) {
+            attributeUpdateDTO.setStatus(attributePO.getStatus().getValue());
+        }
 
         //若修改后数据类型不为浮点型，将数据小数点长度修改为0
-        if(attributeUpdateDTO.getDataType() != DataTypeEnum.FLOAT.getValue()){
+        if(!Objects.isNull(attributeUpdateDTO.getDataType()) && attributeUpdateDTO.getDataType() != DataTypeEnum.FLOAT.getValue()){
             attributeUpdateDTO.setDataTypeDecimalLength(0);
         }
 
