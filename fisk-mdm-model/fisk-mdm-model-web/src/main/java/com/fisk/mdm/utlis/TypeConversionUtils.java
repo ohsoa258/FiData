@@ -69,9 +69,9 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
         }
 
         switch (value){
-            case 0 :
+            case 1 :
                 return AttributeSyncStatusEnum.SUCCESS;
-            case 1:
+            case 0:
                 return AttributeSyncStatusEnum.ERROR;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
