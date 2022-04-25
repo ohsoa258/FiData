@@ -107,7 +107,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 this.updateStgTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo);
                 // 2.mdm表更新
                 this.updateMdmTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo.getAttributeList());
-                // 3.viw视图删了重新生成
+                // 3.viw视图重新生成
                 this.updateViwTable(abstractDbHelper, sqlBuilder, connection,entityInfoVo);
                 // 4.回写成功属性状态
                 this.writableAttributeStatus(entityInfoVo.getAttributeList());
@@ -130,9 +130,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void updateViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo) throws Exception {
-        // 1.删除视图
-        this.dropViwTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo.getAttributeList());
-        // 2.创建view视图
+        // 1.创建view视图
         this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
     }
 
@@ -145,9 +143,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void updateStgTable(AbstractDbHelper abstractDbHelper,Connection connection,
                       IBuildSqlCommand sqlBuilder,EntityInfoVO entityInfoVo) throws Exception{
-        // 1. 删除stg表
+        // 1.删除视图
+        this.dropViwTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo.getAttributeList());
+        // 2.删除stg表
         this.dropStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo.getAttributeList());
-        // 2.创建Stg表
+        // 3.创建Stg表
         this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
     }
 
@@ -195,7 +195,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             String viwName = "viw_" + dto.getModelId() + "_" + dto.getEntityId();
 
             // 1.创建Sql
-            String dropTableSql = sqlBuilder.dropTable(viwName);
+            String dropTableSql = sqlBuilder.dropViw(viwName);
             // 2.执行Sql
             abstractDbHelper.executeSql(dropTableSql, connection);
         }catch (Exception ex){

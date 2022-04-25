@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -281,7 +282,12 @@ public class EntityServiceImpl implements EntityService {
                 .eq(AttributePO::getEntityId,id);
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(attributePoList)){
-            entityInfoVo.setAttributeList(AttributeMap.INSTANCES.poToDtoList(attributePoList));
+            List<AttributeInfoDTO> dtoList = AttributeMap.INSTANCES.poToDtoList(attributePoList).stream().filter(Objects::nonNull)
+                    .map(e -> {
+                        e.setModelId(entityPo.getModelId());
+                        return e;
+                    }).collect(Collectors.toList());
+            entityInfoVo.setAttributeList(dtoList);
             return entityInfoVo;
         }
 
