@@ -565,7 +565,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return result;
     }
 
-
+    /**
+     * @description 冻结表
+     * @author dick
+     * @date 2022/4/25 13:34
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params lifecyclePO
+     * @params templateTypeEnum
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
+     */
     public ResultEntity<Object> frozenTable(DataSourceConPO dataSourceConPO, LifecyclePO lifecyclePO, TemplateTypeEnum templateTypeEnum) {
         ResultEntity<Object> result = new ResultEntity<>();
         // 冻结表
