@@ -233,7 +233,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @return {@link List}<{@link EntityMsgVO}>
      */
     @Override
-    public List<EntityMsgVO> getER() {
+    public List<EntityMsgVO> getEntityMsg() {
         return baseMapper.getER();
     }
 

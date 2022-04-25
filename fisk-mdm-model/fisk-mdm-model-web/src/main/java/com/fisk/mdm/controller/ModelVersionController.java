@@ -29,8 +29,9 @@ public class ModelVersionController {
     @Resource
     private IModelVersionService service;
 
-    @ApiOperation("/getByModelId")
-    @GetMapping
+
+    @ApiOperation("根据模型id查看模型版本")
+    @GetMapping("/getByModelId")
     public ResultEntity<List<ModelVersionVO>> getByModelId(Integer modelId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getByModelId(modelId));
     }

@@ -67,7 +67,7 @@ public class AttributeController {
     @ApiOperation("获取实体、属性信息")
     @GetMapping("/getER")
     public ResultEntity<List<EntityMsgVO>> getER() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getER());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getEntityMsg());
     }
 
     @ApiOperation("根据id集合查询属性信息")
