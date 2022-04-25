@@ -50,7 +50,7 @@ public class DatamaskingConfigController {
      */
     @PostMapping("/add")
     @ApiOperation(value = "添加")
-    public ResultEntity<Object> addData(@RequestBody DatamaskingConfigDTO datamaskingConfig) {
+    public ResultEntity<Object> addData(@Validated @RequestBody DatamaskingConfigDTO datamaskingConfig) {
 
         return ResultEntityBuild.build(service.addData(datamaskingConfig));
     }
