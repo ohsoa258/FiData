@@ -1,6 +1,7 @@
 package com.fisk.mdm.vo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
  * @Version 1.0
  */
 @Data
-public class EntityVO {
+public class EntityVO  extends BaseUserInfoVO {
 
     @ApiModelProperty(value = "主键id",required = true)
     private Integer id;
@@ -51,13 +52,7 @@ public class EntityVO {
     @ApiModelProperty(value = "创建时间",required = true)
     public LocalDateTime createTime;
 
-    @ApiModelProperty(value = "创建人",required = true)
-    public String createUser;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "更新时间",required = true)
     public LocalDateTime updateTime;
-
-    @ApiModelProperty(value = "更新人",required = true)
-    public String updateUser;
 }

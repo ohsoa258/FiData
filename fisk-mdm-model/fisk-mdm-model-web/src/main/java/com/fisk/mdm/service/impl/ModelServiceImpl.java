@@ -30,6 +30,7 @@ import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.system.client.UserClient;
@@ -218,7 +219,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         Page<ModelVO> all = baseMapper.getAll(query.page, query);
 
-        //获取创建人名称
+        //获取创建人、修改人名称
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             ReplenishUserInfo.replenishUserName(all.getRecords(), userClient, UserFieldEnum.USER_ACCOUNT);
         }
@@ -244,12 +245,20 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         ModelInfoVO modelInfoVO = ModelMap.INSTANCES.poToInfoVO(modelPo);
         QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
         wrapper.eq("model_id",modelId);
+        List<EntityPO> entityPos = entityMapper.selectList(wrapper);
 
-        List<EntityPO> entityPOS = entityMapper.selectList(wrapper);
-        if(CollectionUtils.isNotEmpty(entityPOS)){
-            modelInfoVO.setEntityVOList(EntityMap.INSTANCES.poToVoList(entityPOS));
+        //判断是否存在实体
+        if(!CollectionUtils.isNotEmpty(entityPos)){
             return modelInfoVO;
         }
+
+        List<EntityVO> entityVos = EntityMap.INSTANCES.poToVoList(entityPos);
+
+        //获取创建人、修改人名称
+        ReplenishUserInfo.replenishUserName(entityVos, userClient, UserFieldEnum.USER_ACCOUNT);
+
+        //最终返回
+        modelInfoVO.setEntityVOList(entityVos);
         return modelInfoVO;
     }
 }
