@@ -265,13 +265,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingStgTable(){
         StringBuilder str = new StringBuilder();
-        str.append("id serial NOT NULL").append(",");
-        str.append("import_type int4 NULL").append(",");
-        str.append("batch_code VARCHAR ( 100 ) NULL").append(",");
-        str.append("version_id int4 NULL").append(",");
-        str.append("error_id int4 NULL").append(",");
-        str.append("new_code VARCHAR ( 100 ) NULL").append(",");
-        str.append("status int4 NULL").append(",");
+        str.append("fidata_id serial NOT NULL").append(",");
+        str.append("fidata_import_type int4 NULL").append(",");
+        str.append("fidata_batch_code VARCHAR ( 100 ) NULL").append(",");
+        str.append("fidata_version_id int4 NULL").append(",");
+        str.append("fidata_error_id int4 NULL").append(",");
+        str.append("fidata_new_code VARCHAR ( 100 ) NULL").append(",");
+        str.append("fidata_status int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
@@ -283,9 +283,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingMdmTable(){
         StringBuilder str = new StringBuilder();
-        str.append("id serial NOT NULL").append(",");
-        str.append("version_id int4 NULL").append(",");
-        str.append("lock_tag int4 NULL").append(",");
+        str.append("fidata_id serial NOT NULL").append(",");
+        str.append("fidata_version_id int4 NULL").append(",");
+        str.append("fidata_lock_tag int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
@@ -298,17 +298,17 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String splicingViewTable(boolean isDomain){
         StringBuilder str = new StringBuilder();
         if (isDomain == false){
-            str.append("id").append(",");
-            str.append("version_id").append(",");
+            str.append("fidata_id").append(",");
+            str.append("fidata_version_id").append(",");
             str.append(this.commonBaseField());
         }else{
-            str.append(PRIMARY_TABLE + "." + "id").append(",");
-            str.append(PRIMARY_TABLE + "." + "version_id").append(",");
-            str.append(PRIMARY_TABLE + "." + "create_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "create_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "update_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "update_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "del_flag int2 NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_id").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_version_id").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_create_time timestamp(6) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_create_user varchar(50) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_update_time timestamp(6) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_update_user varchar(50) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + "fidata_del_flag int2 NULL").append(",");
         }
 
         return str.toString();
@@ -320,11 +320,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String commonBaseField(){
         StringBuilder str = new StringBuilder();
-        str.append("create_time timestamp(6) NULL").append(",");
-        str.append("create_user varchar(50) NULL").append(",");
-        str.append("update_time timestamp(6) NULL").append(",");
-        str.append("update_user varchar(50) NULL").append(",");
-        str.append("del_flag int2 NULL").append(",");
+        str.append("fidata_create_time timestamp(6) NULL").append(",");
+        str.append("fidata_create_user varchar(50) NULL").append(",");
+        str.append("fidata_update_time timestamp(6) NULL").append(",");
+        str.append("fidata_update_user varchar(50) NULL").append(",");
+        str.append("fidata_del_flag int2 NULL").append(",");
         return str.toString();
     }
 }

@@ -108,7 +108,7 @@ public class AbstractDbHelper {
      * @param connection
      * @return
      */
-    public void executeSql(String sql,Connection connection){
+    public void executeSql(String sql,Connection connection) throws SQLException {
         Statement statement =null;
         String code = UUID.randomUUID().toString();
         StopWatch stopWatch = new StopWatch();
@@ -119,8 +119,7 @@ public class AbstractDbHelper {
             statement = connection.createStatement();
             statement.execute(sql);
         } catch (SQLException ex) {
-            log.error("【execCreate】【" + code + "】执行sql查询报错, ex", ex);
-            throw new FkException(ResultEnum.VISUAL_CREATE_ERROR, ex.getLocalizedMessage());
+            log.error("【execCreate】【" + code + "】执行sql报错, ex", ex);
         }finally {
             closeStatement(statement);
             stopWatch.stop();

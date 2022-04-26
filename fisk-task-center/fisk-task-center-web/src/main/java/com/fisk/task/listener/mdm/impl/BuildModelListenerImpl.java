@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -216,41 +217,41 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void updateMdmTable(AbstractDbHelper abstractDbHelper,Connection connection,
                             IBuildSqlCommand sqlBuilder,List<AttributeInfoDTO> attributeList){
-        try{
-            // 表名
-            AttributeInfoDTO dto = attributeList.get(0);
-            String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
+        // 表名
+        AttributeInfoDTO dto = attributeList.get(0);
+        String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
-            attributeList.stream().filter(e -> e.getStatus().equals(UPDATE.getName()))
-                    .forEach(e -> {
+        attributeList.stream().filter(e -> e.getStatus().equals(UPDATE.getName()))
+                .forEach(e -> {
 
-                        String filedType = null;
-                        String filedTypeLength = null;
-                        switch (e.getDataType()){
-                            case "数值":
-                                filedType = "int4";
-                                filedTypeLength = "int4";
-                                break;
-                            default:
-                                filedType = "varchar";
-                                filedTypeLength = "varchar(" + e.getDataTypeLength() + ")";
-                        }
+                    String filedType = null;
+                    String filedTypeLength = null;
+                    switch (e.getDataType()){
+                        case "数值":
+                            filedType = "int4";
+                            filedTypeLength = "int4";
+                            break;
+                        default:
+                            filedType = "varchar";
+                            filedTypeLength = "varchar(" + e.getDataTypeLength() + ")";
+                    }
 
+                    try {
                         // 1.修改字段类型
                         String modifyFieldType = sqlBuilder.modifyFieldType(tableName, e.getColumnName(), filedType);
                         abstractDbHelper.executeSql(modifyFieldType, connection);
                         // 2.修改字段长度
                         String fieldLength = sqlBuilder.modifyFieldLength(tableName, e.getColumnName(), filedTypeLength);
                         abstractDbHelper.executeSql(fieldLength, connection);
-                    });
-        }catch (Exception ex){
-            closeConnection(connection);
+                    }catch (SQLException ex){
+                        closeConnection(connection);
 
-            // 回写失败属性信息
-            this.exceptionAttributeProcess(attributeList, ResultEnum.UPDATE_MDM_TABLE.getMsg() + "原因:" + ex);
-            log.error("修改Mdm表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
-        }
+                        // 回写失败属性信息
+                        this.exceptionAttributeProcess(attributeList, ResultEnum.UPDATE_MDM_TABLE.getMsg() + "原因:" + ex.getLocalizedMessage());
+                        log.error("修改Mdm表失败,异常信息:" + ex);
+                        throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
+                    }
+                });
     }
 
     /**
@@ -322,16 +323,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
+
+        String buildStgTableSql = null;
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
+            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (Exception ex){
+        }catch (SQLException ex){
             closeConnection(connection);
 
             // 回写失败信息
-            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg() + "原因:" + ex);
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg()
+                    + "【执行的SQL】:" + buildStgTableSql + "原因:" + ex.getLocalizedMessage());
             log.error("创建Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
@@ -346,16 +350,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
+
+        String buildStgTableSql = null;
         try{
             // 1.生成Sql
-            String buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo);
+            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (Exception ex){
+        }catch (SQLException ex){
             closeConnection(connection);
 
             // 回写失败信息
-            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_MDM_TABLE.getMsg() + "原因:" + ex);
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_MDM_TABLE.getMsg()
+                    + "【执行的SQL】" + buildStgTableSql + "原因:" + ex.getLocalizedMessage());
             log.error("创建Mdm表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_MDM_TABLE);
         }
@@ -422,16 +429,19 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
+
+        String buildStgTableSql = null;
         try{
             // 1.生成Sql
-            String buildStgTableSql = this.buildViewTable(entityInfoVo);
+            buildStgTableSql = this.buildViewTable(entityInfoVo);
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (Exception ex){
+        }catch (SQLException ex){
             closeConnection(connection);
 
             // 回写失败信息
-            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_VIW_TABLE.getMsg() + "原因:" + ex);
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_VIW_TABLE.getMsg()
+                    + "【执行的SQL】" + buildStgTableSql + "原因:" + ex.getLocalizedMessage());
             log.error("创建Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_VIW_TABLE);
         }
@@ -503,11 +513,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
         str.append(foreign).append(",");
 
         // 追加系统字段
-        str.append(PRIMARY_TABLE + "." + "create_time timestamp(6) NULL").append(",");
-        str.append(PRIMARY_TABLE + "." + "create_user varchar(50) NULL").append(",");
-        str.append(PRIMARY_TABLE + "." + "update_time timestamp(6) NULL").append(",");
-        str.append(PRIMARY_TABLE + "." + "update_user varchar(50) NULL").append(",");
-        str.append(PRIMARY_TABLE + "." + "del_flag int2 NULL");
+        BuildPgCommandImpl buildPgCommand = new BuildPgCommandImpl();
+        str.append(buildPgCommand.splicingViewTable(true));
 
         // 主表表名
         str.append(" FROM " + "mdm_" + dto.getModelId() + "_" + dto.getEntityId() + " " + PRIMARY_TABLE);
