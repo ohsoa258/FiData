@@ -1,5 +1,6 @@
 package com.fisk.mdm.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
@@ -68,6 +69,7 @@ public class AttributePO extends BasePO {
     /**
      * 数据类型小数点长度
      */
+    @TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED)
     private Integer dataTypeDecimalLength;
 
     /**
