@@ -33,17 +33,17 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
-        str.append("ID int4 NOT NULL,");
-        str.append("model_id int4 NULL,");
-        str.append("entity_id int4 NULL,");
-        str.append("attribute_id int4 NULL,");
-        str.append("member_id int4 NULL,");
-        str.append("batch_id int4 NULL,");
-        str.append("version_id int4 NULL,");
-        str.append("old_code VARCHAR ( 200 ) NULL,");
-        str.append("old_value VARCHAR ( 200 ) NULL,");
-        str.append("new_code VARCHAR ( 200 ) NULL,");
-        str.append("new_value VARCHAR ( 200 ) NULL,");
+        str.append("fidata_ID int4 NOT NULL,");
+        str.append("fidata_model_id int4 NULL,");
+        str.append("fidata_entity_id int4 NULL,");
+        str.append("fidata_attribute_id int4 NULL,");
+        str.append("fidata_member_id int4 NULL,");
+        str.append("fidata_batch_id int4 NULL,");
+        str.append("fidata_version_id int4 NULL,");
+        str.append("fidata_old_code VARCHAR ( 200 ) NULL,");
+        str.append("fidata_old_value VARCHAR ( 200 ) NULL,");
+        str.append("fidata_new_code VARCHAR ( 200 ) NULL,");
+        str.append("fidata_new_value VARCHAR ( 200 ) NULL,");
         str.append(this.commonBaseField());
         str.deleteCharAt(str.length()-1);
         str.append(");");
