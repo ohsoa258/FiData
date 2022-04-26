@@ -71,7 +71,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         }
 
         // 同一用户(组)只允许选择一个权限
-        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnly(dto);
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnlyByAdd(dto);
         if (usergroupPermissionOnly != null) {
             return usergroupPermissionOnly;
         }
@@ -90,10 +90,37 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
      * @version v1.0
      * @params dto 前端入参
      */
-    private ResultEnum validateTableUserGroupPermissonOnly(TablesecurityConfigDTO dto) {
+    private ResultEnum validateTableUserGroupPermissonOnlyByAdd(TablesecurityConfigDTO dto) {
         QueryWrapper<TablesecurityConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().
-                select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
+        queryWrapper.lambda()
+                .eq(TablesecurityConfigPO::getDatasourceId, dto.datasourceId).eq(TablesecurityConfigPO::getTableId, dto.tableId)
+                .select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
+        List<TablesecurityConfigPO> tablesecurityConfigPoList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(tablesecurityConfigPoList)) {
+            for (TablesecurityConfigPO e : tablesecurityConfigPoList) {
+                if (e.accessType == dto.accessType && e.userGroupId == dto.userGroupId) {
+                    return ResultEnum.USERGROUP_PERMISSION_ONLY;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 校验表级用户(组)权限是否唯一
+     *
+     * @return com.fisk.common.core.response.ResultEnum
+     * @description 校验表级用户(组)权限是否唯一
+     * @author Lock
+     * @date 2022/4/8 17:44
+     * @version v1.0
+     * @params dto 前端入参
+     */
+    private ResultEnum validateTableUserGroupPermissonOnlyByEdit(TablesecurityConfigDTO dto) {
+        QueryWrapper<TablesecurityConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(TablesecurityConfigPO::getDatasourceId, dto.datasourceId).eq(TablesecurityConfigPO::getTableId, dto.tableId)
+                .select(TablesecurityConfigPO::getAccessType, TablesecurityConfigPO::getUserGroupId, TablesecurityConfigPO::getId);
         List<TablesecurityConfigPO> tablesecurityConfigPoList = baseMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(tablesecurityConfigPoList)) {
             for (TablesecurityConfigPO e : tablesecurityConfigPoList) {
@@ -116,7 +143,7 @@ public class TablesecurityConfigServiceImpl extends ServiceImpl<TablesecurityCon
         }
 
         // 同一用户(组)只允许选择一个权限
-        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnly(dto);
+        ResultEnum usergroupPermissionOnly = validateTableUserGroupPermissonOnlyByEdit(dto);
         if (usergroupPermissionOnly != null) {
             return usergroupPermissionOnly;
         }
