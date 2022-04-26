@@ -90,11 +90,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         //添加数据
         AttributePO attributePO = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
 
-        //若数据类型为布尔或数值，长度设置为10，小数点长度设置为0
-        if (attributePO.getDataType() == DataTypeEnum.BOOL ||
-                attributePO.getDataType() == DataTypeEnum.NUMERICAL){
-            attributePO.setDataTypeLength(10);
+        //若数据不为浮点型，设置精度为0
+        if(attributePO.getDataType() != DataTypeEnum.FLOAT){
             attributePO.setDataTypeDecimalLength(0);
+        }
+
+        //若数据类型为布尔或数值，长度设置为10
+        if (attributePO.getDataType() == DataTypeEnum.BOOL){
+            attributePO.setDataTypeLength(10);
         }
         attributePO.setStatus(AttributeStatusEnum.INSERT);
         if (baseMapper.insert(attributePO) <= 0) {
@@ -145,8 +148,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         //若数据类型为布尔或数值，长度更改为10
-        if(attributeUpdateDTO.getDataType() == DataTypeEnum.BOOL.getValue() ||
-                attributeUpdateDTO.getDataType() == DataTypeEnum.NUMERICAL.getValue() ){
+        if(attributeUpdateDTO.getDataType() == DataTypeEnum.BOOL.getValue()){
             attributeUpdateDTO.setDataTypeLength(10);
         }
 
