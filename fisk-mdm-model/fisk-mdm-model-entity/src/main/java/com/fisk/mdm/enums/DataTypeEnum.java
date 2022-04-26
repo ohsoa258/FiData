@@ -35,6 +35,8 @@ public enum DataTypeEnum implements BaseEnum {
      */
     FLOAT(8, "浮点型"),
 
+    BOOL(9,"布尔型"),
+
     /**
      * 复杂数据类型
      * 说明:

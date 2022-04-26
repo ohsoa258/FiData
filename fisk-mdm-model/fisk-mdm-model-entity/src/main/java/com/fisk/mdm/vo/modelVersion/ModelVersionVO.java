@@ -1,6 +1,7 @@
 package com.fisk.mdm.vo.modelVersion;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
  * @date 2022/04/24
  */
 @Data
-public class ModelVersionVO {
+public class ModelVersionVO extends BaseUserInfoVO {
     @ApiModelProperty(value = "主键")
     public int id;
 
