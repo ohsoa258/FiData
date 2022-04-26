@@ -23,6 +23,9 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "api名称", required = true)
     public String apiName;
 
+    @ApiModelProperty(value = "api地址")
+    public String apiAddress;
+
     @ApiModelProperty(value = "api描述", required = true)
     public String apiDes;
 

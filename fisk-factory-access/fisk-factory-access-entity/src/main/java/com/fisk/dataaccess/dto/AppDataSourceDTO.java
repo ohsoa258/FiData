@@ -24,56 +24,56 @@ public class AppDataSourceDTO extends BaseDTO {
 
     public Long appId;
 
-    /**
-     * 驱动类型
-     */
     @ApiModelProperty(value = "驱动类型", required = true)
     public String driveType;
 
-    /**
-     * 主机名
-     */
+    @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token", required = true)
+    public Integer authenticationMethod;
+
     @ApiModelProperty(value = "服务器地址", required = true)
     public String host;
 
-    /**
-     * 端口号
-     */
     @ApiModelProperty(value = "端口", required = true)
     public String port;
 
-    /**
-     * 数据库名
-     */
     @ApiModelProperty(value = "数据库", required = true)
     public String dbName;
 
-    /**
-     * 连接字符串
-     */
     @ApiModelProperty(value = "连接字符串", required = true)
     public String connectStr;
 
-    /**
-     * 连接账号
-     */
-    @ApiModelProperty(value = "连接账号", required = true)
+    @ApiModelProperty(value = "连接账号(实时、OAuth、JWT)", required = true)
     public String connectAccount;
 
-    /**
-     * 连接密码
-     */
-    @ApiModelProperty(value = "连接密码", required = true)
+    @ApiModelProperty(value = "连接密码(实时、OAuth、JWT)", required = true)
     public String connectPwd;
 
     @ApiModelProperty(value = "文件后缀名(1:csv  2:xls&xlsx)", required = true)
     public Integer fileSuffix;
 
-    @ApiModelProperty(value = "验证方式（实时） 登录账号")
+    @ApiModelProperty(value = "验证方式（实时） 登录账号", required = true)
     public String realtimeAccount;
 
-    @ApiModelProperty(value = "验证方式（实时） 登录密码")
+    @ApiModelProperty(value = "验证方式（实时） 登录密码", required = true)
     public String realtimePwd;
+
+    @ApiModelProperty(value = "OAuth 1.0: Signature Method", required = true)
+    public String signatureMethod;
+
+    @ApiModelProperty(value = "OAuth 1.0: Consumer Key", required = true)
+    public String consumerKey;
+
+    @ApiModelProperty(value = "OAuth 1.0: Consumer Secret", required = true)
+    public String consumerSecret;
+
+    @ApiModelProperty(value = "OAuth 1.0: Access Token", required = true)
+    public String accessToken;
+
+    @ApiModelProperty(value = "OAuth 1.0: Token Secret", required = true)
+    public String tokenSecret;
+
+    @ApiModelProperty(value = "Bearer Token验证方式的Token", required = true)
+    public String token;
 
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);

@@ -26,6 +26,11 @@ public class ApiConfigPO extends BasePO {
     public String apiName;
 
     /**
+     * api地址
+     */
+    public String apiAddress;
+
+    /**
      * api描述
      */
     public String apiDes;

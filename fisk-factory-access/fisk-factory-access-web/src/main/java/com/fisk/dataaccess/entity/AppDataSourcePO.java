@@ -23,6 +23,11 @@ public class AppDataSourcePO extends BasePO {
     public String driveType;
 
     /**
+     * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token
+     */
+    public Integer authenticationMethod;
+
+    /**
      * 主机名
      */
     public String host;
@@ -66,4 +71,34 @@ public class AppDataSourcePO extends BasePO {
      * 验证方式（实时） 登录密码
      */
     public String realtimePwd;
+
+    /**
+     * OAuth 1.0: Signature Method
+     */
+    public String signatureMethod;
+
+    /**
+     * OAuth 1.0: Consumer Key
+     */
+    public String consumerKey;
+
+    /**
+     * OAuth 1.0: Consumer Secret
+     */
+    public String consumerSecret;
+
+    /**
+     * OAuth 1.0: Access Token
+     */
+    public String accessToken;
+
+    /**
+     * OAuth 1.0: Token Secret
+     */
+    public String tokenSecret;
+
+    /**
+     * Bearer Token验证方式的Token
+     */
+    public String token;
 }
