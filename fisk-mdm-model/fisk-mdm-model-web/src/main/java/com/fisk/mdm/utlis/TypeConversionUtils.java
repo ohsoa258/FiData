@@ -106,6 +106,8 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return DataTypeEnum.POI;
             case 8:
                 return DataTypeEnum.FLOAT;
+            case 9:
+                return DataTypeEnum.BOOL;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
