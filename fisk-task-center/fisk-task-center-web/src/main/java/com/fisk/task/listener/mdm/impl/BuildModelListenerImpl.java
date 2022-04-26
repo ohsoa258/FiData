@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,13 +85,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
     @Override
     public void backgroundCreateTasks(String dataInfo, Acknowledgment acke) {
 
+        Connection connection = null;
         try {
             EntityDTO dto = JSON.parseObject(dataInfo, EntityDTO.class);
 
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             // 获取连接信息
-            Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+            connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
 
             // 获取实体信息
             EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
@@ -107,18 +109,20 @@ public class BuildModelListenerImpl implements BuildModelListener {
             }else if (status.equals(CREATED_SUCCESSFULLY.getName())){
                 // 1.stg表删了重新生成
                 this.updateStgTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo);
+                EntityInfoVO data = mdmClient.getAttributeById(dto.getEntityId()).getData();
                 // 2.mdm表更新
-                this.updateMdmTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo.getAttributeList());
+                this.updateMdmTable(abstractDbHelper,connection, sqlBuilder,data.getAttributeList());
                 // 3.回写成功属性状态
-                this.writableAttributeStatus(entityInfoVo.getAttributeList());
+                this.writableAttributeStatus(data.getAttributeList());
                 // 4.viw视图重新生成
-                this.updateViwTable(abstractDbHelper, sqlBuilder, connection,entityInfoVo);
+                this.updateViwTable(abstractDbHelper, sqlBuilder, connection,data);
             }
 
         } catch (Exception ex) {
             log.error("创建后台任务表失败,异常信息:" + ex);
             ex.printStackTrace();
         } finally {
+            closeConnection(connection);
             acke.acknowledge();
         }
     }
@@ -151,6 +155,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
         this.dropStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo.getAttributeList());
         // 3.创建Stg表
         this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+        // 4.回写columnName
+        this.writableColumnName(entityInfoVo.getAttributeList());
     }
 
     /**
@@ -174,7 +180,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行Sql
             abstractDbHelper.executeSql(dropTableSql, connection);
         }catch (SQLException ex){
-            closeConnection(connection);
 
             // 回写失败属性信息
             this.exceptionAttributeProcess(attributeList, ResultEnum.DROP_STG_TABLE.getMsg()
@@ -206,7 +211,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行Sql
             abstractDbHelper.executeSql(dropTableSql, connection);
         }catch (SQLException ex){
-            closeConnection(connection);
 
             // 回写失败属性信息
             this.exceptionAttributeProcess(attributeList, ResultEnum.DROP_VIW_TABLE.getMsg()
@@ -227,70 +231,72 @@ public class BuildModelListenerImpl implements BuildModelListener {
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
-        // 添加字段
-        attributeList.stream().filter(e -> e.getStatus().equals(INSERT.getName()))
-                        .forEach(e -> {
+        List<AttributeStatusDTO> dtoList = new ArrayList<>();
+        for (AttributeInfoDTO infoDto : attributeList) {
 
-                            String filedType = null;
-                            switch (e.getDataType()){
-                                case "数值":
-                                    filedType = "int4";
-                                    break;
-                                default:
-                                    filedType = "VARCHAR ( 100 )";
-                            }
+            String sql = null;
+            AttributeStatusDTO status = new AttributeStatusDTO();
+            status.setId(infoDto.getId());
+            status.setColumnName("column_" + infoDto.getEntityId() + "_" + infoDto.getId());
 
-                            String addColumn = null;
-                            try {
-                                // 1.构建Sql
-                                addColumn = sqlBuilder.addColumn(tableName, e.getColumnName(), filedType + " NULL ");
-                                // 1.执行Sql
-                                abstractDbHelper.executeSql(addColumn, connection);
-                            } catch (SQLException ex) {
-                                closeConnection(connection);
+            try{
 
-                                // 回写失败属性信息
-                                this.exceptionAttributeProcess(attributeList, ResultEnum.UPDATE_MDM_TABLE.getMsg()
-                                        + "【执行SQL】" + addColumn + "【原因】:" + ex);
-                                log.error("修改Mdm表失败,异常信息:" + ex);
-                                throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
-                            }
-                        });
+                if (infoDto.getStatus().equals(INSERT.getName())){
+                    // 新增字段
+                    String filedType = null;
+                    switch (infoDto.getDataType()){
+                        case "数值":
+                            filedType = "int4";
+                            break;
+                        default:
+                            filedType = "VARCHAR ( 100 )";
+                    }
 
-        // 修改字段
-        attributeList.stream().filter(e -> e.getStatus().equals(UPDATE.getName()))
-                .forEach(e -> {
-
+                    // 1.构建Sql
+                    sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + " NULL ");
+                    // 1.执行Sql
+                    abstractDbHelper.executeSql(sql, connection);
+                }else if (infoDto.getStatus().equals(UPDATE.getName())){
+                    // 修改字段
                     String filedType = null;
                     String filedTypeLength = null;
-                    switch (e.getDataType()){
+                    switch (infoDto.getDataType()){
                         case "数值":
                             filedType = "int4";
                             filedTypeLength = "int4";
                             break;
                         default:
                             filedType = "varchar";
-                            filedTypeLength = "varchar(" + e.getDataTypeLength() + ")";
+                            filedTypeLength = "varchar(" + infoDto.getDataTypeLength() + ")";
                     }
 
-                    String sql = null;
-                    try {
-                        // 1.修改字段类型
-                        sql = sqlBuilder.modifyFieldType(tableName, e.getColumnName(), filedType);
-                        abstractDbHelper.executeSql(sql, connection);
-                        // 2.修改字段长度
-                        sql = sqlBuilder.modifyFieldLength(tableName, e.getColumnName(), filedTypeLength);
-                        abstractDbHelper.executeSql(sql, connection);
-                    }catch (SQLException ex){
-                        closeConnection(connection);
+                    // 1.修改字段类型
+                    sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
+                    abstractDbHelper.executeSql(sql, connection);
+                    // 2.修改字段长度
+                    sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(), filedTypeLength);
+                    abstractDbHelper.executeSql(sql, connection);
+                }
 
-                        // 回写失败属性信息
-                        this.exceptionAttributeProcess(attributeList, ResultEnum.UPDATE_MDM_TABLE.getMsg()
-                                + "【执行SQL】" + sql + "【原因】:" + ex);
-                        log.error("修改Mdm表失败,异常信息:" + ex);
-                        throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
-                    }
-                });
+                // 3.回写成功状态
+                status.setStatus(2);
+                status.setSyncStatus(1);
+                dtoList.add(status);
+            }catch (SQLException ex){
+
+                // 回写失败状态
+                status.setStatus(this.stringToStatusInt(infoDto.getStatus()));
+                status.setSyncStatus(0);
+                status.setErrorMsg(ResultEnum.UPDATE_MDM_TABLE.getMsg()
+                        + "【执行SQL】" + sql + "【原因】:" + ex);
+                dtoList.add(status);
+                log.error("修改Mdm表失败,异常信息:" + ex);
+                throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
+            }finally {
+                // 回写属性状态
+                this.exceptionAttributeProcess(dtoList);
+            }
+        }
     }
 
     /**
@@ -355,6 +361,28 @@ public class BuildModelListenerImpl implements BuildModelListener {
     }
 
     /**
+     * 回写columnName
+     */
+    public void writableColumnName(List<AttributeInfoDTO> attributeList){
+        List<AttributeStatusDTO> dtoList = attributeList.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    AttributeStatusDTO dto = new AttributeStatusDTO();
+                    dto.setId(e.getId());
+                    dto.setColumnName("column_" + e.getEntityId() + "_" + e.getId());
+
+                    return dto;
+                }).collect(Collectors.toList());
+
+        dtoList.stream().forEach(e -> {
+            ResultEntity<ResultEnum> result = mdmClient.updateStatus(e);
+            if (result.getData() == ResultEnum.UPDATE_DATA_ERROR){
+                // todo
+                throw new FkException(ResultEnum.UPDATE_DATA_ERROR);
+            }
+        });
+    }
+
+    /**
      * 创建Stg表
      * @param abstractDbHelper
      * @param sqlBuilder
@@ -371,7 +399,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (SQLException ex){
-            closeConnection(connection);
 
             // 回写失败信息
             this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg()
@@ -442,6 +469,17 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 });
     }
 
+    public void exceptionAttributeProcess(List<AttributeStatusDTO> dtoList){
+        if (CollectionUtils.isEmpty(dtoList)){
+            return;
+        }
+
+        dtoList.stream().filter(Objects::nonNull)
+                .forEach(e -> {
+                    mdmClient.updateStatus(e);
+                });
+    }
+
     /**
      * 属性状态转换: status
      * @param status
@@ -477,7 +515,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 2.执行sql
             abstractDbHelper.executeSql(buildStgTableSql, connection);
         }catch (SQLException ex){
-            closeConnection(connection);
 
             // 回写失败信息
             this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_VIW_TABLE.getMsg()

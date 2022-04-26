@@ -34,19 +34,20 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
-        str.append(MARK + "ID int4 NOT NULL,");
-        str.append(MARK + "model_id int4 NULL,");
-        str.append(MARK + "entity_id int4 NULL,");
-        str.append(MARK + "attribute_id int4 NULL,");
-        str.append(MARK + "member_id int4 NULL,");
-        str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
-        str.append(MARK + "version_id int4 NULL,");
-        str.append(MARK + "old_code VARCHAR ( 200 ) NULL,");
-        str.append(MARK + "old_value VARCHAR ( 200 ) NULL,");
-        str.append(MARK + "new_code VARCHAR ( 200 ) NULL,");
-        str.append(MARK + "new_value VARCHAR ( 200 ) NULL,");
-        str.append(this.commonBaseField());
-        str.deleteCharAt(str.length()-1);
+        str.append("ID int4 NOT NULL,");
+        str.append("model_id int4 NULL,");
+        str.append("entity_id int4 NULL,");
+        str.append("attribute_id int4 NULL,");
+        str.append("member_id int4 NULL,");
+        str.append("batch_code VARCHAR ( 100 ) NULL").append(",");
+        str.append("version_id int4 NULL,");
+        str.append("old_code VARCHAR ( 200 ) NULL,");
+        str.append("old_value VARCHAR ( 200 ) NULL,");
+        str.append("new_code VARCHAR ( 200 ) NULL,");
+        str.append("new_value VARCHAR ( 200 ) NULL,");
+        str.append("create_time timestamp(6) NULL").append(",");
+        str.append("create_user varchar(50) NULL").append(",");
+        str.append("del_flag int2 NULL");
         str.append(");");
         return str.toString();
     }
@@ -62,7 +63,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream()
-                .filter(e -> e.getStatus().equals(SUBMITTED.getName()) || e.getStatus().equals(UPDATE.getName()))
+                .filter(Objects::nonNull)
                 .map(e -> {
 
                     String str1 = null;
