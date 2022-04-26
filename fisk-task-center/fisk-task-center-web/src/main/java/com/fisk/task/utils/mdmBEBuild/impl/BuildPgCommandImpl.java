@@ -28,22 +28,23 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     public static final String PUBLIC = "PUBLIC";
     public static final String PRIMARY_TABLE = "a";
+    public static final String MARK ="fidata_";
 
     @Override
     public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
-        str.append("fidata_ID int4 NOT NULL,");
-        str.append("fidata_model_id int4 NULL,");
-        str.append("fidata_entity_id int4 NULL,");
-        str.append("fidata_attribute_id int4 NULL,");
-        str.append("fidata_member_id int4 NULL,");
-        str.append("fidata_batch_id int4 NULL,");
-        str.append("fidata_version_id int4 NULL,");
-        str.append("fidata_old_code VARCHAR ( 200 ) NULL,");
-        str.append("fidata_old_value VARCHAR ( 200 ) NULL,");
-        str.append("fidata_new_code VARCHAR ( 200 ) NULL,");
-        str.append("fidata_new_value VARCHAR ( 200 ) NULL,");
+        str.append(MARK + "ID int4 NOT NULL,");
+        str.append(MARK + "model_id int4 NULL,");
+        str.append(MARK + "entity_id int4 NULL,");
+        str.append(MARK + "attribute_id int4 NULL,");
+        str.append(MARK + "member_id int4 NULL,");
+        str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
+        str.append(MARK + "version_id int4 NULL,");
+        str.append(MARK + "old_code VARCHAR ( 200 ) NULL,");
+        str.append(MARK + "old_value VARCHAR ( 200 ) NULL,");
+        str.append(MARK + "new_code VARCHAR ( 200 ) NULL,");
+        str.append(MARK + "new_value VARCHAR ( 200 ) NULL,");
         str.append(this.commonBaseField());
         str.deleteCharAt(str.length()-1);
         str.append(");");
@@ -61,7 +62,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream()
-                .filter(e -> e.getStatus().equals(INSERT.getName()) || e.getStatus().equals(UPDATE.getName()))
+                .filter(e -> e.getStatus().equals(SUBMITTED.getName()) || e.getStatus().equals(UPDATE.getName()))
                 .map(e -> {
 
                     String str1 = null;
@@ -190,6 +191,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String addColumn(String tableName, String filedName, String filedType) {
+        StringBuilder str = new StringBuilder();
+        str.append("ALTER TABLE ");
+        str.append(PUBLIC + "." + tableName);
+        str.append(" ADD COLUMN " + filedName + " " + filedType);
+        return str.toString();
+    }
+
     /**
      * 存在域字段
      * @param foreignList
@@ -265,13 +275,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingStgTable(){
         StringBuilder str = new StringBuilder();
-        str.append("fidata_id serial NOT NULL").append(",");
-        str.append("fidata_import_type int4 NULL").append(",");
-        str.append("fidata_batch_code VARCHAR ( 100 ) NULL").append(",");
-        str.append("fidata_version_id int4 NULL").append(",");
-        str.append("fidata_error_id int4 NULL").append(",");
-        str.append("fidata_new_code VARCHAR ( 100 ) NULL").append(",");
-        str.append("fidata_status int4 NULL").append(",");
+        str.append(MARK + "id serial NOT NULL").append(",");
+        str.append(MARK + "import_type int4 NULL").append(",");
+        str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
+        str.append(MARK + "version_id int4 NULL").append(",");
+        str.append(MARK + "error_id int4 NULL").append(",");
+        str.append(MARK + "new_code VARCHAR ( 100 ) NULL").append(",");
+        str.append(MARK + "status int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
@@ -283,9 +293,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String splicingMdmTable(){
         StringBuilder str = new StringBuilder();
-        str.append("fidata_id serial NOT NULL").append(",");
-        str.append("fidata_version_id int4 NULL").append(",");
-        str.append("fidata_lock_tag int4 NULL").append(",");
+        str.append(MARK + "id serial NOT NULL").append(",");
+        str.append(MARK + "version_id int4 NULL").append(",");
+        str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
@@ -298,17 +308,17 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String splicingViewTable(boolean isDomain){
         StringBuilder str = new StringBuilder();
         if (isDomain == false){
-            str.append("fidata_id").append(",");
-            str.append("fidata_version_id").append(",");
+            str.append(MARK + "id").append(",");
+            str.append(MARK + "version_id").append(",");
             str.append(this.commonBaseField());
         }else{
-            str.append(PRIMARY_TABLE + "." + "fidata_id").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_version_id").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_create_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_create_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_update_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_update_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + "fidata_del_flag int2 NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "id").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "version_id").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "create_time timestamp(6) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "create_user varchar(50) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_time timestamp(6) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_user varchar(50) NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "del_flag int2 NULL").append(",");
         }
 
         return str.toString();
@@ -320,11 +330,25 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String commonBaseField(){
         StringBuilder str = new StringBuilder();
-        str.append("fidata_create_time timestamp(6) NULL").append(",");
-        str.append("fidata_create_user varchar(50) NULL").append(",");
-        str.append("fidata_update_time timestamp(6) NULL").append(",");
-        str.append("fidata_update_user varchar(50) NULL").append(",");
-        str.append("fidata_del_flag int2 NULL").append(",");
+        str.append(MARK + "create_time timestamp(6) NULL").append(",");
+        str.append(MARK + "create_user varchar(50) NULL").append(",");
+        str.append(MARK + "update_time timestamp(6) NULL").append(",");
+        str.append(MARK + "update_user varchar(50) NULL").append(",");
+        str.append(MARK + "del_flag int2 NULL").append(",");
+        return str.toString();
+    }
+
+    /**
+     * 创建视图基础字段
+     * @return
+     */
+    public String createViw(){
+        StringBuilder str = new StringBuilder();
+        str.append(MARK + "create_time").append(",");
+        str.append(MARK + "create_user").append(",");
+        str.append(MARK + "update_time").append(",");
+        str.append(MARK + "update_user").append(",");
+        str.append(MARK + "del_flag").append(",");
         return str.toString();
     }
 }

@@ -62,4 +62,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String dropViw(String viwName) {
         return null;
     }
+
+    @Override
+    public String addColumn(String tableName, String filedName, String filedType) {
+        return null;
+    }
 }

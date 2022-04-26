@@ -68,4 +68,13 @@ public interface IBuildSqlCommand {
      * @return
      */
     String dropViw(String viwName);
+
+    /**
+     * 添加字段
+     * @param tableName
+     * @param filedName
+     * @param filedType
+     * @return
+     */
+    String addColumn(String tableName,String filedName,String filedType);
 }

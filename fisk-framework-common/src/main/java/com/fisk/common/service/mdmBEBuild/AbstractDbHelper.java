@@ -113,17 +113,9 @@ public class AbstractDbHelper {
         String code = UUID.randomUUID().toString();
         StopWatch stopWatch = new StopWatch();
 
-        try {
-            stopWatch.start();
-            log.info("【execCreate】【" + code + "】执行sql: 【" + sql + "】");
-            statement = connection.createStatement();
-            statement.execute(sql);
-        } catch (SQLException ex) {
-            log.error("【execCreate】【" + code + "】执行sql报错, ex", ex);
-        }finally {
-            closeStatement(statement);
-            stopWatch.stop();
-            log.info("【execCreate】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
-        }
+        stopWatch.start();
+        log.info("【execCreate】【" + code + "】执行sql: 【" + sql + "】");
+        statement = connection.createStatement();
+        statement.execute(sql);
     }
 }
