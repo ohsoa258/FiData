@@ -243,14 +243,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                 if (infoDto.getStatus().equals(INSERT.getName())){
                     // 新增字段
-                    String filedType = null;
-                    switch (infoDto.getDataType()){
-                        case "数值":
-                            filedType = "int4";
-                            break;
-                        default:
-                            filedType = "VARCHAR ( 100 )";
-                    }
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
                     // 1.构建Sql
                     sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + " NULL ");
@@ -258,24 +251,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     abstractDbHelper.executeSql(sql, connection);
                 }else if (infoDto.getStatus().equals(UPDATE.getName())){
                     // 修改字段
-                    String filedType = null;
-                    String filedTypeLength = null;
-                    switch (infoDto.getDataType()){
-                        case "数值":
-                            filedType = "int4";
-                            filedTypeLength = "int4";
-                            break;
-                        default:
-                            filedType = "varchar";
-                            filedTypeLength = "varchar(" + infoDto.getDataTypeLength() + ")";
-                    }
+
+                    String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
                     abstractDbHelper.executeSql(sql, connection);
+                    // todo 字段长度
                     // 2.修改字段长度
-                    sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(), filedTypeLength);
-                    abstractDbHelper.executeSql(sql, connection);
+//                    sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(),filedType, filedTypeLength);
+//                    abstractDbHelper.executeSql(sql, connection);
                 }
 
                 // 3.回写成功状态
@@ -297,6 +282,41 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 this.exceptionAttributeProcess(dtoList);
             }
         }
+    }
+
+    /**
+     * 返回字段类型
+     * @param dataType
+     * @param dataTypeLength
+     * @return
+     */
+    public String getDataType(String dataType,Integer dataTypeLength){
+        if (dataType != null){
+            String filedType = null;
+            switch (dataType){
+                case "域字段":
+                case "数值":
+                    filedType = "int4";
+                    break;
+                case "时间":
+                    filedType = "date";
+                    break;
+                case "浮点型":
+                    filedType = "float4";
+                    break;
+                case "布尔型":
+                    filedType = "bool";
+                    break;
+                case "文本":
+                default:
+                    filedType = "varchar";
+                    filedType = "VARCHAR ( " + dataTypeLength + " )";
+            }
+
+            return filedType;
+        }
+
+        return null;
     }
 
     /**

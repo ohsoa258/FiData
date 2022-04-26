@@ -53,7 +53,7 @@ public interface IBuildSqlCommand {
      * @param type
      * @return
      */
-    String modifyFieldLength(String tableName,String filedName,String type);
+    String modifyFieldLength(String tableName,String filedName,String type,String Typelength);
 
     /**
      * 删除表

@@ -49,7 +49,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String modifyFieldLength(String tableName, String filedName, String type) {
+    public String modifyFieldLength(String tableName, String filedName, String type,String filedType) {
         return null;
     }
 

@@ -118,6 +118,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                         case "浮点型":
                             str1 = name + " float4 " + "NULL";
                             break;
+                        case "布尔型":
+                            str1 = name + " bool " + "NULL";
+                            break;
                         case "文本":
                         default:
                             str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL";
@@ -166,15 +169,18 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String modifyFieldType(String tableName, String filedName, String type) {
         StringBuilder str = new StringBuilder();
-        str.append("alter table ").append(tableName).append(" alter column ").append(filedName);
-        str.append(" type ").append(type).append(" using ").append(filedName).append("::").append(type);
+        str.append("ALTER TABLE " + PUBLIC + "." + tableName);
+        str.append(" alter column " + filedName);
+        str.append(" type " + type + " using " + filedName + "::" + type);
         return str.toString();
     }
 
     @Override
-    public String modifyFieldLength(String tableName, String filedName, String type) {
+    public String modifyFieldLength(String tableName, String filedName, String type,String Typelength) {
         StringBuilder str = new StringBuilder();
-        str.append("alter table ").append(tableName).append(" alter column ").append(filedName).append(" type ").append(type);
+        str.append("ALTER TABLE " + PUBLIC + "." + tableName);
+        str.append(" alter column " + filedName);
+        str.append(" type " + type + "(" + Typelength + ")");
         return str.toString();
     }
 
