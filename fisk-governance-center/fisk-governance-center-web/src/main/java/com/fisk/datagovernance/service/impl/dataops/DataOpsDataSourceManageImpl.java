@@ -327,6 +327,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
             if (CollectionUtils.isNotEmpty(dataOpsSourceVOList)) {
                 String dataOpsSourceJson = JSONArray.toJSON(dataOpsSourceVOList).toString();
+                // 生成目录加 ：
                 redisTemplate.opsForValue().set("DataOps_PGMetaDataEntityKey", dataOpsSourceJson);
                 log.info("setDataOpsDataSource pg元数据信息已写入redis");
             }
