@@ -32,10 +32,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildAttributeLogTable(String tableName) {
+        double d = Math.random();
+        int pk = (int)(d*100);
+
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
         str.append("id serial NOT NULL,");
-        str.append("constraint age primary key(id),");
+        str.append("constraint pk_id" + pk + " primary key(id),");
         str.append("model_id int4 NULL,");
         str.append("entity_id int4 NULL,");
         str.append("attribute_id int4 NULL,");
@@ -335,9 +338,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      * @return
      */
     public String splicingStgTable(){
+        double d = Math.random();
+        int pk = (int)(d*100);
+
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
-        str.append("constraint age primary key(" + MARK + "id)").append(",");
+        str.append("constraint pk_id" + pk + " primary key(" + MARK + "id)").append(",");
         str.append(MARK + "import_type int4 NULL").append(",");
         str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
@@ -354,9 +360,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      * @return
      */
     public String splicingMdmTable(){
+        double d = Math.random();
+        int pk = (int)(d*100);
+
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
-        str.append("constraint age primary key(" + MARK + "id)").append(",");
+        str.append("constraint pk_id"+ pk +" primary key(" + MARK + "id)").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(this.commonBaseField());
