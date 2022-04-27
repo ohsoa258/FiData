@@ -34,7 +34,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildAttributeLogTable(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
-        str.append("ID int4 NOT NULL,");
+        str.append("id serial NOT NULL,");
         str.append("constraint age primary key(id),");
         str.append("model_id int4 NULL,");
         str.append("entity_id int4 NULL,");
