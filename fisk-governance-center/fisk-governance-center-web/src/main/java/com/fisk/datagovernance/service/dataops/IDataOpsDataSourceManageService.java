@@ -17,23 +17,23 @@ import java.util.List;
 public interface IDataOpsDataSourceManageService {
 
     /**
-     * 获取数据运维数据源中的 实例、库、表信息
+     * 获取数据运维数据源中的 实例、库、表、字段信息
      *
      * @return 查询结果
      */
-    ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll();
+    ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource();
 
     /**
-     * 获取数据运维数据源中表字段信息
-     *
-     * @return 查询结果
-     */
-    ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName);
-
-    /**
-     * executeDataOpsSql
+     * 执行sql
      *
      * @return 查询结果
      */
     ResultEntity<ExecuteResultVO> executeDataOpsSql(ExecuteDataOpsSqlDTO dto);
+
+    /**
+     * pg数据库信息同步到redis
+     *
+     * @return 查询结果
+     */
+    Object setDataOpsDataSourceStart();
 }

@@ -88,17 +88,18 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
     }
 
-    @PostMapping("/getDataOpsTableAll")
-    @ApiOperation("获取数据源的实例信息")
-    public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll() {
-        return dataOpsDataSourceManageService.getDataOpsTableAll();
+    @PostMapping("/getDataOpsDataSource")
+    @ApiOperation("获取数据运维数据源信息")
+    public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
+        return dataOpsDataSourceManageService.getDataOpsDataSource();
     }
 
-    @GetMapping("/getDataOpsTableFieldAll")
-    @ApiOperation("获取数据源的表字段信息")
-    public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName) {
-        return dataOpsDataSourceManageService.getDataOpsTableFieldAll(datasourceId, tableName);
+    @PostMapping("/setDataOpsDataSourceStart")
+    @ApiOperation("pg数据库信息同步到redis")
+    public ResultEntity<Object> setDataOpsDataSourceStart() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.setDataOpsDataSourceStart());
     }
+
 
     @PostMapping("/executeDataOpsSql")
     @ApiOperation("执行sql")

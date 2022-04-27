@@ -222,6 +222,9 @@ public enum ResultEnum {
     DATA_OPS_CREATELOG_ERROR(14007, "执行日志保存失败"),
     NO_DATA_TO_SUBMIT(14008,"暂无可提交数据"),
     DATA_SUBMIT_ERROR(14009,"数据提交失败"),
+    PG_METADATA_READREDIS_EXISTS(14010,"redis中未找到pg元数据对应的key"),
+    PG_METADATA_SETREDIS_ERROR(14011,"redis写入pg元数据信息异常"),
+    PG_METADATA_GETREDIS_ERROR(14012,"redis读取pg元数据信息异常"),
 
     /**
      * mdm

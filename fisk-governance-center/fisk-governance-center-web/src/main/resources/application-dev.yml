@@ -2,6 +2,13 @@ dataquality:
   excel:
     # excel保存路径
     path: /root/java/fisk-governance-center/dataquality/excel
+dataops:
+  # pg数据库元数据对应 redis key
+  pg_metadataentity_key: DataOps_PGMetaDataEntityKey
+  # 执行时间 凌晨12点半
+  schedule: 0 0 13 * * ?
+  # 是否启用
+  enabled: true
 spring:
   application:
     name: datagovernance-service

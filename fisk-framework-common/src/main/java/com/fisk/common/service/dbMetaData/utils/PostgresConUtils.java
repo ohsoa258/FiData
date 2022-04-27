@@ -9,7 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dick
@@ -93,14 +95,17 @@ public class PostgresConUtils {
      *
      * @return 返回值
      */
-    public List<TableStructureDTO> getTableColumnList(String url, String user,
-                                                      String password, String driver, String tableName) {
-        List<TableStructureDTO> colNames = null;
+    public Map<String, List<TableStructureDTO>> getTableColumnList(String url, String user,
+                                                                   String password, String driver, List<String> tableNames) {
+        Map<String, List<TableStructureDTO>> map = new IdentityHashMap<>();
         try {
             Class.forName(driver);
             Connection conn = DriverManager.getConnection(url, user, password);
             Statement st = conn.createStatement();
-            colNames = getColNames(st, tableName);
+            for (String tableName : tableNames) {
+                List<TableStructureDTO> colNames = getColNames(st, tableName);
+                map.put(tableName, colNames);
+            }
             st.close();
             conn.close();
         } catch (ClassNotFoundException e) {
@@ -110,7 +115,7 @@ public class PostgresConUtils {
             log.error("【PostgresConUtils/getTableColumnList】建立pg数据库连接异常, ex", e);
             throw new FkException(ResultEnum.PG_READ_FIELD_ERROR);
         }
-        return colNames;
+        return map;
     }
 
 

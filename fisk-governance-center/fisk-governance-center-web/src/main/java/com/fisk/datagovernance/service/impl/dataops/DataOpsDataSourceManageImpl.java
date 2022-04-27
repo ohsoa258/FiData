@@ -17,13 +17,16 @@ import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.vo.dataops.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +72,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     private String pgsqlOdsUsername;
     @Value("${pgsql-ods.password}")
     private String pgsqlOdsPassword;
+    @Value("${dataops.pg_metadataentity_key}")
+    private String pgMetaDataEntityKey;
 
     @Resource
     private DataOpsLogManageImpl dataOpsLogManageImpl;
@@ -76,102 +81,29 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     @Resource
     private UserHelper userHelper;
 
-    @Override
-    public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableAll() {
-        List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
-        // 第一步：读取配置的数据源信息
-        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
-        if (CollectionUtils.isEmpty(postgreDTOList)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsSourceVOList);
-        }
-        // 第二步：读取数据源下的库、表信息
-        PostgresConUtils postgresConUtils = new PostgresConUtils();
-        // 实例信息
-        try {
-            List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
-            for (String conIp : conIps) {
-                DataOpsSourceVO dataOpsSourceVO = null;
-                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = new ArrayList<>();
-                for (PostgreDTO postgreDTO : postgreDTOList) {
-                    if (postgreDTO.getIp().equals(conIp)) {
-                        if (dataOpsSourceVO == null) {
-                            dataOpsSourceVO = new DataOpsSourceVO();
-                            dataOpsSourceVO.setConIp(postgreDTO.getIp());
-                            dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
-                            dataOpsSourceVO.setConPort(postgreDTO.getPort());
-                        }
-                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
-                        // pg数据库信息读取
-                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
-                            List<String>  tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
-                                    postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
-                            if (CollectionUtils.isNotEmpty(tableList)){
-                                for (String tableName:tableList){
-                                    DataOpsDataTableVO dataOpsDataTableVO=new DataOpsDataTableVO();
-                                    dataOpsDataTableVO.setTableName(tableName);
-                                    dataOpsDataTableVO.setDatasourceId(postgreDTO.getId());
-                                    dataOpsDataTableVOList.add(dataOpsDataTableVO);
-                                }
-                            }
-                        }
-                        DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
-                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
-                        dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
-                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
-                        dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
-                    }
-                }
-                dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
-                dataOpsSourceVOList.add(dataOpsSourceVO);
-            }
-        } catch (Exception ex) {
-            log.error("getDataOpsTableAll执行异常：", ex);
-            throw new FkException(ResultEnum.PG_READ_TABLE_ERROR, ex.getMessage());
-        }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsSourceVOList);
-    }
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Override
-    public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsTableFieldAll(int datasourceId, String tableName) {
-        List<DataOpsTableFieldVO> dataOpsTableFieldVOList = new ArrayList<>();
-        if (datasourceId == 0 || tableName == null || tableName.isEmpty()) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, dataOpsTableFieldVOList);
-        }
-        // 第一步：读取配置的数据源信息
-        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
-        if (CollectionUtils.isEmpty(postgreDTOList)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOList);
-        }
-        PostgreDTO postgreDTO = postgreDTOList.stream().filter(t -> t.getId() == datasourceId).findFirst().orElse(null);
-        if (postgreDTO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOList);
-        }
-        // 第二步：读取表的所有字段信息
-        PostgresConUtils postgresConUtils = new PostgresConUtils();
-        // 实例信息
+    public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
+        List<DataOpsSourceVO> list = new ArrayList<>();
         try {
-            List<TableStructureDTO> tableColumnList = null;
-            //pg数据库信息
-            if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
-                tableColumnList = postgresConUtils.getTableColumnList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
-                        postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName(), tableName);
+            Boolean exist = redisTemplate.hasKey(pgMetaDataEntityKey);
+            if (!exist) {
+                setDataOpsDataSourceStart();
             }
-            if (CollectionUtils.isNotEmpty(tableColumnList)) {
-                for (TableStructureDTO tableStructureDTO : tableColumnList) {
-                    DataOpsTableFieldVO tableFieldVO = new DataOpsTableFieldVO();
-                    tableFieldVO.setDatasourceId(postgreDTO.getId());
-                    tableFieldVO.setFieldName(tableStructureDTO.getFieldName());
-                    tableFieldVO.setFieldType(tableStructureDTO.getFieldType());
-                    tableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
-                    tableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-                    dataOpsTableFieldVOList.add(tableFieldVO);
-                }
+            String json = redisTemplate.opsForValue().get(pgMetaDataEntityKey).toString();
+            if (StringUtils.isNotEmpty(json)) {
+                list =  JSONArray.parseArray(json, DataOpsSourceVO.class);
+            }
+            if (CollectionUtils.isNotEmpty(list)) {
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, list);
             }
         } catch (Exception ex) {
-            log.error("getDataOpsTableFieldAll执行异常：", ex);
-            throw new FkException(ResultEnum.PG_READ_FIELD_ERROR, ex.getMessage());
+            log.error("getDataOpsDataSource执行异常：", ex);
+            throw new FkException(ResultEnum.PG_METADATA_GETREDIS_ERROR, ex.getMessage());
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOList);
+        return ResultEntityBuild.buildData(ResultEnum.PG_METADATA_READREDIS_EXISTS, list);
     }
 
     @Override
@@ -317,6 +249,92 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
+    }
+
+    @Override
+    public Object setDataOpsDataSourceStart() {
+        setDataOpsDataSource();
+        return "success";
+    }
+
+    public void setDataOpsDataSource() {
+        log.info("setDataOpsDataSource 开始");
+        List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
+        // 第一步：读取配置的数据源信息
+        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
+        if (CollectionUtils.isEmpty(postgreDTOList)) {
+            log.error("setDataOpsDataSource 数据源配置不存在");
+            return;
+        }
+        // 第二步：读取数据源下的库、表、字段信息
+        PostgresConUtils postgresConUtils = new PostgresConUtils();
+        try {
+            List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
+            for (String conIp : conIps) {
+                DataOpsSourceVO dataOpsSourceVO = null;
+                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = new ArrayList<>();
+                for (PostgreDTO postgreDTO : postgreDTOList) {
+                    if (postgreDTO.getIp().equals(conIp)) {
+                        if (dataOpsSourceVO == null) {
+                            dataOpsSourceVO = new DataOpsSourceVO();
+                            dataOpsSourceVO.setConIp(postgreDTO.getIp());
+                            dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
+                            dataOpsSourceVO.setConPort(postgreDTO.getPort());
+                        }
+                        List<DataOpsDataTableVO> dataOpsDataTableVOList = new ArrayList<>();
+                        // pg数据库信息读取
+                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRE) {
+                            // 表信息
+                            List<String> tableList = postgresConUtils.getTableList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
+                                    postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName());
+                            if (CollectionUtils.isNotEmpty(tableList)) {
+                                // 字段信息
+                                Map<String, List<TableStructureDTO>> tableColumnList = postgresConUtils.getTableColumnList(postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(),
+                                        postgreDTO.getPgsqlPassword(), postgreDTO.getDataSourceTypeEnum().getDriverName(), tableList);
+                                for (String tableName : tableList) {
+                                    DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                                    if (tableColumnList != null && tableColumnList.size() > 0) {
+                                        List<TableStructureDTO> tableStructureDTOS = tableColumnList.get(tableName);
+                                        if (CollectionUtils.isNotEmpty(tableStructureDTOS)) {
+                                            List<DataOpsTableFieldVO> fieldVOList = new ArrayList<>();
+                                            for (TableStructureDTO tableStructureDTO : tableStructureDTOS) {
+                                                DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
+                                                dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
+                                                dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
+                                                dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
+                                                dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+                                                dataOpsTableFieldVO.setDatasourceId(postgreDTO.getId());
+                                                fieldVOList.add(dataOpsTableFieldVO);
+                                            }
+                                            dataOpsDataTableVO.setChildren(fieldVOList);
+                                        }
+                                    }
+                                    dataOpsDataTableVO.setTableName(tableName);
+                                    dataOpsDataTableVO.setDatasourceId(postgreDTO.getId());
+                                    dataOpsDataTableVOList.add(dataOpsDataTableVO);
+                                }
+                            }
+                        }
+                        DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
+                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
+                        dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
+                        dataOpsDataBaseVO.setChildren(dataOpsDataTableVOList);
+                        dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
+                    }
+                }
+                dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
+                dataOpsSourceVOList.add(dataOpsSourceVO);
+            }
+            if (CollectionUtils.isNotEmpty(dataOpsSourceVOList)) {
+                String dataOpsSourceJson = JSONArray.toJSON(dataOpsSourceVOList).toString();
+                redisTemplate.opsForValue().set("DataOps_PGMetaDataEntityKey", dataOpsSourceJson);
+                log.info("setDataOpsDataSource pg元数据信息已写入redis");
+            }
+        } catch (Exception ex) {
+            log.error("setDataOpsDataSource执行异常：", ex);
+        } finally {
+            log.info("setDataOpsDataSource 结束");
+        }
     }
 
     /**
