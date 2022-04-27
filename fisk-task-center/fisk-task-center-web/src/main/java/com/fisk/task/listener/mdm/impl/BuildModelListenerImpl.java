@@ -287,6 +287,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     }else {
                         sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
                     }
+                }else if(infoDto.getStatus().equals("删除待提交")){
+                    // 删除字段
+                    sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
                 }
 
                 // 3.回写成功状态
@@ -545,6 +548,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 return AttributeStatusEnum.INSERT.getValue();
             case "修改待提交":
                 return UPDATE.getValue();
+            case "删除待提交":
+                return AttributeStatusEnum.DELETE.getValue();
             case "已提交":
                 return AttributeStatusEnum.SUBMITTED.getValue();
             default:

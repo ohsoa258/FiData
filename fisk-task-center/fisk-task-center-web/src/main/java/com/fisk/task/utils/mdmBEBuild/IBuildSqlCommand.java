@@ -93,4 +93,12 @@ public interface IBuildSqlCommand {
      * @return
      */
     String nullable(String tableName,String filedName);
+
+    /**
+     * 删除字段
+     * @param tableName
+     * @param filedName
+     * @return
+     */
+    String deleteFiled(String tableName,String filedName);
 }

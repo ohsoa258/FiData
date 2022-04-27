@@ -64,7 +64,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream()
-                .filter(Objects::nonNull)
+                .filter(e -> !e.getStatus().equals("删除待提交"))
                 .map(e -> {
 
                     String str1 = null;
@@ -83,7 +83,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                             str1 = e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
                             break;
                         default:
-                            str1 = e.getName() + " VARCHAR( 200 )" + "NULL";
+                            str1 = e.getName() + " VARCHAR( 200 )" + required;
                             break;
                     }
 
@@ -240,7 +240,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("ALTER TABLE ");
         str.append(PUBLIC + "." + tableName);
         str.append(" ALTER " + filedName + "  set not null ");
-        return null;
+        return str.toString();
     }
 
     @Override
@@ -249,7 +249,16 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("ALTER TABLE ");
         str.append(PUBLIC + "." + tableName);
         str.append(" ALTER " + filedName + "  drop not null ");
-        return null;
+        return str.toString();
+    }
+
+    @Override
+    public String deleteFiled(String tableName, String filedName) {
+        StringBuilder str = new StringBuilder();
+        str.append("ALTER TABLE ");
+        str.append(PUBLIC + "." + tableName);
+        str.append(" drop column if exists ").append(filedName);
+        return str.toString();
     }
 
     /**

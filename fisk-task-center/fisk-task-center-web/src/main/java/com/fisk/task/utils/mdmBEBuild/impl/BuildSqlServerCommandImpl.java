@@ -77,4 +77,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String nullable(String tableName, String filedName) {
         return null;
     }
+
+    @Override
+    public String deleteFiled(String tableName, String filedName) {
+        return null;
+    }
 }
