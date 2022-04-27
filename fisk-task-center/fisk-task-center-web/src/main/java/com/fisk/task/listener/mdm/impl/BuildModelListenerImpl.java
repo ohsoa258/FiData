@@ -21,6 +21,7 @@ import com.fisk.task.utils.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,10 +50,14 @@ import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.*;
 @Slf4j
 public class BuildModelListenerImpl implements BuildModelListener {
 
-    DataSourceTypeEnum type = DataSourceTypeEnum.PG;
-    String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified";
-    String acc = "postgres";
-    String pwd = "Password01!";
+    @Value("${pgsql-mdm.type}")
+    DataSourceTypeEnum type;
+    @Value("${pgsql-mdm.url}")
+    String connectionStr;
+    @Value("${pgsql-mdm.username}")
+    String acc;
+    @Value("${pgsql-mdm.password}")
+    String pwd;
 
     @Resource
     MdmClient mdmClient;
@@ -60,23 +65,26 @@ public class BuildModelListenerImpl implements BuildModelListener {
     @Override
     public void msg(String dataInfo, Acknowledgment acke) {
 
+        String tableName = null;
+        String sql = null;
         try {
             // 获取需要创建的表名
             ModelDTO model = JSON.parseObject(dataInfo, ModelDTO.class);
-            String tableName = model.getAttributeLogName();
+            tableName = model.getAttributeLogName();
 
             // 工厂
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
-            String sql = sqlBuilder.buildAttributeLogTable(tableName);
+            sql = sqlBuilder.buildAttributeLogTable(tableName);
             // 执行sql
             abstractDbHelper.executeSql(sql, connection);
-            log.info("创建属性日志表名SQL:" + sql);
-        } catch (Exception e) {
-            log.error("创建属性日志表名失败,异常信息:" + e);
-            e.printStackTrace();
+            log.info("【创建属性日志表名】:" + tableName + "创建属性日志表名SQL:" + sql);
+        } catch (Exception ex) {
+            log.error("【创建属性日志表名】:" + tableName + "【创建属性日志表名SQL】:" + sql
+                    + "【创建属性日志表名失败,异常信息】:" + ex);
+            ex.printStackTrace();
         } finally {
             acke.acknowledge();
         }
