@@ -70,9 +70,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
             Connection connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+            String sql = sqlBuilder.buildAttributeLogTable(tableName);
             // 执行sql
-            abstractDbHelper.executeSql(sqlBuilder.buildAttributeLogTable(tableName), connection);
-            log.info("创建属性日志表名:" + tableName);
+            abstractDbHelper.executeSql(sql, connection);
+            log.info("创建属性日志表名SQL:" + sql);
         } catch (Exception e) {
             log.error("创建属性日志表名失败,异常信息:" + e);
             e.printStackTrace();
