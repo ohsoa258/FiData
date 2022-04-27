@@ -19,9 +19,10 @@ public enum DataTypeEnum implements BaseEnum {
      */
     TEXT(0, "文本"),
     /**
-     * pag: date
+     * pg: date
+     * yyyy-MM-dd
      */
-    DATE(1, "时间"),
+    DATE(1, "日期"),
     /**
      * pg:int4
      */
@@ -36,6 +37,23 @@ public enum DataTypeEnum implements BaseEnum {
     FLOAT(8, "浮点型"),
 
     BOOL(9,"布尔型"),
+
+    /**
+     * pg: money
+     */
+    CURRENCY(10,"货币"),
+
+    /**
+     * pg: time
+     * HH-mm-ss
+     */
+    TIME(11,"时间"),
+
+    /**
+     * pg: timestamp
+     * yyyy-MM-dd HH-mm-ss
+     */
+    TIMESTAMP(12,"日期时间"),
 
     /**
      * 复杂数据类型

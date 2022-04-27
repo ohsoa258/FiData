@@ -108,6 +108,12 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return DataTypeEnum.FLOAT;
             case 9:
                 return DataTypeEnum.BOOL;
+            case 10:
+                return DataTypeEnum.CURRENCY;
+            case 11:
+                return DataTypeEnum.TIME;
+            case 12:
+                return DataTypeEnum.TIMESTAMP;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
