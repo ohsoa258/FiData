@@ -41,7 +41,7 @@ public enum DataTypeEnum implements BaseEnum {
     /**
      * pg: money
      */
-    CURRENCY(10,"货币"),
+    MONEY(10,"货币"),
 
     /**
      * pg: time

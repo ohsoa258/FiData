@@ -62,7 +62,7 @@ public class AttributeVO extends BaseUserInfoVO {
     private Integer sortWieght;
 
     /**
-     *状态： 0：待新增 ，1：待修改 ， 2：已提交
+     *状态： 0：新增 ，1：修改 ，2:已提交 3：删除
      */
     @ApiModelProperty(value = "状态")
     private String status;

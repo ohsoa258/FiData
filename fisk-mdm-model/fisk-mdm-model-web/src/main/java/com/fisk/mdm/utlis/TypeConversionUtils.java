@@ -55,6 +55,8 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
                 return AttributeStatusEnum.UPDATE;
             case 2:
                 return AttributeStatusEnum.SUBMITTED;
+            case 3:
+                return AttributeStatusEnum.DELETE;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -109,7 +111,7 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
             case 9:
                 return DataTypeEnum.BOOL;
             case 10:
-                return DataTypeEnum.CURRENCY;
+                return DataTypeEnum.MONEY;
             case 11:
                 return DataTypeEnum.TIME;
             case 12:
