@@ -35,6 +35,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
         str.append("ID int4 NOT NULL,");
+        str.append("constraint age primary key(id),");
         str.append("model_id int4 NULL,");
         str.append("entity_id int4 NULL,");
         str.append("attribute_id int4 NULL,");
@@ -68,10 +69,18 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
                     String str1 = null;
 
+                    // 判断是否必填
+                    String required = null;
+                    if (e.getEnableRequired() == true){
+                        required = " NOT NULL ";
+                    }else {
+                        required = " NULL ";
+                    }
+
                     // 判断数据类型
                     switch (e.getDataType()) {
                         case "文本":
-                            str1 = e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL";
+                            str1 = e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
                             break;
                         default:
                             str1 = e.getName() + " VARCHAR( 200 )" + "NULL";
@@ -106,24 +115,42 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
                     String str1 = null;
                     String name = "column_" + entityInfoVo.getId() + "_" + e.getId();
+
+                    // 判断是否必填
+                    String required = null;
+                    if (e.getEnableRequired() == true){
+                        required = " NOT NULL ";
+                    }else {
+                        required = " NULL ";
+                    }
+
                     // 判断数据类型
                     switch (e.getDataType()) {
                         case "数值":
                         case "域字段":
-                            str1 = name + " int4 " + "NULL";
+                            str1 = name + " int4 " + required;
                             break;
                         case "时间":
-                            str1 = name + " date " + "NULL";
+                            str1 = name + " TIME " + required;
+                            break;
+                        case "日期":
+                            str1 = name + " date " + required;
+                            break;
+                        case "日期时间":
+                            str1 = name + " timestamp " + required;
                             break;
                         case "浮点型":
-                            str1 = name + " float4 " + "NULL";
+                            str1 = name + " numeic(12,2) " + required;
                             break;
                         case "布尔型":
-                            str1 = name + " bool " + "NULL";
+                            str1 = name + " bool " + required;
+                            break;
+                        case "货币":
+                            str1 = name + " money " + required;
                             break;
                         case "文本":
                         default:
-                            str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + "NULL";
+                            str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
                             break;
                     }
 
@@ -176,11 +203,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String modifyFieldLength(String tableName, String filedName, String type,String Typelength) {
+    public String modifyFieldLength(String tableName, String filedName, String type) {
         StringBuilder str = new StringBuilder();
         str.append("ALTER TABLE " + PUBLIC + "." + tableName);
         str.append(" alter column " + filedName);
-        str.append(" type " + type + "(" + Typelength + ")");
+        str.append(" type " + type);
         return str.toString();
     }
 
@@ -205,6 +232,24 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(PUBLIC + "." + tableName);
         str.append(" ADD COLUMN " + filedName + " " + filedType);
         return str.toString();
+    }
+
+    @Override
+    public String notNullable(String tableName, String filedName) {
+        StringBuilder str = new StringBuilder();
+        str.append("ALTER TABLE ");
+        str.append(PUBLIC + "." + tableName);
+        str.append(" ALTER " + filedName + "  set not null ");
+        return null;
+    }
+
+    @Override
+    public String nullable(String tableName, String filedName) {
+        StringBuilder str = new StringBuilder();
+        str.append("ALTER TABLE ");
+        str.append(PUBLIC + "." + tableName);
+        str.append(" ALTER " + filedName + "  drop not null ");
+        return null;
     }
 
     /**
@@ -283,6 +328,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String splicingStgTable(){
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
+        str.append("constraint age primary key(" + MARK + "id)").append(",");
         str.append(MARK + "import_type int4 NULL").append(",");
         str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
@@ -301,6 +347,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String splicingMdmTable(){
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
+        str.append("constraint age primary key(" + MARK + "id)").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(this.commonBaseField());

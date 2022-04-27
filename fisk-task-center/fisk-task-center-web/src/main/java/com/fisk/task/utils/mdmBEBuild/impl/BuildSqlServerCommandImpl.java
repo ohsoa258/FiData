@@ -49,7 +49,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String modifyFieldLength(String tableName, String filedName, String type,String filedType) {
+    public String modifyFieldLength(String tableName, String filedName, String type) {
         return null;
     }
 
@@ -65,6 +65,16 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String addColumn(String tableName, String filedName, String filedType) {
+        return null;
+    }
+
+    @Override
+    public String notNullable(String tableName, String filedName) {
+        return null;
+    }
+
+    @Override
+    public String nullable(String tableName, String filedName) {
         return null;
     }
 }

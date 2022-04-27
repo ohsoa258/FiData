@@ -254,22 +254,39 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     // 新增字段
                     String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
+                    // 判断是否必填
+                    String required = null;
+                    Boolean enableRequired = infoDto.getEnableRequired();
+                    if (enableRequired == true){
+                        required = " NOT NULL ";
+                    }else {
+                        required = " NULL ";
+                    }
+
                     // 1.构建Sql
-                    sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + " NULL ");
+                    sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + required);
                     // 1.执行Sql
                     abstractDbHelper.executeSql(sql, connection);
                 }else if (infoDto.getStatus().equals(UPDATE.getName())){
                     // 修改字段
-
                     String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
                     abstractDbHelper.executeSql(sql, connection);
-                    // todo 字段长度
                     // 2.修改字段长度
-//                    sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(),filedType, filedTypeLength);
-//                    abstractDbHelper.executeSql(sql, connection);
+                    if (infoDto.getDataType().equals("文本")){
+                        sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(),filedType);
+                        abstractDbHelper.executeSql(sql, connection);
+                    }
+
+                    // 3.修改字段是否必填
+                    Boolean enableRequired = infoDto.getEnableRequired();
+                    if (enableRequired == true){
+                        sql = sqlBuilder.notNullable(tableName, infoDto.getColumnName());
+                    }else {
+                        sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
+                    }
                 }
 
                 // 3.回写成功状态
@@ -308,17 +325,25 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     filedType = "int4";
                     break;
                 case "时间":
+                    filedType = "TIME";
+                    break;
+                case "日期":
                     filedType = "date";
                     break;
+                case "日期时间":
+                    filedType = "timestamp";
+                    break;
                 case "浮点型":
-                    filedType = "float4";
+                    filedType = "numeic(12,2)";
                     break;
                 case "布尔型":
                     filedType = "bool";
                     break;
+                case "货币":
+                    filedType = "money";
+                    break;
                 case "文本":
                 default:
-                    filedType = "varchar";
                     filedType = "VARCHAR ( " + dataTypeLength + " )";
             }
 

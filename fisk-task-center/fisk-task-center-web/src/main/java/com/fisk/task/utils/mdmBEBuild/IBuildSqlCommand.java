@@ -53,7 +53,7 @@ public interface IBuildSqlCommand {
      * @param type
      * @return
      */
-    String modifyFieldLength(String tableName,String filedName,String type,String Typelength);
+    String modifyFieldLength(String tableName,String filedName,String type);
 
     /**
      * 删除表
@@ -77,4 +77,20 @@ public interface IBuildSqlCommand {
      * @return
      */
     String addColumn(String tableName,String filedName,String filedType);
+
+    /**
+     * 设置字段不可为空
+     * @param tableName
+     * @param filedName
+     * @return
+     */
+    String notNullable(String tableName,String filedName);
+
+    /**
+     * 设置字段可为空
+     * @param tableName
+     * @param filedName
+     * @return
+     */
+    String nullable(String tableName,String filedName);
 }
