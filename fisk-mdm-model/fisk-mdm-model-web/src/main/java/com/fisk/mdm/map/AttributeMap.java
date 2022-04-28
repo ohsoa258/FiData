@@ -8,6 +8,7 @@ import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.mapstruct.Mapper;
@@ -137,6 +138,14 @@ public interface AttributeMap {
      * @return {@link List}<{@link AttributeInfoDTO}>
      */
     List<AttributeInfoDTO> poToVoList(List<AttributePO> po);
+
+    /**
+     * po => ColumnVo
+     *
+     * @param po po
+     * @return {@link List}<{@link AttributeColumnVO}>
+     */
+    List<AttributeColumnVO> poToColumnVoList(List<AttributePO> po);
 }
 
 

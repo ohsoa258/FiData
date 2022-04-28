@@ -1,6 +1,6 @@
 package com.fisk.mdm.vo.resultObject;
 
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import lombok.Data;
 
 import java.util.List;
@@ -14,6 +14,6 @@ import java.util.Map;
  */
 @Data
 public class ResultObjectVO {
-    private List<AttributeInfoDTO> attributeInfoDTOList;
+    private List<AttributeColumnVO> attributeColumnVoList;
     private List<Map<String,Object>> resultData;
 }

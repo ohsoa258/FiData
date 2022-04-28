@@ -1,13 +1,17 @@
 package com.fisk.mdm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.mapper.MasterDataMapper;
+import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.map.AttributeMap;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -27,11 +31,12 @@ import java.util.*;
 @Slf4j
 @Service
 public class MasterDataServiceImpl implements IMasterDataService {
-    @Resource
-    MasterDataMapper mapper;
 
     @Resource
     EntityService entityService;
+
+    @Resource
+    AttributeMapper attributeMapper;
 
     String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified";
     String acc = "postgres";
@@ -64,18 +69,33 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId){
 
+        if(entityId == null || modelVersionId == null){
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS,ResultEnum.DATA_NOTEXISTS.getMsg());
+        }
+
+        //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
+
         //获得主数据表名
         String tableName = "viw_"+entityService.getDataById(entityId).getModelId()+"_"+entityId;
 
-        //获取属性集合
-        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entityId).getAttributeList();
-        resultObjectVO.setAttributeInfoDTOList(attributeList);
+        //查询该实体下已提交的属性
+        QueryWrapper<AttributePO> attributeColumnWrapper = new QueryWrapper<>();
+        attributeColumnWrapper.lambda().eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
+                .eq(AttributePO::getEntityId,entityId);
+        List<AttributePO> attributePoList = attributeMapper.selectList(attributeColumnWrapper);
+        if(attributePoList.isEmpty()){
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS,ResultEnum.DATA_NOTEXISTS.getMsg());
+        }
+
+        //将查询到的属性集合添加装入结果对象
+        List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.poToColumnVoList(attributePoList);
+        resultObjectVO.setAttributeColumnVoList(attributeColumnVoList);
 
         //获得业务字段名
         List<String> list = new ArrayList<>();
-        for (AttributeInfoDTO attributeInfoDTO:attributeList){
-            list.add(attributeInfoDTO.getName());
+        for (AttributeColumnVO attributeColumnVo:attributeColumnVoList){
+            list.add(attributeColumnVo.getName());
         }
         String businessColumnName = StringUtils.join(list, ",");
 
@@ -83,21 +103,38 @@ public class MasterDataServiceImpl implements IMasterDataService {
         String sql = "select "+ businessColumnName + systemColumnName  + " from "+tableName + " view " +
                 "where fidata_del_flag = 1 and fidata_version_id = " + modelVersionId;
 
-        //准备返回的主数据
+        //准备主数据集合
         List<Map<String,Object>> data = new ArrayList<>();
 
         try {
+            //获得工厂
             Connection connection = getConnection();
-            ResultSet resultSet = executeSelectSql(sql, connection);
+            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            //执行sql，获得结果集
+            log.info("执行sql: 【" + sql + "】");
+            ResultSet resultSet = statement.executeQuery(sql);
+            //判断结果集是否为空
+            if(!resultSet.next()){
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS,ResultEnum.DATA_NOTEXISTS.getMsg());
+            }
+            //获取结果集的结构信息
             ResultSetMetaData metaData = resultSet.getMetaData();
+            //重置结果集游标，遍历结果集，取出数据
+            resultSet.beforeFirst();
             while (resultSet.next()){
+                //用map接收对象
                 Map<String,Object> map = new HashMap<>();
+                //遍历每一行数据，取出每一个字段名与其对应值
                 for (int i = 1 ; i <=metaData.getColumnCount() ; i++){
                     map.put(metaData.getColumnName(i),resultSet.getString(metaData.getColumnName(i)));
                 }
+                //将接收到的对象放入主数据集合中
                 data.add(map);
             }
+            //将主数据集合添加装入结果对象
             resultObjectVO.setResultData(data);
+            //释放资源
+            release(resultSet,statement,connection);
             return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
 
         } catch (Exception e) {
