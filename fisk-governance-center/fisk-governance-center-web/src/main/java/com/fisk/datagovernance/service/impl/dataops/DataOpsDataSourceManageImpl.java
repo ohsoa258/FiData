@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-@Component
 public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageService {
 
     @Value("${pgsql-dw.id}")
@@ -196,7 +195,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 // 执行 INSERT、UPDATE、DELETE 将返回受影响行数
                 affectedCount = st.getUpdateCount();
                 log.debug("executeDataOpsSql affectedCount:" + affectedCount);
-                if (affectedCount < 0) {
+                if (affectedCount == -1) {
                     // 如果返回的结果是一个结果集对象或没有更多结果，则返回-1。小于0默认未返回结果
                     // TRUNCATE、DROP、CREATE、ALTER 返回为-1，也就说明未返回结果
                     executeResultVO.setExecuteType(3);
