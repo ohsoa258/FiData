@@ -143,7 +143,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                             str1 = name + " timestamp " + required;
                             break;
                         case "浮点型":
-                            str1 = name + " numeic(12,2) " + required;
+                            str1 = name + " numeric(12,2) " + required;
                             break;
                         case "布尔型":
                             str1 = name + " bool " + required;
