@@ -39,7 +39,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
     String acc = "postgres";
     String pwd = "Password01!";
 
-    //系统字段
+    /**
+     * 系统字段
+     */
     String systemColumnName = ",fidata_id," +
             "fidata_version_id," +
             "fidata_create_time," +
@@ -78,7 +80,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param entityId 实体id
      */
     @Override
-    public ResultObjectVO getAll(Integer entityId){
+    public ResultObjectVO getAll(Integer entityId,Integer modelVersionId){
 
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         //获得主数据表名
@@ -96,7 +98,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
         String businessColumnName = StringUtils.join(list, ",");
 
         //拼接sql语句
-        String sql = "select "+ businessColumnName + systemColumnName  + " from "+tableName +" view";
+        String sql = "select "+ businessColumnName + systemColumnName  + " from "+tableName + " view " +
+                "where fidata_del_flag = 1 and fidata_version_id = " + modelVersionId;
 
         //准备返回的主数据
         List<Map<String,Object>> data = new ArrayList<>();

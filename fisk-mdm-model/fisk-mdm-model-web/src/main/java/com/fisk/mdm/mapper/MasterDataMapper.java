@@ -16,19 +16,5 @@ import java.util.Map;
  */
 @Mapper
 public interface MasterDataMapper {
-    /**
-     * 根据code查询主数据
-     *
-     * @param tableName  表名
-     * @param columnName 列名
-     * @param code       查询条件
-     * @return {@link Map}<{@link String}, {@link Object}>
-     */
-    @Select("select #{columnName} from #{tableName} where code = #{code}")
-    Map<String,Object> getByCode(@Param(value = "tableName")String tableName,
-                                 @Param(value = "columnName")String columnName,
-                                 @Param(value = "code")Integer code);
 
-
-    Page<Map<String,Object>> getAll();
 }

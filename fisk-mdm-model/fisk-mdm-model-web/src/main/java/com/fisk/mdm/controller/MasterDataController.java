@@ -33,8 +33,8 @@ public class MasterDataController {
 
     @ApiOperation("分页查询所有model")
     @PostMapping("/list")
-    public ResultObjectVO getAll(Integer id) {
-        return service.getAll(id);
+    public ResultObjectVO getAll(Integer entityId ,Integer modelVersionId) {
+        return service.getAll(entityId ,modelVersionId);
     }
 
 }
