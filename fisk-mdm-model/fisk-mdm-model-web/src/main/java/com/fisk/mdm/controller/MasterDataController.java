@@ -1,20 +1,12 @@
 package com.fisk.mdm.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
+
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.service.IMasterDataService;
-import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -32,7 +24,7 @@ public class MasterDataController {
     private IMasterDataService service;
 
     @ApiOperation("分页查询所有model")
-    @PostMapping("/list")
+    @GetMapping("/list")
     public ResultObjectVO getAll(Integer entityId ,Integer modelVersionId) {
         return service.getAll(entityId ,modelVersionId);
     }
