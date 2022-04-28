@@ -20,12 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -94,7 +96,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
             String json = redisTemplate.opsForValue().get(pgMetaDataEntityKey).toString();
             if (StringUtils.isNotEmpty(json)) {
-                list =  JSONArray.parseArray(json, DataOpsSourceVO.class);
+                list = JSONArray.parseArray(json, DataOpsSourceVO.class);
             }
             if (CollectionUtils.isNotEmpty(list)) {
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, list);
@@ -139,10 +141,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     postgreDTO.getPgsqlUrl(), postgreDTO.getPgsqlUsername(), postgreDTO.getPgsqlPassword());
             st = conn.createStatement();
             assert st != null;
-            // 返回值为true时，表示执行的是查询语句，可以通过st.getResultSet方法获取结果；
-            // 返回值为false时，执行的是更新语句或DDL语句，st.getUpdateCount方法获取更新的记录数量。
-            // 查询时，不能有多个结果集，也就是sql中不能有多个查询结果，否则会直接抛出异常
-            // 修改时，允许新增、修改一起出现，但只会返回第一条sql受影响的行数
+           /*
+           * QL语言包括四种主要程序设计语言类别的语句：
+            数据定义语言(DDL)，数据操作语言(DML)，数据控制语言(DCL)和事务控制语言（TCL）。
+            主要的DDL动词：CREATE（创建）、DROP（删除）、ALTER（修改）、TRUNCATE（截断）、RENAME（重命名）
+            DML主要指数据的增删查改: SELECT、DELETE、UPDATE、INSERT、CALL(执行存储过程)
+           * */
             boolean execute = st.execute(dto.executeSql);
             if (execute) {
                 executeResultVO.setExecuteType(1);
@@ -190,16 +194,22 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     executeResultVO.setDataOpsTableFieldVO(dataOpsTableFieldVOList);
                 }
             } else {
-                executeResultVO.setExecuteType(2);
-                // 执行 INSERT、UPDATE、DELETE 将返回受影响行数
                 affectedCount = st.getUpdateCount();
-                if (affectedCount < 0) {
-                    // 如果返回的结果是一个结果集对象或没有更多结果，则返回-1。小于0默认未返回结果
-                    // TRUNCATE、DROP、CREATE、ALTER 返回为-1，也就说明未返回结果
-                    executeResultVO.setExecuteType(3);
-                }
-                executeResultVO.setAffectedCount(affectedCount);
+                executeResultVO.setExecuteType(2);
                 executeResultVO.setExecuteState(true);
+                executeResultVO.setAffectedCount(affectedCount);
+                if (dto.executeSql.toUpperCase().contains("CREATE")
+                        || dto.executeSql.toUpperCase().contains("DROP")
+                        || dto.executeSql.toUpperCase().contains("ALTER")
+                        || dto.executeSql.toUpperCase().contains("TRUNCATE")
+                        || dto.executeSql.toUpperCase().contains("RENAME")
+                ) {
+                    executeResultVO.setExecuteType(3);
+                    if (affectedCount == -1) {
+                        // 为-1时表示失败
+                        executeResultVO.setExecuteState(false);
+                    }
+                }
             }
         } catch (Exception ex) {
             executeResult = ResultEnum.ERROR;
