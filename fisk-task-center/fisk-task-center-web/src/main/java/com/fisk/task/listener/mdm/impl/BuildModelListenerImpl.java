@@ -671,8 +671,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     String alias = PRIMARY_TABLE + amount1.incrementAndGet();
                     String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId() + " " + alias;
-                    String on = " ON " + PRIMARY_TABLE + "." + "version_id" + " = " + alias + ".version_id" +
-                            " AND " + PRIMARY_TABLE + "." + data.getColumnName() + " = " + alias + ".id";
+                    String on = " ON " + PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id" +
+                            " AND " + PRIMARY_TABLE + "." + data.getColumnName() + " = " + alias + "." + MARK +"id";
                     String str1 = tableName + " " + on;
                     return str1;
                 }).collect(Collectors.joining(" LEFT JOIN "));
@@ -730,9 +730,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
         if (isDomain == false){
             str.append(MARK + "id").append(",");
             str.append(MARK + "version_id").append(",");
+            str.append(MARK + "lock_tag").append(",");
         }else{
             str.append(PRIMARY_TABLE + "." + MARK + "id").append(",");
             str.append(PRIMARY_TABLE + "." + MARK + "version_id").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "lock_tag").append(",");
         }
         return str.toString();
     }

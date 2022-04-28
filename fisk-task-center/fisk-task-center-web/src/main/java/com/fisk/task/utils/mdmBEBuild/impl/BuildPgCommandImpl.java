@@ -384,13 +384,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             str.append(MARK + "version_id").append(",");
             str.append(this.commonBaseField());
         }else{
-            str.append(PRIMARY_TABLE + "." + MARK + "id").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "version_id").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "create_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "create_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "update_time timestamp(6) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "update_user varchar(50) NULL").append(",");
-            str.append(PRIMARY_TABLE + "." + MARK + "del_flag int2 NULL").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "create_time").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "create_user").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_time").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "update_user").append(",");
+            str.append(PRIMARY_TABLE + "." + MARK + "del_flag");
         }
 
         return str.toString();
