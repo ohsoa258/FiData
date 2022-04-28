@@ -117,9 +117,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             }
             //查询出该实体下的code属性
             QueryWrapper<AttributePO> codeAttributeWrapper = new QueryWrapper<>();
-            codeAttributeWrapper.eq("name","code")
-                    .eq("entity_id",entityVo.getId())
-                    .last("limit 1");
+            codeAttributeWrapper.lambda()
+                    .eq(AttributePO::getEntityId,attributeDTO.getDomainId())
+                    .eq(AttributePO::getName,"code");
             AttributePO codeAttribute = baseMapper.selectOne(codeAttributeWrapper);
             if(codeAttribute == null){
                 return ResultEnum.SAVE_DATA_ERROR;
