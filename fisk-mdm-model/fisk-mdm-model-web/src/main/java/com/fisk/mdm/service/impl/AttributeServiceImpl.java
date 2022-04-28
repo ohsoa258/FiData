@@ -1,6 +1,7 @@
 package com.fisk.mdm.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -95,7 +96,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             attributePO.setDataTypeDecimalLength(null);
         }
 
-        //若数据类型不为布尔或文本，数据长度设置为null
+        //若数据类型不为浮点型或文本，数据长度设置为null
         if (attributePO.getDataType() != DataTypeEnum.TEXT &&
                 attributePO.getDataType() != DataTypeEnum.FLOAT){
             attributePO.setDataTypeLength(null);
@@ -123,10 +124,10 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      */
     @Override
     public ResultEnum editData(AttributeUpdateDTO attributeUpdateDTO) {
-        AttributePO attributePO = baseMapper.selectById(attributeUpdateDTO.getId());
+        AttributePO attributePo = baseMapper.selectById(attributeUpdateDTO.getId());
 
         //判断数据是否存在
-        if (attributePO == null) {
+        if (attributePo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -141,36 +142,39 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         //维护历史的状态字段，防止保持状态为新增失效
-        if(!Objects.isNull(attributePO.getStatus())) {
-            attributeUpdateDTO.setStatus(attributePO.getStatus().getValue());
+        if(!Objects.isNull(attributePo.getStatus())) {
+            attributeUpdateDTO.setStatus(attributePo.getStatus().getValue());
         }
 
         //把DTO转化到查询出来的PO上
-        attributePO = AttributeMap.INSTANCES.updateDtoToPo(attributeUpdateDTO);
+        attributePo = AttributeMap.INSTANCES.updateDtoToPo(attributeUpdateDTO);
 
         //如果历史的状态是新增,保持状态为新增
-        attributePO.setStatus(attributePO.getStatus() == AttributeStatusEnum.INSERT ?
+        attributePo.setStatus(attributePo.getStatus() == AttributeStatusEnum.INSERT ?
                 AttributeStatusEnum.INSERT : AttributeStatusEnum.UPDATE);
 
+
+        LambdaUpdateWrapper<AttributePO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AttributePO::getId,attributePo.getId());
         //若修改后数据类型不为浮点型，将数据小数点长度修改为null
-        if(!Objects.isNull(attributePO.getDataType()) && attributePO.getDataType() != DataTypeEnum.FLOAT){
-            attributeUpdateDTO.setDataTypeDecimalLength(null);
+        if(!Objects.isNull(attributePo.getDataType()) && attributePo.getDataType() != DataTypeEnum.FLOAT){
+            updateWrapper.set(AttributePO::getDataTypeDecimalLength,null);
         }
 
-        //若数据类型不为布尔或文本，数据长度设置为null
-        if (attributePO.getDataType() != DataTypeEnum.TEXT &&
-                attributePO.getDataType() != DataTypeEnum.FLOAT){
-            attributePO.setDataTypeLength(null);
+        //若数据类型不为浮点型或文本，数据长度设置为null
+        if (attributePo.getDataType() != DataTypeEnum.TEXT &&
+                attributePo.getDataType() != DataTypeEnum.FLOAT){
+            updateWrapper.set(AttributePO::getDataTypeLength,null);
         }
 
         //修改数据
-        if (baseMapper.updateById(attributePO) <= 0) {
+        if (baseMapper.update(attributePo,updateWrapper) <= 0) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 
         // 记录日志
         String desc = "修改一个属性,id:" + attributeUpdateDTO.getId();
-        logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.UPDATE, desc);
+        logService.saveEventLog((int) attributePo.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.UPDATE, desc);
 
         //添加成功
         return ResultEnum.SUCCESS;
