@@ -25,6 +25,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityMsgVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -80,37 +81,61 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Override
     public ResultEnum addData(AttributeDTO attributeDTO) {
 
+        if (attributeDTO.getEntityId() == null){
+            return ResultEnum.PARAMTER_ERROR;
+        }
+
         //判断同实体下是否存在重复名称
-        QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("name", attributeDTO.getName())
-                .eq("entity_id", attributeDTO.getEntityId());
-        if (baseMapper.selectOne(wrapper) != null) {
+        QueryWrapper<AttributePO> attributeWrapper = new QueryWrapper<>();
+        attributeWrapper.eq("name", attributeDTO.getName())
+                .eq("entity_id", attributeDTO.getEntityId())
+                .last("limit 1");
+        if (baseMapper.selectOne(attributeWrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
 
         //转换数据
-        AttributePO attributePO = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
+        AttributePO attributePo = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
 
         //若数据不为浮点型，设置精度为null
-        if(attributePO.getDataType() != DataTypeEnum.FLOAT){
-            attributePO.setDataTypeDecimalLength(null);
+        if(attributePo.getDataType() != DataTypeEnum.FLOAT){
+            attributePo.setDataTypeDecimalLength(null);
         }
 
         //若数据类型不为浮点型或文本，数据长度设置为null
-        if (attributePO.getDataType() != DataTypeEnum.TEXT &&
-                attributePO.getDataType() != DataTypeEnum.FLOAT){
-            attributePO.setDataTypeLength(null);
+        if (attributePo.getDataType() != DataTypeEnum.TEXT &&
+                attributePo.getDataType() != DataTypeEnum.FLOAT){
+            attributePo.setDataTypeLength(null);
+        }
+
+        //若数据类型为“域字段”类型，维护“域字段id”字段
+        if(attributePo.getDataType() == DataTypeEnum.DOMAIN){
+            //查询出该属性属于哪个实体
+            EntityVO entityVo = entityService.getDataById(attributePo.getEntityId());
+            if(entityVo == null){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //查询出该实体下的code属性
+            QueryWrapper<AttributePO> codeAttributeWrapper = new QueryWrapper<>();
+            codeAttributeWrapper.eq("name","code")
+                    .eq("entity_id",entityVo.getId())
+                    .last("limit 1");
+            AttributePO codeAttribute = baseMapper.selectOne(codeAttributeWrapper);
+            if(codeAttribute == null){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            attributePo.setDomainId((int)codeAttribute.getId());
         }
 
         //添加数据
-        attributePO.setStatus(AttributeStatusEnum.INSERT);
-        if (baseMapper.insert(attributePO) <= 0) {
+        attributePo.setStatus(AttributeStatusEnum.INSERT);
+        if (baseMapper.insert(attributePo) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 记录日志
-        String desc = "新增一个属性,id:" + attributePO.getId();
-        logService.saveEventLog((int) attributePO.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE, desc);
+        String desc = "新增一个属性,id:" + attributePo.getId();
+        logService.saveEventLog((int) attributePo.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.SAVE, desc);
 
         //创建成功
         return ResultEnum.SUCCESS;
@@ -165,6 +190,26 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (attributePo.getDataType() != DataTypeEnum.TEXT &&
                 attributePo.getDataType() != DataTypeEnum.FLOAT){
             updateWrapper.set(AttributePO::getDataTypeLength,null);
+        }
+
+        //若数据类型为“域字段”类型，维护“域字段id”字段
+        if(attributePo.getDataType() == DataTypeEnum.DOMAIN){
+            //查询出该属性属于哪个实体
+            EntityVO entityVo = entityService.getDataById(attributePo.getEntityId());
+            if(entityVo == null){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //查询出该实体下的code属性
+            QueryWrapper<AttributePO> codeAttributeWrapper = new QueryWrapper<>();
+            codeAttributeWrapper.eq("name","code")
+                    .eq("entity_id",entityVo.getId())
+                    .last("limit 1");
+            AttributePO codeAttribute = baseMapper.selectOne(codeAttributeWrapper);
+            if(codeAttribute == null){
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+            //“域字段id”赋值为同实体下code属性的id
+            attributePo.setDomainId((int)codeAttribute.getId());
         }
 
         //修改数据
