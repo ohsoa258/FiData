@@ -64,13 +64,13 @@ public class AttributePO extends BasePO {
     /**
      * 数据类型长度
      */
-    @TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED)
+    //@TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED)
     private Integer dataTypeLength;
 
     /**
      * 数据类型小数点长度
      */
-    @TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED)
+    //@TableField(insertStrategy = FieldStrategy.IGNORED,updateStrategy = FieldStrategy.IGNORED)
     private Integer dataTypeDecimalLength;
 
     /**
