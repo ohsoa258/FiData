@@ -12,12 +12,6 @@ import lombok.Data;
 @Data
 public class DataOpsTableFieldVO {
     /**
-     * 数据源id
-     */
-    @ApiModelProperty(value = "数据源id")
-    public int datasourceId;
-
-    /**
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")

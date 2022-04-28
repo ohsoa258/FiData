@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.office.excel.ExcelUtil;
+import com.fisk.common.core.utils.similarity.CosineSimilarity;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
@@ -21,20 +22,20 @@ import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.DataQualityResponseVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.SimilarityResultVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author dick
@@ -60,6 +61,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     DataCheckMapper dataCheckMapper;
+
+    @Resource
+    SimilarityExtendMapper similarityExtendMapper;
 
     @Resource
     DataCheckManageImpl dataCheckManageImpl;
@@ -338,8 +342,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             List<Map<String, Object>> mapList = resultSetToMap(dataSourceConPO, dataCheckPO.getModuleRule(), TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE);
             if (mapList != null && mapList.size() > 0 && excelPath != null && !excelPath.isEmpty()) {
                 // 发送校验附件保存，发送校验报告（含附件）
-                String fileName = "业务验证模板执行结果.xlsx";
+                String uuid = UUID.randomUUID().toString().replace("-", "").toLowerCase();
+                String fileName = String.format("业务验证模板执行结果_%s.xlsx", uuid);
                 String filePaht = excelPath + File.separator + "businessCheckFile";
+                log.info("buildBusinessCheckRule 业务验证模板生成的附件名称：" + fileName);
+                log.info("buildBusinessCheckRule 业务验证模板生成附件的地址：" + filePaht);
                 result = sendNotice(dataCheckPO.getTemplateId(), dataCheckPO.getId(),
                         dataCheckPO.getCreateUser(), TemplateTypeEnum.BUSINESS_CHECK_TEMPLATE, fileName, filePaht, mapList);
             }
@@ -354,7 +361,42 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Override
     public ResultEntity<Object> buildSimilarityRule(DataQualityRequestDTO requestDTO) {
-        return null;
+        ResultEntity<Object> result = null;
+        try {
+            ResultEntity<DataQualityPO> dataQualityPOResultEntity = verification(requestDTO, TemplateTypeEnum.SIMILARITY_TEMPLATE);
+            if (dataQualityPOResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                result.setCode(dataQualityPOResultEntity.getCode());
+                result.setMsg(dataQualityPOResultEntity.getData().getMsgBody());
+                return result;
+            }
+            DataCheckPO dataCheckPO = dataQualityPOResultEntity.getData().getDataCheckPO();
+            DataSourceConPO dataSourceConPO = dataQualityPOResultEntity.data.getDataSourceConPO();
+            QueryWrapper<SimilarityExtendPO> similarityExtendPOQueryWrapper = new QueryWrapper<>();
+            similarityExtendPOQueryWrapper.lambda().eq(SimilarityExtendPO::getDelFlag, 1)
+                    .eq(SimilarityExtendPO::getDatacheckId, dataSourceConPO.getId());
+            List<SimilarityExtendPO> similarityExtendPOS = similarityExtendMapper.selectList(similarityExtendPOQueryWrapper);
+            if (CollectionUtils.isEmpty(similarityExtendPOS)) {
+                result.setCode(ResultEnum.DATA_QUALITY_SCHEDULE_TASK_FAIL.getCode());
+                result.setMsg("相似度模板规则已消费，未配置相似度字段");
+                return result;
+            }
+            // 读取校验结果
+            Map<Long, List<SimilarityResultVO>> mapList = resultSetToSimilarityVo(dataSourceConPO, dataCheckPO.getModuleRule(), TemplateTypeEnum.SIMILARITY_TEMPLATE);
+            if (mapList != null && mapList.size() > 0 && excelPath != null && !excelPath.isEmpty()) {
+                // 发送校验附件保存，发送校验报告（含附件）
+                String uuid = UUID.randomUUID().toString().replace("-", "").toLowerCase();
+                String fileName = String.format("相似度模板执行结果_%s.xlsx", uuid);
+                String filePaht = excelPath + File.separator + "similarityFile";
+                log.info("buildBusinessCheckRule 相似度模板生成的附件名称：" + fileName);
+                log.info("buildBusinessCheckRule 相似度模板生成附件的地址：" + filePaht);
+            }
+        } catch (Exception ex) {
+            log.error("buildSimilarityRule消费时触发异常，请求参数:", String.format("模板类型：相似度模板，id：%s，templateModulesType:%s",
+                    requestDTO.getId(), requestDTO.getTemplateModulesType().getName()));
+            log.error("buildSimilarityRule消费时触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.ERROR, "【相似度模板】：" + ex);
+        }
+        return result;
     }
 
     @Override
@@ -566,6 +608,51 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     /**
+     * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
+     * @description 相似度结果
+     * @author dick
+     * @date 2022/4/27 23:02
+     * @version v1.0
+     * @params dataList
+     * @params similarityExtendPOS
+     */
+    public List<Map<String, Object>> checkSimilarityResult(Map<Long, List<SimilarityResultVO>> dataList, List<SimilarityExtendPO> similarityExtendPOS) {
+        List<Map<String, Object>> maps = new ArrayList<>();
+        if (dataList == null || dataList.size() <= 0 || CollectionUtils.isEmpty(similarityExtendPOS)) {
+            return maps;
+        }
+        Map<Long, List<SimilarityResultVO>> dataList_next = new IdentityHashMap<>();
+        dataList_next = dataList;
+
+        for (Map.Entry<Long, List<SimilarityResultVO>> list : dataList.entrySet()) {
+            long rowIndex = list.getKey();
+            List<SimilarityResultVO> similarityResult = list.getValue();
+            for (SimilarityResultVO row : similarityResult) {
+                String fieldName = row.fieldName;
+                String fieldValue = row.fieldValue != null ? row.fieldValue.toString() : "";
+                SimilarityExtendPO similarityExtendPO = similarityExtendPOS.stream().filter(f -> f.fieldName.equals(fieldName)).findFirst().orElse(null);
+                if (similarityExtendPO != null) {
+                    row.scale = similarityExtendPO.getScale();
+                }
+                for (Map.Entry<Long, List<SimilarityResultVO>> list_next : dataList_next.entrySet()) {
+                    long rowIndex_next = list.getKey();
+                    if (rowIndex == rowIndex_next)
+                        continue; // 当前行为本身，跳过
+                    List<SimilarityResultVO> similarityResult_next = list_next.getValue();
+                    SimilarityResultVO similarityResultVO = similarityResult_next.stream().filter(t -> t.fieldName.equals(fieldName)).findFirst().orElse(null);
+                    if (similarityResultVO != null) {
+                        String fieldValue_next = similarityResultVO.fieldValue != null ? similarityResultVO.fieldValue.toString() : "";
+                        double similarity = CosineSimilarity.getSimilarity(fieldValue, fieldValue_next);
+                        row.similaritValue = similarity;
+                    }
+                }
+            }
+        }
+        return maps;
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
      * @description 冻结表
      * @author dick
      * @date 2022/4/25 13:34
@@ -573,7 +660,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataSourceConPO
      * @params lifecyclePO
      * @params templateTypeEnum
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
      */
     public ResultEntity<Object> frozenTable(DataSourceConPO dataSourceConPO, LifecyclePO lifecyclePO, TemplateTypeEnum templateTypeEnum) {
         ResultEntity<Object> result = new ResultEntity<>();
@@ -751,6 +837,70 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             log.error("resultSetToJsonArray触发异常，请求参数:", String.format("模板类型：%s，数据源id:%s，数据源类型：%s，连接字符串：%s，sql：%s",
                     templateTypeEnum.getName(), dataSourceConPO.getId(), dataSourceConPO.getConType(), dataSourceConPO.getConStr(), sql));
             log.error("resultSetToJsonArray触发异常，详细报错:", ex);
+            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
+        } finally {
+            try {
+                if (st != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                // do nothing
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                throw new FkException(ResultEnum.DATA_QUALITY_CLOSESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】数据库连接关闭异常:" + ex);
+            }
+        }
+        return resultVOS;
+    }
+
+    /**
+     * @return java.util.List<java.util.List < com.fisk.datagovernance.vo.dataquality.datacheck.SimilarityResultVO>>
+     * @description 数据质量查询结果转SimilarityVo
+     * @author dick
+     * @date 2022/4/27 20:49
+     * @version v1.0
+     * @params dataSourceConPO
+     * @params sql
+     * @params templateTypeEnum
+     */
+    public Map<Long, List<SimilarityResultVO>> resultSetToSimilarityVo(DataSourceConPO dataSourceConPO, String
+            sql, TemplateTypeEnum templateTypeEnum) {
+        Map<Long, List<SimilarityResultVO>> resultVOS = new IdentityHashMap<>();
+        Statement st = null;
+        Connection conn = null;
+        try {
+            // 数据源类型
+            DataSourceTypeEnum sourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
+            // 数据库连接对象
+            conn = dataSourceConManageImpl.getStatement(sourceTypeEnum.getDriverName(), dataSourceConPO.getConStr(),
+                    dataSourceConPO.getConAccount(), dataSourceConPO.getConPassword());
+            // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            assert st != null;
+            ResultSet rs = st.executeQuery(sql);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            long rowIndex = 0;
+            while (rs.next()) {
+                rowIndex++;
+                List<SimilarityResultVO> resultVOList = new ArrayList<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    SimilarityResultVO similarityResultVO = new SimilarityResultVO();
+                    similarityResultVO.fieldName = metaData.getColumnLabel(i);
+                    similarityResultVO.fieldValue = rs.getObject(similarityResultVO.fieldName);
+                    resultVOList.add(similarityResultVO);
+                }
+                resultVOS.put(rowIndex, resultVOList);
+            }
+            rs.close();
+        } catch (Exception ex) {
+            log.error("resultSetToSimilarityVo触发异常，请求参数:", String.format("模板类型：%s，数据源id:%s，数据源类型：%s，连接字符串：%s，sql：%s",
+                    templateTypeEnum.getName(), dataSourceConPO.getId(), dataSourceConPO.getConType(), dataSourceConPO.getConStr(), sql));
+            log.error("resultSetToSimilarityVo触发异常，详细报错:", ex);
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, "【" + templateTypeEnum.getName() + "】:" + ex);
         } finally {
             try {

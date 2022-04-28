@@ -14,6 +14,7 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.SimilarityExtendDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -281,7 +282,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 break;
             case SIMILARITY_TEMPLATE:
                 //相似度模板
-                rule = createSimilarity_Rule();
+                rule = createSimilarity_Rule(tableName, dto.getSimilarityExtendDTOS());
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
@@ -638,12 +639,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @version v1.0
      * @params
      */
-    public ResultEntity<String> createSimilarity_Rule() {
-        /*
-         * 逻辑：
-         * 调度任务实时计算相似度比例，此处无需生成规则
-         * */
+    public ResultEntity<String> createSimilarity_Rule(String tableName, List<SimilarityExtendDTO> similarityExtendDTOS) {
+        String sql = null;
+        if (CollectionUtils.isNotEmpty(similarityExtendDTOS)) {
+            sql = "SELECT";
+            for (SimilarityExtendDTO similarityExtendDTO : similarityExtendDTOS) {
+                sql += String.format(" %s,", similarityExtendDTO.fieldName);
+            }
+            if (StringUtils.isNotEmpty(sql)) {
+                sql = sql.substring(0, sql.length() - 1);
+            }
+            sql += String.format(" FROM %s;", tableName);
+        }
         ResultEntity<String> result = new ResultEntity<>();
+        result.setData(sql);
         result.setCode(0);
         return result;
     }

@@ -303,14 +303,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                                                 dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
                                                 dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
                                                 dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-                                                dataOpsTableFieldVO.setDatasourceId(postgreDTO.getId());
                                                 fieldVOList.add(dataOpsTableFieldVO);
                                             }
                                             dataOpsDataTableVO.setChildren(fieldVOList);
                                         }
                                     }
                                     dataOpsDataTableVO.setTableName(tableName);
-                                    dataOpsDataTableVO.setDatasourceId(postgreDTO.getId());
                                     dataOpsDataTableVOList.add(dataOpsDataTableVO);
                                 }
                             }
