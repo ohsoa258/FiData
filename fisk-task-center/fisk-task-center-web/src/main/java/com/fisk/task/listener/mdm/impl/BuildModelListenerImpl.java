@@ -592,12 +592,18 @@ public class BuildModelListenerImpl implements BuildModelListener {
         str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
         str.append(" AS ").append("SELECT ");
 
-        List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
-        List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
+        List<AttributeInfoDTO> attributeList = null;
+        if (entityInfoVo.getStatus().equals(NOT_CREATED.getName())){
+            List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
+            attributeList = mdmClient.getByIds(ids).getData();
+        }else {
+            attributeList =entityInfoVo.getAttributeList();
+        }
+
         // 存在外键数据
-        List<AttributeInfoDTO> foreignList = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
+        List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
         // 不存在外键数据
-        List<AttributeInfoDTO> noForeignList = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
+        List<AttributeInfoDTO> noForeignList = attributeList.stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
 
         // 先去判断属性有没有外键
         if (CollectionUtils.isEmpty(foreignList)){
