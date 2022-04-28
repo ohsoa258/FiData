@@ -12,6 +12,7 @@ import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -76,6 +77,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
 
+        EntityVO entityVo = entityService.getDataById(entityId);
+        if(entityVo == null){
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS,ResultEnum.DATA_NOTEXISTS.getMsg());
+        }
         //获得主数据表名
         String tableName = "viw_"+entityService.getDataById(entityId).getModelId()+"_"+entityId;
 
