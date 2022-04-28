@@ -232,8 +232,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //5. 创建组件
 
             List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
-
-            enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size() - 1));
+            Thread.sleep(1000);
+            enabledProcessor(taskGroupEntity.getId(), processors.subList(0, processors.size()));
             //7. 如果是接入,同步一次,然后把调度组件停掉
             if (dto.groupStructureId == null && dto.openTransmission) {
                 enabledProcessor(taskGroupEntity.getId(), processors.subList(processors.size() - 1, processors.size()));
@@ -773,10 +773,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
         //接受消息ConsumeKafka
         ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
+        List<ProcessorEntity> processorEntityList = new ArrayList<>();
+        processorEntityList.add(consumeKafkaProcessor);
+        enabledProcessor(groupId, processorEntityList);
+        try {
+            ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().getProcessor(consumeKafkaProcessor.getId());
+            ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
+            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            processorRunStatusEntity.setRevision(processorEntity.getRevision());
+            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
+            NifiHelper.getProcessorsApi().updateRunStatus(processorEntity.getId(), processorRunStatusEntity);
+        } catch (ApiException e) {
+            e.printStackTrace();
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
+        }
         componentConnector(groupId, consumeKafkaProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.SUCCESS);
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
-
-
         if (dto.groupStructureId != null) {
             //  创建input_port(组)
             PositionDTO position = queryField.getComponent().getPosition();
@@ -987,7 +999,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         appNifiSettingPO.nifiCustomWorkflowId = dto.nifiCustomWorkflowId;
         appNifiSettingService.saveOrUpdate(appNifiSettingPO);
         res.add(queryField);
-        res.add(consumeKafkaProcessor);
+
         res.add(jsonRes);
         res.add(evaluateJson);
         res.add(logProcessor);
@@ -1000,6 +1012,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
             tableNifiSettingPO.publishKafkaProcessorId = publishKafkaProcessor.getId();
             res.add(publishKafkaProcessor);
+            res.add(consumeKafkaProcessor);
             res.add(dispatchProcessor);
         }
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
@@ -1751,7 +1764,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
         componentsBuild.buildNifiGlobalVariable(variable);
         buildConsumeKafkaProcessorDTO.kafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-        buildConsumeKafkaProcessorDTO.honorTransactions=false;
+        buildConsumeKafkaProcessorDTO.honorTransactions = false;
         TableTopicDTO tableTopicDTO = new TableTopicDTO();
         tableTopicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
         tableTopicDTO.tableId = Math.toIntExact(dto.id);
@@ -1872,7 +1885,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.dbConnectionId = cfgDbPoolId;
         /*querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;*/
-        querySqlDto.scheduleExpression = "3600";
+        querySqlDto.scheduleExpression = "180";
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());

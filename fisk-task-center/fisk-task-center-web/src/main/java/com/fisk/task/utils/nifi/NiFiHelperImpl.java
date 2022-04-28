@@ -492,11 +492,13 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("topic", data.topicNames);
         map.put("group.id", data.GroupId);
         map.put("honor-transactions", String.valueOf(data.honorTransactions));
+        map.put("auto.offset.reset", "earliest");
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);
         config.setAutoTerminatedRelationships(autoEnd);
         config.setComments(data.details);
+        config.setSchedulingPeriod("1 sec");
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);

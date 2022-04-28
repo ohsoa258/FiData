@@ -61,10 +61,10 @@ public class BuildDataInputPgTableListener {
         taskPgTableStructureHelper.saveTableStructure(dto);
 */
             log.info("保存版本号方法执行成功");
-            StringBuilder sql = new StringBuilder("CREATE TABLE tableName ( ");
+            StringBuilder sql = new StringBuilder("CREATE TABLE fi_tableName ( ");
             StringBuilder sqlFileds = new StringBuilder();
             StringBuilder pksql = new StringBuilder();
-            StringBuilder stgSql = new StringBuilder("CREATE TABLE tableName ( ");
+            StringBuilder stgSql = new StringBuilder("CREATE TABLE fi_tableName ( ");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             //ods与stg类型不变,不然有的值,类型转换不来
             tableFieldsDTOS.forEach((l) -> {
@@ -86,8 +86,8 @@ public class BuildDataInputPgTableListener {
             stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
             sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
             sql.append(sqlFileds);
-            String stg_sql1 = sql.toString().replace("tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-            String stg_sql2 = stgSql.toString().replace("tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
+            String stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
+            String stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
             BusinessResult Result = pg.postgreBuildTable(stg_sql2.toLowerCase(), BusinessTypeEnum.DATAINPUT);
             if(!Result.success){
