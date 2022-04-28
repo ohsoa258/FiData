@@ -87,4 +87,10 @@ public class AttributeController {
     public ResultEntity<ResultEnum> updateStatus(@Validated @RequestBody AttributeStatusDTO statusDto) {
         return ResultEntityBuild.build(service.updateStatus(statusDto));
     }
+
+    @ApiOperation("删除attribute(待提交)")
+    @DeleteMapping("/deleteAttribute")
+    public ResultEntity<ResultEnum> deleteAttribute(Integer id) {
+        return ResultEntityBuild.build(service.deleteAttribute(id));
+    }
 }

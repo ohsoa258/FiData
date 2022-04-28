@@ -306,5 +306,30 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return res == 0 ? ResultEnum.SAVE_DATA_ERROR : ResultEnum.SUCCESS;
     }
 
+    /**
+     * 删除属性(修改状态为删除待提交)
+     *
+     * @param id 属性id
+     * @return {@link ResultEnum}
+     */
+    @Override
+    public ResultEnum deleteAttribute(Integer id) {
+        if(id == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        if(baseMapper.selectById(id) == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        if( baseMapper.deleteAttribute(id) == 0){
+            return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
+        // 记录日志
+        String desc = "删除一个属性,id:" + id;
+        logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
+
+        return ResultEnum.SUCCESS;
+    }
+
 
 }

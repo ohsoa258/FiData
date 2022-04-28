@@ -2,6 +2,7 @@ package com.fisk.mdm.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -32,5 +33,13 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
      * @return {@link List}<{@link EntityMsgVO}>
      */
     List<EntityMsgVO> getER();
+
+    /**
+     * 删除属性(修改状态为删除待提交)
+     *
+     * @param id 属性id
+     * @return {@link ResultEnum}
+     */
+    int deleteAttribute(Integer id);
 
 }
