@@ -31,6 +31,11 @@ public class ApiConfigPO extends BasePO {
     public String apiAddress;
 
     /**
+     * api请求方式(0: 空;  1: get;  2:post)
+     */
+    public Integer apiRequestType;
+
+    /**
      * api描述
      */
     public String apiDes;

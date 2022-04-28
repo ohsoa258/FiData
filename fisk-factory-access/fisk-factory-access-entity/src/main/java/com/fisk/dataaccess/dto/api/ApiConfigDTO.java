@@ -23,8 +23,11 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "api名称", required = true)
     public String apiName;
 
-    @ApiModelProperty(value = "api地址")
+    @ApiModelProperty(value = "api地址", required = true)
     public String apiAddress;
+
+    @ApiModelProperty(value = "api请求方式(0: 空;  1: get;  2:post)", required = true)
+    public Integer apiRequestType;
 
     @ApiModelProperty(value = "api描述", required = true)
     public String apiDes;
