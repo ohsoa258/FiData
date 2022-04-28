@@ -288,6 +288,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 }else if(infoDto.getStatus().equals("删除待提交")){
                     // 删除字段
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
+                    abstractDbHelper.executeSql(sql, connection);
+                    // 删除属性
+                    mdmClient.delete(infoDto.getId());
                 }
 
                 // 3.回写成功状态
