@@ -52,12 +52,6 @@ public class AttributeController {
         return ResultEntityBuild.build(service.editData(attributeUpdateDTO));
     }
 
-    @ApiOperation("删除attribute")
-    @DeleteMapping("/delete")
-    public ResultEntity<ResultEnum> deleteData(Integer id) {
-        return ResultEntityBuild.build(service.deleteDataById(id));
-    }
-
     @ApiOperation("提交待添加和待修改的属性")
     @GetMapping("/getNotSubmittedData")
     public ResultEntity<ResultEnum> getNotSubmittedData(Integer entityId) {
@@ -88,9 +82,9 @@ public class AttributeController {
         return ResultEntityBuild.build(service.updateStatus(statusDto));
     }
 
-    @ApiOperation("删除attribute(待提交)")
-    @DeleteMapping("/deleteAttribute")
+    @ApiOperation("删除attribute")
+    @DeleteMapping("/delete")
     public ResultEntity<ResultEnum> deleteAttribute(Integer id) {
-        return ResultEntityBuild.build(service.deleteAttribute(id));
+        return ResultEntityBuild.build(service.deleteData(id));
     }
 }

@@ -226,25 +226,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return ResultEnum.SUCCESS;
     }
 
-    @Override
-    public ResultEnum deleteDataById(Integer id) {
-        //判断数据是否存在
-        if (baseMapper.selectById(id) == null) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
 
-        //删除数据
-        if (baseMapper.deleteById(id) <= 0) {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-
-        // 记录日志
-        String desc = "删除一个属性,id:" + id;
-        logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
-
-        //删除成功
-        return ResultEnum.SUCCESS;
-    }
 
     @Override
     public Page<AttributeVO> getAll(AttributeQueryDTO query) {
@@ -265,7 +247,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 提交待添加、待修改属性
+     * 提交未提交的属性
      *
      * @return {@link List}<{@link AttributePO}>
      */
@@ -280,10 +262,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         //查询实体下是否存在可提交的属性
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("entity_id", entityId)
-                .eq("status", AttributeStatusEnum.INSERT).or()
-                .eq("status", AttributeStatusEnum.UPDATE);
+                .ne("status",AttributeStatusEnum.SUBMITTED);
         List<AttributePO> attributePoList = baseMapper.selectList(wrapper);
-        if ( Objects.isNull(attributePoList)) {
+        if ( CollectionUtils.isEmpty(attributePoList)) {
             return ResultEnum.NO_DATA_TO_SUBMIT;
         }
 
@@ -353,12 +334,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 删除属性(修改状态为删除待提交)
+     * 删除属性(后台表已生成该字段，删除需等待提交)
      *
      * @param id 属性id
      * @return {@link ResultEnum}
      */
-    @Override
     public ResultEnum deleteAttribute(Integer id) {
         if(id == null){
             return ResultEnum.DATA_NOTEXISTS;
@@ -371,10 +351,61 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         // 记录日志
-        String desc = "删除一个属性,id:" + id;
+        String desc = "删除一个属性,id:" + id +"（待提交）";
         logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
 
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 删除数据（逻辑删除，仅用于删除  未提交的属性）
+     *
+     * @param id id
+     * @return {@link ResultEnum}
+     */
+    public ResultEnum deleteDataById(Integer id) {
+        if(id == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        //判断数据是否存在
+        if (baseMapper.selectById(id) == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        //删除数据
+        if (baseMapper.deleteById(id) <= 0) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        // 记录日志
+        String desc = "删除一个属性,id:" + id;
+        logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
+
+        //删除成功
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 删除数据
+     *
+     * @param id id
+     * @return {@link ResultEnum}
+     */
+    @Override
+    public ResultEnum deleteData(Integer id){
+        if(id == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        //判断数据是否存在
+        AttributePO attributePo = baseMapper.selectById(id);
+        if(attributePo == null){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        //若状态为新增待提交，则直接逻辑删除
+        //若为修改待提交、已提交、删除待提交，说明后台表已生成该字段，删除需等待提交
+        if(attributePo.getStatus() == AttributeStatusEnum.INSERT){
+            return this.deleteDataById(id);
+        }else{
+            return this.deleteAttribute(id);
+        }
     }
 
 

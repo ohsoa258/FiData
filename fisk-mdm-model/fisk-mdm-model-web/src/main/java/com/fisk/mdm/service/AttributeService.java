@@ -44,13 +44,6 @@ public interface AttributeService extends IService<AttributePO> {
     ResultEnum editData(AttributeUpdateDTO attributeUpdateDTO);
 
     /**
-     * 删除（直接逻辑删除）
-     * @param id 属性id
-     * @return ResultEnum
-     */
-    ResultEnum deleteDataById(Integer id);
-
-    /**
      * 分页查询所有属性
      * @param query 属性分页查询条件
      * @return {@link Page}<{@link AttributeVO}>
@@ -99,5 +92,5 @@ public interface AttributeService extends IService<AttributePO> {
      * @param id 属性id
      * @return {@link ResultEnum}
      */
-    ResultEnum deleteAttribute(Integer id);
+    ResultEnum deleteData(Integer id);
 }
