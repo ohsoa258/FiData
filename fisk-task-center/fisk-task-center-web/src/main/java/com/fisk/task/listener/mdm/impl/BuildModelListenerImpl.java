@@ -121,10 +121,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 EntityInfoVO data = mdmClient.getAttributeById(dto.getEntityId()).getData();
                 // 2.mdm表更新
                 this.updateMdmTable(abstractDbHelper,connection, sqlBuilder,data.getAttributeList());
-                // 3.回写成功属性状态
-                this.writableAttributeStatus(data.getAttributeList());
-                // 4.viw视图重新生成
+                // 3.viw视图重新生成
                 this.updateViwTable(abstractDbHelper, sqlBuilder, connection,data);
+                // 4.回写成功属性状态
+                this.writableAttributeStatus(data.getAttributeList());
             }
 
         } catch (Exception ex) {
@@ -337,7 +337,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     filedType = "timestamp";
                     break;
                 case "浮点型":
-                    filedType = "numeic(12,2)";
+                    filedType = "numeric(12,2)";
                     break;
                 case "布尔型":
                     filedType = "bool";
@@ -698,7 +698,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 视图基础字段
         str.append(this.splicingViewTable(false));
 
-        String collect = noForeignList.stream().filter(Objects::nonNull).map(e -> {
+        String collect = noForeignList.stream().filter(e -> !e.getStatus().equals("删除待提交")).map(e -> {
             String str1 = e.getColumnName() + " AS " + e.getName();
             return str1;
         }).collect(Collectors.joining(","));
