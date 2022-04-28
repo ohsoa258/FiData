@@ -1,5 +1,6 @@
 package com.fisk.mdm.service;
 
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 
 import java.util.List;
@@ -20,5 +21,5 @@ public interface IMasterDataService {
      * @param modelVersionId 模型版本id
      * @return {@link ResultObjectVO}
      */
-    ResultObjectVO getAll(Integer entityId,Integer modelVersionId);
+    ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId);
 }

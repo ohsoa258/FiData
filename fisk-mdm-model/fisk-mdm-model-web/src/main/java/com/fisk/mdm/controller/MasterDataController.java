@@ -1,6 +1,7 @@
 package com.fisk.mdm.controller;
 
 
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -25,7 +26,7 @@ public class MasterDataController {
 
     @ApiOperation("分页查询所有model")
     @GetMapping("/list")
-    public ResultObjectVO getAll(Integer entityId ,Integer modelVersionId) {
+    public ResultEntity<ResultObjectVO> getAll(Integer entityId , Integer modelVersionId) {
         return service.getAll(entityId ,modelVersionId);
     }
 

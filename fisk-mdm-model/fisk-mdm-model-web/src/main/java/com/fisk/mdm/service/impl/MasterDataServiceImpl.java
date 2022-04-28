@@ -1,15 +1,13 @@
 package com.fisk.mdm.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.mapper.MasterDataMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
-import com.fisk.mdm.vo.entity.EntityInfoVO;
-import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -58,29 +56,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
     }
 
-//    @Override
-//    public Map<String, Object> getByCode(Integer entityId, Integer code) {
-//        //获得主数据表名
-//        String tableName = "viw_"+entityService.getDataById(entityId).getTableName();
-//
-//        //获得字段名
-//        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(entityId).getAttributeList();
-//        List<String> list = new ArrayList<>();
-//        for (AttributeInfoDTO attributeInfoDTO:attributeList){
-//            list.add(attributeInfoDTO.getName());
-//        }
-//        String columnName = StringUtils.join(list, ",");
-//
-//
-//        return mapper.getByCode(tableName,columnName,code);
-//    }
     /**
      * 根据实体id查询主数据
      *
      * @param entityId 实体id
      */
     @Override
-    public ResultObjectVO getAll(Integer entityId,Integer modelVersionId){
+    public ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId){
 
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         //获得主数据表名
@@ -116,12 +98,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 data.add(map);
             }
             resultObjectVO.setResultData(data);
-            return resultObjectVO;
+            return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return resultObjectVO;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
     }
 
     /**
