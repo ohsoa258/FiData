@@ -94,7 +94,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
             String json = redisTemplate.opsForValue().get(pgMetaDataEntityKey).toString();
             if (StringUtils.isNotEmpty(json)) {
-                list =  JSONArray.parseArray(json, DataOpsSourceVO.class);
+                list = JSONArray.parseArray(json, DataOpsSourceVO.class);
             }
             if (CollectionUtils.isNotEmpty(list)) {
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, list);
@@ -193,11 +193,13 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 executeResultVO.setExecuteType(2);
                 // 执行 INSERT、UPDATE、DELETE 将返回受影响行数
                 affectedCount = st.getUpdateCount();
+                log.info("executeDataOpsSql affectedCount:" + affectedCount);
                 if (affectedCount < 0) {
                     // 如果返回的结果是一个结果集对象或没有更多结果，则返回-1。小于0默认未返回结果
                     // TRUNCATE、DROP、CREATE、ALTER 返回为-1，也就说明未返回结果
                     executeResultVO.setExecuteType(3);
                 }
+                log.info("executeDataOpsSql executeType:" + executeResultVO.getExecuteType());
                 executeResultVO.setAffectedCount(affectedCount);
                 executeResultVO.setExecuteState(true);
             }
