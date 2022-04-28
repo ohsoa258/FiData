@@ -67,4 +67,12 @@ public interface MdmClient {
      */
     @PostMapping("/attribute/getByDomainId")
     ResultEntity<AttributeInfoDTO> getByDomainId(@RequestBody AttributeDomainDTO dto);
+
+    /**
+     * 删除属性
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/attribute/delete")
+    ResultEntity<ResultEnum> delete(@RequestParam("id") Integer id);
 }
