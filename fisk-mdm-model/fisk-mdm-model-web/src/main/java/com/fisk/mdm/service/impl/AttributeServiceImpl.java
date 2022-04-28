@@ -124,6 +124,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             if(codeAttribute == null){
                 return ResultEnum.SAVE_DATA_ERROR;
             }
+            //“域字段id”赋值，值为同实体下code属性的id
             attributePo.setDomainId((int)codeAttribute.getId());
         }
 
@@ -208,7 +209,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             if(codeAttribute == null){
                 return ResultEnum.SAVE_DATA_ERROR;
             }
-            //“域字段id”赋值为同实体下code属性的id
+            //“域字段id”赋值，值为同实体下code属性的id
             attributePo.setDomainId((int)codeAttribute.getId());
         }
 
