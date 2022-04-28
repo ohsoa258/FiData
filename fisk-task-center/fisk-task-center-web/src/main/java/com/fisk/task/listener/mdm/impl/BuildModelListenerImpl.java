@@ -123,8 +123,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 this.updateMdmTable(abstractDbHelper,connection, sqlBuilder,data.getAttributeList());
                 // 3.viw视图重新生成
                 this.updateViwTable(abstractDbHelper, sqlBuilder, connection,data);
-                // 4.回写成功属性状态
-                this.writableAttributeStatus(data.getAttributeList());
             }
 
         } catch (Exception ex) {
@@ -597,9 +595,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
         List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
         List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
         // 存在外键数据
-        List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
+        List<AttributeInfoDTO> foreignList = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
         // 不存在外键数据
-        List<AttributeInfoDTO> noForeignList = attributeList.stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
+        List<AttributeInfoDTO> noForeignList = entityInfoVo.getAttributeList().stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
 
         // 先去判断属性有没有外键
         if (CollectionUtils.isEmpty(foreignList)){
