@@ -1,0 +1,14 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.mdm.mapper.MasterDataMapper">
+    <select id="getAll" resultType="java.util.Map">
+        select #{columnName}
+        from ${tableName} as t
+        <if test=" query.keyword !=null and query.keyword.length()>0 ">
+            and t.name like concat('%', #{query.keyword}, '%')
+        </if>
+        order by create_time desc
+    </select>
+
+</mapper>
