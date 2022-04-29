@@ -37,6 +37,6 @@ public class KeywordServiceImpl extends ServiceImpl<KeywordMapper, KeywordPO> im
         queryWrapper.lambda().select(KeywordPO::getKeyword);
         List<KeywordPO> poList = baseMapper.selectList(queryWrapper);
 
-        return poList.stream().anyMatch(e -> dto.field.equalsIgnoreCase(e.keyword));
+        return poList.stream().anyMatch(e -> e.keyword.equalsIgnoreCase(dto.field));
     }
 }
