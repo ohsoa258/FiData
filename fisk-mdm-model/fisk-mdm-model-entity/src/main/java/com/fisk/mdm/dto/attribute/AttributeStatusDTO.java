@@ -34,6 +34,6 @@ public class AttributeStatusDTO {
     private Integer syncStatus;
 
     @ApiModelProperty(value = "提交失败描述")
-    @Length(min = 0, max = 200, message = "长度最多200")
+    //@Length(min = 0, max = 200, message = "长度最多200")
     private String errorMsg;
 }
