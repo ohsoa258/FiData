@@ -119,9 +119,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
         }
 
-//        if (list.contains(dto.apiName)) {
-//        }
-
         // dto -> po
         ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
         // 参数校验

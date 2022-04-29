@@ -135,6 +135,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 前端有时会传入已经删除的组件,后端使用入库后的数据
         List<NifiCustomWorkflowDetailPO> workflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
 
+        // 两种类型合并
+
+
         // 给nifi封装参数
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
         if (CollectionUtils.isNotEmpty(workflowDetailPoList)) {
@@ -468,7 +471,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         ChannelDataEnum channelDataEnum = ChannelDataEnum.getName(Math.toIntExact(dto.id));
 
-        switch (channelDataEnum) {
+        switch (Objects.requireNonNull(channelDataEnum)) {
             // 数据湖非实时物理表任务
             case DATALAKE_TASK:
             case DATALAKE_FTP_TASK:
