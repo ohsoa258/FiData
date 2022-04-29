@@ -78,6 +78,12 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return ResultEntityBuild.build(ResultEnum.SUCCESS, attributeVO);
     }
 
+    /**
+     * 添加数据
+     *
+     * @param attributeDTO 属性dto
+     * @return {@link ResultEnum}
+     */
     @Override
     public ResultEnum addData(AttributeDTO attributeDTO) {
         if (attributeDTO.getEntityId() == null){
@@ -126,6 +132,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 return ResultEnum.DATA_NOTEXISTS;
             }
             attributePo.setDomainId((int)codeAttribute.getId());
+        }else{
+            //若数据类型不为“域字段”，将域字段id置空
+            attributePo.setDomainId(null);
         }
 
         //添加数据
@@ -214,6 +223,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 return ResultEnum.DATA_NOTEXISTS;
             }
             updateWrapper.set(AttributePO::getDomainId,codeAttribute.getId());
+        }else{
+            //若数据类型不为“域字段”，将域字段id置空
+            updateWrapper.set(AttributePO::getDomainId,null);
         }
 
         //修改数据
