@@ -80,11 +80,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Override
     public ResultEnum addData(AttributeDTO attributeDTO) {
-
         if (attributeDTO.getEntityId() == null){
             return ResultEnum.PARAMTER_ERROR;
         }
-
         //判断同实体下是否存在重复名称
         QueryWrapper<AttributePO> attributeWrapper = new QueryWrapper<>();
         attributeWrapper.eq("name", attributeDTO.getName())
@@ -93,7 +91,6 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (baseMapper.selectOne(attributeWrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
-
         //转换数据
         AttributePO attributePo = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
 
@@ -110,21 +107,24 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //若数据类型为“域字段”类型，维护“域字段id”字段
         if(attributePo.getDataType() == DataTypeEnum.DOMAIN){
-            //查询出该属性属于哪个实体
-            EntityVO entityVo = entityService.getDataById(attributePo.getEntityId());
-            if(entityVo == null){
-                return ResultEnum.SAVE_DATA_ERROR;
+            //判断用户是否填入域字段关联id
+            if(attributePo.getDomainId() == null){
+                return ResultEnum.PARAMTER_ERROR;
             }
-            //查询出该实体下的code属性
-            QueryWrapper<AttributePO> codeAttributeWrapper = new QueryWrapper<>();
-            codeAttributeWrapper.lambda()
-                    .eq(AttributePO::getEntityId,attributeDTO.getDomainId())
-                    .eq(AttributePO::getName,"code");
-            AttributePO codeAttribute = baseMapper.selectOne(codeAttributeWrapper);
+            EntityPO entity = entityMapper.selectById(attributePo.getDomainId());
+            //判断该id是否存在实体
+            if(entity == null){
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            //查询关联实体下名称为code的属性
+            QueryWrapper<AttributePO> codeWrapper = new QueryWrapper<>();
+            codeWrapper.lambda().eq(AttributePO::getName,"code")
+                    .eq(AttributePO::getEntityId,entity.getId())
+                    .last("limit 1");
+            AttributePO codeAttribute = baseMapper.selectOne(codeWrapper);
             if(codeAttribute == null){
-                return ResultEnum.SAVE_DATA_ERROR;
+                return ResultEnum.DATA_NOTEXISTS;
             }
-            //“域字段id”赋值，值为同实体下code属性的id
             attributePo.setDomainId((int)codeAttribute.getId());
         }
 
@@ -195,22 +195,25 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //若数据类型为“域字段”类型，维护“域字段id”字段
         if(attributePo.getDataType() == DataTypeEnum.DOMAIN){
-            //查询出该属性属于哪个实体
-            EntityVO entityVo = entityService.getDataById(attributePo.getEntityId());
-            if(entityVo == null){
-                return ResultEnum.SAVE_DATA_ERROR;
+            //判断用户是否填入域字段关联id
+            if(attributePo.getDomainId() == null){
+                return ResultEnum.PARAMTER_ERROR;
             }
-            //查询出该实体下的code属性
-            QueryWrapper<AttributePO> codeAttributeWrapper = new QueryWrapper<>();
-            codeAttributeWrapper.eq("name","code")
-                    .eq("entity_id",entityVo.getId())
+            EntityPO entity = entityMapper.selectById(attributePo.getDomainId());
+            //判断该id是否存在实体
+            if(entity == null){
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            //查询关联实体下名称为code的属性
+            QueryWrapper<AttributePO> codeWrapper = new QueryWrapper<>();
+            codeWrapper.lambda().eq(AttributePO::getName,"code")
+                    .eq(AttributePO::getEntityId,entity.getId())
                     .last("limit 1");
-            AttributePO codeAttribute = baseMapper.selectOne(codeAttributeWrapper);
+            AttributePO codeAttribute = baseMapper.selectOne(codeWrapper);
             if(codeAttribute == null){
-                return ResultEnum.SAVE_DATA_ERROR;
+                return ResultEnum.DATA_NOTEXISTS;
             }
-            //“域字段id”赋值，值为同实体下code属性的id
-            attributePo.setDomainId((int)codeAttribute.getId());
+            updateWrapper.set(AttributePO::getDomainId,codeAttribute.getId());
         }
 
         //修改数据
@@ -407,6 +410,5 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return this.deleteAttribute(id);
         }
     }
-
 
 }

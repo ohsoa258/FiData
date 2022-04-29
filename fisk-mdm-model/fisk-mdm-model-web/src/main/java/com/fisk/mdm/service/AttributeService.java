@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityMsgVO;
 
@@ -93,4 +94,5 @@ public interface AttributeService extends IService<AttributePO> {
      * @return {@link ResultEnum}
      */
     ResultEnum deleteData(Integer id);
+
 }
