@@ -92,7 +92,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         try {
             Boolean exist = redisTemplate.hasKey(pgMetaDataEntityKey);
             if (!exist) {
-                setDataOpsDataSourceStart();
+                reloadDataOpsDataSource();
             }
             String json = redisTemplate.opsForValue().get(pgMetaDataEntityKey).toString();
             if (StringUtils.isNotEmpty(json)) {
@@ -106,6 +106,12 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             throw new FkException(ResultEnum.PG_METADATA_GETREDIS_ERROR, ex.getMessage());
         }
         return ResultEntityBuild.buildData(ResultEnum.PG_METADATA_READREDIS_EXISTS, list);
+    }
+
+    @Override
+    public ResultEntity<Object> reloadDataOpsDataSource(){
+        setDataOpsDataSource();
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
     }
 
     @Override
@@ -259,12 +265,6 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
-    }
-
-    @Override
-    public Object setDataOpsDataSourceStart() {
-        setDataOpsDataSource();
-        return "success";
     }
 
     public void setDataOpsDataSource() {

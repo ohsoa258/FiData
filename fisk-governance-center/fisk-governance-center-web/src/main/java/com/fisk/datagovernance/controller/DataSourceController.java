@@ -94,10 +94,10 @@ public class DataSourceController {
         return dataOpsDataSourceManageService.getDataOpsDataSource();
     }
 
-    @PostMapping("/setDataOpsDataSourceStart")
+    @PostMapping("/reloadDataOpsDataSource")
     @ApiOperation("pg数据库信息同步到redis")
-    public ResultEntity<Object> setDataOpsDataSourceStart() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.setDataOpsDataSourceStart());
+    public ResultEntity<Object> reloadDataOpsDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.reloadDataOpsDataSource());
     }
 
 

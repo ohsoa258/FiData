@@ -35,5 +35,5 @@ public interface IDataOpsDataSourceManageService {
      *
      * @return 查询结果
      */
-    Object setDataOpsDataSourceStart();
+    Object reloadDataOpsDataSource();
 }
