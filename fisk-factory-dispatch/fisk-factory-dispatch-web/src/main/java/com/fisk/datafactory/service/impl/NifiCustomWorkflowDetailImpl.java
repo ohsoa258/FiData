@@ -9,17 +9,22 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
 import com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper;
 import com.fisk.datafactory.service.INifiComponent;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiCustomWorkFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkDTO;
@@ -53,6 +58,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     NifiCustomWorkflowImpl nifiCustomWorkflowImpl;
     @Resource
     PublishTaskClient publishTaskClient;
+    @Resource
+    DataModelClient dataModelClient;
+    @Resource
+    DataAccessClient dataAccessClient;
 
 
     @Override
@@ -109,7 +118,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         List<NifiCustomWorkflowDetailPO> list = NifiCustomWorkflowDetailMap.INSTANCES.listDtoToPo(dto.list);
 
-        // 判断开始组件是否有调度参数
+        // 判断开始组件是否有调度参数(用于确保开始组件的调度参数不为空)
         List<NifiCustomWorkflowDetailPO> start = list.stream().filter(e -> componentType.equalsIgnoreCase(e.componentType)).collect(Collectors.toList());
         for (NifiCustomWorkflowDetailPO e : start) {
             if (e.schedule == null || e.script == null || "".equals(e.script)) {
@@ -125,6 +134,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         // 前端有时会传入已经删除的组件,后端使用入库后的数据
         List<NifiCustomWorkflowDetailPO> workflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
+
+        // 给nifi封装参数
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
         if (CollectionUtils.isNotEmpty(workflowDetailPoList)) {
             List<NifiCustomWorkflowDetailDTO> workflowDetailDTOList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(workflowDetailPoList);
@@ -155,7 +166,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         workListDTO.nifiCustomWorkflowId = workflowId;
         // 管道名称
         workListDTO.pipelineName = pipelineName;
-        // 封装nifi所有节点
+        // TODO 封装nifi所有节点(大量改动)
         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
         // 管道详情-tree
         workListDTO.structure = getMenuTree(list);
@@ -448,6 +459,34 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             }
         } catch (Exception e) {
             return ResultEnum.DELETE_TASK_GRUOP_ERROR;
+        }
+        return null;
+    }
+
+    @Override
+    public List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto) {
+
+        ChannelDataEnum channelDataEnum = ChannelDataEnum.getName(Math.toIntExact(dto.id));
+
+        switch (channelDataEnum) {
+            // 数据湖非实时物理表任务
+            case DATALAKE_TASK:
+                ResultEntity<List<ChannelDataDTO>> result1 = dataAccessClient.getTableId();
+                return result1.data;
+            // 数仓维度表任务
+            case DW_DIMENSION_TASK:
+                // 数仓事实表任务
+            case DW_FACT_TASK:
+                //分析模型维度表任务
+            case OLAP_DIMENSION_TASK:
+                // 分析模型事实表任务
+            case OLAP_FACT_TASK:
+                // 分析模型宽表任务
+            case OLAP_WIDETABLE_TASK:
+                ResultEntity<List<ChannelDataDTO>> result2 = dataModelClient.getTableId(dto);
+                return result2.data;
+            default:
+                break;
         }
         return null;
     }

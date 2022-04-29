@@ -3,6 +3,7 @@ package com.fisk.datafactory.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
@@ -56,8 +57,8 @@ public class NifiCustomWorkflowDetailController {
             log.info("nifi: 管道开始创建");
             Map<Map, Map> externalStructure = workListDTO.externalStructure;
             Map<Map, Map> structure = workListDTO.structure;
-            workListDTO.externalStructure1=externalStructure.toString();
-            workListDTO.structure1=structure.toString();
+            workListDTO.externalStructure1 = externalStructure.toString();
+            workListDTO.structure1 = structure.toString();
             publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
             log.info("nifi: 管道创建成功");
         }//
@@ -84,5 +85,16 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<Object> deleteDataList(@RequestBody WorkflowTaskGroupDTO dto) {
 
         return ResultEntityBuild.build(service.deleteDataList(dto));
+    }
+
+    /**
+     * 根据不同类型获取数仓对应的表
+     *
+     * @param dto dto
+     * @return 结果
+     */
+    @PostMapping("/getTableId")
+    public ResultEntity<Object> getTableId(@RequestBody NifiComponentsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds(dto));
     }
 }

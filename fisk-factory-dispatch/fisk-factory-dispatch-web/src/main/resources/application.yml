@@ -38,3 +38,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://127.0.0.1:8082/eureka
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 600000

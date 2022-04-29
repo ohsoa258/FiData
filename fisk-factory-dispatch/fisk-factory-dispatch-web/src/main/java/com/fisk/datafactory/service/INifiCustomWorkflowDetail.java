@@ -3,11 +3,15 @@ package com.fisk.datafactory.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+
+import java.util.List;
 
 /**
  * @author Lock
@@ -60,4 +64,12 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     ResultEnum deleteDataList(WorkflowTaskGroupDTO dto);
+
+    /**
+     * 根据不同的类型,获取不同tree
+     *
+     * @param dto dto
+     * @return tree
+     */
+    List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto);
 }
