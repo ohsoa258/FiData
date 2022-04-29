@@ -29,7 +29,7 @@ pgsql-datamodel:
 pgsql-mdm:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+
-  url: jdbc:postgresql://100.102.201.107:5433/dmp_dw?stringtype=unspecified
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified
   username: adminuser
   type: PG
 server:
