@@ -252,11 +252,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @return {@link List}<{@link AttributePO}>
      */
     @Override
-    public ResultEnum getNotSubmittedData(Integer entityId) {
+    public ResultEntity<ResultEnum> getNotSubmittedData(Integer entityId) {
 
         //查询实体是否存在
         if (Objects.isNull(entityId) || entityService.getDataById(entityId) == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
         //查询实体下是否存在可提交的属性
@@ -265,7 +265,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 .ne("status",AttributeStatusEnum.SUBMITTED);
         List<AttributePO> attributePoList = baseMapper.selectList(wrapper);
         if ( CollectionUtils.isEmpty(attributePoList)) {
-            return ResultEnum.NO_DATA_TO_SUBMIT;
+            return ResultEntityBuild.build(ResultEnum.NO_DATA_TO_SUBMIT);
         }
 
         //提交
@@ -273,10 +273,10 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         entityDTO.setEntityId(entityId);
         entityDTO.setUserId(userHelper.getLoginUserInfo().getId());
         if (publishTaskClient.createBackendTable(entityDTO).getCode() != ResultEnum.SUCCESS.getCode()) {
-            return ResultEnum.DATA_SUBMIT_ERROR;
+            return ResultEntityBuild.build(ResultEnum.DATA_SUBMIT_ERROR);
         }
 
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
 
