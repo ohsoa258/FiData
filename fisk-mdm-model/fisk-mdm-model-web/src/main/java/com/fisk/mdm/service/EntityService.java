@@ -1,12 +1,15 @@
 package com.fisk.mdm.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+
+import java.util.List;
 
 /**
  * @author WangYan
@@ -55,4 +58,11 @@ public interface EntityService {
      * @return
      */
     EntityInfoVO getAttributeById(Integer id);
+
+    /**
+     * 获取创建后台表成功的实体
+     *
+     * @return {@link List}<{@link EntityVO}>
+     */
+    ResultEntity<List<EntityVO>> getCreateSuccessEntity();
 }

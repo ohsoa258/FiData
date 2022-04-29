@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author WangYan
@@ -70,5 +71,12 @@ public class EntityController {
     @ResponseBody
     public ResultEntity<EntityInfoVO> getAttributeById(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,entityService.getAttributeById(id));
+    }
+
+    @ApiOperation("获取创建后台表成功的实体")
+    @GetMapping("/getCreateSuccessEntity")
+    @ResponseBody
+    public ResultEntity<List<EntityVO>> getCreateSuccessEntity() {
+        return entityService.getCreateSuccessEntity();
     }
 }

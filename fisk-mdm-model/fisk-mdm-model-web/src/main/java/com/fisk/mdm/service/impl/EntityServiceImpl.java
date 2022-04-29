@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -318,6 +320,20 @@ public class EntityServiceImpl implements EntityService {
         }
 
         return entityInfoVo;
+    }
+
+    /**
+     * 得到创建后台表成功的实体
+     *
+     * @return {@link List}<{@link EntityVO}>
+     */
+    @Override
+    public ResultEntity<List<EntityVO>> getCreateSuccessEntity() {
+        QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(EntityPO::getStatus,MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
+        List<EntityPO> entityPoS = entityMapper.selectList(wrapper);
+        return entityPoS.size() == 0 ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) :
+                ResultEntityBuild.build(ResultEnum.SUCCESS,EntityMap.INSTANCES.poToVoList(entityPoS));
     }
 
     /**
