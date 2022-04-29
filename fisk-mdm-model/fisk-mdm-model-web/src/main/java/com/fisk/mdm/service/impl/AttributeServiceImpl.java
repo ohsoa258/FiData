@@ -354,6 +354,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @param id 属性id
      * @return {@link ResultEnum}
      */
+
     public ResultEnum deleteAttribute(Integer id) {
         if(id == null){
             return ResultEnum.DATA_NOTEXISTS;
@@ -378,6 +379,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @param id id
      * @return {@link ResultEnum}
      */
+    @Override
     public ResultEnum deleteDataById(Integer id) {
         if(id == null){
             return ResultEnum.DATA_NOTEXISTS;
