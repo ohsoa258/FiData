@@ -128,7 +128,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     //@MQConsumerLog
     @Override
-    public void msg(String data, Acknowledgment ack) {
+    public ResultEnum msg(String data, Acknowledgment ack) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
         log.info("创建nifi流程发布参数:" + data);
@@ -140,7 +141,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
             if (configDTO == null) {
                 log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
-                return;
+                return ResultEnum.NOTFOUND;
             }
             AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
             AppNifiSettingPO appNifiSettingPO1 = new AppNifiSettingPO();
@@ -255,12 +256,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 savaNifiConfig(dbPool.get(1).getId(), ComponentIdTypeEnum.DORIS_OLAP_DB_POOL_COMPONENT_ID);
                 savaNifiConfig(dbPool.get(0).getId(), ComponentIdTypeEnum.PG_DW_DB_POOL_COMPONENT_ID);
             }
+            return resultEnum;
         } catch (Exception e) {
+            resultEnum = ResultEnum.ERROR;
             modelPublishStatusDTO.publish = 2;
             client.updateTablePublishStatus(modelPublishStatusDTO);
             e.printStackTrace();
-            log.error("nifi流程创建失败");
-            e.printStackTrace();
+            log.error("nifi流程创建失败" + e);
+            return resultEnum;
         } finally {
             ack.acknowledge();
         }

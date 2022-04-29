@@ -49,7 +49,7 @@ public class BuildModelTaskListener {
     @Resource
     private ITBETLIncremental itbetlIncremental;
 
-    public void msg(String dataInfo, Acknowledgment acke) {
+    public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("doris组装参数:" + dataInfo);
         int tableId = 0;
         int tableType = 0;
@@ -97,6 +97,7 @@ public class BuildModelTaskListener {
                 }
                 log.info("nifi流程配置结束");
             }
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             if (tableType == 1) {
                 modelPublishStatusDTO.status = 2;
@@ -108,6 +109,7 @@ public class BuildModelTaskListener {
                 client.updateFactPublishStatus(modelPublishStatusDTO);
             }
             e.printStackTrace();
+            return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
         }

@@ -1,5 +1,6 @@
 package com.fisk.task.listener.nifi;
 
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.kafka.support.Acknowledgment;
 
 /**
@@ -8,5 +9,5 @@ import org.springframework.kafka.support.Acknowledgment;
  * Description:
  */
 public interface INifiTaskListener {
-    void msg(String dataInfo, Acknowledgment acke);
+    ResultEnum msg(String dataInfo, Acknowledgment acke);
 }

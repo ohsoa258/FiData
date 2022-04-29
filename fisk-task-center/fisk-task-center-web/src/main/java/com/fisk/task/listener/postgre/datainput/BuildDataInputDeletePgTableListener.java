@@ -2,6 +2,7 @@ package com.fisk.task.listener.postgre.datainput;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import com.fisk.task.service.atlas.IAtlasBuildInstance;
@@ -33,7 +34,7 @@ public class BuildDataInputDeletePgTableListener {
     TaskPgTableStructureMapper taskPgTableStructureMapper;
 
 
-    public void msg(String dataInfo, Acknowledgment acke) {
+    public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg delete table");
         log.info("dataInfo:" + dataInfo);
         try {
@@ -71,8 +72,10 @@ public class BuildDataInputDeletePgTableListener {
                     log.info("执行pg delete table 完成");
                 }
             }
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             e.printStackTrace();
+            return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
         }

@@ -41,7 +41,7 @@ public class BuildDataInputPgTableListener {
     TaskPgTableStructureHelper taskPgTableStructureHelper;
 
 
-    public void msg(String dataInfo, Acknowledgment acke) {
+    public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
@@ -63,7 +63,7 @@ public class BuildDataInputPgTableListener {
             log.info("保存版本号方法执行成功");
             StringBuilder sql = new StringBuilder("CREATE TABLE fi_tableName ( ");
             StringBuilder sqlFileds = new StringBuilder();
-            StringBuilder pksql = new StringBuilder();
+            StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
             StringBuilder stgSql = new StringBuilder("CREATE TABLE fi_tableName ( ");
             List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
             //ods与stg类型不变,不然有的值,类型转换不来
@@ -83,14 +83,17 @@ public class BuildDataInputPgTableListener {
                 }
 
             });
-            stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
-            sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid())");
+            pksql.append(buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key))");
+            stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),enableflag varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid(),");
+            stgSql.append(pksql);
+            sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid(),");
+            sqlFileds.append(pksql);
             sql.append(sqlFileds);
             String stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             String stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
             BusinessResult Result = pg.postgreBuildTable(stg_sql2.toLowerCase(), BusinessTypeEnum.DATAINPUT);
-            if(!Result.success){
+            if (!Result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
@@ -119,11 +122,13 @@ public class BuildDataInputPgTableListener {
                     dc.updateApiPublishStatus(modelPublishStatusDTO);
                 }
             }
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
             dc.updateApiPublishStatus(modelPublishStatusDTO);
             log.error("创建表失败");
             e.printStackTrace();
+            return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
         }

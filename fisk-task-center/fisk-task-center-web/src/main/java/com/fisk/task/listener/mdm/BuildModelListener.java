@@ -1,5 +1,6 @@
 package com.fisk.task.listener.mdm;
 
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.kafka.support.Acknowledgment;
 
 /**
@@ -13,12 +14,12 @@ public interface BuildModelListener {
      * @param dataInfo
      * @param acke
      */
-    void msg(String dataInfo, Acknowledgment acke);
+    ResultEnum msg(String dataInfo, Acknowledgment acke);
 
     /**
      * 创建后台任务表
      * @param dataInfo
      * @param acke
      */
-    void backgroundCreateTasks(String dataInfo, Acknowledgment acke);
+    ResultEnum backgroundCreateTasks(String dataInfo, Acknowledgment acke);
 }

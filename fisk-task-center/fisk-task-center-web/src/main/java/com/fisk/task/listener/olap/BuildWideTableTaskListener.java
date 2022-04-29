@@ -42,7 +42,7 @@ public class BuildWideTableTaskListener {
     @Resource
     TBETLIncrementalImpl tbetlIncremental;
 
-    public void msg(String dataInfo, Acknowledgment acke) {
+    public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.type = 1;
         modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
@@ -71,10 +71,12 @@ public class BuildWideTableTaskListener {
             buildNifiFlowDTO.selectSql = insertSql;
             buildNifiFlowDTO.openTransmission = true;
             pc.publishBuildNifiFlowTask(buildNifiFlowDTO);
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             log.error("宽表创建失败");
             e.printStackTrace();
             modelPublishStatusDTO.status = PublicStatusEnum.PUBLIC_FAILURE.getValue();
+            return ResultEnum.ERROR;
         } finally {
             dataModelClient.updateWideTablePublishStatus(modelPublishStatusDTO);
             acke.acknowledge();

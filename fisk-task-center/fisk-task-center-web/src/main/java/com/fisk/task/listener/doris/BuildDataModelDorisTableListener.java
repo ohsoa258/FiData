@@ -109,7 +109,8 @@ public class BuildDataModelDorisTableListener
     public String tableOutputPortId;
 
 
-    public void msg(String dataInfo, Acknowledgment acke) {
+    public ResultEnum msg(String dataInfo, Acknowledgment acke) {
+        ResultEnum result = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         int id = 0;
         int tableType = 0;
@@ -207,8 +208,7 @@ public class BuildDataModelDorisTableListener
                 }
 
             }
-
-
+            return result;
         } catch (Exception e) {
             log.error("dw发布失败,表id为" + id);
             e.printStackTrace();
@@ -223,6 +223,7 @@ public class BuildDataModelDorisTableListener
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
+            return result;
         } finally {
             acke.acknowledge();
         }
@@ -379,9 +380,9 @@ public class BuildDataModelDorisTableListener
                 sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ,");
                 stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
             }
-            /*if(l.isPrimaryKey==1){
+            if(l.isPrimaryKey==1){
                 pksql.append(""+l.fieldEnName+" ,");
-            }*/
+            }
 
         });
         pksql.append(tablePk + ",");

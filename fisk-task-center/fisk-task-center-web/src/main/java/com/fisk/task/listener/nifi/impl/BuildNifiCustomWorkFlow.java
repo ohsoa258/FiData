@@ -87,7 +87,7 @@ public class BuildNifiCustomWorkFlow {
     TableTopicImpl tableTopic;
 
 
-    public void msg(String data, Acknowledgment acke) {
+    public ResultEnum msg(String data, Acknowledgment acke) {
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
         nifiCustomWorkflowDTO.id = dto.pipelineId;
@@ -120,11 +120,13 @@ public class BuildNifiCustomWorkFlow {
                 Thread.sleep(200);
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             }
+            return ResultEnum.SUCCESS;
         } catch (Exception e) {
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
             log.info("此组启动失败");
             e.printStackTrace();
+            return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
         }

@@ -48,7 +48,7 @@ public class TriggerScheduling implements ITriggerScheduling {
 
 
     @Override
-    public void unifiedControl(String data, Acknowledgment acknowledgment) {
+    public ResultEnum unifiedControl(String data, Acknowledgment acknowledgment) {
         try {
 
             UnifiedControlDTO unifiedControlDTO = JSON.parseObject(data, UnifiedControlDTO.class);
@@ -129,8 +129,10 @@ public class TriggerScheduling implements ITriggerScheduling {
                     throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
                 }
             }
+            return ResultEnum.SUCCESS;
         } catch (ApiException e) {
             e.printStackTrace();
+            return ResultEnum.ERROR;
         } finally {
             acknowledgment.acknowledge();
         }
@@ -148,7 +150,7 @@ public class TriggerScheduling implements ITriggerScheduling {
         querySqlDto.name = "queryDispatchProcessor";
         querySqlDto.details = "queryDispatchProcessor";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType," +unifiedControlDTO.userId +" as userId";
+        querySqlDto.querySql = "select " + unifiedControlDTO.id + " as id, " + unifiedControlDTO.templateModulesType + " as templateModulesType," + unifiedControlDTO.userId + " as userId";
         querySqlDto.dbConnectionId = cfgDbPoolId;
         querySqlDto.scheduleExpression = unifiedControlDTO.scheduleExpression;
         querySqlDto.scheduleType = unifiedControlDTO.scheduleType;

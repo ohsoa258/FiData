@@ -1,5 +1,6 @@
 package com.fisk.task.listener.nifi;
 
+import com.fisk.common.core.response.ResultEnum;
 import org.springframework.kafka.support.Acknowledgment;
 
 /**
@@ -7,5 +8,5 @@ import org.springframework.kafka.support.Acknowledgment;
  */
 public interface ITriggerScheduling {
 
-    void unifiedControl(String data, Acknowledgment acknowledgment);
+    ResultEnum unifiedControl(String data, Acknowledgment acknowledgment);
 }

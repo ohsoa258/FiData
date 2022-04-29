@@ -3,6 +3,8 @@ package com.fisk.task.consumer;
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -160,72 +162,72 @@ public class KafkaConsumer {
     //这里只用来存放reids
     @KafkaListener(topics = "${nifi.pipeline.topicName}", containerFactory = "batchFactory", groupId = "test")
     public void consumer(List<String> arrMessage, Acknowledgment ack) {
-        iBuildPipelineSupervisionListener.msg(arrMessage,ack);
+        iBuildPipelineSupervisionListener.msg(arrMessage, ack);
     }
 
     @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildNifiTaskListener(String data, Acknowledgment ack) {
-        iNifiTaskListener.msg(data, ack);
+    public ResultEntity<Object> buildNifiTaskListener(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ATLAS_TABLECOLUMN_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {
-        buildAtlasTableAndColumnTaskListener.msg(data, ack);
+    public ResultEntity<Object> buildAtlasTableAndColumnTaskListener(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(buildAtlasTableAndColumnTaskListener.msg(data, ack));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAMODEL_DORIS_TABLE, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD)
-    public void buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataModelDorisTableListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildDataModelDorisTableListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DORIS_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DORIS_MQ_BUILD)
-    public void buildDorisTaskListener(String dataInfo, Acknowledgment acke) {
-        buildDorisTaskListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildDorisTaskListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildDorisTaskListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildNifiCustomWorkFlow(String dataInfo, Acknowledgment acke) {
-        buildNifiCustomWorkFlow.msg(dataInfo, acke);
+    public ResultEntity<Object> buildNifiCustomWorkFlow(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildNifiCustomWorkFlow.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_DELETE_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_DELETE)
-    public void buildDataInputDeletePgTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataInputDeletePgTableListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildDataInputDeletePgTableListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildDataInputDeletePgTableListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_DATAINPUT_PGSQL_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.DATAINPUT_PG_TABLE_BUILD)
-    public void buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
-        buildDataInputPgTableListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildDataInputPgTableListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildDataInputPgTableListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_CREATEMODEL_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog(type = TraceTypeEnum.OLAP_CREATEMODEL_BUILD)
-    public void buildModelTaskListener(String dataInfo, Acknowledgment acke) {
-        buildModelTaskListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildModelTaskListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildModelTaskListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_OLAP_WIDE_TABLE_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildWideTableTaskListener(String dataInfo, Acknowledgment acke) {
-        buildWideTableTaskListener.msg(dataInfo, acke);
+    public ResultEntity<Object> buildWideTableTaskListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildWideTableTaskListener.msg(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_TASK_BUILD_NIFI_DISPATCH_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildUnifiedControlTaskListener(String dataInfo, Acknowledgment acke) {
-        iTriggerScheduling.unifiedControl(dataInfo, acke);
+    public ResultEntity<Object> buildUnifiedControlTaskListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(iTriggerScheduling.unifiedControl(dataInfo, acke));
     }
 
     @KafkaListener(topics = MqConstants.QueueConstants.BUILD_IMMEDIATELYSTART_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
-    public void buildImmediatelyStartTaskListener(String dataInfo, Acknowledgment acke) {
+    public ResultEntity<Object> buildImmediatelyStartTaskListener(String dataInfo, Acknowledgment acke) {
         try {
             BuildTableNifiSettingDTO buildTableNifiSettingDTO = JSON.parseObject(dataInfo, BuildTableNifiSettingDTO.class);
             List<TableNifiSettingDTO> tableNifiSettings = buildTableNifiSettingDTO.tableNifiSettings;
@@ -234,8 +236,10 @@ public class KafkaConsumer {
                     iNiFiHelper.immediatelyStart(tableNifiSettingDTO);
                 }
             }
+            return ResultEntityBuild.build(ResultEnum.SUCCESS);
         } catch (Exception e) {
             e.printStackTrace();
+            return ResultEntityBuild.build(ResultEnum.ERROR);
         } finally {
             acke.acknowledge();
         }
@@ -325,19 +329,18 @@ public class KafkaConsumer {
     }
 
 
-
     // 7个模板7个方法
 
     @MQConsumerLog
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory" ,groupId = "test")
-    public void buildModelListener(String dataInfo, Acknowledgment acke) {
-        buildModelListener.msg(dataInfo, acke);
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_MODEL_DATA, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> buildModelListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildModelListener.msg(dataInfo, acke));
     }
 
     @MQConsumerLog
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory" ,groupId = "test")
-    public void buildEntityListener(String dataInfo, Acknowledgment acke) {
-        buildModelListener.backgroundCreateTasks(dataInfo, acke);
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_MDM_ENTITY_DATA, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> buildEntityListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildModelListener.backgroundCreateTasks(dataInfo, acke));
     }
 
 }
