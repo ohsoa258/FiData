@@ -32,8 +32,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildAttributeLogTable(String tableName) {
-        double d = Math.random();
-        int pk = (int)(d*100);
+        int pk = (int)(Math.random()*899998)+1000+1;
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");

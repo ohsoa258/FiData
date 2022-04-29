@@ -108,7 +108,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 获取实体信息
             EntityInfoVO entityInfoVo = mdmClient.getAttributeById(dto.getEntityId()).getData();
             String status = entityInfoVo.getStatus();
-            if (status.equals(NOT_CREATED.getName())){
+            if (status.equals(NOT_CREATED.getName()) || status.equals(CREATED_FAIL.getName())){
                 // 1.执行创建表任务
                 this.createTable(abstractDbHelper,sqlBuilder,connection,entityInfoVo);
             }else if (status.equals(CREATED_SUCCESSFULLY.getName())){
