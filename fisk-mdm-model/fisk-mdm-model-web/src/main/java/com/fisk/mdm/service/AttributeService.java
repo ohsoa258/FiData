@@ -95,4 +95,12 @@ public interface AttributeService extends IService<AttributePO> {
      */
     ResultEnum deleteData(Integer id);
 
+    /**
+     * 删除属性(逻辑删除)
+     *
+     * @param id id
+     * @return {@link ResultEnum}
+     */
+    ResultEnum deleteDataById(Integer id);
+
 }
