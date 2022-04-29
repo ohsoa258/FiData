@@ -293,6 +293,24 @@ public class EntityServiceImpl implements EntityService {
 
             // 获取创建人、修改人
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
+
+            //若属性类型为域字段，需返回关联实体名称
+            for (AttributeInfoDTO attributeInfoDTO:dtoList){
+                //判断类型是否为域字段，并且域字段id是否为空
+                if( DataTypeEnum.DOMAIN.getName().equals(attributeInfoDTO.getDataType()) &&
+                        !Objects.isNull(attributeInfoDTO.getDomainId())){
+                    //查询所关联实体的code属性
+                    AttributePO codeAttribute = attributeMapper.selectById(attributeInfoDTO.getDomainId());
+                    if(codeAttribute != null){
+                        //根据code属性的entity_id查询到实体
+                        EntityPO domainEntityPo = entityMapper.selectById(codeAttribute.getEntityId());
+                        if(domainEntityPo != null){
+                            //为”关联实体名“赋值
+                            attributeInfoDTO.setDomainName(domainEntityPo.getName());
+                        }
+                    }
+                }
+            }
             entityInfoVo.setAttributeList(dtoList);
             return entityInfoVo;
         }

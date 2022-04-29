@@ -126,6 +126,11 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
      */
     private Integer domainId;
 
+    /**
+     * 关联实体名称
+     */
+    private String domainName;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",required = true)
     public LocalDateTime createTime;
