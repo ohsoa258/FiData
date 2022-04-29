@@ -306,6 +306,8 @@ public class EntityServiceImpl implements EntityService {
                         EntityPO domainEntityPo = entityMapper.selectById(codeAttribute.getEntityId());
                         if(domainEntityPo != null){
                             //为”关联实体名“赋值
+                            attributeInfoDTO.setDomainEntityId((int)domainEntityPo.getId());
+                            //为”关联实体名“赋值
                             attributeInfoDTO.setDomainName(domainEntityPo.getName());
                         }
                     }
