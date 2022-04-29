@@ -8,8 +8,10 @@ import com.fisk.chartvisual.enums.DataDoFieldTypeEnum;
 import com.fisk.chartvisual.vo.DataDomainVO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
-import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -210,11 +212,20 @@ public interface DataModelClient {
 
 
     /**
-     *根据事实id获取事实字段及其关联详情(nifi)
+     * 根据事实id获取事实字段及其关联详情(nifi)
+     *
      * @param factId
      * @return
-     * */
+     */
     @GetMapping("/factAttribute/selectAttributeList")
     ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(@RequestParam("factId") int factId);
 
+    /**
+     * 根据不同类型获取数仓对应的表
+     *
+     * @param dto dto
+     * @return 结果
+     */
+    @PostMapping("/DataFactory/getTableId")
+    ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto);
 }

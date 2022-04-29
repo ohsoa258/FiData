@@ -14,7 +14,7 @@ public class KeywordTypeDTO {
     /**
      * SQL关键字类型
      */
-    @ApiModelProperty(value = "SQL关键字类型", required = true)
+    @ApiModelProperty(value = "SQL关键字类型: (1:mysql  2:sqlserver  3:pgsql  4:doris)", required = true)
     public List<Long> keywordType;
 
 }
