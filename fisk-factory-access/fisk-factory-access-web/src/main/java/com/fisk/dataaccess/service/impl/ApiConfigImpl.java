@@ -112,9 +112,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEnum addData(ApiConfigDTO dto) {
         // 当前字段名不可重复
         List<String> list = this.list().stream().map(e -> e.apiName).collect(Collectors.toList());
-        if (list.contains(dto.apiName)) {
-            return ResultEnum.NAME_EXISTS;
+
+        for (String s : list) {
+            if (s.equalsIgnoreCase(dto.apiName)) {
+                return ResultEnum.NAME_EXISTS;
+            }
         }
+
+//        if (list.contains(dto.apiName)) {
+//        }
 
         // dto -> po
         ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
