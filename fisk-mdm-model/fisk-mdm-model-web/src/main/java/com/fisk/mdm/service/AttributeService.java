@@ -88,7 +88,7 @@ public interface AttributeService extends IService<AttributePO> {
     ResultEnum updateStatus(AttributeStatusDTO statusDto);
 
     /**
-     * 删除属性(修改状态为删除待提交)
+     * 删除属性
      *
      * @param id 属性id
      * @return {@link ResultEnum}
