@@ -52,7 +52,7 @@ public class AttributeController {
         return ResultEntityBuild.build(service.editData(attributeUpdateDTO));
     }
 
-    @ApiOperation("删除attribute")
+    @ApiOperation("删除attribute(逻辑删除)")
     @DeleteMapping("/delete")
     public ResultEntity<ResultEnum> deleteData(Integer id) {
         return ResultEntityBuild.build(service.deleteDataById(id));
