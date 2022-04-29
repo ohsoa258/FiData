@@ -88,6 +88,23 @@ public class AbstractDbHelper {
     }
 
     /**
+     * 回滚事务
+     *
+     * @param connection 连接对象
+     */
+    public static void rollbackConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                if (connection != null){
+                    connection.rollback();
+                }
+            }catch (SQLException ec){
+                log.error("【closeConnection】数据库连接关闭失败, ex", ec);
+            }
+        }
+    }
+
+    /**
      * 关闭Statement对象
      *
      * @param st Statement对象
