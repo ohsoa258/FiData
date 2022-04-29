@@ -82,4 +82,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String deleteFiled(String tableName, String filedName) {
         return null;
     }
+
+    @Override
+    public String queryData(String tableName) {
+        return null;
+    }
 }

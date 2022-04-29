@@ -264,6 +264,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String queryData(String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT * FROM " + PUBLIC + "." + tableName);
+        return str.toString();
+    }
+
     /**
      * 存在域字段
      * @param foreignList

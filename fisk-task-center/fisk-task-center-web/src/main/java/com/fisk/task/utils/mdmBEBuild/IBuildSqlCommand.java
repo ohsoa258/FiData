@@ -101,4 +101,11 @@ public interface IBuildSqlCommand {
      * @return
      */
     String deleteFiled(String tableName,String filedName);
+
+    /**
+     * 查询数据
+     * @param tableName
+     * @return
+     */
+    String queryData(String tableName);
 }

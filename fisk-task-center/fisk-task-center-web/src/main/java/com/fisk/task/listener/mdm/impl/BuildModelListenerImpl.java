@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ch.qos.logback.core.db.DBHelper.closeConnection;
+import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
 import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
 import static com.fisk.mdm.enums.AttributeStatusEnum.UPDATE;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.*;
@@ -109,12 +111,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             if (status.equals(NOT_CREATED.getName())){
                 // 1.执行创建表任务
                 this.createTable(abstractDbHelper,sqlBuilder,connection,entityInfoVo);
-                // 2.回写成功属性状态
-                this.writableAttributeStatus(entityInfoVo.getAttributeList());
-                // 3.创建view视图
-                this.createViwTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-                // 4.回写实体状态
-                this.writableEntityStatus(entityInfoVo);
             }else if (status.equals(CREATED_SUCCESSFULLY.getName())){
                 // 1.stg表删了重新生成
                 this.updateStgTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo);
@@ -156,14 +152,63 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public void updateStgTable(AbstractDbHelper abstractDbHelper,Connection connection,
                       IBuildSqlCommand sqlBuilder,EntityInfoVO entityInfoVo) throws SQLException{
+
+        // 筛选属性出去已提交
+        List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
+                .collect(Collectors.toList());
+
         // 1.删除视图
-        this.dropViwTable(abstractDbHelper,connection, sqlBuilder,entityInfoVo.getAttributeList());
+        this.dropViwTable(abstractDbHelper,connection, sqlBuilder,noSubmitAttributeList);
         // 2.删除stg表
-        this.dropStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo.getAttributeList());
+        this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
         // 3.创建Stg表
-        this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+        this.createStgTable1(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
         // 4.回写columnName
         this.writableColumnName(entityInfoVo.getAttributeList());
+    }
+
+    /**
+     * 创建Stg表
+     * @param abstractDbHelper
+     * @param sqlBuilder
+     * @param connection
+     * @param entityInfoVo
+     */
+    public void createStgTable1(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+                               Connection connection, EntityInfoVO entityInfoVo){
+
+        String buildStgTableSql = null;
+        try{
+            // 1.生成Sql
+            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
+            // 2.执行sql
+            abstractDbHelper.executeSql(buildStgTableSql, connection);
+        }catch (SQLException ex){
+
+            // 回写失败信息
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg()
+                    + "【执行的SQL】:" + buildStgTableSql + "【原因】:" + ex);
+            log.error("创建Stg表失败,异常信息:" + ex);
+            throw new FkException(ResultEnum.CREATE_STG_TABLE);
+        }
+    }
+
+    /**
+     * 判断表是否存在
+     * @param sqlBuilder
+     * @param tableName
+     * @return
+     */
+    public boolean isExits(IBuildSqlCommand sqlBuilder,AbstractDbHelper abstractDbHelper,
+                           Connection connection,String tableName){
+        try{
+            // 1.查询表是否存在
+            String querySql = sqlBuilder.queryData(tableName);
+            abstractDbHelper.executeSql(querySql, connection);
+            return true;
+        } catch (SQLException ex) {
+            return false;
+        }
     }
 
     /**
@@ -182,14 +227,23 @@ public class BuildModelListenerImpl implements BuildModelListener {
             AttributeInfoDTO dto = attributeList.get(0);
             String tableName = "stg_" + dto.getModelId() + "_" + dto.getEntityId();
 
-            // 1.创建Sql
-            dropTableSql = sqlBuilder.dropTable(tableName);
-            // 2.执行Sql
-            abstractDbHelper.executeSql(dropTableSql, connection);
+            // 判断视图是否存在
+            boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, tableName);
+            if (exits == true){
+                // 1.创建Sql
+                dropTableSql = sqlBuilder.dropTable(tableName);
+                // 2.执行Sql
+                abstractDbHelper.executeSql(dropTableSql, connection);
+            }
+
         }catch (SQLException ex){
 
+            // 筛选属性出去已提交
+            List<AttributeInfoDTO> noSubmitAttributeList = attributeList.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
+                    .collect(Collectors.toList());
+
             // 回写失败属性信息
-            this.exceptionAttributeProcess(attributeList, ResultEnum.DROP_STG_TABLE.getMsg()
+            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.DROP_STG_TABLE.getMsg()
                     + "【执行SQL】" + dropTableSql + "【原因】:" + ex);
             log.error("删除Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.DROP_STG_TABLE);
@@ -213,10 +267,15 @@ public class BuildModelListenerImpl implements BuildModelListener {
             AttributeInfoDTO dto = attributeList.get(0);
             String viwName = "viw_" + dto.getModelId() + "_" + dto.getEntityId();
 
-            // 1.创建Sql
-            dropTableSql = sqlBuilder.dropViw(viwName);
-            // 2.执行Sql
-            abstractDbHelper.executeSql(dropTableSql, connection);
+            // 判断视图是否存在
+            boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, viwName);
+            if (exits == true){
+                // 1.创建Sql
+                dropTableSql = sqlBuilder.dropViw(viwName);
+                // 2.执行Sql
+                abstractDbHelper.executeSql(dropTableSql, connection);
+            }
+
         }catch (SQLException ex){
 
             // 回写失败属性信息
@@ -307,11 +366,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 dtoList.add(status);
                 log.error("修改Mdm表失败,异常信息:" + ex);
                 throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
-            }finally {
-                // 回写属性状态
-                this.exceptionAttributeProcess(dtoList);
             }
         }
+
+        // 回写属性状态
+        this.exceptionAttributeProcess(dtoList);
     }
 
     /**
@@ -364,10 +423,44 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public void createTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                             Connection connection,EntityInfoVO entityInfoVo) throws SQLException {
 
-        // 1.创建Stg表
-        this.createStgTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
-        // 2.创建mdm表
-        this.createMdmTable(abstractDbHelper,sqlBuilder, connection, entityInfoVo);
+        String sql = null;
+        try{
+            // a.开启事务
+            connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            // 1.创建Stg表
+            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            PreparedStatement stemStg = connection.prepareStatement(sql);
+            stemStg.execute();
+
+            // 2.创建mdm表
+            sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            PreparedStatement stemMdm = connection.prepareStatement(sql);
+            stemMdm.execute();
+
+            // 3.回写columnName
+            this.writableColumnName(entityInfoVo.getAttributeList());
+
+            // 4.创建view视图
+            sql = this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            PreparedStatement stemViw = connection.prepareStatement(sql);
+            stemViw.execute();
+
+            // e.提交事务
+            connection.commit();
+
+            // 5.回写成功属性状态
+            this.writableAttributeStatus(entityInfoVo.getAttributeList());
+            // 6.回写实体状态
+            this.writableEntityStatus(entityInfoVo);
+        } catch (Exception ex){
+            // a.回滚事务
+            rollbackConnection(connection);
+            // b.回写失败状态
+            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_TABLE_ERROR.getMsg() + "【执行Sql】:" + sql
+                    + "【原因】:" + ex.getMessage());
+        }
     }
 
     /**
@@ -383,7 +476,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
     }
 
     /**
-     * 回写实体状态
+     * 回写实体成功状态
      * @param entityInfoVo
      */
     public void writableEntityStatus(EntityInfoVO entityInfoVo){
@@ -447,7 +540,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param connection
      * @param entityInfoVo
      */
-    public void createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+    public String createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
 
         String buildStgTableSql = null;
@@ -455,12 +548,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 1.生成Sql
             buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
             // 2.执行sql
-            abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (SQLException ex){
+            return buildStgTableSql;
+        }catch (Exception ex){
 
-            // 回写失败信息
-            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_STG_TABLE.getMsg()
-                    + "【执行的SQL】:" + buildStgTableSql + "【原因】:" + ex);
+            // 筛选属性出去已提交
+            List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
+                    .collect(Collectors.toList());
+
+            // 回写失败属性信息
+            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
+                    + "【执行SQL】" + buildStgTableSql + "【原因】:" + ex);
             log.error("创建Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
@@ -473,7 +570,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param connection
      * @param entityInfoVo
      */
-    public void createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+    public String createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
 
         String buildStgTableSql = null;
@@ -481,8 +578,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 1.生成Sql
             buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo);
             // 2.执行sql
-            abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (SQLException ex){
+            return buildStgTableSql;
+        }catch (Exception ex){
             closeConnection(connection);
 
             // 回写失败信息
@@ -565,7 +662,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param connection
      * @param entityInfoVo
      */
-    public void createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+    public String createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                Connection connection, EntityInfoVO entityInfoVo){
 
         String buildStgTableSql = null;
@@ -573,12 +670,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 1.生成Sql
             buildStgTableSql = this.buildViewTable(entityInfoVo);
             // 2.执行sql
-            abstractDbHelper.executeSql(buildStgTableSql, connection);
-        }catch (SQLException ex){
+            return buildStgTableSql;
+        }catch (Exception ex){
 
-            // 回写失败信息
-            this.exceptionProcess(entityInfoVo,ex,ResultEnum.CREATE_VIW_TABLE.getMsg()
-                    + "【执行的SQL】" + buildStgTableSql + "【原因】:" + ex);
+            // 筛选属性出去已提交
+            List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
+                    .collect(Collectors.toList());
+
+            // 回写失败属性信息
+            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_VIW_TABLE.getMsg()
+                    + "【执行SQL】" + buildStgTableSql + "【原因】:" + ex);
             log.error("创建Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_VIW_TABLE);
         }
