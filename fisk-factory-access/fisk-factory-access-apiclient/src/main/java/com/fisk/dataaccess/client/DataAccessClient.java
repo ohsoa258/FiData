@@ -157,7 +157,7 @@ public interface DataAccessClient {
      *
      * @return list
      */
-    @GetMapping("/dataAccessTree/getTableId")
+    @PostMapping("/dataAccessTree/getTableId")
     public ResultEntity<List<ChannelDataDTO>> getTableId();
 
     /**
