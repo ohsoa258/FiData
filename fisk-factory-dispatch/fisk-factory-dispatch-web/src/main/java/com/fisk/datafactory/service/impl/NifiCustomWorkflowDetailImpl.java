@@ -471,8 +471,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         switch (channelDataEnum) {
             // 数据湖非实时物理表任务
             case DATALAKE_TASK:
-                ResultEntity<List<ChannelDataDTO>> result1 = dataAccessClient.getTableId();
-                return result1.data;
+            case DATALAKE_FTP_TASK:
+            case DATALAKE_API_TASK:
+                ResultEntity<List<ChannelDataDTO>> result = dataAccessClient.getTableId(dto);
+                return result.data;
             // 数仓维度表任务
             case DW_DIMENSION_TASK:
                 // 数仓事实表任务
@@ -483,8 +485,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             case OLAP_FACT_TASK:
                 // 分析模型宽表任务
             case OLAP_WIDETABLE_TASK:
-                ResultEntity<List<ChannelDataDTO>> result2 = dataModelClient.getTableId(dto);
-                return result2.data;
+                ResultEntity<List<ChannelDataDTO>> resultEntity = dataModelClient.getTableId(dto);
+                return resultEntity.data;
             default:
                 break;
         }
