@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
-import com.fisk.common.core.constants.ApiConstants;
 import com.fisk.common.core.constants.RedisTokenKey;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -56,6 +55,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.fisk.common.core.constants.ApiConstants.DATAACCESS_APIBASICINFO;
+
 /**
  * @author lock
  * @email feihongz@fisksoft.com.cn
@@ -85,6 +86,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private PublishTaskClient publishTaskClient;
     @Value("${dataservice.pdf.path}")
     private String templatePath;
+    @Value("${dataservice.pdf.uat_address}")
+    private String pdf_uat_address;
+    @Value("${dataservice.pdf.prd_address}")
+    private String pdf_prd_address;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -538,7 +543,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     private ApiDocDTO createDocDTO(ApiConfigDTO dto, String pushDataJson) {
 
-        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
+        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address)
+                .replace("{api_prd_address}", pdf_prd_address);
+
+        ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
@@ -698,7 +706,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     private ApiDocDTO createApiDocDTO(List<ApiConfigDTO> dtoList) {
 
-        ApiDocDTO apiDocDTO = JSON.parseObject(ApiConstants.DATAACCESS_APIBASICINFO, ApiDocDTO.class);
+        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address)
+                .replace("{api_prd_address}", pdf_prd_address);
+
+        ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"password\": \"xxx\"\n" +

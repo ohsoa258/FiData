@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.service.IDataAccess;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +38,9 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTree());
     }
 
-    @GetMapping("/getTableId")
-    public ResultEntity<List<ChannelDataDTO>> getTableId() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId());
+    @PostMapping("/getTableId")
+    public ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId(dto));
     }
 
     @ApiOperation("根据appId和tableId 获取appName和tableName")

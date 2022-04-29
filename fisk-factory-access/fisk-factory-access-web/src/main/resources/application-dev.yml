@@ -22,8 +22,11 @@ spring:
 # pdf文档模板
 dataservice:
   pdf:
-#    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fk-dataAccess\\fk-dataAccess-service\\target\\classes
-    path: /root/java/fisk-factory-access/pdf
+    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fisk-factory-access\\fisk-factory-access-web\\target\\classes
+    #    path: /root/java/fisk-factory-access/pdf
+    # 接口文档中的环境信息
+    uat_address: http://192.168.11.130:8083/{apiaddress}。
+    prd_address: https://prdHost/{apiaddress}。
 
 # pg数据源配置
 pgsql-datamodel:
