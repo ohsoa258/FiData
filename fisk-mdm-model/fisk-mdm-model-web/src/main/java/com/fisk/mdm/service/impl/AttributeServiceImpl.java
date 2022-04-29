@@ -414,6 +414,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if(attributePo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
+        if("name".equals(attributePo.getName()) && "code".equals(attributePo.getName())){
+            return ResultEnum.CAN_NOT_DELETE_NAME_OR_CODE;
+        }
         //若状态为新增待提交，则直接逻辑删除
         //若为修改待提交、已提交、删除待提交，说明后台表已生成该字段，删除需等待提交
         if(attributePo.getStatus() == AttributeStatusEnum.INSERT){

@@ -201,6 +201,7 @@ public enum ResultEnum {
     FIELD_NAME_IS_SELECTED(12001, "当前字段已被设置,请重新选择"),
     ROW_SECURITYNAME_EXISTS(12002, "当前权限名称已存在"),
     USERGROUP_PERMISSION_ONLY(12003, "用户(组)已设置过权限,不允许设置两种,请检查参数"),
+    CAN_NOT_DELETE_NAME_OR_CODE(12003,"无法删除“name”或“code”"),
 
     /**
      * 元数据
