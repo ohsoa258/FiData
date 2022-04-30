@@ -60,9 +60,9 @@ public interface EntityService {
     EntityInfoVO getAttributeById(Integer id);
 
     /**
-     * 获取创建后台表成功的实体
+     *  获取可关联（同模型下 除本身外 创建后台表成功）的实体
      *
      * @return {@link List}<{@link EntityVO}>
      */
-    ResultEntity<List<EntityVO>> getCreateSuccessEntity();
+    ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId,Integer entityId);
 }
