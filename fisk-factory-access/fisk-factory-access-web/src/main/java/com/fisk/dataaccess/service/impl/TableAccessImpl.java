@@ -517,6 +517,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.id = e.id;
             dto.tableAccessId = e.tableAccessId;
             dto.sourceFieldName = e.sourceFieldName;
+            dto.sourceFieldType = e.sourceFieldType;
             dto.fieldName = e.fieldName;
             dto.isPrimarykey = e.isPrimarykey;
             dto.isRealtime = e.isRealtime;
@@ -530,6 +531,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             e.id = f.id;
             e.tableAccessId = Math.toIntExact(f.tableAccessId);
             e.sourceFieldName = f.sourceFieldName;
+            e.sourceFieldType = f.sourceFieldType;
             e.fieldName = f.fieldName;
             e.isPrimarykey = f.isPrimarykey;
             e.isRealtime = f.isRealtime;
@@ -1413,6 +1415,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             List<String> list = transformField(dto.fieldType, dto.fieldLength);
             dto.fieldType = list.get(0);
             dto.fieldLength = list.get(1);
+
+            dto.sourceFieldType = dto.fieldType;
 
             fieldNameDTOList.add(dto);
         }

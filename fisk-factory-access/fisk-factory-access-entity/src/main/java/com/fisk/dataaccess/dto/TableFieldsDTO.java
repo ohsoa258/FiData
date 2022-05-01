@@ -46,6 +46,9 @@ public class TableFieldsDTO extends BaseDTO {
     @ApiModelProperty(value = "源字段", required = true)
     public String sourceFieldName;
 
+    @ApiModelProperty(value = "源字段类型", required = true)
+    public String sourceFieldType;
+
     /**
      * 字段名称
      */

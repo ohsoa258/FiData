@@ -27,6 +27,11 @@ public class TableFieldsPO extends BasePO {
     public String sourceFieldName;
 
     /**
+     * 源字段类型
+     */
+    public String sourceFieldType;
+
+    /**
      * 字段名称
      */
     public String fieldName;

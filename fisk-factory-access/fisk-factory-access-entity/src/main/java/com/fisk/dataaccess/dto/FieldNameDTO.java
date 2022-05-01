@@ -14,6 +14,8 @@ public class FieldNameDTO {
     public String sourceTableName;
     @ApiModelProperty(value = "源字段", required = true)
     public String sourceFieldName;
+    @ApiModelProperty(value = "源字段类型", required = true)
+    public String sourceFieldType;
     @ApiModelProperty(value = "字段", required = true)
     public String fieldName;
     @ApiModelProperty(value = "字段类型", required = true)
