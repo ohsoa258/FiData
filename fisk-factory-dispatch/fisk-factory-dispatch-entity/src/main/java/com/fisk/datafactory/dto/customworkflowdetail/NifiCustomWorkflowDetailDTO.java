@@ -18,6 +18,8 @@ public class NifiCustomWorkflowDetailDTO {
     public String appId;
     @ApiModelProperty(value = "表id")
     public String tableId;
+    @ApiModelProperty(value = "组件绑定的表的顺序")
+    public Integer tableOrder;
     public String appName;
     public String tableName;
     /**
@@ -37,7 +39,7 @@ public class NifiCustomWorkflowDetailDTO {
     public Double componentX;
     public Double componentY;
     /**
-     *  元数据对象
+     * 元数据对象
      */
     public String metadataObj;
     public Integer schedule;
