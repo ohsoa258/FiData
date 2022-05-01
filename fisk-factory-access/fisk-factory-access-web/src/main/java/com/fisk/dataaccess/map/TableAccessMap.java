@@ -5,6 +5,7 @@ import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
+import com.fisk.dataaccess.entity.ApiConfigPO;
 import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.datafactory.TableIdAndNameVO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
@@ -147,4 +148,23 @@ public interface TableAccessMap {
      * @return target
      */
     List<ChannelDataChildDTO> listPoToChannelDataDto(List<TableAccessPO> list);
+
+    /**
+     * po -> dto
+     *
+     * @param po source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "apiName", target = "tableName")
+    })
+    ChannelDataChildDTO apiConfigPoToChannelDataChildDTO(ApiConfigPO po);
+
+    /**
+     * list po -> dto
+     *
+     * @param list source
+     * @return tatget
+     */
+    List<ChannelDataChildDTO> listApiConfigPoToChannelDataChildDTO(List<ApiConfigPO> list);
 }

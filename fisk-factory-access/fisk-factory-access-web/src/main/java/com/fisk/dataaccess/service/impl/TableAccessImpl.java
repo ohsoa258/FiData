@@ -48,6 +48,7 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -100,6 +101,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private TableBusinessImpl businessImpl;
     @Resource
     private TableBusinessMapper businessMapper;
+    @Resource
+    private ApiConfigImpl apiConfigImpl;
     @Resource
     private NifiConfigMapper nifiConfigMapper;
     @Resource
@@ -1126,16 +1129,67 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     @Override
-    public List<ChannelDataDTO> getTableId(NifiComponentsDTO dto11) {
+    public List<ChannelDataDTO> getTableId(NifiComponentsDTO nifiComponentsDto) {
 
-        // select id,app_name from tb_app_registration where del_flag=1 ORDER BY create_time DESC;
-        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
+        List<AppRegistrationPO> allAppList = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
                 .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
                 .orderByDesc(AppRegistrationPO::getCreateTime));
 
-        // list: po -> dto
-        List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
+        List<AppRegistrationPO> list = new ArrayList<>();
 
+        // 要根据不同的类型来加载不同的应用
+        ChannelDataEnum channelDataEnum = ChannelDataEnum.getName(Math.toIntExact(nifiComponentsDto.id));
+        switch (Objects.requireNonNull(channelDataEnum)) {
+            // 数据湖非实时物理表任务(mysql  sqlserver  oracle)
+            case DATALAKE_TASK:
+                allAppList.forEach(e -> {
+                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
+                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
+                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
+                            dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                        list.add(e);
+                    }
+                });
+
+                return bulidListChannelDataDTOByTableOrFTP(list);
+            // 数据湖ftp任务
+            case DATALAKE_FTP_TASK:
+                allAppList.forEach(e -> {
+                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
+                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.FTP.getName())) {
+                        list.add(e);
+                    }
+                });
+                return bulidListChannelDataDTOByTableOrFTP(list);
+            // 数据湖非实时api任务
+            case DATALAKE_API_TASK:
+                allAppList.forEach(e -> {
+                    AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
+                    if (dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+                        list.add(e);
+                    }
+                });
+                return bulidListChannelDataDTOByAPI(list);
+            default:
+                break;
+        }
+
+        return null;
+    }
+
+    /**
+     * 封装应用及应用下的物理表
+     *
+     * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
+     * @description 封装应用及应用下的物理表
+     * @author Lock
+     * @date 2022/5/1 15:33
+     * @version v1.0
+     * @params list
+     */
+    private List<ChannelDataDTO> bulidListChannelDataDTOByTableOrFTP(List<AppRegistrationPO> list) {
+
+        List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
         // 查询当前应用下面的所有表
         channelDataDTOList.forEach(dto -> {
             // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
@@ -1148,6 +1202,36 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     .select(TableAccessPO::getId, TableAccessPO::getTableName));
             // list: po->dto 并赋值给dto.list
             dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+        });
+
+        return channelDataDTOList;
+    }
+
+    /**
+     * 封装应用及应用下的api
+     *
+     * @return java.util.List<com.fisk.datafactory.dto.components.ChannelDataDTO>
+     * @description 封装应用及应用下的api
+     * @author Lock
+     * @date 2022/5/1 15:34
+     * @version v1.0
+     * @params list
+     */
+    private List<ChannelDataDTO> bulidListChannelDataDTOByAPI(List<AppRegistrationPO> list) {
+
+        List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
+        // 查询当前应用下面的所有API
+        channelDataDTOList.forEach(dto -> {
+            // select id,api_name from tb_api_config where app_id =#{dto.id} and del_flag = 1
+            List<ApiConfigPO> poList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery()
+                    .eq(ApiConfigPO::getAppId, dto.id)
+                    // publish=3: 正在发布 -> 1:发布成功
+                    .or()
+                    .eq(ApiConfigPO::getPublish, 3)
+                    .eq(ApiConfigPO::getPublish, 1)
+                    .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
+            // list: po->dto 并赋值给dto.list
+            dto.list = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(poList);
         });
 
         return channelDataDTOList;
