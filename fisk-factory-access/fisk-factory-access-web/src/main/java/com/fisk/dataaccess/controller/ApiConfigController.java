@@ -4,10 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.ApiUserDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import io.swagger.annotations.Api;
@@ -17,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 
@@ -120,7 +118,13 @@ public class ApiConfigController {
 
     @ApiOperation("修改api发布状态")
     @PutMapping("/updateApiPublishStatus")
-    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto){
+    public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto) {
         service.updateApiPublishStatus(dto);
+    }
+
+    @PostMapping("/importData")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importData(@NotNull @RequestBody ApiImportDataDTO dto) {
+        return ResultEntityBuild.build(service.importData(dto));
     }
 }

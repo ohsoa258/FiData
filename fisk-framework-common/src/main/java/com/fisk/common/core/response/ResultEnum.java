@@ -103,6 +103,8 @@ public enum ResultEnum {
     CREATE_PG_CONNECTION(5029, "创建pgsql连接驱动失败"),
     API_NOT_EXIST(5030, "创建pgsql连接驱动失败"),
     STG_TO_ODS_ERROR(5031, "stg同步数据到ods报错"),
+    DATASOURCE_INFORMATION_ISNULL(5032, "数据源信息不存在"),
+    APICONFIG_ISNULL(5033, "api不存在"),
 
 
     /**
@@ -111,8 +113,8 @@ public enum ResultEnum {
     TASK_PUBLISH_ERROR(6001, "任务发布失败"),
     TASK_NIFI_BUILD_COMPONENTS_ERROR(6002, "Nifi组件创建失败"),
     TASK_NIFI_NO_COMPONENTS_FOUND(6003, "未找到组件"),
-    TASK_NIFI_DISPATCH_ERROR(6004,"调度失败"),
-    TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005,"清空队列失败"),
+    TASK_NIFI_DISPATCH_ERROR(6004, "调度失败"),
+    TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR(6005, "清空队列失败"),
     TASK_NIFI_CONTROLLER_SERVICES_RUN_STATUS_ERROR(6006,"禁用控制器服务失败"),
     TASK_NIFI_DELETE_FLOW(6007,"nifi删除失败"),
     TASK_TABLE_NOT_EXIST(6008,"表不存在"),

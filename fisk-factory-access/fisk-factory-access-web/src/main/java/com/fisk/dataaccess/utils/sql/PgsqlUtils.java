@@ -85,6 +85,8 @@ public class PgsqlUtils {
         Statement statement = pgConn.createStatement();
         try {
             // 执行sql
+            System.out.println("操作类型: 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods;  " + flag);
+            System.out.println("pg函数: " + sqlList.get(flag));
             statement.executeUpdate(sqlList.get(flag));
 
             statement.close();

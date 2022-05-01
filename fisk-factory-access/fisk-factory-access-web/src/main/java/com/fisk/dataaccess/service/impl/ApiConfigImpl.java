@@ -15,11 +15,10 @@ import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.ApiUserDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.doc.doc.*;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
+import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -30,6 +29,8 @@ import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
+import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
+import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.task.client.PublishTaskClient;
@@ -56,6 +57,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.constants.ApiConstants.DATAACCESS_APIBASICINFO;
+import static com.fisk.dataaccess.enums.HttpRequestEnum.GET;
+import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
 
 /**
  * @author lock
@@ -82,6 +85,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private TableSyncmodeImpl tableSyncmodeImpl;
     @Resource
     private TableBusinessImpl tableBusinessImpl;
+    @Resource
+    private ApiParameterServiceImpl apiParameterServiceImpl;
+    //    @Resource
+//    private ApiHttpRequestFactoryHelper apiHttpRequestFactoryHelper;
     @Resource
     private PublishTaskClient publishTaskClient;
     @Value("${dataservice.pdf.path}")
@@ -356,6 +363,62 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             model.publish = apiPublish;
             baseMapper.updateById(model);
         }
+    }
+
+    @Override
+    public ResultEnum importData(ApiImportDataDTO dto) {
+
+        // 根据appId获取应用信息(身份验证方式,验证参数)
+        // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (dataSourcePo == null) {
+            return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
+        }
+        ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiId).one();
+        if (apiConfigPo == null) {
+            return ResultEnum.APICONFIG_ISNULL;
+        }
+        List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
+
+        ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+        apiHttpRequestDto.httpRequestEnum = POST;
+        // 身份验证地址
+        apiHttpRequestDto.uri = dataSourcePo.connectStr;
+        // jwt账号&密码
+        JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+        jwtRequestDto.username = dataSourcePo.connectAccount;
+        jwtRequestDto.password = dataSourcePo.connectPwd;
+        apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
+
+        IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+        // 获取token
+        String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
+
+
+        apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+        apiHttpRequestDto.requestHeader = requestToken;
+        if (apiConfigPo.apiRequestType == 1) {
+            apiHttpRequestDto.httpRequestEnum = GET;
+        } else if (apiConfigPo.apiRequestType == 2) {
+            apiHttpRequestDto.httpRequestEnum = POST;
+            if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
+                apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+            }
+        }
+        // 调用第三方api返回的数据
+        JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+        receiveDataDTO.apiId = dto.apiId;
+        String data = String.valueOf(jsonObject);
+        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+        System.out.println("data = " + data);
+        receiveDataDTO.pushData = String.valueOf(data);
+
+        // 推送数据
+        pushData(receiveDataDTO);
+
+        return ResultEnum.SUCCESS;
     }
 
     /**

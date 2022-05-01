@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
+import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -207,4 +208,14 @@ public interface DataAccessClient {
     @ApiOperation("修改api发布状态")
     @PutMapping("/apiConfig/updateApiPublishStatus")
     public void updateApiPublishStatus(@RequestBody ModelPublishStatusDTO dto);
+
+    /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/apiConfig/importData")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto);
 }

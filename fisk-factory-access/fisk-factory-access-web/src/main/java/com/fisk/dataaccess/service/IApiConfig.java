@@ -3,10 +3,7 @@ package com.fisk.dataaccess.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.api.ApiConfigDTO;
-import com.fisk.dataaccess.dto.api.ApiUserDTO;
-import com.fisk.dataaccess.dto.api.GenerateDocDTO;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
@@ -116,5 +113,13 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return 执行结果
      */
     ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response);
+
+    /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum importData(ApiImportDataDTO dto);
 }
 

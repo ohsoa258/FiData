@@ -43,17 +43,17 @@ public class AppDataSourcePO extends BasePO {
     public String dbName;
 
     /**
-     * 数据源连接字符串
+     * 数据源连接字符串or身份验证地址
      */
     public String connectStr;
 
     /**
-     * 连接账号
+     * 连接账号(非实时、OAuth、JWT)
      */
     public String connectAccount;
 
     /**
-     * 连接密码
+     * 连接密码(非实时、OAuth、JWT)
      */
     public String connectPwd;
 
