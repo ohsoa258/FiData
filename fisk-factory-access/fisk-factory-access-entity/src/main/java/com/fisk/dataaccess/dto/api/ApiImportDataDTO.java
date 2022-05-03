@@ -22,4 +22,7 @@ public class ApiImportDataDTO {
     @NotNull
     @ApiModelProperty(value = "非实时apiId", required = true)
     public long apiId;
+
+    @ApiModelProperty(value = "管道id", required = true)
+    public String workflowId;
 }
