@@ -217,7 +217,7 @@ public class ApiConstants {
             "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。apiCode为私密信息，不在文档中体现，请在订阅API时自行保存。\",\n" +
             "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
             //"    \"uatAddress\":\"测试环境：{api_uat_address}\",\n" +
-            "    \"接口地址\":\"{api_environment_address}\",\n" +
+            "    \"prdAddress\":\"{api_environment_address}\",\n" +
             "    \"apiCatalogueDTOS\":[\n" +
             "        {\n" +
             "            \"grade\":1,\n" +

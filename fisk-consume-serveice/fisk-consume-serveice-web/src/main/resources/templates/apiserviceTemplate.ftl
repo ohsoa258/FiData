@@ -323,11 +323,11 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.3.&nbsp;&nbsp;环境信息</p>
+            <p style="font-weight: bold;">2.3.&nbsp;&nbsp;接口地址</p>
         </div>
-        <div>
-            <p style="text-indent: 2em;font-size: 12px">${uatAddress}</p>
-        </div>
+<#--        <div>-->
+<#--            <p style="text-indent: 2em;font-size: 12px">${uatAddress}</p>-->
+<#--        </div>-->
         <div>
             <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>
         </div>
