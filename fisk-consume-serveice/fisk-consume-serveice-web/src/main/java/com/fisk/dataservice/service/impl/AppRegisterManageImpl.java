@@ -421,7 +421,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
         // API文档基础信息
         String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_uat_address}", api_address);
-        log.info("createDocDTO jsonInfo："+jsonResult);
+        // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
