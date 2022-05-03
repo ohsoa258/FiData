@@ -17,7 +17,7 @@ public class ApiConstants {
             "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
             "    \"isuDate\":\"发布日期：20220222\",\n" +
             "    \"footerName\":\"FiData接口文档\",\n" +
-            "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
+            "    \"docPurpose\":\"本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
             "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的上游系统。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
             "    \"standard_query\":\"暂无。\",\n" +
@@ -211,7 +211,7 @@ public class ApiConstants {
             "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
             "    \"isuDate\":\"发布日期：20220101\",\n" +
             "    \"footerName\":\"FiData接口文档\",\n" +
-            "    \"docPurpose\":\"本文由本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
+            "    \"docPurpose\":\"本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
             "    \"readers\":\"预期读者包括需要从FiData一体化数据赋能平台中获取数据的第三方平台。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
             "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。apiCode为私密信息，不在文档中体现，请在订阅API时自行保存。\",\n" +

@@ -25,6 +25,7 @@ import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +45,7 @@ import static com.fisk.common.core.constants.ApiConstants.DATASERVICE_APIBASICIN
  * @author dick
  */
 @Service
+@Slf4j
 public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppConfigPO> implements IAppRegisterManageService {
 
     @Resource
@@ -419,6 +421,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
         // API文档基础信息
         String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_uat_address}", api_address);
+        log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
