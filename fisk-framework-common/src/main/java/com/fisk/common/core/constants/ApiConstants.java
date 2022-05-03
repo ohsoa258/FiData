@@ -68,7 +68,7 @@ public class ApiConstants {
             "        {\n" +
             "            \"grade\":3,\n" +
             "            \"catalogueIndex\":\"2.3.\",\n" +
-            "            \"catalogueName\":\"环境信息\"\n" +
+            "            \"catalogueName\":\"接口地址\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"grade\":3,\n" +
