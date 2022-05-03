@@ -3,7 +3,7 @@ dataservice:
     # pdf文档模板路径
     path: /root/java/fisk-consume-serveice/pdf
     # 接口文档中的环境信息
-    api_environment_address: http://192.168.21.13:8083/{apiaddress}。
+    api_address: http://192.168.21.13:8083/{apiaddress}。
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver

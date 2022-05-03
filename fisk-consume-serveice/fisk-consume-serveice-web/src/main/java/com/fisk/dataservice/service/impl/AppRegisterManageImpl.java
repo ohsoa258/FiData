@@ -72,8 +72,8 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
     @Value("${dataservice.pdf.path}")
     private String templatePath;
-    @Value("${dataservice.pdf.api_environment_address}")
-    private String api_environment_address;
+    @Value("${dataservice.pdf.api_address}")
+    private String api_address;
 
     @Override
     public Integer getAppCount() {
@@ -418,7 +418,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         ApiDocDTO apiDocDTO = new ApiDocDTO();
 
         // API文档基础信息
-        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_environment_address}", api_environment_address);
+        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_uat_address}", api_address);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
