@@ -153,7 +153,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      *
      * @param pipelineId   tb_nifi_custom_workflow表 id
      * @param workflowId   tb_nifi_custom_workflow表 workflowId
-     * @param pipelineName tb_nifi_custom_workflow表 pipelineName
+     * @param pipelineName tb_nifi_custom_workflow表 调度的管道名称作为nifi的pipelineName
      * @param list         list
      * @return NifiCustomWorkListDTO
      */
@@ -171,7 +171,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         workListDTO.pipelineName = pipelineName;
         // TODO 封装nifi所有节点(大量改动)
         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(list);
-        // 管道详情-tree
+        // TODO 管道详情-父子级tree,
         workListDTO.structure = getMenuTree(list);
         // 管道详情下的任务组-tree
         workListDTO.externalStructure = getMenuTree(workflowId, list);
@@ -206,7 +206,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 封装输入节点
+     * 封装输入节点(只有前端组件存在连线关系的,才适用这个方法)
      *
      * @param po po
      * @return list
@@ -229,7 +229,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 封装输出节点
+     * 封装输出节点(只有前端组件存在连线关系的,才适用这个方法)
      *
      * @param po po
      * @return list
@@ -363,7 +363,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 管道详情-tree
+     * 管道详情-父子级tree
      *
      * @param list tb_nifi_custom_workflow_detail表 list对象
      * @return map
