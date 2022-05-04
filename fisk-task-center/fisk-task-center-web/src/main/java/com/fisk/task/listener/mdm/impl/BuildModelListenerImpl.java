@@ -16,6 +16,7 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
@@ -353,15 +354,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     Boolean enableRequired = infoDto.getEnableRequired();
                     if (enableRequired == true) {
                         sql = sqlBuilder.notNullable(tableName, infoDto.getColumnName());
-                        // 2.执行Sql
-                        preparedStatement = connection.prepareStatement(sql);
-                        preparedStatement.execute();
                     } else {
                         sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
-                        // 2.执行Sql
-                        preparedStatement = connection.prepareStatement(sql);
-                        preparedStatement.execute();
                     }
+                    // 2.执行Sql
+                    preparedStatement = connection.prepareStatement(sql);
+                    preparedStatement.execute();
                 } else if (infoDto.getStatus().equals(DELETE.getName())) {
                     // 删除字段
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
@@ -780,14 +778,16 @@ public class BuildModelListenerImpl implements BuildModelListener {
             AttributeVO dataCode = mdmClient.get(e.getId() - 1).getData();
             StringBuilder stringBuilder = new StringBuilder();
             if (dataCode != null) {
-                stringBuilder.append(PRIMARY_TABLE + incrementAndGet  + "." + dataCode.getColumnName() + " AS " + dataCode.getName() + "_code");
+                EntityVO entityVo = mdmClient.getDataById(dataCode.getEntityId()).getData();
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet  + "." + dataCode.getColumnName() + " AS " + entityVo.getName() + "_code");
             }
 
             stringBuilder.append(",");
             // 获取域字段名称
             AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
             if (data != null) {
-                stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + data.getName() + "_name");
+                EntityVO entityVo = mdmClient.getDataById(data.getEntityId()).getData();
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + entityVo.getName() + "_name");
             }
 
             return stringBuilder;

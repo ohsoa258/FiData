@@ -8,6 +8,7 @@ import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,4 +76,12 @@ public interface MdmClient {
      */
     @DeleteMapping("/attribute/delete")
     ResultEntity<ResultEnum> delete(@RequestParam("id") Integer id);
+
+    /**
+     * 根据id获取实体
+     * @param id
+     * @return
+     */
+    @GetMapping("/entity/getDataById")
+    ResultEntity<EntityVO> getDataById(@RequestParam("id") Integer id);
 }
