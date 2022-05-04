@@ -14,6 +14,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -152,7 +153,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
             EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
             // 2.mdm表更新
-            this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
+            List<Integer> list = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
 
@@ -160,9 +161,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
             connection.commit();
 
             // 删除属性
-            data.getAttributeList().stream().filter(e -> e.getStatus().equals(DELETE.getName()))
+            list.stream().filter(Objects::nonNull)
                             .forEach(e -> {
-                                mdmClient.delete(e.getId());
+                                mdmClient.delete(e);
                             });
 
         }catch (Exception ex){
@@ -295,12 +296,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param sqlBuilder
      * @param attributeList
      */
-    public void updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
+    public List<Integer> updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
                                IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
+        List<Integer> idsDelete = new ArrayList<>();
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
@@ -365,6 +367,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
                     PreparedStatement statement = connection.prepareStatement(sql);
                     statement.execute();
+                    idsDelete.add(infoDto.getId());
                 }
 
                 // 3.回写成功状态
@@ -388,6 +391,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         // 回写属性状态
         this.exceptionAttributeProcess(dtoList);
+        return idsDelete;
     }
 
     /**
@@ -771,13 +775,22 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         AtomicInteger amount = new AtomicInteger(0);
         String foreign = list.stream().filter(e -> e.getName() != null).map(e -> {
+            int incrementAndGet = amount.incrementAndGet();
+            // 获取域字段名称
+            AttributeVO dataCode = mdmClient.get(e.getId() - 1).getData();
+            StringBuilder stringBuilder = new StringBuilder();
+            if (dataCode != null) {
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet  + "." + dataCode.getColumnName() + " AS " + dataCode.getName() + "_code");
+            }
+
+            stringBuilder.append(",");
             // 获取域字段名称
             AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
-            String str1 = null;
             if (data != null) {
-                str1 = PRIMARY_TABLE + amount.incrementAndGet() + "." + e.getColumnName() + " AS " + data.getName();
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + data.getName() + "_name");
             }
-            return str1;
+
+            return stringBuilder;
         }).collect(Collectors.joining(","));
 
         // 获取主表表名
