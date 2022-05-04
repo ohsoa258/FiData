@@ -39,11 +39,6 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildViewTable(EntityInfoVO entityInfoVo) {
-        return null;
-    }
-
-    @Override
     public String modifyFieldType(String tableName, String filedName, String type) {
         return null;
     }

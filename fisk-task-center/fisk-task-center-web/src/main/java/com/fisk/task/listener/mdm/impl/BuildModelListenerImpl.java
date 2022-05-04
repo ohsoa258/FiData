@@ -2,6 +2,7 @@ package com.fisk.task.listener.mdm.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -38,8 +39,7 @@ import java.util.stream.Collectors;
 
 import static ch.qos.logback.core.db.DBHelper.closeConnection;
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
-import static com.fisk.mdm.enums.AttributeStatusEnum.INSERT;
-import static com.fisk.mdm.enums.AttributeStatusEnum.UPDATE;
+import static com.fisk.mdm.enums.AttributeStatusEnum.*;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.*;
 import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.*;
 
@@ -113,13 +113,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 // 1.执行创建表任务
                 this.createTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
             } else if (status.equals(CREATED_SUCCESSFULLY.getName())) {
-                // 1.stg表删了重新生成
-                this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo);
-                EntityInfoVO data = mdmClient.getAttributeById(dto.getEntityId()).getData();
-                // 2.mdm表更新
-                this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
-                // 3.viw视图重新生成
-                this.updateViwTable(abstractDbHelper, sqlBuilder, connection, data);
+                // 2.执行修改表任务
+                this.updateTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, dto.getEntityId());
             }
             return ResultEnum.SUCCESS;
         } catch (Exception ex) {
@@ -133,67 +128,91 @@ public class BuildModelListenerImpl implements BuildModelListener {
     }
 
     /**
-     * Viw 视图重新生成
-     *
-     * @param abstractDbHelper
-     * @param sqlBuilder
-     * @param connection
-     * @param entityInfoVo
-     */
-    public void updateViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                               Connection connection, EntityInfoVO entityInfoVo) throws Exception {
-        // 1.创建view视图
-        this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
-    }
-
-    /**
-     * stg表删除重新生成
-     *
+     * 执行表后台修改任务
      * @param abstractDbHelper
      * @param connection
      * @param sqlBuilder
      * @param entityInfoVo
+     * @param entityId
+     * @throws Exception
      */
-    public void updateStgTable(AbstractDbHelper abstractDbHelper, Connection connection,
-                               IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo) throws SQLException {
+    public void updateTable(AbstractDbHelper abstractDbHelper, Connection connection,
+                            IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,
+                            Integer entityId) {
 
         // 筛选属性出去已提交
         List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
                 .collect(Collectors.toList());
+        try{
+            // a.开启事务
+            connection.getAutoCommit();
+            connection.setAutoCommit(false);
 
-        // 1.删除视图
-        this.dropViwTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
-        // 2.删除stg表
-        this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
-        // 3.创建Stg表
-        this.createStgTable1(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
-        // 4.回写columnName
-        this.writableColumnName(entityInfoVo.getAttributeList());
+            // 1.stg表删了重新生成
+            this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
+            EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
+            // 2.mdm表更新
+            this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
+            // 3.viw视图重新生成
+            this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+
+            // e.提交事务
+            connection.commit();
+
+            // 删除属性
+            data.getAttributeList().stream().filter(e -> e.getStatus().equals(DELETE.getName()))
+                            .forEach(e -> {
+                                mdmClient.delete(e.getId());
+                            });
+
+        }catch (Exception ex){
+            // a.回滚事务
+            rollbackConnection(connection);
+        }
     }
 
     /**
-     * 创建Stg表
-     *
+     * stg表删了重新生成
      * @param abstractDbHelper
-     * @param sqlBuilder
      * @param connection
+     * @param sqlBuilder
      * @param entityInfoVo
+     * @param noSubmitAttributeList
      */
-    public void createStgTable1(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                Connection connection, EntityInfoVO entityInfoVo) {
+    public void updateStgTable(AbstractDbHelper abstractDbHelper, Connection connection,
+                               IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,
+                               List<AttributeInfoDTO> noSubmitAttributeList){
 
-        String buildStgTableSql = null;
-        try {
-            // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
-            // 2.执行sql
-            abstractDbHelper.executeSql(buildStgTableSql, connection);
-        } catch (SQLException ex) {
+        String sql = null;
+        try{
+            // 1.删除视图
+            sql = this.dropViwTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
+            if (StringUtils.isNotBlank(sql)){
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.execute();
+            }
 
-            // 回写失败信息
-            this.exceptionProcess(entityInfoVo, ex, ResultEnum.CREATE_STG_TABLE.getMsg()
-                    + "【执行的SQL】:" + buildStgTableSql + "【原因】:" + ex);
-            log.error("创建Stg表失败,异常信息:" + ex);
+            // 2.删除stg
+            sql = this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
+            if (StringUtils.isNotBlank(sql)){
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.execute();
+            }
+
+            // 3.创建Stg表
+            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.execute();
+
+            // 4.回写columnName
+            this.writableColumnName(entityInfoVo.getAttributeList());
+        }catch (SQLException ex){
+            // a.回滚事务
+            rollbackConnection(connection);
+
+            // 回写失败属性信息
+            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
+                    + "【执行SQL】" + sql + "【原因】:" + ex);
             throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
     }
@@ -225,36 +244,22 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param sqlBuilder
      * @param attributeList
      */
-    public void dropStgTable(AbstractDbHelper abstractDbHelper, Connection connection,
+    public String dropStgTable(AbstractDbHelper abstractDbHelper, Connection connection,
                              IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
 
-        String dropTableSql = null;
-        try {
-            // 表名
-            AttributeInfoDTO dto = attributeList.get(0);
-            String tableName = "stg_" + dto.getModelId() + "_" + dto.getEntityId();
+        // 表名
+        AttributeInfoDTO dto = attributeList.get(0);
+        String tableName = "stg_" + dto.getModelId() + "_" + dto.getEntityId();
 
-            // 判断视图是否存在
-            boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, tableName);
-            if (exits == true) {
-                // 1.创建Sql
-                dropTableSql = sqlBuilder.dropTable(tableName);
-                // 2.执行Sql
-                abstractDbHelper.executeSql(dropTableSql, connection);
-            }
-
-        } catch (SQLException ex) {
-
-            // 筛选属性出去已提交
-            List<AttributeInfoDTO> noSubmitAttributeList = attributeList.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
-                    .collect(Collectors.toList());
-
-            // 回写失败属性信息
-            this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.DROP_STG_TABLE.getMsg()
-                    + "【执行SQL】" + dropTableSql + "【原因】:" + ex);
-            log.error("删除Stg表失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.DROP_STG_TABLE);
+        // 判断视图是否存在
+        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, tableName);
+        if (exits == true) {
+            // 1.创建Sql
+            String dropTableSql = sqlBuilder.dropTable(tableName);
+            return dropTableSql;
         }
+
+        return null;
     }
 
 
@@ -266,32 +271,22 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param sqlBuilder
      * @param attributeList
      */
-    public void dropViwTable(AbstractDbHelper abstractDbHelper, Connection connection,
+    public String dropViwTable(AbstractDbHelper abstractDbHelper, Connection connection,
                              IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
 
-        String dropTableSql = null;
-        try {
-            // 表名
-            AttributeInfoDTO dto = attributeList.get(0);
-            String viwName = "viw_" + dto.getModelId() + "_" + dto.getEntityId();
+        // 表名
+        AttributeInfoDTO dto = attributeList.get(0);
+        String viwName = "viw_" + dto.getModelId() + "_" + dto.getEntityId();
 
-            // 判断视图是否存在
-            boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, viwName);
-            if (exits == true) {
-                // 1.创建Sql
-                dropTableSql = sqlBuilder.dropViw(viwName);
-                // 2.执行Sql
-                abstractDbHelper.executeSql(dropTableSql, connection);
-            }
-
-        } catch (SQLException ex) {
-
-            // 回写失败属性信息
-            this.exceptionAttributeProcess(attributeList, ResultEnum.DROP_VIW_TABLE.getMsg()
-                    + "【执行的SQL】:" + dropTableSql + "【原因】:" + ex);
-            log.error("删除Viw视图失败,异常信息:" + ex);
-            throw new FkException(ResultEnum.DROP_VIW_TABLE);
+        // 判断视图是否存在
+        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, viwName);
+        if (exits == true) {
+            // 1.创建Sql
+            String dropTableSql = sqlBuilder.dropViw(viwName);
+            return dropTableSql;
         }
+
+        return null;
     }
 
     /**
@@ -331,34 +326,45 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     // 1.构建Sql
                     sql = sqlBuilder.addColumn(tableName, infoDto.getColumnName(), filedType + required);
-                    // 1.执行Sql
-                    abstractDbHelper.executeSql(sql, connection);
+                    // 2.执行Sql
+                    PreparedStatement statement = connection.prepareStatement(sql);
+                    statement.execute();
                 } else if (infoDto.getStatus().equals(UPDATE.getName())) {
                     // 修改字段
                     String filedType = this.getDataType(infoDto.getDataType(), infoDto.getDataTypeLength());
 
                     // 1.修改字段类型
                     sql = sqlBuilder.modifyFieldType(tableName, infoDto.getColumnName(), filedType);
-                    abstractDbHelper.executeSql(sql, connection);
+                    // 2.执行Sql
+                    PreparedStatement statement = connection.prepareStatement(sql);
+                    statement.execute();
                     // 2.修改字段长度
                     if (infoDto.getDataType().equals("文本")) {
                         sql = sqlBuilder.modifyFieldLength(tableName, infoDto.getColumnName(), filedType);
-                        abstractDbHelper.executeSql(sql, connection);
+                        // 2.执行Sql
+                        PreparedStatement statement1 = connection.prepareStatement(sql);
+                        statement1.execute();
                     }
 
                     // 3.修改字段是否必填
+                    PreparedStatement preparedStatement = null;
                     Boolean enableRequired = infoDto.getEnableRequired();
                     if (enableRequired == true) {
                         sql = sqlBuilder.notNullable(tableName, infoDto.getColumnName());
+                        // 2.执行Sql
+                        preparedStatement = connection.prepareStatement(sql);
+                        preparedStatement.execute();
                     } else {
                         sql = sqlBuilder.nullable(tableName, infoDto.getColumnName());
+                        // 2.执行Sql
+                        preparedStatement = connection.prepareStatement(sql);
+                        preparedStatement.execute();
                     }
-                } else if (infoDto.getStatus().equals("删除待提交")) {
+                } else if (infoDto.getStatus().equals(DELETE.getName())) {
                     // 删除字段
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
-                    abstractDbHelper.executeSql(sql, connection);
-                    // 删除属性
-                    mdmClient.delete(infoDto.getId());
+                    PreparedStatement statement = connection.prepareStatement(sql);
+                    statement.execute();
                 }
 
                 // 3.回写成功状态
@@ -366,6 +372,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 status.setSyncStatus(1);
                 dtoList.add(status);
             } catch (SQLException ex) {
+                // a.回滚事务
+                rollbackConnection(connection);
 
                 // 回写失败状态
                 status.setStatus(this.stringToStatusInt(infoDto.getStatus()));
@@ -454,7 +462,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.writableColumnName(entityInfoVo.getAttributeList());
 
             // 4.创建view视图
-            sql = this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            sql = this.buildViewTable(entityInfoVo);
             PreparedStatement stemViw = connection.prepareStatement(sql);
             stemViw.execute();
 
@@ -681,7 +689,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param connection
      * @param entityInfoVo
      */
-    public String createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
+    public void createViwTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
                                  Connection connection, EntityInfoVO entityInfoVo) {
 
         String buildStgTableSql = null;
@@ -689,7 +697,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 1.生成Sql
             buildStgTableSql = this.buildViewTable(entityInfoVo);
             // 2.执行sql
-            return buildStgTableSql;
+            PreparedStatement statement = connection.prepareStatement(buildStgTableSql);
+            statement.execute();
         } catch (Exception ex) {
 
             // 筛选属性出去已提交

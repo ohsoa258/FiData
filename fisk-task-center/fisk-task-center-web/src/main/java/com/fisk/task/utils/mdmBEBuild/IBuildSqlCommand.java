@@ -31,13 +31,6 @@ public interface IBuildSqlCommand {
     String buildMdmTable(EntityInfoVO entityInfoVo);
 
     /**
-     * 创建视图view
-     * @param entityInfoVo
-     * @return
-     */
-    String buildViewTable(EntityInfoVO entityInfoVo);
-
-    /**
      * 修改字段类型
      * @param tableName
      * @param filedName

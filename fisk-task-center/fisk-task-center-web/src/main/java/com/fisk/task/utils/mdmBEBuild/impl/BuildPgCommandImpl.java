@@ -1,17 +1,9 @@
 package com.fisk.task.utils.mdmBEBuild.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.mdm.client.MdmClient;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.enums.AttributeStatusEnum.*;
@@ -23,21 +15,18 @@ import static com.fisk.mdm.enums.AttributeStatusEnum.*;
 @Component
 public class BuildPgCommandImpl implements IBuildSqlCommand {
 
-    @Resource
-    MdmClient mdmClient;
-
     public static final String PUBLIC = "PUBLIC";
     public static final String PRIMARY_TABLE = "a";
     public static final String MARK ="fidata_";
 
     @Override
     public String buildAttributeLogTable(String tableName) {
-        int pk = (int)(Math.random()*899998)+1000+1;
+        int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE public." + tableName).append("(");
         str.append("id serial NOT NULL,");
-        str.append("constraint pk_id" + pk + " primary key(id),");
+        str.append("constraint pk_" + tableName + "_id_" + pk + " primary key(id),");
         str.append("model_id int4 NULL,");
         str.append("entity_id int4 NULL,");
         str.append("attribute_id int4 NULL,");
@@ -59,10 +48,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildStgTable(EntityInfoVO entityInfoVo) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append("stg_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId()).append("(");
+        String tableName = "stg_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
+        str.append(tableName).append("(");
 
         // 拼接Stg表基础字段
-        str.append(this.splicingStgTable());
+        str.append(this.splicingStgTable(tableName));
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream()
@@ -104,12 +94,14 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String buildMdmTable(EntityInfoVO entityInfoVo) {
+        String tableName = "mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
+
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        str.append("mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId()).append("(");
+        str.append(tableName).append("(");
 
         // 拼接mdm表基础字段拼接
-        str.append(this.splicingMdmTable());
+        str.append(this.splicingMdmTable(tableName));
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
@@ -166,32 +158,6 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         }
 
         str.append(");");
-        return str.toString();
-    }
-
-    @Override
-    public String buildViewTable(EntityInfoVO entityInfoVo) {
-        StringBuilder str = new StringBuilder();
-        str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
-        str.append(" AS ").append("SELECT ");
-
-        List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
-        List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
-        // 存在外键数据
-        List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
-        // 不存在外键数据
-        List<AttributeInfoDTO> noForeignList = attributeList.stream().filter(e -> e.getDomainId() == null).collect(Collectors.toList());
-
-        // 先去判断属性有没有外键
-        if (CollectionUtils.isEmpty(foreignList)){
-            // 不存在外键
-            str.append(this.noDomainSplicing(noForeignList));
-        }else {
-            // 存在外键
-            str.append(this.domainSplicing(foreignList,noForeignList));
-        }
-
         return str.toString();
     }
 
@@ -271,85 +237,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     /**
-     * 存在域字段
-     * @param foreignList
-     * @param noForeignList
-     */
-    public String domainSplicing(List<AttributeInfoDTO> foreignList,List<AttributeInfoDTO> noForeignList){
-        StringBuilder str = new StringBuilder();
-
-        // 不存在域字段的属性
-        String noForeign = noForeignList.stream().filter(e -> e.getDomainId() == null).map(e -> {
-            String str1 = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
-            return str1;
-        }).collect(Collectors.joining(","));
-
-        // 存在域字段的属性
-        List<Integer> domainIds = foreignList.stream().filter(e -> e.getDomainId() != null).map(e -> e.getDomainId() + 1).collect(Collectors.toList());
-        List<AttributeInfoDTO> list = mdmClient.getByIds(domainIds).getData();
-
-        AtomicInteger amount = new AtomicInteger(1);
-        String foreign = list.stream().filter(e -> e.getName() != null).map(e -> {
-            String str1 = PRIMARY_TABLE + amount.incrementAndGet() + "." + e.getColumnName() + " AS " + e.getName();
-            return str1;
-        }).collect(Collectors.joining(","));
-
-        // 获取主表表名
-        AttributeInfoDTO dto = noForeignList.get(1);
-        str.append(this.splicingViewTable(true));
-        str.append(noForeign);
-        str.append(foreign);
-        // 主表表名
-        str.append("mdm_" + dto.getModelId() + "_" + dto.getEntityId() + PRIMARY_TABLE);
-
-        AtomicInteger amount1 = new AtomicInteger(1);
-        String leftJoin = foreignList.stream().filter(Objects::nonNull)
-                .map(e -> {
-                    String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId();
-                    String alias = PRIMARY_TABLE + amount1.incrementAndGet() + ".";
-                    String on = " ON " + PRIMARY_TABLE + "." + "version_id" + "=" + alias + "version_id" +
-                            " AND " + PRIMARY_TABLE + "." + e.getColumnName() + "=" + alias + ".id";
-                    String str1 = tableName + alias + on;
-                    return str1;
-                }).collect(Collectors.joining(" LEFT JOIN "));
-
-        str.append(" LEFT JOIN " + leftJoin);
-        return str.toString();
-    }
-
-    /**
-     * 不存在域字段拼接
-     * @param noForeignList
-     * @return
-     */
-    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList){
-        StringBuilder str = new StringBuilder();
-        // 视图基础字段
-        str.append(this.splicingViewTable(false));
-
-        String collect = noForeignList.stream().filter(Objects::nonNull).map(e -> {
-            String str1 = e.getColumnName() + " AS " + e.getName();
-            return str1;
-        }).collect(Collectors.joining(","));
-
-        AttributeInfoDTO infoDto = noForeignList.get(1);
-        // 业务字段
-        str.append(collect);
-        str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
-        return str.toString();
-    }
-
-    /**
      * stg表基础字段拼接
      * @return
      */
-    public String splicingStgTable(){
-        double d = Math.random();
-        int pk = (int)(d*100);
+    public String splicingStgTable(String tableName){
+        int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
-        str.append("constraint pk_id" + pk + " primary key(" + MARK + "id)").append(",");
+        str.append("constraint pk_" +tableName + "_id_" + pk + " primary key(" + MARK + "id)").append(",");
         str.append(MARK + "import_type int4 NULL").append(",");
         str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
@@ -365,13 +261,12 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      * mdm表基础字段拼接
      * @return
      */
-    public String splicingMdmTable(){
-        double d = Math.random();
-        int pk = (int)(d*100);
+    public String splicingMdmTable(String tableName){
+        int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
-        str.append("constraint pk_id"+ pk +" primary key(" + MARK + "id)").append(",");
+        str.append("constraint pk_"+ tableName + "_id_" + pk +" primary key(" + MARK + "id)").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(this.commonBaseField());
