@@ -45,4 +45,7 @@ public class ApiConfigDTO {
 
     @ApiModelProperty(value = "当前api的json格式")
     public String pushDataJson;
+
+    @ApiModelProperty(value = "true: 勾选(发布之后,按照配置调用一次api);false: 不勾选")
+    public boolean executeConfigFlag;
 }
