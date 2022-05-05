@@ -841,11 +841,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @return
      */
     public String noDomainSplicing(List<AttributeInfoDTO> noForeignList) {
+        List<Integer> ids = noForeignList.stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
+        List<AttributeInfoDTO> list = mdmClient.getByIds(ids).getData();
+
         StringBuilder str = new StringBuilder();
         // 视图基础字段
         str.append(this.splicingViewTable(false));
 
-        String collect = noForeignList.stream().filter(e -> !e.getStatus().equals("删除待提交")).map(e -> {
+        String collect = list.stream().filter(e -> !e.getStatus().equals("删除待提交")).map(e -> {
             String str1 = e.getColumnName() + " AS " + e.getName();
             return str1;
         }).collect(Collectors.joining(","));
