@@ -72,4 +72,12 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return tree
      */
     List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto);
+
+    /**
+     * 查询当前任务下的组件详情集合
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    List<NifiCustomWorkflowDetailDTO> getComponentList(long id);
 }

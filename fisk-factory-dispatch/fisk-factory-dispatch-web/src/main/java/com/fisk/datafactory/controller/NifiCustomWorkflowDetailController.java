@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,12 +36,20 @@ public class NifiCustomWorkflowDetailController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addData(dto));
     }
 
+    @GetMapping("/getComponentList/{id}")
+    @ApiOperation(value = "查询当前任务下的组件详情集合")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getComponentList(@PathVariable("id") long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getComponentList(id));
+    }
+
     @GetMapping("/get/{id}")
     @ApiOperation(value = "查询单个管道组件")
     public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
     }
+
 
     @PutMapping("/edit")
     @ApiOperation(value = "修改管道详情")

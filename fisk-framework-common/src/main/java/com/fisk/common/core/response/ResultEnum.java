@@ -152,19 +152,20 @@ public enum ResultEnum {
      * 数据工厂
      */
     TASK_SCHEDULE_CRONEXPRESSION_ERROR(9001, "添加成功,暂无法解析此表达式"),
-    WORKFLOWNAME_EXISTS(9002,"管道名称已存在"),
-    DELETE_TASK_GRUOP_ERROR(9003,"删除任务组失败"),
-    SCHEDULE_PARAME_NULL(9004,"请设置[开始]组件的调度参数"),
-    DATA_FACTORY_FEIGN_EXCEPTION(9005,"数据工厂feign接口异常"),
-    CUSTOMWORKFLOW_NOT_EXISTS(9006,"当前管道已删除,请检查参数"),
-    CUSTOMWORKFLOWDETAIL_NOT_EXISTS(9007,"当前管道下不存在组件,请检查参数"),
-    FLOW_TABLE_NOT_EXISTS(9008,"当前管道下不存在组件,请检查参数"),
+    WORKFLOWNAME_EXISTS(9002, "管道名称已存在"),
+    DELETE_TASK_GRUOP_ERROR(9003, "删除任务组失败"),
+    SCHEDULE_PARAME_NULL(9004, "请设置[开始]组件的调度参数"),
+    DATA_FACTORY_FEIGN_EXCEPTION(9005, "数据工厂feign接口异常"),
+    CUSTOMWORKFLOW_NOT_EXISTS(9006, "当前管道已删除,请检查参数"),
+    CUSTOMWORKFLOWDETAIL_NOT_EXISTS(9007, "当前管道下不存在组件,请检查参数"),
+    FLOW_TABLE_NOT_EXISTS(9008, "当前管道下不存在组件,请检查参数"),
+    COMPONENT_NOT_EXISTS(9009, "当前组件不存在请检查参数"),
 
     /**
      * 数据服务
      */
-    DS_APP_NAME_EXISTS(10000,"应用名称已存在"),
-    DS_APP_ACCOUNT_EXISTS(10001,"账号已存在"),
+    DS_APP_NAME_EXISTS(10000, "应用名称已存在"),
+    DS_APP_ACCOUNT_EXISTS(10001, "账号已存在"),
     DS_APP_API_EXISTS(10002, "请先禁用应用下的API接口"),
     DS_APP_EXISTS(10003, "应用不存在"),
     DS_API_EXISTS(10004, "API不存在"),

@@ -495,4 +495,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
         return null;
     }
+
+    @Override
+    public List<NifiCustomWorkflowDetailDTO> getComponentList(long id) {
+
+        NifiCustomWorkflowDetailPO po = this.query().eq("id", id).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.COMPONENT_NOT_EXISTS);
+        }
+        return NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(this.query().eq("pid", po.id).list());
+    }
 }
