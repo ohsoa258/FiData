@@ -776,18 +776,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
             int incrementAndGet = amount.incrementAndGet();
             // 获取域字段名称
             AttributeVO dataCode = mdmClient.get(e.getId() - 1).getData();
-            StringBuilder stringBuilder = new StringBuilder();
-            if (dataCode != null) {
-                EntityVO entityVo = mdmClient.getDataById(dataCode.getEntityId()).getData();
-                stringBuilder.append(PRIMARY_TABLE + incrementAndGet  + "." + dataCode.getColumnName() + " AS " + entityVo.getName() + "_code");
-            }
-
-            stringBuilder.append(",");
-            // 获取域字段名称
             AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
-            if (data != null) {
-                EntityVO entityVo = mdmClient.getDataById(e.getEntityId()).getData();
-                stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + entityVo.getName() + "_name");
+            StringBuilder stringBuilder = new StringBuilder();
+            if (dataCode != null && data != null) {
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet  + "." + dataCode.getColumnName() + " AS " + data.getName() + "_code");
+                stringBuilder.append(",");
+                stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + data.getName() + "_name");
             }
 
             return stringBuilder;
