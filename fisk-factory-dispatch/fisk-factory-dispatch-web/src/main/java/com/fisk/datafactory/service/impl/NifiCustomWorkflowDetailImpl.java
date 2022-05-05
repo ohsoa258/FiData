@@ -293,7 +293,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     /**
-     * 获取操作类型
+     * TODO 获取操作类型(新版改动)
      *
      * @param componentsId componentsId
      * @return DataClassifyEnum
