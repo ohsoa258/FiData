@@ -1,10 +1,15 @@
 package com.fisk.mdm.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.map.AttributeMap;
@@ -16,10 +21,15 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
 import java.sql.*;
 import java.util.*;
 
@@ -38,6 +48,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Resource
     AttributeMapper attributeMapper;
+    @Resource
+    EntityMapper entityMapper;
 
     String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified";
     String acc = "postgres";
@@ -213,4 +225,74 @@ public class MasterDataServiceImpl implements IMasterDataService {
         log.info("执行sql: 【" + sql + "】");
         return statement.executeQuery(sql);
     }
+
+    /***
+     * 下载模板
+     * @param entityId
+     * @param response
+     * @return
+     */
+    @Override
+    public ResultEnum downloadTemplate(int entityId, HttpServletResponse response)
+    {
+        EntityPO entityPO=entityMapper.selectById(entityId);
+        if (entityPO==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        ExportResultVO vo=new ExportResultVO();
+        QueryWrapper<AttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.select("display_name").lambda().eq(AttributePO::getEntityId,entityId);
+        vo.headerList=(List)attributeMapper.selectObjs(queryWrapper);
+        vo.fileName=entityPO.getDisplayName();
+        return exportExcel(vo,response);
+    }
+
+    /**
+     * 导出Excel
+     * @param vo
+     * @param response
+     * @return
+     */
+    public ResultEnum exportExcel(ExportResultVO vo,HttpServletResponse response)
+    {
+        HSSFWorkbook workbook = new HSSFWorkbook();
+        HSSFSheet sheet = workbook.createSheet("sheet1");
+        HSSFRow row1 = sheet.createRow(0);
+        if (CollectionUtils.isEmpty(vo.headerList))
+        {
+            ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        for (int i = 0; i < vo.headerList.size(); i++) {
+            row1.createCell(i).setCellValue(vo.headerList.get(i));
+        }
+        if (!CollectionUtils.isEmpty(vo.dataArray))
+        {
+            for (int i=0;i<vo.dataArray.size();i++)
+            {
+                HSSFRow row = sheet.createRow(i+1);
+                JSONObject jsonObject = JSONObject.parseObject(vo.dataArray.get(i).toString());
+                for (int j = 0; j < vo.headerList.size(); j++)
+                {
+                    row.createCell(j).setCellValue(jsonObject.get(vo.headerList.get(j)).toString());
+                }
+            }
+        }
+        //将文件存到指定位置
+        try {
+            //输出Excel文件
+            OutputStream output=response.getOutputStream();
+            response.reset();
+            response.setHeader("Content-disposition", "attachment;filename="+vo.fileName+".xls");
+            response.setContentType("application/x-xls");
+            workbook.write(output);
+            output.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new FkException(ResultEnum.SQL_ANALYSIS,e);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+
 }

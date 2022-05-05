@@ -1,10 +1,11 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 
-import java.util.List;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * 主数据服务
@@ -22,4 +23,13 @@ public interface IMasterDataService {
      * @return {@link ResultObjectVO}
      */
     ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId);
+
+    /**
+     * 下载模板
+     * @param entityId
+     * @param response
+     * @return
+     */
+    ResultEnum downloadTemplate(int entityId, HttpServletResponse response);
+
 }
