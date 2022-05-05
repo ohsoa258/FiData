@@ -154,18 +154,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
             EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
             // 2.mdm表更新
-            List<Integer> list = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
+            this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
 
             // e.提交事务
             connection.commit();
-
-            // 删除属性
-            list.stream().filter(Objects::nonNull)
-                            .forEach(e -> {
-                                mdmClient.delete(e);
-                            });
 
         }catch (Exception ex){
             // a.回滚事务
@@ -297,13 +291,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param sqlBuilder
      * @param attributeList
      */
-    public List<Integer> updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
+    public void updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
                                IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
-        List<Integer> idsDelete = new ArrayList<>();
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
@@ -365,7 +358,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     sql = sqlBuilder.deleteFiled(tableName, infoDto.getColumnName());
                     PreparedStatement statement = connection.prepareStatement(sql);
                     statement.execute();
-                    idsDelete.add(infoDto.getId());
+                    mdmClient.delete(infoDto.getId());
                 }
 
                 // 3.回写成功状态
@@ -389,7 +382,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         // 回写属性状态
         this.exceptionAttributeProcess(dtoList);
-        return idsDelete;
     }
 
     /**
