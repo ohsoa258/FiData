@@ -786,7 +786,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 获取域字段名称
             AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
             if (data != null) {
-                EntityVO entityVo = mdmClient.getDataById(data.getEntityId()).getData();
+                EntityVO entityVo = mdmClient.getDataById(e.getEntityId()).getData();
                 stringBuilder.append(PRIMARY_TABLE + incrementAndGet + "." + e.getColumnName() + " AS " + entityVo.getName() + "_name");
             }
 
