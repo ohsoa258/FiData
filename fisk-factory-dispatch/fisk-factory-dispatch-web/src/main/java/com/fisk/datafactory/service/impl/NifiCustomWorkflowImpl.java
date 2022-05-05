@@ -110,7 +110,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         if (CollectionUtils.isNotEmpty(dtoList)) {
             for (NifiCustomWorkflowDetailDTO e : dtoList) {
                 ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
-                if (e.componentType == null) {
+                if (channelDataEnum == null) {
                     return vo;
                 }
                 switch (channelDataEnum) {
