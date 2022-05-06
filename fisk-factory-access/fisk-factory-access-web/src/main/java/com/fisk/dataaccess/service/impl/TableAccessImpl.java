@@ -1177,6 +1177,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return null;
     }
 
+    @Override
+    public List<ChannelDataDTO> getTableId() {
+
+        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
+                .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
+                .orderByDesc(AppRegistrationPO::getCreateTime));
+
+        List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
+        // 查询当前应用下面的所有表
+        channelDataDTOList.forEach(dto -> {
+            // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
+            List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
+                    .eq(TableAccessPO::getAppId, dto.id)
+                    // publish=3: 正在发布 -> 1:发布成功
+                    .or()
+                    .eq(TableAccessPO::getPublish, 3)
+                    .eq(TableAccessPO::getPublish, 1)
+                    .select(TableAccessPO::getId, TableAccessPO::getTableName));
+            // list: po->dto 并赋值给dto.list
+            dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+        });
+
+        return channelDataDTOList;
+    }
+
     /**
      * 封装应用及应用下的物理表
      *

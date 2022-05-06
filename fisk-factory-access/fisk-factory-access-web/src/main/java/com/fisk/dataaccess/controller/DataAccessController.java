@@ -43,6 +43,11 @@ public class DataAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId(dto));
     }
 
+    @GetMapping("/getTableId")
+    public ResultEntity<List<ChannelDataDTO>> getTableId() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessService.getTableId());
+    }
+
     @ApiOperation("根据appId和tableId 获取appName和tableName")
     @PostMapping("/getAppNameAndTableName")
     public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto) {

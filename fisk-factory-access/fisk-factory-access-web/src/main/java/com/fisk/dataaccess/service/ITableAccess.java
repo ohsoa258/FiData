@@ -205,11 +205,18 @@ public interface ITableAccess extends IService<TableAccessPO> {
     List<FieldNameDTO> getTableFieldId(int id);
 
     /**
-     * 获取所有物理表id
+     * 根据不同的类型获取相应的物理表id
      *
      * @return list
      */
     List<ChannelDataDTO> getTableId(NifiComponentsDTO dto);
+
+    /**
+     * 获取所有物理表id
+     *
+     * @return list
+     */
+    List<ChannelDataDTO> getTableId();
 
     /**
      * 获取所有应用下表以及字段数据
