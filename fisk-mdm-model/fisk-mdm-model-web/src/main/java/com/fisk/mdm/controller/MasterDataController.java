@@ -50,8 +50,8 @@ public class MasterDataController {
     }
 
     @ApiOperation("下载模板")
-    @GetMapping("/downloadTemplate/{entityId}")
-    public ResultEntity<Object> downloadTemplate(@PathVariable("entityId") Integer entityId){
+    @GetMapping("/downloadTemplate")
+    public ResultEntity<Object> downloadTemplate(Integer entityId){
         return ResultEntityBuild.build(service.downloadTemplate(entityId,response));
     }
 
