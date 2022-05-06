@@ -17,6 +17,7 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -55,5 +56,14 @@ public class MasterDataController {
         return ResultEntityBuild.build(service.downloadTemplate(entityId,response));
     }
 
+    /**
+     * 首先上传文件模块
+     */
+    /*@RequestMapping(value = "/uploadExcel", method = RequestMethod.POST)
+    public ResultEntity<Object> uploadFile(@RequestParam MultipartFile file) {
+        *//*String a = excelService.uploadExcel(file,tenantId,userId);
+        return WrappedResult.successWrapedResult(a);*//*
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+    }*/
 
 }

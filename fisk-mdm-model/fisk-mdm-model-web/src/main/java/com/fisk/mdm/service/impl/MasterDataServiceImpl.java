@@ -283,7 +283,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //输出Excel文件
             OutputStream output=response.getOutputStream();
             response.reset();
-            response.setHeader("Content-disposition", "attachment;filename="+vo.fileName+".xls");
+            response.setHeader("Content-disposition", "attachment;filename="+vo.fileName+".xlsx");
             response.setContentType("application/x-xls");
             workbook.write(output);
             output.close();
