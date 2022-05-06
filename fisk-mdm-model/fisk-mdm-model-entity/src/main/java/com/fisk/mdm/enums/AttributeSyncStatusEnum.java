@@ -12,7 +12,8 @@ public enum AttributeSyncStatusEnum implements BaseEnum {
      * 发布状态
      */
     ERROR(0,"发布失败"),
-    SUCCESS(1,"发布成功");
+    SUCCESS(1,"发布成功"),
+    NOT_PUBLISH(2,"未发布");
 
     @EnumValue
     private final int value;

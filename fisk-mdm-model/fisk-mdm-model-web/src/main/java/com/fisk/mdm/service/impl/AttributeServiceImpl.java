@@ -226,7 +226,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         //修改数据
-        attributePo.setSyncStatus(null);
+        attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
         if (baseMapper.update(attributePo,updateWrapper) <= 0) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
