@@ -11,6 +11,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.service.nifi.IPostgreBuild;
 import com.fisk.task.utils.TaskPgTableStructureHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author: DennyHui
@@ -102,7 +100,7 @@ public class BuildDataInputPgTableListener {
                 log.info("pg：建表完成");
             }
             //实时应用改状态
-            if (buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) {
+            if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
                 int tableCount = 0;
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 String selectTable = "select count(*) from pg_class where ";
