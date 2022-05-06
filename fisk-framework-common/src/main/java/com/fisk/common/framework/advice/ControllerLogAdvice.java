@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author guoyu
@@ -69,7 +70,7 @@ public class ControllerLogAdvice {
             // log
             log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
 
-            if (ano.printParams()) {
+            if (Objects.nonNull(ano) && ano.printParams()) {
                 // get method params
                 Map<String, Object> args = new HashMap<>();
                 String[] argNames = ((MethodSignature) jp.getSignature()).getParameterNames();
