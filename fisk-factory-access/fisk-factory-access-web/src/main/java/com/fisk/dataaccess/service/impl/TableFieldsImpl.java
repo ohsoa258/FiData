@@ -322,8 +322,8 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
 
             // 执行发布
             try {
-                // 实时--RestfulAPI类型
-                if (registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType)) {
+                // 实时--RestfulAPI类型  or  非实时--api类型
+                if ((registration.appType == 0 && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType)) || (registration.appType == 1 && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
                     TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
