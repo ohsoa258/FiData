@@ -1,27 +1,20 @@
 package com.fisk.mdm.controller;
 
 
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.service.IMasterDataService;
-import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
 
 /**
  * 主数据控制器
@@ -29,7 +22,7 @@ import java.io.OutputStream;
  * @author ChenYa
  * @date 2022/04/27
  */
-@Api(tags = {SwaggerConfig.TAG_5})
+//@Api(tags = {SwaggerConfig.TAG_5})
 @RestController
 @RequestMapping("/masterData")
 public class MasterDataController {
@@ -40,8 +33,11 @@ public class MasterDataController {
      * 基于构造器注入
      */
     private final HttpServletResponse response;
-    public MasterDataController(HttpServletResponse response) {
+    private final HttpServletRequest request;
+    public MasterDataController(HttpServletResponse response,HttpServletRequest request) {
+
         this.response = response;
+        this.request=request;
     }
 
     @ApiOperation("分页查询所有model")
@@ -56,14 +52,12 @@ public class MasterDataController {
         return ResultEntityBuild.build(service.downloadTemplate(entityId,response));
     }
 
-    /**
-     * 首先上传文件模块
-     */
-    /*@RequestMapping(value = "/uploadExcel", method = RequestMethod.POST)
-    public ResultEntity<Object> uploadFile(@RequestParam MultipartFile file) {
-        *//*String a = excelService.uploadExcel(file,tenantId,userId);
-        return WrappedResult.successWrapedResult(a);*//*
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
-    }*/
+    @ApiOperation("导入模板数据")
+    @PostMapping("/importExcel")
+    @ResponseBody
+    @ControllerAOPConfig(printParams=false)
+    public ResultEntity<Object> importExcel(ImportParamDTO dto, @RequestParam("file") MultipartFile file){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importTemplateData(dto,file));
+    }
 
 }

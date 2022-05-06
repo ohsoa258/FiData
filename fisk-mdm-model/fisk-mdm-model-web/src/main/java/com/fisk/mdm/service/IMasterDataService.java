@@ -2,8 +2,11 @@ package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,5 +34,13 @@ public interface IMasterDataService {
      * @return
      */
     ResultEnum downloadTemplate(int entityId, HttpServletResponse response);
+
+    /**
+     * 导入模板数据
+     * @param dto
+     * @param file
+     * @return
+     */
+    BathUploadMemberVO importTemplateData(ImportParamDTO dto, MultipartFile file);
 
 }

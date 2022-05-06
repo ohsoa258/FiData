@@ -240,7 +240,11 @@ public enum ResultEnum {
     DROP_STG_TABLE(15005, "Stg表删除失败"),
     DROP_VIW_TABLE(15006, "Viw视图删除失败"),
     CREATE_ATTRIBUTE_LOG_TABLE_ERROR(15007,"创建属性日志表失败"),
-    CREATE_TABLE_ERROR(15008, "后台任务创建表失败"),;
+    CREATE_TABLE_ERROR(15008, "后台任务创建表失败"),
+    EXIST_INVALID_COLUMN(15009,"存在无效列"),
+    REQUIRED_FIELDS(15010,"必填项"),
+    DATA_TYPE_DISAGREE(15011,"与数据类型不一致"),
+    EXIST_ERROR_DATA(15012,"存在错误数据");
 
     ResultEnum(int code, String msg) {
         this.code = code;

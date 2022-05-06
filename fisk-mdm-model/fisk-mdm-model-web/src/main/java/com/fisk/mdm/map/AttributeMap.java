@@ -146,6 +146,13 @@ public interface AttributeMap {
      * @return {@link List}<{@link AttributeColumnVO}>
      */
     List<AttributeColumnVO> poToColumnVoList(List<AttributePO> po);
+
+    /**
+     * poList==>VoList
+     * @param po
+     * @return
+     */
+    List<AttributeVO> poListToVoList(List<AttributePO> po);
 }
 
 
