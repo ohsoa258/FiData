@@ -32,6 +32,7 @@ import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -152,7 +153,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, noSubmitAttributeList);
             EntityInfoVO data = mdmClient.getAttributeById(entityId).getData();
             // 2.mdm表更新
-            this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
+            List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList());
             // 3.viw视图重新生成
             this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
 
@@ -167,6 +168,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
                         dto1.setErrorMsg(" ");
                         mdmClient.updateStatus(dto1);
                     });
+
+            // 5.回写属性成功状态
+            dtoList.stream().filter(Objects::nonNull).forEach(e -> {
+                mdmClient.updateStatus(e);
+            });
         }catch (Exception ex){
             // a.回滚事务
             rollbackConnection(connection);
@@ -214,7 +220,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 回写失败属性信息
             this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()
-                    + "【执行SQL】" + sql + "【原因】:" + ex);
+                    + "【执行SQL】" + sql + "【原因】:" + ex.getMessage());
             throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
     }
@@ -297,12 +303,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param sqlBuilder
      * @param attributeList
      */
-    public void updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
+    public List<AttributeStatusDTO> updateMdmTable(AbstractDbHelper abstractDbHelper, Connection connection,
                                IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
+        List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
             String sql = null;
@@ -369,6 +376,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 // 3.回写成功状态
                 status.setStatus(2);
                 status.setSyncStatus(1);
+                dtoList.add(status);
             } catch (SQLException ex) {
                 // a.回滚事务
                 rollbackConnection(connection);
@@ -378,13 +386,15 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 status.setSyncStatus(0);
                 status.setErrorMsg(ResultEnum.UPDATE_MDM_TABLE.getMsg()
                         + "【执行SQL】" + sql + "【原因】:" + ex);
-                log.error("修改Mdm表失败,异常信息:" + ex);
-                throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
-            }finally {
                 // 回写属性状态
                 mdmClient.updateStatus(status);
+
+                log.error("修改Mdm表失败,异常信息:" + ex);
+                throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
             }
         }
+
+        return dtoList;
     }
 
     /**
