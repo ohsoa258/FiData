@@ -5,9 +5,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author ChenYa
  * @date 2022/04/27
  */
-//@Api(tags = {SwaggerConfig.TAG_5})
+@Api(tags = {SwaggerConfig.TAG_5})
 @RestController
 @RequestMapping("/masterData")
 public class MasterDataController {
@@ -52,7 +54,7 @@ public class MasterDataController {
         return ResultEntityBuild.build(service.downloadTemplate(entityId,response));
     }
 
-    @ApiOperation("导入模板数据")
+    @ApiOperation("导入模板")
     @PostMapping("/importExcel")
     @ResponseBody
     @ControllerAOPConfig(printParams=false)

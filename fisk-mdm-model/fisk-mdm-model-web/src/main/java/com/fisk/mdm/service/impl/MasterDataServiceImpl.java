@@ -299,9 +299,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             OutputStream output=response.getOutputStream();
             response.reset();
             response.setHeader("Content-disposition", "attachment;filename="+vo.fileName+".xlsx");
-            //response.setContentType("application/x-xls");
-            response.setContentType("application/msexcel");
-            response.setContentType("text/html; charset=UTF-8");
+            response.setContentType("application/x-xls");
             workbook.write(output);
             output.close();
         } catch (Exception e) {
@@ -365,44 +363,47 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
                 nameArr=nameList.toArray(new String[nameList.size()]);
                 enableArr=enableList.toArray(new Integer[enableList.size()]);
-                String errorMsg="";
                 for (int row=1;row<rowNum;row++)
                 {
                     JSONObject jsonObj = new JSONObject();
                     List<String> errorAttribute=new ArrayList<>();
                     Row nowRow = sheet.getRow(row);
+                    String errorMsg="";
                     for (int col=0;col<columnNum;col++)
                     {
                         Cell cell = nowRow.getCell(col);
                         String value="";
                         //判断字段类型
-                        switch (cell.getCellType()) {
-                            //字符串
-                            case Cell.CELL_TYPE_STRING:
-                                value=cell.getStringCellValue();
-                                break;
-                            //公式
-                            case Cell.CELL_TYPE_FORMULA:
-                                break;
-                            //数字
-                            case Cell.CELL_TYPE_NUMERIC:
-                                if (HSSFDateUtil.isCellDateFormatted(cell))
-                                {
-                                    value=getFormatDate(cell.getDateCellValue());
-                                }else {
-                                    value=String.valueOf(cell.getNumericCellValue());
-                                }
-                                break;
-                            //空白
-                            case Cell.CELL_TYPE_BLANK:
-                                break;
-                            //布尔值
-                            case Cell.CELL_TYPE_BOOLEAN:
-                                value=String.valueOf(cell.getBooleanCellValue());
-                                break;
-                            //错误值=CELL_TYPE_ERROR
-                            default:
-                                //return ResultEnum.EXIST_ERROR_DATA;
+                        if (cell !=null)
+                        {
+                            switch (cell.getCellType()) {
+                                //字符串
+                                case Cell.CELL_TYPE_STRING:
+                                    value=cell.getStringCellValue();
+                                    break;
+                                //公式
+                                case Cell.CELL_TYPE_FORMULA:
+                                    break;
+                                //数字
+                                case Cell.CELL_TYPE_NUMERIC:
+                                    if (HSSFDateUtil.isCellDateFormatted(cell))
+                                    {
+                                        value=getFormatDate(cell.getDateCellValue());
+                                    }else {
+                                        value=String.valueOf(cell.getNumericCellValue());
+                                    }
+                                    break;
+                                //空白
+                                case Cell.CELL_TYPE_BLANK:
+                                    break;
+                                //布尔值
+                                case Cell.CELL_TYPE_BOOLEAN:
+                                    value=String.valueOf(cell.getBooleanCellValue());
+                                    break;
+                                //错误值=CELL_TYPE_ERROR
+                                default:
+                                    //return ResultEnum.EXIST_ERROR_DATA;
+                            }
                         }
                         jsonObj.put(nameArr[col],value);
                         //字段是否必填
@@ -432,6 +433,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String guid=UUID.randomUUID().toString();
             redisTemplate.opsForValue().set("importTemplateData:"+guid,JSONArray.toJSON(result).toString());
             result.key=guid;
+
+            result.members=startPage(result.members,dto.pageIndex,dto.pageSize);
+
             return result;
         }
         catch (Exception e)
@@ -444,6 +448,39 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public static String getFormatDate(Date date) {
         SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return myFormat.format(date);
+    }
+
+    public static List startPage(List list, Integer pageNum,
+                                 Integer pageSize) {
+        if (list == null) {
+            return null;
+        }
+        if (list.size() == 0) {
+            return null;
+        }
+
+        Integer count = list.size(); // 记录总数
+        Integer pageCount = 0; // 页数
+        if (count % pageSize == 0) {
+            pageCount = count / pageSize;
+        } else {
+            pageCount = count / pageSize + 1;
+        }
+
+        int fromIndex = 0; // 开始索引
+        int toIndex = 0; // 结束索引
+
+        if (!pageNum.equals(pageCount)) {
+            fromIndex = (pageNum - 1) * pageSize;
+            toIndex = fromIndex + pageSize;
+        } else {
+            fromIndex = (pageNum - 1) * pageSize;
+            toIndex = count;
+        }
+
+        List pageList = list.subList(fromIndex, toIndex);
+
+        return pageList;
     }
 
 

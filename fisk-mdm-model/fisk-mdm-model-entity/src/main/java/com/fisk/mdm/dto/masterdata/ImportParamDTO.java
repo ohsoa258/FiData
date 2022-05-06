@@ -18,4 +18,8 @@ public class ImportParamDTO {
 
     public boolean removeSpace;
 
+    public int pageSize;
+
+    public int pageIndex;
+
 }
