@@ -1758,8 +1758,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case RestfulAPI:
                 dto.driveType = DbTypeEnum.RestfulAPI;
                 break;
-            case API:
-                dto.driveType = DbTypeEnum.API;
+            case api:
+                dto.driveType = DbTypeEnum.api;
                 break;
             default:
                 break;
@@ -1768,7 +1768,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.appAbbreviation = registrationPo.appAbbreviation;
         dto.tableName = tableAccessPo.tableName;
         // 非实时物理表才有sql
-        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dbTypeEnum.getName().equals(DbTypeEnum.API.getName())) {
+        if (!dbTypeEnum.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dbTypeEnum.getName().equals(DbTypeEnum.api.getName())) {
             Map<String, String> converSql = publishTaskClient.converSql(registrationPo.appAbbreviation + "_" + tableAccessPo.tableName, tableAccessPo.sqlScript, dataSourcePo.driveType).data;
             String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
             dto.selectSql = sql;
