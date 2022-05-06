@@ -27,7 +27,7 @@ public class ModelVersionVO extends BaseUserInfoVO {
     @ApiModelProperty(value = "model版本描述")
     public String desc;
 
-    @ApiModelProperty(value = "版本状态，0 打开、1 锁定、2 已提交")
+    @ApiModelProperty(value = "版本状态，0 打开、1 锁定、2 发布")
     public String status;
 
     @ApiModelProperty(value = "版本类型，1 用户创建、2 自动创建")

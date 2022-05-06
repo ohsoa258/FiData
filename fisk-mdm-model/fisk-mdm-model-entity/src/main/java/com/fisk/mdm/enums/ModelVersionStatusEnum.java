@@ -16,7 +16,7 @@ public enum ModelVersionStatusEnum  implements BaseEnum {
 
     LOCK(1,"锁定"),
 
-    SUBMITTED(2,"已提交");
+    SUBMITTED(2,"发布");
 
     @EnumValue
     private final int value;

@@ -13,7 +13,7 @@ public enum AttributeStatusEnum  implements BaseEnum {
      */
     INSERT(0,"新增待提交"),
     UPDATE(1,"修改待提交"),
-    SUBMITTED(2,"已提交"),
+    SUBMITTED(2,"发布"),
     DELETE(3,"删除待提交");
 
 

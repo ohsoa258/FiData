@@ -12,10 +12,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.enums.AttributeStatusEnum;
-import com.fisk.mdm.enums.DataTypeEnum;
-import com.fisk.mdm.enums.EventTypeEnum;
-import com.fisk.mdm.enums.ObjectTypeEnum;
+import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
@@ -229,6 +226,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         //修改数据
+        attributePo.setSyncStatus(null);
         if (baseMapper.update(attributePo,updateWrapper) <= 0) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
@@ -420,7 +418,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEnum.CAN_NOT_DELETE_NAME_OR_CODE;
         }
         //若状态为新增待提交，则直接逻辑删除
-        //若为修改待提交、已提交、删除待提交，说明后台表已生成该字段，删除需等待提交
+        //若为修改待提交、发布、删除待提交，说明后台表已生成该字段，删除需等待提交
         if(attributePo.getStatus() == AttributeStatusEnum.INSERT){
             return this.deleteDataById(id);
         }else{

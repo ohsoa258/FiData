@@ -140,7 +140,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                             IBuildSqlCommand sqlBuilder, EntityInfoVO entityInfoVo,
                             Integer entityId) {
 
-        // 筛选属性出去已提交
+        // 筛选属性出去发布
         List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
                 .collect(Collectors.toList());
         try{
@@ -579,7 +579,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             return buildStgTableSql;
         } catch (Exception ex) {
 
-            // 筛选属性出去已提交
+            // 筛选属性出去发布
             List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
                     .collect(Collectors.toList());
 
@@ -680,7 +680,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 return UPDATE.getValue();
             case "删除待提交":
                 return AttributeStatusEnum.DELETE.getValue();
-            case "已提交":
+            case "发布":
                 return AttributeStatusEnum.SUBMITTED.getValue();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -707,7 +707,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             statement.execute();
         } catch (Exception ex) {
 
-            // 筛选属性出去已提交
+            // 筛选属性出去发布
             List<AttributeInfoDTO> noSubmitAttributeList = entityInfoVo.getAttributeList().stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
                     .collect(Collectors.toList());
 

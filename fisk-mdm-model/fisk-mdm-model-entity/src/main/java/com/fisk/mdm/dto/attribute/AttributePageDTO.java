@@ -99,7 +99,7 @@ public class AttributePageDTO {
     private Integer sortWieght;
 
     /**
-     *状态： 0：新增 ，1：修改 ，2:已提交 3：删除
+     *状态： 0：新增 ，1：修改 ，2:发布 3：删除
      */
     @ApiModelProperty(value = "状态")
     private Integer status;

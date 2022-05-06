@@ -96,7 +96,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获得主数据表名
         String tableName = "viw_"+entityService.getDataById(entityId).getModelId()+"_"+entityId;
 
-        //查询该实体下已提交的属性
+        //查询该实体下发布的属性
         QueryWrapper<AttributePO> attributeColumnWrapper = new QueryWrapper<>();
         attributeColumnWrapper.lambda().eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
                 .eq(AttributePO::getEntityId,entityId);

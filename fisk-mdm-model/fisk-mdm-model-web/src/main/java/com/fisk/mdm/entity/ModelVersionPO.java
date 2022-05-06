@@ -32,7 +32,7 @@ public class ModelVersionPO extends BasePO {
     public String desc;
 
     /**
-     * 版本状态，0 打开、1 锁定、2 已提交
+     * 版本状态，0 打开、1 锁定、2 发布
      */
     public ModelVersionStatusEnum status;
 
