@@ -16,7 +16,6 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
-import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
@@ -33,7 +32,6 @@ import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -161,6 +159,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // e.提交事务
             connection.commit();
 
+            // 4.清空错误信息
+            entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
+                    .forEach(e -> {
+                        AttributeStatusDTO dto1 = new AttributeStatusDTO();
+                        dto1.setId(e.getId());
+                        dto1.setErrorMsg(" ");
+                        mdmClient.updateStatus(dto1);
+                    });
         }catch (Exception ex){
             // a.回滚事务
             rollbackConnection(connection);
@@ -297,7 +303,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
         AttributeInfoDTO dto = attributeList.get(0);
         String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
 
-        List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
 
             String sql = null;
@@ -364,7 +369,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 // 3.回写成功状态
                 status.setStatus(2);
                 status.setSyncStatus(1);
-                dtoList.add(status);
             } catch (SQLException ex) {
                 // a.回滚事务
                 rollbackConnection(connection);
@@ -374,14 +378,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 status.setSyncStatus(0);
                 status.setErrorMsg(ResultEnum.UPDATE_MDM_TABLE.getMsg()
                         + "【执行SQL】" + sql + "【原因】:" + ex);
-                dtoList.add(status);
                 log.error("修改Mdm表失败,异常信息:" + ex);
                 throw new FkException(ResultEnum.UPDATE_MDM_TABLE);
+            }finally {
+                // 回写属性状态
+                mdmClient.updateStatus(status);
             }
         }
-
-        // 回写属性状态
-        this.exceptionAttributeProcess(dtoList);
     }
 
     /**
@@ -467,6 +470,15 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.writableAttributeStatus(entityInfoVo.getAttributeList());
             // 6.回写实体状态
             this.writableEntityStatus(entityInfoVo);
+
+            // 7.清空错误信息
+            entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
+                    .forEach(e -> {
+                        AttributeStatusDTO dto1 = new AttributeStatusDTO();
+                        dto1.setId(e.getId());
+                        dto1.setErrorMsg(" ");
+                        mdmClient.updateStatus(dto1);
+                    });
         } catch (Exception ex) {
             // a.回滚事务
             rollbackConnection(connection);
