@@ -10,7 +10,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
@@ -23,16 +22,13 @@ import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.format.CellFormatType;
-import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -271,9 +267,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
      */
     public ResultEnum exportExcel(ExportResultVO vo,HttpServletResponse response)
     {
-        HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet sheet = workbook.createSheet("sheet1");
-        HSSFRow row1 = sheet.createRow(0);
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("sheet1");
+        XSSFRow row1 = sheet.createRow(0);
         if (CollectionUtils.isEmpty(vo.headerList))
         {
             ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR);
@@ -285,7 +281,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         {
             for (int i=0;i<vo.dataArray.size();i++)
             {
-                HSSFRow row = sheet.createRow(i+1);
+                XSSFRow row = sheet.createRow(i+1);
                 JSONObject jsonObject = JSONObject.parseObject(vo.dataArray.get(i).toString());
                 for (int j = 0; j < vo.headerList.size(); j++)
                 {
@@ -298,8 +294,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //输出Excel文件
             OutputStream output=response.getOutputStream();
             response.reset();
-            response.setHeader("Content-disposition", "attachment;filename="+vo.fileName+".xlsx");
-            response.setContentType("application/x-xls");
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.addHeader("Content-Disposition", "attachment;filename=fileName" + ".xlsx");
             workbook.write(output);
             output.close();
         } catch (Exception e) {
