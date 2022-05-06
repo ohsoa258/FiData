@@ -86,7 +86,7 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
     private Integer sortWieght;
 
     /**
-     * 状态： 0：新增 ，1：修改 ，2:发布 3：删除
+     * 状态： 0：新增 ，1：修改 ，2:已发布 3：删除
      */
     private String status;
 

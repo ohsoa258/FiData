@@ -680,7 +680,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 return UPDATE.getValue();
             case "删除待发布":
                 return AttributeStatusEnum.DELETE.getValue();
-            case "发布":
+            case "已发布":
                 return AttributeStatusEnum.SUBMITTED.getValue();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -852,7 +852,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 视图基础字段
         str.append(this.splicingViewTable(false));
 
-        String collect = list.stream().filter(e -> !e.getStatus().equals("删除待发布")).map(e -> {
+        String collect = list.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.DELETE.getName())).map(e -> {
             String str1 = e.getColumnName() + " AS " + e.getName();
             return str1;
         }).collect(Collectors.joining(","));
