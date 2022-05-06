@@ -70,7 +70,9 @@ public class ControllerLogAdvice {
             // log
             log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
 
-            if (Objects.nonNull(ano) && ano.printParams()) {
+            if (Objects.nonNull(ano) && !ano.printParams()) {
+                log.debug("方法准备调用, 方法详情【{}】", jp.getSignature());
+            } else {
                 // get method params
                 Map<String, Object> args = new HashMap<>();
                 String[] argNames = ((MethodSignature) jp.getSignature()).getParameterNames();
@@ -78,8 +80,6 @@ public class ControllerLogAdvice {
                     args.put(argNames[i] + "参数", jp.getArgs()[i]);
                 }
                 log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
-            } else {
-                log.debug("方法准备调用, 方法详情【{}】", jp.getSignature());
             }
 
             long execTime = System.currentTimeMillis();
