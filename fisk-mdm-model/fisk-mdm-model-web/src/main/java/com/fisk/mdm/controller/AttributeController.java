@@ -58,7 +58,7 @@ public class AttributeController {
         return ResultEntityBuild.build(service.deleteDataById(id));
     }
 
-    @ApiOperation("提交待添加和待修改的属性")
+    @ApiOperation("发布待添加和待修改的属性")
     @GetMapping("/getNotSubmittedData")
     public ResultEntity<ResultEnum> getNotSubmittedData(Integer entityId) {
         return service.getNotSubmittedData(entityId);

@@ -56,7 +56,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream()
-                .filter(e -> !e.getStatus().equals("删除待提交"))
+                .filter(e -> !e.getStatus().equals("删除待发布"))
                 .map(e -> {
 
                     String str1 = null;

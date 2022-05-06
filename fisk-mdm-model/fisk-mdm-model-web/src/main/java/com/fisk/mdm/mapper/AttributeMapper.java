@@ -35,7 +35,7 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
     List<EntityMsgVO> getER();
 
     /**
-     * 删除属性(修改状态为删除待提交)
+     * 删除属性(修改状态为删除待发布)
      *
      * @param id 属性id
      * @return {@link ResultEnum}

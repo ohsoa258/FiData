@@ -11,10 +11,10 @@ public enum AttributeStatusEnum  implements BaseEnum {
     /**
      * 属性状态
      */
-    INSERT(0,"新增待提交"),
-    UPDATE(1,"修改待提交"),
+    INSERT(0,"新增待发布"),
+    UPDATE(1,"修改待发布"),
     SUBMITTED(2,"发布"),
-    DELETE(3,"删除待提交");
+    DELETE(3,"删除待发布");
 
 
     @EnumValue

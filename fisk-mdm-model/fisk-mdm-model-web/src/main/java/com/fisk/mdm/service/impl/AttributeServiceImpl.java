@@ -260,7 +260,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 提交未提交的属性
+     * 发布未发布的属性
      *
      * @return {@link List}<{@link AttributePO}>
      */
@@ -272,7 +272,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
-        //查询实体下是否存在可提交的属性
+        //查询实体下是否存在可发布的属性
         QueryWrapper<AttributePO> wrapper = new QueryWrapper<>();
         wrapper.eq("entity_id", entityId)
                 .ne("status",AttributeStatusEnum.SUBMITTED);
@@ -281,7 +281,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEntityBuild.build(ResultEnum.NO_DATA_TO_SUBMIT);
         }
 
-        //提交
+        //发布
         com.fisk.task.dto.model.EntityDTO entityDTO = new com.fisk.task.dto.model.EntityDTO();
         entityDTO.setEntityId(entityId);
         entityDTO.setUserId(userHelper.getLoginUserInfo().getId());
@@ -347,7 +347,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     }
 
     /**
-     * 删除属性(后台表已生成该字段，删除需等待提交)
+     * 删除属性(后台表已生成该字段，删除需等待发布)
      *
      * @param id 属性id
      * @return {@link ResultEnum}
@@ -365,14 +365,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
 
         // 记录日志
-        String desc = "删除一个属性,id:" + id +"（待提交）";
+        String desc = "删除一个属性,id:" + id +"（待发布）";
         logService.saveEventLog(id, ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.DELETE, desc);
 
         return ResultEnum.SUCCESS;
     }
 
     /**
-     * 删除数据（逻辑删除，仅用于删除  未提交的属性）
+     * 删除数据（逻辑删除，仅用于删除  未发布的属性）
      *
      * @param id id
      * @return {@link ResultEnum}
@@ -417,8 +417,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if("name".equals(attributePo.getName()) && "code".equals(attributePo.getName())){
             return ResultEnum.CAN_NOT_DELETE_NAME_OR_CODE;
         }
-        //若状态为新增待提交，则直接逻辑删除
-        //若为修改待提交、发布、删除待提交，说明后台表已生成该字段，删除需等待提交
+        //若状态为新增待发布，则直接逻辑删除
+        //若为修改待发布、发布、删除待发布，说明后台表已生成该字段，删除需等待发布
         if(attributePo.getStatus() == AttributeStatusEnum.INSERT){
             return this.deleteDataById(id);
         }else{

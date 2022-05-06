@@ -63,7 +63,7 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
     }
 
     /**
-     * 属性提交状态转换
+     * 属性发布状态转换
      */
     public AttributeSyncStatusEnum intToAttributeSyncStatusEnum(Integer value){
         if (value == null){

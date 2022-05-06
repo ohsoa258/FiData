@@ -53,7 +53,7 @@ public interface AttributeService extends IService<AttributePO> {
 
 
     /**
-     * 提交待添加、待修改数据
+     * 发布待添加、待修改数据
      * @param entityId 实体id
      * @return {@link List}<{@link AttributePO}>
      */

@@ -128,7 +128,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        //提交创建属性日志表任务
+        //发布创建属性日志表任务
         com.fisk.task.dto.model.ModelDTO dto = new com.fisk.task.dto.model.ModelDTO();
         dto.setAttributeLogName(modelPO.attributeLogName);
         dto.setUserId(userHelper.getLoginUserInfo().getId());

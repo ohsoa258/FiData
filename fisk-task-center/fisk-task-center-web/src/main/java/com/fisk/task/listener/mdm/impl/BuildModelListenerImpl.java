@@ -674,11 +674,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public Integer stringToStatusInt(String status) {
         switch (status) {
-            case "新增待提交":
+            case "新增待发布":
                 return AttributeStatusEnum.INSERT.getValue();
-            case "修改待提交":
+            case "修改待发布":
                 return UPDATE.getValue();
-            case "删除待提交":
+            case "删除待发布":
                 return AttributeStatusEnum.DELETE.getValue();
             case "发布":
                 return AttributeStatusEnum.SUBMITTED.getValue();
@@ -852,7 +852,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 视图基础字段
         str.append(this.splicingViewTable(false));
 
-        String collect = list.stream().filter(e -> !e.getStatus().equals("删除待提交")).map(e -> {
+        String collect = list.stream().filter(e -> !e.getStatus().equals("删除待发布")).map(e -> {
             String str1 = e.getColumnName() + " AS " + e.getName();
             return str1;
         }).collect(Collectors.joining(","));

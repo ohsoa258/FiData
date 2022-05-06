@@ -91,12 +91,12 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
     private String status;
 
     /**
-     * 提交状态：0：提交失败 1：提交成功
+     * 发布状态：0：发布失败 1：发布成功
      */
     private String syncStatus;
 
     /**
-     * 提交失败描述
+     * 发布失败描述
      */
     private String errorMsg;
 

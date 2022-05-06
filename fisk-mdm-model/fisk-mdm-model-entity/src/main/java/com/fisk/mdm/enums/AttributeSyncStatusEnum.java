@@ -9,10 +9,10 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum AttributeSyncStatusEnum implements BaseEnum {
 
     /**
-     * 提交状态
+     * 发布状态
      */
-    ERROR(0,"提交失败"),
-    SUCCESS(1,"提交成功");
+    ERROR(0,"发布失败"),
+    SUCCESS(1,"发布成功");
 
     @EnumValue
     private final int value;
