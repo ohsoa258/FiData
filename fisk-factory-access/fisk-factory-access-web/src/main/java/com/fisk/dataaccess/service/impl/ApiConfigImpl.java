@@ -189,6 +189,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
 
+        // 发布之后,按照配置调用一次api
+        if (dto.executeConfigFlag) {
+            ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
+            apiImportDataDTO.appId = dto.appId;
+            apiImportDataDTO.apiId = dto.id;
+            // 调用api推送数据方法
+            importData(apiImportDataDTO);
+        }
+
         return ResultEnum.SUCCESS;
     }
 
