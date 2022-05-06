@@ -19,6 +19,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +47,13 @@ public class ControllerLogAdvice {
             String remoteAddr = "",
                     requestUrl = "",
                     token = "";
+
+            // get method meta
+            Class<?> targetClass = jp.getTarget().getClass();
+            Class<?>[] argClass = ((MethodSignature) jp.getSignature()).getParameterTypes();
+            Method method = targetClass.getMethod(jp.getSignature().getName(), argClass);
+            ControllerAOPConfig ano = method.getAnnotation(ControllerAOPConfig.class);
+
             // get token
             ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (requestAttributes != null) {
@@ -60,13 +68,18 @@ public class ControllerLogAdvice {
             }
             // log
             log.debug("IP: 【{}】, Port: 【{}】, 请求地址: 【{}】, 用户ID: 【{}】, Token: 【{}】", remoteAddr, remotePort, requestUrl, userId, token);
-            // get method params
-            Map<String, Object> args = new HashMap<>();
-            String[] argNames = ((MethodSignature) jp.getSignature()).getParameterNames();
-            for (int i = 0; i < argNames.length; i++) {
-                args.put(argNames[i] + "参数", jp.getArgs()[i]);
+
+            if (ano.printParams()) {
+                // get method params
+                Map<String, Object> args = new HashMap<>();
+                String[] argNames = ((MethodSignature) jp.getSignature()).getParameterNames();
+                for (int i = 0; i < argNames.length; i++) {
+                    args.put(argNames[i] + "参数", jp.getArgs()[i]);
+                }
+                log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
+            } else {
+                log.debug("方法准备调用, 方法详情【{}】", jp.getSignature());
             }
-            log.debug("方法准备调用, 方法详情【{}】, 参数: {}", jp.getSignature(), JSON.toJSONString(args));
 
             long execTime = System.currentTimeMillis();
             // 调用切点方法
