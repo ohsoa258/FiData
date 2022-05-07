@@ -20,6 +20,11 @@ public enum ChannelDataEnum implements BaseEnum {
      * 数据湖表任务
      */
     DATALAKE_TASK(3, "数据湖表任务"),
+
+    /**
+     * 数仓表任务
+     */
+    DW_TASK(11, "数仓表任务"),
     /**
      * 数仓维度表任务组
      */
@@ -28,6 +33,12 @@ public enum ChannelDataEnum implements BaseEnum {
      * 数仓事实表任务组
      */
     DW_FACT_TASK(5, "数仓事实表任务"),
+
+
+    /**
+     * 分析模型任务
+     */
+    OLAP_TASK(12, "分析模型任务"),
     /**
      * 分析模型维度表任务组
      */

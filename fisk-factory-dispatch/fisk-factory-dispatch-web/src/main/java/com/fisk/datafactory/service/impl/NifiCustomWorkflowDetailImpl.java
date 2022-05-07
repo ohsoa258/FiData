@@ -135,7 +135,59 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 前端有时会传入已经删除的组件,后端使用入库后的数据
         List<NifiCustomWorkflowDetailPO> workflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
 
-        // 两种类型合并
+        // TODO 两种类型合并
+        for (NifiCustomWorkflowDetailPO e : workflowDetailPoList) {
+
+            ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
+
+            switch (Objects.requireNonNull(channelDataEnum)) {
+                // 开始
+                case SCHEDULE_TASK:
+                    // 任务组
+                case TASKGROUP:
+                    // 数据湖表任务
+                case DATALAKE_TASK:
+                    break;
+                case DW_TASK:
+                    e.componentsId = 11;
+                    break;
+                // 数仓维度表任务
+                case DW_DIMENSION_TASK:
+                    e.componentsId = 4;
+                    break;
+                // 数仓事实表任务
+                case DW_FACT_TASK:
+                    e.componentsId = 5;
+                    break;
+                case OLAP_TASK:
+                    e.componentsId = 12;
+                    break;
+                // 分析模型维度表任务
+                case OLAP_DIMENSION_TASK:
+                    e.componentsId = 6;
+                    break;
+                // 分析模型事实表任务
+                case OLAP_FACT_TASK:
+                    e.componentsId = 7;
+                    break;
+                // 分析模型宽表任务
+                case OLAP_WIDETABLE_TASK:
+                    e.componentsId = 8;
+                    break;
+                // 数据湖ftp任务
+                case DATALAKE_FTP_TASK:
+                    e.componentsId = 9;
+                    break;
+                // 数据湖非实时api任务
+                case DATALAKE_API_TASK:
+                    e.componentsId = 10;
+                    break;
+                default:
+                    break;
+            }
+
+
+        }
 
 
         // 给nifi封装参数
