@@ -8,6 +8,7 @@ public enum DataClassifyEnum  implements BaseEnum {
      */
     DATAMODELING(0,"数据建模-维度事实"),
     DATAACCESS(1,"数据接入"),
+    DATAACCESS_API(11,"数据接入-非实时api"),
     DATAMODELKPL(2,"数据建模-指标"),
     DATAMODELWIDETABLE(9,"数据建模-宽表"),
     UNIFIEDCONTROL(10,"统一调度"),

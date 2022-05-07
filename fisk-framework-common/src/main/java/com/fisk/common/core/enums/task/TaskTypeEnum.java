@@ -71,7 +71,9 @@ public enum TaskTypeEnum implements BaseEnum {
     /**
      * mdm创建后台表生成任务
      */
-    BACKGROUND_TABLE_TASK_CREATION(14,"mdm创建后台表生成任务");
+    BACKGROUND_TABLE_TASK_CREATION(14,"mdm创建后台表生成任务"),
+
+    BUILD_ACCESS_API_TASK(15,"非实时api同步");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;
