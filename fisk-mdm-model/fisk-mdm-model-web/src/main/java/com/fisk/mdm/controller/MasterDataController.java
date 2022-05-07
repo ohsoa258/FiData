@@ -6,11 +6,13 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,6 +62,13 @@ public class MasterDataController {
     @ControllerAOPConfig(printParams=false)
     public ResultEntity<Object> importExcel(ImportParamDTO dto, @RequestParam("file") MultipartFile file){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importTemplateData(dto,file));
+    }
+
+    @ApiOperation("模板数据分页")
+    @PostMapping("/importDataQuery")
+    @ResponseBody
+    public ResultEntity<Object> importDataQuery(@Validated @RequestBody ImportDataQueryDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataQuery(dto));
     }
 
 }

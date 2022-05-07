@@ -244,7 +244,8 @@ public enum ResultEnum {
     EXIST_INVALID_COLUMN(15009,"存在无效列"),
     REQUIRED_FIELDS(15010,"必填项"),
     DATA_TYPE_DISAGREE(15011,"与数据类型不一致"),
-    EXIST_ERROR_DATA(15012,"存在错误数据");
+    EXIST_ERROR_DATA(15012,"存在错误数据"),
+    KEY_DATA_NOT_FOUND(151013,"数据不存在或已过期");
 
     ResultEnum(int code, String msg) {
         this.code = code;

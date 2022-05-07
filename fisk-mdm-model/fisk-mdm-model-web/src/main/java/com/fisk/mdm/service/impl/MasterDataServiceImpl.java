@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.mapper.EntityMapper;
@@ -309,17 +310,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public BathUploadMemberVO importTemplateData(ImportParamDTO dto, MultipartFile file)
     {
-        if (!StringUtils.isEmpty(dto.key))
-        {
-            Boolean exist = redisTemplate.hasKey("importTemplateData:"+dto.key);
-            if (exist) {
-                String jsonStr = redisTemplate.opsForValue().get("importTemplateData:"+dto.key).toString();
-                BathUploadMemberVO data=JSONObject.parseObject(jsonStr,BathUploadMemberVO.class);
-                data.members=startPage(data.members,dto.pageIndex,dto.pageSize);
-                data.key=dto.key;
-                return data;
-            }
-        }
         EntityPO po=entityMapper.selectById(dto.entityId);
         if (po==null)
         {
@@ -441,7 +431,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String guid=UUID.randomUUID().toString();
             redisTemplate.opsForValue().set("importTemplateData:"+guid,JSONArray.toJSON(result).toString());
             result.key=guid;
-            result.members=startPage(result.members,dto.pageIndex,dto.pageSize);
             return result;
         }
         catch (Exception e)
@@ -449,6 +438,20 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
         }
         return null;
+    }
+
+    @Override
+    public BathUploadMemberVO importDataQuery(ImportDataQueryDTO dto)
+    {
+        Boolean exist = redisTemplate.hasKey("importTemplateData:"+dto.key);
+        if (exist) {
+            String jsonStr = redisTemplate.opsForValue().get("importTemplateData:"+dto.key).toString();
+            BathUploadMemberVO data=JSONObject.parseObject(jsonStr,BathUploadMemberVO.class);
+            data.members=startPage(data.members,dto.pageIndex,dto.pageSize);
+            data.key=dto.key;
+            return data;
+        }
+        throw new FkException(ResultEnum.KEY_DATA_NOT_FOUND);
     }
 
     public static String getFormatDate(Date date) {
