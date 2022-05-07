@@ -66,7 +66,7 @@
     </resultMap>
 
     <update id="deleteAttribute">
-        update tb_attribute set status = 3 , sync_status = 3  where del_flag=1 and id = #{id}
+        update tb_attribute set status = 3 , sync_status = 2  where del_flag=1 and id = #{id}
     </update>
 
 </mapper>
