@@ -254,5 +254,5 @@ public interface PublishTaskClient {
     public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO data);
 
     @PostMapping("/pipeline/consumer")
-    public void consumer(List<String> arrMessage, Acknowledgment ack);
+    public void consumer(@RequestBody List<String> arrMessage);
 }

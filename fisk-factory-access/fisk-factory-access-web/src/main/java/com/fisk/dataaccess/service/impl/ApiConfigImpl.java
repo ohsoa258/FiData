@@ -397,7 +397,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                 kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
-                publishTaskClient.consumer(kafkaReceives, null);
+                publishTaskClient.consumer(kafkaReceives);
             }
         } else {
             List<String> kafkaReceives = new ArrayList<>();
@@ -408,7 +408,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                 kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
-                publishTaskClient.consumer(kafkaReceives, null);
+                publishTaskClient.consumer(kafkaReceives);
             }
         }
         return ResultEnum.SUCCESS;
