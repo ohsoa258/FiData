@@ -10,6 +10,7 @@ import com.fisk.common.core.constants.RedisTokenKey;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
@@ -37,6 +38,8 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
+import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -87,6 +90,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private TableBusinessImpl tableBusinessImpl;
     @Resource
     private ApiParameterServiceImpl apiParameterServiceImpl;
+    @Resource
+    private UserHelper userHelper;
     //    @Resource
 //    private ApiHttpRequestFactoryHelper apiHttpRequestFactoryHelper;
     @Resource
@@ -376,16 +381,49 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
+        dto.userId = userHelper.getLoginUserInfo().id;
+        if (dto.workflowIdAppIdApiId != null && dto.workflowIdAppIdApiId != "") {
+            String[] split = dto.workflowIdAppIdApiId.split(",");
+            for (int i = 0; i < split.length; i++) {
+                List<String> kafkaReceives = new ArrayList<>();
+                KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+                String workflowIdApiId = split[i];
+                String[] s = workflowIdApiId.split("_");
+                dto.workflowId = s[0];
+                dto.appId = Long.parseLong(s[1]);
+                dto.apiId = Long.parseLong(s[2]);
+                syncData(dto);
+                kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
+                kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
+                publishTaskClient.consumer(kafkaReceives, null);
+            }
+        } else {
+            List<String> kafkaReceives = new ArrayList<>();
+            KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+            syncData(dto);
+            if (dto.workflowId != null) {
+                kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
+                kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
+                publishTaskClient.consumer(kafkaReceives, null);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
 
+    public void syncData(ApiImportDataDTO dto) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
-            return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
         }
         ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiId).one();
         if (apiConfigPo == null) {
-            return ResultEnum.APICONFIG_ISNULL;
+            throw new FkException(ResultEnum.APICONFIG_ISNULL);
         }
         List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
 
@@ -427,7 +465,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 推送数据
         pushData(receiveDataDTO);
 
-        return ResultEnum.SUCCESS;
     }
 
     /**
