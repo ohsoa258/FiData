@@ -18,6 +18,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -251,4 +252,7 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/createBackendTable")
     public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO data);
+
+    @PostMapping("/pipeline/consumer")
+    public void consumer(List<String> arrMessage, Acknowledgment ack);
 }
