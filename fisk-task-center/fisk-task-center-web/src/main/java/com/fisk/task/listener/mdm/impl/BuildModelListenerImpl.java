@@ -741,13 +741,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
         str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
         str.append(" AS ").append("SELECT ");
 
-        List<AttributeInfoDTO> attributeList = null;
-        if (entityInfoVo.getStatus().equals(NOT_CREATED.getName())) {
-            List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
-            attributeList = mdmClient.getByIds(ids).getData();
-        } else {
-            attributeList = entityInfoVo.getAttributeList();
-        }
+        List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
+        List<AttributeInfoDTO> attributeList = mdmClient.getByIds(ids).getData();
 
         // 存在外键数据
         List<AttributeInfoDTO> foreignList = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
@@ -855,14 +850,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @return
      */
     public String noDomainSplicing(List<AttributeInfoDTO> noForeignList) {
-        List<Integer> ids = noForeignList.stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
-        List<AttributeInfoDTO> list = mdmClient.getByIds(ids).getData();
-
         StringBuilder str = new StringBuilder();
         // 视图基础字段
         str.append(this.splicingViewTable(false));
 
-        String collect = list.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.DELETE.getName())).map(e -> {
+        String collect = noForeignList.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.DELETE.getName())).map(e -> {
             String str1 = e.getColumnName() + " AS " + e.getName();
             return str1;
         }).collect(Collectors.joining(","));
