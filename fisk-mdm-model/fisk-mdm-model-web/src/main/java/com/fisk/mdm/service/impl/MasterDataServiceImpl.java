@@ -10,9 +10,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.entity.AttributePO;
@@ -308,7 +310,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     @Override
-    public BathUploadMemberVO importTemplateData(ImportParamDTO dto, MultipartFile file)
+    public BathUploadMemberListVo importTemplateData(ImportParamDTO dto, MultipartFile file)
     {
         EntityPO po=entityMapper.selectById(dto.entityId);
         if (po==null)
@@ -322,6 +324,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+        BathUploadMemberListVo listVo=new BathUploadMemberListVo();
         BathUploadMemberVO result=new BathUploadMemberVO();
         result.attribute=AttributeMap.INSTANCES.poListToVoList(list);
         result.versionId=dto.versionId;
@@ -429,9 +432,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 result.members=list1;
             }
             String guid=UUID.randomUUID().toString();
-            redisTemplate.opsForValue().set("importTemplateData:"+guid,JSONArray.toJSON(result).toString());
-            result.key=guid;
-            return result;
+            List<BathUploadMemberVO> bathUploadMemberVOList=new ArrayList<>();
+            bathUploadMemberVOList.add(result);
+            listVo.key=guid;
+            listVo.list=bathUploadMemberVOList;
+            redisTemplate.opsForValue().set("importTemplateData:"+guid,JSONArray.toJSON(listVo).toString());
+            return listVo;
         }
         catch (Exception e)
         {
@@ -446,12 +452,23 @@ public class MasterDataServiceImpl implements IMasterDataService {
         Boolean exist = redisTemplate.hasKey("importTemplateData:"+dto.key);
         if (exist) {
             String jsonStr = redisTemplate.opsForValue().get("importTemplateData:"+dto.key).toString();
-            BathUploadMemberVO data=JSONObject.parseObject(jsonStr,BathUploadMemberVO.class);
-            data.members=startPage(data.members,dto.pageIndex,dto.pageSize);
-            data.key=dto.key;
-            return data;
+            BathUploadMemberListVo data=JSONObject.parseObject(jsonStr,BathUploadMemberListVo.class);
+
+            Optional<BathUploadMemberVO> first = data.list.stream().filter(e -> dto.entityId == e.entityId).findFirst();
+            if (!first.isPresent())
+            {
+                throw new FkException(ResultEnum.KEY_DATA_NOT_FOUND);
+            }
+            first.get().members=startPage(first.get().members,dto.pageIndex,dto.pageSize);
+            return first.get();
         }
         throw new FkException(ResultEnum.KEY_DATA_NOT_FOUND);
+    }
+
+    @Override
+    public ResultEnum importDataSubmit(ImportDataSubmitDTO dto)
+    {
+        return ResultEnum.SUCCESS;
     }
 
     public static String getFormatDate(Date date) {
