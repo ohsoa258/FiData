@@ -136,6 +136,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //添加数据
         attributePo.setStatus(AttributeStatusEnum.INSERT);
+        attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
         if (baseMapper.insert(attributePo) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }

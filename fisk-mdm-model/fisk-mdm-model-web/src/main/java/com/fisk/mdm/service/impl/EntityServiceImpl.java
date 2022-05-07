@@ -241,6 +241,7 @@ public class EntityServiceImpl implements EntityService {
         attributeCode.setEnableRequired(1);
         attributeCode.setDisplayWidth(120);
         attributeCode.setStatus(AttributeStatusEnum.INSERT);
+        attributeCode.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
         attributePoList.add(attributeCode);
 
         AttributePO attributePoName = new AttributePO();
@@ -255,6 +256,7 @@ public class EntityServiceImpl implements EntityService {
         attributePoName.setEnableRequired(1);
         attributePoName.setDisplayWidth(120);
         attributePoName.setStatus(AttributeStatusEnum.INSERT);
+        attributePoName.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
         attributePoList.add(attributePoName);
 
         boolean saveBatch = attributeService.saveBatch(attributePoList);
