@@ -231,7 +231,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addTableAccessData(TbTableAccessDTO dto);
+    ResultEntity<Object> addTableAccessData(TbTableAccessDTO dto);
 
     /**
      * 物理表单表回显

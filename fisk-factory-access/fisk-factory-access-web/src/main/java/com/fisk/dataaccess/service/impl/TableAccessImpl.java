@@ -1336,22 +1336,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 */
 
     @Override
-    public ResultEnum addTableAccessData(TbTableAccessDTO dto) {
+    public ResultEntity<Object> addTableAccessData(TbTableAccessDTO dto) {
 
         // dto -> po
         TableAccessPO model = TableAccessMap.INSTANCES.tbDtoToPo(dto);
         // 参数校验
         if (model == null) {
-            return ResultEnum.PARAMTER_NOTNULL;
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
         // 同一应用下表名不可重复
         boolean flag = this.checkTableName(dto);
         if (flag) {
-            return ResultEnum.TABLE_NAME_EXISTS;
+            return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS);
         }
 
-        return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        boolean save = this.save(model);
+        if (!save) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, model.id);
     }
 
     @Override
