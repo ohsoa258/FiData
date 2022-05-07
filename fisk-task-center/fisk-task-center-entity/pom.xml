@@ -45,12 +45,7 @@
 <!--            <artifactId>common-atlasapi</artifactId>-->
 <!--            <version>1.0-ATLASCLIENT</version>-->
 <!--        </dependency>-->
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fisk-factory-access-entity</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
@@ -89,6 +84,12 @@
         <dependency>
             <groupId>com.fisk</groupId>
             <artifactId>fisk-governance-center-entity</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-access-entity</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
