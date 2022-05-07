@@ -22,4 +22,6 @@ public class ImportParamDTO {
 
     public int pageIndex;
 
+    public String key;
+
 }

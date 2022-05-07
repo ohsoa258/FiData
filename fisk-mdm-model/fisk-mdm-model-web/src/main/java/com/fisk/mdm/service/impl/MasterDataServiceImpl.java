@@ -1,5 +1,6 @@
 package com.fisk.mdm.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -308,6 +309,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public BathUploadMemberVO importTemplateData(ImportParamDTO dto, MultipartFile file)
     {
+        if (!StringUtils.isEmpty(dto.key))
+        {
+            Boolean exist = redisTemplate.hasKey("importTemplateData:"+dto.key);
+            if (exist) {
+                String jsonStr = redisTemplate.opsForValue().get("importTemplateData:"+dto.key).toString();
+                BathUploadMemberVO data=JSONObject.parseObject(jsonStr,BathUploadMemberVO.class);
+                data.members=startPage(data.members,dto.pageIndex,dto.pageSize);
+                data.key=dto.key;
+                return data;
+            }
+        }
         EntityPO po=entityMapper.selectById(dto.entityId);
         if (po==null)
         {
@@ -429,9 +441,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             String guid=UUID.randomUUID().toString();
             redisTemplate.opsForValue().set("importTemplateData:"+guid,JSONArray.toJSON(result).toString());
             result.key=guid;
-
             result.members=startPage(result.members,dto.pageIndex,dto.pageSize);
-
             return result;
         }
         catch (Exception e)
@@ -446,15 +456,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return myFormat.format(date);
     }
 
-    public static List startPage(List list, Integer pageNum,
-                                 Integer pageSize) {
+    public static List startPage(List list, Integer pageNum,Integer pageSize) {
         if (list == null) {
             return null;
         }
         if (list.size() == 0) {
             return null;
         }
-
         Integer count = list.size(); // 记录总数
         Integer pageCount = 0; // 页数
         if (count % pageSize == 0) {
@@ -462,7 +470,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         } else {
             pageCount = count / pageSize + 1;
         }
-
         int fromIndex = 0; // 开始索引
         int toIndex = 0; // 结束索引
 
@@ -473,9 +480,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             fromIndex = (pageNum - 1) * pageSize;
             toIndex = count;
         }
-
         List pageList = list.subList(fromIndex, toIndex);
-
         return pageList;
     }
 
