@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -69,6 +70,14 @@ public class MasterDataController {
     @ResponseBody
     public ResultEntity<Object> importDataQuery(@Validated @RequestBody ImportDataQueryDTO dto){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataQuery(dto));
+    }
+
+    @ApiOperation("模板数据提交")
+    @PostMapping("/importDataSubmit")
+    @ResponseBody
+    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+        //return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
     }
 
 }

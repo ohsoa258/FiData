@@ -32,6 +32,4 @@ public class BathUploadMemberVO {
 
     public List<JSONObject> members;
 
-    public String key;
-
 }

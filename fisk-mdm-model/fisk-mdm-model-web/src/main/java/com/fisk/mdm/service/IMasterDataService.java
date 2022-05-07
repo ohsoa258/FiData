@@ -3,7 +3,9 @@ package com.fisk.mdm.service;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -42,7 +44,7 @@ public interface IMasterDataService {
      * @param file
      * @return
      */
-    BathUploadMemberVO importTemplateData(ImportParamDTO dto, MultipartFile file);
+    BathUploadMemberListVo importTemplateData(ImportParamDTO dto, MultipartFile file);
 
     /**
      * 导出数据分页展示
@@ -50,6 +52,13 @@ public interface IMasterDataService {
      * @return
      */
     BathUploadMemberVO importDataQuery(ImportDataQueryDTO dto);
+
+    /**
+     * 模板数据提交
+     * @param dto
+     * @return
+     */
+    ResultEnum importDataSubmit(ImportDataSubmitDTO dto);
 
 
 }
