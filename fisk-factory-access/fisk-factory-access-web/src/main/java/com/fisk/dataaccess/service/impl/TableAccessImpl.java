@@ -1185,6 +1185,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 .orderByDesc(AppRegistrationPO::getCreateTime));
 
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
+
+        for (AppRegistrationPO e : list) {
+            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
+            for (ChannelDataDTO f : channelDataDTOList) {
+                if (appDataSourcePo.appId == f.id) {
+                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
+                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
+                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
+                            || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())) {
+                        f.type = "数据湖-表任务";
+                    }
+                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
+                        f.type = "数据湖-非实时api任务";
+                    }
+                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
+                        f.type = "数据湖-ftp任务";
+                    }
+                }
+            }
+        }
+
         // 查询当前应用下面的所有表
         channelDataDTOList.forEach(dto -> {
             // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1

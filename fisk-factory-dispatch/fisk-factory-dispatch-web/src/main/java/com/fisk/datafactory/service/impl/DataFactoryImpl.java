@@ -22,7 +22,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -69,14 +68,21 @@ public class DataFactoryImpl implements IDataFactory {
                 return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOW_NOT_EXISTS);
             }
             List<NifiCustomWorkflowDetailPO> detailList = nifiCustomWorkflowDetailImpl.query()
-                    .eq("workflow_id", customWorkflowPo.workflowId).eq("component_type", dto.channelDataEnum.getName()).list();
+                    .eq("workflow_id", customWorkflowPo.workflowId)
+                    .eq("component_type", dto.channelDataEnum.getName())
+                    .list();
             if (CollectionUtils.isEmpty(detailList)) {
                 // 当前管道下没有组件
                 return ResultEntityBuild.build(ResultEnum.CUSTOMWORKFLOWDETAIL_NOT_EXISTS);
             }
 
             // 匹配tableId与feign接口传参的tableId保持一致的
-            List<NifiCustomWorkflowDetailPO> newList = detailList.stream().filter(e -> dto.tableId.equals(e.tableId)).collect(Collectors.toList());
+            List<NifiCustomWorkflowDetailPO> newList = new ArrayList<>();
+            for (NifiCustomWorkflowDetailPO e : detailList) {
+                if (StringUtils.isNotBlank(e.tableId) && dto.tableId.equals(e.tableId)) {
+                    newList.add(e);
+                }
+            }
             if (CollectionUtils.isEmpty(newList)) {
                 return ResultEntityBuild.build(ResultEnum.FLOW_TABLE_NOT_EXISTS);
             }
