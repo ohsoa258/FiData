@@ -590,7 +590,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 columnList.add(name+"='"+entry.getValue().toString()+"'");
             }
         }
-        columnList.add("fidata_update_time='"+getFormatDate(date)+"',fidata_update_user="+userHelper.getLoginUserInfo().id);
+        if (type==3)
+        {
+            columnList.add("fidata_update_time='"+getFormatDate(date)+"',fidata_update_user="+userHelper.getLoginUserInfo().id);
+        }
         return Joiner.on(",").join(columnList)+condition;
     }
 
