@@ -9,7 +9,6 @@ import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
-import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -159,8 +158,8 @@ public interface DataAccessClient {
      *
      * @return list
      */
-    @PostMapping("/dataAccessTree/getTableId")
-    public ResultEntity<List<ChannelDataDTO>> getTableId(NifiComponentsDTO dto);
+    @GetMapping("/dataAccessTree/getTableId")
+    public ResultEntity<List<ChannelDataDTO>> getTableId();
 
     /**
      * 封装参数给nifi
