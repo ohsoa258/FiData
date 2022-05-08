@@ -30,3 +30,10 @@ spring:
     time-zone: GMT+8
   redis:
     host: 192.168.21.13
+
+# pg数仓
+pgsql-mdm:
+  password: PgPassword01!
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified
+  username: postgres
+  type: PG

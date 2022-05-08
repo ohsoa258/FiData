@@ -2,12 +2,17 @@ package com.fisk.common.service.mdmBEBuild;
 
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.BeanHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 
 import java.sql.*;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * @author WangYan
@@ -134,5 +139,56 @@ public class AbstractDbHelper {
         log.info("【execCreate】【" + code + "】执行sql: 【" + sql + "】");
         statement = connection.createStatement();
         statement.execute(sql);
+    }
+
+    /**
+     * 数据库连接器
+     * @param sql 创建的sql
+     * @return 查询结果
+     */
+    public static List<Map<String, Object>> execQueryResultList(String sql, DataSourceConDTO dataSource) {
+        AbstractDbHelper dbHelper = new AbstractDbHelper();
+        Connection connection = dbHelper.connection(dataSource.conStr, dataSource.conAccount,
+                dataSource.conPassword,dataSource.conType);
+        List<Map<String, Object>> data = execQueryResultMaps(sql, connection);
+        return data;
+    }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
+     * @return 查询结果Map
+     */
+    public static List<Map<String, Object>> execQueryResultMaps(String sql, Connection con) {
+        return query(sql, con, BeanHelper::resultSetToMaps);
+    }
+
+    /**
+     * 执行sql
+     * @param sql sql
+     * @param con 连接器
+     * @param func<T>
+     * @return
+     */
+    private static <T> T query(String sql, Connection con, Function<ResultSet, T> func) {
+        Statement st = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            stopWatch.start();
+            log.info("【execQuery】【" + code + "】执行sql: 【" + sql + "】");
+            st = con.createStatement();
+            ResultSet res = st.executeQuery(sql);
+            return func.apply(res);
+        } catch (SQLException ex) {
+            log.error("【execQuery】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            closeStatement(st);
+            stopWatch.stop();
+            log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
     }
 }

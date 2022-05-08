@@ -32,3 +32,10 @@ spring:
     host: 10.220.108.140
     port: 16380
     password: test123456
+
+# pg数仓
+pgsql-mdm:
+  password: .FdF_r&tj4)+
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified
+  username: adminuser
+  type: PG
