@@ -569,7 +569,7 @@ public class SynchronizationData {
                 attributesDTO.protocol=fiDataProtocol.split(",")[index];
                 attributesDTO.rdbms_type=fiDataRdbmsType.split(",")[index];
                 attributesDTO.description=fiDataName.split(",")[index];
-                attributesDTO.comment=userList[index]+"&"+passwordList[index];
+                attributesDTO.comment=userList[index]+"\\"+passwordList[index];
                 break;
             case RDBMS_DB:
                 attributesDTO.qualifiedName=po.qualifiedName+"_"+name;

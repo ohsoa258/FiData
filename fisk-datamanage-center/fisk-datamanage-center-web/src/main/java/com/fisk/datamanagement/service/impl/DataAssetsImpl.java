@@ -41,7 +41,7 @@ public class DataAssetsImpl implements IDataAssets {
             //获取数据库类型
             String rdbmsType = attributes.getString("rdbms_type").toLowerCase();
             //获取账号密码
-            String[] comments = attributes.getString("comment").split("&");
+            String[] comments = attributes.getString("comment").split("\\\\");
             ConnectionInformationDTO connectionDTO = jointConnection(rdbmsType, attributes.getString("hostname"), attributes.getString("port"), dto.dbName);
             //连接数据源
             Connection conn=getStatement(connectionDTO.driver,connectionDTO.url,comments[0],comments[1]);

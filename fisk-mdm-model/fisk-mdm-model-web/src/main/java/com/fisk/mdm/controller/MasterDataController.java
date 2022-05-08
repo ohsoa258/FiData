@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
 
 /**
  * 主数据控制器
@@ -75,9 +76,9 @@ public class MasterDataController {
     @ApiOperation("模板数据提交")
     @PostMapping("/importDataSubmit")
     @ResponseBody
-    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS);
-        //return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
+    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto) throws SQLException {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
     }
+
 
 }

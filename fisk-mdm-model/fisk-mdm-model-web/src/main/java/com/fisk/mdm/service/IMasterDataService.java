@@ -12,6 +12,7 @@ import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
 
 /**
  * 主数据服务
@@ -58,7 +59,7 @@ public interface IMasterDataService {
      * @param dto
      * @return
      */
-    ResultEnum importDataSubmit(ImportDataSubmitDTO dto);
+    ResultEnum importDataSubmit(ImportDataSubmitDTO dto) throws SQLException;
 
 
 }
