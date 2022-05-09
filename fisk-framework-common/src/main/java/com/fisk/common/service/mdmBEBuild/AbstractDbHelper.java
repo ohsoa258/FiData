@@ -191,4 +191,15 @@ public class AbstractDbHelper {
             log.info("【execQuery】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
         }
     }
+
+    /**
+     * 执行查询
+     *
+     * @param sql 查询语句
+     * @param con 数据库连接
+     * @return 查询结果List
+     */
+    public static <T> List<T> execQueryResultList(String sql, Connection con, Class<T> tClass) {
+        return query(sql, con, e -> BeanHelper.resultSetToList(e, tClass));
+    }
 }
