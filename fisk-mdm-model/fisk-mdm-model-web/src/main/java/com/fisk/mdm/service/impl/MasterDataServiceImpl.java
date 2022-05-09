@@ -15,9 +15,12 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.AttributeSyncStatusEnum;
+import com.fisk.mdm.enums.ImportTypeEnum;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
@@ -34,6 +37,7 @@ import com.google.common.base.Joiner;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.*;
@@ -67,6 +71,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Resource
     EntityService entityService;
+    /*@Resource
+    DataSynchronizationUtils dataSynchronizationUtils;*/
+    @Resource
+    StgBatchServiceImpl stgBatchService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -280,6 +288,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .eq(AttributePO::getStatus,AttributeStatusEnum.SUBMITTED.getValue())
                 .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS.getValue());
         vo.headerList=(List)attributeMapper.selectObjs(queryWrapper);
+        vo.headerList.add(2,"新编码");
         vo.fileName=entityPo.getDisplayName();
         return exportExcel(vo,response);
     }
@@ -352,7 +361,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         result.entityId=dto.entityId;
         result.entityName=po.getDisplayName();
         List<JSONObject> objectArrayList=new ArrayList<>();
-        List<String> codeList = getCodeList(po.getTableName().replace("mdm","stg"));
+        ////List<String> codeList = getCodeList(po.getTableName().replace("mdm","stg"));
         //创建工作簿
         Workbook workbook = null;
         try {
@@ -372,6 +381,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 for (int col=0;col<columnNum;col++)
                 {
                     Cell cell = row1.getCell(col);
+                    if (cell.getStringCellValue().equals("新编码"))
+                    {
+                        AttributeInfoDTO newCode=new AttributeInfoDTO();
+                        newCode.setName("fidata_new_code");
+                        attributePoList.add(newCode);
+                        continue;
+                    }
                     Optional<AttributePO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
                     if (!data.isPresent())
                     {
@@ -396,23 +412,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                             value=getCellDataType(cell);
                         }
                         jsonObj.put(attributePoList.get(col).getName(),value);
-                        //字段是否必填
-                        if (attributePoList.get(col).getEnableRequired() && StringUtils.isEmpty(value))
-                        {
-                            errorAttribute.add(attributePoList.get(col).getName());
-                            errorMsg+=attributePoList.get(col).getName()+":不能为空;";
-                            continue;
-                        }
                     }
-                    //存在则是修改
-                    if (codeList.contains(jsonObj.get("code")))
-                    {
-                        jsonObj.put("UploadStatus","1");
-                        result.updateCount+=1;
-                    }else {
-                        jsonObj.put("UploadStatus","2");
-                        result.addCount+=1;
-                    }
+                    jsonObj.put("UploadStatus","2");
                     jsonObj.put("ErrorMsg",errorMsg);
                     jsonObj.put("ErrorStatus",errorAttribute.size() > 0 ? 1 : 2);
                     jsonObj.put("internalId","");
@@ -437,9 +438,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         catch (Exception e)
         {
-
+            throw new FkException(ResultEnum.SQL_ANALYSIS,e);
         }
-        return null;
     }
 
     @Override
@@ -477,6 +477,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 return ResultEnum.KEY_DATA_NOT_FOUND;
             }
             Date date=new Date();
+            String batchCode=UUID.randomUUID().toString();
             for(BathUploadMemberVO item:data.list){
                 if (CollectionUtils.isEmpty(item.members))
                 {
@@ -503,37 +504,25 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         {
                             str.append("insert into "+entityPO.getTableName().replace("mdm","stg"));
                             str.append("("+getColumnNameAndValue(addMemberList.get(i),0));
-                            str.append(",fidata_version_id,fidata_create_time,fidata_create_user,fidata_del_flag");
+                            str.append(",fidata_import_type,fidata_batch_code,fidata_status,fidata_version_id," +
+                                    "fidata_create_time,fidata_create_user,fidata_del_flag");
                             str.append(")");
                             str.append(" values("+getColumnNameAndValue(addMemberList.get(i),1)+","
+                                    + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
                                     +item.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
                             continue;
                         }
                         str.append(",("+getColumnNameAndValue(addMemberList.get(i),1)+","
+                                + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
                                 +item.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
                     }
                     log.info("模板批量添加sql:",str.toString());
                     stat.addBatch(str.toString());
                     stat.executeBatch();
+                    //String aa="";
                 }
-
-                //修改
-                List<JSONObject> updateMemberList= item.members.stream()
-                        .filter(e->e.getString("UploadStatus").equals("1"))
-                        .collect(Collectors.toList());
-                if (!CollectionUtils.isEmpty(updateMemberList))
-                {
-                    StringBuilder str=new StringBuilder();
-                    for (int i=0;i<updateMemberList.size();i++)
-                    {
-                        str.append("update "+entityPO.getTableName().replace("mdm","stg")+" set ");
-                        str.append(getColumnNameAndValue(updateMemberList.get(i),2)+";");
-                        str.append("\n");
-                    }
-                    log.info("模板批量修改sql:",str.toString());
-                    stat.executeUpdate(str.toString());
-                    stat.executeBatch();
-                }
+                //setStgBatch();
+                //dataSynchronizationUtils.stgDataSynchronize(item.entityId,"batchCode");
             }
         }
         catch (SQLException e)
@@ -559,8 +548,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     {
         List<String> columnList=new ArrayList<>();
         Iterator iter = member.entrySet().iterator();
-        String condition="";
-        Date date=new Date();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             String name=entry.getKey().toString();if (name.equals("ErrorStatus")
@@ -578,25 +565,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 columnList.add(name);
             }
             //拼接value
-            else if(type==1) {
+            else{
                 columnList.add("'"+entry.getValue().toString()+"'");
             }
-            else{
-                if (name.equals("code"))
-                {
-                    condition=" where code='"+entry.getValue().toString()+"'";
-                    continue;
-                }
-                columnList.add(name+"='"+entry.getValue().toString()+"'");
-            }
         }
-        if (type==2)
-        {
-            columnList.add("fidata_update_time='"+getFormatDate(date)+"',fidata_update_user="+userHelper.getLoginUserInfo().id);
-        }
-        return Joiner.on(",").join(columnList)+condition;
+        return Joiner.on(",").join(columnList);
     }
-
 
     /**
      * 获取Excel表格数据类型
@@ -644,6 +618,25 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public static String getFormatDate(Date date) {
         SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return myFormat.format(date);
+    }
+
+    /**
+     * 添加批次日志
+     * @param batchCode
+     * @param entityId
+     * @param versionId
+     * @param totalCount
+     * @param errorCount
+     */
+    public void setStgBatch(String batchCode,int entityId,int versionId,int totalCount,int errorCount){
+        StgBatchDTO stgBatchDto=new StgBatchDTO();
+        stgBatchDto.batchCode=batchCode;
+        stgBatchDto.entityId=entityId;
+        stgBatchDto.versionId=versionId;
+        stgBatchDto.status=0;
+        stgBatchDto.totalCount=totalCount;
+        stgBatchDto.errorCount=errorCount;
+        stgBatchService.addStgBatch(stgBatchDto);
     }
 
     /**
