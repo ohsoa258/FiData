@@ -1,6 +1,5 @@
 package com.fisk.mdm.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -34,17 +33,13 @@ import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.google.common.base.Joiner;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
-import org.apache.poi.ss.formula.functions.Column;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -72,8 +67,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Resource
     EntityService entityService;
-    @Resource
-    DataSynchronizationUtils dataSynchronizationUtils;
+    /*@Resource
+    DataSynchronizationUtils dataSynchronizationUtils;*/
     @Resource
     StgBatchServiceImpl stgBatchService;
 
@@ -533,7 +528,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 int[] flatCount = stat.executeBatch();
                 //添加批次数据
                 setStgBatch(batchCode,item.entityId,item.versionId,item.count,item.count-flatCount[0]);
-                dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
+                //dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
             }
         }
         catch (SQLException e)
