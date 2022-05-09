@@ -139,19 +139,15 @@ public class DataSynchronizationUtils {
         str.append("INSERT INTO " + mdmTableName);
         str.append("(");
         // 系统字段
-        str.append(MARK + "id ").append(",");
-        str.append(MARK + "import_type").append(",");
-        str.append(MARK + "batch_code").append(",");
+        str.append(MARK + "id").append(",");
         str.append(MARK + "version_id").append(",");
-        str.append(MARK + "error_id").append(",");
-        str.append(MARK + "new_code").append(",");
-        str.append(MARK + "status").append(",");
+        str.append(MARK + "lock_tag").append(",");
         // 表基础字段
-        str.append(MARK + "create_time timestamp(6) NULL").append(",");
-        str.append(MARK + "create_user varchar(50) NULL").append(",");
-        str.append(MARK + "update_time timestamp(6) NULL").append(",");
-        str.append(MARK + "update_user varchar(50) NULL").append(",");
-        str.append(MARK + "del_flag int2 NULL").append(",");
+        str.append(MARK + "create_time").append(",");
+        str.append(MARK + "create_user").append(",");
+        str.append(MARK + "update_time").append(",");
+        str.append(MARK + "update_user").append(",");
+        str.append(MARK + "del_flag").append(",");
 
         // 业务字段
         String businessFields = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
@@ -175,12 +171,8 @@ public class DataSynchronizationUtils {
         str.append(" ON CONFLICT ( " + MARK +"id) DO UPDATE ");
         str.append(" SET ");
         str.append(MARK + "id = " + "excluded." + MARK + "id").append(",");
-        str.append(MARK + "import_type = " +  "excluded." + MARK + "import_type").append(",");
-        str.append(MARK + "batch_code = " + "excluded." + MARK + "batch_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
-        str.append(MARK + "error_id = " + "excluded." + MARK + "error_id").append(",");
-        str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
-        str.append(MARK + "status = " + "excluded." + MARK + "status").append(",");
+        str.append(MARK + "lock_tag = " +  "excluded." + MARK + "lock_tag").append(",");
 
         // 业务字段
         String collect1 = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
@@ -192,10 +184,27 @@ public class DataSynchronizationUtils {
                 }).collect(Collectors.joining(","));
         str.append(collect1);
 
-        PreparedStatement pstmt = null;
+        PreparedStatement stmt = null;
         try {
-            pstmt = connection.prepareStatement(str.toString());
-            // todo
+            stmt = connection.prepareStatement(str.toString());
+
+            stmt.setArray(1, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(MARK + "id").toArray()));
+            stmt.setArray(2, connection.createArrayOf(JDBCType.INTEGER.getName(),listMap.get(MARK + "version_id").toArray()));
+            stmt.setArray(3, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(MARK + "lock_tag").toArray()));
+            stmt.setArray(4, connection.createArrayOf(JDBCType.TIMESTAMP.getName(), listMap.get(MARK + "create_time").toArray()));
+            stmt.setArray(5, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(MARK + "create_user").toArray()));
+            stmt.setArray(6, connection.createArrayOf(JDBCType.TIMESTAMP.getName(), listMap.get(MARK + "update_time").toArray()));
+            stmt.setArray(7, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(MARK + "update_user").toArray()));
+            stmt.setArray(8, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(MARK + "del_flag").toArray()));
+
+            // 业务字段
+            int index = 8;
+            for (AttributeInfoDTO infoDto : attributeList) {
+                stmt.setArray(index++, connection.createArrayOf(JDBCType.INTEGER.getName(), listMap.get(infoDto.getColumnName()).toArray()));
+            }
+
+            // 影响记录条数
+            int res = stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
