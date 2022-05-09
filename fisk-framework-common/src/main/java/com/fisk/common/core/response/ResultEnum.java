@@ -245,7 +245,8 @@ public enum ResultEnum {
     REQUIRED_FIELDS(15010,"必填项"),
     DATA_TYPE_DISAGREE(15011,"与数据类型不一致"),
     EXIST_ERROR_DATA(15012,"存在错误数据"),
-    KEY_DATA_NOT_FOUND(151013,"数据不存在或已过期");
+    KEY_DATA_NOT_FOUND(151013,"数据不存在或已过期"),
+    FILE_NAME_ERROR(151014,"文件格式不正确,只支持xlsx文件");
 
     ResultEnum(int code, String msg) {
         this.code = code;

@@ -45,6 +45,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -71,8 +72,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Resource
     EntityService entityService;
-    /*@Resource
-    DataSynchronizationUtils dataSynchronizationUtils;*/
+    @Resource
+    DataSynchronizationUtils dataSynchronizationUtils;
     @Resource
     StgBatchServiceImpl stgBatchService;
 
@@ -85,9 +86,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Resource
     UserHelper userHelper;
 
-    String connectionStr = "jdbc:postgresql://192.168.1.250:5432/dmp_mdm?stringtype=unspecified";
-    String acc = "postgres";
-    String pwd = "Password01!";
+    @Value("${pgsql-mdm.type}")
+    private String type;
+    @Value("${pgsql-mdm.url}")
+    private String url;
+    @Value("${pgsql-mdm.username}")
+    private String username;
+    @Value("${pgsql-mdm.password}")
+    private String password;
 
     /**
      * 系统字段
@@ -201,8 +207,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
      */
     public Connection getConnection(){
         try {
-            Connection connection = DriverManager.getConnection(connectionStr, acc, pwd);
-            log.info("【connection】数据库连接成功, 连接信息【" + connectionStr + "】");
+            Connection connection = DriverManager.getConnection(url, username, password);
+            log.info("【connection】数据库连接成功, 连接信息【" + url + "】");
             return connection;
         } catch (SQLException e) {
             log.error("【connection】数据库连接获取失败, ex", e);
@@ -342,6 +348,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public BathUploadMemberListVo importTemplateData(ImportParamDTO dto, MultipartFile file)
     {
+        if (!file.getOriginalFilename().contains(".xlsx"))
+        {
+            throw new FkException(ResultEnum.FILE_NAME_ERROR);
+        }
         EntityPO po=entityMapper.selectById(dto.entityId);
         if (po==null)
         {
@@ -411,7 +421,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         {
                             value=getCellDataType(cell);
                         }
-                        jsonObj.put(attributePoList.get(col).getName(),value);
+                        jsonObj.put(attributePoList.get(col).getName(),dto.removeSpace==true?value.trim():value);
                     }
                     jsonObj.put("UploadStatus","2");
                     jsonObj.put("ErrorMsg",errorMsg);
@@ -494,35 +504,36 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         .collect(Collectors.toList());
                 conn = getConnection();
                 stat = conn.createStatement();
-                if (!CollectionUtils.isEmpty(addMemberList))
+                if (CollectionUtils.isEmpty(addMemberList))
                 {
-                    StringBuilder str=new StringBuilder();
-                    for (int i=0;i<addMemberList.size();i++)
-                    {
+                    continue;
+                }
+                StringBuilder str=new StringBuilder();
+                for (int i=0;i<addMemberList.size();i++)
+                {
 
-                        if (i==0)
-                        {
-                            str.append("insert into "+entityPO.getTableName().replace("mdm","stg"));
-                            str.append("("+getColumnNameAndValue(addMemberList.get(i),0));
-                            str.append(",fidata_import_type,fidata_batch_code,fidata_status,fidata_version_id," +
-                                    "fidata_create_time,fidata_create_user,fidata_del_flag");
-                            str.append(")");
-                            str.append(" values("+getColumnNameAndValue(addMemberList.get(i),1)+","
-                                    + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
-                                    +item.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
-                            continue;
-                        }
-                        str.append(",("+getColumnNameAndValue(addMemberList.get(i),1)+","
+                    if (i==0)
+                    {
+                        str.append("insert into "+entityPO.getTableName().replace("mdm","stg"));
+                        str.append("("+getColumnNameAndValue(addMemberList.get(i),0));
+                        str.append(",fidata_import_type,fidata_batch_code,fidata_status,fidata_version_id," +
+                                "fidata_create_time,fidata_create_user,fidata_del_flag");
+                        str.append(")");
+                        str.append(" values("+getColumnNameAndValue(addMemberList.get(i),1)+","
                                 + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
                                 +item.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
+                        continue;
                     }
-                    log.info("模板批量添加sql:",str.toString());
-                    stat.addBatch(str.toString());
-                    stat.executeBatch();
-                    //String aa="";
+                    str.append(",("+getColumnNameAndValue(addMemberList.get(i),1)+","
+                            + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
+                            +item.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
                 }
-                //setStgBatch();
-                //dataSynchronizationUtils.stgDataSynchronize(item.entityId,"batchCode");
+                log.info("模板批量添加sql:",str.toString());
+                stat.addBatch(str.toString());
+                int[] flatCount = stat.executeBatch();
+                //添加批次数据
+                setStgBatch(batchCode,item.entityId,item.versionId,item.count,item.count-flatCount[0]);
+                dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
             }
         }
         catch (SQLException e)

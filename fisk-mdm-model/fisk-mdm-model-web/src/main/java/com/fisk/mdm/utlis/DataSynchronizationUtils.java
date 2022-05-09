@@ -8,6 +8,7 @@ import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
@@ -26,6 +27,7 @@ import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResul
  * @Date 2022/5/6 14:19
  * @Version 1.0
  */
+@Component
 public class DataSynchronizationUtils {
 
     @Value("${pgsql-mdm.type}")
