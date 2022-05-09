@@ -232,7 +232,7 @@ public class EntityServiceImpl implements EntityService {
         AttributePO attributeCode = new AttributePO();
         attributeCode.setEntityId(entityId);
         attributeCode.setName(MdmTypeEnum.CODE.getName());
-        attributeCode.setDisplayName("字典编码");
+        attributeCode.setDisplayName("编码");
         attributeCode.setDataType(DataTypeEnum.TEXT);
         attributeCode.setDataTypeLength(50);
         attributeCode.setEnableAttributeLog(0);
@@ -247,7 +247,7 @@ public class EntityServiceImpl implements EntityService {
         AttributePO attributePoName = new AttributePO();
         attributePoName.setEntityId(entityId);
         attributePoName.setName(MdmTypeEnum.NAME.getName());
-        attributePoName.setDisplayName("字典名称");
+        attributePoName.setDisplayName("名称");
         attributePoName.setDataType(DataTypeEnum.TEXT);
         attributePoName.setDataTypeLength(50);
         attributePoName.setEnableAttributeLog(0);
