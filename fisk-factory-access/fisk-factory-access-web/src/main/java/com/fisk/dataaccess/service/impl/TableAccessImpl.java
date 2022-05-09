@@ -1194,13 +1194,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                             || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
                             || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
                             || appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())) {
-                        f.type = "数据湖-表任务";
+                        f.type = "数据湖表任务";
                     }
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
-                        f.type = "数据湖-非实时api任务";
+                        f.type = "数据湖非实时api任务";
                     }
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
-                        f.type = "数据湖-ftp任务";
+                        f.type = "数据湖ftp任务";
                     }
                 }
             }
