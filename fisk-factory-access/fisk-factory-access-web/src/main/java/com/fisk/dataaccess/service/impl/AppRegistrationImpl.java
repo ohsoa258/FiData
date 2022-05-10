@@ -111,18 +111,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEntityBuild.build(ResultEnum.DATAACCESS_APPABBREVIATION_SUCCESS);
         }
 
-        // 保存tb_app_registration数据
-        boolean save = this.save(po);
-        if (!save) {
-            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
-        }
-
         //
         List<String> realtimeAccountList = appDataSourceMapper.getRealtimeAccountList();
         AppDataSourceDTO datasourceDTO = appRegistrationDTO.getAppDatasourceDTO();
         // 当前为实时应用
         if (po.appType == 0 && realtimeAccountList.contains(datasourceDTO.realtimeAccount)) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+        }
+
+        // 保存tb_app_registration数据
+        boolean save = this.save(po);
+        if (!save) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
 
         AppDataSourcePO modelDataSource = AppDataSourceMap.INSTANCES.dtoToPo(datasourceDTO);
