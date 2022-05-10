@@ -316,7 +316,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 //        }
         String fileName = "APIServiceDoc" + v + ".pdf";
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "菲斯科FiData接口文档", docDTO, response);
+                templatePath, fileName, "接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -468,7 +468,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             requestDTO.parmName = "apiCode";
             requestDTO.isRequired = "是";
             requestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
-            requestDTO.parmDesc = String.format("API标识: %s (真实数据)", apiConfigPO.getApiCode());
+            requestDTO.parmDesc = String.format("API标识(parmList中忽略): %s (真实数据)", apiConfigPO.getApiCode());
             requestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
             apiRequestDTOS.add(requestDTO);
             trReqIndex[0]++;
