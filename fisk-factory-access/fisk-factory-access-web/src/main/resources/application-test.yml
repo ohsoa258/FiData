@@ -23,7 +23,7 @@ spring:
 dataservice:
   pdf:
     #    path: E:\\mycode\\20211018\\Fisk.DMP.Project\\fk-dataAccess\\fk-dataAccess-service\\target\\classes
-    path: /root/java/fisk-factory-access/pdf
+    path: /root/java/bak/fisk-factory-access/pdf
     uat_address: http://192.168.11.130:8083/{apiaddress}。
     prd_address: https://prdHost/{apiaddress}。
 
