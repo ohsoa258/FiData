@@ -330,14 +330,14 @@ public class ApiConstants {
             "    \"apiContactsDTOS\":[\n" +
             "        {\n" +
             "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"菲斯科\",\n" +
+            "            \"company\":\"技术部\",\n" +
             "            \"fullName\":\"徐阳辉\",\n" +
             "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
             "            \"trStyle\":\"background-color: #fff\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"菲斯科\",\n" +
+            "            \"company\":\"技术部\",\n" +
             "            \"fullName\":\"李家温\",\n" +
             "            \"mailbox\":\"dick@fisksoft.com\",\n" +
             "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
