@@ -170,7 +170,7 @@ public class DataSynchronizationUtils {
         });
 
         // 4.数据导入
-        this.dataImport(mdmTableName,dto,attributeList,insertDates);
+        this.dataImport(mdmTableName,dto,attributeList,dateList);
     }
 
     /**
@@ -235,6 +235,7 @@ public class DataSynchronizationUtils {
         PreparedStatement stmt = null;
         try {
             // 系统字段和表基础字段
+            stmt = connection.prepareStatement(str.toString());
             stmt.setArray(1, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "id").toArray()));
             stmt.setArray(2, connection.createArrayOf(JDBCType.INTEGER.getName(),this.getParameter(listMap,MARK + "version_id").toArray()));
             stmt.setArray(3, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "lock_tag").toArray()));
@@ -247,7 +248,7 @@ public class DataSynchronizationUtils {
             // 业务字段
             int index = 8;
             for (AttributeInfoDTO infoDto : attributeList) {
-                stmt.setArray(index++, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
+                stmt.setArray(++index, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
             }
 
             // 影响记录条数
