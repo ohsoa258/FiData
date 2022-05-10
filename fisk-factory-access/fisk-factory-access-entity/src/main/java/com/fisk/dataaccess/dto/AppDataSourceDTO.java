@@ -27,7 +27,7 @@ public class AppDataSourceDTO extends BaseDTO {
     @ApiModelProperty(value = "驱动类型", required = true)
     public String driveType;
 
-    @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token", required = true)
+    @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token  5: 无需身份验证", required = true)
     public Integer authenticationMethod;
 
     @ApiModelProperty(value = "服务器地址", required = true)
