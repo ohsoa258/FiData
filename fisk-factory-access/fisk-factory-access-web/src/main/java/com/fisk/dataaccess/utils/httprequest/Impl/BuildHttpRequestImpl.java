@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -30,8 +31,13 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
     public JSONObject httpRequest(ApiHttpRequestDTO dto) {
         try {
             String json = JSON.toJSONString(dto.jsonObject);
+            String result = null;
 
-            String result = sendRequest(dto, json);
+            if (dto.httpRequestEnum.getValue() == 2) {
+                result = sendPostRequest(dto, json);
+            } else {
+                result = sendGetRequest(dto, json);
+            }
             return JSONObject.parseObject(result);
         } catch (Exception e) {
             log.error("执行httpRequest方法失败,【失败原因为：】", e);
@@ -44,7 +50,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         try {
             String json = JSON.toJSONString(dto.jwtRequestDTO);
 
-            String result = sendRequest(dto, json);
+            String result = sendPostRequest(dto, json);
 
             JSONObject jsonObject = JSONObject.parseObject(result);
             String bearer = "Bearer ";
@@ -57,7 +63,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         return null;
     }
 
-    private String sendRequest(ApiHttpRequestDTO dto, String json) throws IOException {
+    private String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
         HttpClient client = new DefaultHttpClient();
         // post请求
         HttpPost request = new HttpPost(dto.uri);
@@ -68,6 +74,21 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         }
 
         request.setEntity(new StringEntity(json, StandardCharsets.UTF_8));
+        HttpResponse response = client.execute(request);
+        HttpEntity entity = response.getEntity();
+        //解析返回数据
+        String result = EntityUtils.toString(entity, "UTF-8");
+        log.info("执行httpRequest方法成功,【返回信息为：】,{}", result);
+        return result;
+    }
+
+    private String sendGetRequest(ApiHttpRequestDTO dto, String json) throws IOException {
+        HttpClient client = new DefaultHttpClient();
+        // post请求
+//        HttpPost request = new HttpPost(dto.uri);
+        HttpGet request = new HttpGet(dto.uri);
+        request.setHeader("Content-Type", "application/json; charset=utf-8");
+
         HttpResponse response = client.execute(request);
         HttpEntity entity = response.getEntity();
         //解析返回数据

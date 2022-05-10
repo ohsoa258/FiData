@@ -38,4 +38,26 @@ public enum HttpRequestEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static HttpRequestEnum getValue(String name) {
+        HttpRequestEnum[] carTypeEnums = values();
+        for (HttpRequestEnum carTypeEnum : carTypeEnums) {
+            String queryName = carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return null;
+    }
+
+    public static HttpRequestEnum getName(int value) {
+        HttpRequestEnum[] httpRequestEnums = values();
+        for (HttpRequestEnum httpRequestEnum : httpRequestEnums) {
+            int value1 = httpRequestEnum.value;
+            if (value1 == value) {
+                return httpRequestEnum;
+            }
+        }
+        return null;
+    }
 }

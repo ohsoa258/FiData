@@ -23,7 +23,7 @@ public class AppDataSourcePO extends BasePO {
     public String driveType;
 
     /**
-     * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token
+     * 身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token;  5: 暂无身份验证方式
      */
     public Integer authenticationMethod;
 

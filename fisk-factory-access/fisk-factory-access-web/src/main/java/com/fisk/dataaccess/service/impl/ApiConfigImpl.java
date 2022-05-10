@@ -414,6 +414,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * 根据配置执行api功能
+     *
+     * @return void
+     * @description 根据配置执行api功能
+     * @author Lock
+     * @date 2022/5/10 15:31
+     * @version v1.0
+     * @params dto
+     */
     public void syncData(ApiImportDataDTO dto) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
@@ -425,46 +435,105 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         if (apiConfigPo == null) {
             throw new FkException(ResultEnum.APICONFIG_ISNULL);
         }
+        // api的请求参数(允许为空)
         List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
 
-        ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
-        apiHttpRequestDto.httpRequestEnum = POST;
-        // 身份验证地址
-        apiHttpRequestDto.uri = dataSourcePo.connectStr;
-        // jwt账号&密码
-        JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
-        jwtRequestDto.username = dataSourcePo.connectAccount;
-        jwtRequestDto.password = dataSourcePo.connectPwd;
-        apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
-
-        IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
-        // 获取token
-        String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
-
-
-        apiHttpRequestDto.uri = apiConfigPo.apiAddress;
-        apiHttpRequestDto.requestHeader = requestToken;
-        if (apiConfigPo.apiRequestType == 1) {
-            apiHttpRequestDto.httpRequestEnum = GET;
-        } else if (apiConfigPo.apiRequestType == 2) {
+        if (dataSourcePo.authenticationMethod == 3) {
+            // jwt身份验证方式对象
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
             apiHttpRequestDto.httpRequestEnum = POST;
-            if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
-                apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+            // 身份验证地址
+            apiHttpRequestDto.uri = dataSourcePo.connectStr;
+            // jwt账号&密码
+            JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+            jwtRequestDto.username = dataSourcePo.connectAccount;
+            jwtRequestDto.password = dataSourcePo.connectPwd;
+            apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+            // 获取token
+            String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
+
+
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            apiHttpRequestDto.requestHeader = requestToken;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
+                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
             }
+            // 调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+
+            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.apiId = dto.apiId;
+            String data = String.valueOf(jsonObject);
+            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            System.out.println("data = " + data);
+            receiveDataDTO.pushData = String.valueOf(data);
+
+            // 推送数据
+            pushData(receiveDataDTO);
+            // 没有身份验证方式
+        } else if (dataSourcePo.authenticationMethod == 5) {
+
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
+                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+            }
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+            // 调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+
+            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.apiId = dto.apiId;
+            String data = String.valueOf(jsonObject);
+            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            System.out.println("data = " + data);
+            receiveDataDTO.pushData = String.valueOf(data);
+
+            // 推送数据
+            pushData(receiveDataDTO);
+
+            // Bearer Token
+        } else if (dataSourcePo.authenticationMethod == 4) {
+
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            apiHttpRequestDto.requestHeader = dataSourcePo.token;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
+                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+            }
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+            // 调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+
+            ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.apiId = dto.apiId;
+            String data = String.valueOf(jsonObject);
+            System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            System.out.println("data = " + data);
+            receiveDataDTO.pushData = String.valueOf(data);
+
+            // 推送数据
+            pushData(receiveDataDTO);
         }
-        // 调用第三方api返回的数据
-        JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
-
-        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-        receiveDataDTO.apiId = dto.apiId;
-        String data = String.valueOf(jsonObject);
-        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-        System.out.println("data = " + data);
-        receiveDataDTO.pushData = String.valueOf(data);
-
-        // 推送数据
-        pushData(receiveDataDTO);
-
     }
 
     /**
