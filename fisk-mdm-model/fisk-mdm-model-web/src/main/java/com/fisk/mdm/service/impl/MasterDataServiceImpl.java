@@ -11,9 +11,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
-import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
-import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.AttributeSyncStatusEnum;
@@ -33,8 +31,10 @@ import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.google.common.base.Joiner;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -50,6 +50,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
@@ -361,7 +362,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         BathUploadMemberListVo listVo=new BathUploadMemberListVo();
         BathUploadMemberVO result=new BathUploadMemberVO();
-        result.attribute=AttributeMap.INSTANCES.poListToVoList(list);
         result.versionId=dto.versionId;
         result.entityId=dto.entityId;
         result.entityName=po.getDisplayName();
@@ -400,6 +400,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     }
                     attributePoList.add(AttributeMap.INSTANCES.poToInfoDto(data.get()));
                 }
+                result.attribute=attributePoList;
                 for (int row=1;row<rowNum;row++)
                 {
                     JSONObject jsonObj = new JSONObject();
@@ -415,6 +416,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         if (cell !=null)
                         {
                             value=getCellDataType(cell);
+                        }
+                        if ("code".equals(attributePoList.get(col).getName()) && StringUtils.isEmpty(value))
+                        {
+                            value=UUID.randomUUID().toString();
                         }
                         jsonObj.put(attributePoList.get(col).getName(),dto.removeSpace==true?value.trim():value);
                     }
@@ -527,7 +532,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 stat.addBatch(str.toString());
                 int[] flatCount = stat.executeBatch();
                 //添加批次数据
-                setStgBatch(batchCode,item.entityId,item.versionId,item.count,item.count-flatCount[0]);
+                setStgBatch(batchCode,item.entityId,item.versionId,item.count,item.count-flatCount[0],0);
                 //dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
             }
         }
@@ -542,6 +547,91 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         redisTemplate.delete("importTemplateData:"+dto.key);
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addMasterData(MasterDataDTO dto)
+    {
+        return OperateMasterData(dto,0);
+    }
+
+    @Override
+    public ResultEnum delMasterData(MasterDataDTO dto)
+    {
+        return OperateMasterData(dto,2);
+    }
+
+    public ResultEnum OperateMasterData(MasterDataDTO dto,int type){
+        EntityPO entityPO=entityMapper.selectById(dto.entityId);
+        if (entityPO==null)
+        {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        String tableName=entityPO.getTableName().replace("mdm","stg");
+        if (CollectionUtils.isEmpty(dto.members))
+        {
+            return ResultEnum.PARAMTER_ERROR;
+        }
+        String batchCode=UUID.randomUUID().toString();
+        Date date=new Date();
+        StringBuilder str=new StringBuilder();
+        str.append("insert into "+tableName);
+        str.append("("+getColumnNameAndValue(dto.members,0));
+        //添加
+        if (type==0)
+        {
+            str.append(",fidata_import_type,fidata_batch_code,fidata_status,fidata_version_id," +
+                    "fidata_create_time,fidata_create_user,fidata_del_flag");
+            str.append(") ");
+            str.append(" values("+getColumnNameAndValue(dto.members,1)+","
+                    + ImportTypeEnum.MANUALLY_ENTER.getValue()+",'"+batchCode+"',"+0+","
+                    +dto.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
+        }
+        //删除
+        else if (type==2)
+        {
+            str.append(",fidata_batch_code,fidata_status,fidata_version_id," +
+                    "fidata_update_time,fidata_update_user,fidata_del_flag");
+            str.append(") ");
+            str.append(" values("+getColumnNameAndValue(dto.members,1)+","
+                    +"'"+batchCode+"',"+0+","
+                    +dto.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",0"+")");
+        }
+        log.info("执行sql:",str.toString());
+        int flag = executeSql(str.toString());
+        //添加批次
+        setStgBatch(batchCode,dto.entityId,dto.versionId,1,1-flag,flag>0?0:1);
+        return flag>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    public String getColumnNameAndValue(List<MemberDTO> members,int type){
+        List<String> columnList=new ArrayList<>();
+        for (MemberDTO item:members)
+        {
+            //获取列名
+            if (type==0)
+            {
+                columnList.add(item.name);
+            }else {
+                columnList.add("'"+item.value+"'");
+            }
+        }
+        return Joiner.on(",").join(columnList);
+    }
+
+    public int executeSql(String sql){
+        try {
+            Connection conn= getConnection();
+            Statement stat = conn.createStatement();
+            stat.addBatch(sql);
+            int[] ints = stat.executeBatch();
+            return ints[0];
+        }
+        catch (SQLException e)
+        {
+            log.error("executeSql:",e);
+            return 0;
+        }
     }
 
     /**
@@ -599,7 +689,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 {
                     value=getFormatDate(cell.getDateCellValue());
                 }else {
-                    value=String.valueOf(cell.getNumericCellValue());
+                    DecimalFormat df = new DecimalFormat("#");
+                    value=df.format(cell.getNumericCellValue());
                 }
                 break;
             //空白
@@ -634,12 +725,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param totalCount
      * @param errorCount
      */
-    public void setStgBatch(String batchCode,int entityId,int versionId,int totalCount,int errorCount){
+    public void setStgBatch(String batchCode,int entityId,int versionId,int totalCount,int errorCount,int status){
         StgBatchDTO stgBatchDto=new StgBatchDTO();
         stgBatchDto.batchCode=batchCode;
         stgBatchDto.entityId=entityId;
         stgBatchDto.versionId=versionId;
-        stgBatchDto.status=0;
+        //status:0成功,1失败
+        stgBatchDto.status=status;
         stgBatchDto.totalCount=totalCount;
         stgBatchDto.errorCount=errorCount;
         stgBatchService.addStgBatch(stgBatchDto);

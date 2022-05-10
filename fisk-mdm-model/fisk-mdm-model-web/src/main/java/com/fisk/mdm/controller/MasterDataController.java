@@ -9,6 +9,7 @@ import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
@@ -78,6 +79,22 @@ public class MasterDataController {
     @ResponseBody
     public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto) throws SQLException {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
+    }
+
+    @ApiOperation("添加主数据")
+    @PostMapping("/addMasterData")
+    @ResponseBody
+    public ResultEntity<Object> addMasterData(@Validated @RequestBody MasterDataDTO dto)
+    {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.addMasterData(dto));
+    }
+
+    @ApiOperation("删除主数据")
+    @DeleteMapping("/deleteMasterData")
+    @ResponseBody
+    public ResultEntity<Object> deleteMasterData(@Validated @RequestBody MasterDataDTO dto)
+    {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.delMasterData(dto));
     }
 
 

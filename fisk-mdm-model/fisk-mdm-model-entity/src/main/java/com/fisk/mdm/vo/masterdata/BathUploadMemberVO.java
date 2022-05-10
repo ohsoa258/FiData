@@ -1,6 +1,8 @@
 package com.fisk.mdm.vo.masterdata;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.mdm.dto.attribute.AttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import lombok.Data;
 
@@ -28,7 +30,7 @@ public class BathUploadMemberVO {
 
     public int versionId;
 
-    public List<AttributeVO> attribute;
+    public List<AttributeInfoDTO> attribute;
 
     public List<JSONObject> members;
 

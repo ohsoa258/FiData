@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
 import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataDTO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
@@ -61,6 +62,20 @@ public interface IMasterDataService {
      * @throws SQLException
      */
     ResultEnum importDataSubmit(ImportDataSubmitDTO dto) throws SQLException;
+
+    /**
+     * 主数据新增
+     * @param dto
+     * @return
+     */
+    ResultEnum addMasterData(MasterDataDTO dto);
+
+    /**
+     * 主数据删除
+     * @param dto
+     * @return
+     */
+    ResultEnum delMasterData(MasterDataDTO dto);
 
 
 }
