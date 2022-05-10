@@ -614,6 +614,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 if ("NewCode".equals(item.name))
                 {
                     columnList.add("fidata_new_code");
+                    continue;
                 }
                 columnList.add(item.name);
             }else {
