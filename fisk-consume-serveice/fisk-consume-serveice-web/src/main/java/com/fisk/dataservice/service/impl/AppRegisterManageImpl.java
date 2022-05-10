@@ -461,21 +461,33 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
 
             /* 设置API请求参数 start */
             List<ApiRequestDTO> apiRequestDTOS = new ArrayList<>();
+            final int[] trReqIndex = {1};
+
+            // 请求参数新增api标识
+            ApiRequestDTO requestDTO = new ApiRequestDTO();
+            requestDTO.parmName = "apiCode";
+            requestDTO.isRequired = "是";
+            requestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
+            requestDTO.parmDesc = String.format("API标识: %s (真实数据)", apiConfigPO.getApiCode());
+            requestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiRequestDTOS.add(requestDTO);
+            trReqIndex[0]++;
+
             if (CollectionUtils.isNotEmpty(parmList)) {
-                final int[] trIndex = {1};
                 List<ParmConfigPO> collect = parmList.stream().filter(item -> item.apiId == apiConfigPO.id).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     collect.forEach(e -> {
                         Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == e.id).findFirst();
+                        // 不是内置参数，在文档中体现
                         if (!builtinParmOptional.isPresent()) {
                             ApiRequestDTO apiRequestDTO = new ApiRequestDTO();
                             apiRequestDTO.parmName = e.parmName;
                             apiRequestDTO.isRequired = "是";
                             apiRequestDTO.parmType = "String"; //String特指这个类型，string适用于引用对象
                             apiRequestDTO.parmDesc = e.parmDesc;
-                            apiRequestDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                            apiRequestDTO.trStyle = trReqIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                             apiRequestDTOS.add(apiRequestDTO);
-                            trIndex[0]++;
+                            trReqIndex[0]++;
                         }
                     });
                 }

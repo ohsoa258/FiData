@@ -214,7 +214,7 @@ public class ApiConstants {
             "    \"docPurpose\":\"本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
             "    \"readers\":\"预期读者包括需要从FiData一体化数据赋能平台中获取数据的第三方平台。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
-            "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。apiCode为私密信息，不在文档中体现，请在订阅API时自行保存。\",\n" +
+            "    \"standard_query\":\"查询接口携带分页功能，current和size为null默认查询全部。\",\n" +
             "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
             "    \"uatAddress\":\"{api_uat_address}\",\n" +
 //          "    \"prdAddress\":\"生产环境：{api_prd_address}(预留地址,暂不使用)\",\n" +
