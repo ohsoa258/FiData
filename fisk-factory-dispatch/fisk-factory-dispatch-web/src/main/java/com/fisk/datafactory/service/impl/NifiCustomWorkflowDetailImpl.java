@@ -10,13 +10,11 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
-import com.fisk.datafactory.dto.json.TableJsonSourceDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -84,6 +82,18 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         dto.id = model.id;
         // 保存
         return dto;
+    }
+
+    @Override
+    public List<NifiCustomWorkflowDetailDTO> addDataList(List<NifiCustomWorkflowDetailDTO> list) {
+
+        return list.stream().map(this::addData).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResultEnum editDataList(List<NifiCustomWorkflowDetailDTO> list) {
+
+        return this.updateBatchById(NifiCustomWorkflowDetailMap.INSTANCES.listDtoToPo(list)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
@@ -586,95 +596,5 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             throw new FkException(ResultEnum.COMPONENT_NOT_EXISTS);
         }
         return NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(this.query().eq("pid", po.id).list());
-    }
-
-    @Override
-    public ChannelDataDTO buildJson(TableJsonSourceDTO dto) {
-
-//        List<ChannelDataDTO> channelDataDtoList = new ArrayList<>();
-        List<ChannelDataChildDTO> childDtoList = new ArrayList<>();
-
-//        NifiCustomWorkflowDetailPO po = this.query().eq("id", dto.id).one();
-
-        List<NifiCustomWorkflowDetailPO> list = this.query().eq("pid", dto.id).list();
-
-        ChannelDataDTO channelDataDTO = new ChannelDataDTO();
-
-        for (NifiCustomWorkflowDetailPO e : list) {
-
-            ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(e.componentType);
-            switch (Objects.requireNonNull(channelDataEnum)) {
-                // 数据湖非实时物理表任务
-                case DATALAKE_TASK:
-                case DATALAKE_FTP_TASK:
-                case DATALAKE_API_TASK:
-                    ResultEntity<List<ChannelDataDTO>> result = dataAccessClient.getTableId();
-
-                    List<ChannelDataDTO> collect = result.data.stream().filter(k -> k.id == Long.parseLong(e.appId)).collect(Collectors.toList());
-
-                    ChannelDataDTO f = collect.get(0);
-
-
-                    if (f.id == Long.parseLong(e.appId)) {
-                        channelDataDTO.id = f.id;
-                        channelDataDTO.businessName = f.businessName;
-                        channelDataDTO.type = e.componentType;
-                        for (ChannelDataChildDTO g : f.list) {
-                            if (g.id == Long.parseLong(e.tableId)) {
-                                ChannelDataChildDTO channelDataChildDto = new ChannelDataChildDTO();
-                                channelDataChildDto.id = Long.parseLong(e.tableId);
-                                channelDataChildDto.tableName = g.tableName;
-                                // 填充
-                                childDtoList.add(channelDataChildDto);
-                            }
-                        }
-                        channelDataDTO.list = childDtoList;
-                    }
-
-
-                    return channelDataDTO;
-                // 数仓维度表任务
-                case DW_DIMENSION_TASK:
-                    // 数仓事实表任务
-                case DW_FACT_TASK:
-                    //分析模型维度表任务
-                case OLAP_DIMENSION_TASK:
-                    // 分析模型事实表任务
-                case OLAP_FACT_TASK:
-                    // 分析模型宽表任务
-                case OLAP_WIDETABLE_TASK:
-//                    NifiComponentsDTO nifiComponentsDto = new NifiComponentsDTO();
-//                    ResultEntity<List<ChannelDataDTO>> resultEntity = dataModelClient.getTableId(nifiComponentsDto);
-//
-//
-//
-//                    for (ChannelDataDTO f : resultEntity.data) {
-//                        if (f.id == Long.parseLong(e.appId)) {
-//                            ChannelDataDTO channelDataDTO = new ChannelDataDTO();
-//                            channelDataDTO.id = f.id;
-//                            channelDataDTO.businessName = f.businessName;
-//                            channelDataDTO.type = e.componentType;
-//                            for (ChannelDataChildDTO g : f.list) {
-//                                if (g.id == Long.parseLong(e.tableId)) {
-//                                    ChannelDataChildDTO channelDataChildDto = new ChannelDataChildDTO();
-//                                    channelDataChildDto.id = Long.parseLong(e.tableId);
-//                                    channelDataChildDto.tableName = g.tableName;
-//                                    // 填充
-//                                    childDtoList.add(channelDataChildDto);
-//                                }
-//                            }
-//                            channelDataDTO.list = childDtoList;
-//                            channelDataDtoList.add(channelDataDTO);
-//                        }
-//                    }
-//                    return channelDataDtoList;
-                default:
-                    break;
-
-            }
-
-
-        }
-        return channelDataDTO;
     }
 }

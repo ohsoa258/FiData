@@ -2,6 +2,7 @@ package com.fisk.mdm.utlis;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -9,6 +10,7 @@ import com.fisk.mdm.dto.stgbatch.MdmDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,7 @@ import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResul
  * @Date 2022/5/6 14:19
  * @Version 1.0
  */
+@Slf4j
 @Component
 public class DataSynchronizationUtils {
 
@@ -182,15 +185,18 @@ public class DataSynchronizationUtils {
         });
 
         // 4.数据导入
-        this.dataImport(mdmTableName,dto,attributeList,dateList);
+        this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
     }
 
     /**
      * 数据导入
      */
-    public void dataImport(String mdmTableName,DataSourceConDTO dto
+    public void dataImport(String mdmTableName,String stgTableName
+            ,DataSourceConDTO dto
             ,List<AttributeInfoDTO> attributeList
-            ,List<Map<String, Object>> listMap){
+            ,List<Map<String, Object>> listMap
+            ,String codes
+            ,String batchCode){
         AbstractDbHelper dbHelper = new AbstractDbHelper();
         Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
                 dto.conPassword,dto.conType);
@@ -266,8 +272,13 @@ public class DataSynchronizationUtils {
             // 影响记录条数
             int res = stmt.executeUpdate();
             System.out.println("成功条数！:" + res);
-        } catch (SQLException e) {
-            e.printStackTrace();
+            log.error(ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【成功条数】:" + res
+                       + "【批次号】:" + batchCode);
+        } catch (SQLException ex) {
+            log.error("stg表数据同步失败,异常信息:" + ex);
+            String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() +
+                    "【执行SQL】" + stmt.toString() + "【原因】:" + ex.getMessage();
+            this.errorMessageProcess(stgTableName,errorMessage,codes,connection);
         }
     }
 
@@ -287,5 +298,30 @@ public class DataSynchronizationUtils {
         });
 
         return list;
+    }
+
+    /**
+     * stg表插入失败信息
+     * @param stgTableName
+     * @param errorMessage
+     * @param codes
+     * @param connection
+     */
+    public void errorMessageProcess(String stgTableName,String errorMessage,String codes
+                      ,Connection connection){
+        StringBuilder str = new StringBuilder();
+        str.append("UPDATE " + stgTableName);
+        str.append(" SET fidata_error_msg = '" + errorMessage).append("'");
+        str.append(" WHERE code IN(" + codes + ")");
+        str.append(" AND fidata_del_flag = 1 ");
+
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(str.toString());
+            statement.execute();
+        } catch (SQLException ex) {
+            log.error("stg表数据失败信息插入失败!,【执行SQL】:" + str
+                   + "【原因】:" + ex.getMessage());
+        }
     }
 }
