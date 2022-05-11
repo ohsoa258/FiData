@@ -280,7 +280,7 @@ public class DataSynchronizationUtils {
                        + "【批次号】:" + batchCode);
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
-            String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + ex.getMessage();
+            String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
             this.errorMessageProcess(stgTableName,errorMessage,codes,connection);
         }
     }
