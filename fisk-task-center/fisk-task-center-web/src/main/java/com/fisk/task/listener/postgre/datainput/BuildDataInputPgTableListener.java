@@ -46,6 +46,7 @@ public class BuildDataInputPgTableListener {
         modelPublishStatusDTO.publish = PublishTypeEnum.SUCCESS.getValue();
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
         modelPublishStatusDTO.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+        modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         try {
             log.info("开始保存ods版本号,参数为{}", dto);
@@ -130,7 +131,7 @@ public class BuildDataInputPgTableListener {
             e.printStackTrace();
             return ResultEnum.ERROR;
         } finally {
-            //acke.acknowledge();
+            acke.acknowledge();
         }
     }
 
