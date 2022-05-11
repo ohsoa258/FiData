@@ -77,9 +77,9 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll(id));
     }
 
-    @PostMapping("/reloadDataSource")
+    @GetMapping("/reloadDataSource/{id}")
     @ApiOperation("重新加载数据源到redis")
-    public ResultEntity<Object> reloadDataSource(int id) {
+    public ResultEntity<Object> reloadDataSource(@PathVariable("id")int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadDataSource(id));
     }
 
