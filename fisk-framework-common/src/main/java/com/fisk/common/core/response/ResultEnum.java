@@ -105,6 +105,7 @@ public enum ResultEnum {
     STG_TO_ODS_ERROR(5031, "stg同步数据到ods报错"),
     DATASOURCE_INFORMATION_ISNULL(5032, "数据源信息不存在"),
     APICONFIG_ISNULL(5033, "api不存在"),
+    DATASOURCE_ISNULL(5034, "当前api的身份验证信息已缺失,请检查当前api所属的应用参数"),
 
 
     /**
