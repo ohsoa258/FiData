@@ -87,7 +87,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
         int id = (int) model.getId();
-        setDataSourceToRedis(id,1);
+        setDataSourceToRedis(id, 1);
         return ResultEnum.SUCCESS;
     }
 
@@ -176,11 +176,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             String redisKey = metaDataEntityKey + "_" + datasourceId;
             Boolean exist = redisTemplate.hasKey(redisKey);
             if (!exist) {
-                setDataSourceToRedis(datasourceId,1);
+                setDataSourceToRedis(datasourceId, 1);
             }
             String json = redisTemplate.opsForValue().get(redisKey).toString();
             if (StringUtils.isNotEmpty(json)) {
-                dataSource = JSONObject.parseObject(json,DataSourceVO.class);
+                dataSource = JSONObject.parseObject(json, DataSourceVO.class);
             }
         } catch (Exception ex) {
             log.error("getTableAll执行异常：", ex);
@@ -391,7 +391,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         String redisKey = metaDataEntityKey + "_" + datasourceId;
         if (operationType == 3) {
-            redisTemplate.delete(redisKey);
+            Boolean exist = redisTemplate.hasKey(redisKey);
+            if (exist) {
+                redisTemplate.delete(redisKey);
+            }
         } else if (operationType == 1 || operationType == 2) {
             DataSourceVO meta = getMeta(datasourceId);
             String json = JSONArray.toJSON(meta).toString();

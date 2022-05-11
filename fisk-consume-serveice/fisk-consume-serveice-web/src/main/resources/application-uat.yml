@@ -8,7 +8,7 @@ dataservice:
     # redis key
     metadataentity_key: DataService_MetaDataKey
     # 执行时间 凌晨12点半
-    schedule: 0 55 16 * * ?
+    schedule: 0 30 0 * * ?
     # 是否启用
     enabled: true
 spring:
