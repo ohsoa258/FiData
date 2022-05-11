@@ -270,7 +270,7 @@ public class DataSynchronizationUtils {
             // 业务字段
             int index = 8;
             for (AttributeInfoDTO infoDto : attributeList) {
-                stmt.setArray(++index, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
+                stmt.setArray(++index, connection.createArrayOf(this.getFieldType(infoDto.getDataType()), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
             }
 
             // 影响记录条数
@@ -330,5 +330,47 @@ public class DataSynchronizationUtils {
             log.error("stg表数据失败信息插入失败!,【执行SQL】:" + str
                    + "【原因】:" + ex.getMessage());
         }
+    }
+
+    /**
+     * 字段类型匹配
+     * @param dataType
+     * @return
+     */
+    public String getFieldType(String dataType) {
+        if (dataType != null) {
+            String filedType = null;
+            switch (dataType) {
+                case "域字段":
+                case "数值":
+                    filedType = JDBCType.INTEGER.getName();
+                    break;
+                case "时间":
+                    filedType = JDBCType.TIME.getName();
+                    break;
+                case "日期":
+                    filedType = JDBCType.DATE.getName();
+                    break;
+                case "日期时间":
+                    filedType = JDBCType.TIMESTAMP.getName();
+                    break;
+                case "浮点型":
+                    filedType = JDBCType.NUMERIC.getName();
+                    break;
+                case "布尔型":
+                    filedType = JDBCType.BOOLEAN.getName();
+                    break;
+                case "货币":
+                    filedType = JDBCType.DECIMAL.getName();
+                    break;
+                case "文本":
+                default:
+                    filedType = JDBCType.VARCHAR.getName();
+            }
+
+            return filedType;
+        }
+
+        return null;
     }
 }
