@@ -292,7 +292,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         // 生成PDF文件
         OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "FiData接口文档", docDTO, response);
+                templatePath, fileName, "接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
