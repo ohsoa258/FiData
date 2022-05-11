@@ -74,7 +74,6 @@ public class DataSynchronizationUtils {
 
         // 3.结果集转换
         List<Map<String, Object>> resultList = execQueryResultList(sql, dto);
-        Map<String, List<Object>> listMap = new HashMap<>();
 
         // stg表的主键id转换成mdm表的id
         StringBuilder stringBuilder = new StringBuilder();
@@ -114,18 +113,31 @@ public class DataSynchronizationUtils {
 
         // 需要插入的数据
         resultList.stream().forEach(e -> {
-            updateList.stream().filter(item -> !e.get("code").equals(item.get("code")))
-                    .forEach(item -> {
-                        insertList.add(e);
-                    });
+            if (CollectionUtils.isNotEmpty(updateList)){
+                updateList.stream().filter(item -> !e.get("code").equals(item.get("code")))
+                        .forEach(item -> {
+                            insertList.add(e);
+                        });
+            }else {
+                insertList.add(e);
+            }
         });
 
-        Map<Map<String, Object>, Long> countMap = insertList.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        List<Map<String, Object>> insertDataList = countMap.keySet().stream().filter(e -> countMap.get(e) > 1).distinct().collect(Collectors.toList());
+        List<Map<String, Object>> insertDataList = null;
+        if (CollectionUtils.isNotEmpty(updateList)){
+            insertDataList = insertList;
+        }else {
+            Map<Map<String, Object>, Long> countMap = insertList.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+            insertDataList = countMap.keySet().stream().filter(e -> countMap.get(e) > 1).distinct().collect(Collectors.toList());
+        }
+
 
         // 插入的数据id做转换
         String queryMaxIdSql = "SELECT max(fidata_id) AS fidata_id FROM " + mdmTableName + " WHERE fidata_del_flag = 1 ";
         List<MdmDTO> maxId = execQueryResultList(queryMaxIdSql, connection, MdmDTO.class);
+        if (maxId.get(0).getFidata_id() == null){
+            maxId.get(0).setFidata_id(1);
+        }
 
         AtomicReference<Integer> fataId = new AtomicReference<>(maxId.get(0).getFidata_id() + 1);
         List<Map<String, Object>> insertDates = new ArrayList<>();
