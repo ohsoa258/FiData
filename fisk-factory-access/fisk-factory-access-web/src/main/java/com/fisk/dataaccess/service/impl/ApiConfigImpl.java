@@ -25,6 +25,7 @@ import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.entity.*;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.ApiConfigMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
@@ -194,8 +195,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
 
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (dataSourcePo == null) {
+            return ResultEnum.DATASOURCE_ISNULL;
+        }
+
         // 发布之后,按照配置调用一次api
-        if (dto.executeConfigFlag) {
+        if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
             ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
             apiImportDataDTO.appId = dto.appId;
             apiImportDataDTO.apiId = dto.id;
