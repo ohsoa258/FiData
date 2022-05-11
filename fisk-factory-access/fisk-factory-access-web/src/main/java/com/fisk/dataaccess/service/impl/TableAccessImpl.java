@@ -1180,10 +1180,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public List<ChannelDataDTO> getTableId() {
 
+        // 查询所有app_id和app_name
         List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
                 .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
                 .orderByDesc(AppRegistrationPO::getCreateTime));
 
+        // 封装app_id和appName到新的对象集合中
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
 
         for (AppRegistrationPO e : list) {
@@ -1202,22 +1204,39 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
                         f.type = "数据湖ftp任务";
                     }
+                    if (appDataSourcePo.driveType.equalsIgnoreCase(DbTypeEnum.RestfulAPI.getName())) {
+                        f.type = "数据湖RestfulAPI任务";
+                    }
                 }
             }
         }
 
-        // 查询当前应用下面的所有表
-        channelDataDTOList.forEach(dto -> {
-            // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
-            List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
-                    .eq(TableAccessPO::getAppId, dto.id)
-                    // publish=3: 正在发布 -> 1:发布成功
-                    .or()
-                    .eq(TableAccessPO::getPublish, 3)
-                    .eq(TableAccessPO::getPublish, 1)
-                    .select(TableAccessPO::getId, TableAccessPO::getTableName));
-            // list: po->dto 并赋值给dto.list
-            dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+        // 查询当前应用下面的所有表(type为空的是脏数据)
+        channelDataDTOList.stream().filter(e -> StringUtils.isNotBlank(e.type)).collect(Collectors.toList()).forEach(dto -> {
+
+            if (dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()) || dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_FTP_TASK.getName())) {
+                // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
+                List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
+                        .eq(TableAccessPO::getAppId, dto.id)
+                        // publish=3: 正在发布 -> 1:发布成功
+                        .or()
+                        .eq(TableAccessPO::getPublish, 3)
+                        .eq(TableAccessPO::getPublish, 1)
+                        .select(TableAccessPO::getId, TableAccessPO::getTableName));
+                dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+            } else if (dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_API_TASK.getName())) {
+                List<ApiConfigPO> apiConfigPoList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery()
+                        .eq(ApiConfigPO::getAppId, dto.id)
+                        .or()
+                        // publish=3: 正在发布 -> 1:发布成功
+                        .or()
+                        .eq(ApiConfigPO::getPublish, 3)
+                        .eq(ApiConfigPO::getPublish, 1)
+                        .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
+                // list: po->dto 并赋值给dto.list
+                dto.list = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(apiConfigPoList);
+            }
+
         });
 
         return channelDataDTOList;

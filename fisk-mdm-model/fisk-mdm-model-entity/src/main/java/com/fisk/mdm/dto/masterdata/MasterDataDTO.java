@@ -8,13 +8,7 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class MasterDataDTO {
-
-    public int entityId;
-
-    public int versionId;
-
-    public int modelId;
+public class MasterDataDTO extends MasterDataBaseDTO {
 
     public List<MemberDTO> members;
 

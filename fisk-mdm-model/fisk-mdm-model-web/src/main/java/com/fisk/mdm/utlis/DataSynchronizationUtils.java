@@ -1,6 +1,7 @@
 package com.fisk.mdm.utlis;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
@@ -62,7 +63,8 @@ public class DataSynchronizationUtils {
         String stgTableName = "stg_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
 
         // 2.查询需要同步的数据
-        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'";
+        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'"
+                + " AND fidata_del_flag = 1 ";
 
         DataSourceConDTO dto = new DataSourceConDTO();
         dto.setConStr(connectionStr);
@@ -110,6 +112,15 @@ public class DataSynchronizationUtils {
                                 e.put("fidata_id",item.getFidata_id());
                                 updateList.add(e);
                             }
+
+                            Object value = e.get("fidata_new_code");
+                            if (ObjectUtils.isNotEmpty(value)){
+                                if (key.equals("code")){
+                                    updateList.remove(e);
+                                    e.put("code", value);
+                                    updateList.add(e);
+                                }
+                            }
                         }
                     });
         });
@@ -117,22 +128,15 @@ public class DataSynchronizationUtils {
         // 需要插入的数据
         resultList.stream().forEach(e -> {
             if (CollectionUtils.isNotEmpty(updateList)){
-                updateList.stream().filter(item -> !e.get("code").equals(item.get("code")))
-                        .forEach(item -> {
-                            insertList.add(e);
-                        });
+                List<Map<String, Object>> list = resultList.stream().filter(
+                        (mapItem) -> !updateList.stream().map(item -> item.get("code")
+                        ).collect(Collectors.toList()).contains(mapItem.get("code"))
+                ).collect(Collectors.toList());
+                insertList.addAll(list);
             }else {
                 insertList.add(e);
             }
         });
-
-        List<Map<String, Object>> insertDataList = null;
-        if (CollectionUtils.isNotEmpty(updateList)){
-            insertDataList = insertList;
-        }else {
-            Map<Map<String, Object>, Long> countMap = insertList.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-            insertDataList = countMap.keySet().stream().filter(e -> countMap.get(e) > 1).distinct().collect(Collectors.toList());
-        }
 
 
         // 插入的数据id做转换
@@ -144,7 +148,7 @@ public class DataSynchronizationUtils {
 
         AtomicReference<Integer> fataId = new AtomicReference<>(maxId.get(0).getFidata_id() + 1);
         List<Map<String, Object>> insertDates = new ArrayList<>();
-        insertDataList.stream().filter(Objects::nonNull).forEach(e -> {
+        insertList.stream().filter(Objects::nonNull).forEach(e -> {
             for (String key : e.keySet()) {
                 if (key.equals("fidata_id")) {
                     e.put("fidata_id", fataId.getAndSet(fataId.get() + 1));
@@ -272,12 +276,11 @@ public class DataSynchronizationUtils {
             // 影响记录条数
             int res = stmt.executeUpdate();
             System.out.println("成功条数！:" + res);
-            log.error(ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【成功条数】:" + res
+            log.info(ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getMsg() + "【成功条数】:" + res
                        + "【批次号】:" + batchCode);
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
-            String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() +
-                    "【执行SQL】" + stmt.toString() + "【原因】:" + ex.getMessage();
+            String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
             this.errorMessageProcess(stgTableName,errorMessage,codes,connection);
         }
     }

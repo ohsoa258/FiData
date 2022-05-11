@@ -8,13 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
  * date 2022/05/06 11:26
  */
 @Data
-public class ImportParamDTO {
-
-    public int versionId;
-
-    public int entityId;
-
-    public int modelId;
+public class ImportParamDTO extends MasterDataBaseDTO {
 
     public boolean removeSpace;
 
