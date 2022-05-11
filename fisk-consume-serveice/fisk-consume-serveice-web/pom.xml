@@ -130,6 +130,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.5</version>
+        </dependency>
+
     </dependencies>
     <build>
         <!--Jenkins 编译-->

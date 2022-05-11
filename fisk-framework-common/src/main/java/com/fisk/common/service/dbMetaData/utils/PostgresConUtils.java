@@ -29,11 +29,11 @@ public class PostgresConUtils {
      * @param password password
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, String driver) {
+    public List<TablePyhNameDTO> getTableNameAndColumns(String url, String user, String password, DriverTypeEnum driver) {
 
         List<TablePyhNameDTO> list = null;
         try {
-            Class.forName(driver);
+            Class.forName(driver.getName());
             Connection conn = DriverManager.getConnection(url, user, password);
             // 获取数据库中所有表名称
             List<String> tableNames = getTables(conn);

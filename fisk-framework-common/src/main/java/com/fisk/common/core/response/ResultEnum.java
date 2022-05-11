@@ -186,6 +186,7 @@ public enum ResultEnum {
     DS_APPAPIDOC_ERROR(10019, "pdf文档生成失败"),
     DS_APP_SUBAPI_ENABLE(10020, "取消勾选的API含已启用的API，请先禁用"),
     DS_APISERVICE_API_APPINFO_EXISTS(10021, "应用账号/密码错误，请核对"),
+    DS_DATASOURCE_READ_ERROR(10022, "数据源信息读取失败"),
 
     /**
      * 数据质量

@@ -1,13 +1,19 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.service.dbMetaData.dto.DataBaseViewDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
+import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
@@ -15,19 +21,21 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.datasource.*;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.map.DataSourceConMap;
-import com.fisk.dataservice.mapper.AppRegisterMapper;
 import com.fisk.dataservice.mapper.DataSourceConMapper;
 import com.fisk.dataservice.service.IDataSourceConManageService;
 import com.fisk.dataservice.vo.api.FieldInfoVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
 import lombok.SneakyThrows;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +56,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     UserHelper userHelper;
 
     @Resource
-    AppRegisterMapper appRegisterMapper;
+    private RedisTemplate redisTemplate;
+
+    @Value("${dataservice.datasource.metadataentity_key}")
+    private String metaDataEntityKey;
 
     @Override
     public Page<DataSourceConVO> listDataSourceCons(DataSourceConQuery query) {
@@ -69,7 +80,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             return ResultEnum.NAME_EXISTS;
         }
         DataSourceConPO model = DataSourceConMap.INSTANCES.dtoToPo(dto);
-        return mapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        model.setCreateTime(LocalDateTime.now());
+        Long userId = userHelper.getLoginUserInfo().getId();
+        model.setCreateUser(userId.toString());
+        boolean isInsert = baseMapper.insertOne(model) > 0;
+        if (!isInsert)
+            return ResultEnum.SAVE_DATA_ERROR;
+        int id = (int) model.getId();
+        setDataSourceToRedis(id,1);
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -89,7 +108,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-
+        setDataSourceToRedis(dto.getId(), 2);
         DataSourceConMap.INSTANCES.editDtoToPo(dto, model);
         return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -100,6 +119,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        setDataSourceToRedis(id, 3);
         return mapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -144,13 +164,39 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public DataSourceVO getMeta(int datasourceId) throws SQLException {
+    public DataSourceVO getTableAll(int datasourceId) {
+        DataSourceVO dataSource = null;
+        try {
+            String redisKey = metaDataEntityKey + "_" + datasourceId;
+            Boolean exist = redisTemplate.hasKey(redisKey);
+            if (!exist) {
+                setDataSourceToRedis(datasourceId,1);
+            }
+            String json = redisTemplate.opsForValue().get(redisKey).toString();
+            if (StringUtils.isNotEmpty(json)) {
+                dataSource = JSONObject.parseObject(json,DataSourceVO.class);
+            }
+        } catch (Exception ex) {
+            log.error("getTableAll执行异常：", ex);
+            throw new FkException(ResultEnum.DS_DATASOURCE_READ_ERROR, ex.getMessage());
+        }
+        return dataSource;
+    }
+
+    @Override
+    public ResultEntity<Object> reloadDataSource(int datasourceId) {
+        setDataSourceToRedis(datasourceId, 2);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
+    }
+
+    public DataSourceVO getMeta(int datasourceId) {
         DataSourceVO dataSource = new DataSourceVO();
         DataSourceConPO conPo = mapper.selectById(datasourceId);
         if (conPo == null)
             return dataSource;
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+        PostgresConUtils postgresConUtils = new PostgresConUtils();
         List<DataBaseViewDTO> dataBaseViewDTOS = null;
         switch (DataSourceTypeEnum.values()[conPo.conType]) {
             case MYSQL:
@@ -167,12 +213,17 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 //dataSource.viewDtoList = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 dataBaseViewDTOS = sqlServerPlusUtils.loadViewDetails(DriverTypeEnum.SQLSERVER, conPo.conStr, conPo.conAccount, conPo.conPassword, conPo.conDbname);
                 break;
+            case POSTGRE:
+                dataSource.tableDtoList = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DriverTypeEnum.POSTGRESQL);
+                break;
         }
         Connection conn = null;
         if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.MYSQL.getValue()) {
             conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.MYSQL.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
         } else if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.SQLSERVER.getValue()) {
             conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
+        } else if (conPo.getConType() == com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRE.getValue()) {
+            conn = getStatement(com.fisk.dataservice.enums.DataSourceTypeEnum.POSTGRE.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
         }
         List<FieldInfoVO> tableFieldList = getTableFieldList(conn, conPo);
         if (CollectionUtils.isNotEmpty(tableFieldList)
@@ -224,7 +275,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return dataSource;
     }
 
-
     /**
      * 连接数据库
      *
@@ -252,7 +302,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @param dataSource 数据源信息
      * @return statement
      */
-    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) throws SQLException {
+    private static List<FieldInfoVO> getTableFieldList(Connection conn, DataSourceConPO dataSource) {
         List<FieldInfoVO> fieldlist = new ArrayList<>();
         String sql = "";
         com.fisk.dataservice.enums.DataSourceTypeEnum value = com.fisk.dataservice.enums.DataSourceTypeEnum.values()[dataSource.getConType()];
@@ -287,6 +337,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         "\tLEFT JOIN sys.extended_properties f ON d.id= f.major_id \n" +
                         "\tAND f.minor_id= 0";
                 break;
+            case POSTGRE:
+                sql = "SELECT c.relname as originalTableName,a.attname as originalFieldName,col_description(a.attrelid,a.attnum) as originalFieldDesc,'' AS originalFramework \n" +
+                        "FROM pg_class as c,pg_attribute as a inner join pg_type on pg_type.oid = a.atttypid\n" +
+                        "where c.relname in  (SELECT tablename FROM pg_tables ) and a.attrelid = c.oid and a.attnum>0";
+                break;
         }
         if (sql == null || sql.isEmpty())
             return fieldlist;
@@ -315,4 +370,42 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return fieldlist;
     }
 
+    /**
+     * @return void
+     * @description 保存数据源到redis缓存
+     * @author dick
+     * @date 2022/5/11 10:33
+     * @version v1.0
+     * @params datasourceId 数据源id
+     * @params operationType 操作类型 1、新增 2、修改 3、删除
+     */
+    public void setDataSourceToRedis(int datasourceId, int operationType) {
+        if (datasourceId <= 0 && StringUtils.isNotEmpty(metaDataEntityKey)) {
+            return;
+        }
+        String redisKey = metaDataEntityKey + "_" + datasourceId;
+        if (operationType == 3) {
+            redisTemplate.delete(redisKey);
+        } else if (operationType == 1 || operationType == 2) {
+            DataSourceVO meta = getMeta(datasourceId);
+            String json = JSONArray.toJSON(meta).toString();
+            redisTemplate.opsForValue().set(redisKey, json);
+        }
+    }
+
+    /**
+     * @return void
+     * @description 保存数据源到redis缓存
+     * @author dick
+     * @date 2022/5/11 10:33
+     * @version v1.0
+     */
+    public void setDataSourceToRedis() {
+        List<DataSourceConVO> all = mapper.getAll();
+        if (CollectionUtils.isNotEmpty(all)) {
+            for (DataSourceConVO dataSourceConVO : all) {
+                setDataSourceToRedis(dataSourceConVO.getId(), 2);
+            }
+        }
+    }
 }

@@ -2,12 +2,11 @@ package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.dto.datasource.DataSourceConQuery;
+import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.entity.DataSourceConPO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -40,4 +39,13 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      */
     @Select("SELECT id,`name` FROM tb_datasource_config  WHERE del_flag=1;")
     List<DataSourceConVO> getAll();
+
+    /**
+     * 新增一条数据
+     *
+     * @return 执行结果
+     */
+    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+    @Insert("INSERT INTO `tb_api_config`(`name`, `con_str`, `con_ip`, `con_port`, `con_cube`, `con_dbname`, `con_type`, `con_account`, `con_password`, `create_time`, `create_user`,`del_flag`) VALUES (#{name}, #{conStr}, #{conIp}, #{conPort}, #{conCube}, #{conDbname}, #{conType}, #{conAccount}, #{conPassword}, #{createTime}, #{createUser},1);")
+    int insertOne(DataSourceConPO po);
 }

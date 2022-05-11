@@ -73,7 +73,14 @@ public class DataSourceController {
 
     @GetMapping("/getTableAll/{id}")
     @ApiOperation("获取全部表字段信息")
-    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) throws SQLException {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(id));
+    public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll(id));
     }
+
+    @PostMapping("/reloadDataSource")
+    @ApiOperation("重新加载数据源到redis")
+    public ResultEntity<Object> reloadDataSource(int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.reloadDataSource(id));
+    }
+
 }

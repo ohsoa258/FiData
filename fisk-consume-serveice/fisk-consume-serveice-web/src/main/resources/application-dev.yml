@@ -5,6 +5,13 @@ dataservice:
     path: D:/Work/java/Fisk.DMP.Project/fisk-consume-serveice/fisk-consume-serveice-web/target/classes
     # 接口文档中的环境信息
     api_address: http://192.168.11.130:8083/{apiaddress}。
+  datasource:
+    # redis key
+    metadataentity_key: DataService_MetaDataKey
+    # 执行时间 凌晨12点半
+    schedule: 0 30 0 * * ?
+    # 是否启用
+    enabled: true
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver

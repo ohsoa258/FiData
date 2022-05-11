@@ -157,9 +157,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
-        //apiConfigPO.setCreateUser("lijiawen");
-        Long id = userHelper.getLoginUserInfo().getId();
-        apiConfigPO.setCreateUser(id.toString());
+        Long userId = userHelper.getLoginUserInfo().getId();
+        apiConfigPO.setCreateUser(userId.toString());
         isInsert = baseMapper.insertOne(apiConfigPO) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
