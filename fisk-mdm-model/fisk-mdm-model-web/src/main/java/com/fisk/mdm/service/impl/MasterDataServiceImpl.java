@@ -9,7 +9,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
@@ -18,6 +17,7 @@ import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.ImportTypeEnum;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
+import com.fisk.mdm.vo.attribute.AttributeDetailsVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
@@ -29,6 +29,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.masterdata.MasterDataDetailsVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.google.common.base.Joiner;
 import lombok.Data;
@@ -68,8 +69,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Resource
     EntityService entityService;
-    /*@Resource
-    DataSynchronizationUtils dataSynchronizationUtils;*/
+    @Resource
+    DataSynchronizationUtils dataSynchronizationUtils;
     @Resource
     StgBatchServiceImpl stgBatchService;
 
@@ -533,7 +534,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 int[] flatCount = stat.executeBatch();
                 //添加批次数据
                 setStgBatch(batchCode,item.entityId,item.versionId,item.count,item.count-flatCount[0],0);
-                //dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
+                dataSynchronizationUtils.stgDataSynchronize(item.entityId,batchCode);
             }
         }
         catch (SQLException e)
@@ -559,6 +560,54 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public ResultEnum delMasterData(MasterDataDTO dto)
     {
         return OperateMasterData(dto,2);
+    }
+
+    @Override
+    public ResultEnum updateMasterData(MasterDataDTO dto)
+    {
+        return OperateMasterData(dto,1);
+    }
+
+    @Override
+    public MasterDataDetailsVO getMasterData(MasterDataDetailsParamDTO dto)
+    {
+        EntityPO entityPO=entityMapper.selectById(dto.entityId);
+        if (entityPO==null)
+        {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        MasterDataDetailsVO data=new MasterDataDetailsVO();
+        QueryWrapper<AttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(AttributePO::getEntityId,dto.entityId);
+        List<AttributePO> list=attributeMapper.selectList(queryWrapper);
+        List<AttributeDetailsVO> detailsList=AttributeMap.INSTANCES.poListToDetailsVoList(list);
+        String sql="select * from "+entityPO.getTableName()+" where code='"+dto.code+"'";
+        try {
+            Connection connection = getConnection();
+            Statement st = connection.createStatement();
+            ResultSet rs = st.executeQuery(sql);
+            // 获取列数
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next())
+            {
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Optional<AttributeDetailsVO> first = detailsList.stream().filter(e -> columnName.equals(e.columnName)).findFirst();
+                    if (!first.isPresent())
+                    {
+                        continue;
+                    }
+                    first.get().value=rs.getString(columnName);
+                }
+            }
+            data.attributes=detailsList;
+            return data;
+        }
+        catch (SQLException e)
+        {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
+        }
     }
 
     public ResultEnum OperateMasterData(MasterDataDTO dto,int type){
@@ -587,15 +636,16 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     + ImportTypeEnum.MANUALLY_ENTER.getValue()+",'"+batchCode+"',"+0+","
                     +dto.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",1"+")");
         }
-        //删除
-        else if (type==2)
+        //删除或修改
+        else
         {
+            int delFlag=type==1?1:0;
             str.append(",fidata_batch_code,fidata_status,fidata_version_id," +
                     "fidata_update_time,fidata_update_user,fidata_del_flag");
             str.append(") ");
             str.append(" values("+getColumnNameAndValue(dto.members,1)+","
                     +"'"+batchCode+"',"+0+","
-                    +dto.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+",0"+")");
+                    +dto.versionId+",'"+getFormatDate(date)+"',"+userHelper.getLoginUserInfo().id+","+delFlag+")");
         }
         log.info("执行sql:",str.toString());
         int flag = executeSql(str.toString());
