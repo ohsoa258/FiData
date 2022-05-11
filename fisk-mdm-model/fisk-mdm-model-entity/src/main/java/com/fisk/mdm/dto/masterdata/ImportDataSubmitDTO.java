@@ -11,4 +11,6 @@ public class ImportDataSubmitDTO {
 
     public String key;
 
+    public int entityId;
+
 }

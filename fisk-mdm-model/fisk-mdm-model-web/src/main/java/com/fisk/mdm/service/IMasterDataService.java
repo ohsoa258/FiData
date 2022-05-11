@@ -59,7 +59,7 @@ public interface IMasterDataService {
      * @return
      * @throws SQLException
      */
-    ResultEnum importDataSubmit(ImportDataSubmitDTO dto) throws SQLException;
+    ResultEnum importDataSubmit(ImportDataSubmitDTO dto);
 
     /**
      * 主数据新增

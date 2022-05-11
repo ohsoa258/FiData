@@ -77,7 +77,7 @@ public class MasterDataController {
     @ApiOperation("模板数据提交")
     @PostMapping("/importDataSubmit")
     @ResponseBody
-    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto) throws SQLException {
+    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
     }
 
