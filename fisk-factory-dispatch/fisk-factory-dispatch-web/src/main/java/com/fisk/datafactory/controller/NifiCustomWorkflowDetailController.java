@@ -6,7 +6,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.WorkflowTaskGroupDTO;
-import com.fisk.datafactory.dto.json.TableJsonSourceDTO;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -41,6 +40,12 @@ public class NifiCustomWorkflowDetailController {
     @PostMapping("/addList")
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> addDataList(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addDataList(list));
+    }
+
+    @ApiOperation("修改管道组件集合")
+    @PostMapping("/editList")
+    public ResultEntity<Object> editDataList(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.editDataList(list));
     }
 
     @GetMapping("/getComponentList/{id}")
@@ -112,16 +117,5 @@ public class NifiCustomWorkflowDetailController {
     @PostMapping("/getTableId")
     public ResultEntity<Object> getTableId(@RequestBody NifiComponentsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds(dto));
-    }
-
-    /**
-     * 数据表的json结构
-     *
-     * @param dto dto
-     * @return 结果
-     */
-    @PostMapping("/buildJson")
-    public ResultEntity<Object> buildJson(@RequestBody TableJsonSourceDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildJson(dto));
     }
 }
