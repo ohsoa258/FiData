@@ -1,6 +1,7 @@
 package com.fisk.mdm.utlis;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
@@ -110,6 +111,15 @@ public class DataSynchronizationUtils {
                             if (key.equals("fidata_id")){
                                 e.put("fidata_id",item.getFidata_id());
                                 updateList.add(e);
+                            }
+
+                            Object value = e.get("fidata_new_code");
+                            if (ObjectUtils.isNotEmpty(value)){
+                                if (key.equals("code")){
+                                    updateList.remove(e);
+                                    e.put("code", value);
+                                    updateList.add(e);
+                                }
                             }
                         }
                     });
