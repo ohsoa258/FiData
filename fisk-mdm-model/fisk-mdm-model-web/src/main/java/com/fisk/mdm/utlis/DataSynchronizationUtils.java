@@ -47,7 +47,7 @@ public class DataSynchronizationUtils {
     EntityService entityService;
 
     public static final String MARK ="fidata_";
-
+    public static final String SPECIAL_CHARACTERS_NULL = "`fidata_null`";
 
     /**
      * stg数据同步
@@ -295,7 +295,11 @@ public class DataSynchronizationUtils {
         listMap.stream().forEach(e -> {
             e.forEach((k,v) -> {
                 if (k.equals(filed)){
-                    list.add(v);
+                    if (SPECIAL_CHARACTERS_NULL.equals(v)){
+                        list.add(null);
+                    }else {
+                        list.add(v);
+                    }
                 }
             });
         });
