@@ -6,7 +6,7 @@ dataservice:
     api_address: http://10.220.108.140:10089/{apiaddress}。
   datasource:
     # redis key
-    pg_metadataentity_key: DataService_MetaDataEntityKey
+    metadataentity_key: DataService_MetaDataKey
     # 执行时间 凌晨12点半
     schedule: 0 30 0 * * ?
     # 是否启用
