@@ -122,13 +122,15 @@ public class BuildDataInputPgTableListener {
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
-            dc.updateApiPublishStatus(modelPublishStatusDTO);
+            if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
+                modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
+                dc.updateApiPublishStatus(modelPublishStatusDTO);
+            }
             log.error("创建表失败");
             e.printStackTrace();
             return ResultEnum.ERROR;
         } finally {
-            acke.acknowledge();
+            //acke.acknowledge();
         }
     }
 

@@ -355,6 +355,11 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             case WIDETABLE:
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
                 nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
+            case PHYSICS_API:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
+                break;
             default:
                 break;
         }

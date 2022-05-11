@@ -24,6 +24,7 @@ import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.nifi.INonRealTimeListener;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.impl.BuildNifiTaskListener;
@@ -121,6 +122,8 @@ public class KafkaConsumer {
     BuildModelListener buildModelListener;
     @Resource
     IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
+    @Resource
+    INonRealTimeListener iNonRealTimeListener;
 
     @Bean
     public KafkaListenerContainerFactory<?> batchFactory() {
@@ -160,12 +163,12 @@ public class KafkaConsumer {
     }
 
     //这里只用来存放reids
-    @KafkaListener(topics = "${nifi.pipeline.topicName}", containerFactory = "batchFactory", groupId = "test")
+    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_PIPELINE_TOPICNAME_FLOW}, containerFactory = "batchFactory", groupId = "test")
     public void consumer(List<String> arrMessage, Acknowledgment ack) {
         iBuildPipelineSupervisionListener.msg(arrMessage, ack);
     }
 
-    @KafkaListener(topics = {MqConstants.QueueConstants.BUILD_NIFI_FLOW}, containerFactory = "batchFactory", groupId = "test")
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_NIFI_FLOW, containerFactory = "batchFactory", groupId = "test")
     @MQConsumerLog
     public ResultEntity<Object> buildNifiTaskListener(String data, Acknowledgment ack) {
         return ResultEntityBuild.build(iNifiTaskListener.msg(data, ack));
@@ -343,4 +346,8 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(buildModelListener.backgroundCreateTasks(dataInfo, acke));
     }
 
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW, containerFactory = "batchFactory", groupId = "test")
+    public ResultEntity<Object> importData(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(iNonRealTimeListener.importData(dataInfo, acke));
+    }
 }

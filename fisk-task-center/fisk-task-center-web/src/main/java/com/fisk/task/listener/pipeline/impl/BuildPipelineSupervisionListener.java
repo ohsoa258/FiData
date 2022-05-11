@@ -93,6 +93,11 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                             case 9:
                                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
                                 nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                                break;
+                            case 10:
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                                break;
                             default:
                                 break;
                         }
@@ -163,7 +168,9 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
             log.error("管道调度报错");
             e.printStackTrace();
         } finally {
-            acke.acknowledge();
+            if(acke!=null){
+                acke.acknowledge();
+            }
         }
     }
 }
