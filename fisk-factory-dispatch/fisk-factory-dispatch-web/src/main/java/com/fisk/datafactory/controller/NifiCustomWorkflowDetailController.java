@@ -37,6 +37,12 @@ public class NifiCustomWorkflowDetailController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addData(dto));
     }
 
+    @ApiOperation("添加管道组件集合")
+    @PostMapping("/addList")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> addDataList(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.addDataList(list));
+    }
+
     @GetMapping("/getComponentList/{id}")
     @ApiOperation(value = "查询当前任务下的组件详情集合")
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getComponentList(@PathVariable("id") long id) {

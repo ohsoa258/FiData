@@ -87,6 +87,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     @Override
+    public List<NifiCustomWorkflowDetailDTO> addDataList(List<NifiCustomWorkflowDetailDTO> list) {
+
+        return list.stream().map(this::addData).collect(Collectors.toList());
+    }
+
+    @Override
     public NifiCustomWorkflowDetailDTO getData(long id) {
 
         NifiCustomWorkflowDetailPO model = this.query().eq("id", id).one();

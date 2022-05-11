@@ -26,6 +26,9 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      */
     NifiCustomWorkflowDetailDTO addData(NifiCustomWorkflowDetailDTO dto);
 
+
+    List<NifiCustomWorkflowDetailDTO> addDataList(List<NifiCustomWorkflowDetailDTO> list);
+
     /**
      * 回显数据
      *
