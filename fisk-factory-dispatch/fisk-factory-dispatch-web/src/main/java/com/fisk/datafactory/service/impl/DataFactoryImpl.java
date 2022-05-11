@@ -113,15 +113,50 @@ public class DataFactoryImpl implements IDataFactory {
             return nifiPortsHierarchyDTO;
         }
         nifiPortsHierarchyDTO.itselfPort = itselfPort;
-        // 指向的下一个组件id,逗号隔开
-        String outport = itselfPort.outport;
-        if (StringUtils.isNotBlank(outport)) {
-            nifiPortsHierarchyDTO.nextList = getNextList(outport.split(","));
+        NifiCustomWorkflowDetailPO one = nifiCustomWorkflowDetailImpl.query().eq("pid", itselfPort.pid).eq("table_order", itselfPort.tableOrder + 1).isNotNull("table_id").one();
+        if (one != null) {
+            List<NifiPortsHierarchyNextDTO> nextList = new ArrayList<>();
+            NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO = new NifiPortsHierarchyNextDTO();
+            nifiPortsHierarchyNextDTO.itselfPort = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one);
+            List<NifiCustomWorkflowDetailDTO> upPortList = new ArrayList<>();
+            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO = new NifiCustomWorkflowDetailDTO();
+            nifiCustomWorkflowDetailDTO = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one);
+            upPortList.add(nifiCustomWorkflowDetailDTO);
+            nifiPortsHierarchyNextDTO.upPortList = upPortList;
+            nextList.add(nifiPortsHierarchyNextDTO);
+            nifiPortsHierarchyDTO.nextList = nextList;
         } else {
-            log.info("当前组件没有指向下一级的组件");
-            return nifiPortsHierarchyDTO;
+            // 指向的下一个组件id,逗号隔开
+            String outport = itselfPort.outport;
+            List<NifiPortsHierarchyNextDTO> nextList = new ArrayList<>();
+            if (StringUtils.isNotBlank(outport)) {
+                //下一个组件的第一张表
+                String[] split = outport.split(",");
+                for (String id : split) {
+                    NifiCustomWorkflowDetailPO one1 = nifiCustomWorkflowDetailImpl.query().eq("pid", id).eq("table_order", 0).isNotNull("table_id").one();
+                    NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO = new NifiPortsHierarchyNextDTO();
+                    //下一级本身
+                    nifiPortsHierarchyNextDTO.itselfPort = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one1);
+                    List<NifiCustomWorkflowDetailDTO> upPortList = new ArrayList<>();
+                    //下一级所有的上一级
+                    String[] split1 = one1.inport.split(",");
+                    for (String inputId : split1) {
+                        NifiCustomWorkflowDetailPO one2 = nifiCustomWorkflowDetailImpl.query().eq("pid", inputId)
+                                .isNotNull("table_id").orderByDesc("table_order").list().get(0);
+                        if (one2 != null) {
+                            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO1 = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one2);
+                            upPortList.add(nifiCustomWorkflowDetailDTO1);
+                        }
+                    }
+                    nifiPortsHierarchyNextDTO.upPortList = upPortList;
+                    nextList.add(nifiPortsHierarchyNextDTO);
+                }
+                nifiPortsHierarchyDTO.nextList = nextList;
+            } else {
+                log.info("当前组件没有指向下一级的组件");
+                return nifiPortsHierarchyDTO;
+            }
         }
-
         return nifiPortsHierarchyDTO;
     }
 

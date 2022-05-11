@@ -5,6 +5,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
+import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,8 @@ public class PipelineSupervisionController {
     IPipelineTableLog iPipelineTableLog;
     @Resource
     INifiStage iNifiStage;
+    @Resource
+    IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
 
     @PostMapping("/getPipelineTableLogs")
     public ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO) {
@@ -50,6 +53,10 @@ public class PipelineSupervisionController {
         objectResultEntity.data= iNifiStage.getNifiStage(nifiCustomWorkflowDetailDTO);
         objectResultEntity.code=0;
         return objectResultEntity;
+    }
+    @PostMapping("/consumer")
+    public void consumer(List<String> arrMessage) {
+        iBuildPipelineSupervisionListener.msg(arrMessage, null);
     }
 
 }
