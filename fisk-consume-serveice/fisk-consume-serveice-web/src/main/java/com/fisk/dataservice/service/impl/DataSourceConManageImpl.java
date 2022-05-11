@@ -139,6 +139,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     //2.获得数据库的连接
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
+                case POSTGRE:
+                    //1.加载驱动程序
+                    Class.forName(DataSourceTypeEnum.POSTGRE.getDriverName());
+                    //2.获得数据库的连接
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
