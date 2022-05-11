@@ -12,13 +12,13 @@ public class ApiConstants {
      * api文档基本信息
      */
     public static final String DATAACCESS_APIBASICINFO = "{\n" +
-            "    \"title\":\"FiData一体化数据赋能平台 API接口文档\",\n" +
+            "    \"title\":\"一体化数据赋能平台 API接口文档\",\n" +
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
-            "    \"isuCompany\":\"菲斯科（上海）软件有限公司编制\",\n" +
+            "    \"isuCompany\":\"\",\n" +
             "    \"isuDate\":\"发布日期：20220222\",\n" +
-            "    \"footerName\":\"FiData接口文档\",\n" +
-            "    \"docPurpose\":\"本文由菲斯科（上海）软件有限公司编写，用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
-            "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的上游系统。\",\n" +
+            "    \"footerName\":\"接口文档\",\n" +
+            "    \"docPurpose\":\"本文用于第三方平台对接一体化数据赋能平台。\",\n" +
+            "    \"readers\":\"预期读者包括需要推送数据到一体化数据赋能平台的第三方平台。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
             "    \"standard_query\":\"暂无。\",\n" +
             "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
@@ -136,14 +136,14 @@ public class ApiConstants {
             "    \"apiContactsDTOS\":[\n" +
             "        {\n" +
             "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"菲斯科\",\n" +
+            "            \"company\":\"技术部\",\n" +
             "            \"fullName\":\"徐阳辉\",\n" +
             "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
             "            \"trStyle\":\"background-color: #fff\"\n" +
             "        },\n" +
             "        {\n" +
             "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"菲斯科\",\n" +
+            "            \"company\":\"技术部\",\n" +
             "            \"fullName\":\"赵飞鸿\",\n" +
             "            \"mailbox\":\"feihongz@fisksoft.com.cn\",\n" +
             "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
