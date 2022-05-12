@@ -86,4 +86,16 @@ public enum DataTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
+
+    public static DataTypeEnum getValue(String name) {
+        DataTypeEnum[] carTypeEnums = values();
+        for (DataTypeEnum carTypeEnum : carTypeEnums) {
+            String queryName=carTypeEnum.name;
+            if (queryName.equals(name)) {
+                return carTypeEnum;
+            }
+        }
+        return DataTypeEnum.TEXT;
+    }
+
 }

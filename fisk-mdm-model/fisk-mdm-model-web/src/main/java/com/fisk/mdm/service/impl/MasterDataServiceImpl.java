@@ -1,6 +1,5 @@
 package com.fisk.mdm.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -13,15 +12,16 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ImportTypeEnum;
+import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.vo.attribute.AttributeDetailsVO;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
-import com.fisk.mdm.vo.masterdata.ExportResultVO;
+import com.fisk.mdm.vo.masterdata.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.map.AttributeMap;
@@ -30,18 +30,17 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
-import com.fisk.mdm.vo.masterdata.MasterDataDetailsVO;
+import com.fisk.mdm.vo.model.ModelDropDownVO;
+import com.fisk.mdm.vo.resultObject.ResultAttributeGroupVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -55,7 +54,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * 主数据服务impl
@@ -73,11 +72,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
     DataSynchronizationUtils dataSynchronizationUtils;
     @Resource
     StgBatchServiceImpl stgBatchService;
+    @Resource
+    ModelVersionServiceImpl modelVersionServiceImpl;
+    @Resource
+    EntityServiceImpl entityServiceImpl;
 
     @Resource
     AttributeMapper attributeMapper;
     @Resource
     EntityMapper entityMapper;
+    @Resource
+    ModelMapper modelMapper;
     @Resource
     UserHelper userHelper;
 
@@ -142,6 +147,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
         //将查询到的属性集合添加装入结果对象
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.poToColumnVoList(attributePoList);
+        //数据类型英文名称赋值
+        attributeColumnVoList
+                .stream()
+                .map(e->e.dataTypeEnDisplay =DataTypeEnum.getValue(e.getDataType()).name())
+                .collect(Collectors.toList());
         resultObjectVO.setAttributeColumnVoList(attributeColumnVoList);
 
         //获得业务字段名
@@ -157,7 +167,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
         //准备主数据集合
         List<Map<String,Object>> data = new ArrayList<>();
-
+        List<ResultAttributeGroupVO> attributeGroupVoList=new ArrayList<>();
         try {
             //获得工厂
             Connection connection = getConnection();
@@ -167,7 +177,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             ResultSet resultSet = statement.executeQuery(sql);
             //判断结果集是否为空
             if(!resultSet.next()){
-                resultObjectVO.setResultData(data);
+                resultObjectVO.setAttributeGroups(attributeGroupVoList);
                 return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
             }
             //获取结果集的结构信息
@@ -184,8 +194,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 //将接收到的对象放入主数据集合中
                 data.add(map);
             }
+            ResultAttributeGroupVO vo=new ResultAttributeGroupVO();
+            vo.setResultData(data);
+            vo.setName("属性组1");
+            attributeGroupVoList.add(vo);
             //将主数据集合添加装入结果对象
-            resultObjectVO.setResultData(data);
+            resultObjectVO.setAttributeGroups(attributeGroupVoList);
             //释放资源
             release(resultSet,statement,connection);
             return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
@@ -194,6 +208,21 @@ public class MasterDataServiceImpl implements IMasterDataService {
             e.printStackTrace();
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS,resultObjectVO);
+    }
+
+    @Override
+    public List<ModelDropDownVO> getModelEntityVersionStruct()
+    {
+        QueryWrapper<ModelPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time");
+        List<ModelPO> modelPoList=modelMapper.selectList(queryWrapper);
+        List<ModelDropDownVO> data= ModelMap.INSTANCES.poListToDropDownVoList(modelPoList);
+        data.stream().forEach(e->{
+            e.versions= modelVersionServiceImpl.getModelVersionDropDown(e.id);
+            e.versions.stream().map(p->p.displayName=p.name).collect(Collectors.toList());
+            e.children=entityServiceImpl.getEntityDropDown(e.id);
+        });
+        return data;
     }
 
     /**
@@ -450,6 +479,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         catch (Exception e)
         {
+            log.error("importTemplateData",e);
             throw new FkException(ResultEnum.SQL_ANALYSIS,e);
         }
     }

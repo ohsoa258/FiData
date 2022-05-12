@@ -4,7 +4,6 @@ import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 结果对象
@@ -15,5 +14,5 @@ import java.util.Map;
 @Data
 public class ResultObjectVO {
     private List<AttributeColumnVO> attributeColumnVoList;
-    private List<Map<String,Object>> resultData;
+    private List<ResultAttributeGroupVO> attributeGroups;
 }

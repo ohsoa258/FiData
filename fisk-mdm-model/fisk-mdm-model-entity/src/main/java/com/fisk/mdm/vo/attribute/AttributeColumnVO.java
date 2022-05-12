@@ -39,4 +39,9 @@ public class AttributeColumnVO {
      * 数据类型
      */
     private String dataType;
+
+    /**
+     * 数据类型业务名称
+     */
+    public String dataTypeEnDisplay;
 }

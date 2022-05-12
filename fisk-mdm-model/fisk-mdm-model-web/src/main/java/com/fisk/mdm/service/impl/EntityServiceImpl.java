@@ -22,6 +22,7 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
+import com.fisk.mdm.vo.entity.EntityDropDownVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
@@ -373,4 +374,18 @@ public class EntityServiceImpl implements EntityService {
             }
         }
     }
+
+    /**
+     * 获取实体下拉列表
+     * @param modelId
+     * @return
+     */
+    public List<EntityDropDownVO> getEntityDropDown(int modelId)
+    {
+        QueryWrapper<EntityPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(EntityPO::getModelId,modelId);
+        List<EntityPO> list=entityMapper.selectList(queryWrapper);
+        return EntityMap.INSTANCES.poListToDropDownVoList(list);
+    }
+
 }

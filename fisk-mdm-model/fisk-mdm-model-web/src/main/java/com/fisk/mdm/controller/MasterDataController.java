@@ -53,6 +53,12 @@ public class MasterDataController {
         return service.getAll(entityId ,modelVersionId);
     }
 
+    @ApiOperation("获取模型、实体、版本下拉列表")
+    @GetMapping("/getModelEntityVersionStruct")
+    public ResultEntity<Object> getModelEntityVersionStruct(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getModelEntityVersionStruct());
+    }
+
     @ApiOperation("下载模板")
     @GetMapping("/downloadTemplate")
     public ResultEntity<Object> downloadTemplate(Integer entityId){

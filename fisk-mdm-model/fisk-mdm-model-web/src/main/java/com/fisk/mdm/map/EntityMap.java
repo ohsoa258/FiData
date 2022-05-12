@@ -7,6 +7,7 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.entity.EntityDropDownVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -76,4 +77,12 @@ public interface EntityMap {
      * @return
      */
     AttributePO dtoToStatusPo(AttributeStatusDTO dto);
+
+    /**
+     * poList==>DropDownVoList
+     * @param poList
+     * @return
+     */
+    List<EntityDropDownVO> poListToDropDownVoList(List<EntityPO> poList);
+
 }

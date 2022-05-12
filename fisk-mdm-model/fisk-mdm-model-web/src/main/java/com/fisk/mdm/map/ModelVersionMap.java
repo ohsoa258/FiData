@@ -3,6 +3,7 @@ package com.fisk.mdm.map;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
 import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -35,4 +36,12 @@ public interface ModelVersionMap {
             @Mapping(source = "type" ,target = "type")
     })
     List<ModelVersionVO> poToVoList(List<ModelVersionPO> poList);
+
+    /**
+     * poList==>DropDownVoList
+     * @param poList
+     * @return
+     */
+    List<ModelVersionDropDownVO> poListToDropDownVoList(List<ModelVersionPO> poList);
+
 }

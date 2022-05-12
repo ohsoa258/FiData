@@ -3,15 +3,14 @@ package com.fisk.mdm.service;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.*;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
-import com.fisk.mdm.vo.masterdata.ExportResultVO;
-import com.fisk.mdm.vo.masterdata.MasterDataDetailsVO;
+import com.fisk.mdm.vo.masterdata.*;
+import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * 主数据服务
@@ -29,6 +28,12 @@ public interface IMasterDataService {
      * @return {@link ResultObjectVO}
      */
     ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId);
+
+    /**
+     * 获取模型实体版本数据
+     * @return
+     */
+    List<ModelDropDownVO> getModelEntityVersionStruct();
 
     /**
      * 下载模板
