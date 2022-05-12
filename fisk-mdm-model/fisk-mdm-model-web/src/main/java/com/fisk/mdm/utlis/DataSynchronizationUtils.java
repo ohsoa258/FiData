@@ -307,6 +307,7 @@ public class DataSynchronizationUtils {
         StringBuilder str = new StringBuilder();
         str.append("UPDATE " + stgTableName);
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMITTED_SUCCESSFULLY.getValue()).append("'");
+        str.append(",fidata_error_msg = null");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
         str.append(" AND fidata_del_flag = 1 ");
 
