@@ -12,7 +12,7 @@ import lombok.Data;
 @Data
 public class ReceiveDataDTO {
     @ApiModelProperty(value = "当前实时api的主键")
-    public Long apiId;
+    public Long apiCode;
     @ApiModelProperty(value = "本次同步的数据")
     public String pushData;
 }
