@@ -283,25 +283,31 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return nifiCustomWorkDTOList.add(dto);
         }).collect(Collectors.toList());*/
         for (NifiCustomWorkflowDetailDTO e : list) {
-            NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
             // 只有调度组件有下一级,其他的不要上下级,余下的只传绑定有表的
             NifiCustomWorkflowDetailPO po = this.query().eq("id", e.id).one();
             if (Objects.equals(ChannelDataEnum.SCHEDULE_TASK.getName(), po.componentType)) {
+                NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
                 dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(po));
                 dto.outputDucts = getOutputDucts(po);
+                if(dto.NifiNode!=null){
+                    nifiCustomWorkDTOList.add(dto);
+                }
             } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
                 log.info("任务组不做处理");
             } else {
                 List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
                 if (CollectionUtils.isNotEmpty(detailPoList)) {
-                    NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = detailPoList.get(0);
-                    dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
+                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO:detailPoList) {
+                        NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
+                        dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
+                        nifiCustomWorkDTOList.add(dto);
+                    }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
             }
 
 
-            nifiCustomWorkDTOList.add(dto);
+
         }
 
         return nifiCustomWorkDTOList;

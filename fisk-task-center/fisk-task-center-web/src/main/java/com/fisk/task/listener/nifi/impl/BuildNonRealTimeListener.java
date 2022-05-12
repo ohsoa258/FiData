@@ -26,6 +26,7 @@ public class BuildNonRealTimeListener implements INonRealTimeListener {
     public ResultEnum importData(String dto, Acknowledgment acke) {
         try {
             //ApiImportDataDTO
+            log.info("非实时api同步参数:{}",dto);
             ApiImportDataDTO apiImportDataDTO = JSON.parseObject(dto, ApiImportDataDTO.class);
             ResultEntity<Object> objectResultEntity = dataAccessClient.importData(apiImportDataDTO);
             if (Objects.equals(objectResultEntity.code, ResultEnum.SUCCESS.getCode())) {
