@@ -62,12 +62,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     String str1 = null;
 
                     // 判断是否必填
-                    String required = null;
-                    if (e.getEnableRequired() == true){
-                        required = " NOT NULL ";
-                    }else {
-                        required = " NULL ";
-                    }
+                    String required = " NULL ";
 
                     // 判断数据类型
                     switch (e.getDataType()) {
