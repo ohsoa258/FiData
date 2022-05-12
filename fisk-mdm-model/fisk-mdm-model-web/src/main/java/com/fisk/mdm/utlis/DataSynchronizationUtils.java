@@ -9,6 +9,7 @@ import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
+import com.fisk.mdm.enums.SyncStatusTypeEnum;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,6 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
@@ -54,7 +54,7 @@ public class DataSynchronizationUtils {
      * @param entityId
      * @param batchCode
      */
-    public void stgDataSynchronize(Integer entityId,String batchCode){
+    public ResultEnum stgDataSynchronize(Integer entityId,String batchCode){
 
         // 1.查询属性配置信息
         EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
@@ -189,13 +189,13 @@ public class DataSynchronizationUtils {
         });
 
         // 4.数据导入
-        this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
+        return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
     }
 
     /**
      * 数据导入
      */
-    public void dataImport(String mdmTableName,String stgTableName
+    public ResultEnum dataImport(String mdmTableName,String stgTableName
             ,DataSourceConDTO dto
             ,List<AttributeInfoDTO> attributeList
             ,List<Map<String, Object>> listMap
@@ -278,10 +278,19 @@ public class DataSynchronizationUtils {
             System.out.println("成功条数！:" + res);
             log.info(ResultEnum.DATA_SYNCHRONIZATION_SUCCESS.getMsg() + "【成功条数】:" + res
                        + "【批次号】:" + batchCode);
+            // 回调成功同步状态
+            this.callbackSuccessStatus(stgTableName,batchCode,connection);
+
+            return ResultEnum.DATA_SYNCHRONIZATION_SUCCESS;
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
             String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
             this.errorMessageProcess(stgTableName,errorMessage,codes,connection);
+
+            // 回调失败同步状态
+            this.callbackFailedStatus(stgTableName,batchCode,connection);
+
+            return ResultEnum.DATA_SYNCHRONIZATION_FAILED;
         }
     }
 
@@ -372,5 +381,49 @@ public class DataSynchronizationUtils {
         }
 
         return null;
+    }
+
+    /**
+     * 回调成功同步状态
+     * @param batchCode
+     */
+    public void callbackSuccessStatus(String stgTableName,String batchCode,Connection connection){
+        StringBuilder str = new StringBuilder();
+        str.append("UPDATE " + stgTableName);
+        str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMITTED_SUCCESSFULLY.getValue()).append("'");
+        str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
+        str.append(" AND fidata_del_flag = 1 ");
+
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(str.toString());
+            statement.execute();
+        } catch (SQLException ex) {
+            log.error("mdm表数据同步回调成功状态失败!,【执行SQL】:" + str
+                    + "【原因】:" + ex.getMessage());
+        }
+    }
+
+    /**
+     * 回调成功失败状态
+     * @param stgTableName
+     * @param batchCode
+     * @param connection
+     */
+    public void callbackFailedStatus(String stgTableName,String batchCode,Connection connection){
+        StringBuilder str = new StringBuilder();
+        str.append("UPDATE " + stgTableName);
+        str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMISSION_FAILED.getValue()).append("'");
+        str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
+        str.append(" AND fidata_del_flag = 1 ");
+
+        PreparedStatement statement = null;
+        try {
+            statement = connection.prepareStatement(str.toString());
+            statement.execute();
+        } catch (SQLException ex) {
+            log.error("mdm表数据同步回调失败状态失败!,【执行SQL】:" + str
+                    + "【原因】:" + ex.getMessage());
+        }
     }
 }
