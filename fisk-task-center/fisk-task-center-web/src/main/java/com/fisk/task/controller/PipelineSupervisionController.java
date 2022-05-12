@@ -5,9 +5,11 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
+import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +32,8 @@ public class PipelineSupervisionController {
     INifiStage iNifiStage;
     @Resource
     IBuildPipelineSupervisionListener iBuildPipelineSupervisionListener;
+    @Resource
+    ITableTopicService iTableTopicService;
 
     @PostMapping("/getPipelineTableLogs")
     public ResultEntity<List<PipelineTableLogDTO>> getPipelineTableLogs(@RequestBody List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTO) {
@@ -55,8 +59,13 @@ public class PipelineSupervisionController {
         return objectResultEntity;
     }
     @PostMapping("/consumer")
-    public void consumer(List<String> arrMessage) {
+    public void consumer(@RequestBody List<String> arrMessage) {
         iBuildPipelineSupervisionListener.msg(arrMessage, null);
+    }
+
+    @PostMapping("/updateTableTopicByComponentId")
+    public void updateTableTopicByComponentId(@RequestBody TableTopicDTO tableTopicDTO) {
+        iTableTopicService.updateTableTopicByComponentId(tableTopicDTO);
     }
 
 }

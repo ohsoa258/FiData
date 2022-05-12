@@ -2,6 +2,7 @@ package com.fisk.datafactory.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -29,6 +30,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiCustomWorkFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -289,7 +291,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
                 dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(po));
                 dto.outputDucts = getOutputDucts(po);
-                if(dto.NifiNode!=null){
+                if (dto.NifiNode != null) {
                     nifiCustomWorkDTOList.add(dto);
                 }
             } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
@@ -297,15 +299,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             } else {
                 List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
                 if (CollectionUtils.isNotEmpty(detailPoList)) {
-                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO:detailPoList) {
+                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO : detailPoList) {
                         NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
                         dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
                         nifiCustomWorkDTOList.add(dto);
+                        // 保存topic
+                        TableTopicDTO topicDTO = new TableTopicDTO();
+                        topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                        topicDTO.topicName = "dmp.datafactory.nifi." + nifiCustomWorkflowDetailPO.id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
+                        topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                        topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
+                        topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPO.id);
+                        publishTaskClient.updateTableTopicByComponentId(topicDTO);
                     }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
             }
-
 
 
         }
@@ -395,7 +404,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
         // 任务组时，appId即tb_nifi_custom_workflow_detail表id
 //        if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
-        flow.appId = dto.id;
+        if (StringUtils.isNotBlank(dto.appId)) {
+            flow.appId = Long.valueOf(dto.appId);
+        }
 //        }
         // 开始才有的属性
         if (scheduleType.equalsIgnoreCase(dto.componentType)) {

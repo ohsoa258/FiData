@@ -387,7 +387,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
-        dto.userId = userHelper.getLoginUserInfo().id;
         if (dto.workflowIdAppIdApiId != null && dto.workflowIdAppIdApiId != "") {
             String[] split = dto.workflowIdAppIdApiId.split(",");
             for (int i = 0; i < split.length; i++) {
@@ -401,7 +400,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 syncData(dto);
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
                 publishTaskClient.consumer(kafkaReceives);
             }
@@ -412,7 +412,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (dto.workflowId != null) {
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
                 publishTaskClient.consumer(kafkaReceives);
             }
