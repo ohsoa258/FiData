@@ -349,7 +349,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         for (String id : outportIds) {
             NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("id", id).one();
             if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.TASKGROUP)) {
-                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", id).orderByAsc("table_order").list().get(0);
+
+                List<NifiCustomWorkflowDetailPO> list = this.query().eq("pid", id).orderByAsc("table_order").list();
+                if (CollectionUtils.isEmpty(list)) {
+                    continue;
+                }
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = list.get(0);
                 buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO)));
             }
 
