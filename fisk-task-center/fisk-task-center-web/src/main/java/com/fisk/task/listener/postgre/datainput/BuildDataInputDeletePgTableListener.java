@@ -55,7 +55,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    PostgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                    PostgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAINPUT);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
                 } else {
@@ -66,7 +66,7 @@ public class BuildDataInputDeletePgTableListener {
                     });
                     String delSqlStr = buildDelSqlStr.toString();
                     delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                    PostgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
+                    PostgreHelper.postgreExecuteSql(delSqlStr.toLowerCase(), BusinessTypeEnum.DATAMODEL);
                     doris.dorisBuildTable(delSqlStr);
                     log.info("delsql:" + delSqlStr);
                     log.info("执行pg delete table 完成");
