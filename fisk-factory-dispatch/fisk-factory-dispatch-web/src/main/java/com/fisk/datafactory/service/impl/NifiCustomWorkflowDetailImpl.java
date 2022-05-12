@@ -266,23 +266,18 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         List<NifiCustomWorkDTO> nifiCustomWorkDTOList = new ArrayList<>();
         list.stream().map(e -> {
             NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
-
-            // 每一个节点需要分别组装 inputDucts outputDucts
+            // 只有调度组件有下一级,其他的不要上下级,余下的只传绑定有表的
             NifiCustomWorkflowDetailPO po = this.query().eq("id", e.id).one();
-            List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
-            for (NifiCustomWorkflowDetailPO f : detailPoList) {
-
-                NifiCustomWorkflowDetailDTO detailDto = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(f);
-                if (po.inport != null && !"".equalsIgnoreCase(po.inport) && po.inport.length() > 0) {
-                    dto.inputDucts = getInputDucts(po);
-                }
-                if (po.outport != null && !"".equalsIgnoreCase(po.outport) && po.outport.length() > 0) {
-                    dto.outputDucts = getOutputDucts(po);
-                }
-
-                // 组装节点参数
-                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(detailDto);
+            if (Objects.equals(ChannelDataEnum.SCHEDULE_TASK.getName(), po.componentType)) {
+                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(po));
+                dto.outputDucts = getOutputDucts(po);
+            } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
+                log.info("任务组不做处理");
+            } else {
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
+                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
             }
+
 
             return nifiCustomWorkDTOList.add(dto);
         }).collect(Collectors.toList());
@@ -322,13 +317,16 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     private List<BuildNifiCustomWorkFlowDTO> getOutputDucts(NifiCustomWorkflowDetailPO po) {
         String outport = po.outport;
         String[] outportIds = outport.split(",");
+        List<BuildNifiCustomWorkFlowDTO> buildNifiCustomWorkFlows = new ArrayList<>();
+        for (String id : outportIds) {
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("id", id).one();
+            if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.TASKGROUP)) {
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", id).orderByAsc("table_order").list().get(0);
+                buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO)));
+            }
 
-        return Arrays.stream(outportIds)
-                .map(outportId -> this.query().eq("id", outportId).one())
-                // 确保当前outport没有删除
-                .filter(Objects::nonNull)
-                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
-                .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
+        }
+        return buildNifiCustomWorkFlows;
     }
 
     /**
