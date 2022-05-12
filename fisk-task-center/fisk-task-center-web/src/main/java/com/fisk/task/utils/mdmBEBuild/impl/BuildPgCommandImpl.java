@@ -252,6 +252,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "error_msg VARCHAR ( 1000 ) NULL").append(",");
         str.append(MARK + "new_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "status int4 NULL").append(",");
+        str.append(MARK + "syncy_type int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();
