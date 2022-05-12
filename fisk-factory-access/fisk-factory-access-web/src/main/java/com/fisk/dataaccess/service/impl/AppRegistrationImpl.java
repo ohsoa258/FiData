@@ -307,7 +307,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 TableListVO tableVO = new TableListVO();
                 TableAccessPO po = tableAccessImpl.query().eq("id", tableId).eq("del_flag", 1).one();
 ////                tableVO.tableAtlasId = po.atlasTableId;
-                tableVO.tableName = po.tableName;
+                tableVO.tableName = model.appAbbreviation + "_" + po.tableName;
                 tableList.add(tableVO);
             }
 
