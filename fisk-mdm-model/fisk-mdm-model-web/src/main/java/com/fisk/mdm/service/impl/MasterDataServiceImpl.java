@@ -477,7 +477,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     continue;
                 }
                 str.append(",("+getColumnNameAndValue(vo.members.get(i),1)+","
-                        + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"+0+","
+                        + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"
                         +vo.versionId+",'"+getFormatDate(date,DataTypeEnum.TIMESTAMP.getName())+"',"+userHelper.getLoginUserInfo().id+",1"+")");
             }
             log.info("模板批量添加sql:",str.toString());
