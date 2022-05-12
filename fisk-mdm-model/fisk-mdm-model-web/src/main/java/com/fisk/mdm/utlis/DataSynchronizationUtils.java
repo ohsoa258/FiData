@@ -101,92 +101,8 @@ public class DataSynchronizationUtils {
         // 查询数据
         List<MdmDTO> ids = execQueryResultList(stringBuilder.toString(), connection, MdmDTO.class);
 
-        List<Map<String, Object>> updateList = new ArrayList<>();
-        List<Map<String, Object>> insertList = new ArrayList<>();
-        // 需要更新的数据
-        ids.stream().forEach(item -> {
-            resultList.stream().filter(e -> e.get("code").equals(item.getCode()))
-                    .forEach(e -> {
-                        for (String key : e.keySet()) {
-                            if (key.equals("fidata_id")){
-                                e.put("fidata_id",item.getFidata_id());
-                                updateList.add(e);
-                            }
-
-                            Object value = e.get("fidata_new_code");
-                            if (ObjectUtils.isNotEmpty(value)){
-                                if (key.equals("code")){
-                                    updateList.remove(e);
-                                    e.put("code", value);
-                                    updateList.add(e);
-                                }
-                            }
-                        }
-                    });
-        });
-
-        // 需要插入的数据
-        resultList.stream().forEach(e -> {
-            if (CollectionUtils.isNotEmpty(updateList)){
-                List<Map<String, Object>> list = resultList.stream().filter(
-                        (mapItem) -> !updateList.stream().map(item -> item.get("code")
-                        ).collect(Collectors.toList()).contains(mapItem.get("code"))
-                ).collect(Collectors.toList());
-                insertList.addAll(list);
-            }else {
-                insertList.add(e);
-            }
-        });
-
-
-        // 插入的数据id做转换
-        String queryMaxIdSql = "SELECT max(fidata_id) AS fidata_id FROM " + mdmTableName + " WHERE fidata_del_flag = 1 ";
-        List<MdmDTO> maxId = execQueryResultList(queryMaxIdSql, connection, MdmDTO.class);
-        if (maxId.get(0).getFidata_id() == null){
-            maxId.get(0).setFidata_id(1);
-        }
-
-        AtomicReference<Integer> fataId = new AtomicReference<>(maxId.get(0).getFidata_id() + 1);
-        List<Map<String, Object>> insertDates = new ArrayList<>();
-        insertList.stream().filter(Objects::nonNull).forEach(e -> {
-            for (String key : e.keySet()) {
-                if (key.equals("fidata_id")) {
-                    e.put("fidata_id", fataId.getAndSet(fataId.get() + 1));
-                    insertDates.add(e);
-                }
-            }
-
-        });
-
-        List<Map<String, Object>> dateList = new ArrayList<>();
-        // 名称转换(name转换成ColumnName)
-        updateList.stream().filter(e -> CollectionUtils.isNotEmpty(e)).forEach(e -> {
-            Map<String, Object> map = new HashMap<>();
-            e.forEach((k,v) -> {
-                map.put(k,v);
-                for (AttributeInfoDTO infoDto : attributeList) {
-                    if (k.equals(infoDto.getName())){
-                        map.remove(k);
-                        map.put(infoDto.getColumnName(),v);
-                    }
-                }
-            });
-            dateList.add(map);
-        });
-
-        insertDates.stream().filter(e -> CollectionUtils.isNotEmpty(e)).forEach(e -> {
-            Map<String, Object> map = new HashMap<>();
-            e.forEach((k,v) -> {
-                map.put(k,v);
-                for (AttributeInfoDTO infoDto : attributeList) {
-                    if (k.equals(infoDto.getName())){
-                        map.remove(k);
-                        map.put(infoDto.getColumnName(),v);
-                    }
-                }
-            });
-            dateList.add(map);
-        });
+        // 处理需要插入和更新的数据(关键点)
+        List<Map<String, Object>> dateList = this.dataProcessing(ids, resultList, attributeList, mdmTableName, connection);
 
         // 4.数据导入
         return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
@@ -425,5 +341,107 @@ public class DataSynchronizationUtils {
             log.error("mdm表数据同步回调失败状态失败!,【执行SQL】:" + str
                     + "【原因】:" + ex.getMessage());
         }
+    }
+
+    /**
+     * 处理需要插入和更新的数据
+     * @param ids
+     * @param resultList
+     * @param attributeList
+     * @param mdmTableName
+     * @param connection
+     * @return
+     */
+    public List<Map<String, Object>> dataProcessing(List<MdmDTO> ids,List<Map<String, Object>> resultList
+                                            ,List<AttributeInfoDTO> attributeList
+                                            ,String mdmTableName,Connection connection){
+        List<Map<String, Object>> updateList = new ArrayList<>();
+        List<Map<String, Object>> insertList = new ArrayList<>();
+        // 需要更新的数据
+        ids.stream().forEach(item -> {
+            resultList.stream().filter(e -> e.get("code").equals(item.getCode()))
+                    .forEach(e -> {
+                        for (String key : e.keySet()) {
+                            if (key.equals("fidata_id")){
+                                e.put("fidata_id",item.getFidata_id());
+                                updateList.add(e);
+                            }
+
+                            Object value = e.get("fidata_new_code");
+                            if (ObjectUtils.isNotEmpty(value)){
+                                if (key.equals("code")){
+                                    updateList.remove(e);
+                                    e.put("code", value);
+                                    updateList.add(e);
+                                }
+                            }
+                        }
+                    });
+        });
+
+        // 需要插入的数据
+        resultList.stream().forEach(e -> {
+            if (CollectionUtils.isNotEmpty(updateList)){
+                List<Map<String, Object>> list = resultList.stream().filter(
+                        (mapItem) -> !updateList.stream().map(item -> item.get("code")
+                        ).collect(Collectors.toList()).contains(mapItem.get("code"))
+                ).collect(Collectors.toList());
+                insertList.addAll(list);
+            }else {
+                insertList.add(e);
+            }
+        });
+
+
+        // 插入的数据id做转换
+        String queryMaxIdSql = "SELECT max(fidata_id) AS fidata_id FROM " + mdmTableName + " WHERE fidata_del_flag = 1 ";
+        List<MdmDTO> maxId = execQueryResultList(queryMaxIdSql, connection, MdmDTO.class);
+        if (maxId.get(0).getFidata_id() == null){
+            maxId.get(0).setFidata_id(1);
+        }
+
+        AtomicReference<Integer> fataId = new AtomicReference<>(maxId.get(0).getFidata_id() + 1);
+        List<Map<String, Object>> insertDates = new ArrayList<>();
+        insertList.stream().filter(Objects::nonNull).forEach(e -> {
+            for (String key : e.keySet()) {
+                if (key.equals("fidata_id")) {
+                    e.put("fidata_id", fataId.getAndSet(fataId.get() + 1));
+                    insertDates.add(e);
+                }
+            }
+
+        });
+
+        List<Map<String, Object>> dateList = new ArrayList<>();
+        // 名称转换(name转换成ColumnName)
+        updateList.stream().filter(e -> CollectionUtils.isNotEmpty(e)).forEach(e -> {
+            Map<String, Object> map = new HashMap<>();
+            e.forEach((k,v) -> {
+                map.put(k,v);
+                for (AttributeInfoDTO infoDto : attributeList) {
+                    if (k.equals(infoDto.getName())){
+                        map.remove(k);
+                        map.put(infoDto.getColumnName(),v);
+                    }
+                }
+            });
+            dateList.add(map);
+        });
+
+        insertDates.stream().filter(e -> CollectionUtils.isNotEmpty(e)).forEach(e -> {
+            Map<String, Object> map = new HashMap<>();
+            e.forEach((k,v) -> {
+                map.put(k,v);
+                for (AttributeInfoDTO infoDto : attributeList) {
+                    if (k.equals(infoDto.getName())){
+                        map.remove(k);
+                        map.put(infoDto.getColumnName(),v);
+                    }
+                }
+            });
+            dateList.add(map);
+        });
+
+        return dateList;
     }
 }
