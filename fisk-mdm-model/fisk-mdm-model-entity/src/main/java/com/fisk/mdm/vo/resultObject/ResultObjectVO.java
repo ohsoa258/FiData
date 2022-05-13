@@ -14,6 +14,20 @@ import java.util.Map;
  */
 @Data
 public class ResultObjectVO {
-    private List<AttributeColumnVO> attributeColumnVoList;
+
+    /**
+     * 属性组下所有属性
+     */
+    private List<ResultAttributeGroupVO> attributes;
+
+    /**
+     * 查询结果集
+     */
     private List<Map<String,Object>> resultData;
+
+    /**
+     * 总条数
+     */
+    private Integer total;
+
 }

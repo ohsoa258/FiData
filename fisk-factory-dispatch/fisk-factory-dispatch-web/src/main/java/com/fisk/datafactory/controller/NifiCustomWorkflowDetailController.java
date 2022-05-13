@@ -1,5 +1,6 @@
 package com.fisk.datafactory.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -81,8 +82,9 @@ public class NifiCustomWorkflowDetailController {
             workListDTO.externalStructure1 = externalStructure.toString();
             workListDTO.structure1 = structure.toString();
             publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
+            log.info(JSON.toJSONString(workListDTO));
             log.info("nifi: 管道创建成功");
-        }//
+        }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, workListDTO);
     }

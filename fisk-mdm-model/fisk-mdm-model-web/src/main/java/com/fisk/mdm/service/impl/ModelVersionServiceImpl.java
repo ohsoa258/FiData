@@ -8,6 +8,7 @@ import com.fisk.mdm.entity.ModelVersionPO;
 import com.fisk.mdm.map.ModelVersionMap;
 import com.fisk.mdm.mapper.ModelVersionMapper;
 import com.fisk.mdm.service.IModelVersionService;
+import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionVO;
 import org.springframework.stereotype.Service;
 
@@ -42,4 +43,17 @@ public class ModelVersionServiceImpl extends ServiceImpl<ModelVersionMapper, Mod
 
         return ModelVersionMap.INSTANCES.poToVoList(baseMapper.selectList(wrapper));
     }
+
+    /**
+     * 获取模型版本列表
+     * @param modelId
+     * @return
+     */
+    public List<ModelVersionDropDownVO> getModelVersionDropDown(int modelId){
+        QueryWrapper<ModelVersionPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(ModelVersionPO::getModelId,modelId);
+        List<ModelVersionPO> list=baseMapper.selectList(queryWrapper);
+        return ModelVersionMap.INSTANCES.poListToDropDownVoList(list);
+    }
+
 }

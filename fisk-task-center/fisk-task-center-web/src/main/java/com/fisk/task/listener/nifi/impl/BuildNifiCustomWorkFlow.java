@@ -116,10 +116,12 @@ public class BuildNifiCustomWorkFlow {
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
+            log.info("预备启动");
             //启动两次,防止有的组件创建不及时导致没启动
             for (int i = 3; i > 0; i--) {
                 Thread.sleep(200);
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+                log.info("开始启动,次数"+i);
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
@@ -559,7 +561,7 @@ public class BuildNifiCustomWorkFlow {
                     if (queryApiSql.length() == 0) {
                         querySqlDto.querySql = "select count(1) as nums from tb_etl_Incremental";
                     } else {
-                        querySqlDto.querySql = "select '" + queryApiSql.substring(0, queryApiSql.length() - 1) + "' as workflowIdAppIdApiId  from tb_etl_Incremental";
+                        querySqlDto.querySql = "select '" + queryApiSql.substring(0, queryApiSql.length() - 1) + "' as workflowIdAppIdApiId  from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
@@ -587,22 +589,14 @@ public class BuildNifiCustomWorkFlow {
                     variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
                     componentsBuild.buildNifiGlobalVariable(variable);
                     //拿到与调度组件直连的组件,创建另外的topic
-
-
+                    BuildConvertToJsonProcessorDTO toJsonDto = new BuildConvertToJsonProcessorDTO();
+                    toJsonDto.name = "Convert Data To Json";
+                    toJsonDto.details = "query_phase";
+                    toJsonDto.groupId = groupStructure;
+                    toJsonDto.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 1);
+                    BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
+                    componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, toJsonRes.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     if (commonTask) {
-                        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
-                        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-                        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
-                        buildPublishKafkaProcessorDTO.groupId = groupStructure;
-                        buildPublishKafkaProcessorDTO.name = "PublishKafka";
-                        buildPublishKafkaProcessorDTO.details = "PublishKafka";
-                        buildPublishKafkaProcessorDTO.UseTransactions = "false";
-                        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW;
-                        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-                        componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                    }
-                    if (fapi) {
                         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
                         buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
                         buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
@@ -613,7 +607,20 @@ public class BuildNifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
                         buildPublishKafkaProcessorDTO.TopicName = TopicName;
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-                        componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                        componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    }
+                    if (fapi) {
+                        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
+                        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+                        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
+                        buildPublishKafkaProcessorDTO.groupId = groupStructure;
+                        buildPublishKafkaProcessorDTO.name = "PublishKafka";
+                        buildPublishKafkaProcessorDTO.details = "PublishKafka";
+                        buildPublishKafkaProcessorDTO.UseTransactions = "false";
+                        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_ACCESS_API_FLOW;
+                        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+                        componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
                     }
                 }
@@ -721,11 +728,15 @@ public class BuildNifiCustomWorkFlow {
             //String topic = properties.get("topic");
             properties.put("topic", consumerTopicName);
             processor.getComponent().getConfig().setProperties(properties);
-            log.info("组件详情:" + id);
+            log.info("组件详情1:" + id);
+            Thread.sleep(50);
             NifiHelper.getProcessorsApi().updateProcessor(id, processor);
+            log.info("组件详情2:" + id);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
+            log.info("组件详情3:" + id);
             componentsBuild.enabledProcessor(processor.getId(), processor);
-        } catch (ApiException e) {
+            log.info("组件详情4:" + id);
+        } catch (Exception e) {
             e.printStackTrace();
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }

@@ -133,18 +133,25 @@ public class DataFactoryImpl implements IDataFactory {
                 //下一个组件的第一张表
                 String[] split = outport.split(",");
                 for (String id : split) {
-                    NifiCustomWorkflowDetailPO one1 = nifiCustomWorkflowDetailImpl.query().eq("pid", id).eq("table_order", 0).isNotNull("table_id").one();
+                    NifiCustomWorkflowDetailPO one1 = nifiCustomWorkflowDetailImpl.query().eq("pid", id).eq("table_order", 1).isNotNull("table_id").one();
                     NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO = new NifiPortsHierarchyNextDTO();
                     //下一级本身
                     nifiPortsHierarchyNextDTO.itselfPort = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one1);
                     List<NifiCustomWorkflowDetailDTO> upPortList = new ArrayList<>();
                     //下一级所有的上一级
+                    if (StringUtils.isBlank(one1.inport)) {
+                        continue;
+                    }
                     String[] split1 = one1.inport.split(",");
                     for (String inputId : split1) {
-                        NifiCustomWorkflowDetailPO one2 = nifiCustomWorkflowDetailImpl.query().eq("pid", inputId)
-                                .isNotNull("table_id").orderByDesc("table_order").list().get(0);
-                        if (one2 != null) {
-                            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO1 = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one2);
+                        List<NifiCustomWorkflowDetailPO> list = nifiCustomWorkflowDetailImpl.query().eq("pid", inputId)
+                                .isNotNull("table_id").orderByDesc("table_order").list();
+                        if (CollectionUtils.isEmpty(list)) {
+                            continue;
+                        }
+                        NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = list.get(0);
+                        if (nifiCustomWorkflowDetailPO != null) {
+                            NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO1 = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO);
                             upPortList.add(nifiCustomWorkflowDetailDTO1);
                         }
                     }

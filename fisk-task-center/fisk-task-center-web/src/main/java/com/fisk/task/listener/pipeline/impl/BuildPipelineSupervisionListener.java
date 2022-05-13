@@ -56,109 +56,110 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
         try {
             for (String mapString : arrMessage) {
                 log.info("mapString信息:" + mapString);
-                if (mapString.contains("topic") && mapString.contains("table_id") && mapString.contains("table_type")) {
-                    KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
-                    if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
-                        String topicName = kafkaReceiveDTO.topic;
-                        String[] split1 = topicName.split("\\.");
-                        if (split1.length == 6) {
-                            continue;
-                        }
-                        String pipelineId = split1[3];
-                        //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
-                        NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
-                        nifiGetPortHierarchyDTO.workflowId = pipelineId;
-                        switch (kafkaReceiveDTO.tableType) {
-                            case 0:
-                                OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId);
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
-                                if (olapPO.tableName != null && olapPO.tableName.contains("dim_")) {
-                                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
-                                } else {
-                                    nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
-                                }
-                                break;
-                            case 1:
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                                break;
-                            case 2:
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                                break;
-                            case 3:
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                                break;
-                            case 9:
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                                break;
-                            case 10:
-                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
-                                nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
-                                break;
-                            default:
-                                break;
-                        }
 
-                        ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
-                        NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
-                        //本节点
-                        NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
-                        TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id));
-                        //能走到最后说明这一批次走成功了
-                        nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
-                        pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
-                        //本节点topic
-                        String topicName1 = topicSelf.topicName;
-                        //下一级
-                        List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
-                        if (nextList == null) {
-                            continue;
-                        }
-                        for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
-                            //下一级本身
-                            NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
-                            //下一级所有的上一级
-                            List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
-                            //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
-                            TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id));
-                            String topicKey = "";
-                            Object key = redisUtil.get(topicDTO.topicName);
-                            if (key == null) {
-                                if (upPortList.size() == 1) {
-                                    log.info("存入redis即将调用的节点1:" + topicDTO.topicName);
-                                    redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
-                                } else {
-                                    redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
-                                }
+                KafkaReceiveDTO kafkaReceiveDTO = JSON.parseObject(mapString, KafkaReceiveDTO.class);
+                if (kafkaReceiveDTO.topic != null && kafkaReceiveDTO.topic != "") {
+                    String topicName = kafkaReceiveDTO.topic;
+                    String[] split1 = topicName.split("\\.");
+                    if (split1.length == 6) {
+                        continue;
+                    }
+                    String pipelineId = split1[3];
+                    //请求接口得到对象,条件--管道名称,表名称,表类别,表id,topic_name(加表名table_name)
+                    NifiGetPortHierarchyDTO nifiGetPortHierarchyDTO = new NifiGetPortHierarchyDTO();
+                    nifiGetPortHierarchyDTO.workflowId = pipelineId;
+                    nifiGetPortHierarchyDTO.nifiCustomWorkflowDetailId = kafkaReceiveDTO.nifiCustomWorkflowDetailId;
+                    switch (kafkaReceiveDTO.tableType) {
+                        case 0:
+                            OlapPO olapPO = iOlap.selectOlapPO(kafkaReceiveDTO.tableId);
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(olapPO.tableId);
+                            if (olapPO.tableName != null && olapPO.tableName.contains("dim_")) {
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_DIMENSION_TASK;
                             } else {
-                                topicKey = key.toString();
-                                String[] split = topicKey.split(",");
-                                //意思是没全了,所有上游没有调完
-                                if (split.length != upPortList.size()) {
-                                    if (upPortList.size() - split.length <= 1) {
-                                        if (topicKey.contains(topicSelf.topicName)) {
-                                            log.info("存入redis即将调用的节点2:" + topicDTO.topicName);
-                                            redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
-                                        } else {
-                                            log.info("存入redis即将调用的节点3:" + topicDTO.topicName);
-                                            redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
-                                        }
+                                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
+                            }
+                            break;
+                        case 1:
+                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_DIMENSION_TASK;
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                            break;
+                        case 2:
+                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                            break;
+                        case 3:
+                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_TASK;
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                            break;
+                        case 9:
+                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.OLAP_WIDETABLE_TASK;
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                            break;
+                        case 10:
+                            nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.DATALAKE_API_TASK;
+                            nifiGetPortHierarchyDTO.tableId = String.valueOf(kafkaReceiveDTO.tableId);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
+                    NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
+                    //本节点
+                    NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
+                    TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id));
+                    //能走到最后说明这一批次走成功了
+                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
+                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
+                    //本节点topic
+                    String topicName1 = topicSelf.topicName;
+                    //下一级
+                    List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
+                    if (nextList == null) {
+                        continue;
+                    }
+                    for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
+                        //下一级本身
+                        NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
+                        //下一级所有的上一级
+                        List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
+                        //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
+                        TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id));
+                        String topicKey = "";
+                        Object key = redisUtil.get(topicDTO.topicName);
+                        if (key == null) {
+                            if (upPortList.size() == 1) {
+                                log.info("存入redis即将调用的节点1:" + topicDTO.topicName);
+                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, Long.parseLong(waitTime));
+                            } else {
+                                redisUtil.set(topicDTO.topicName, topicSelf.topicName, 3000L);
+                            }
+                        } else {
+                            topicKey = key.toString();
+                            String[] split = topicKey.split(",");
+                            //意思是没全了,所有上游没有调完
+                            if (split.length != upPortList.size()) {
+                                if (upPortList.size() - split.length <= 1) {
+                                    if (topicKey.contains(topicSelf.topicName)) {
+                                        log.info("存入redis即将调用的节点2:" + topicDTO.topicName);
+                                        redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                                     } else {
-                                        if (topicKey.contains(topicSelf.topicName)) {
-                                            redisUtil.expire(topicDTO.topicName, 3000L);
-                                        } else {
-                                            redisUtil.set(topicSelf.topicName, topicKey + "," + topicSelf.topicName, 3000L);
-                                        }
+                                        log.info("存入redis即将调用的节点3:" + topicDTO.topicName);
+                                        redisUtil.set(topicDTO.topicName, topicKey + "," + topicSelf.topicName, Long.parseLong(waitTime));
                                     }
                                 } else {
-                                    log.info("存入redis即将调用的节点4:" + topicDTO.topicName);
-                                    redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
+                                    if (topicKey.contains(topicSelf.topicName)) {
+                                        redisUtil.expire(topicDTO.topicName, 3000L);
+                                    } else {
+                                        redisUtil.set(topicSelf.topicName, topicKey + "," + topicSelf.topicName, 3000L);
+                                    }
                                 }
+                            } else {
+                                log.info("存入redis即将调用的节点4:" + topicDTO.topicName);
+                                redisUtil.expire(topicDTO.topicName, Long.parseLong(waitTime));
                             }
                         }
+
                     }
                 }
             }
@@ -168,7 +169,7 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
             log.error("管道调度报错");
             e.printStackTrace();
         } finally {
-            if(acke!=null){
+            if (acke != null) {
                 acke.acknowledge();
             }
         }

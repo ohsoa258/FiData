@@ -13,10 +13,10 @@ import lombok.Data;
 public class ApiImportDataDTO extends MQBaseDTO {
 
 
-    public long appId;
+    public Long appId;
 
 
-    public long apiId;
+    public Long apiId;
 
 
     public String workflowId;

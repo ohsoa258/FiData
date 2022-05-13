@@ -62,12 +62,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                     String str1 = null;
 
                     // 判断是否必填
-                    String required = null;
-                    if (e.getEnableRequired() == true){
-                        required = " NOT NULL ";
-                    }else {
-                        required = " NULL ";
-                    }
+                    String required = " NULL ";
 
                     // 判断数据类型
                     switch (e.getDataType()) {
@@ -252,6 +247,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "error_msg VARCHAR ( 1000 ) NULL").append(",");
         str.append(MARK + "new_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "status int4 NULL").append(",");
+        str.append(MARK + "syncy_type int4 NULL").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();

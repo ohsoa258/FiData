@@ -239,6 +239,7 @@ public interface PublishTaskClient {
 
     /**
      * 创建属性日志表
+     *
      * @param data
      * @return
      */
@@ -247,12 +248,26 @@ public interface PublishTaskClient {
 
     /**
      * 创建任务后台表
+     *
      * @param data
      * @return
      */
     @PostMapping("/publishTask/createBackendTable")
     public ResultEntity<Object> createBackendTable(@RequestBody EntityDTO data);
 
+    /**
+     * consumer
+     *
+     * @return
+     */
     @PostMapping("/pipeline/consumer")
     public void consumer(@RequestBody List<String> arrMessage);
+
+    /**
+     * updateTableTopicByComponentId
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/updateTableTopicByComponentId")
+    public void updateTableTopicByComponentId(@RequestBody TableTopicDTO tableTopicDTO);
 }

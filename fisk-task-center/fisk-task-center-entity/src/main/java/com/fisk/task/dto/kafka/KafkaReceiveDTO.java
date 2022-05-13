@@ -8,6 +8,7 @@ import java.util.Date;
 public class KafkaReceiveDTO {
     public Integer tableId;
     public Integer tableType;
+    public Long nifiCustomWorkflowDetailId;
     public Integer numbers;
     public String topic;
     public Date endTime;

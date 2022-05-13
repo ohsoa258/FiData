@@ -305,15 +305,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEnum pushData(ReceiveDataDTO dto) {
         try {
-            if (dto.apiId == null) {
+            if (dto.apiCode == null) {
                 return ResultEnum.PUSH_TABLEID_NULL;
             }
 
             // 每次推送数据前,将stg数据删除
-            pushDataStgToOds(dto.apiId, 0);
+            pushDataStgToOds(dto.apiCode, 0);
 
             // 根据api_id查询所有物理表
-            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiId).list();
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiCode).list();
             if (CollectionUtils.isEmpty(accessPoList)) {
                 return ResultEnum.TABLE_NOT_EXIST;
             }
@@ -331,7 +331,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
 
             // TODO stg同步到ods(联调task)
-            pushDataStgToOds(dto.apiId, 1);
+            pushDataStgToOds(dto.apiCode, 1);
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
         }
@@ -387,7 +387,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
-        dto.userId = userHelper.getLoginUserInfo().id;
         if (dto.workflowIdAppIdApiId != null && dto.workflowIdAppIdApiId != "") {
             String[] split = dto.workflowIdAppIdApiId.split(",");
             for (int i = 0; i < split.length; i++) {
@@ -401,7 +400,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 syncData(dto);
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
                 publishTaskClient.consumer(kafkaReceives);
             }
@@ -412,7 +412,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (dto.workflowId != null) {
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
                 kafkaReceiveDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.topic = "dmp.datafactory.nifi." + dto.workflowId + "." + kafkaReceiveDTO.tableType + "." + dto.appId + "." + dto.apiId;
+                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.workflowId);
                 kafkaReceives.add(JSON.toJSONString(kafkaReceiveDTO));
                 publishTaskClient.consumer(kafkaReceives);
             }
@@ -475,7 +476,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiId = dto.apiId;
+            receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
@@ -502,7 +503,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiId = dto.apiId;
+            receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
@@ -531,7 +532,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiId = dto.apiId;
+            receiveDataDTO.apiCode = dto.apiId;
             String data = String.valueOf(jsonObject);
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
@@ -779,7 +780,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 设置API请求参数(2.5.7 参数body)
         List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
         ApiRequestDTO apiId = new ApiRequestDTO();
-        apiId.parmName = "apiId";
+        apiId.parmName = "apiCode";
         apiId.isRequired = "是";
         apiId.parmType = "String";
         apiId.parmDesc = "api唯一标识: " + dto.id + " (真实数据)";
@@ -794,7 +795,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiRequestDtoS.add(pushData);
         apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
         apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
-                " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
+                " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
                 " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
                 "}", addIndex + ".7");
 
@@ -944,7 +945,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 设置API请求参数(2.5.7 参数body)
             List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
             ApiRequestDTO apiId = new ApiRequestDTO();
-            apiId.parmName = "apiId";
+            apiId.parmName = "apiCode";
             apiId.isRequired = "是";
             apiId.parmType = "String";
             apiId.parmDesc = "api唯一标识: " + dto.id + " (真实数据)";
@@ -959,7 +960,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiRequestDtoS.add(pushData);
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
             apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
-                    " &nbsp;&nbsp;\"apiId\": \"xxx\",\n" +
+                    " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
                     " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
                     "}", addIndex + ".7");
 

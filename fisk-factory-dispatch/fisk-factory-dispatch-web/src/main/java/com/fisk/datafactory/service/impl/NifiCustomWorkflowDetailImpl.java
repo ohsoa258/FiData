@@ -2,6 +2,7 @@ package com.fisk.datafactory.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -29,9 +30,11 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildNifiCustomWorkFlowDTO;
 import com.fisk.task.dto.task.NifiCustomWorkDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -264,28 +267,57 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      */
     private List<NifiCustomWorkDTO> getNifiCustomWorkList(List<NifiCustomWorkflowDetailDTO> list) {
         List<NifiCustomWorkDTO> nifiCustomWorkDTOList = new ArrayList<>();
-        list.stream().map(e -> {
+        /*list.stream().map(e -> {
             NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
-
-            // 每一个节点需要分别组装 inputDucts outputDucts
+            // 只有调度组件有下一级,其他的不要上下级,余下的只传绑定有表的
             NifiCustomWorkflowDetailPO po = this.query().eq("id", e.id).one();
-            List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
-            for (NifiCustomWorkflowDetailPO f : detailPoList) {
-
-                NifiCustomWorkflowDetailDTO detailDto = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(f);
-                if (po.inport != null && !"".equalsIgnoreCase(po.inport) && po.inport.length() > 0) {
-                    dto.inputDucts = getInputDucts(po);
-                }
-                if (po.outport != null && !"".equalsIgnoreCase(po.outport) && po.outport.length() > 0) {
-                    dto.outputDucts = getOutputDucts(po);
-                }
-
-                // 组装节点参数
-                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(detailDto);
+            if (Objects.equals(ChannelDataEnum.SCHEDULE_TASK.getName(), po.componentType)) {
+                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(po));
+                dto.outputDucts = getOutputDucts(po);
+            } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
+                log.info("任务组不做处理");
+            } else {
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
+                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
             }
 
+
             return nifiCustomWorkDTOList.add(dto);
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toList());*/
+        for (NifiCustomWorkflowDetailDTO e : list) {
+            // 只有调度组件有下一级,其他的不要上下级,余下的只传绑定有表的
+            NifiCustomWorkflowDetailPO po = this.query().eq("id", e.id).one();
+            if (Objects.equals(ChannelDataEnum.SCHEDULE_TASK.getName(), po.componentType)) {
+                NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
+                dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(po));
+                dto.outputDucts = getOutputDucts(po);
+                if (dto.NifiNode != null) {
+                    nifiCustomWorkDTOList.add(dto);
+                }
+            } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
+                log.info("任务组不做处理");
+            } else {
+                List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+                if (CollectionUtils.isNotEmpty(detailPoList)) {
+                    for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO : detailPoList) {
+                        NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
+                        dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO));
+                        nifiCustomWorkDTOList.add(dto);
+                        // 保存topic
+                        TableTopicDTO topicDTO = new TableTopicDTO();
+                        topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                        topicDTO.topicName = "dmp.datafactory.nifi." + nifiCustomWorkflowDetailPO.id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPO.appId + "." + nifiCustomWorkflowDetailPO.tableId;
+                        topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                        topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
+                        topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPO.id);
+                        publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                    }
+                }
+//                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
+            }
+
+
+        }
 
         return nifiCustomWorkDTOList;
     }
@@ -320,15 +352,29 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
      * @return list
      */
     private List<BuildNifiCustomWorkFlowDTO> getOutputDucts(NifiCustomWorkflowDetailPO po) {
+
+        if (StringUtils.isBlank(po.outport)) {
+            log.info("未找到下一级,{}", po.id);
+            return new ArrayList<>();
+        }
+
         String outport = po.outport;
         String[] outportIds = outport.split(",");
+        List<BuildNifiCustomWorkFlowDTO> buildNifiCustomWorkFlows = new ArrayList<>();
+        for (String id : outportIds) {
+            NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("id", id).one();
+            if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.TASKGROUP)) {
 
-        return Arrays.stream(outportIds)
-                .map(outportId -> this.query().eq("id", outportId).one())
-                // 确保当前outport没有删除
-                .filter(Objects::nonNull)
-                .map(NifiCustomWorkflowDetailMap.INSTANCES::poToDto)
-                .map(this::getBuildNifiCustomWorkFlowDTO).collect(Collectors.toList());
+                List<NifiCustomWorkflowDetailPO> list = this.query().eq("pid", id).orderByAsc("table_order").list();
+                if (CollectionUtils.isEmpty(list)) {
+                    continue;
+                }
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = list.get(0);
+                buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO)));
+            }
+
+        }
+        return buildNifiCustomWorkFlows;
     }
 
     /**
@@ -343,9 +389,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         String taskGroupTpye = "任务组";
         BuildNifiCustomWorkFlowDTO flow = new BuildNifiCustomWorkFlowDTO();
         // 调用组装操作类型方法
-        flow.type = getDataClassifyEnum(dto.componentsId);
+        flow.type = getDataClassifyEnum(dto.componentType);
         // 调用表类型方法
-        flow.tableType = getOlapTableEnum(dto.componentsId);
+        flow.tableType = getOlapTableEnum(dto.componentType);
         flow.tableId = dto.tableId;
 
         if (dto.pid == 0) {
@@ -357,9 +403,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         flow.workflowDetailId = dto.id;
 
         // 任务组时，appId即tb_nifi_custom_workflow_detail表id
-        if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
-            flow.appId = dto.id;
+//        if (taskGroupTpye.equalsIgnoreCase(dto.componentType)) {
+        if (StringUtils.isNotBlank(dto.appId)) {
+            flow.appId = Long.valueOf(dto.appId);
         }
+//        }
         // 开始才有的属性
         if (scheduleType.equalsIgnoreCase(dto.componentType)) {
             flow.nifiCustomWorkflowName = dto.componentName;
@@ -378,79 +426,98 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     /**
      * TODO 获取操作类型(新版改动)
      *
-     * @param componentsId componentsId
+     * @param componentType componentType
      * @return DataClassifyEnum
      */
-    private DataClassifyEnum getDataClassifyEnum(Integer componentsId) {
-        switch (componentsId) {
+    private DataClassifyEnum getDataClassifyEnum(String componentType) {
+
+        ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(componentType);
+        switch (Objects.requireNonNull(channelDataEnum)) {
             // 开始
-            case 1:
+            case SCHEDULE_TASK:
                 return DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT;
             // 任务组
-            case 2:
+            case TASKGROUP:
                 return DataClassifyEnum.CUSTOMWORKSTRUCTURE;
-            // 数据湖物理表
-            case 3:
-                // 数据湖ftp
-            case 9:
+            // 数据湖表任务
+            case DATALAKE_TASK:
+                // 数据湖ftp任务
+            case DATALAKE_FTP_TASK:
                 return DataClassifyEnum.CUSTOMWORKDATAACCESS;
-            // 数仓维度、事实
-            case 4:
-            case 5:
-                return DataClassifyEnum.CUSTOMWORKDATAMODELING;
-            // 分析模型维度、事实
-            case 6:
-                return DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL;
-            case 7:
-                return DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL;
-            // 分析模型宽表
-            case 8:
-                return DataClassifyEnum.DATAMODELWIDETABLE;
-            // 数据湖非实时api
-            case 10:
+            // 数据湖非实时api任务
+            case DATALAKE_API_TASK:
                 return DataClassifyEnum.DATAACCESS_API;
+            // 数仓维度表任务
+            case DW_DIMENSION_TASK:
+                // 数仓事实表任务
+            case DW_FACT_TASK:
+                return DataClassifyEnum.CUSTOMWORKDATAMODELING;
+            // 分析模型维度表任务
+            case OLAP_DIMENSION_TASK:
+                return DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL;
+            // 分析模型事实表任务
+            case OLAP_FACT_TASK:
+                return DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL;
+            // 分析模型宽表任务
+            case OLAP_WIDETABLE_TASK:
+                return DataClassifyEnum.DATAMODELWIDETABLE;
+            case DW_TASK:
+            case OLAP_TASK:
+
             default:
                 break;
         }
+
         return null;
     }
 
     /**
      * 获取表类型
      *
-     * @param componentsId componentsId
+     * @param componentType componentType
      * @return OlapTableEnum
      */
-    private OlapTableEnum getOlapTableEnum(Integer componentsId) {
-        switch (componentsId) {
+    private OlapTableEnum getOlapTableEnum(String componentType) {
+
+        ChannelDataEnum channelDataEnum = ChannelDataEnum.getValue(componentType);
+        switch (Objects.requireNonNull(channelDataEnum)) {
             // 开始
-            // 任务组
-            case 1:
-            case 2:
+            case SCHEDULE_TASK:
+                // 任务组
+            case TASKGROUP:
+                // 数仓表任务
+            case DW_TASK:
+                // 分析模型任务
+            case OLAP_TASK:
                 break;
-            // 数据接入(数据湖)
-            case 3:
-            case 9:
+            // 数据湖表任务
+            case DATALAKE_TASK:
+                // 数据湖ftp任务
+            case DATALAKE_FTP_TASK:
                 return OlapTableEnum.CUSTOMWORKPHYSICS;
-            // 数仓维度
-            case 4:
-                return OlapTableEnum.CUSTOMWORKDIMENSION;
-            // 数仓事实
-            case 5:
-                return OlapTableEnum.CUSTOMWORKFACT;
-            // 分析模型维度、事实
-            case 6:
-                return OlapTableEnum.CUSTOMWORKDIMENSIONKPI;
-            case 7:
-                return OlapTableEnum.CUSTOMWORKFACTKPI;
-            // 宽表
-            case 8:
-                return OlapTableEnum.WIDETABLE;
-            case 10:
+            // 数据湖非实时api任务
+            case DATALAKE_API_TASK:
                 return OlapTableEnum.PHYSICS_API;
+            // 数仓维度表任务
+            case DW_DIMENSION_TASK:
+                return OlapTableEnum.CUSTOMWORKDIMENSION;
+            // 数仓事实表任务
+            case DW_FACT_TASK:
+                return OlapTableEnum.CUSTOMWORKFACT;
+            // 分析模型维度表任务
+            case OLAP_DIMENSION_TASK:
+                return OlapTableEnum.CUSTOMWORKDIMENSIONKPI;
+            // 分析模型事实表任务
+            case OLAP_FACT_TASK:
+                return OlapTableEnum.CUSTOMWORKFACTKPI;
+            // 分析模型宽表任务
+            case OLAP_WIDETABLE_TASK:
+                return OlapTableEnum.WIDETABLE;
+
             default:
                 break;
         }
+
         return null;
     }
 

@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.DimensionPO;
 import com.fisk.datamodel.entity.FactPO;
@@ -77,30 +78,35 @@ public class DataFactoryImpl implements IDataFactory {
                             .filter(e->e.businessId==item.id && (e.isPublish== PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelDimensionData(dimensionPo);
+                    dataDTO.type=ChannelDataEnum.DW_DIMENSION_TASK.getName();
                     break;
                 case ANALYSIS_DIMENSION:
                     List<DimensionPO> dimensionPoStreamList=dimensionPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelDimensionData(dimensionPoStreamList);
+                    dataDTO.type=ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
                     break;
                 case NUMBER_FACT:
                     List<FactPO> factPo=factPoList.stream()
                             .filter(e->e.businessId==item.id && (e.isPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelFactData(factPo);
+                    dataDTO.type=ChannelDataEnum.DW_FACT_TASK.getName();
                     break;
                 case ANALYSIS_FACT:
                     List<FactPO> factPoStreamList=factPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelFactData(factPoStreamList);
+                    dataDTO.type=ChannelDataEnum.OLAP_FACT_TASK.getName();
                     break;
                 case WIDE_TABLE:
                     List<WideTableConfigPO> wideTableConfigPoStreamList=wideTableConfigPoList.stream()
                             .filter(e->e.businessId==item.id && (e.dorisPublish==PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish==PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
                     dataDTO.list=getChannelWideTableData(wideTableConfigPoStreamList);
+                    dataDTO.type=ChannelDataEnum.OLAP_WIDETABLE_TASK.getName();
                     break;
                 default:
             }

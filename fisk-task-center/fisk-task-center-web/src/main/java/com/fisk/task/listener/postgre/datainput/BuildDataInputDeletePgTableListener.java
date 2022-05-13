@@ -61,6 +61,7 @@ public class BuildDataInputDeletePgTableListener {
                 } else {
                     inputData.tableList.forEach((t) -> {
                         buildDelSqlStr.append(t.tableName + ", ");
+                        buildDelSqlStr.append("stg_"+t.tableName + ", ");
                         conditionHashMap.put("table_name", t.tableName);
                         taskPgTableStructureMapper.deleteByMap(conditionHashMap);
                     });
