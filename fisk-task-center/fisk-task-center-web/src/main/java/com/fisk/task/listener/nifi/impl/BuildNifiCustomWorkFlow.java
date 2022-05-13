@@ -559,7 +559,7 @@ public class BuildNifiCustomWorkFlow {
                     if (queryApiSql.length() == 0) {
                         querySqlDto.querySql = "select count(1) as nums from tb_etl_Incremental";
                     } else {
-                        querySqlDto.querySql = "select '" + queryApiSql.substring(0, queryApiSql.length() - 1) + "' as workflowIdAppIdApiId  from tb_etl_Incremental";
+                        querySqlDto.querySql = "select '" + queryApiSql.substring(0, queryApiSql.length() - 1) + "' as workflowIdAppIdApiId  from tb_etl_Incremental limit 1";
                     }
 
                     //配置库
