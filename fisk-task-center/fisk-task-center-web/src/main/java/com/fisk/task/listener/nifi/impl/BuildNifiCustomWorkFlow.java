@@ -116,10 +116,12 @@ public class BuildNifiCustomWorkFlow {
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
+            log.info("预备启动");
             //启动两次,防止有的组件创建不及时导致没启动
             for (int i = 3; i > 0; i--) {
                 Thread.sleep(200);
                 NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+                log.info("开始启动,次数"+i);
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
