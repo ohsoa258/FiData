@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
-import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
-import com.fisk.mdm.dto.masterdata.ImportParamDTO;
-import com.fisk.mdm.dto.masterdata.MasterDataDTO;
+import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
@@ -47,10 +44,10 @@ public class MasterDataController {
         this.request=request;
     }
 
-    @ApiOperation("分页查询所有model")
+    @ApiOperation("分页查询实体数据")
     @GetMapping("/list")
-    public ResultEntity<ResultObjectVO> getAll(Integer entityId , Integer modelVersionId) {
-        return service.getAll(entityId ,modelVersionId);
+    public ResultEntity<ResultObjectVO> getAll(MasterDataQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getMasterDataPage(dto));
     }
 
     @ApiOperation("获取模型、实体、版本下拉列表")

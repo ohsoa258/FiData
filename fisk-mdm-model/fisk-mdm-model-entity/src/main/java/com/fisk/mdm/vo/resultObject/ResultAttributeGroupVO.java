@@ -1,5 +1,6 @@
 package com.fisk.mdm.vo.resultObject;
 
+import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import lombok.Data;
 
 import java.util.List;
@@ -13,6 +14,6 @@ public class ResultAttributeGroupVO {
 
     private String name;
 
-    private List<Map<String,Object>> resultData;
+    private List<AttributeColumnVO> attributes;
 
 }

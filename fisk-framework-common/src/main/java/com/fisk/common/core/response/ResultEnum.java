@@ -250,7 +250,8 @@ public enum ResultEnum {
     KEY_DATA_NOT_FOUND(151013,"数据不存在或已过期"),
     FILE_NAME_ERROR(151014,"文件格式不正确,只支持xlsx文件"),
     DATA_SYNCHRONIZATION_FAILED(151015,"stg表数据同步失败!"),
-    DATA_SYNCHRONIZATION_SUCCESS(151016,"stg表数据同步成功!");
+    DATA_SYNCHRONIZATION_SUCCESS(151016,"stg表数据同步成功!"),
+    ATTRIBUTE_NOT_EXIST(151017,"该实体不存在属性");
 
     ResultEnum(int code, String msg) {
         this.code = code;

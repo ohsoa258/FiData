@@ -21,13 +21,11 @@ import java.util.List;
 public interface IMasterDataService {
 
     /**
-     * 得到所有
-     *
-     * @param entityId       实体id
-     * @param modelVersionId 模型版本id
-     * @return {@link ResultObjectVO}
+     * 分页
+     * @param dto
+     * @return
      */
-    ResultEntity<ResultObjectVO> getAll(Integer entityId, Integer modelVersionId);
+    ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto);
 
     /**
      * 获取模型实体版本数据

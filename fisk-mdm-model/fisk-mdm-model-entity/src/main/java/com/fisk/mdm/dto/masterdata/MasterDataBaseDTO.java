@@ -8,10 +8,19 @@ import lombok.Data;
 @Data
 public class MasterDataBaseDTO {
 
-    public int entityId;
+    /**
+     * 实体id
+     */
+    private Integer entityId;
 
-    public int versionId;
+    /**
+     * 版本id
+     */
+    private Integer versionId;
 
-    public int modelId;
+    /**
+     * 模型id
+     */
+    private Integer modelId;
 
 }
