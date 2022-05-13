@@ -1217,20 +1217,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_TASK.getName()) || dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_FTP_TASK.getName())) {
                 // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
                 List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
+//                        .or()
                         .eq(TableAccessPO::getAppId, dto.id)
                         // publish=3: 正在发布 -> 1:发布成功
-                        .or()
-                        .eq(TableAccessPO::getPublish, 3)
+//                        .eq(TableAccessPO::getPublish, 3)
                         .eq(TableAccessPO::getPublish, 1)
                         .select(TableAccessPO::getId, TableAccessPO::getTableName));
                 dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
             } else if (dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_API_TASK.getName())) {
                 List<ApiConfigPO> apiConfigPoList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery()
+//                        .or()
                         .eq(ApiConfigPO::getAppId, dto.id)
-                        .or()
                         // publish=3: 正在发布 -> 1:发布成功
-                        .or()
-                        .eq(ApiConfigPO::getPublish, 3)
+//                        .eq(ApiConfigPO::getPublish, 3)
                         .eq(ApiConfigPO::getPublish, 1)
                         .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
                 // list: po->dto 并赋值给dto.list
