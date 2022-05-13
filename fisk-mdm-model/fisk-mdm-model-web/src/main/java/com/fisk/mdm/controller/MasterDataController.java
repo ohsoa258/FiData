@@ -45,8 +45,8 @@ public class MasterDataController {
     }
 
     @ApiOperation("分页查询实体数据")
-    @GetMapping("/list")
-    public ResultEntity<ResultObjectVO> getAll(MasterDataQueryDTO dto) {
+    @PostMapping("/list")
+    public ResultEntity<ResultObjectVO> getAll(@Validated @RequestBody MasterDataQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getMasterDataPage(dto));
     }
 

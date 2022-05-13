@@ -217,6 +217,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return resultObjectVO;
     }
 
+    /**
+     * 获取创建人/更新人
+     * @param data
+     * @return
+     */
     public List<Map<String,Object>>  getUserName(List<Map<String,Object>> data){
         ResultEntity<List<UserDropDTO>> resultData = client.listUserDrops();
         if (resultData.code!=ResultEnum.SUCCESS.getCode())
@@ -225,12 +230,24 @@ public class MasterDataServiceImpl implements IMasterDataService {
             return data;
         }
         for (Map<String,Object> item:data) {
-            Optional<UserDropDTO> first = resultData.data.stream().filter(e -> item.get("fidata_create_user").equals(String.valueOf(e.id))).findFirst();
-            if (!first.isPresent())
+            String createUserId=item.get("fidata_create_user")==null?"":item.get("fidata_create_user").toString();
+            if (!StringUtils.isEmpty(createUserId))
             {
-                continue;
+                Optional<UserDropDTO>  createUser= resultData.data.stream().filter(e -> createUserId.equals(String.valueOf(e.id))).findFirst();
+                if (createUser.isPresent())
+                {
+                    item.put("fidata_create_user",createUser.get().username);
+                }
             }
-            item.put("fidata_create_user",first.get().username);
+            String updateUserId=item.get("fidata_update_user")==null?"":item.get("fidata_update_user").toString();
+            if (!StringUtils.isEmpty(updateUserId))
+            {
+                Optional<UserDropDTO> updateUser = resultData.data.stream().filter(e -> updateUserId.equals(String.valueOf(e.id))).findFirst();
+                if (updateUser.isPresent())
+                {
+                    item.put("fidata_update_user",updateUser.get().username);
+                }
+            }
         }
         return data;
     }
