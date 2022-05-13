@@ -729,13 +729,14 @@ public class BuildNifiCustomWorkFlow {
             properties.put("topic", consumerTopicName);
             processor.getComponent().getConfig().setProperties(properties);
             log.info("组件详情1:" + id);
+            Thread.sleep(50);
             NifiHelper.getProcessorsApi().updateProcessor(id, processor);
             log.info("组件详情2:" + id);
             processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             log.info("组件详情3:" + id);
             componentsBuild.enabledProcessor(processor.getId(), processor);
             log.info("组件详情4:" + id);
-        } catch (ApiException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);
         }
