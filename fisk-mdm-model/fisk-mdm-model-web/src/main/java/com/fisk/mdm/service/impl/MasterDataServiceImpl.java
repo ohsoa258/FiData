@@ -38,6 +38,7 @@ import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -182,14 +183,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
             str.append("select "+businessColumnName + systemColumnName);
             str.append(" from "+tableName + " view ");
             str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
-            str.append(" order by fidata_create_time desc ");
+            str.append(" order by fidata_create_time,fidata_id desc ");
             str.append(" limit "+ dto.getPageSize() + " offset " + offset);
             //执行sql，获得结果集
             log.info("执行sql: 【" + str.toString() + "】");
             ResultSet resultSet = statement.executeQuery(str.toString());
             //判断结果集是否为空
             if(!resultSet.next()){
-                resultObjectVO.setAttributes(attributeGroupVoList);
+                resultObjectVO.setResultData(new ArrayList<>());
                 return resultObjectVO;
             }
             //获取结果集的结构信息
@@ -450,6 +451,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
             {
                 //获取当前工作表
                 Sheet sheet = workbook.getSheetAt(i);
+                if (sheet.getRow(0)==null)
+                {
+                    continue;
+                }
                 //列数
                 int columnNum=sheet.getRow(0).getPhysicalNumberOfCells();
                 //获得总行数
@@ -486,7 +491,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         //判断字段类型
                         if (cell !=null)
                         {
-                            value=getCellDataType(cell,attributePoList.get(col).getDataType());
+                            value=getCellDataType(cell,
+                                    attributePoList.get(col).getDataType(),
+                                    attributePoList.get(col).getDataTypeDecimalLength()==null?0:attributePoList.get(col).getDataTypeDecimalLength());
                         }
                         if ("code".equals(attributePoList.get(col).getName()) && StringUtils.isEmpty(value))
                         {
@@ -498,10 +505,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     if (codeList.contains(jsonObj.get("code")))
                     {
                         jsonObj.put("fidata_syncy_type","1");
-                        result.updateCount+=1;
+                        //result.updateCount+=1;
                     }else {
                         jsonObj.put("fidata_syncy_type","2");
-                        result.addCount+=1;
+                        //result.addCount+=1;
                     }
                     jsonObj.put("fidata_error_msg","");
                     jsonObj.put("internalId","");
@@ -843,7 +850,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param cell
      * @return
      */
-    public String getCellDataType(Cell cell, String dataType){
+    public String getCellDataType(Cell cell, String dataType,int decimalLength){
         String value="";
         switch (cell.getCellType()) {
             //字符串
@@ -855,12 +862,22 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 break;
             //数字
             case Cell.CELL_TYPE_NUMERIC:
+                //时间格式
                 if (HSSFDateUtil.isCellDateFormatted(cell))
                 {
                     value=getFormatDate(cell.getDateCellValue(),dataType);
                 }else {
-                    DecimalFormat df = new DecimalFormat("#");
-                    value=df.format(cell.getNumericCellValue());
+                    //数字格式
+                    if (DataTypeEnum.NUMERICAL.getName().equals(dataType))
+                    {
+                        DecimalFormat df = new DecimalFormat("#");
+                        value=df.format(cell.getNumericCellValue());
+                    }
+                    else if (DataTypeEnum.FLOAT.getName().equals(dataType))
+                    {
+                        DecimalFormat df = new DecimalFormat(createDecimalLength(decimalLength));
+                        value = df.format(cell.getNumericCellValue());
+                    }
                 }
                 break;
             //空白
@@ -877,6 +894,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return value;
     }
 
+    public String createDecimalLength(int decimalLength){
+        String decimalFormat="0.";
+        for (int i=0;i<decimalLength;i++)
+        {
+            decimalFormat+="0";
+        }
+        return decimalFormat;
+    }
+
     /**
      * 时间格式化
      * @param date
@@ -886,7 +912,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //日期
         SimpleDateFormat dates = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat time = new SimpleDateFormat("HH-mm-ss");
+        SimpleDateFormat time = new SimpleDateFormat("HH:mm:ss");
         if (DataTypeEnum.DATE.getName().equals(dataType))
         {
             return dates.format(date);
