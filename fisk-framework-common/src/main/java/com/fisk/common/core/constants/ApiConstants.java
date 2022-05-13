@@ -405,7 +405,7 @@ public class ApiConstants {
             "    {\n" +
             "        public static void Main(string[] args)\n" +
             "        {\n" +
-            "            #region Step 1：getToken\n" +
+            "            #region getToken\n" +
             "            string url = \"{api_prd_address}/dataservice/apiService/getToken\";\n" +
             "            // set request parameters\n" +
             "            GetTokenRequest getTokenRequest = new GetTokenRequest\n" +
@@ -418,7 +418,7 @@ public class ApiConstants {
             "            string token = sendPostWebRequest<GetTokenResponse>(url, getTokenParams)?.data;\n" +
             "            #endregion\n" +
             "\n" +
-            "            #region Step 2：getData\n" +
+            "            #region getData\n" +
             "            url = \"{api_prd_address}/dataservice/apiService/getData\";\n" +
             "            // set request parameters\n" +
             "            GetDataRequest getDataRequest = new GetDataRequest()\n" +
@@ -461,7 +461,7 @@ public class ApiConstants {
             "                    httpRequest.Headers.Add(\"Authorization\", token);\n" +
             "                httpRequest.ServicePoint.Expect100Continue = false;\n" +
             "                using (StreamWriter dataStream = \n" +
-            "                        new StreamWriter(httpRequest.GetRequestStream()))\n" +
+            "                                     new StreamWriter(httpRequest.GetRequestStream()))\n" +
             "                {\n" +
             "                    dataStream.Write(parameters);\n" +
             "                    dataStream.Close();\n" +
@@ -584,7 +584,7 @@ public class ApiConstants {
             "    @Test\n" +
             "    public void getData()\n" +
             "    {\n" +
-            "        /*Step 1：getToken*/\n" +
+            "        /*getToken*/\n" +
             "        String url = \"{api_prd_address}/dataservice/apiService/getToken\";\n" +
             "        // set request parameters\n" +
             "        GetTokenRequest getTokenRequest = new GetTokenRequest();\n" +
@@ -595,7 +595,7 @@ public class ApiConstants {
             "        GetTokenResponse getTokenResponse = sendPostWebRequest(GetTokenResponse.class,\n" +
             "                url, getTokenParams, null);\n" +
             "\n" +
-            "        /*Step 2：getData*/\n" +
+            "        /*getData*/\n" +
             "        url = \"{api_prd_address}/dataservice/apiService/getData\";\n" +
             "        // set request parameters\n" +
             "        GetDataRequest getDataRequest = new GetDataRequest();\n" +

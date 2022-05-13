@@ -3,7 +3,7 @@ dataservice:
     # pdf文档模板路径
     path: /data/java/fisk-consume-serveice/pdf
     # 接口文档中的环境信息
-    api_address: http://10.220.108.140:10089。
+    api_address: http://10.220.108.140:10089
   datasource:
     # redis key
     metadataentity_key: DataService_MetaDataKey

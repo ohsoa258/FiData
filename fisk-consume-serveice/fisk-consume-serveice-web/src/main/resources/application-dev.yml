@@ -4,7 +4,7 @@ dataservice:
     #path: /root/java/fisk-consume-serveice/pdf
     path: D:/Work/java/Fisk.DMP.Project/fisk-consume-serveice/fisk-consume-serveice-web/target/classes
     # 接口文档中的环境信息
-    api_address: http://192.168.11.130:8083。
+    api_address: http://192.168.11.130:8083
   datasource:
     # redis key
     metadataentity_key: DataService_MetaDataKey
