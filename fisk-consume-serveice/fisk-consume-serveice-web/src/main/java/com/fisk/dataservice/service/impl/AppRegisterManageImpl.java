@@ -37,7 +37,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.core.constants.ApiConstants.DATASERVICE_APIBASICINFO;
+import static com.fisk.common.core.constants.ApiConstants.*;
 
 /**
  * 应用接口实现类
@@ -420,9 +420,14 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
         ApiDocDTO apiDocDTO = new ApiDocDTO();
 
         // API文档基础信息
-        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_uat_address}", api_address);
+        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address);
         // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
+        // API文档代码示例 c#
+        apiDocDTO.apiCodeExamples_net=DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
+        // API文档代码示例 java
+        apiDocDTO.apiCodeExamples_java=DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
+
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"appPassword\": \"xxx\"\n" +
@@ -445,7 +450,7 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
             apiCatalogueDTO.grade = 3;
             apiCatalogueDTO.catalogueIndex = addIndex + ".";
             apiCatalogueDTO.catalogueName = apiConfigPO.apiName;
-            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 1, apiCatalogueDTO);
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
             catalogueIndex = addIndex;
             /* 设置目录 end */
 

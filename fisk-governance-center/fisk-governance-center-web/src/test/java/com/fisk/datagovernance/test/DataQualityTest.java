@@ -16,7 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class DataQualityTest {
-
     /**
      * @return void
      * @description 相似度规则测试
@@ -48,5 +47,4 @@ public class DataQualityTest {
         DataOpsDataSourceManageImpl dataOpsDataSourceManage=new DataOpsDataSourceManageImpl();
         dataOpsDataSourceManage.setDataOpsDataSource();
     }
-
 }

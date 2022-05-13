@@ -74,7 +74,7 @@ public class DataSourceController {
     @GetMapping("/getTableAll/{id}")
     @ApiOperation("获取全部表字段信息")
     public ResultEntity<DataSourceVO> getTableAll(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll(id));
+        return service.getTableAll(id);
     }
 
     @GetMapping("/reloadDataSource/{id}")

@@ -170,9 +170,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     @Override
-    public DataSourceVO getTableAll(int datasourceId) {
+    public ResultEntity<DataSourceVO> getTableAll(int datasourceId) {
         DataSourceVO dataSource = null;
         try {
+            DataSourceConPO conPo = mapper.selectById(datasourceId);
+            if (conPo == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_DATASOURCE_EXISTS, dataSource);
+            }
             String redisKey = metaDataEntityKey + "_" + datasourceId;
             Boolean exist = redisTemplate.hasKey(redisKey);
             if (!exist) {
@@ -186,7 +190,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             log.error("getTableAll执行异常：", ex);
             throw new FkException(ResultEnum.DS_DATASOURCE_READ_ERROR, ex.getMessage());
         }
-        return dataSource;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSource);
     }
 
     @Override
