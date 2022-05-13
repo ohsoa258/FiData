@@ -133,7 +133,7 @@ public class DataFactoryImpl implements IDataFactory {
                 //下一个组件的第一张表
                 String[] split = outport.split(",");
                 for (String id : split) {
-                    NifiCustomWorkflowDetailPO one1 = nifiCustomWorkflowDetailImpl.query().eq("pid", id).eq("table_order", 0).isNotNull("table_id").one();
+                    NifiCustomWorkflowDetailPO one1 = nifiCustomWorkflowDetailImpl.query().eq("pid", id).eq("table_order", 1).isNotNull("table_id").one();
                     NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO = new NifiPortsHierarchyNextDTO();
                     //下一级本身
                     nifiPortsHierarchyNextDTO.itselfPort = NifiCustomWorkflowDetailMap.INSTANCES.poToDto(one1);
