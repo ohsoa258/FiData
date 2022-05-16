@@ -8,16 +8,20 @@ import lombok.Data;
 @Data
 public class StgBatchDTO {
 
-    public int entityId;
+    private Integer entityId;
 
-    public int versionId;
+    private Integer versionId;
 
-    public String batchCode;
+    private String batchCode;
 
-    public int totalCount;
+    private Integer totalCount;
 
-    public int errorCount;
+    private Integer errorCount;
 
-    public int status;
+    private Integer status;
+
+    private Integer addCount;
+
+    private Integer updateCount;
 
 }

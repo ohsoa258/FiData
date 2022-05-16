@@ -241,17 +241,19 @@ public enum ResultEnum {
     UPDATE_MDM_TABLE(15004, "Mdm表修改失败"),
     DROP_STG_TABLE(15005, "Stg表删除失败"),
     DROP_VIW_TABLE(15006, "Viw视图删除失败"),
-    CREATE_ATTRIBUTE_LOG_TABLE_ERROR(15007,"创建属性日志表失败"),
+    CREATE_ATTRIBUTE_LOG_TABLE_ERROR(15007, "创建属性日志表失败"),
     CREATE_TABLE_ERROR(15008, "后台任务创建表失败"),
-    EXIST_INVALID_COLUMN(15009,"存在无效列"),
-    REQUIRED_FIELDS(15010,"必填项"),
-    DATA_TYPE_DISAGREE(15011,"与数据类型不一致"),
-    EXIST_ERROR_DATA(15012,"存在错误数据"),
-    KEY_DATA_NOT_FOUND(151013,"数据不存在或已过期"),
-    FILE_NAME_ERROR(151014,"文件格式不正确,只支持xlsx文件"),
-    DATA_SYNCHRONIZATION_FAILED(151015,"stg表数据同步失败!"),
-    DATA_SYNCHRONIZATION_SUCCESS(151016,"stg表数据同步成功!"),
-    ATTRIBUTE_NOT_EXIST(151017,"该实体不存在属性");
+    EXIST_INVALID_COLUMN(15009, "存在无效列"),
+    REQUIRED_FIELDS(15010, "必填项"),
+    DATA_TYPE_DISAGREE(15011, "与数据类型不一致"),
+    EXIST_ERROR_DATA(15012, "存在错误数据"),
+    KEY_DATA_NOT_FOUND(151013, "数据不存在或已过期"),
+    FILE_NAME_ERROR(151014, "文件格式不正确,只支持xlsx文件"),
+    DATA_SYNCHRONIZATION_FAILED(151015, "stg表数据同步失败!"),
+    DATA_SYNCHRONIZATION_SUCCESS(151016, "stg表数据同步成功!"),
+    ATTRIBUTE_NOT_EXIST(151017, "该实体不存在属性"),
+    EXISTS_INCORRECT_DATA(151018, "存在提交错误数据"),
+    SUBMIT_FAILURE(151019, "提交失败");
 
     ResultEnum(int code, String msg) {
         this.code = code;

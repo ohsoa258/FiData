@@ -21,6 +21,10 @@ public class StgBatchPO extends BasePO {
 
     public int errorCount;
 
+    public int addCount;
+
+    public int updateCount;
+
     public int status;
 
 }
