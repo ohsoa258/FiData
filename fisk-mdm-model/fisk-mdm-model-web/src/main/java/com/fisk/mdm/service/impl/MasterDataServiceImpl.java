@@ -42,7 +42,6 @@ import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
-import com.google.common.base.Joiner;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -493,7 +492,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
     }
 
-
     /**
      * 导出Excel
      *
@@ -590,6 +588,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dto.setUserId(userId);
             dto.setMembers(members);
             dto.setTableName(tableName);
+            //调用生成批量insert语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildInsertImportData(dto);
             log.info("模板批量添加sql:", sql);
@@ -734,42 +733,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.SUBMIT_FAILURE);
         }
 
-    }
-
-    /**
-     * 获取对象键值对
-     * @param member
-     * @param type
-     * @return
-     */
-    public String getColumnNameAndValue(JSONObject member,int type)
-    {
-        List<String> columnList=new ArrayList<>();
-        Iterator iter = member.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String name=entry.getKey().toString();
-            if ( name.equals("internalId") || name.equals("ErrorAttribute"))
-            {
-                continue;
-            }
-            //获取列名
-            if (type==0)
-            {
-                columnList.add(name);
-            }
-            //拼接value
-            else{
-                if (StringUtils.isEmpty(entry.getValue().toString()))
-                {
-                    columnList.add("null");
-                }
-                else {
-                    columnList.add("'"+entry.getValue().toString()+"'");
-                }
-            }
-        }
-        return Joiner.on(",").join(columnList);
     }
 
     /**
