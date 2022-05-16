@@ -10,6 +10,10 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
+import com.fisk.common.service.mdmBEBuild.dto.PageDataDTO;
 import com.fisk.common.service.mdmBEOperate.BuildCodeHelper;
 import com.fisk.common.service.mdmBEOperate.IBuildCodeCommand;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -576,30 +580,20 @@ public class MasterDataServiceImpl implements IMasterDataService {
         Connection conn = null;
         Statement stat = null;
         try {
-            Date date = new Date();
-            StringBuilder str = new StringBuilder();
+
             conn = getConnection();
             stat = conn.createStatement();
-            str.append("insert into " + tableName);
-            str.append("(" + getColumnNameAndValue(members.get(0), 0));
-            str.append(",fidata_import_type,fidata_batch_code,fidata_version_id,");
-            str.append("fidata_create_time,fidata_create_user,fidata_update_time,fidata_update_user,fidata_del_flag");
-            str.append(")");
-            str.append(" values(" + getColumnNameAndValue(members.get(0), 1) + ","
-                    + ImportTypeEnum.EXCEL_IMPORT.getValue() + ",'" + batchCode + "'," + versionId + ",'");
-            str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",'");
-            str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",1" + ")");
-            if (members.size() > 1) {
-                for (int i = 1; i < members.size(); i++) {
-                    str.append(",(" + getColumnNameAndValue(members.get(i), 1) + ","
-                            + ImportTypeEnum.EXCEL_IMPORT.getValue() + ",'" + batchCode + "',"
-                            + versionId + ",'");
-                    str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",'");
-                    str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",1" + ")");
-                }
-            }
-            log.info("模板批量添加sql:", str.toString());
-            stat.addBatch(str.toString());
+            InsertImportDataDTO dto = new InsertImportDataDTO();
+            dto.setBatchCode(batchCode);
+            dto.setImportType(ImportTypeEnum.EXCEL_IMPORT.getValue());
+            dto.setVersionId(versionId);
+            dto.setUserId(userId);
+            dto.setMembers(members);
+            dto.setTableName(tableName);
+            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+            String sql = sqlBuilder.buildInsertImportData(dto);
+            log.info("模板批量添加sql:", sql);
+            stat.addBatch(sql);
             int[] flatCount = stat.executeBatch();
             return flatCount[0];
         } catch (Exception e) {
@@ -647,13 +641,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 vo.errorCount = rSet.getInt("errorCount");
             }
             rSet.close();
-            //分页获取数据
-            int offset = (dto.pageIndex - 1) * dto.pageSize;
-            StringBuilder str=new StringBuilder();
-            str.append("select * from "+entityPO.getTableName().replace("mdm","stg"));
-            str.append(" where fidata_batch_code='"+dto.key+"'");
-            str.append(" limit "+ dto.pageSize + " offset " + offset);
-            ResultSet rs = st.executeQuery(str.toString());
+            //筛选条件
+            String conditions = " where fidata_batch_code='" + dto.key + "'";
+            PageDataDTO pageDataDTO = new PageDataDTO();
+            pageDataDTO.setPageIndex(dto.pageIndex);
+            pageDataDTO.setPageSize(dto.pageSize);
+            pageDataDTO.setConditions(conditions);
+            pageDataDTO.setTableName(entityPO.getTableName().replace("mdm", "stg"));
+            //调用生成分页语句方法
+            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+            String sql = sqlBuilder.buildPageData(pageDataDTO);
+            ResultSet rs = st.executeQuery(sql);
             // 获取列数
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();

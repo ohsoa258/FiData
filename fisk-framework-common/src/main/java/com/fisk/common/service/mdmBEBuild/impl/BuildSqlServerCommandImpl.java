@@ -1,6 +1,11 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
+import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
+import com.fisk.common.service.mdmBEBuild.dto.PageDataDTO;
+
+import java.util.Date;
 
 /**
  * @author WangYan
@@ -26,4 +31,36 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         str.append(");");
         return str.toString();
     }
+
+    @Override
+    public String buildInsertImportData(InsertImportDataDTO dto) {
+        Date date = new Date();
+        StringBuilder str = new StringBuilder();
+        str.append("insert into " + dto.getTableName());
+        str.append("(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), 0));
+        str.append(",fidata_import_type,fidata_batch_code,fidata_version_id,");
+        str.append("fidata_create_time,fidata_create_user,fidata_update_time,fidata_update_user,fidata_del_flag");
+        str.append(")");
+        str.append(" values(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), 1) + ","
+                + dto.getImportType() + ",'" + dto.getBatchCode() + "'," + dto.getVersionId() + ",'");
+        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",'");
+        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",1" + ")");
+        if (dto.getMembers().size() > 1) {
+            for (int i = 1; i < dto.getMembers().size(); i++) {
+                str.append(",(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(i), 1) + ","
+                        + dto.getImportType() + ",'" + dto.getBatchCode() + "',"
+                        + dto.getVersionId() + ",'");
+                str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",'");
+                str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",1" + ")");
+            }
+        }
+        return str.toString();
+    }
+
+    @Override
+    public String buildPageData(PageDataDTO dto) {
+        return "";
+    }
+
+
 }
