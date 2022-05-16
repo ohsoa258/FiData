@@ -11,7 +11,6 @@ import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.task.listener.mdm.BuildModelListener;
-import net.minidev.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,8 +19,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
 
 /**
  * @author WangYan

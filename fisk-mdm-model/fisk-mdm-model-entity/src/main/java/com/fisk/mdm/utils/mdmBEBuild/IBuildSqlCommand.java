@@ -1,4 +1,4 @@
-package com.fisk.task.utils.mdmBEBuild;
+package com.fisk.mdm.utils.mdmBEBuild;
 
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 

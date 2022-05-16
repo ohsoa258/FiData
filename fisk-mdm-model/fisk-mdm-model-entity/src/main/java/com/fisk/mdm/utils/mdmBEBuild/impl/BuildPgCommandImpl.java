@@ -1,7 +1,7 @@
-package com.fisk.task.utils.mdmBEBuild.impl;
+package com.fisk.mdm.utils.mdmBEBuild.impl;
 
 import com.fisk.mdm.vo.entity.EntityInfoVO;
-import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import java.util.stream.Collectors;

@@ -1,10 +1,10 @@
-package com.fisk.task.utils.mdmBEBuild;
+package com.fisk.mdm.utils.mdmBEBuild;
 
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl;
-import com.fisk.task.utils.mdmBEBuild.impl.BuildSqlServerCommandImpl;
+import com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl;
+import com.fisk.mdm.utils.mdmBEBuild.impl.BuildSqlServerCommandImpl;
 
 /**
  * @author WangYan

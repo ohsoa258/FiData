@@ -19,9 +19,9 @@ import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
-import com.fisk.task.utils.mdmBEBuild.BuildFactoryHelper;
-import com.fisk.task.utils.mdmBEBuild.IBuildSqlCommand;
-import com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl;
+import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
+import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
@@ -42,7 +42,7 @@ import static ch.qos.logback.core.db.DBHelper.closeConnection;
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
 import static com.fisk.mdm.enums.AttributeStatusEnum.*;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.*;
-import static com.fisk.task.utils.mdmBEBuild.impl.BuildPgCommandImpl.*;
+import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.*;
 
 /**
  * Description: 创建模型日志表
