@@ -1,12 +1,8 @@
 package com.fisk.datagovernance.dto.dataquality.lifecycle;
 
-import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
+import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.TableStateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
-
-import java.util.List;
 
 /**
  * @author dick
@@ -28,16 +24,10 @@ public class LifecycleDTO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    @ApiModelProperty(value = "数据源类型")
-    public ModuleDataSourceTypeEnum datasourceType;
-
-    /**
-     * 组件名称
-     */
-    @ApiModelProperty(value = "组件名称")
-    public String moduleName;
+    @ApiModelProperty(value = "规则名称")
+    public String ruleName;
 
     /**
      * 表名称
@@ -46,22 +36,16 @@ public class LifecycleDTO {
     public String tableName;
 
     /**
-     * 字段名称，更新依据字段
-     */
-    @ApiModelProperty(value = "字段名称,更新依据字段")
-    public String fieldName;
-
-    /**
      * 回收时间
      */
     @ApiModelProperty(value = "回收时间")
     public String recoveryDate;
 
     /**
-     * 提醒时间
+     * 已持续次数
      */
-    @ApiModelProperty(value = "提醒时间")
-    public int remindDate;
+    @ApiModelProperty(value = "已持续次数")
+    public int continuedNumber;
 
     /**
      * 是否需要备份，默认否
@@ -70,34 +54,19 @@ public class LifecycleDTO {
     public int isBackup;
 
     /**
-     * 检查空表持续天数
+     * 数据血缘断裂回收模板；
+     * 上下游血缘关系范围：
+     * 1、上游 2、下游 3、上下游
      */
-    @ApiModelProperty(value = "检查空表持续天数")
-    public int checkEmptytbDay;
+    @ApiModelProperty(value = "上下游血缘关系范围")
+    public int consanguinityRange;
 
     /**
-     * 检查表无刷新天数
+     * 数据无刷新模板；
+     * 字段名称
      */
-    @ApiModelProperty(value = "检查表无刷新天数")
-    public int checkRefreshtbDay;
-
-    /**
-     * 检查表血缘断裂持续天数
-     */
-    @ApiModelProperty(value = "检查表血缘断裂持续天数")
-    public int checkConsanguinityDay;
-
-    /**
-     * 上下游血缘关系范围：1、上游 2、下游 3、上下游
-     */
-    @ApiModelProperty(value = "上下游血缘关系范围：1、上游 2、下游 3、上下游")
-    public int checkConsanguinity;
-
-    /**
-     * 运行时间表达式
-     */
-    @ApiModelProperty(value = "运行时间表达式")
-    public String runTimeCron;
+    @ApiModelProperty(value = "字段名称")
+    public String fieldName;
 
     /**
      * 表状态
@@ -106,20 +75,14 @@ public class LifecycleDTO {
     public TableStateTypeEnum tableState;
 
     /**
-     * 组件规则
+     * 生成规则
      */
-    @ApiModelProperty(value = "组件规则")
-    public String moduleRule;
+    @ApiModelProperty(value = "生成规则")
+    public String createRule;
 
     /**
-     * 组件状态
+     * 规则状态
      */
-    @ApiModelProperty(value = "组件状态")
-    public ModuleStateEnum moduleState;
-
-    /**
-     * 组件通知关联DTO
-     */
-    @ApiModelProperty(value = "组件通知关联DTO")
-    public List<ComponentNotificationDTO> componentNotificationDTOS;
+    @ApiModelProperty(value = "规则状态")
+    public RuleStateEnum ruleState;
 }

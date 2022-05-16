@@ -5,10 +5,10 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * @author dick
  * @version 1.0
- * @description 校验规则类型
+ * @description 校验类型
  * @date 2022/3/22 14:01
  */
-public enum CheckRuleTypeEnum implements BaseEnum {
+public enum CheckTypeEnum implements BaseEnum {
     /**
      * 校验规则类型
      */
@@ -17,7 +17,7 @@ public enum CheckRuleTypeEnum implements BaseEnum {
     NONEMPTY_CHECK(2, "非空校验"),
     LENGTH_CHECK(3, "长度校验");
 
-    CheckRuleTypeEnum(int value, String name) {
+    CheckTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
@@ -35,11 +35,11 @@ public enum CheckRuleTypeEnum implements BaseEnum {
         return name;
     }
 
-    public static CheckRuleTypeEnum  getEnum(int value){
-        for (CheckRuleTypeEnum e:CheckRuleTypeEnum.values()) {
+    public static CheckTypeEnum getEnum(int value){
+        for (CheckTypeEnum e: CheckTypeEnum.values()) {
             if(e.getValue() == value)
                 return e;
         }
-        return CheckRuleTypeEnum.NONE;
+        return CheckTypeEnum.NONE;
     }
 }

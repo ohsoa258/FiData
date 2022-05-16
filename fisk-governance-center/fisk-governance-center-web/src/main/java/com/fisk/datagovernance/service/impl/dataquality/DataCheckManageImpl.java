@@ -13,17 +13,17 @@ import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckExtendDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.SimilarityExtendDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
-import com.fisk.datagovernance.map.dataquality.SimilarityExtendMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.SimilarityExtendVO;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,60 +49,33 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
-    private ComponentNotificationMapper componentNotificationMapper;
+    private DataCheckExtendMapper dataCheckExtendMapper;
 
     @Resource
-    private SimilarityExtendMapper similarityExtendMapper;
-
-    @Resource
-    private ComponentNotificationMapImpl componentNotificationMapImpl;
-
-    @Resource
-    private SimilarityExtendManageImpl similarityExtendManageImpl;
-
-    @Resource
-    private NoticeManageImpl noticeManageImpl;
+    private DataCheckExtendManageImpl dataCheckExtendManageImpl;
 
     @Resource
     UserHelper userHelper;
 
     @Override
     public Page<DataCheckVO> getAll(DataCheckQueryDTO query) {
-        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.conIp, query.conDbname, query.tableName, query.keyword);
+        Page<DataCheckVO> all = baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-            // 查询告警通知
-            List<Integer> collect = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
-            List<Integer> collect1 = all.getRecords().stream().map(DataCheckVO::getTemplateId).distinct().collect(Collectors.toList());
-            QueryWrapper<ComponentNotificationPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(ComponentNotificationPO::getDelFlag, 1)
-                    .in(ComponentNotificationPO::getTemplateId, collect1)
-                    .in(ComponentNotificationPO::getModuleId, collect);
-            List<ComponentNotificationPO> componentNotificationPOS = componentNotificationMapper.selectList(queryWrapper);
-            // 查询相似度组件扩展属性
-            QueryWrapper<SimilarityExtendPO> similarityExtendPOQueryWrapper = new QueryWrapper<>();
-            similarityExtendPOQueryWrapper.lambda().eq(SimilarityExtendPO::getDelFlag, 1)
-                    .in(SimilarityExtendPO::getDatacheckId, collect);
-            List<SimilarityExtendPO> similarityExtendPOS = similarityExtendMapper.selectList(similarityExtendPOQueryWrapper);
-            // 循环赋值
-            all.getRecords().forEach(e -> {
-                if (CollectionUtils.isNotEmpty(componentNotificationPOS)) {
-                    List<Integer> collect2 = componentNotificationPOS.stream()
-                            .filter(item -> item.getTemplateId() == e.getTemplateId() && item.getModuleId() == e.getId())
-                            .map(ComponentNotificationPO::getNoticeId).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(collect2)) {
-                        e.setNoticeIds(collect2);
+            List<Integer> ruleIds = all.getRecords().stream().map(DataCheckVO::getId).collect(Collectors.toList());
+
+            // 数据校验规则扩展属性
+            QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+            dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                    .in(DataCheckExtendPO::getRuleId, ruleIds);
+            List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+            if (CollectionUtils.isNotEmpty(dataCheckExtends)) {
+                all.getRecords().forEach(e -> {
+                    List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == e.getId()).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(dataCheckExtendFilters)) {
+                        e.setDataCheckExtends(DataCheckExtendMap.INSTANCES.poToVo(dataCheckExtendFilters));
                     }
-                }
-                if (CollectionUtils.isNotEmpty(similarityExtendPOS)) {
-                    List<SimilarityExtendVO> similarityExtendVOS = SimilarityExtendMap.INSTANCES.poToVo(similarityExtendPOS);
-                    e.setSimilarityExtendVOS(similarityExtendVOS);
-                }
-                // cron下次执行时间
-                if (!StringUtils.isEmpty(e.getRunTimeCron())) {
-                    String cronExpress = CronUtils.getCronExpress(e.getRunTimeCron());
-                    e.setNextTime(cronExpress);
-                }
-            });
+                });
+            }
         }
         return all;
     }
@@ -110,24 +83,24 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataCheckDTO dto) {
-        //验证模板是否存在
+        //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
-        //第一步：根据配置的校验条件生成校验规则
+        //第二步：根据配置的校验条件生成校验规则
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         ResultEntity<String> role = createRole(dto, templateTypeEnum);
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.getEnum(role.getCode());
         }
-        dto.moduleRule = role.data;
-        //第二步：转换DTO对象为PO对象
+        dto.createRule = role.data;
+        //第三步：转换DTO对象为PO对象
         DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第三步：保存数据校验信息
+        //第四步：保存数据校验
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dataCheckPO.setCreateTime(LocalDateTime.now());
         dataCheckPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
@@ -135,27 +108,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第四步：保存数据组件通知信息
-        ResultEnum resultEnum = componentNotificationMapImpl.saveData(dataCheckPO.templateId, dataCheckPO.getId(), dto.componentNotificationDTOS, false);
-        //第五步：保存相似度模板扩展属性
-        if (templatePO.getTemplateType() == TemplateTypeEnum.SIMILARITY_TEMPLATE.getValue()) {
-            similarityExtendManageImpl.saveBatchById(dto.similarityExtendDTOS, dataCheckPO.getId(), false);
+        //第五步：保存数据校验扩展属性
+        if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
+            List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.dataCheckExtends);
+            dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
-        //第六步：如果设置了调度任务条件，则生成调度任务
-        //设置了调度计划，调用创建调度任务接口
-        if (dataCheckPO.getRunTimeCron() != null && !dataCheckPO.getRunTimeCron().isEmpty()) {
-            ModuleStateEnum moduleStateEnum = ModuleStateEnum.values()[dataCheckPO.getModuleState()];
-            noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
-                    loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
-                    templateTypeEnum, moduleStateEnum, dataCheckPO.getRunTimeCron());
-        }
-        return resultEnum;
+        return ResultEnum.SUCCESS;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(DataCheckEditDTO dto) {
-        //验证模板是否存在
+        //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
@@ -165,39 +129,30 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-        //第一步：根据配置的校验条件生成校验规则
+        //第二步：根据配置的校验条件生成校验规则
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         ResultEntity<String> role = createRole(dto, templateTypeEnum);
         if (role == null || role.code != ResultEnum.SUCCESS.getCode()) {
             return ResultEnum.values()[role.code];
         }
-        dto.moduleRule = role.data;
-        //第二步：转换DTO对象为PO对象
+        dto.createRule = role.data;
+        //第三步：转换DTO对象为PO对象
         dataCheckPO = DataCheckMap.INSTANCES.dtoToPo_Edit(dto);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第三步：保存数据校验信息
+        //第四步：保存数据校验信息
         int i = baseMapper.updateById(dataCheckPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第四步：保存数据组件通知信息，先将原来的组件通知关联关系置为无效
-        ResultEnum resultEnum = componentNotificationMapImpl.saveData(dataCheckPO.templateId, dataCheckPO.getId(), dto.componentNotificationDTOS, true);
-        //第五步：保存相似度模板扩展属性
-        if (templatePO.getTemplateType() == TemplateTypeEnum.SIMILARITY_TEMPLATE.getValue()) {
-            similarityExtendManageImpl.saveBatchById(dto.similarityExtendDTOS, dataCheckPO.getId(), true);
+        //第五步：保存数据校验扩展属性
+        if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
+            dataCheckExtendMapper.updateByRuleId(dto.id);
+            List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.dataCheckExtends);
+            dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
-        //第六步：根据组件状态&Corn调度任务
-        //未设置cron表达式，删除相关任务
-        ModuleStateEnum moduleStateEnum = ModuleStateEnum.Disable;
-        if (dataCheckPO.getRunTimeCron() != null && !dataCheckPO.getRunTimeCron().isEmpty()) {
-            moduleStateEnum = ModuleStateEnum.values()[dataCheckPO.getModuleState()];
-        }
-        noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
-                loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
-                templateTypeEnum, moduleStateEnum, dataCheckPO.getRunTimeCron());
-        return resultEnum;
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -207,19 +162,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        //验证模板是否存在
-        TemplatePO templatePO = templateMapper.selectById(dataCheckPO.templateId);
-        if (templatePO == null) {
-            return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
-        }
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-        // 删除关联通知
-        componentNotificationMapImpl.updateDelFlag(0, dataCheckPO.getTemplateId(), dataCheckPO.getId());
-        // 删除调度任务
-        TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-        noticeManageImpl.publishBuildunifiedControlTask(dataCheckPO.getId(),
-                loginUserInfo.getId(), TemplateModulesTypeEnum.DATACHECK_MODULE,
-                templateTypeEnum, ModuleStateEnum.Disable, dataCheckPO.getRunTimeCron());
+        // 删除数据校验扩展属性
+        dataCheckExtendMapper.updateByRuleId(id);
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -234,33 +179,38 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      */
     public ResultEntity<String> createRole(DataCheckDTO dto, TemplateTypeEnum templateTypeEnum) {
         //查询数据源
-        DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getDataSourceConPO(dto.datasourceId, dto.datasourceType);
+        DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getById(dto.datasourceId);
         if (dataSourceConPO == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, "");
         }
-        // 待确定元数据返回的类型是几
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
 
-        String tableName = dto.checkStep == CheckStepTypeEnum.TABLE_FRONT ? dto.proTableName : dto.tableName;
-        String fieldName = dto.fieldName;
-        if (dto.fieldName != null && !dto.fieldName.isEmpty()) {
-            if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                fieldName = "`" + fieldName + "`";
-            } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                fieldName = "[" + fieldName + "]";
+        String tableName = dto.useTableName;
+        String fieldName = null;
+        DataCheckExtendDTO dataCheckExtendDTO = null;
+        if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
+            dataCheckExtendDTO = dto.dataCheckExtends.get(0);
+            fieldName = dto.dataCheckExtends.get(0).fieldName;
+            if (!StringUtils.isNotEmpty(fieldName)) {
+                if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+                    fieldName = "`" + fieldName + "`";
+                } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                    fieldName = "[" + fieldName + "]";
+                }
             }
         }
+
         ResultEntity<String> rule = null;
         switch (templateTypeEnum) {
-            case FIELD_STRONG_RULE_TEMPLATE:
+            case FIELD_RULE_TEMPLATE:
                 //强类型模板规则
-                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName, dto.fieldLength, dto.checkRuleType);
+                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName, dataCheckExtendDTO.fieldLength, dataCheckExtendDTO.checkType);
                 break;
-            case FIELD_AGGREGATE_THRESHOLD_TEMPLATE:
+            case FIELD_AGGREGATE_TEMPLATE:
                 //字段聚合波动阈值模板
-                rule = createField_AggregateRule(dataSourceConPO.conDbname, tableName, fieldName, dto.fieldAggregate, dto.thresholdValue);
+                rule = createField_AggregateRule(dataSourceConPO.conDbname, tableName, fieldName, dataCheckExtendDTO.fieldAggregate, dto.thresholdValue);
                 break;
-            case ROWCOUNT_THRESHOLD_TEMPLATE:
+            case TABLECOUNT_TEMPLATE:
                 //表行数波动阈值模板
                 rule = createTableRow_ThresholdRule(dataSourceConPO.conDbname, tableName);
                 break;
@@ -272,17 +222,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 //表更新校验模板
                 rule = createUpdateTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
                 break;
-            case TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE:
-                //表血缘断裂校验模板
-                rule = createTableBloodKinship_CheckRule();
-                break;
-            case BUSINESS_CHECK_TEMPLATE:
-                rule = createBusiness_CheckRule(dto.getModuleRule());
-                //业务验证模板
-                break;
             case SIMILARITY_TEMPLATE:
                 //相似度模板
-                rule = createSimilarity_Rule(tableName, dto.getSimilarityExtendDTOS());
+                rule = createSimilarity_Rule(tableName, dto.dataCheckExtends);
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
@@ -329,9 +271,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         String[] split = checkRuleType.split(",");
         for (String x : split) {
-            CheckRuleTypeEnum checkRuleTypeEnum = CheckRuleTypeEnum.getEnum(Integer.parseInt(x));
+            CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(x));
 
-            switch (checkRuleTypeEnum) {
+            switch (checkTypeEnum) {
                 case UNIQUE_CHECK:
                     stringBuilder.append(String.format("SELECT\n" +
                                     "\t* \n" +
@@ -350,8 +292,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T1 ",
                             dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.UNIQUE_CHECK.getName(),
-                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
+                            CheckTypeEnum.UNIQUE_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
                     break;
                 case NONEMPTY_CHECK:
@@ -374,8 +316,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T2", dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.NONEMPTY_CHECK.getName(),
-                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
+                            CheckTypeEnum.NONEMPTY_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldNameParam, fieldNameParam));
                     break;
                 case LENGTH_CHECK:
@@ -398,8 +340,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\t\t'fail' ELSE 'success' \n" +
                                     "\t\tEND AS 'checkResult' \n" +
                                     "\t) T3\n", dataBase, tableName, fieldNameParam,
-                            CheckRuleTypeEnum.LENGTH_CHECK.getName(),
-                            TemplateTypeEnum.FIELD_STRONG_RULE_TEMPLATE.getName(),
+                            CheckTypeEnum.LENGTH_CHECK.getName(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
                             fieldNameParam, tableName, fieldLengthFunParm, fieldNameParam, fieldLength));
                     break;
                 default:
@@ -443,23 +385,23 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t'%s';";
         switch (fieldAggregate) {
             case "SUM":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
                         "SUM", "SUM(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "COUNT":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
                         "COUNT", "COUNT(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "AVG":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
                         "AVG", "AVG(CAST(" + fieldName + " AS decimal(10, 2)))", thresholdValue, tableName);
                 break;
             case "MAX":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
                         "MAX", "MAX(" + fieldName + ")", thresholdValue, tableName);
                 break;
             case "MIN":
-                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_THRESHOLD_TEMPLATE.getName(),
+                sql = String.format(sql, dataBase, tableName, fieldName, TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
                         "MIN", "MIN(" + fieldName + ")", thresholdValue, tableName);
                 break;
             default:
@@ -493,7 +435,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 "\t'%s' AS checkType,\n" +
                 "\tCOUNT( * ) AS checkResult\n" +
                 "FROM\n" +
-                "\t%s;", dataBase, tableName, TemplateTypeEnum.ROWCOUNT_THRESHOLD_TEMPLATE.getName(), "COUNT", tableName);
+                "\t%s;", dataBase, tableName, TemplateTypeEnum.TABLECOUNT_TEMPLATE.getName(), "COUNT", tableName);
         ResultEntity<String> result = new ResultEntity<>();
         result.setCode(0);
         result.setData(sql);
@@ -592,59 +534,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     /**
      * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
-     * @description 表血缘断裂校验规则
-     * @author dick
-     * @date 2022/4/2 18:36
-     * @version v1.0
-     * @params datasourceId 数据源id
-     * @params datasourceType 功能类型
-     * @params tableName 表名称
-     * @params checkConsanguinity  血缘检查范围：1、上游 2、下游 3、上下游
-     */
-    public ResultEntity<String> createTableBloodKinship_CheckRule() {
-        /*
-         * 逻辑：
-         * 无规则。数据调度实时调用元数据接口检查表血缘是否存在
-         * 目前只有在元数据中管理的表才能查询表的上下游血缘，自由数据源从存储过程同步记录表记录血缘关系暂时未做
-         * */
-        ResultEntity<String> result = new ResultEntity<>();
-        result.setCode(0);
-        return result;
-    }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
-     * @description 生成业务校验规则
-     * @author dick
-     * @date 2022/4/2 18:40
-     * @version v1.0
-     * @params
-     */
-    public ResultEntity<String> createBusiness_CheckRule(String moduleRule) {
-        /*
-         * 逻辑：
-         * 高级业务清洗为用户自定义sql规则，此处无需生成规则
-         * */
-        ResultEntity<String> result = new ResultEntity<>();
-        result.setData(moduleRule);
-        result.setCode(0);
-        return result;
-    }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.lang.String>
      * @description 生成相似度规则
      * @author dick
      * @date 2022/4/2 18:44
      * @version v1.0
      * @params
      */
-    public ResultEntity<String> createSimilarity_Rule(String tableName, List<SimilarityExtendDTO> similarityExtendDTOS) {
+    public ResultEntity<String> createSimilarity_Rule(String tableName, List<DataCheckExtendDTO> extendList) {
         String sql = null;
-        if (CollectionUtils.isNotEmpty(similarityExtendDTOS)) {
+        if (CollectionUtils.isNotEmpty(extendList)) {
             sql = "SELECT";
-            for (SimilarityExtendDTO similarityExtendDTO : similarityExtendDTOS) {
-                sql += String.format(" %s,", similarityExtendDTO.fieldName);
+            for (DataCheckExtendDTO extendDTO : extendList) {
+                sql += String.format(" %s,", extendDTO.fieldName);
             }
             if (StringUtils.isNotEmpty(sql)) {
                 sql = sql.substring(0, sql.length() - 1);

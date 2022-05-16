@@ -24,12 +24,7 @@ public interface DataCheckMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            @Mapping(source = "checkStep.value", target = "checkStep"),
-            @Mapping(source = "moduleType.value", target = "moduleType"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true),
-            //@Mapping(target = "fieldLength", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     DataCheckPO dtoToPo(DataCheckDTO dto);
 
@@ -40,12 +35,7 @@ public interface DataCheckMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            @Mapping(source = "checkStep.value", target = "checkStep"),
-            @Mapping(source = "moduleType.value", target = "moduleType"),
-            @Mapping(source = "moduleState.value", target = "moduleState"),
-            //@Mapping(target = "componentNotificationDTOS", ignore = true),
-            //@Mapping(target = "fieldLength", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     DataCheckPO dtoToPo_Edit(DataCheckEditDTO dto);
 }

@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.dto.dataquality.datasource;
 
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -18,22 +17,20 @@ public class TableFieldQueryDTO {
      */
     @ApiModelProperty(value = "数据源id")
     public int datasourceId;
-    /**
-     * 数据源类型
-     */
-    @ApiModelProperty(value = "数据源类型")
-    public ModuleDataSourceTypeEnum datasourceTyoe;
+
     /**
      * 表名称
      */
     @ApiModelProperty(value = "表名称")
     @NotNull(message = "表名称不可为null")
     public String tableName;
+
     /**
      * 表架构名称
      */
     @ApiModelProperty(value = "表架构名称，比如dbo")
     public String tableFramework;
+
     /**
      * 模板类型
      */

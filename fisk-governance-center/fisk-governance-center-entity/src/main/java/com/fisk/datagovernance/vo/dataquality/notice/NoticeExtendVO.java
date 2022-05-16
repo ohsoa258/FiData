@@ -1,19 +1,17 @@
-package com.fisk.datagovernance.vo.dataquality.businessfilter;
+package com.fisk.datagovernance.vo.dataquality.notice;
 
-import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TemplateSceneEnum;
+import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * @author dick
  * @version 1.0
- * @description 业务清洗规则VO
- * @date 2022/3/22 15:36
+ * @description 通知扩展VO
+ * @date 2022/3/22 15:37
  */
-@Data
-public class BusinessFilterVO {
+public class NoticeExtendVO {
     /**
      * id
      */
@@ -21,60 +19,30 @@ public class BusinessFilterVO {
     public int id;
 
     /**
-     * 模板id
+     * 通知id
      */
-    @ApiModelProperty(value = "模板id")
-    public int templateId;
-
-    /**
-     * 数据源id
-     */
-    @ApiModelProperty(value = "数据源id")
-    public int datasourceId;
-
-    /**
-     * 规则名称
-     */
-    @ApiModelProperty(value = "规则名称")
-    public String ruleName;
-
-    /**
-     * 表名称，页面展示
-     */
-    @ApiModelProperty(value = "表名称，页面展示")
-    public String tableName;
-
-    /**
-     * 实际引用表名称
-     */
-    @ApiModelProperty(value = "实际引用表名称")
-    public String useTableName;
-
-    /**
-     * 生成规则（清洗脚本）
-     */
-    @ApiModelProperty(value = "生成规则（清洗脚本）")
-    public String createRule;
-
-    /**
-     * 规则执行顺序
-     */
-    @ApiModelProperty(value = "规则执行顺序")
-    public int ruleSort;
-
-    /**
-     * 规则状态
-     */
-    @ApiModelProperty(value = "规则状态")
-    public RuleStateEnum ruleState;
+    @ApiModelProperty(value = "通知id")
+    public int noticeId;
 
     /**
      * 模块类型
      * 100、数据校验 200、业务清洗
-     * 300、生命周期 400、告警设置
+     * 300、生命周期
      */
     @ApiModelProperty(value = "模块类型")
     public ModuleTypeEnum moduleType;
+
+    /**
+     * 规则id
+     */
+    @ApiModelProperty(value = "规则id")
+    public int ruleId;
+
+    /**
+     * 模板id
+     */
+    @ApiModelProperty(value = "模板id")
+    public int templateId;
 
     /**
      * 模块名称
@@ -134,16 +102,4 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "模板描述")
     public String templateDesc;
-
-    /**
-     * 创建时间
-     */
-    @ApiModelProperty(value = "创建时间")
-    public LocalDateTime createTime;
-
-    /**
-     * 创建人
-     */
-    @ApiModelProperty(value = "创建人")
-    public String createUser;
 }

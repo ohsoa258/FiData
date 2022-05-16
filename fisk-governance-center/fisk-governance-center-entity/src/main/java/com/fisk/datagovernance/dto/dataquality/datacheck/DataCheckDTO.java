@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
-import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
 import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -16,6 +16,12 @@ import java.util.List;
 @Data
 public class DataCheckDTO {
     /**
+     * id
+     */
+    @ApiModelProperty(value = "id")
+    public int id;
+
+    /**
      * 模板id
      */
     @ApiModelProperty(value = "模板id")
@@ -28,61 +34,46 @@ public class DataCheckDTO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    @ApiModelProperty(value = "数据源类型")
-    public ModuleDataSourceTypeEnum datasourceType;
+    @ApiModelProperty(value = "规则名称")
+    public String ruleName;
 
     /**
-     * 组件名称
+     * 表名称，页面展示
      */
-    @ApiModelProperty(value = "组件名称")
-    public String moduleName;
-
-    /**
-     * 检验步骤
-     */
-    @ApiModelProperty(value = "检验步骤")
-    public CheckStepTypeEnum checkStep;
-
-    /**
-     * 表名称
-     */
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "表名称，页面展示")
     public String tableName;
 
     /**
-     * 前置表名称
+     * 实际引用表名称
      */
-    @ApiModelProperty(value = "前置表名称")
-    public String proTableName;
+    @ApiModelProperty(value = "实际引用表名称")
+    public String useTableName;
 
     /**
-     * 字段名称
+     * 校验规则：1、强规则 2、弱规则
      */
-    @ApiModelProperty(value = "字段名称")
-    public String fieldName;
+    @ApiModelProperty(value = "校验规则")
+    public String checkRule;
 
     /**
-     * 字段长度
+     * 生成规则
      */
-    @ApiModelProperty(value = "字段长度")
-    public int fieldLength;
+    @ApiModelProperty(value = "生成规则")
+    public String createRule;
 
     /**
-     * 字段聚合函数
+     * 规则执行顺序
      */
-    @ApiModelProperty(value = "字段聚合函数")
-    public String fieldAggregate;
+    @ApiModelProperty(value = "规则执行顺序")
+    public int ruleSort;
 
     /**
-     * 校验规则的类型，英文逗号分隔
-     * 1、唯一校验
-     * 2、非空校验
-     * 3、长度校验
+     * 规则状态
      */
-    @ApiModelProperty(value = "校验规则的类型，英文逗号分隔")
-    public String checkRuleType;
+    @ApiModelProperty(value = "规则状态")
+    public RuleStateEnum ruleState;
 
     /**
      * 波动阈值
@@ -91,52 +82,8 @@ public class DataCheckDTO {
     public int thresholdValue;
 
     /**
-     * 表行数，实际表行数减去表行数
+     * 数据校验规则扩展属性
      */
-    @ApiModelProperty(value = "表行数")
-    public int rowsValue;
-
-    /**
-     * 运行时间表达式
-     */
-    @ApiModelProperty(value = "运行时间表达式")
-    public String runTimeCron;
-
-    /**
-     * 上下游血缘关系范围
-     * 1、上游 2、下游 3、上下游
-     */
-    @ApiModelProperty(value = "上下游血缘关系范围 1、上游 2、下游 3、上下游")
-    public int checkConsanguinity;
-
-    /**
-     * 组件规则类型
-     */
-    @ApiModelProperty(value = "组件规则类型")
-    public ModuleTypeEnum moduleType;
-
-    /**
-     * 组件规则
-     */
-    @ApiModelProperty(value = "组件规则")
-    public String moduleRule;
-
-    /**
-     * 组件状态
-     */
-    @ApiModelProperty(value = "组件状态")
-    public ModuleStateEnum moduleState;
-
-    /**
-     * 组件通知关联DTO
-     */
-    @ApiModelProperty(value = "组件通知关联DTO")
-    public List<ComponentNotificationDTO> componentNotificationDTOS;
-
-    /**
-     * 数据校验模块下相似度组件扩展属性
-     */
-    @ApiModelProperty(value = "数据校验模块下相似度组件扩展属性")
-    public List<SimilarityExtendDTO> similarityExtendDTOS;
-
+    @ApiModelProperty(value = "数据校验规则扩展属性")
+    public List<DataCheckExtendDTO> dataCheckExtends;
 }

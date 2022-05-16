@@ -28,15 +28,15 @@ public class DataQualityClientController {
     IDataQualityClientManageService service;
 
     /**
-     * 消费字段强规则模板规则
+     * 消费字段规则模板规则
      *
      * @param requestDTO 请求DTO
      * @return 执行结果
      */
-    @ApiOperation("消费字段强规则模板规则")
-    @PostMapping("/dataQualityClient/buildFieldStrongRule")
-    ResultEntity<Object> buildFieldStrongRule(@RequestBody DataQualityRequestDTO requestDTO) {
-        return service.buildFieldStrongRule(requestDTO);
+    @ApiOperation("消费字段规则模板规则")
+    @PostMapping("/dataQualityClient/buildFieldRule")
+    ResultEntity<Object> buildFieldRule(@RequestBody DataQualityRequestDTO requestDTO) {
+        return service.buildFieldRule(requestDTO);
     }
 
     /**

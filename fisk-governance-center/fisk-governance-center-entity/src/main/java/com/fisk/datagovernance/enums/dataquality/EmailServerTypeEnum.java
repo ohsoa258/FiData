@@ -9,9 +9,6 @@ import com.fisk.common.core.enums.BaseEnum;
  * @date 2022/3/22 14:07
  */
 public enum EmailServerTypeEnum implements BaseEnum {
-    /**
-     * 邮件服务器类型
-     */
     SMTP(1,"SMTP"),
     IMAP(2,"IMAP"),
     POP3(3,"POP3");

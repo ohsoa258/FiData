@@ -7,11 +7,11 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description 告警通知表
+ * @description 通知表
  * @date 2022/3/22 15:19
  */
 @Data
-@TableName("tb_notice_module")
+@TableName("tb_notice_rule")
 public class NoticePO extends BasePO {
     /**
      * 模板id
@@ -19,12 +19,12 @@ public class NoticePO extends BasePO {
     public int templateId;
 
     /**
-     * 组件名称
+     * 通知名称
      */
-    public String moduleName;
+    public String noticeName;
 
     /**
-     * 通知类型
+     * 通知类型 1、邮件通知 2、站内通知
      */
     public int noticeType;
 
@@ -54,7 +54,12 @@ public class NoticePO extends BasePO {
     public String body;
 
     /**
-     * 组件状态
+     * 运行时间cron表达式
      */
-    public int moduleState;
+    public String runTimeCron;
+
+    /**
+     * 通知状态
+     */
+    public int noticeState;
 }

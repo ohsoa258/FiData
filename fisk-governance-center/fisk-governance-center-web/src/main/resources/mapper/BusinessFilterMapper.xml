@@ -5,37 +5,36 @@
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.businessfilter.BusinessFilterVO">
         SELECT
         t1.id,
-        template_id,
-        datasource_id,
-        datasource_type,
-        module_name,
-        filter_step,
-        table_name,
-        pro_table_name,
-        module_rule,
-        run_time_cron,
-        module_exec_sort,
-        module_state,
-        t2.templaten_name,
-        t2.template_modules,
+        t1.template_id,
+        t1.datasource_id,
+        t1.rule_name,
+        t1.table_name,
+        t1.use_table_name,
+        t1.create_rule,
+        t1.rule_sort,
+        t1.rule_state,
+        t2.module_type,
+        t2.module_name,
+        t2.template_scene,
+        t2.scene_name,
+        t2.scene_desc,
         t2.template_type,
+        t2.templaten_name,
         t2.template_desc,
         t1.create_time,
         t1.create_user
         FROM
-        tb_bizfilter_module t1
-        LEFT JOIN tb_template_config t2
-        ON t1.template_id=t2.id
+        tb_bizfilter_rule t1
+        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
         LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
         WHERE
         t1.del_flag = 1
         AND t2.del_flag = 1
         AND t3.del_flag = 1
-        AND t3.con_ip = #{conIp,jdbcType=VARCHAR}
-        AND t3.con_dbname = #{conDbname,jdbcType=VARCHAR}
+        AND t3.id = #{datasourceId}
         AND table_name = #{tableName,jdbcType=VARCHAR}
         <if test="keyword != null and keyword != '' ">
-            AND module_name LIKE concat('%', #{keyword}, '%')
+            AND rule_name LIKE concat('%', #{keyword}, '%')
         </if>
     </select>
 </mapper>

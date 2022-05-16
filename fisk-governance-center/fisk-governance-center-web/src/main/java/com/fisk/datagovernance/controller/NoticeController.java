@@ -9,15 +9,12 @@ import com.fisk.datagovernance.dto.dataquality.notice.NoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeEditDTO;
 import com.fisk.datagovernance.dto.dataquality.notice.NoticeQueryDTO;
 import com.fisk.datagovernance.service.dataquality.INoticeManageService;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeDetailVO;
-import com.fisk.datagovernance.vo.dataquality.notice.NoticeModuleVO;
 import com.fisk.datagovernance.vo.dataquality.notice.NoticeVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author dick
@@ -54,18 +51,6 @@ public class NoticeController {
     @DeleteMapping("/delete/{id}")
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteData(id));
-    }
-
-    @ApiOperation("查询告警通知应用情况")
-    @GetMapping("/getNotificationInfo")
-    public ResultEntity<NoticeDetailVO> getNotificationInfo() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNotificationInfo());
-    }
-
-    @ApiOperation("获取组件通知列表")
-    @GetMapping("/getModuleNoticeList")
-    public ResultEntity< List<NoticeModuleVO>> getModuleNoticeList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModuleNoticeList());
     }
 
     @ApiOperation("测试发送邮件通知")

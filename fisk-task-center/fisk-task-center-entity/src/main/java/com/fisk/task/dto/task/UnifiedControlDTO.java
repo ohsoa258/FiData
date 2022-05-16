@@ -1,7 +1,7 @@
 package com.fisk.task.dto.task;
 
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import lombok.Data;
@@ -15,7 +15,7 @@ public class UnifiedControlDTO extends MQBaseDTO {
     /**
      * templateModulesType
      */
-    public TemplateModulesTypeEnum templateModulesType;
+    public ModuleTypeEnum templateModulesType;
     /**
      * 表达式类型
      */

@@ -4,7 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TemplateSceneEnum;
 import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ITemplateManageService;
@@ -33,16 +34,18 @@ public class TemplateManageImpl extends ServiceImpl<TemplateMapper, TemplatePO> 
         }
         for (TemplatePO e : templatePOS) {
             TemplateVO templateVO = new TemplateVO();
+            templateVO.setModuleType(ModuleTypeEnum.getEnum(e.getModuleType()));
+            templateVO.setModuleName(e.getModuleName());
+            templateVO.setTemplateScene(TemplateSceneEnum.getEnum(e.getTemplateScene()));
+            templateVO.setSceneDesc(e.getSceneDesc());
             templateVO.setId(Math.toIntExact(e.getId()));
-            templateVO.setTemplateDesc(e.getTemplateDesc());
-            templateVO.setTemplateType(TemplateTypeEnum.getEnum(e.getTemplateType()));
-            templateVO.setTemplateModules(TemplateModulesTypeEnum.getEnum(e.getTemplateModules()));
             templateVO.setTemplatenName(e.getTemplatenName());
+            templateVO.setTemplateType(TemplateTypeEnum.getEnum(e.getTemplateType()));
+            templateVO.setTemplateDesc(e.getTemplateDesc());
             templateVO.setCreateTime(e.getCreateTime());
             templateVO.setCreateUser(e.getCreateUser());
             templateVOS.add(templateVO);
         }
-        //templateVOS = TemplateMap.INSTANCES.listPoToVo(templatePOS);
         return templateVOS;
     }
 }

@@ -70,16 +70,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(service.testConnection(dto));
     }
 
-//    @GetMapping("/getAll")
-//    @ApiOperation("获取所有数据源连接信息")
-//    public ResultEntity<List<DataSourceConVO>> getAll() {
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAll());
-//    }
+    @GetMapping("/getSystemAll")
+    @ApiOperation("获取FiData数据源")
+    public ResultEntity<List<DataSourceConVO>> getSystemAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSystemAll());
+    }
 
     @GetMapping("/getTableAll")
     @ApiOperation("获取全部表信息")
-    public ResultEntity<List<DataExampleSourceVO>> getTableAll(String tableName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMeta(tableName));
+    public ResultEntity<List<DataExampleSourceVO>> getTableAll() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAll());
     }
 
     @PostMapping("/getTableFieldAll")
@@ -88,6 +88,7 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldAll(dto));
     }
 
+    /*数据运维数据源*/
     @PostMapping("/getDataOpsDataSource")
     @ApiOperation("获取数据运维数据源信息")
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsDataSource() {
@@ -106,4 +107,6 @@ public class DataSourceController {
     public ResultEntity<ExecuteResultVO> executeDataOpsSql(@Validated @RequestBody ExecuteDataOpsSqlDTO dto) {
         return dataOpsDataSourceManageService.executeDataOpsSql(dto);
     }
+    /*数据运维数据源*/
+
 }

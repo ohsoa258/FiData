@@ -1,7 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.notice;
 
-import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.NoticeTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
@@ -13,6 +13,7 @@ import java.util.List;
  * @date 2022/3/24 14:30
  */
 public class NoticeDTO {
+
     /**
      * 模板id
      */
@@ -20,10 +21,10 @@ public class NoticeDTO {
     public int templateId;
 
     /**
-     * 组件名称
+     * 通知名称
      */
-    @ApiModelProperty(value = "组件名称")
-    public String moduleName;
+    @ApiModelProperty(value = "通知名称")
+    public String noticeName;
 
     /**
      * 通知类型
@@ -62,32 +63,20 @@ public class NoticeDTO {
     public String body;
 
     /**
-     * 组件状态
+     * 运行时间cron表达式
      */
-    @ApiModelProperty(value = "组件状态")
-    public ModuleStateEnum moduleState;
+    @ApiModelProperty(value = "运行时间cron表达式")
+    public String runTimeCron;
 
     /**
-     * 是否发送附件
+     * 通知状态：1、启用 0、禁用
      */
-    @ApiModelProperty(value = "是否发送附件")
-    public boolean sendAttachment;
+    @ApiModelProperty(value = "通知状态")
+    public RuleStateEnum noticeState;
 
     /**
-     * 附件名称
+     * 通知扩展信息
      */
-    @ApiModelProperty(value = "附件名称")
-    public String attachmentName;
-
-    /**
-     * 附件地址
-     */
-    @ApiModelProperty(value = "附件地址")
-    public String attachmentPath;
-
-    /**
-     * 组件通知关联DTO
-     */
-    @ApiModelProperty(value = "组件通知关联DTO")
-    public List<ComponentNotificationDTO> componentNotificationDTOS;
+    @ApiModelProperty(value = "通知扩展信息")
+    public List<NoticeExtendDTO> noticeExtends;
 }

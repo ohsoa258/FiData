@@ -7,11 +7,11 @@ import lombok.Data;
 /**
  * @author dick
  * @version 1.0
- * @description 生命周期组件表
+ * @description 生命周期规则表
  * @date 2022/3/22 15:12
  */
 @Data
-@TableName("tb_lifecycle_module")
+@TableName("tb_lifecycle_rule")
 public class LifecyclePO extends BasePO {
     /**
      * 模板id
@@ -24,14 +24,9 @@ public class LifecyclePO extends BasePO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    public int datasourceType;
-
-    /**
-     * 组件名称
-     */
-    public String moduleName;
+    public String ruleName;
 
     /**
      * 表名称
@@ -39,19 +34,14 @@ public class LifecyclePO extends BasePO {
     public String tableName;
 
     /**
-     * 字段名称，更新依据字段
-     */
-    public String fieldName;
-
-    /**
      * 回收时间
      */
     public String recoveryDate;
 
     /**
-     * 提醒时间
+     * 已持续次数
      */
-    public int remindDate;
+    public int continuedNumber;
 
     /**
      * 是否需要备份，默认否
@@ -59,42 +49,30 @@ public class LifecyclePO extends BasePO {
     public int isBackup;
 
     /**
-     * 检查空表持续天数
+     * 数据血缘断裂回收模板；
+     * 上下游血缘关系范围：
+     * 1、上游 2、下游 3、上下游
      */
-    public int checkEmptytbDay;
+    public int consanguinityRange;
 
     /**
-     * 检查表无刷新天数
+     * 数据无刷新模板；
+     * 字段名称
      */
-    public int checkRefreshtbDay;
+    public String fieldName;
 
     /**
-     * 检查表血缘断裂持续天数
-     */
-    public int checkConsanguinityDay;
-
-    /**
-     * 上下游血缘关系范围：1、上游 2、下游 3、上下游
-     */
-    public int checkConsanguinity;
-
-    /**
-     * 运行时间表达式
-     */
-    public String runTimeCron;
-
-    /**
-     * 表状态
+     * 表状态：1、正常 0、回收
      */
     public int tableState;
 
     /**
-     * 组件规则
+     * 生成规则
      */
-    public String moduleRule;
+    public String createRule;
 
     /**
-     * 组件状态
+     * 规则状态：1、启用 0、禁用
      */
-    public int moduleState;
+    public int ruleState;
 }

@@ -1,6 +1,6 @@
 package com.fisk.datagovernance.dto.dataquality;
 
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
 import lombok.Data;
 
 /**
@@ -20,5 +20,5 @@ public class DataQualityRequestDTO {
     /**
      * 模块类型
      */
-    public TemplateModulesTypeEnum templateModulesType;
+    public ModuleTypeEnum moduleTypeEnum;
 }

@@ -7,11 +7,11 @@ import lombok.Data;
 /**
  * @author dick
  * @version v1.0
- * @description 业务清洗
+ * @description 业务清洗规则表
  * @date 2022/3/22 14:51
  */
 @Data
-@TableName("tb_bizfilter_module")
+@TableName("tb_bizfilter_rule")
 public class BusinessFilterPO extends BasePO
 {
     /**
@@ -25,49 +25,34 @@ public class BusinessFilterPO extends BasePO
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    public int datasourceType;
+    public String ruleName;
 
     /**
-     * 组件名称
-     */
-    public String moduleName;
-
-    /**
-     * 清洗步骤
-     */
-    public int filterStep;
-
-    /**
-     * 表名称
+     * 表名称，页面展示
      */
     public String tableName;
 
     /**
-     * 前置表名称
+     * 实际引用表名称
      */
-    public String proTableName;
+    public String useTableName;
 
     /**
-     * 组件规则（清洗脚本）
+     * 生成规则（清洗脚本）
      */
-    public String moduleRule;
+    public String createRule;
 
     /**
-     * 运行时间表达式
+     * 规则执行顺序
      */
-    public String runTimeCron;
+    public int ruleSort;
 
     /**
-     * 组件执行顺序
+     * 规则状态
      */
-    public int moduleExecSort;
-
-    /**
-     * 组件状态
-     */
-    public int moduleState;
+    public int ruleState;
 }
 
 

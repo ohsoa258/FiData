@@ -15,9 +15,9 @@ import java.util.List;
 @Data
 public class DataExampleSourceVO {
     /**
-     * 数据源类型
+     * 连接类型
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "连接类型")
     public DataSourceTypeEnum conType;
 
     /**

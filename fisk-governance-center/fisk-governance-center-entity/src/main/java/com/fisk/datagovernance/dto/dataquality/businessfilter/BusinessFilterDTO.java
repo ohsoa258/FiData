@@ -1,12 +1,8 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
-import com.fisk.datagovernance.dto.dataquality.notice.ComponentNotificationDTO;
-import com.fisk.datagovernance.enums.dataquality.CheckStepTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleDataSourceTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.ModuleStateEnum;
+import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.util.List;
 
 /**
  * @author dick
@@ -28,62 +24,38 @@ public class BusinessFilterDTO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    @ApiModelProperty(value = "数据源类型")
-    public ModuleDataSourceTypeEnum datasourceType;
+    @ApiModelProperty(value = "规则名称")
+    public String ruleName;
 
     /**
-     * 组件名称
+     * 表名称，页面展示
      */
-    @ApiModelProperty(value = "组件名称")
-    public String moduleName;
-
-    /**
-     * 清洗步骤
-     */
-    @ApiModelProperty(value = "清洗步骤 1：进表前 2：进表后")
-    public CheckStepTypeEnum filterStep;
-
-    /**
-     * 表名称
-     */
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "表名称，页面展示")
     public String tableName;
 
     /**
-     * 前置表名称
+     * 实际引用表名称
      */
-    @ApiModelProperty(value = "前置表名称")
-    public String proTableName;
+    @ApiModelProperty(value = "实际引用表名称")
+    public String useTableName;
 
     /**
-     * 组件规则（清洗脚本）
+     * 生成规则（清洗脚本）
      */
-    @ApiModelProperty(value = "组件规则（清洗脚本）")
-    public String moduleRule;
+    @ApiModelProperty(value = "生成规则（清洗脚本）")
+    public String createRule;
 
     /**
-     * 运行时间表达式
+     * 规则执行顺序
      */
-    @ApiModelProperty(value = "运行时间表达式")
-    public String runTimeCron;
+    @ApiModelProperty(value = "规则执行顺序")
+    public int ruleSort;
 
     /**
-     * 组件执行顺序
+     * 规则状态
      */
-    @ApiModelProperty(value = "组件执行顺序")
-    public int moduleExecSort;
-
-    /**
-     * 组件状态
-     */
-    @ApiModelProperty(value = "组件状态")
-    public ModuleStateEnum moduleState;
-
-    /**
-     * 组件通知关联DTO
-     */
-    @ApiModelProperty(value = "组件通知关联DTO")
-    public List<ComponentNotificationDTO> componentNotificationDTOS;
+    @ApiModelProperty(value = "规则状态")
+    public RuleStateEnum ruleState;
 }

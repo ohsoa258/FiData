@@ -2,7 +2,7 @@ package com.fisk.task.listener.governance;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.datagovernance.dto.dataquality.DataQualityRequestDTO;
-import com.fisk.datagovernance.enums.dataquality.TemplateModulesTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -17,11 +17,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class BuildFieldStrongTaskListener {
     public void msg(String dataInfo, Acknowledgment acke) {
-        log.info("执行 数据治理-数据质量-数据校验-强规则模板消费类");
+        log.info("执行 数据治理-数据质量-数据校验-字段规则模板消费类");
         log.info("dataInfo:" + dataInfo);
         DataQualityRequestDTO requestDTO= JSON.parseObject(dataInfo,DataQualityRequestDTO.class);
         if (requestDTO==null || requestDTO.getId()==0
-                || requestDTO.getTemplateModulesType()!= TemplateModulesTypeEnum.DATACHECK_MODULE){
+                || requestDTO.getModuleTypeEnum()!= ModuleTypeEnum.DATACHECK_MODULE){
             log.info("强规则模板消费参数异常");
             return;
         }

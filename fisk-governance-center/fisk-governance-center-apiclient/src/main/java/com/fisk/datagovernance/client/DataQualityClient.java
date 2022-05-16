@@ -22,8 +22,8 @@ public interface DataQualityClient {
      * @return 执行结果
      */
     @ApiOperation("消费字段强规则模板规则")
-    @PostMapping("/dataQualityClient/buildFieldStrongRule")
-    ResultEntity<Object> buildFieldStrongRule(@RequestBody DataQualityRequestDTO requestDTO);
+    @PostMapping("/dataQualityClient/buildFieldRule")
+    ResultEntity<Object> buildFieldRule(@RequestBody DataQualityRequestDTO requestDTO);
 
     /**
      * 消费字段聚合波动阈值模板规则

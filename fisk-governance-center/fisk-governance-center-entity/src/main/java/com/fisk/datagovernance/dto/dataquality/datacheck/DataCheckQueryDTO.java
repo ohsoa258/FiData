@@ -18,16 +18,10 @@ public class DataCheckQueryDTO {
     public String keyword;
 
     /**
-     * IP
+     * 数据源id
      */
-    @ApiModelProperty(value = "IP")
-    public String conIp;
-
-    /**
-     * 数据库名称
-     */
-    @ApiModelProperty(value = "数据库名称")
-    public String conDbname;
+    @ApiModelProperty(value = "数据源id")
+    public int datasourceId;
 
     /**
      * 表名称

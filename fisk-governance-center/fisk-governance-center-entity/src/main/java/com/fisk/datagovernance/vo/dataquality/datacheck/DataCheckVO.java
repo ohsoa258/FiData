@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author dick
  * @version 1.0
- * @description 数据校验VO
+ * @description 数据校验规则VO
  * @date 2022/3/22 15:35
  */
 @Data
@@ -34,98 +34,87 @@ public class DataCheckVO {
     public int datasourceId;
 
     /**
-     * 数据源类型
+     * 规则名称
      */
-    @ApiModelProperty(value = "数据源类型")
-    public ModuleDataSourceTypeEnum datasourceType;
+    @ApiModelProperty(value = "规则名称")
+    public String ruleName;
 
     /**
-     * 组件名称
+     * 表名称，页面展示
      */
-    @ApiModelProperty(value = "组件名称")
-    public String moduleName;
-
-    /**
-     * 检验步骤
-     */
-    @ApiModelProperty(value = "检验步骤")
-    public CheckStepTypeEnum checkStep;
-
-    /**
-     * 表名称
-     */
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "表名称，页面展示")
     public String tableName;
 
     /**
-     * 前置表名称
+     * 实际引用表名称
      */
-    @ApiModelProperty(value = "前置表名称")
-    public String proTableName;
+    @ApiModelProperty(value = "实际引用表名称")
+    public String useTableName;
 
     /**
-     * 字段名称
+     * 校验规则：1、强规则 2、弱规则
      */
-    @ApiModelProperty(value = "字段名称")
-    public String fieldName;
+    @ApiModelProperty(value = "校验规则：1、强规则 2、弱规则")
+    public String checkRule;
 
     /**
-     * 字段聚合函数
+     * 生成规则
      */
-    @ApiModelProperty(value = "字段聚合函数")
-    public String fieldAggregate;
+    @ApiModelProperty(value = "生成规则")
+    public String createRule;
 
     /**
-     * 校验规则的类型，英文逗号分隔
-     * 1、唯一校验
-     * 2、非空校验
-     * 3、长度校验
+     * 规则执行顺序
      */
-    @ApiModelProperty(value = "校验规则的类型，英文逗号分隔")
-    public String checkRuleType;
+    @ApiModelProperty(value = "规则执行顺序")
+    public int ruleSort;
 
     /**
-     * 波动阀值
+     * 规则状态
+     */
+    @ApiModelProperty(value = "规则状态")
+    public RuleStateEnum ruleState;
+
+    /**
+     * 波动阈值
      */
     @ApiModelProperty(value = "波动阈值")
     public int thresholdValue;
 
     /**
-     * 表行数，实际表行数减去表行数
+     * 模块类型
+     * 100、数据校验 200、业务清洗
+     * 300、生命周期 400、告警设置
      */
-    @ApiModelProperty(value = "表行数")
-    public int rowsValue;
-
-    /**
-     * 运行时间表达式
-     */
-    @ApiModelProperty(value = "运行时间表达式")
-    public String runTimeCron;
-
-    /**
-     * 上下游血缘关系范围
-     * 1、上游 2、下游 3、上下游
-     */
-    @ApiModelProperty(value = "上下游血缘关系范围 1、上游 2、下游 3、上下游")
-    public int checkConsanguinity;
-
-    /**
-     * 组件规则类型
-     */
-    @ApiModelProperty(value = "组件规则类型")
+    @ApiModelProperty(value = "模块类型")
     public ModuleTypeEnum moduleType;
 
     /**
-     * 组件规则
+     * 模块名称
      */
-    @ApiModelProperty(value = "组件规则")
-    public String moduleRule;
+    @ApiModelProperty(value = "模块名称")
+    public String moduleName;
 
     /**
-     * 组件状态
+     * 模板应用场景
+     * 100、页面校验
+     * 101、同步校验
+     * 102、质量报告
+     * 200、同步清洗
+     * 201、清洗报告
+     * 300、生命周期报告
+     * 400、数据校验告警
+     * 401、业务清洗告警
+     * 402、生命周期告警
      */
-    @ApiModelProperty(value = "组件状态")
-    public ModuleStateEnum moduleState;
+    @ApiModelProperty(value = "模板应用场景")
+    public TemplateSceneEnum templateScene;
+
+    /**
+     * 应用场景描述
+     */
+    @ApiModelProperty(value = "应用场景描述")
+    public String sceneDesc;
 
     /**
      * 模板名称
@@ -134,13 +123,21 @@ public class DataCheckVO {
     public String templatenName;
 
     /**
-     * 模板模块
-     */
-    @ApiModelProperty(value = "模板模块")
-    public TemplateModulesTypeEnum templateModules;
-
-    /**
      * 模板类型
+     * 100、字段规则模板
+     * 101、字段聚合波动阈值模板
+     * 102、表行数波动阈值模板
+     * 103、空表校验模板
+     * 104、表更新校验模板
+     * 105、表血缘断裂校验模板
+     * 106、业务验证模板
+     * 200、业务清洗模板
+     * 300、指定时间回收模板
+     * 301、空表回收模板
+     * 302、数据无刷新回收模板
+     * 303、数据血缘断裂回收模板
+     * 400、邮件通知模板
+     * 401、站内消息模板
      */
     @ApiModelProperty(value = "模板类型")
     public TemplateTypeEnum templateType;
@@ -152,22 +149,10 @@ public class DataCheckVO {
     public String templateDesc;
 
     /**
-     * 下次运行时间
+     * 数据校验规则扩展属性
      */
-    @ApiModelProperty(value = "下次运行时间")
-    public String nextTime;
-
-    /**
-     * 通知id集合
-     */
-    @ApiModelProperty(value = "通知id集合")
-    public List<Integer> noticeIds;
-
-    /**
-     * 数据校验模块下相似度组件扩展属性
-     */
-    @ApiModelProperty(value = "数据校验模块下相似度组件扩展属性")
-    public List<SimilarityExtendVO> similarityExtendVOS;
+    @ApiModelProperty(value = "数据校验规则扩展属性")
+    public List<DataCheckExtendVO> dataCheckExtends;
 
     /**
      * 创建时间

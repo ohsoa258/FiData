@@ -53,16 +53,16 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     ResultEnum testConnection(TestConnectionDTO dto);
 
     /**
-     * 获取全部数据源
+     * 获取FiData数据源
      * @return 查询结果
      */
-    //List<DataSourceConVO> getAll();
+    List<DataSourceConVO> getSystemAll();
 
     /**
      * 获取数据源下的表
      * @return 查询结果
      */
-    List<DataExampleSourceVO> getMeta(String tableName);
+    List<DataExampleSourceVO> getTableAll();
 
     /**
      * 获取表字段信息

@@ -5,17 +5,14 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * @author dick
  * @version 1.0
- * @description 组件状态
+ * @description 规则状态
  * @date 2022/3/22 14:02
  */
-public enum ModuleStateEnum implements BaseEnum {
-    /**
-     * 组件状态
-     */
+public enum RuleStateEnum implements BaseEnum {
     Disable(0,"禁用"),
     Enable(1,"启用");
 
-    ModuleStateEnum(int value, String name) {
+    RuleStateEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }

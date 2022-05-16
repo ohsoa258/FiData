@@ -2,6 +2,7 @@ package com.fisk.datagovernance.vo.dataquality.datasource;
 
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -23,9 +24,9 @@ public class DataSourceVO
     public int id;
 
     /**
-     * 数据源类型
+     * 连接类型
      */
-    @ApiModelProperty(value = "数据源类型")
+    @ApiModelProperty(value = "连接类型")
     public DataSourceTypeEnum conType;
 
     /**
@@ -51,6 +52,12 @@ public class DataSourceVO
      */
     @ApiModelProperty(value = "端口")
     public int conPort;
+
+    /**
+     * 数据源类型 1、FiData 2、自定义
+     */
+    @ApiModelProperty(value = "数据源类型")
+    public SourceTypeEnum datasourceType;
 
     /**
      * 表

@@ -24,10 +24,7 @@ public interface BusinessFilterMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            @Mapping(source = "filterStep.value", target = "filterStep"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     BusinessFilterPO dtoToPo(BusinessFilterDTO dto);
 
@@ -38,10 +35,7 @@ public interface BusinessFilterMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "datasourceType.value", target = "datasourceType"),
-            @Mapping(source = "filterStep.value", target = "filterStep"),
-            @Mapping(source = "moduleState.value", target = "moduleState")
-            //@Mapping(target = "componentNotificationDTOS", ignore = true)
+            @Mapping(source = "ruleState.value", target = "ruleState")
     })
     BusinessFilterPO dtoToPo_Edit(BusinessFilterEditDTO dto);
 }

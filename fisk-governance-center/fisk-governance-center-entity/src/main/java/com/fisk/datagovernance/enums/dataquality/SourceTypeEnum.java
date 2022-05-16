@@ -5,18 +5,16 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * @author dick
  * @version 1.0
- * @description 组件数据源类型
- * @date 2022/3/22 13:59
+ * @description 数据源类型
+ * @date 2022/5/16 13:09
  */
-public enum ModuleDataSourceTypeEnum implements BaseEnum {
-    /**
-     * 组件数据源类型
-     */
-    NONE(0, "空"),
-    DATAQUALITY(1, "数据质量"),
-    METADATA(2, "元数据");
+public enum SourceTypeEnum implements BaseEnum {
 
-    ModuleDataSourceTypeEnum(int value, String name) {
+    NONE(0, "空"),
+    FiData(1, "FiData"),
+    custom(2, "自定义");
+
+    SourceTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
@@ -34,11 +32,11 @@ public enum ModuleDataSourceTypeEnum implements BaseEnum {
         return name;
     }
 
-    public static ModuleDataSourceTypeEnum getEnum(int value) {
-        for (ModuleDataSourceTypeEnum e : ModuleDataSourceTypeEnum.values()) {
+    public static SourceTypeEnum getEnum(int value) {
+        for (SourceTypeEnum e : SourceTypeEnum.values()) {
             if (e.getValue() == value)
                 return e;
         }
-        return ModuleDataSourceTypeEnum.NONE;
+        return SourceTypeEnum.NONE;
     }
 }

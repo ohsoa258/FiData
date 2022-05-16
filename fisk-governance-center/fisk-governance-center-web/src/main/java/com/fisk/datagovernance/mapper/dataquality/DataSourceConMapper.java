@@ -23,18 +23,4 @@ public interface DataSourceConMapper extends FKBaseMapper<DataSourceConPO> {
      * @return 查询结果
      */
     Page<DataSourceConVO> listDataSourceCon(Page<DataSourceConVO> page, @Param("query") DataSourceConQuery query);
-
-    /**
-     * 根据id查询数据
-     * @param id id
-     * @return 数据对象
-     */
-    //DataSourceConVO getDataSourceConByUserId(int id);
-
-    /**
-     * 查询所有数据源信息
-     * @return 查询结果
-     */
-//    @Select("SELECT id,`name` FROM tb_datasource_config  WHERE del_flag=1;")
-//    List<DataSourceConVO> getAll();
 }

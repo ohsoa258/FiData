@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datasource;
 
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -46,11 +47,10 @@ public class DataSourceConDTO
     public int conPort;
 
     /**
-     * 模型
+     * 数据源类型 1、FiData 2、自定义
      */
-    @ApiModelProperty(value = "模型")
-    @Length(min = 0, max = 50, message = "长度最多50")
-    public String conCube;
+    @ApiModelProperty(value = "数据源类型 1、FiData 2、自定义")
+    public SourceTypeEnum datasourceType;
 
     /**
      * 数据库名称
