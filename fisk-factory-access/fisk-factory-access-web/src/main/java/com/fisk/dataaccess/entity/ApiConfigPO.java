@@ -44,4 +44,9 @@ public class ApiConfigPO extends BasePO {
      * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
      */
     public Integer publish;
+
+    /**
+     * json解析的根节点
+     */
+    public String jsonKey;
 }

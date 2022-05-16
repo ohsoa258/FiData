@@ -35,6 +35,9 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布", required = true)
     public Integer publish;
 
+    @ApiModelProperty(value = "json解析的根节点")
+    public String jsonKey;
+
     @ApiModelProperty(value = "0: 保存;   1: 保存&发布", required = true)
     public int flag;
 
