@@ -28,9 +28,10 @@ public interface IBuildSqlCommand {
      * 创建表mdm
      * @param entityInfoVo
      * @param tableName
+     * @param code
      * @return
      */
-    String buildMdmTable(EntityInfoVO entityInfoVo,String tableName);
+    String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code);
 
     /**
      * 修改字段类型

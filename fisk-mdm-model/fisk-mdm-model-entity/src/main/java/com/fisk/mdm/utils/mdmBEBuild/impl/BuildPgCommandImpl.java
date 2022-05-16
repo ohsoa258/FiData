@@ -87,14 +87,14 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName) {
+    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code) {
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
         str.append(tableName).append("(");
 
         // 拼接mdm表基础字段拼接
-        str.append(this.splicingMdmTable(tableName));
+        str.append(this.splicingMdmTable(tableName,code));
 
         // 字段sql
         String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
@@ -276,7 +276,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      * mdm表基础字段拼接
      * @return
      */
-    public String splicingMdmTable(String tableName){
+    public String splicingMdmTable(String tableName,String code){
         int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
@@ -285,6 +285,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(MARK + "fidata_newcode varchar(50) NULL").append(",");
+        str.append("constraint pk_"+ tableName + "_code_" + pk +" unique(" + code +")").append(",");
         str.append(this.commonBaseField());
 
         return str.toString();

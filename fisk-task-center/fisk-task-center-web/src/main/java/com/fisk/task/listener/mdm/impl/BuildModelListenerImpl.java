@@ -614,7 +614,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
         String buildStgTableSql = null;
         try {
             // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName);
+            List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> {
+                return "column_" + e.getEntityId() + "_" + e.getId();
+            }).collect(Collectors.toList());
+            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName,code.get(0));
             // 2.执行sql
             return buildStgTableSql;
         } catch (Exception ex) {

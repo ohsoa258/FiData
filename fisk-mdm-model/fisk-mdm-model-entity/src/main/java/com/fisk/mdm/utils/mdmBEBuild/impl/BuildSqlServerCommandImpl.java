@@ -34,7 +34,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName) {
+    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code) {
         return null;
     }
 
