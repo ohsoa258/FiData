@@ -1,6 +1,5 @@
 package com.fisk.mdm.vo.resultObject;
 
-import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import lombok.Data;
 
 import java.util.List;
@@ -23,11 +22,16 @@ public class ResultObjectVO {
     /**
      * 查询结果集
      */
-    private List<Map<String,Object>> resultData;
+    private List<Map<String, Object>> resultData;
 
     /**
      * 总条数
      */
     private Integer total;
+
+    /**
+     * 错误提示
+     */
+    private String errorMsg;
 
 }

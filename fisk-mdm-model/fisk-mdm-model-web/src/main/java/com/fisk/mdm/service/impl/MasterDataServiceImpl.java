@@ -3,42 +3,48 @@ package com.fisk.mdm.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.masterdata.*;
+import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataQueryDTO;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
+import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
+import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.AttributeSyncStatusEnum;
 import com.fisk.mdm.enums.DataTypeEnum;
 import com.fisk.mdm.enums.ImportTypeEnum;
+import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.ModelMap;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
-import com.fisk.mdm.utlis.DataSynchronizationUtils;
-import com.fisk.mdm.vo.attribute.AttributeColumnVO;
-import com.fisk.mdm.vo.attribute.AttributeDetailsVO;
-import com.fisk.mdm.vo.entity.EntityVO;
-import com.fisk.mdm.vo.masterdata.*;
-import com.fisk.mdm.entity.AttributePO;
-import com.fisk.mdm.enums.AttributeStatusEnum;
-import com.fisk.mdm.map.AttributeMap;
-import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.utlis.DataSynchronizationUtils;
+import com.fisk.mdm.vo.attribute.AttributeColumnVO;
+import com.fisk.mdm.vo.entity.EntityVO;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultAttributeGroupVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDropDTO;
 import com.google.common.base.Joiner;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.kafka.common.protocol.types.Field;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -55,8 +61,9 @@ import java.io.OutputStream;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -92,7 +99,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     UserClient client;
 
     @Value("${pgsql-mdm.type}")
-    private String type;
+    private DataSourceTypeEnum type;
     @Value("${pgsql-mdm.url}")
     private String url;
     @Value("${pgsql-mdm.username}")
@@ -109,15 +116,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             "fidata_create_user," +
             "fidata_update_time," +
             "fidata_update_user";
-
-    static {
-        //加载pg数据库驱动
-        try {
-            Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 根据实体id查询主数据
@@ -213,7 +211,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             release(resultSet,statement,connection);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("getMasterDataPage:",e);
+            log.error("getMasterDataPage:", e);
+            resultObjectVO.setErrorMsg(e.getMessage());
         }
         return resultObjectVO;
     }
@@ -231,23 +230,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
             return data;
         }
         for (Map<String,Object> item:data) {
-            String createUserId=item.get("fidata_create_user")==null?"":item.get("fidata_create_user").toString();
-            if (!StringUtils.isEmpty(createUserId))
-            {
-                Optional<UserDropDTO>  createUser= resultData.data.stream().filter(e -> createUserId.equals(String.valueOf(e.id))).findFirst();
-                if (createUser.isPresent())
-                {
-                    item.put("fidata_create_user",createUser.get().username);
-                }
+            String createUserId = item.get("fidata_create_user") == null ? "" : item.get("fidata_create_user").toString();
+            Optional<UserDropDTO> createUser = resultData.data.stream().filter(e -> createUserId.equals(String.valueOf(e.id))).findFirst();
+            if (createUser.isPresent()) {
+                item.put("fidata_create_user", createUser.get().username);
             }
-            String updateUserId=item.get("fidata_update_user")==null?"":item.get("fidata_update_user").toString();
-            if (!StringUtils.isEmpty(updateUserId))
-            {
-                Optional<UserDropDTO> updateUser = resultData.data.stream().filter(e -> updateUserId.equals(String.valueOf(e.id))).findFirst();
-                if (updateUser.isPresent())
-                {
-                    item.put("fidata_update_user",updateUser.get().username);
-                }
+            String updateUserId = item.get("fidata_update_user") == null ? "" : item.get("fidata_update_user").toString();
+            Optional<UserDropDTO> updateUser = resultData.data.stream().filter(e -> updateUserId.equals(String.valueOf(e.id))).findFirst();
+            if (updateUser.isPresent()) {
+                item.put("fidata_update_user", updateUser.get().username);
             }
         }
         return data;
@@ -269,19 +260,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     /**
-     * 获得连接
+     * 连接Connection
      *
      * @return {@link Connection}
      */
-    public Connection getConnection(){
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            log.info("【connection】数据库连接成功, 连接信息【" + url + "】");
-            return connection;
-        } catch (SQLException e) {
-            log.error("【connection】数据库连接获取失败, ex", e);
-            throw new FkException(ResultEnum.VISUAL_CONNECTION_ERROR, e.getLocalizedMessage());
-        }
+    public Connection getConnection() {
+        AbstractDbHelper dbHelper = new AbstractDbHelper();
+        Connection connection = dbHelper.connection(url, username,
+                password, type);
+        return connection;
     }
 
     /**
@@ -432,143 +419,177 @@ public class MasterDataServiceImpl implements IMasterDataService {
         {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        BathUploadMemberListVo listVo=new BathUploadMemberListVo();
-        BathUploadMemberVO result=new BathUploadMemberVO();
-        result.versionId=dto.getVersionId();
-        result.entityId=dto.getEntityId();
-        result.entityName=po.getDisplayName();
-        List<JSONObject> objectArrayList=new ArrayList<>();
-        String tableName=po.getTableName().replace("mdm","stg");
+        BathUploadMemberListVo listVo = new BathUploadMemberListVo();
+        BathUploadMemberVO result = new BathUploadMemberVO();
+        result.versionId = dto.getVersionId();
+        result.entityId = dto.getEntityId();
+        result.entityName = po.getDisplayName();
+        List<JSONObject> objectArrayList = new ArrayList<>();
+        String tableName = po.getTableName().replace("mdm", "stg");
         List<String> codeList = getCodeList(tableName);
-        String batchCode=UUID.randomUUID().toString();
+        String batchCode = UUID.randomUUID().toString();
+        List<Integer> successCountList = new ArrayList<>();
         //创建工作簿
         Workbook workbook;
         try {
             workbook = WorkbookFactory.create(file.getInputStream());
             //获取sheet数量
             int numberOfSheets = workbook.getNumberOfSheets();
-            for (int i = 0; i < numberOfSheets; i++)
-            {
+            for (int i = 0; i < numberOfSheets; i++) {
                 //获取当前工作表
                 Sheet sheet = workbook.getSheetAt(i);
-                if (sheet.getRow(0)==null)
-                {
+                if (sheet.getRow(0) == null) {
                     continue;
                 }
                 //列数
-                int columnNum=sheet.getRow(0).getPhysicalNumberOfCells();
+                int columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
                 //获得总行数
-                int rowNum=sheet.getPhysicalNumberOfRows();
+                int rowNum = sheet.getPhysicalNumberOfRows();
                 Row row1 = sheet.getRow(0);
-                List<AttributeInfoDTO> attributePoList=new ArrayList<>();
-                for (int col=0;col<columnNum;col++)
-                {
+                List<AttributeInfoDTO> attributePoList = new ArrayList<>();
+                //获取表头
+                for (int col = 0; col < columnNum; col++) {
                     Cell cell = row1.getCell(col);
-                    if (cell.getStringCellValue().equals("新编码"))
-                    {
-                        AttributeInfoDTO newCode=new AttributeInfoDTO();
+                    if (cell.getStringCellValue().equals("新编码")) {
+                        AttributeInfoDTO newCode = new AttributeInfoDTO();
                         newCode.setName("fidata_new_code");
                         attributePoList.add(newCode);
                         continue;
                     }
                     Optional<AttributePO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
-                    if (!data.isPresent())
-                    {
+                    if (!data.isPresent()) {
                         throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
                     }
                     attributePoList.add(AttributeMap.INSTANCES.poToInfoDto(data.get()));
                 }
-                result.attribute=attributePoList;
-                for (int row=1;row<rowNum;row++)
-                {
-                    JSONObject jsonObj = new JSONObject();
-                    Row nowRow = sheet.getRow(row);
-                    result.count+=1;
-                    for (int col=0;col<columnNum;col++)
-                    {
-                        Cell cell = nowRow.getCell(col);
-                        String value="";
-                        //判断字段类型
-                        if (cell !=null)
-                        {
-                            value=getCellDataType(cell,
-                                    attributePoList.get(col).getDataType(),
-                                    attributePoList.get(col).getDataTypeDecimalLength()==null?0:attributePoList.get(col).getDataTypeDecimalLength());
+                result.attribute = attributePoList;
+                result.count = rowNum - 1;
+                //每个线程执行条数
+                final int threadHandleNumber = 1000;
+                //线程数
+                int threadCount = rowNum / threadHandleNumber == 0 ? rowNum / threadHandleNumber : (rowNum / threadHandleNumber) + 1;
+                final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+                long userId = userHelper.getLoginUserInfo().id;
+                for (int thread = 0; thread < threadCount; thread++) {
+                    int start = thread * threadHandleNumber + 1;
+                    int end = (thread + 1) * threadHandleNumber > rowNum ? rowNum : ((thread + 1) * threadHandleNumber) + 1;
+                    List<JSONObject> objectList = new ArrayList<>();
+                    new Thread(new Runnable() {
+                        @SneakyThrows
+                        @Override
+                        public void run() {
+                            try {
+                                for (int row = start; row < end; row++) {
+                                    JSONObject jsonObj = new JSONObject();
+                                    Row nowRow = sheet.getRow(row);
+                                    for (int col = 0; col < columnNum; col++) {
+                                        Cell cell = nowRow.getCell(col);
+                                        String value = "";
+                                        //判断字段类型
+                                        if (cell != null) {
+                                            value = getCellDataType(cell,
+                                                    attributePoList.get(col).getDataType(),
+                                                    attributePoList.get(col).getDataTypeDecimalLength() == null ? 0 : attributePoList.get(col).getDataTypeDecimalLength());
+                                        }
+                                        if ("code".equals(attributePoList.get(col).getName()) && StringUtils.isEmpty(value)) {
+                                            value = UUID.randomUUID().toString();
+                                        }
+                                        jsonObj.put(attributePoList.get(col).getName(), dto.removeSpace == true ? value.trim() : value);
+                                    }
+                                    //上传逻辑：1 修改 2 新增
+                                    if (codeList.contains(jsonObj.get("code"))) {
+                                        jsonObj.put("fidata_syncy_type", "1");
+                                        //result.updateCount+=1;
+                                    } else {
+                                        jsonObj.put("fidata_syncy_type", "2");
+                                        //result.addCount+=1;
+                                    }
+                                    jsonObj.put("fidata_error_msg", "");
+                                    jsonObj.put("internalId", "");
+                                    //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
+                                    jsonObj.put("fidata_status", "0");
+                                    objectList.add(jsonObj);
+                                }
+                                if (!CollectionUtils.isEmpty(objectList)) {
+                                    objectArrayList.addAll(objectList);
+                                    int flatCount = templateDataSubmitStg(objectList, tableName, batchCode, dto.getVersionId(), userId);
+                                    successCountList.add(flatCount);
+                                }
+                            } catch (Exception e) {
+                                log.error("importTemplateData thread:", e);
+                            } finally {
+                                countDownLatch.countDown();
+                            }
                         }
-                        if ("code".equals(attributePoList.get(col).getName()) && StringUtils.isEmpty(value))
-                        {
-                            value=UUID.randomUUID().toString();
-                        }
-                        jsonObj.put(attributePoList.get(col).getName(),dto.removeSpace==true?value.trim():value);
-                    }
-                    //上传逻辑：1 修改 2 新增
-                    if (codeList.contains(jsonObj.get("code")))
-                    {
-                        jsonObj.put("fidata_syncy_type","1");
-                        //result.updateCount+=1;
-                    }else {
-                        jsonObj.put("fidata_syncy_type","2");
-                        //result.addCount+=1;
-                    }
-                    jsonObj.put("fidata_error_msg","");
-                    jsonObj.put("internalId","");
-                    //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
-                    jsonObj.put("fidata_status","0");
-                    objectArrayList.add(jsonObj);
+                    }).start();
                 }
-                result.members=objectArrayList;
-                int flatCount = templateDataSubmitStg(result, tableName, batchCode);
-                setStgBatch(batchCode,dto.getEntityId(),dto.getVersionId(),result.count,result.count-flatCount,flatCount>0?0:1);
+                //等待所有线程执行完毕
+                countDownLatch.await();
             }
-            List<BathUploadMemberVO> bathUploadMemberVOList=new ArrayList<>();
+            Integer successCount = successCountList.stream().reduce(Integer::sum).orElse(0);
+            //添加批次
+            setStgBatch(batchCode, dto.getEntityId(), dto.getVersionId(), result.count, result.count - successCount, successCount > 0 ? 0 : 1);
+            result.members = objectArrayList;
+            List<BathUploadMemberVO> bathUploadMemberVOList = new ArrayList<>();
             bathUploadMemberVOList.add(result);
-            listVo.key =batchCode;
-            listVo.list=bathUploadMemberVOList;
+            listVo.key = batchCode;
+            listVo.list = bathUploadMemberVOList;
             return listVo;
-        }
-        catch (Exception e)
-        {
-            log.error("importTemplateData",e);
-            throw new FkException(ResultEnum.SQL_ANALYSIS,e);
+        } catch (Exception e) {
+            log.error("importTemplateData", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS, e);
         }
     }
 
-    public int templateDataSubmitStg(BathUploadMemberVO vo,String tableName,String batchCode) throws SQLException{
-        Connection conn=null;
-        Statement stat=null;
+    /**
+     * 模板数据提交到stg
+     *
+     * @param members
+     * @param tableName
+     * @param batchCode
+     * @param versionId
+     * @param userId
+     * @return
+     * @throws SQLException
+     */
+    public int templateDataSubmitStg(List<JSONObject> members,
+                                     String tableName,
+                                     String batchCode,
+                                     int versionId,
+                                     long userId) throws SQLException {
+        Connection conn = null;
+        Statement stat = null;
         try {
-            Date date=new Date();
-            StringBuilder str=new StringBuilder();
+            Date date = new Date();
+            StringBuilder str = new StringBuilder();
             conn = getConnection();
             stat = conn.createStatement();
-            for (int i=0;i<vo.members.size();i++)
-            {
-                if (i==0)
-                {
-                    str.append("insert into "+tableName);
-                    str.append("("+getColumnNameAndValue(vo.members.get(i),0));
-                    str.append(",fidata_import_type,fidata_batch_code,fidata_version_id," +
-                            "fidata_create_time,fidata_create_user,fidata_del_flag");
-                    str.append(")");
-                    str.append(" values("+getColumnNameAndValue(vo.members.get(i),1)+","
-                            + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"
-                            +vo.versionId+",'"+getFormatDate(date,DataTypeEnum.TIMESTAMP.getName())+"',"+userHelper.getLoginUserInfo().id+",1"+")");
-                    continue;
+            str.append("insert into " + tableName);
+            str.append("(" + getColumnNameAndValue(members.get(0), 0));
+            str.append(",fidata_import_type,fidata_batch_code,fidata_version_id,");
+            str.append("fidata_create_time,fidata_create_user,fidata_update_time,fidata_update_user,fidata_del_flag");
+            str.append(")");
+            str.append(" values(" + getColumnNameAndValue(members.get(0), 1) + ","
+                    + ImportTypeEnum.EXCEL_IMPORT.getValue() + ",'" + batchCode + "'," + versionId + ",'");
+            str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",'");
+            str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",1" + ")");
+            if (members.size() > 1) {
+                for (int i = 1; i < members.size(); i++) {
+                    str.append(",(" + getColumnNameAndValue(members.get(i), 1) + ","
+                            + ImportTypeEnum.EXCEL_IMPORT.getValue() + ",'" + batchCode + "',"
+                            + versionId + ",'");
+                    str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",'");
+                    str.append(getFormatDate(date, DataTypeEnum.TIMESTAMP.getName()) + "'," + userId + ",1" + ")");
                 }
-                str.append(",("+getColumnNameAndValue(vo.members.get(i),1)+","
-                        + ImportTypeEnum.EXCEL_IMPORT.getValue()+",'"+batchCode+"',"
-                        +vo.versionId+",'"+getFormatDate(date,DataTypeEnum.TIMESTAMP.getName())+"',"+userHelper.getLoginUserInfo().id+",1"+")");
             }
-            log.info("模板批量添加sql:",str.toString());
+            log.info("模板批量添加sql:", str.toString());
             stat.addBatch(str.toString());
             int[] flatCount = stat.executeBatch();
             return flatCount[0];
-        }
-        catch (Exception e)
-        {
-            throw new FkException(ResultEnum.DATA_SUBMIT_ERROR,e);
-        }
-        finally {
+        } catch (Exception e) {
+            log.error("templateDataSubmitStg:", e);
+            throw new FkException(ResultEnum.DATA_SUBMIT_ERROR, e);
+        } finally {
             stat.close();
             conn.close();
         }
@@ -613,18 +634,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             //获取列名
-            List<AttributeInfoDTO> attributes=new ArrayList<>();
+            List<AttributeInfoDTO> attributes = new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
-                String columnName=metaData.getColumnLabel(i);
+                String columnName = metaData.getColumnLabel(i);
                 Optional<AttributePO> first = list.stream().filter(e -> columnName.equals(e.getName())).findFirst();
-                if (!first.isPresent())
-                {
+                if (!first.isPresent()) {
                     continue;
                 }
                 attributes.add(AttributeMap.INSTANCES.poToInfoDto(first.get()));
             }
-            vo.attribute=attributes;
-            vo.members=columnDataList(rs,metaData,columnCount);
+            vo.attribute = attributes;
+            vo.members = columnDataList(rs, metaData, columnCount);
+            //释放资源
+            release(rs, st, connection);
         }
         catch (SQLException e)
         {
@@ -668,145 +690,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public ResultEnum importDataSubmit(ImportDataSubmitDTO dto) {
         dataSynchronizationUtils.stgDataSynchronize(dto.entityId,dto.key);
         return ResultEnum.SUCCESS;
-    }
-
-    @Override
-    public ResultEnum addMasterData(MasterDataDTO dto)
-    {
-        return OperateMasterData(dto,0);
-    }
-
-    @Override
-    public ResultEnum delMasterData(MasterDataDTO dto)
-    {
-        return OperateMasterData(dto,2);
-    }
-
-    @Override
-    public ResultEnum updateMasterData(MasterDataDTO dto)
-    {
-        return OperateMasterData(dto,1);
-    }
-
-    @Override
-    public MasterDataDetailsVO getMasterData(MasterDataDetailsParamDTO dto)
-    {
-        EntityPO entityPO=entityMapper.selectById(dto.getEntityId());
-        if (entityPO==null)
-        {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
-        MasterDataDetailsVO data=new MasterDataDetailsVO();
-        QueryWrapper<AttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(AttributePO::getEntityId,dto.getEntityId());
-        List<AttributePO> list=attributeMapper.selectList(queryWrapper);
-        List<AttributeDetailsVO> detailsList=AttributeMap.INSTANCES.poListToDetailsVoList(list);
-        String sql="select * from "+entityPO.getTableName()+" where code='"+dto.code+"'";
-        try {
-            Connection connection = getConnection();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery(sql);
-            // 获取列数
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            while (rs.next())
-            {
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = metaData.getColumnLabel(i);
-                    Optional<AttributeDetailsVO> first = detailsList.stream().filter(e -> columnName.equals(e.columnName)).findFirst();
-                    if (!first.isPresent())
-                    {
-                        continue;
-                    }
-                    first.get().value=rs.getString(columnName);
-                }
-            }
-            data.attributes=detailsList;
-            return data;
-        }
-        catch (SQLException e)
-        {
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR,e);
-        }
-    }
-
-    public ResultEnum OperateMasterData(MasterDataDTO dto,int type){
-        EntityPO entityPO=entityMapper.selectById(dto.getEntityId());
-        if (entityPO==null)
-        {
-            return ResultEnum.DATA_NOTEXISTS;
-        }
-        String tableName=entityPO.getTableName().replace("mdm","stg");
-        if (CollectionUtils.isEmpty(dto.members))
-        {
-            return ResultEnum.PARAMTER_ERROR;
-        }
-        String batchCode=UUID.randomUUID().toString();
-        Date date=new Date();
-        StringBuilder str=new StringBuilder();
-        str.append("insert into "+tableName);
-        str.append("("+getColumnNameAndValue(dto.members,0));
-        //添加
-        if (type==0)
-        {
-            str.append(",fidata_import_type,fidata_batch_code,fidata_status,fidata_version_id," +
-                    "fidata_create_time,fidata_create_user,fidata_del_flag");
-            str.append(") ");
-            str.append(" values("+getColumnNameAndValue(dto.members,1)+","
-                    + ImportTypeEnum.MANUALLY_ENTER.getValue()+",'"+batchCode+"',"+0+","
-                    +dto.getVersionId()+",'"+getFormatDate(date,DataTypeEnum.TIMESTAMP.getName())+"',"+userHelper.getLoginUserInfo().id+",1"+")");
-        }
-        //删除或修改
-        else
-        {
-            int delFlag=type==1?1:0;
-            str.append(",fidata_batch_code,fidata_status,fidata_version_id," +
-                    "fidata_update_time,fidata_update_user,fidata_del_flag");
-            str.append(") ");
-            str.append(" values("+getColumnNameAndValue(dto.members,1)+","
-                    +"'"+batchCode+"',"+0+","
-                    +dto.getVersionId()+",'"+getFormatDate(date,DataTypeEnum.TIMESTAMP.getName())+"',"+userHelper.getLoginUserInfo().id+","+delFlag+")");
-        }
-        log.info("执行sql:",str.toString());
-        int flag = executeSql(str.toString());
-        //添加批次
-        setStgBatch(batchCode,dto.getEntityId(),dto.getVersionId(),1,1-flag,flag>0?0:1);
-        return flag>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
-    }
-
-    public String getColumnNameAndValue(List<MemberDTO> members,int type){
-        List<String> columnList=new ArrayList<>();
-        for (MemberDTO item:members)
-        {
-            //获取列名
-            if (type==0)
-            {
-                if ("NewCode".equals(item.name))
-                {
-                    columnList.add("fidata_new_code");
-                    continue;
-                }
-                columnList.add(item.name);
-            }else {
-                columnList.add("'"+item.value+"'");
-            }
-        }
-        return Joiner.on(",").join(columnList);
-    }
-
-    public int executeSql(String sql){
-        try {
-            Connection conn= getConnection();
-            Statement stat = conn.createStatement();
-            stat.addBatch(sql);
-            int[] ints = stat.executeBatch();
-            return ints[0];
-        }
-        catch (SQLException e)
-        {
-            log.error("executeSql:",e);
-            return 0;
-        }
     }
 
     /**
@@ -863,18 +746,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //数字
             case Cell.CELL_TYPE_NUMERIC:
                 //时间格式
-                if (HSSFDateUtil.isCellDateFormatted(cell))
-                {
-                    value=getFormatDate(cell.getDateCellValue(),dataType);
-                }else {
+                if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                    value = getFormatDate(cell.getDateCellValue(), dataType);
+                } else {
                     //数字格式
-                    if (DataTypeEnum.NUMERICAL.getName().equals(dataType))
-                    {
+                    if (DataTypeEnum.NUMERICAL.getName().equals(dataType)) {
                         DecimalFormat df = new DecimalFormat("#");
-                        value=df.format(cell.getNumericCellValue());
-                    }
-                    else if (DataTypeEnum.FLOAT.getName().equals(dataType))
-                    {
+                        value = df.format(cell.getNumericCellValue());
+                    } else if (DataTypeEnum.FLOAT.getName().equals(dataType)) {
                         DecimalFormat df = new DecimalFormat(createDecimalLength(decimalLength));
                         value = df.format(cell.getNumericCellValue());
                     }
@@ -885,7 +764,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 break;
             //布尔值
             case Cell.CELL_TYPE_BOOLEAN:
-                value=String.valueOf(cell.getBooleanCellValue());
+                value = String.valueOf(cell.getBooleanCellValue());
                 break;
             //错误值=CELL_TYPE_ERROR
             default:
@@ -894,21 +773,27 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return value;
     }
 
-    public String createDecimalLength(int decimalLength){
-        String decimalFormat="0.";
-        for (int i=0;i<decimalLength;i++)
-        {
-            decimalFormat+="0";
+    /**
+     * 浮点型转字符串生成格式
+     *
+     * @param decimalLength
+     * @return
+     */
+    public String createDecimalLength(int decimalLength) {
+        String decimalFormat = "0.";
+        for (int i = 0; i < decimalLength; i++) {
+            decimalFormat += "0";
         }
         return decimalFormat;
     }
 
     /**
      * 时间格式化
+     *
      * @param date
      * @return
      */
-    public static String getFormatDate(Date date,String dataType) {
+    public static String getFormatDate(Date date, String dataType) {
         SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //日期
         SimpleDateFormat dates = new SimpleDateFormat("yyyy-MM-dd");
@@ -947,41 +832,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         stgBatchDto.totalCount=totalCount;
         stgBatchDto.errorCount=errorCount;
         stgBatchService.addStgBatch(stgBatchDto);
-    }
-
-    /**
-     * list集合分页
-     * @param list
-     * @param pageNum
-     * @param pageSize
-     * @return
-     */
-    public static List startPage(List list, Integer pageNum,Integer pageSize) {
-        if (list == null) {
-            return null;
-        }
-        if (list.size() == 0) {
-            return null;
-        }
-        Integer count = list.size(); // 记录总数
-        Integer pageCount = 0; // 页数
-        if (count % pageSize == 0) {
-            pageCount = count / pageSize;
-        } else {
-            pageCount = count / pageSize + 1;
-        }
-        int fromIndex = 0; // 开始索引
-        int toIndex = 0; // 结束索引
-
-        if (!pageNum.equals(pageCount)) {
-            fromIndex = (pageNum - 1) * pageSize;
-            toIndex = fromIndex + pageSize;
-        } else {
-            fromIndex = (pageNum - 1) * pageSize;
-            toIndex = count;
-        }
-        List pageList = list.subList(fromIndex, toIndex);
-        return pageList;
     }
 
     /**

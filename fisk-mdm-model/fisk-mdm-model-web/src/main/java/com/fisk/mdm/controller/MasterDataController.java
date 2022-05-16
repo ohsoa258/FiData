@@ -6,7 +6,10 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.masterdata.*;
+import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataQueryDTO;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
@@ -18,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.sql.SQLException;
 
 /**
  * 主数据控制器
@@ -84,7 +86,7 @@ public class MasterDataController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
     }
 
-    @ApiOperation("添加主数据")
+    /*@ApiOperation("添加主数据")
     @PostMapping("/addMasterData")
     @ResponseBody
     public ResultEntity<Object> addMasterData(@Validated @RequestBody MasterDataDTO dto)
@@ -98,7 +100,7 @@ public class MasterDataController {
     public ResultEntity<Object> deleteMasterData(@Validated @RequestBody MasterDataDTO dto)
     {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.delMasterData(dto));
-    }
+    }*/
 
 
 }

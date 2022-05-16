@@ -1,9 +1,12 @@
 package com.fisk.mdm.service;
 
-import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.mdm.dto.masterdata.*;
-import com.fisk.mdm.vo.masterdata.*;
+import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
+import com.fisk.mdm.dto.masterdata.MasterDataQueryDTO;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,28 +72,28 @@ public interface IMasterDataService {
      * @param dto
      * @return
      */
-    ResultEnum addMasterData(MasterDataDTO dto);
+    //ResultEnum addMasterData(MasterDataDTO dto);
 
     /**
      * 主数据删除
      * @param dto
      * @return
      */
-    ResultEnum delMasterData(MasterDataDTO dto);
+    //ResultEnum delMasterData(MasterDataDTO dto);
 
     /**
      * 主数据更新
      * @param dto
      * @return
      */
-    ResultEnum updateMasterData(MasterDataDTO dto);
+    //ResultEnum updateMasterData(MasterDataDTO dto);
 
     /**
      * 主数据详情
      * @param dto
      * @return
      */
-    MasterDataDetailsVO getMasterData(MasterDataDetailsParamDTO dto);
+    //MasterDataDetailsVO getMasterData(MasterDataDetailsParamDTO dto);
 
 
 }
