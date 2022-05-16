@@ -25,6 +25,16 @@ public class ApiParameterPO extends BasePO {
     public long apiId;
 
     /**
+     * Headers or Body
+     */
+    public String requestType;
+
+    /**
+     * form-data or raw
+     */
+    public String requestMethod;
+
+    /**
      * 请求参数key
      */
     public String parameterKey;

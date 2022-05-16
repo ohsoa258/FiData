@@ -3,6 +3,8 @@ package com.fisk.dataaccess.dto.api;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * <p>
  * api请求参数
@@ -21,9 +23,16 @@ public class ApiParameterDTO {
     @ApiModelProperty(value = "左边非实时api的id", required = true)
     public long apiId;
 
-    @ApiModelProperty(value = "请求参数key", required = true)
+    @ApiModelProperty(value = "Headers or Body", required = true)
+    @NotNull
+    public String requestType;
+
+    @ApiModelProperty(value = "form-data or raw")
+    public String requestMethod;
+
+    @ApiModelProperty(value = "请求参数key or Headers的key", required = true)
     public String parameterKey;
 
-    @ApiModelProperty(value = "请求参数value", required = true)
+    @ApiModelProperty(value = "请求参数value or Headers的value", required = true)
     public String parameterValue;
 }

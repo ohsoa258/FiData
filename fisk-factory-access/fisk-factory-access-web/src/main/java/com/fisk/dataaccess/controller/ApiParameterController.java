@@ -9,6 +9,7 @@ import com.fisk.dataaccess.service.IApiParameter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,14 +37,14 @@ public class ApiParameterController {
 
     @PostMapping("/addList")
     @ApiOperation(value = "添加API请求参数集合")
-    public ResultEntity<Object> addData(@RequestBody List<ApiParameterDTO> dtoList) {
+    public ResultEntity<Object> addData(@Validated @RequestBody List<ApiParameterDTO> dtoList) {
 
         return ResultEntityBuild.build(service.addData(dtoList));
     }
 
     @PutMapping("/editList")
     @ApiOperation(value = "修改API请求参数集合")
-    public ResultEntity<Object> editData(@RequestBody List<ApiParameterDTO> dtoList) {
+    public ResultEntity<Object> editData(@Validated @RequestBody List<ApiParameterDTO> dtoList) {
 
         return ResultEntityBuild.build(service.editData(dtoList));
     }
