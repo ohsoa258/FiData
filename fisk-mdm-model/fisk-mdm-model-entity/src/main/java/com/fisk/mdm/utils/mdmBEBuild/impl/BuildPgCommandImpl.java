@@ -45,10 +45,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildStgTable(EntityInfoVO entityInfoVo) {
+    public String buildStgTable(EntityInfoVO entityInfoVo,String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
-        String tableName = "stg_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
         str.append(tableName).append("(");
 
         // 拼接Stg表基础字段
@@ -88,8 +87,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildMdmTable(EntityInfoVO entityInfoVo) {
-        String tableName = "mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId();
+    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName) {
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE TABLE " + PUBLIC + ".");
@@ -228,6 +226,27 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String queryData(String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT * FROM " + PUBLIC + "." + tableName);
+        return str.toString();
+    }
+
+    @Override
+    public String generateStgTableName(Integer modelId, Integer entityId) {
+        StringBuilder str = new StringBuilder();
+        str.append("stg_" + modelId + "_" + entityId);
+        return str.toString();
+    }
+
+    @Override
+    public String generateMdmTableName(Integer modelId, Integer entityId) {
+        StringBuilder str = new StringBuilder();
+        str.append("mdm_" + modelId + "_" + entityId);
+        return str.toString();
+    }
+
+    @Override
+    public String generateViwTableName(Integer modelId, Integer entityId) {
+        StringBuilder str = new StringBuilder();
+        str.append("viw_" + modelId + "_" + entityId);
         return str.toString();
     }
 

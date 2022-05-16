@@ -29,12 +29,12 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildStgTable(EntityInfoVO entityInfoVo) {
+    public String buildStgTable(EntityInfoVO entityInfoVo,String tableName) {
         return null;
     }
 
     @Override
-    public String buildMdmTable(EntityInfoVO entityInfoVo) {
+    public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName) {
         return null;
     }
 
@@ -80,6 +80,21 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
 
     @Override
     public String queryData(String tableName) {
+        return null;
+    }
+
+    @Override
+    public String generateStgTableName(Integer modelId, Integer entityId) {
+        return null;
+    }
+
+    @Override
+    public String generateMdmTableName(Integer modelId, Integer entityId) {
+        return null;
+    }
+
+    @Override
+    public String generateViwTableName(Integer modelId, Integer entityId) {
         return null;
     }
 }

@@ -194,21 +194,24 @@ public class BuildModelListenerImpl implements BuildModelListener {
         String sql = null;
         try{
             // 1.删除视图
-            sql = this.dropViwTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
+            AttributeInfoDTO dto = noSubmitAttributeList.get(0);
+            String viwTableName = sqlBuilder.generateViwTableName(dto.getModelId(), dto.getEntityId());
+            sql = this.dropViwTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList,viwTableName);
             if (StringUtils.isNotBlank(sql)){
                 PreparedStatement statement = connection.prepareStatement(sql);
                 statement.execute();
             }
 
             // 2.删除stg
-            sql = this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList);
+            String stgTableName = sqlBuilder.generateStgTableName(dto.getModelId(), dto.getEntityId());
+            sql = this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList,stgTableName);
             if (StringUtils.isNotBlank(sql)){
                 PreparedStatement statement = connection.prepareStatement(sql);
                 statement.execute();
             }
 
             // 3.创建Stg表
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
 
@@ -253,17 +256,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param attributeList
      */
     public String dropStgTable(AbstractDbHelper abstractDbHelper, Connection connection,
-                             IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
-
-        // 表名
-        AttributeInfoDTO dto = attributeList.get(0);
-        String tableName = "stg_" + dto.getModelId() + "_" + dto.getEntityId();
+                             IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList
+                             ,String stgTableName) {
 
         // 判断视图是否存在
-        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, tableName);
+        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, stgTableName);
         if (exits == true) {
             // 1.创建Sql
-            String dropTableSql = sqlBuilder.dropTable(tableName);
+            String dropTableSql = sqlBuilder.dropTable(stgTableName);
             return dropTableSql;
         }
 
@@ -280,17 +280,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param attributeList
      */
     public String dropViwTable(AbstractDbHelper abstractDbHelper, Connection connection,
-                             IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
-
-        // 表名
-        AttributeInfoDTO dto = attributeList.get(0);
-        String viwName = "viw_" + dto.getModelId() + "_" + dto.getEntityId();
+                             IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList
+                             ,String viwTableName) {
 
         // 判断视图是否存在
-        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, viwName);
+        boolean exits = this.isExits(sqlBuilder, abstractDbHelper, connection, viwTableName);
         if (exits == true) {
             // 1.创建Sql
-            String dropTableSql = sqlBuilder.dropViw(viwName);
+            String dropTableSql = sqlBuilder.dropViw(viwTableName);
             return dropTableSql;
         }
 
@@ -307,7 +304,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                                IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
-        String tableName = "mdm_" + dto.getModelId() + "_" + dto.getEntityId();
+        String tableName = sqlBuilder.generateMdmTableName(dto.getModelId(),dto.getEntityId());
 
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
@@ -456,12 +453,14 @@ public class BuildModelListenerImpl implements BuildModelListener {
             connection.setAutoCommit(false);
 
             // 1.创建Stg表
-            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            String stgTableName = sqlBuilder.generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
             PreparedStatement stemStg = connection.prepareStatement(sql);
             stemStg.execute();
 
             // 2.创建mdm表
-            sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo);
+            String mdmTableName = sqlBuilder.generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,mdmTableName);
             PreparedStatement stemMdm = connection.prepareStatement(sql);
             stemMdm.execute();
 
@@ -469,7 +468,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             this.writableColumnName(entityInfoVo.getAttributeList());
 
             // 4.创建view视图
-            sql = this.buildViewTable(entityInfoVo);
+            sql = this.buildViewTable(entityInfoVo,sqlBuilder);
             PreparedStatement stemViw = connection.prepareStatement(sql);
             stemViw.execute();
 
@@ -479,7 +478,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 5.回写成功属性状态
             this.writableAttributeStatus(entityInfoVo.getAttributeList());
             // 6.回写实体状态
-            this.writableEntityStatus(entityInfoVo);
+            this.writableEntityStatus(entityInfoVo,mdmTableName);
 
             // 7.清空错误信息
             entityInfoVo.getAttributeList().stream().filter(Objects::nonNull)
@@ -516,11 +515,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
      *
      * @param entityInfoVo
      */
-    public void writableEntityStatus(EntityInfoVO entityInfoVo) {
+    public void writableEntityStatus(EntityInfoVO entityInfoVo,String mdmTableName) {
         UpdateEntityDTO dto = new UpdateEntityDTO();
         dto.setId(entityInfoVo.getId());
         dto.setStatus(1);
-        dto.setTableName("mdm_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
+        dto.setTableName(mdmTableName);
         mdmClient.update(dto);
     }
 
@@ -579,12 +578,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param entityInfoVo
      */
     public String createStgTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo) {
+                                 Connection connection, EntityInfoVO entityInfoVo,String stgTableName) {
 
         String buildStgTableSql = null;
         try {
             // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo);
+            buildStgTableSql = sqlBuilder.buildStgTable(entityInfoVo,stgTableName);
             // 2.执行sql
             return buildStgTableSql;
         } catch (Exception ex) {
@@ -610,12 +609,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param entityInfoVo
      */
     public String createMdmTable(AbstractDbHelper abstractDbHelper, IBuildSqlCommand sqlBuilder,
-                                 Connection connection, EntityInfoVO entityInfoVo) {
+                                 Connection connection, EntityInfoVO entityInfoVo,String mdmTableName) {
 
         String buildStgTableSql = null;
         try {
             // 1.生成Sql
-            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo);
+            buildStgTableSql = sqlBuilder.buildMdmTable(entityInfoVo,mdmTableName);
             // 2.执行sql
             return buildStgTableSql;
         } catch (Exception ex) {
@@ -711,7 +710,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         String buildStgTableSql = null;
         try {
             // 1.生成Sql
-            buildStgTableSql = this.buildViewTable(entityInfoVo);
+            buildStgTableSql = this.buildViewTable(entityInfoVo,sqlBuilder);
             // 2.执行sql
             PreparedStatement statement = connection.prepareStatement(buildStgTableSql);
             statement.execute();
@@ -735,10 +734,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param entityInfoVo
      * @return
      */
-    public String buildViewTable(EntityInfoVO entityInfoVo) {
+    public String buildViewTable(EntityInfoVO entityInfoVo,IBuildSqlCommand sqlBuilder) {
+        String viwTableName = sqlBuilder.generateViwTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String mdmTableName = sqlBuilder.generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
-        str.append("viw_" + entityInfoVo.getModelId() + "_" + entityInfoVo.getId());
+        str.append(viwTableName);
         str.append(" AS ").append("SELECT ");
 
         List<Integer> ids = entityInfoVo.getAttributeList().stream().filter(e -> e.getId() != null).map(e -> e.getId()).collect(Collectors.toList());
@@ -752,10 +754,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 先去判断属性有没有外键
         if (CollectionUtils.isEmpty(foreignList)) {
             // 不存在外键
-            str.append(this.noDomainSplicing(noForeignList));
+            str.append(this.noDomainSplicing(noForeignList,mdmTableName));
         } else {
             // 存在外键
-            str.append(this.domainSplicing(foreignList, noForeignList));
+            str.append(this.domainSplicing(foreignList, noForeignList,mdmTableName));
         }
 
         return str.toString();
@@ -767,7 +769,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param foreignList
      * @param noForeignList
      */
-    public String domainSplicing(List<AttributeInfoDTO> foreignList, List<AttributeInfoDTO> noForeignList) {
+    public String domainSplicing(List<AttributeInfoDTO> foreignList, List<AttributeInfoDTO> noForeignList
+                                 ,String mdmTableName) {
         StringBuilder str = new StringBuilder();
 
         // 不存在域字段的属性
@@ -807,7 +810,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         str.append(buildPgCommand.splicingViewTable(true));
 
         // 主表表名
-        str.append(" FROM " + "mdm_" + dto.getModelId() + "_" + dto.getEntityId() + " " + PRIMARY_TABLE);
+        str.append(" FROM " + mdmTableName + " " + PRIMARY_TABLE);
 
         AtomicInteger amount1 = new AtomicInteger(0);
         String leftJoin = list.stream().filter(Objects::nonNull)
@@ -817,7 +820,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
 
                     String alias = PRIMARY_TABLE + amount1.incrementAndGet();
-                    String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId() + " " + alias;
+                    String tableName = mdmTableName + " " + alias;
                     String on = " ON " + PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id" +
                             " AND " + PRIMARY_TABLE + "." + data.getColumnName() + " = " + alias + "." + MARK + "id";
                     String str1 = tableName + " " + on;
@@ -849,7 +852,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param noForeignList
      * @return
      */
-    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList) {
+    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList,String mdmTableName) {
         StringBuilder str = new StringBuilder();
         // 视图基础字段
         str.append(this.splicingViewTable(false));
@@ -866,7 +869,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 追加基础字段
         str.append(buildPgCommand.createViw());
         str.deleteCharAt(str.length() - 1);
-        str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
+        str.append(" FROM " + mdmTableName);
         return str.toString();
     }
 
