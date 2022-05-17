@@ -43,7 +43,7 @@ public class DataCheckExtendDTO {
      * 2、非空校验
      * 3、长度校验
      */
-    @ApiModelProperty(value = "校验类型")
+    @ApiModelProperty(value = "校验类型，多选逗号分割 1、唯一校验 2、非空校验 3、长度校验")
     public String checkType;
 
     /**

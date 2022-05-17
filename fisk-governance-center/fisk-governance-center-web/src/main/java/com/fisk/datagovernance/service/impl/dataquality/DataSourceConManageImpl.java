@@ -186,6 +186,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO dw = new DataSourceConVO();
         dw.setConIp(pgsqlDwIp);
+        dw.setName(pgsqlDwDbName);
         dw.setConDbname(pgsqlDwDbName);
         dw.setConPort(pgsqlDwPort);
         dw.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlDwDriverClassName));
@@ -197,6 +198,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO ods = new DataSourceConVO();
         ods.setConIp(pgsqlOdsIp);
+        ods.setName(pgsqlOdsDbName);
         ods.setConDbname(pgsqlOdsDbName);
         ods.setConPort(pgsqlOdsPort);
         ods.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlOdsDriverClassName));
@@ -208,6 +210,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO mdm = new DataSourceConVO();
         mdm.setConIp(pgsqlMdmIp);
+        mdm.setName(pgsqlMdmDbName);
         mdm.setConDbname(pgsqlMdmDbName);
         mdm.setConPort(pgsqlMdmPort);
         mdm.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlMdmDriverClassName));
