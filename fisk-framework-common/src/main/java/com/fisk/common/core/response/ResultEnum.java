@@ -253,8 +253,9 @@ public enum ResultEnum {
     DATA_SYNCHRONIZATION_FAILED(151015, "stg表数据同步失败!"),
     DATA_SYNCHRONIZATION_SUCCESS(151016, "stg表数据同步成功!"),
     ATTRIBUTE_NOT_EXIST(151017, "该实体不存在属性"),
-    EXISTS_INCORRECT_DATA(151018, "存在提交错误数据"),
-    SUBMIT_FAILURE(151019, "提交失败");
+    EXISTS_INCORRECT_DATA(151018, "数据格式有问题，请修改数据后重新提交"),
+    SUBMIT_FAILURE(151019, "提交失败"),
+    CHECK_TEMPLATE_IMPORT_FAILURE(151020, "导入失败，请检查模板是否正确");
 
     ResultEnum(int code, String msg) {
         this.code = code;

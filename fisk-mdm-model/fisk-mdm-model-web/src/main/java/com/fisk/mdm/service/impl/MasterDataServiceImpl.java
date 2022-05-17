@@ -438,7 +438,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     }
                                     if (StringUtils.isEmpty(jsonObj.get("code").toString())
                                             && !StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
-                                        errorMsg += "编码列不能为空";
+                                        errorMsg += "输入新编码时，编码列不能为空";
                                     }
                                     if (StringUtils.isEmpty(jsonObj.get("code").toString())
                                             && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
@@ -539,7 +539,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new FkException(ResultEnum.SQL_ANALYSIS, e);
+            throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE, e);
         }
         return ResultEnum.SUCCESS;
     }
@@ -755,6 +755,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.SUBMIT_FAILURE);
         }
 
+    }
+
+    @Override
+    public ResultEnum updateImportData(JSONObject jsonObject) {
+        return ResultEnum.SUCCESS;
     }
 
     /**

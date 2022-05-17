@@ -1,5 +1,6 @@
 package com.fisk.mdm.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
 import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
@@ -61,11 +62,20 @@ public interface IMasterDataService {
 
     /**
      * 模板数据提交
+     *
      * @param dto
      * @return
      * @throws SQLException
      */
     ResultEnum importDataSubmit(ImportDataSubmitDTO dto);
+
+    /**
+     * 模板导入数据-实时修改
+     *
+     * @param jsonObject
+     * @return
+     */
+    ResultEnum updateImportData(JSONObject jsonObject);
 
     /**
      * 主数据新增
