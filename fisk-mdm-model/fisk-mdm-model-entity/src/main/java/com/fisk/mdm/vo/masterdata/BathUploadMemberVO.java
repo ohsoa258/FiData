@@ -1,9 +1,7 @@
 package com.fisk.mdm.vo.masterdata;
 
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.vo.attribute.AttributeVO;
 import lombok.Data;
 
 import java.util.List;
@@ -27,6 +25,10 @@ public class BathUploadMemberVO {
     public int successCount;
 
     public int updateCount;
+
+    public int submitSuccessCount;
+
+    public int submitErrorCount;
 
     public int versionId;
 

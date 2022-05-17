@@ -42,6 +42,7 @@ import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
+import com.google.common.base.Joiner;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -433,10 +434,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                             value = cellDataDTO.getValue();
                                             errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
                                         }
-                                        if ("code".equals(attributePoList.get(col).getName()) && StringUtils.isEmpty(value)) {
-                                            value = buildCodeCommand.createCode();
-                                        }
                                         jsonObj.put(attributePoList.get(col).getName(), dto.removeSpace ? value.trim() : value);
+                                    }
+                                    if (StringUtils.isEmpty(jsonObj.get("code").toString())
+                                            && !StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
+                                        errorMsg += "编码列不能为空";
+                                    }
+                                    if (StringUtils.isEmpty(jsonObj.get("code").toString())
+                                            && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
+                                        jsonObj.put("code", buildCodeCommand.createCode());
                                     }
                                     //上传逻辑：1 修改 2 新增
                                     if (codeList.contains(jsonObj.get("code"))) {
@@ -608,17 +614,20 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Override
     public BathUploadMemberVO importDataQuery(ImportDataQueryDTO dto)
     {
-        EntityPO entityPO=entityMapper.selectById(dto.entityId);
-        if (entityPO==null)
-        {
+        EntityPO entityPO = entityMapper.selectById(dto.getEntityId());
+        if (entityPO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        BathUploadMemberVO vo=new BathUploadMemberVO();
-        vo.entityName=entityPO.getDisplayName();
-        vo.entityId=dto.entityId;
-        QueryWrapper<AttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(AttributePO::getEntityId,dto.entityId);
-        List<AttributePO> list=attributeMapper.selectList(queryWrapper);
+        BathUploadMemberVO vo = new BathUploadMemberVO();
+        vo.entityName = entityPO.getDisplayName();
+        vo.entityId = dto.getEntityId();
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AttributePO::getEntityId, dto.getEntityId());
+        List<AttributePO> list = attributeMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
         try {
             Connection connection = getConnection();
             Statement st = connection.createStatement();
@@ -626,11 +635,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //获取总条数、新增条数、编辑条数、成功条数、失败条数
             StringBuilder getTotalSql = new StringBuilder();
             getTotalSql.append("select count(*) as totalNum");
+            getTotalSql.append(",sum( case fidata_status when " + SyncStatusTypeEnum.SUBMITTED_SUCCESSFULLY.getValue() + " then 1 else 0 end) as submitSuccessCount");
+            getTotalSql.append(",sum( case fidata_status when " + SyncStatusTypeEnum.SUBMISSION_FAILED.getValue() + " then 1 else 0 end) as submitErrorCount");
             getTotalSql.append(",sum( case fidata_status when " + SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue() + " then 1 else 0 end) as successCount");
             getTotalSql.append(",sum( case fidata_status when " + SyncStatusTypeEnum.UPLOADED_FAILED.getValue() + " then 1 else 0 end) as errorCount");
             getTotalSql.append(",sum( case fidata_syncy_type when " + SyncTypeStatusEnum.UPDATE.getValue() + " then 1 else 0 end) as updateCount");
             getTotalSql.append(",sum( case fidata_syncy_type when " + SyncTypeStatusEnum.INSERT.getValue() + " then 1 else 0 end) as addCount");
-            getTotalSql.append(" from " + tableName + " where fidata_batch_code='" + dto.key + "'");
+            getTotalSql.append(" from " + tableName + " where fidata_batch_code='" + dto.getKey() + "'");
+            if (!CollectionUtils.isEmpty(dto.getStatus())) {
+                getTotalSql.append(" and fidata_status in(" + Joiner.on(",").join(dto.getStatus()) + ")");
+            }
+            if (!CollectionUtils.isEmpty(dto.getSyncType())) {
+                getTotalSql.append(" and fidata_syncy_type in(" + Joiner.on(",").join(dto.getSyncType()) + ")");
+            }
             ResultSet rSet = st.executeQuery(getTotalSql.toString());
             if (rSet.next()) {
                 vo.count = rSet.getInt("totalNum");
@@ -638,14 +655,16 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 vo.addCount = rSet.getInt("addCount");
                 vo.successCount = rSet.getInt("successCount");
                 vo.errorCount = rSet.getInt("errorCount");
+                vo.submitSuccessCount = rSet.getInt("submitSuccessCount");
+                vo.submitErrorCount = rSet.getInt("submitErrorCount");
             }
             rSet.close();
-            //筛选条件
-            String conditions = " where fidata_batch_code='" + dto.key + "'";
             PageDataDTO pageDataDTO = new PageDataDTO();
-            pageDataDTO.setPageIndex(dto.pageIndex);
-            pageDataDTO.setPageSize(dto.pageSize);
-            pageDataDTO.setConditions(conditions);
+            pageDataDTO.setPageIndex(dto.getPageIndex());
+            pageDataDTO.setPageSize(dto.getPageSize());
+            pageDataDTO.setBatchCode(dto.getKey());
+            pageDataDTO.setStatus(dto.getStatus());
+            pageDataDTO.setSyncType(dto.getSyncType());
             pageDataDTO.setTableName(entityPO.getTableName().replace("mdm", "stg"));
             //调用生成分页语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
@@ -665,6 +684,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 attributes.add(AttributeMap.INSTANCES.poToInfoDto(first.get()));
             }
             vo.attribute = attributes;
+            AttributeInfoDTO infoDTO = new AttributeInfoDTO();
+            infoDTO.setName("fidata_new_code");
+            infoDTO.setDisplayName("新编码");
+            vo.attribute.add(1, infoDTO);
             vo.members = columnDataList(rs, metaData, columnCount);
             //释放资源
             release(rs, st, connection);
@@ -726,8 +749,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (totalNum > 0) {
                 throw new FkException(ResultEnum.EXISTS_INCORRECT_DATA);
             }
-            dataSynchronizationUtils.stgDataSynchronize(dto.entityId, dto.key);
-            return ResultEnum.SUCCESS;
+            return dataSynchronizationUtils.stgDataSynchronize(dto.entityId, dto.key);
         } catch (SQLException e) {
             log.error("importDataSubmit:", e);
             throw new FkException(ResultEnum.SUBMIT_FAILURE);
@@ -768,12 +790,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     dto.setValue(value);
                 } else {
                     //数字格式
-                    if (DataTypeEnum.NUMERICAL.getName().equals(dataType)) {
-                        DecimalFormat df = new DecimalFormat("#");
-                        dto.setValue(df.format(cell.getNumericCellValue()));
-                    } else if (DataTypeEnum.FLOAT.getName().equals(dataType)) {
-                        DecimalFormat df = new DecimalFormat(createDecimalLength(decimalLength));
-                        dto.setValue(df.format(cell.getNumericCellValue()));
+                    if (DataTypeEnum.FLOAT.getName().equals(dataType)) {
+                        dto.setValue(String.valueOf(cell.getNumericCellValue()));
                     } else {
                         DecimalFormat df = new DecimalFormat("#");
                         dto.setValue(df.format(cell.getNumericCellValue()));
@@ -796,20 +814,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
         }
         return dto;
-    }
-
-    /**
-     * 浮点型转字符串生成格式
-     *
-     * @param decimalLength
-     * @return
-     */
-    public String createDecimalLength(int decimalLength) {
-        String decimalFormat = "0.";
-        for (int i = 0; i < decimalLength; i++) {
-            decimalFormat += "0";
-        }
-        return decimalFormat;
     }
 
     /**

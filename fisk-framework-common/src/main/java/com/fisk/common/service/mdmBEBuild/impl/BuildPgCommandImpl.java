@@ -1,10 +1,12 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.mdm.ImportDataEnum;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.PageDataDTO;
+import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
@@ -64,8 +66,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
         str.append("select * from " + dto.getTableName());
-        if (!StringUtils.isEmpty(dto.getConditions())) {
-            str.append(dto.getConditions());
+        str.append(" where 1=1 ");
+        if (!StringUtils.isEmpty(dto.getBatchCode())) {
+            str.append(" and fidata_batch_code='" + dto.getBatchCode() + "'");
+        }
+        if (!CollectionUtils.isEmpty(dto.getStatus())) {
+            str.append(" and fidata_status in(" + Joiner.on(",").join(dto.getStatus()) + ")");
+        }
+        if (!CollectionUtils.isEmpty(dto.getSyncType())) {
+            str.append(" and fidata_syncy_type in(" + Joiner.on(",").join(dto.getSyncType()) + ")");
         }
         str.append(" limit " + dto.getPageSize() + " offset " + offset);
         return str.toString();

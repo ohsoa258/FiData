@@ -2,6 +2,8 @@ package com.fisk.mdm.dto.masterdata;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  * date 2022/05/07 11:06
@@ -9,12 +11,22 @@ import lombok.Data;
 @Data
 public class ImportDataQueryDTO {
 
-    public int pageSize;
+    private Integer pageSize;
 
-    public int pageIndex;
+    private Integer pageIndex;
 
-    public int entityId;
+    private Integer entityId;
 
-    public String key;
+    private String key;
+
+    /**
+     * 上传状态
+     */
+    private List<Integer> status;
+
+    /**
+     * 上传逻辑
+     */
+    private List<Integer> syncType;
 
 }
