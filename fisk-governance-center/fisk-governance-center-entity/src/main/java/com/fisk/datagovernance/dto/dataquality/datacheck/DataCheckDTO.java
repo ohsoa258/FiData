@@ -16,12 +16,6 @@ import java.util.List;
 @Data
 public class DataCheckDTO {
     /**
-     * id
-     */
-    @ApiModelProperty(value = "id")
-    public int id;
-
-    /**
      * 模板id
      */
     @ApiModelProperty(value = "模板id")
