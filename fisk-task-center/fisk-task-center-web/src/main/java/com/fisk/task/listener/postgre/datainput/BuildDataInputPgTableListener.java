@@ -86,7 +86,7 @@ public class BuildDataInputPgTableListener {
             sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
             String havePk = pksql.toString();
             if (havePk.length() != 14) {
-                sqlFileds.append("," + pksql + ")");
+                sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
             }
             sqlFileds.append(")");
             stgSql.append(")");

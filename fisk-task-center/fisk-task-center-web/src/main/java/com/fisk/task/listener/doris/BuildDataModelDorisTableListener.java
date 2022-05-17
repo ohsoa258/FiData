@@ -398,8 +398,7 @@ public class BuildDataModelDorisTableListener
         }
         String havePk = pksql.toString();
         if (havePk.length() != 14) {
-            pksql.append(tablePk);
-            sql1 += "," + havePk + ")";
+            sql1 += "," + havePk.substring(0, havePk.length() - 1) + ")";
         }
         sql1 += ")";
         //创建表
