@@ -202,6 +202,7 @@ public enum ResultEnum {
     DATA_QUALITY_CLOSESTATEMENT_ERROR(11005, "数据库连接关闭失败"),
     DATA_QUALITY_SCHEDULE_TASK_PARAMTER_ERROR(11006, "调度任务参数异常，创建失败"),
     DATA_QUALITY_SCHEDULE_TASK_FAIL(11007, "调度任务执行失败"),
+    DATA_QUALITY_DATACHECK_RULE_ERROR(11008, "数据校验规则异常"),
 
     /**
      * 数据安全

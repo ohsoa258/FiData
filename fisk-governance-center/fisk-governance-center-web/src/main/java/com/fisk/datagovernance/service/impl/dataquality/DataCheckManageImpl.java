@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -175,16 +176,54 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataSourceInfo == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, dataCheckResults);
         }
-        // 第二步：查询配置的表规则信息
+        // 第二步：查询数据校验模块下页面校验场景下的模板
+        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+        templatePOQueryWrapper.lambda()
+                .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATACHECK_MODULE.getValue())
+                .eq(TemplatePO::getTemplateScene, TemplateSceneEnum.DATACHECK_WEBCHECK.getValue())
+                .eq(TemplatePO::getDelFlag, 1);
+        List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
+        if (CollectionUtils.isEmpty(templatePOList)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, dataCheckResults);
+        }
+        // 第三步：查询配置的表规则信息
         Set<String> tableNames = dto.body.keySet();
+        List<Long> templateIds = templatePOList.stream().map(TemplatePO::getId).collect(Collectors.toList());
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
-        dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
-                .in(DataCheckPO::getTableName, tableNames);
+        dataCheckPOQueryWrapper.lambda()
+                .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
+                .eq(DataCheckPO::getDelFlag, 1)
+                .in(DataCheckPO::getTableName, tableNames)
+                .in(DataCheckPO::getTemplateId, templateIds);
         List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
         if (CollectionUtils.isEmpty(dataCheckPOList)) {
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
         }
-        // 第三步：
+        // 第四步：查询校验规则的扩展属性
+        List<Long> ruleIds = dataCheckPOList.stream().map(DataCheckPO::getId).collect(Collectors.toList());
+        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                .in(DataCheckExtendPO::getRuleId, ruleIds);
+        List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+        if (CollectionUtils.isEmpty(dataCheckExtends)) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, dataCheckResults);
+        }
+        // 第五步：循环规则，解析数据，验证数据是否合规
+        for (DataCheckPO dataCheckPO : dataCheckPOList) {
+            TemplatePO templatePO = templatePOList.stream().filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
+            TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+            List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(dataCheckExtendFilters)) {
+                continue;
+            }
+            // 第六步：解析需要验证的数据
+            JSONArray data = dto.body.get(dataCheckPO.getUseTableName());
+
+            switch (templateType){
+               case FIELD_RULE_TEMPLATE:
+                   break;
+           }
+        }
         return null;
     }
 
