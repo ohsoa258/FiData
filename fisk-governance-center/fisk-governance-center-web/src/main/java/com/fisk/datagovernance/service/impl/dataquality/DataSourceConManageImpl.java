@@ -186,6 +186,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO dw = new DataSourceConVO();
         dw.setConIp(pgsqlDwIp);
+        dw.setName(pgsqlDwDbName);
         dw.setConDbname(pgsqlDwDbName);
         dw.setConPort(pgsqlDwPort);
         dw.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlDwDriverClassName));
@@ -197,6 +198,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO ods = new DataSourceConVO();
         ods.setConIp(pgsqlOdsIp);
+        ods.setName(pgsqlOdsDbName);
         ods.setConDbname(pgsqlOdsDbName);
         ods.setConPort(pgsqlOdsPort);
         ods.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlOdsDriverClassName));
@@ -208,6 +210,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         DataSourceConVO mdm = new DataSourceConVO();
         mdm.setConIp(pgsqlMdmIp);
+        mdm.setName(pgsqlMdmDbName);
         mdm.setConDbname(pgsqlMdmDbName);
         mdm.setConPort(pgsqlMdmPort);
         mdm.setConType(DataSourceTypeEnum.getEnumByDriverName(pgsqlMdmDriverClassName));
@@ -410,12 +413,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params conPort
      * @params conDbname
      */
-    public DataSourceConPO getDataSourceInfo(String conIp, int conPort, String conDbname) {
+    public DataSourceConPO getDataSourceInfo(String conIp, String conDbname) {
         DataSourceConPO dataSourceConPO = null;
         QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
         dataSourceConPOQueryWrapper.lambda().eq(DataSourceConPO::getConIp, conIp)
                 .eq(DataSourceConPO::getConIp, conIp)
-                .eq(DataSourceConPO::getConPort, conPort)
                 .eq(DataSourceConPO::getConDbname, conDbname)
                 .eq(DataSourceConPO::getDelFlag, 1);
         dataSourceConPO = baseMapper.selectOne(dataSourceConPOQueryWrapper);

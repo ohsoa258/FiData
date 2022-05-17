@@ -91,21 +91,26 @@ public class DataSynchronizationUtils {
                     return e.getColumnName();
                 }).collect(Collectors.toList());
 
+        String columnName = attributeList.stream().filter(Objects::nonNull)
+                .map(e -> {
+                    return e.getColumnName() + " AS " + e.getName();
+                }).collect(Collectors.joining(","));
+
         String codes = resultList.stream().filter(Objects::nonNull).map(e -> {
             Object code = e.get("code");
             String code1 = "'" + code + "'";
             return code1;
         }).collect(Collectors.joining(","));
 
-        stringBuilder.append("SELECT fidata_id, " + codeColumnName.get(0) + " AS code"  + "  FROM " + mdmTableName);
+        stringBuilder.append("SELECT fidata_id, " + columnName  + "  FROM " + mdmTableName);
         stringBuilder.append(" WHERE fidata_del_flag = 1 AND " + codeColumnName.get(0));
         stringBuilder.append(" IN(" + codes + ")");
 
         // 查询数据
-        List<MdmDTO> ids = execQueryResultList(stringBuilder.toString(), connection, MdmDTO.class);
+        List<Map<String, Object>> mdmResultList = execQueryResultList(stringBuilder.toString(), dto);
 
         // 处理需要插入和更新的数据(关键点)
-        List<Map<String, Object>> dateList = this.dataProcessing(ids, resultList, attributeList);
+        List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
 
         // 4.数据导入
         return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
@@ -359,18 +364,18 @@ public class DataSynchronizationUtils {
 
     /**
      * 处理需要插入和更新的数据
-     * @param ids
+     * @param mdmResultList
      * @param resultList
      * @param attributeList
      * @return
      */
-    public List<Map<String, Object>> dataProcessing(List<MdmDTO> ids,List<Map<String, Object>> resultList
+    public List<Map<String, Object>> dataProcessing(List<Map<String, Object>> mdmResultList,List<Map<String, Object>> resultList
                                             ,List<AttributeInfoDTO> attributeList){
         List<Map<String, Object>> updateList = new ArrayList<>();
         List<Map<String, Object>> insertList = new ArrayList<>();
         // 需要更新的数据
-        ids.stream().forEach(item -> {
-            resultList.stream().filter(e -> e.get("code").equals(item.getCode()))
+        mdmResultList.stream().forEach(item -> {
+            resultList.stream().filter(e -> e.get("code").equals(item.get("code")))
                     .forEach(e -> {
                         for (String key : e.keySet()) {
                             Object newCodeValue = e.get("fidata_new_code");
@@ -385,6 +390,21 @@ public class DataSynchronizationUtils {
                                     e.put("fidata_new_code", codeValue);
                                     updateList.remove(e);
                                     updateList.add(e);
+                                }
+                            }
+                        }
+                    });
+        });
+
+        // 更新的数据存在编码,进行赋值
+        mdmResultList.stream().forEach(item -> {
+            updateList.stream().filter(e -> e.get("code").equals(item.get("code")))
+                    .forEach(e -> {
+                        for (String mdmKey : item.keySet()) {
+                            for (String stgKey : e.keySet()) {
+                                Object stgValue = e.get(stgKey);
+                                if (ObjectUtils.isEmpty(stgValue) && mdmKey.equals(stgKey)){
+                                    e.put(stgKey,item.get(mdmKey));
                                 }
                             }
                         }

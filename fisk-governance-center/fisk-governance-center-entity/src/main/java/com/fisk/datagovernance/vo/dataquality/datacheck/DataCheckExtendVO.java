@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.CheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -50,7 +49,7 @@ public class DataCheckExtendVO {
      * 3、长度校验
      */
     @ApiModelProperty(value = "校验类型")
-    public CheckTypeEnum checkType;
+    public String checkType;
 
     /**
      * 权重、比例

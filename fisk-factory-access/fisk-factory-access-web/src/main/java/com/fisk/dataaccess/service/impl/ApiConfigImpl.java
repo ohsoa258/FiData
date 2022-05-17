@@ -61,7 +61,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.fisk.common.core.constants.ApiConstants.DATAACCESS_APIBASICINFO;
+import static com.fisk.common.core.constants.ApiConstants.*;
 import static com.fisk.dataaccess.enums.HttpRequestEnum.GET;
 import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
 
@@ -124,13 +124,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum addData(ApiConfigDTO dto) {
-        // 当前字段名不可重复
-        List<String> list = this.list().stream().map(e -> e.apiName).collect(Collectors.toList());
+        // 当前字段名不可重复,得保证同一应用下
+//        List<String> list = this.list().stream().map(e -> e.apiName).collect(Collectors.toList());
+//
+//        for (String s : list) {
+//            if (s.equalsIgnoreCase(dto.apiName)) {
+//                return ResultEnum.NAME_EXISTS;
+//            }
+//        }
 
-        for (String s : list) {
-            if (s.equalsIgnoreCase(dto.apiName)) {
-                return ResultEnum.NAME_EXISTS;
-            }
+        boolean flag = checkApiName(dto);
+        if (flag) {
+            return ResultEnum.APINAME_ISEXIST;
         }
 
         // dto -> po
@@ -142,6 +147,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         //保存
         return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    private boolean checkApiName(ApiConfigDTO dto) {
+
+        boolean flag = false;
+
+        QueryWrapper<ApiConfigPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().select(ApiConfigPO::getAppId, ApiConfigPO::getApiName);
+        List<ApiConfigPO> apiConfigPoList = baseMapper.selectList(queryWrapper);
+        ApiConfigPO apiConfigPo = new ApiConfigPO();
+        apiConfigPo.appId = dto.appId;
+        apiConfigPo.apiName = dto.apiName;
+        if (apiConfigPoList.contains(apiConfigPo)) {
+            flag = true;
+        }
+        return flag;
     }
 
     @Override
@@ -430,6 +451,30 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public ResultEnum copyApi(CopyApiDTO dto) {
+
+        // TODO 复制api功能,仅保存配置,关于是否发布,后面再讨论
+        // 1.根据apiId查询当前api信息tb_api_config: 调用/apiConfig/add接口,保存tb_api_config主表信息
+        ApiConfigPO apiConfigPo = this.query().eq("id", dto.getApiId()).one();
+        if (apiConfigPo == null) {
+            return ResultEnum.COPY_API_ISNULL;
+        }
+        apiConfigPo.id = 0;
+        apiConfigPo.appId = dto.getAppId();
+        apiConfigPo.apiName = apiConfigPo + "_copy";
+        this.addData(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
+
+        // 2.查询出当前api实时还是非实时
+//        appDataSourceImpl
+        // 2-1.实时不需要保存请求参数表tb_api_parameter
+        // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
+        // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
+        // 4.调用apiConfig/addApiDetail接口
+
+        return null;
+    }
+
     /**
      * 根据配置执行api功能
      *
@@ -652,6 +697,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             jsonUtils.rootNodeHandler(schemas, json, targetTable);
             targetTable.forEach(System.out::println);
 
+            // TODO 先去数据质量验证
+            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
+
+
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // ods_abbreviationName_tableName
@@ -713,7 +762,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 业务主键集合(逗号隔开)
             List<TableFieldsDTO> fieldList = e.list;
             if (!CollectionUtils.isEmpty(fieldList)) {
-                configDTO.businessKeyAppend = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                // 去掉最后一位逗号","
+                configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
             }
 
             configDTO.processorConfig = processorConfig;
@@ -738,6 +789,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private void getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
         try {
             // 调用task,获取同步数据的sql
+            log.info("同步sql入参AE87: " + JSON.toJSONString(configDTO));
             ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOds(configDTO);
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
@@ -949,6 +1001,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 .replace("{api_prd_address}", pdf_prd_address);
 
         ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
+
+        // API文档代码示例 c#
+        apiDocDTO.apiCodeExamplesNet = DATAACCESS_APICODEEXAMPLES_NET.replace("{api_prd_address}", pdf_uat_address);
+        // API文档代码示例 java
+        apiDocDTO.apiCodeExamplesJava = DATAACCESS_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", pdf_uat_address);
+
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
                 "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
@@ -981,7 +1039,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiCatalogueDTO.catalogueIndex = addIndex + ".";
             // 目录名称
             apiCatalogueDTO.catalogueName = dto.apiName;
-            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 1, apiCatalogueDTO);
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
             catalogueIndex = addIndex;
 
             // 设置API基础信息(2.5.-2.5.5)

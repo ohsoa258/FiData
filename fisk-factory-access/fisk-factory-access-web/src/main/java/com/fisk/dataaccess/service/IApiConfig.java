@@ -121,5 +121,13 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return 执行结果
      */
     ResultEnum importData(ApiImportDataDTO dto);
+
+    /**
+     * 复制api功能
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum copyApi(CopyApiDTO dto);
 }
 

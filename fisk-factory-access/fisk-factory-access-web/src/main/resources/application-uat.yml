@@ -24,8 +24,8 @@ dataservice:
   pdf:
     path: /root/java/fisk-factory-access/pdf
     # 接口文档中的环境信息
-    uat_address: http://192.168.21.13:8083/{apiaddress}。
-    prd_address: https://prdHost/{apiaddress}。
+    uat_address: http://192.168.21.13:8083
+    prd_address: https://prdHost
 
 # pg数据源配置
 pgsql-datamodel:

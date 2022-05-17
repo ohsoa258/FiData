@@ -67,7 +67,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             return bearer + token;
         } catch (Exception e) {
             log.error("执行httpRequest方法失败,【失败原因为：】", e);
-            throw new FkException(ResultEnum.get_jwt_token_error);
+            throw new FkException(ResultEnum.GET_JWT_TOKEN_ERROR);
         }
     }
 

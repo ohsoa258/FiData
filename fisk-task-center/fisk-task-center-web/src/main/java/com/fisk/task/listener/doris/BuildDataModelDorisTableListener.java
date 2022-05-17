@@ -380,24 +380,28 @@ public class BuildDataModelDorisTableListener
                 sqlFileds.append("\"" + l.fieldEnName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + ") ,");
                 stgSqlFileds.append("\"" + l.fieldEnName + "\" text,");
             }
-            if(l.isPrimaryKey==1){
-                pksql.append(""+l.fieldEnName+" ,");
+            if (l.isPrimaryKey == 1) {
+                pksql.append("" + l.fieldEnName + " ,");
             }
 
         });
-        pksql.append(tablePk + ",");
+
         String sql1 = sql.toString();
         String associatedKey = associatedConditions(fieldList);
         String sql2 = sqlFileds.toString() + associatedKey;
-        sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50),";
+        sql2 += "fi_createtime varchar(50),fi_updatetime varchar(50)";
         String sql3 = sqlFileds1.toString();
-        String sql4 = pksql.toString();
         if (Objects.equals("", sql3)) {
-            sql1 += sql2 + sql4.substring(0, sql4.length() - 1) + "));";
+            sql1 += sql2;
         } else {
-            sql1 += sql2 + sql3 + sql4.substring(0, sql4.length() - 1) + "));";
+            sql1 += sql2 + sql3;
         }
-
+        String havePk = pksql.toString();
+        if (havePk.length() != 14) {
+            pksql.append(tablePk);
+            sql1 += "," + havePk + ")";
+        }
+        sql1 += ")";
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
