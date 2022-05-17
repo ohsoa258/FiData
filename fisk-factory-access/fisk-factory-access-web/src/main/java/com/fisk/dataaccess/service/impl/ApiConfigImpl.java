@@ -762,7 +762,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 业务主键集合(逗号隔开)
             List<TableFieldsDTO> fieldList = e.list;
             if (!CollectionUtils.isEmpty(fieldList)) {
-                configDTO.businessKeyAppend = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                // 去掉最后一位逗号","
+                configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
             }
 
             configDTO.processorConfig = processorConfig;
