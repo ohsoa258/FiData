@@ -413,12 +413,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
      * @params conPort
      * @params conDbname
      */
-    public DataSourceConPO getDataSourceInfo(String conIp, int conPort, String conDbname) {
+    public DataSourceConPO getDataSourceInfo(String conIp, String conDbname) {
         DataSourceConPO dataSourceConPO = null;
         QueryWrapper<DataSourceConPO> dataSourceConPOQueryWrapper = new QueryWrapper<>();
         dataSourceConPOQueryWrapper.lambda().eq(DataSourceConPO::getConIp, conIp)
                 .eq(DataSourceConPO::getConIp, conIp)
-                .eq(DataSourceConPO::getConPort, conPort)
                 .eq(DataSourceConPO::getConDbname, conDbname)
                 .eq(DataSourceConPO::getDelFlag, 1);
         dataSourceConPO = baseMapper.selectOne(dataSourceConPOQueryWrapper);

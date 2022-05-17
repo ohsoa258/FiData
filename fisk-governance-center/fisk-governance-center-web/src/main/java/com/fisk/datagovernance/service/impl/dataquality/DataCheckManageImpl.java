@@ -28,6 +28,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -108,7 +109,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         //第五步：保存数据校验扩展属性
         if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
             List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.dataCheckExtends);
-            dataCheckExtends.forEach(t->{t.setRuleId(Math.toIntExact(dataCheckPO.getId()));});
+            dataCheckExtends.forEach(t -> {
+                t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            });
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
         return ResultEnum.SUCCESS;
@@ -166,6 +169,22 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckRequestDTO dto) {
+        List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
+        // 第一步：查询数据源信息
+        DataSourceConPO dataSourceInfo = dataSourceConManageImpl.getDataSourceInfo(dto.getIp(), dto.getDbName());
+        if (dataSourceInfo == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, dataCheckResults);
+        }
+        // 第二步：查询配置的表规则信息
+        Set<String> tableNames = dto.body.keySet();
+        QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+        dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
+                .in(DataCheckPO::getTableName, tableNames);
+        List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
+        if (CollectionUtils.isEmpty(dataCheckPOList)) {
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
+        }
+        // 第三步：
         return null;
     }
 
