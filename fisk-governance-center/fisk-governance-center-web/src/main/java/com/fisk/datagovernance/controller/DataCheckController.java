@@ -8,13 +8,17 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRequestDTO;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author dick
@@ -52,4 +56,17 @@ public class DataCheckController {
     public ResultEntity<Object> deleteData(@PathVariable("id") int id) {
         return ResultEntityBuild.build(service.deleteData(id));
     }
+
+    @ApiOperation("界面/接口验证")
+    @PostMapping("/interfaceCheckData")
+    public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(@Validated @RequestBody DataCheckRequestDTO dto) {
+        return service.interfaceCheckData(dto);
+    }
+
+    @ApiOperation("同步验证")
+    @PostMapping("/syncCheckData")
+    public ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckRequestDTO dto) {
+        return service.syncCheckData(dto);
+    }
+
 }

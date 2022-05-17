@@ -38,3 +38,12 @@ pgsql-ods:
   username: postgres
   password: PgPassword01!
   driverClassName: org.postgresql.Driver
+pgsql-mdm:
+  id: 3
+  ip: 192.168.21.13
+  port: 5432
+  dbName: dmp_mdm_UAT
+  url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified&connectTimeout=60&socketTimeout=60 #超时等待60s
+  username: postgres
+  password: PgPassword01!
+  driverClassName: org.postgresql.Driver

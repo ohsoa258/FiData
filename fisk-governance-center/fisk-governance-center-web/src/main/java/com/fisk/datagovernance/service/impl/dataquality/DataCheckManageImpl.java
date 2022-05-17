@@ -9,12 +9,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
-import com.fisk.common.core.utils.CronUtils;
 import com.fisk.common.core.utils.DateTimeUtils;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckExtendDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -22,7 +18,7 @@ import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -166,6 +162,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         // 删除数据校验扩展属性
         dataCheckExtendMapper.updateByRuleId(id);
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckRequestDTO dto) {
+        return null;
+    }
+
+    @Override
+    public ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckRequestDTO dto) {
+        return null;
     }
 
     /**

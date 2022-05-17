@@ -41,3 +41,12 @@ pgsql-ods:
   username: adminuser
   password: .FdF_r&tj4)+
   driverClassName: org.postgresql.Driver
+pgsql-mdm:
+  id: 3
+  ip: 100.102.201.107
+  port: 5433
+  dbName: dmp_mdm
+  url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified&connectTimeout=60&socketTimeout=60 #超时等待60s
+  username: adminuser
+  password: .FdF_r&tj4)+
+  driverClassName: org.postgresql.Driver
