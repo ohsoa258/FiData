@@ -3,6 +3,7 @@ package com.fisk.datagovernance.dto.dataquality.datacheck;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.models.auth.In;
 import lombok.Data;
 
 import java.util.List;

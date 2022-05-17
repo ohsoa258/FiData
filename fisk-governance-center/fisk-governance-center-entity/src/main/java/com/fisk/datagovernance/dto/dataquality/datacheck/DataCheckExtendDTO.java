@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.CheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**

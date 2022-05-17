@@ -21,6 +21,7 @@ import com.fisk.datagovernance.mapper.dataquality.LifecycleMapper;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ILifecycleManageService;
 import com.fisk.datagovernance.vo.dataquality.lifecycle.LifecycleVO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +50,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
 
     @Override
     public Page<LifecycleVO> getAll(LifecycleQueryDTO query) {
-        return  baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
+        return baseMapper.getAll(query.page, query.datasourceId, query.tableName, query.keyword);
     }
 
     @Override
@@ -145,11 +146,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
 
         String tableName = dto.tableName;
         String fieldName = dto.fieldName;
-        if (dto.fieldName != null && !dto.fieldName.isEmpty()) {
+        if (StringUtils.isNotEmpty(fieldName)) {
             if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                 fieldName = "`" + fieldName + "`";
             } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
                 fieldName = "[" + fieldName + "]";
+            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+                fieldName = "" + fieldName + "";
             }
         }
 
@@ -179,7 +182,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
      * @params tableName 表名称
      */
     public ResultEntity<String> createEmptyTable_RecoveryRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum, String tableName) {
-        if (tableName == null || tableName.isEmpty()) {
+        if (StringUtils.isEmpty(dataBase) || StringUtils.isEmpty(tableName)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         String sql = "SELECT\n" +
@@ -221,8 +224,9 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
      */
     public ResultEntity<String> createNoRefreshData_RecoveryRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
                                                                  String tableName, String fieldName) {
-        if (tableName == null || tableName.isEmpty()
-                || fieldName == null || fieldName.isEmpty()) {
+        if (StringUtils.isEmpty(dataBase) ||
+                StringUtils.isEmpty(tableName) ||
+                StringUtils.isEmpty(fieldName)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         /*

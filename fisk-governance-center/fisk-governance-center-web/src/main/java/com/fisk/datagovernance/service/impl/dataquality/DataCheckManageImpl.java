@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,6 +108,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         //第五步：保存数据校验扩展属性
         if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
             List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.dataCheckExtends);
+            dataCheckExtends.forEach(t->{t.setRuleId(Math.toIntExact(dataCheckPO.getId()));});
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
         return ResultEnum.SUCCESS;
@@ -124,7 +126,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         //第二步：根据配置的校验条件生成校验规则
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         ResultEntity<String> role = createRole(dto, templateTypeEnum);
@@ -158,7 +159,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         // 删除数据校验扩展属性
         dataCheckExtendMapper.updateByRuleId(id);
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -184,53 +184,41 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params templateTypeEnum
      */
     public ResultEntity<String> createRole(DataCheckDTO dto, TemplateTypeEnum templateTypeEnum) {
-        //查询数据源
+        if (dto == null || CollectionUtils.isEmpty(dto.dataCheckExtends)) {
+            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
+        }
         DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getById(dto.datasourceId);
         if (dataSourceConPO == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, "");
         }
         DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.getConType()];
 
-        String tableName = dto.useTableName;
-        String fieldName = null;
-        DataCheckExtendDTO dataCheckExtendDTO = null;
-        if (CollectionUtils.isNotEmpty(dto.dataCheckExtends)) {
-            dataCheckExtendDTO = dto.dataCheckExtends.get(0);
-            fieldName = dto.dataCheckExtends.get(0).fieldName;
-            if (!StringUtils.isNotEmpty(fieldName)) {
-                if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                    fieldName = "`" + fieldName + "`";
-                } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                    fieldName = "[" + fieldName + "]";
-                }
-            }
-        }
-
         ResultEntity<String> rule = null;
         switch (templateTypeEnum) {
             case FIELD_RULE_TEMPLATE:
                 //强类型模板规则
-                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName, dataCheckExtendDTO.fieldLength, dataCheckExtendDTO.checkType);
+                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum,
+                        dto.tableName, dto.dataCheckExtends);
                 break;
             case FIELD_AGGREGATE_TEMPLATE:
                 //字段聚合波动阈值模板
-                rule = createField_AggregateRule(dataSourceConPO.conDbname, tableName, fieldName, dataCheckExtendDTO.fieldAggregate, dto.thresholdValue);
+                //rule = createField_AggregateRule(dataSourceConPO.conDbname, tableName, fieldName, dataCheckExtendDTO.fieldAggregate, dto.thresholdValue);
                 break;
             case TABLECOUNT_TEMPLATE:
                 //表行数波动阈值模板
-                rule = createTableRow_ThresholdRule(dataSourceConPO.conDbname, tableName);
+                //rule = createTableRow_ThresholdRule(dataSourceConPO.conDbname, tableName);
                 break;
             case EMPTY_TABLE_CHECK_TEMPLATE:
                 //空表校验模板
-                rule = createEmptyTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
+                //rule = createEmptyTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
                 break;
             case UPDATE_TABLE_CHECK_TEMPLATE:
                 //表更新校验模板
-                rule = createUpdateTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
+                //rule = createUpdateTable_CheckRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
                 break;
             case SIMILARITY_TEMPLATE:
                 //相似度模板
-                rule = createSimilarity_Rule(tableName, dto.dataCheckExtends);
+                //rule = createSimilarity_Rule(tableName, dto.dataCheckExtends);
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
@@ -255,27 +243,28 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * 3、长度校验
      */
     public ResultEntity<String> createField_StrongRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
-                                                       String tableName, String fieldName,
-                                                       int fieldLength, String checkRuleType) {
+                                                       String tableName, List<DataCheckExtendDTO> dataCheckExtends) {
         StringBuilder stringBuilder = new StringBuilder();
-        if (tableName == null || tableName.isEmpty() ||
-                fieldName == null || fieldName.isEmpty() ||
-                checkRuleType == null || checkRuleType.isEmpty()) {
+        if (StringUtils.isEmpty(tableName) ||
+                CollectionUtils.isEmpty(dataCheckExtends)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, stringBuilder.toString());
         }
-        String fieldNameParam = null;
+        DataCheckExtendDTO dataCheckExtend = dataCheckExtends.get(0);
+        String fieldName = dataCheckExtend.fieldName;
         String fieldLengthFunParm = null;
-        if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            fieldNameParam = "`" + fieldName + "`";
-            fieldLengthFunParm = "CHARACTER_LENGTH";
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            fieldNameParam = "[" + fieldName + "]";
-            fieldLengthFunParm = "LEN";
+        if (StringUtils.isNotEmpty(fieldName)) {
+            if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+                fieldName = "`" + fieldName + "`";
+                fieldLengthFunParm = "CHARACTER_LENGTH";
+            } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                fieldName = "[" + fieldName + "]";
+                fieldLengthFunParm = "LEN";
+            } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+                fieldName = String.format("\"%s\"", fieldName);
+                fieldLengthFunParm = "CHARACTER_LENGTH";
+            }
         }
-        if (fieldNameParam == null || fieldNameParam.isEmpty()) {
-            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, stringBuilder.toString());
-        }
-        String[] split = checkRuleType.split(",");
+        String[] split = dataCheckExtend.checkType.split(",");
         for (String x : split) {
             CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(x));
 
@@ -286,21 +275,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
-                                    "\t\t'%s' AS 'checkDataBase',\n" +
-                                    "\t\t'%s' AS 'checkTable',\n" +
-                                    "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t'%s' AS 'checkType',\n" +
-                                    "\t\t'%s' AS 'checkDesc',\n" +
-                                    "\tCASE\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
                                     "\t\t\t\n" +
                                     "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s GROUP BY %s HAVING count( %s )> 1 ) temp )> 0 THEN\n" +
                                     "\t\t\t'fail' ELSE 'success' \n" +
-                                    "\t\tEND AS 'checkResult' \n" +
+                                    "\t\tEND) AS checkResult \n" +
                                     "\t) T1 ",
-                            dataBase, tableName, fieldNameParam,
+                            dataBase, tableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.UNIQUE_CHECK.getName(),
                             TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
-                            fieldNameParam, tableName, fieldNameParam, fieldNameParam));
+                            fieldName, tableName, fieldName, fieldName));
                     break;
                 case NONEMPTY_CHECK:
                     if (stringBuilder.toString() != null && stringBuilder.toString().length() > 0) {
@@ -311,20 +300,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
-                                    "\t\t'%s' AS 'checkDataBase',\n" +
-                                    "\t\t'%s' AS 'checkTable',\n" +
-                                    "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t'%s' AS 'checkType',\n" +
-                                    "\t\t'%s' AS 'checkDesc',\n" +
-                                    "\tCASE\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
                                     "\t\t\t\n" +
                                     "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE %s IS NULL OR %s = '' ) temp )> 0 THEN\n" +
                                     "\t\t\t'fail' ELSE 'success' \n" +
-                                    "\t\tEND AS 'checkResult' \n" +
-                                    "\t) T2", dataBase, tableName, fieldNameParam,
+                                    "\t\tEND) AS checkResult \n" +
+                                    "\t) T2",
+                            dataBase, tableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.NONEMPTY_CHECK.getName(),
                             TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
-                            fieldNameParam, tableName, fieldNameParam, fieldNameParam));
+                            fieldName, tableName, fieldName, fieldName));
                     break;
                 case LENGTH_CHECK:
                     if (stringBuilder.toString() != null && stringBuilder.toString().length() > 0) {
@@ -335,20 +325,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "FROM\n" +
                                     "\t(\n" +
                                     "\tSELECT\n" +
-                                    "\t\t'%s' AS 'checkDataBase',\n" +
-                                    "\t\t'%s' AS 'checkTable',\n" +
-                                    "\t\t'%s' AS 'checkField',\n" +
-                                    "\t\t'%s' AS 'checkType',\n" +
-                                    "\t\t'%s' AS 'checkDesc',\n" +
-                                    "\tCASE\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
                                     "\t\t\t\n" +
                                     "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE %s( %s )> %s ) temp )> 0 THEN\n" +
                                     "\t\t\t'fail' ELSE 'success' \n" +
-                                    "\t\tEND AS 'checkResult' \n" +
-                                    "\t) T3\n", dataBase, tableName, fieldNameParam,
+                                    "\t\tEND) AS checkResult \n" +
+                                    "\t) T3\n",
+                            dataBase, tableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.LENGTH_CHECK.getName(),
                             TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
-                            fieldNameParam, tableName, fieldLengthFunParm, fieldNameParam, fieldLength));
+                            fieldName, tableName, fieldLengthFunParm, fieldName, dataCheckExtend.fieldLength));
                     break;
                 default:
                     return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -369,11 +360,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params thresholdValue 波动阈值
      */
     public ResultEntity<String> createField_AggregateRule(String dataBase, String tableName, String fieldName,
-                                                          String fieldAggregate, int thresholdValue) {
-        if (tableName == null || tableName.isEmpty() ||
-                fieldName == null || fieldName.isEmpty() ||
-                fieldAggregate == null || fieldAggregate.isEmpty() ||
-                thresholdValue == 0) {
+                                                          String fieldAggregate, Integer thresholdValue) {
+        if (StringUtils.isEmpty(tableName) ||
+                StringUtils.isEmpty(fieldName) ||
+                StringUtils.isEmpty(fieldAggregate) ||
+                thresholdValue == null) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         String sql = "SELECT\n" +
@@ -431,7 +422,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
          * 1、实时查询的的表行数 减去 记录的表行数 大于 波动阀值，发送邮件；
          * 2、更新配置表记录的表行数，赋值为实时查询的的表行数
          * */
-        if (tableName == null || tableName.isEmpty()) {
+        if (StringUtils.isEmpty(dataBase) || StringUtils.isEmpty(tableName)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         String sql = String.format("SELECT\n" +
@@ -457,8 +448,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataSourceTypeEnum 数据源类型
      * @params tableName 表名称
      */
-    public ResultEntity<String> createEmptyTable_CheckRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum, String tableName) {
-        if (tableName == null || tableName.isEmpty()) {
+    public ResultEntity<String> createEmptyTable_CheckRule(String dataBase,
+                                                           DataSourceTypeEnum dataSourceTypeEnum, String tableName) {
+        if (StringUtils.isEmpty(dataBase) || StringUtils.isEmpty(tableName)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         String sql = "SELECT\n" +
@@ -500,8 +492,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      */
     public ResultEntity<String> createUpdateTable_CheckRule(String dataBase, DataSourceTypeEnum dataSourceTypeEnum,
                                                             String tableName, String fieldName) {
-        if (tableName == null || tableName.isEmpty()
-                || fieldName == null || fieldName.isEmpty()) {
+        if (StringUtils.isEmpty(dataBase) || StringUtils.isEmpty(tableName)
+                || StringUtils.isEmpty(fieldName)) {
             return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
         /*
@@ -547,17 +539,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params
      */
     public ResultEntity<String> createSimilarity_Rule(String tableName, List<DataCheckExtendDTO> extendList) {
-        String sql = null;
-        if (CollectionUtils.isNotEmpty(extendList)) {
-            sql = "SELECT";
-            for (DataCheckExtendDTO extendDTO : extendList) {
-                sql += String.format(" %s,", extendDTO.fieldName);
-            }
-            if (StringUtils.isNotEmpty(sql)) {
-                sql = sql.substring(0, sql.length() - 1);
-            }
-            sql += String.format(" FROM %s;", tableName);
+        if (StringUtils.isEmpty(tableName) || CollectionUtils.isEmpty(extendList)) {
+            return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, null);
         }
+        String sql = null;
+        sql = "SELECT";
+        for (DataCheckExtendDTO extendDTO : extendList) {
+            sql += String.format(" %s,", extendDTO.fieldName);
+        }
+        if (StringUtils.isNotEmpty(sql)) {
+            sql = sql.substring(0, sql.length() - 1);
+        }
+        sql += String.format(" FROM %s;", tableName);
         ResultEntity<String> result = new ResultEntity<>();
         result.setData(sql);
         result.setCode(0);
