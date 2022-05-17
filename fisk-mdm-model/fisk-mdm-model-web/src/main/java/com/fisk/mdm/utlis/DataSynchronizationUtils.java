@@ -372,7 +372,22 @@ public class DataSynchronizationUtils {
         ids.stream().forEach(item -> {
             resultList.stream().filter(e -> e.get("code").equals(item.getCode()))
                     .forEach(e -> {
-                        updateList.add(e);
+                        for (String key : e.keySet()) {
+                            Object newCodeValue = e.get("fidata_new_code");
+                            Object codeValue = e.get("code");
+                            if (ObjectUtils.isNotEmpty(newCodeValue)){
+                                if (key.equals("fidata_new_code")){
+                                    e.put("fidata_new_code", newCodeValue);
+                                    updateList.add(e);
+                                }
+                            }else {
+                                if (key.equals("fidata_new_code")){
+                                    e.put("fidata_new_code", codeValue);
+                                    updateList.remove(e);
+                                    updateList.add(e);
+                                }
+                            }
+                        }
                     });
         });
 
