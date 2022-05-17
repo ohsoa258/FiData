@@ -235,9 +235,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataBase 数据库名称
      * @params dataSourceTypeEnum 数据源类型
      * @params tableName 表名称
-     * @params fieldName 字段名称
-     * @params fieldLength 字段长度
-     * @params checkRuleType 校验规则类型
+     * @params dataCheckExtends 数据校验扩展属性
      * 1、唯一校验
      * 2、非空校验
      * 3、长度校验
