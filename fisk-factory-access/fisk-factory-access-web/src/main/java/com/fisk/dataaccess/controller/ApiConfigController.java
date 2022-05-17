@@ -127,4 +127,10 @@ public class ApiConfigController {
     public ResultEntity<Object> importData(@NotNull @RequestBody ApiImportDataDTO dto) {
         return ResultEntityBuild.build(service.importData(dto));
     }
+
+    @PostMapping("/copyApi")
+    @ApiOperation(value = "api复制功能")
+    public ResultEntity<Object> copyApi(@NotNull @RequestBody CopyApiDTO dto) {
+        return ResultEntityBuild.build(service.copyApi(dto));
+    }
 }

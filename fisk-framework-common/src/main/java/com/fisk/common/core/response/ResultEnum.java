@@ -106,7 +106,9 @@ public enum ResultEnum {
     DATASOURCE_INFORMATION_ISNULL(5032, "数据源信息不存在"),
     APICONFIG_ISNULL(5033, "api不存在"),
     DATASOURCE_ISNULL(5034, "当前api的身份验证信息已缺失,请检查当前api所属的应用参数"),
-    get_jwt_token_error(5035, "当前api,获取token失败,请检查api的配置信息"),
+    GET_JWT_TOKEN_ERROR(5035, "当前api,获取token失败,请检查api的配置信息"),
+    COPY_API_ISNULL(5036, "当前复制的api不存在,请重新选择"),
+    APINAME_ISEXIST(5037, "api名称重复,请重新设置"),
 
 
     /**

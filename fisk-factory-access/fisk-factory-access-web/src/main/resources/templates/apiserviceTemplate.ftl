@@ -190,7 +190,7 @@
 <div>
     <div>
         <div>
-            <p style="font-weight: bold;">1.&nbsp;&nbsp;文档概述</p>
+            <p style="font-weight: bold;">一.&nbsp;&nbsp;文档概述</p>
         </div>
     </div>
     <div>
@@ -301,7 +301,7 @@
 <div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.&nbsp;&nbsp;Restful API接口</p>
+            <p style="font-weight: bold;">二.&nbsp;&nbsp;Restful API接口</p>
         </div>
     </div>
     <div>
@@ -751,11 +751,38 @@
 <span style="page-break-after:always;"></span>
 <!---Restful API end-->
 
+<!---Restful API C# 调用示例 start-->
+<div>
+    <div>
+        <p style="font-weight: bold;">三.&nbsp;&nbsp;C#代码调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_net" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamplesNet?html}
+        </pre>
+    </div>
+</div>
+<span style="page-break-after:always;"></span>
+<!---Restful API C# 调用示例 end-->
+
+<!---Restful API java 调用示例 start-->
+<div>
+    <div>
+        <p style="font-weight: bold;">四.&nbsp;&nbsp;java代码调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamplesJava?html}
+        </pre>
+    </div>
+</div>
+<span style="page-break-after:always;"></span>
+<!---Restful API java 调用示例 end-->
 
 <!---错误代码示例 start-->
 <div>
     <div>
-        <p style="font-weight: bold;">3.&nbsp;&nbsp;API返回代码示例</p>
+        <p style="font-weight: bold;">五.&nbsp;&nbsp;API返回代码示例</p>
     </div>
     <div>
         <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
