@@ -5,6 +5,8 @@ import com.fisk.dataaccess.enums.HttpRequestEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * @author Lock
  * @version 1.3
@@ -17,10 +19,17 @@ public class ApiHttpRequestDTO {
     public HttpRequestEnum httpRequestEnum;
     @ApiModelProperty(value = "请求地址", required = true)
     public String uri;
-    @ApiModelProperty(value = "post请求携带的请求参数")
+    @ApiModelProperty(value = "post请求携带的请求参数raw-josn类型")
     public JSONObject jsonObject;
+    //    @ApiModelProperty(value = "post请求携带的请求参数form-data类型")
+//    public Map<String, String> formDataParams;
+    @ApiModelProperty(value = "post请求携带的请求头信息")
+    public Map<String, String> headersParams;
     @ApiModelProperty(value = "请求头的token信息")
     public String requestHeader;
+    @ApiModelProperty(value = "post请求携带的请求参数form-data类型")
+    public Map<String, String> formDataParams;
+
     /**
      * jwt身份验证方式的账户&密码
      */

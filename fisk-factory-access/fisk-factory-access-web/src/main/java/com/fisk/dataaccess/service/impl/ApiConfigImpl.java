@@ -57,6 +57,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -309,6 +310,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return ResultEnum.PUSH_TABLEID_NULL;
             }
 
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
+            if (apiConfigPo == null) {
+                throw new FkException(ResultEnum.API_NOT_EXIST);
+            }
+
+            // json解析的根节点
+            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+
             // 每次推送数据前,将stg数据删除
             pushDataStgToOds(dto.apiCode, 0);
 
@@ -328,7 +337,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_");
+            pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey);
 
             // TODO stg同步到ods(联调task)
             pushDataStgToOds(dto.apiCode, 1);
@@ -444,8 +453,23 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         }
         // api的请求参数(允许为空)
         List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
+        String formDataString = "form-data";
+        String rawString = "raw";
+        String bodyString = "Body";
+        String headersString = "Headers";
+        // Body: form-data参数
+        List<ApiParameterPO> formDataParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(formDataString) && e.requestType.equalsIgnoreCase(bodyString)).collect(Collectors.toList());
+        // Body: raw参数
+        List<ApiParameterPO> rawParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(rawString) && e.requestType.equalsIgnoreCase(bodyString)).collect(Collectors.toList());
+        // Headers的参数
+        List<ApiParameterPO> headersParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(headersString)).collect(Collectors.toList());
+        // 封装请求头Headers的参数
+        Map<String, String> params = null;
+        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(headersParams)) {
+            params = headersParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+        }
 
-        if (dataSourcePo.authenticationMethod == 3) {
+        if (dataSourcePo.authenticationMethod == 3) { // JWT版
             // jwt身份验证方式对象
             ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
             apiHttpRequestDto.httpRequestEnum = POST;
@@ -468,10 +492,21 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 apiHttpRequestDto.httpRequestEnum = GET;
             } else if (apiConfigPo.apiRequestType == 2) {
                 apiHttpRequestDto.httpRequestEnum = POST;
-                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
-                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                // post请求携带的请求参数  Body: raw参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream()
+                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
             // 调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
 
@@ -484,8 +519,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 推送数据
             pushData(receiveDataDTO);
-            // 没有身份验证方式
-        } else if (dataSourcePo.authenticationMethod == 5) {
+
+        } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
 
             ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
             apiHttpRequestDto.uri = apiConfigPo.apiAddress;
@@ -493,10 +528,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 apiHttpRequestDto.httpRequestEnum = GET;
             } else if (apiConfigPo.apiRequestType == 2) {
                 apiHttpRequestDto.httpRequestEnum = POST;
-                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
-                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream()
+                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 调用第三方api返回的数据
@@ -522,10 +565,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 apiHttpRequestDto.httpRequestEnum = GET;
             } else if (apiConfigPo.apiRequestType == 2) {
                 apiHttpRequestDto.httpRequestEnum = POST;
-                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(parameterPoList)) {
-                    apiHttpRequestDto.jsonObject = parameterPoList.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream()
+                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 调用第三方api返回的数据
@@ -587,7 +638,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params apiTableDtoList
      * @params tablePrefixName pg中的物理表名
      */
-    private void pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName) {
+    private void pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey) {
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
@@ -595,7 +646,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
             targetTable.forEach(System.out::println);
             // 获取Json的schema信息
-            List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList);
+            List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
             schemas.forEach(System.out::println);
             // json根节点处理
             jsonUtils.rootNodeHandler(schemas, json, targetTable);

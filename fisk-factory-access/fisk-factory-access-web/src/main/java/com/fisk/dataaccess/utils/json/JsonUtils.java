@@ -142,9 +142,9 @@ public class JsonUtils {
      * @author gy
      * @date 2022/1/20 14:16
      * @version v1.0
-     * @params
+     * @params jsonKey json解析的根节点
      */
-    public List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList) {
+    public List<JsonSchema> getJsonSchema(List<ApiTableDTO> apiTableDtoList, String jsonKey) {
         List<JsonSchema> root = new ArrayList<>();
         try {
             Map<String, List<JsonSchema>> map = getSchemaDetail(apiTableDtoList);
@@ -153,9 +153,9 @@ public class JsonUtils {
 ////                List<JsonSchema> dataSchema = test02(apiTableDTO);
                 List<JsonSchema> mySchema = map.get(apiTableDTO.tableName);
                 // 当前为父级
-                if (apiTableDTO.pid==0) {
+                if (apiTableDTO.pid == 0) {
                     JsonSchema jsonSchema = JsonSchema.builder()
-                            .name("data")
+                            .name(jsonKey)
                             .type(JsonSchema.TypeEnum.ARRAY)
                             .children(mySchema)
                             .build();
