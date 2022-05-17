@@ -67,8 +67,7 @@ public class DataSynchronizationUtils {
         String stgTableName = sqlBuilder.generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
 
         // 2.查询需要同步的数据
-        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'"
-                + " AND fidata_del_flag = 1 ";
+        String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'";
 
         DataSourceConDTO dto = new DataSourceConDTO();
         dto.setConStr(connectionStr);
@@ -129,7 +128,7 @@ public class DataSynchronizationUtils {
         str.append("INSERT INTO " + mdmTableName);
         str.append("(");
         // 系统字段
-        str.append(MARK + "fidata_newcode").append(",");
+        str.append(MARK + "new_code").append(",");
         str.append(MARK + "version_id").append(",");
         str.append(MARK + "lock_tag").append(",");
         // 表基础字段
@@ -158,19 +157,19 @@ public class DataSynchronizationUtils {
         str.append(businessFields).append(")");
         str.append(" VALUES (" + placeholders + ",unnest(?),unnest(?),unnest(?),unnest(?)" +
                 ",unnest(?),unnest(?),unnest(?),unnest(?)" +") ");
-        str.append(" ON CONFLICT ( " + MARK +"id) DO UPDATE ");
+
+        List<AttributeInfoDTO> codeAssociationCondition = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
+                && e.getName().equals("code")).collect(Collectors.toList());
+
+        // 获取唯一键
+        String columnName = codeAssociationCondition.get(0).getColumnName();
+        str.append(" ON CONFLICT ( " + columnName +") DO UPDATE ");
         str.append(" SET ");
-        str.append(MARK + "fidata_newcode = " + "excluded." + MARK + "fidata_newcode").append(",");
+        str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
         str.append(MARK + "lock_tag = " +  "excluded." + MARK + "lock_tag").append(",");
-        str.append(MARK + "lock_tag = " +  "excluded." + MARK + "lock_tag").append(",");
 
-        String code1 = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
-                        && e.getName().equals("code"))
-                .map(e -> {
-                    String code = e.getColumnName() + " = " + "excluded." + MARK + "fidata_newcode";
-                    return code;
-                }).collect(Collectors.joining(","));
+        String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
 
         // 业务字段
         String collect1 = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
@@ -188,7 +187,7 @@ public class DataSynchronizationUtils {
         try {
             // 系统字段和表基础字段
             stmt = connection.prepareStatement(str.toString());
-            stmt.setArray(1, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "fidata_newcode").toArray()));
+            stmt.setArray(1, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "new_code").toArray()));
             stmt.setArray(2, connection.createArrayOf(JDBCType.INTEGER.getName(),this.getParameter(listMap,MARK + "version_id").toArray()));
             stmt.setArray(3, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "lock_tag").toArray()));
             stmt.setArray(4, connection.createArrayOf(JDBCType.TIMESTAMP.getName(), this.getParameter(listMap,MARK + "create_time").toArray()));
@@ -377,7 +376,7 @@ public class DataSynchronizationUtils {
                             Object value = e.get("code");
                             if (ObjectUtils.isNotEmpty(value)){
                                 if (key.equals("code")){
-                                    e.put("fidata_newcode", value);
+                                    e.put("fidata_new_code", value);
                                     updateList.add(e);
                                 }
                             }
@@ -386,25 +385,23 @@ public class DataSynchronizationUtils {
         });
 
         // 需要插入的数据
-        resultList.stream().forEach(e -> {
-            if (CollectionUtils.isNotEmpty(updateList)){
-                List<Map<String, Object>> list = resultList.stream().filter(
-                        (mapItem) -> !updateList.stream().map(item -> item.get("code")
-                        ).collect(Collectors.toList()).contains(mapItem.get("code"))
-                ).collect(Collectors.toList());
-                insertList.addAll(list);
-            }else {
-                insertList.add(e);
-            }
-        });
+        if (CollectionUtils.isNotEmpty(updateList)){
+            List<Map<String, Object>> list = resultList.stream().filter(
+                    (mapItem) -> !updateList.stream().map(item -> item.get("code")
+                    ).collect(Collectors.toList()).contains(mapItem.get("code"))
+            ).collect(Collectors.toList());
+            insertList.addAll(list);
+        }else {
+            insertList.addAll(resultList);
+        }
 
 
         // 新增数据new_code赋值code
         List<Map<String, Object>> insertDates = new ArrayList<>();
         insertList.stream().filter(Objects::nonNull).forEach(e -> {
             for (String key : e.keySet()) {
-                if (key.equals("fidata_newcode")) {
-                    e.put("fidata_newcode", e.get("code"));
+                if (key.equals("fidata_new_code")) {
+                    e.put("fidata_new_code", e.get("code"));
                     insertDates.add(e);
                 }
             }
