@@ -1,15 +1,19 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.mdm.ImportDataEnum;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
-import com.fisk.common.service.mdmBEBuild.dto.PageDataDTO;
+import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -62,7 +66,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildPageData(PageDataDTO dto) {
+    public String buildImportDataPage(ImportDataPageDTO dto) {
         int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
         StringBuilder str = new StringBuilder();
         str.append("select * from " + dto.getTableName());
@@ -76,6 +80,40 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         if (!CollectionUtils.isEmpty(dto.getSyncType())) {
             str.append(" and fidata_syncy_type in(" + Joiner.on(",").join(dto.getSyncType()) + ")");
         }
+        str.append(" limit " + dto.getPageSize() + " offset " + offset);
+        return str.toString();
+    }
+
+    @Override
+    public String buildUpdateImportData(JSONObject jsonObject, String tableName, int importType) {
+        StringBuilder str = new StringBuilder();
+        str.append("update " + tableName);
+        str.append(" set fidata_import_type=" + importType);
+        Iterator iter = jsonObject.entrySet().iterator();
+        String primaryKey = null;
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            if ("fidata_id".equals(entry.getKey().toString())) {
+                primaryKey = entry.getValue().toString();
+            }
+            str.append("," + entry.getKey().toString() + "='" + entry.getValue().toString() + "'");
+        }
+        if (StringUtils.isEmpty(primaryKey)) {
+            return "";
+        }
+        str.append(" where fidata_id=" + primaryKey);
+        return str.toString();
+    }
+
+    @Override
+    public String buildMasterDataPage(MasterDataPageDTO dto) {
+        //计算偏移量
+        int offset = (dto.getPageIndex() - 1) * dto.getPageSize();
+        StringBuilder str = new StringBuilder();
+        str.append("select " + dto.getColumnNames());
+        str.append(" from " + dto.getTableName() + " view ");
+        str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
+        str.append(" order by fidata_create_time,fidata_id desc ");
         str.append(" limit " + dto.getPageSize() + " offset " + offset);
         return str.toString();
     }

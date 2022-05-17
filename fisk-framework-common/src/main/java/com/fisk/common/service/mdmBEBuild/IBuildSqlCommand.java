@@ -1,7 +1,9 @@
 package com.fisk.common.service.mdmBEBuild;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
-import com.fisk.common.service.mdmBEBuild.dto.PageDataDTO;
+import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 
 /**
  * @author WangYan
@@ -32,6 +34,24 @@ public interface IBuildSqlCommand {
      * @param dto
      * @return
      */
-    String buildPageData(PageDataDTO dto);
+    String buildImportDataPage(ImportDataPageDTO dto);
+
+    /**
+     * 主数据维护-导入模板数据实时修改
+     *
+     * @param jsonObject
+     * @param tableName
+     * @param importType
+     * @return
+     */
+    String buildUpdateImportData(JSONObject jsonObject, String tableName, int importType);
+
+    /**
+     * 主数据维护-首页列表
+     *
+     * @param dto
+     * @return
+     */
+    String buildMasterDataPage(MasterDataPageDTO dto);
 
 }

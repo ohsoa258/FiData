@@ -18,7 +18,7 @@ public enum SyncStatusTypeEnum implements BaseEnum {
 
     SUBMISSION_FAILED(2, "提交失败"),
 
-    UPLOADED_FAILED(3, "导入失败");
+    UPLOADED_FAILED(3, "导入验证失败");
 
     SyncStatusTypeEnum(int value, String name) {
         this.name = name;

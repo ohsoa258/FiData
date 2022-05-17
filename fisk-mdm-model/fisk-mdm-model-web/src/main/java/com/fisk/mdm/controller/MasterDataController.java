@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
-import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
-import com.fisk.mdm.dto.masterdata.ImportParamDTO;
-import com.fisk.mdm.dto.masterdata.MasterDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import io.swagger.annotations.Api;
@@ -75,16 +72,24 @@ public class MasterDataController {
     @ApiOperation("模板数据分页")
     @PostMapping("/importDataQuery")
     @ResponseBody
-    public ResultEntity<Object> importDataQuery(@Validated @RequestBody ImportDataQueryDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataQuery(dto));
+    public ResultEntity<Object> importDataQuery(@Validated @RequestBody ImportDataQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.importDataQuery(dto));
     }
 
     @ApiOperation("模板数据提交")
     @PostMapping("/importDataSubmit")
     @ResponseBody
-    public ResultEntity<Object> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.importDataSubmit(dto));
+    public ResultEntity<ResultEnum> importDataSubmit(@Validated @RequestBody ImportDataSubmitDTO dto) {
+        return ResultEntityBuild.build(service.importDataSubmit(dto));
     }
+
+    @ApiOperation("模板数据实时修改")
+    @PostMapping("/updateImportData")
+    @ResponseBody
+    public ResultEntity<Object> updateImportData(@Validated @RequestBody UpdateImportDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateImportData(dto));
+    }
+
 
     /*@ApiOperation("添加主数据")
     @PostMapping("/addMasterData")

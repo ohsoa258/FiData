@@ -1,9 +1,9 @@
 package com.fisk.mdm.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -380,11 +380,13 @@ public class EntityServiceImpl implements EntityService {
      * @param modelId
      * @return
      */
-    public List<EntityDropDownVO> getEntityDropDown(int modelId)
-    {
-        QueryWrapper<EntityPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(EntityPO::getModelId,modelId);
-        List<EntityPO> list=entityMapper.selectList(queryWrapper);
+    public List<EntityDropDownVO> getEntityDropDown(int modelId) {
+        QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time")
+                .lambda()
+                .eq(EntityPO::getModelId, modelId)
+                .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
+        List<EntityPO> list = entityMapper.selectList(queryWrapper);
         return EntityMap.INSTANCES.poListToDropDownVoList(list);
     }
 

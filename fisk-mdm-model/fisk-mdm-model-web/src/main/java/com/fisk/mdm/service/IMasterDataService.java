@@ -1,11 +1,7 @@
 package com.fisk.mdm.service;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.mdm.dto.masterdata.ImportDataQueryDTO;
-import com.fisk.mdm.dto.masterdata.ImportDataSubmitDTO;
-import com.fisk.mdm.dto.masterdata.ImportParamDTO;
-import com.fisk.mdm.dto.masterdata.MasterDataQueryDTO;
+import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
@@ -72,10 +68,10 @@ public interface IMasterDataService {
     /**
      * 模板导入数据-实时修改
      *
-     * @param jsonObject
+     * @param dto
      * @return
      */
-    ResultEnum updateImportData(JSONObject jsonObject);
+    ResultEnum updateImportData(UpdateImportDataDTO dto);
 
     /**
      * 主数据新增
