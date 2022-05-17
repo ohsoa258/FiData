@@ -2,6 +2,8 @@ package com.fisk.dataaccess.utils.httprequest.Impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +67,8 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             return bearer + token;
         } catch (Exception e) {
             log.error("执行httpRequest方法失败,【失败原因为：】", e);
+            throw new FkException(ResultEnum.get_jwt_token_error);
         }
-        return null;
     }
 
     private String sendPostRequest(ApiHttpRequestDTO dto, String json) throws IOException {
@@ -80,7 +82,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         }
 
         // 页面自定义的请求头信息
-        if (!dto.headersParams.isEmpty()) {
+        if (dto.headersParams != null && !dto.headersParams.isEmpty()) {
             dto.headersParams.forEach(httpPost::setHeader);
         }
 
@@ -89,7 +91,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
         }
 
         // form-data数据
-        if (!dto.formDataParams.isEmpty()) {
+        if (dto.formDataParams != null && !dto.formDataParams.isEmpty()) {
             List<BasicNameValuePair> formDataList = new ArrayList<>();
             for (Map.Entry<String, String> entry : dto.formDataParams.entrySet()) {
                 formDataList.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
