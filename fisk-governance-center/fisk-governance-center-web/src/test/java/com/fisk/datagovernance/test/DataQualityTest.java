@@ -1,5 +1,7 @@
 package com.fisk.datagovernance.test;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.utils.similarity.CosineSimilarity;
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
 import org.junit.Test;
@@ -44,7 +46,37 @@ public class DataQualityTest {
      */
     @Test
     public void setDataOpsDataSource() {
-        DataOpsDataSourceManageImpl dataOpsDataSourceManage=new DataOpsDataSourceManageImpl();
+        DataOpsDataSourceManageImpl dataOpsDataSourceManage = new DataOpsDataSourceManageImpl();
         dataOpsDataSourceManage.setDataOpsDataSource();
+    }
+
+    /**
+     * @return void
+     * @description json读取测试
+     * @author dick
+     * @date 2022/4/25 13:42
+     * @version v1.0
+     * @params
+     */
+    @Test
+    public void getJsonArray() {
+        JSONArray jSONArray = new JSONArray();
+        JSONObject jb = new JSONObject();
+        jb.put("id", 1);
+        jb.put("name", "s");
+        jb.put("nameM", 1.894);
+        jSONArray.add(jb);
+        JSONObject j1 = new JSONObject();
+        j1.put("id", null);
+        j1.put("name", "s");
+        j1.put("nameM", 1.894);
+        jSONArray.add(j1);
+        for (int i = 0; i < jSONArray.size(); i++) {
+            JSONObject jsonObject = jSONArray.getJSONObject(i);
+            String a1= jsonObject.getString("id");
+            String a2= jsonObject.getString("name");
+            String a3= jsonObject.getString("nameM");
+            System.out.println(a1+","+a2+","+a3);
+        }
     }
 }

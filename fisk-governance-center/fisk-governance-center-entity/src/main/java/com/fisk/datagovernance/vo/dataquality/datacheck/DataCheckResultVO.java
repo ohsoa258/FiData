@@ -12,6 +12,16 @@ import lombok.Data;
 public class DataCheckResultVO
 {
     /**
+     * 规则id
+     */
+    public int ruleId;
+
+    /**
+     * 规则名称
+     */
+    public String ruleName;
+
+    /**
      * 检查的库
      */
     public String checkDataBase;
@@ -40,4 +50,9 @@ public class DataCheckResultVO
      * 检查的结果
      */
     public Object checkResult;
+
+    /**
+     * 检查的结果消息
+     */
+    public String checkResultMsg;
 }

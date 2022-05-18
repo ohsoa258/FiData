@@ -55,4 +55,12 @@ public enum DataSourceTypeEnum implements BaseEnum {
         }
         return DataSourceTypeEnum.MYSQL;
     }
+
+    public static DataSourceTypeEnum getEnum(int value){
+        for (DataSourceTypeEnum e:DataSourceTypeEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return DataSourceTypeEnum.MYSQL;
+    }
 }

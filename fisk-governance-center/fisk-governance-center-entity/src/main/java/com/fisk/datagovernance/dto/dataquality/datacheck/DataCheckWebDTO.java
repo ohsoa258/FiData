@@ -10,11 +10,11 @@ import java.util.HashMap;
 /**
  * @author dick
  * @version 1.0
- * @description 数据校验请求DTO
+ * @description 数据校验_页面DTO
  * @date 2022/5/16 20:44
  */
 @Data
-public class DataCheckRequestDTO {
+public class DataCheckWebDTO {
     /**
      * 服务器IP
      */
