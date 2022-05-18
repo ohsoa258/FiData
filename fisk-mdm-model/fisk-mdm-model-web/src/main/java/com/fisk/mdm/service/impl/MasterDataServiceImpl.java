@@ -409,18 +409,18 @@ public class MasterDataServiceImpl implements IMasterDataService {
         try {
             workbook = WorkbookFactory.create(file.getInputStream());
             //获取sheet数量
-            int numberOfSheets = workbook.getNumberOfSheets();
-            for (int i = 0; i < numberOfSheets; i++) {
-                //获取当前工作表
-                Sheet sheet = workbook.getSheetAt(i);
-                if (sheet.getRow(0) == null) {
-                    continue;
-                }
-                //列数
-                int columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
-                //获得总行数
-                int rowNum = sheet.getPhysicalNumberOfRows();
-                Row row1 = sheet.getRow(0);
+            ////int numberOfSheets = workbook.getNumberOfSheets();
+            //for (int i = 0; i < numberOfSheets; i++) {
+            //获取当前工作表
+            Sheet sheet = workbook.getSheetAt(0);
+            if (sheet.getRow(0) == null) {
+                throw new FkException(ResultEnum.EMPTY_FORM);
+            }
+            //列数
+            int columnNum = sheet.getRow(0).getPhysicalNumberOfCells();
+            //获得总行数
+            int rowNum = sheet.getPhysicalNumberOfRows();
+            Row row1 = sheet.getRow(0);
                 List<AttributeInfoDTO> attributePoList = new ArrayList<>();
                 //获取表头
                 for (int col = 0; col < columnNum; col++) {
@@ -512,7 +512,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
                 //等待所有线程执行完毕
                 countDownLatch.await();
-            }
+            //}
             int flatCount = 0;
             if (!CollectionUtils.isEmpty(objectArrayList)) {
                 flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId);
@@ -705,6 +705,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dto.getData().put("fidata_error_msg", verifyDTO.getErrorMsg());
             if (verifyDTO.getSuccess()) {
                 dto.getData().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+                if (StringUtils.isEmpty(dto.getData().get("code").toString())) {
+                    //code生成规则
+                    IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
+                    dto.getData().put("code", buildCodeCommand.createCode());
+                }
+            }
+            //获取mdm表code数据列表
+            List<String> codeList = getCodeList(entityPO.getTableName().replace("mdm", "stg"));
+            //判断上传逻辑
+            if (codeList.contains(dto.getData().get("code"))) {
+                dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
             }
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
