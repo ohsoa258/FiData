@@ -1,9 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datacheck;
 
 import com.fisk.datagovernance.enums.dataquality.*;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.models.auth.In;
 import lombok.Data;
 
 import java.util.List;
@@ -47,10 +45,10 @@ public class DataCheckDTO {
     public String useTableName;
 
     /**
-     * 校验规则：1、强规则 2、弱规则
+     * 校验规则
      */
-    @ApiModelProperty(value = "校验规则 1、强规则 2、弱规则")
-    public String checkRule;
+    @ApiModelProperty(value = "校验规则")
+    public CheckRuleEnum checkRule;
 
     /**
      * 生成规则

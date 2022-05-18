@@ -24,7 +24,8 @@ public interface DataCheckMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "ruleState.value", target = "ruleState")
+            @Mapping(source = "ruleState.value", target = "ruleState"),
+            @Mapping(source = "checkRule.value", target = "checkRule")
     })
     DataCheckPO dtoToPo(DataCheckDTO dto);
 
@@ -35,7 +36,8 @@ public interface DataCheckMap {
      * @return target
      */
     @Mappings({
-            @Mapping(source = "ruleState.value", target = "ruleState")
+            @Mapping(source = "ruleState.value", target = "ruleState"),
+            @Mapping(source = "checkRule.value", target = "checkRule")
     })
     DataCheckPO dtoToPo_Edit(DataCheckEditDTO dto);
 }
