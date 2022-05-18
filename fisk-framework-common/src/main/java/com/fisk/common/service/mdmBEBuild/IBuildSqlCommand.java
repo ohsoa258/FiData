@@ -1,9 +1,10 @@
 package com.fisk.common.service.mdmBEBuild;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -44,7 +45,7 @@ public interface IBuildSqlCommand {
      * @param importType
      * @return
      */
-    String buildUpdateImportData(JSONObject jsonObject, String tableName, int importType);
+    String buildUpdateImportData(Map<String, Object> jsonObject, String tableName, int importType);
 
     /**
      * 主数据维护-首页列表

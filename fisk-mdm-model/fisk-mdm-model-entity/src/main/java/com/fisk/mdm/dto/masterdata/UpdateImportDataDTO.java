@@ -1,7 +1,8 @@
 package com.fisk.mdm.dto.masterdata;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -11,6 +12,6 @@ public class UpdateImportDataDTO {
 
     private Integer entityId;
 
-    private JSONObject jsonObject;
+    private Map<String, Object> data;
 
 }

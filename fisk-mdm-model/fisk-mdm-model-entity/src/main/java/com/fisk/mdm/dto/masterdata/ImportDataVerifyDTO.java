@@ -6,7 +6,7 @@ import lombok.Data;
  * @author JianWenYang
  */
 @Data
-public class ImportCellDataDTO {
+public class ImportDataVerifyDTO {
 
     /**
      * 是否成功

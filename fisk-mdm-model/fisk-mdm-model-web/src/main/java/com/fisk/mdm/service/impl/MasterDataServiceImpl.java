@@ -286,6 +286,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获得业务字段名
         List<String> list = new ArrayList<>();
         for (AttributeColumnVO attributeColumnVo:attributeColumnVoList){
+            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
+                list.add(attributeColumnVo.getName() + "_code");
+                list.add(attributeColumnVo.getName() + "_name");
+                continue;
+            }
             list.add(attributeColumnVo.getName());
         }
         String businessColumnName = StringUtils.join(list, ",");
@@ -444,10 +449,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                         String value = "";
                                         //判断字段类型
                                         if (cell != null) {
-                                            ImportCellDataDTO cellDataDTO = getCellDataType(cell,
+                                            ImportDataVerifyDTO cellDataDTO = getCellDataType(cell,
                                                     attributePoList.get(col).getDisplayName(),
-                                                    attributePoList.get(col).getDataType(),
-                                                    attributePoList.get(col).getDataTypeDecimalLength() == null ? 0 : attributePoList.get(col).getDataTypeDecimalLength());
+                                                    attributePoList.get(col).getDataType());
                                             value = cellDataDTO.getValue();
                                             errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
                                         }
@@ -680,16 +684,22 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (entityPO == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
+            Connection conn = getConnection();
+            Statement stat = conn.createStatement();
+            //验证code
+            ImportDataVerifyDTO verifyDTO = verifyCode(dto.getData());
+            dto.getData().put("fidata_error_msg", verifyDTO.getErrorMsg());
+            if (verifyDTO.getSuccess()) {
+                dto.getData().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+            }
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
-            String updateSql = sqlBuilder.buildUpdateImportData(dto.getJsonObject(),
+            String updateSql = sqlBuilder.buildUpdateImportData(dto.getData(),
                     entityPO.getTableName().replace("mdm", "stg"),
                     ImportTypeEnum.EXCEL_IMPORT.getValue());
             if (StringUtils.isEmpty(updateSql)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
-            Connection conn = getConnection();
-            Statement stat = conn.createStatement();
             int flat = stat.executeUpdate(updateSql);
             //关闭连接
             AbstractDbHelper.closeStatement(stat);
@@ -698,6 +708,28 @@ public class MasterDataServiceImpl implements IMasterDataService {
         } catch (SQLException e) {
             log.error("updateImportData:", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+    }
+
+    /**
+     * 验证code
+     *
+     * @param data
+     * @return
+     */
+    public ImportDataVerifyDTO verifyCode(Map<String, Object> data) {
+        try {
+            ImportDataVerifyDTO dto = new ImportDataVerifyDTO();
+            dto.setSuccess(true);
+            if (StringUtils.isEmpty(data.get("code").toString())
+                    && !StringUtils.isEmpty(data.get("fidata_new_code").toString())) {
+                dto.setSuccess(false);
+                dto.setErrorMsg("输入新编码时，编码列不能为空");
+            }
+            return dto;
+        } catch (Exception e) {
+            log.error("verifyCode:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
     }
 
@@ -774,13 +806,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
 
     /**
-     * 获取Excel表格数据类型
+     * 获取Excel表格数据类型并校验
      *
      * @param cell
      * @return
      */
-    public ImportCellDataDTO getCellDataType(Cell cell, String columnDisplay, String dataType, int decimalLength) {
-        ImportCellDataDTO dto = new ImportCellDataDTO();
+    public ImportDataVerifyDTO getCellDataType(Cell cell, String columnDisplay, String dataType) {
+        ImportDataVerifyDTO dto = new ImportDataVerifyDTO();
         dto.setSuccess(true);
         dto.setValue("");
         switch (cell.getCellType()) {

@@ -1,6 +1,5 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
@@ -68,7 +67,7 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildUpdateImportData(JSONObject jsonObject, String tableName, int importType) {
+    public String buildUpdateImportData(Map<String, Object> jsonObject, String tableName, int importType) {
         StringBuilder str = new StringBuilder();
         str.append("update " + tableName);
         str.append(" set fidata_import_type=" + importType);

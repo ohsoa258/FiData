@@ -1,6 +1,5 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.mdm.ImportDataEnum;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
@@ -85,7 +84,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildUpdateImportData(JSONObject jsonObject, String tableName, int importType) {
+    public String buildUpdateImportData(Map<String, Object> jsonObject,
+                                        String tableName,
+                                        int importType) {
         StringBuilder str = new StringBuilder();
         str.append("update " + tableName);
         str.append(" set fidata_import_type=" + importType);
@@ -95,6 +96,13 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
             Map.Entry entry = (Map.Entry) iter.next();
             if ("fidata_id".equals(entry.getKey().toString())) {
                 primaryKey = entry.getValue().toString();
+                continue;
+            } else if ("fidata_import_type".equals(entry.getKey().toString())) {
+                continue;
+            }
+            if (entry.getValue() == null) {
+                str.append("," + entry.getKey().toString() + "=null");
+                continue;
             }
             str.append("," + entry.getKey().toString() + "='" + entry.getValue().toString() + "'");
         }
