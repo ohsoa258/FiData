@@ -326,6 +326,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum pushData(ReceiveDataDTO dto) {
+        ResultEnum resultEnum;
         try {
             if (dto.apiCode == null) {
                 return ResultEnum.PUSH_TABLEID_NULL;
@@ -333,11 +334,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
             if (apiConfigPo == null) {
-                throw new FkException(ResultEnum.API_NOT_EXIST);
+                return ResultEnum.API_NOT_EXIST;
             }
 
             // json解析的根节点
             String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+            log.info("json解析的根节点参数为: " + jsonKey);
 
             // 每次推送数据前,将stg数据删除
             pushDataStgToOds(dto.apiCode, 0);
@@ -361,11 +363,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey);
 
             // TODO stg同步到ods(联调task)
-            pushDataStgToOds(dto.apiCode, 1);
+            resultEnum = pushDataStgToOds(dto.apiCode, 1);
         } catch (Exception e) {
-            return ResultEnum.PUSH_DATA_ERROR;
+            resultEnum = ResultEnum.PUSH_DATA_ERROR;
         }
-        return ResultEnum.SUCCESS;
+        return resultEnum;
     }
 
     @Override
@@ -485,16 +487,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params dto
      */
-    public void syncData(ApiImportDataDTO dto) {
+    public ResultEnum syncData(ApiImportDataDTO dto) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
-            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+            return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
         }
         ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiId).one();
         if (apiConfigPo == null) {
-            throw new FkException(ResultEnum.APICONFIG_ISNULL);
+            return ResultEnum.APICONFIG_ISNULL;
         }
         // api的请求参数(允许为空)
         List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list();
@@ -529,7 +531,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
             // 获取token
             String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
-
+            if (StringUtils.isBlank(requestToken)) {
+                return ResultEnum.GET_JWT_TOKEN_ERROR;
+            }
 
             apiHttpRequestDto.uri = apiConfigPo.apiAddress;
             apiHttpRequestDto.requestHeader = requestToken;
@@ -637,6 +641,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 推送数据
             pushData(receiveDataDTO);
         }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -683,7 +689,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params apiTableDtoList
      * @params tablePrefixName pg中的物理表名
      */
-    private void pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey) {
+    private ResultEnum pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey) {
+        ResultEnum resultEnum;
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
@@ -704,11 +711,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // ods_abbreviationName_tableName
-            pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+            resultEnum = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
 
         } catch (Exception e) {
-            throw new FkException(ResultEnum.PUSH_DATA_ERROR);
+            return ResultEnum.PUSH_DATA_ERROR;
         }
+
+        return resultEnum;
     }
 
     /**
@@ -722,17 +731,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params apiId apiId
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    private void pushDataStgToOds(Long apiId, int flag) {
+    private ResultEnum pushDataStgToOds(Long apiId, int flag) {
 
         // 1.根据apiId获取api所有信息
         ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
         if (apiConfigPo == null) {
-            throw new FkException(ResultEnum.API_NOT_EXIST);
+            return ResultEnum.API_NOT_EXIST;
         }
         // 2.根据appId获取app所有信息
         AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
         if (app == null) {
-            throw new FkException(ResultEnum.APP_NOT_EXIST);
+            return ResultEnum.APP_NOT_EXIST;
         }
 
         // 3.根据apiId查询所有物理表详情
@@ -740,7 +749,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<TableAccessNonDTO> tablelist = dto.list;
         if (CollectionUtils.isEmpty(tablelist)) {
             // 当前api下没有物理表
-            throw new FkException(ResultEnum.TABLE_NOT_EXIST);
+            return ResultEnum.TABLE_NOT_EXIST;
         }
 
         // 4.组装参数,调用tasdk,获取推送数据所需的sql
@@ -771,8 +780,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             configDTO.targetDsConfig = dataSourceConfig;
 
             // 获取同步数据的sql并执行
-            getSynchroDataSqlAndExcute(configDTO, flag);
+            return getSynchroDataSqlAndExcute(configDTO, flag);
         }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -786,21 +797,24 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params configDTO task需要的参数
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    private void getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
+    private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 调用task,获取同步数据的sql
             log.info("同步sql入参AE87: " + JSON.toJSONString(configDTO));
             ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOds(configDTO);
+            log.info("task返回的执行sqlAE88: " + JSON.toJSONString(result));
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
                 if (!CollectionUtils.isEmpty(sqlList)) {
                     PgsqlUtils pgsqlUtils = new PgsqlUtils();
-                    pgsqlUtils.stgToOds(sqlList, flag);
+                    resultEnum = pgsqlUtils.stgToOds(sqlList, flag);
                 }
             }
         } catch (SQLException e) {
-            throw new FkException(ResultEnum.STG_TO_ODS_ERROR);
+            return ResultEnum.STG_TO_ODS_ERROR;
         }
+        return resultEnum;
     }
 
     /**
