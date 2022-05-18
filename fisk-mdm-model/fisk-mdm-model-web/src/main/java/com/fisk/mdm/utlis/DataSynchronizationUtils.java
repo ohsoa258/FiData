@@ -10,9 +10,11 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
+import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
 import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
+import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +48,8 @@ public class DataSynchronizationUtils {
 
     @Resource
     EntityService entityService;
+    @Resource
+    AttributeService attributeService;
 
     public static final String MARK ="fidata_";
     public static final String SPECIAL_CHARACTERS_NULL = "`fidata_null`";
@@ -108,6 +112,31 @@ public class DataSynchronizationUtils {
 
         // 查询数据
         List<Map<String, Object>> mdmResultList = execQueryResultList(stringBuilder.toString(), dto);
+
+        // 域字段转换成id
+        List<AttributeInfoDTO> domains = attributeList.stream().filter(e -> e.getDomainId() != null).collect(Collectors.toList());
+        domains.stream().forEach(e -> {
+            resultList.stream().forEach(item -> {
+                for (String key : item.keySet()) {
+                    if (e.getName().equals(key)){
+                        // 查询出域字段信息
+                        AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+
+                        // 域字段的表名称
+                        String stgTableName1 = sqlBuilder.generateStgTableName(data.getModelId(), data.getEntityId());
+
+                        StringBuilder str = new StringBuilder();
+                        str.append("SELECT fidata_id FROM " + stgTableName1);
+                        str.append(" WHERE code = '" + item.get(key)  +"'");
+                        // 查询域字段数据
+                        List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class);
+
+                        item.put(key,ids.get(0).getFidata_id());
+                    }
+                }
+            });
+        });
+
 
         // 处理需要插入和更新的数据(关键点)
         List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
