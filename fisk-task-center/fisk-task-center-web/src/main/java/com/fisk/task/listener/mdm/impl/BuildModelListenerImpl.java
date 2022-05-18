@@ -757,10 +757,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 先去判断属性有没有外键
         if (CollectionUtils.isEmpty(foreignList)) {
             // 不存在外键
-            str.append(this.noDomainSplicing(noForeignList,mdmTableName));
+            str.append(this.noDomainSplicing(noForeignList));
         } else {
             // 存在外键
-            str.append(this.domainSplicing(foreignList, noForeignList,mdmTableName));
+            str.append(this.domainSplicing(foreignList, noForeignList));
         }
 
         return str.toString();
@@ -772,8 +772,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param foreignList
      * @param noForeignList
      */
-    public String domainSplicing(List<AttributeInfoDTO> foreignList, List<AttributeInfoDTO> noForeignList
-                                 ,String mdmTableName) {
+    public String domainSplicing(List<AttributeInfoDTO> foreignList, List<AttributeInfoDTO> noForeignList) {
         StringBuilder str = new StringBuilder();
 
         // 不存在域字段的属性
@@ -813,7 +812,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         str.append(buildPgCommand.splicingViewTable(true));
 
         // 主表表名
-        str.append(" FROM " + mdmTableName + " " + PRIMARY_TABLE);
+        str.append(" FROM " + "mdm_" + dto.getModelId() + "_" + dto.getEntityId() + " " + PRIMARY_TABLE);
 
         AtomicInteger amount1 = new AtomicInteger(0);
         String leftJoin = list.stream().filter(Objects::nonNull)
@@ -823,7 +822,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
 
                     String alias = PRIMARY_TABLE + amount1.incrementAndGet();
-                    String tableName = mdmTableName + " " + alias;
+                    String tableName = "mdm_" + e.getModelId() + "_" + e.getEntityId() + " " + alias;
                     String on = " ON " + PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id" +
                             " AND " + PRIMARY_TABLE + "." + data.getColumnName() + " = " + alias + "." + MARK + "id";
                     String str1 = tableName + " " + on;
@@ -855,7 +854,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @param noForeignList
      * @return
      */
-    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList,String mdmTableName) {
+    public String noDomainSplicing(List<AttributeInfoDTO> noForeignList) {
         StringBuilder str = new StringBuilder();
         // 视图基础字段
         str.append(this.splicingViewTable(false));
@@ -872,7 +871,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         // 追加基础字段
         str.append(buildPgCommand.createViw());
         str.deleteCharAt(str.length() - 1);
-        str.append(" FROM " + mdmTableName);
+        str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
         return str.toString();
     }
 
