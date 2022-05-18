@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
+import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
 import lombok.Data;
 
 /**
@@ -55,4 +56,9 @@ public class DataCheckResultVO
      * 检查的结果消息
      */
     public String checkResultMsg;
+
+    /**
+     * 校验规则
+     */
+    public CheckRuleEnum checkRule;
 }

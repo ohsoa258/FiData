@@ -337,6 +337,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             DataCheckResultVO dataCheckResultVO = new DataCheckResultVO();
             dataCheckResultVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
             dataCheckResultVO.setRuleName(dataCheckPO.getRuleName());
+            dataCheckResultVO.setCheckRule(CheckRuleEnum.getEnum(dataCheckPO.getCheckRule()));
             dataCheckResultVO.setCheckDataBase(dataSourceInfo.getConDbname());
             dataCheckResultVO.setCheckTable(dataCheckPO.getUseTableName());
             dataCheckResultVO.setCheckField(fieldName);
@@ -427,6 +428,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResults.forEach(t -> {
                     t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
                     t.setRuleName(dataCheckPO.getRuleName());
+                    t.setCheckRule(CheckRuleEnum.getEnum(dataCheckPO.getCheckRule()));
                     if (t.getCheckResult().toString().equals("fail")) {
                         t.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过",
                                 t.getCheckTable(), t.getCheckField(), t.getCheckType()));

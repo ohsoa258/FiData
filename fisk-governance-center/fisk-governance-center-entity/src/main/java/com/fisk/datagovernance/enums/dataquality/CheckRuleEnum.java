@@ -12,6 +12,7 @@ public enum CheckRuleEnum implements BaseEnum {
     /**
      * 校验规则
      */
+    NONE(0,"空"),
     STRONG_RULE(1, "强规则"),
     WEAK_RULE(2, "弱规则");
 
@@ -31,5 +32,13 @@ public enum CheckRuleEnum implements BaseEnum {
     @Override
     public String getName() {
         return name;
+    }
+
+    public static CheckRuleEnum  getEnum(int value){
+        for (CheckRuleEnum e:CheckRuleEnum.values()) {
+            if(e.getValue() == value)
+                return e;
+        }
+        return CheckRuleEnum.NONE;
     }
 }
