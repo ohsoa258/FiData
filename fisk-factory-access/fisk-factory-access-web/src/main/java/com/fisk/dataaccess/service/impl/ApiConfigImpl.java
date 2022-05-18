@@ -733,54 +733,60 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     private ResultEnum pushDataStgToOds(Long apiId, int flag) {
 
-        // 1.根据apiId获取api所有信息
-        ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
-        if (apiConfigPo == null) {
-            return ResultEnum.API_NOT_EXIST;
-        }
-        // 2.根据appId获取app所有信息
-        AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
-        if (app == null) {
-            return ResultEnum.APP_NOT_EXIST;
-        }
-
-        // 3.根据apiId查询所有物理表详情
-        ApiConfigDTO dto = getData(apiId);
-        List<TableAccessNonDTO> tablelist = dto.list;
-        if (CollectionUtils.isEmpty(tablelist)) {
-            // 当前api下没有物理表
-            return ResultEnum.TABLE_NOT_EXIST;
-        }
-
-        // 4.组装参数,调用tasdk,获取推送数据所需的sql
-        for (TableAccessNonDTO e : tablelist) {
-            TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
-            DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
-            // 表名
-            ProcessorConfig processorConfig = new ProcessorConfig();
-            processorConfig.targetTableName = app.appAbbreviation + "_" + e.tableName;
-            // 同步方式
-            DataSourceConfig dataSourceConfig = new DataSourceConfig();
-            dataSourceConfig.syncMode = syncmodePo.syncMode;
-            // 增量对象
-            if (syncmodePo.syncMode == 4) {
-                TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
-                configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+        try {
+            // 1.根据apiId获取api所有信息
+            ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
+            if (apiConfigPo == null) {
+                return ResultEnum.API_NOT_EXIST;
+            }
+            // 2.根据appId获取app所有信息
+            AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
+            if (app == null) {
+                return ResultEnum.APP_NOT_EXIST;
             }
 
-            // 业务主键集合(逗号隔开)
-            List<TableFieldsDTO> fieldList = e.list;
-            if (!CollectionUtils.isEmpty(fieldList)) {
-                String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
-                // 去掉最后一位逗号","
-                configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
+            // 3.根据apiId查询所有物理表详情
+            ApiConfigDTO dto = getData(apiId);
+            List<TableAccessNonDTO> tablelist = dto.list;
+            if (CollectionUtils.isEmpty(tablelist)) {
+                // 当前api下没有物理表
+                return ResultEnum.TABLE_NOT_EXIST;
             }
 
-            configDTO.processorConfig = processorConfig;
-            configDTO.targetDsConfig = dataSourceConfig;
+            // 4.组装参数,调用tasdk,获取推送数据所需的sql
+            for (TableAccessNonDTO e : tablelist) {
+                TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+                DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
+                // 表名
+                ProcessorConfig processorConfig = new ProcessorConfig();
+                processorConfig.targetTableName = app.appAbbreviation + "_" + e.tableName;
+                // 同步方式
+                DataSourceConfig dataSourceConfig = new DataSourceConfig();
+                dataSourceConfig.syncMode = syncmodePo.syncMode;
+                // 增量对象
+                if (syncmodePo.syncMode == 4) {
+                    TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                    configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+                }
 
-            // 获取同步数据的sql并执行
-            return getSynchroDataSqlAndExcute(configDTO, flag);
+                // 业务主键集合(逗号隔开)
+                List<TableFieldsDTO> fieldList = e.list;
+                if (!CollectionUtils.isEmpty(fieldList)) {
+                    String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                    // 去掉最后一位逗号","
+                    if (StringUtils.isNotBlank(collect)) {
+                        configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
+                    }
+                }
+
+                configDTO.processorConfig = processorConfig;
+                configDTO.targetDsConfig = dataSourceConfig;
+
+                // 获取同步数据的sql并执行
+                return getSynchroDataSqlAndExcute(configDTO, flag);
+            }
+        } catch (Exception e) {
+            return ResultEnum.PUSH_DATA_ERROR;
         }
 
         return ResultEnum.SUCCESS;
