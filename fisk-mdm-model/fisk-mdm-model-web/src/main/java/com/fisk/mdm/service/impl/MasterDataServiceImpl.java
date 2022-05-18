@@ -285,14 +285,28 @@ public class MasterDataServiceImpl implements IMasterDataService {
         resultObjectVO.setAttributes(attributeGroupVoList);
         //获得业务字段名
         List<String> list = new ArrayList<>();
+        List<AttributeColumnVO> areaColumnList = new ArrayList<>();
         for (AttributeColumnVO attributeColumnVo:attributeColumnVoList){
+            //域字段添加表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
                 list.add(attributeColumnVo.getName() + "_code");
                 list.add(attributeColumnVo.getName() + "_name");
+                AttributeColumnVO vo = new AttributeColumnVO();
+                vo.setDisplayName(attributeColumnVo.getDisplayName() + "_名称");
+                vo.setName(attributeColumnVo.getName() + "_name");
+                vo.setDataType(attributeColumnVo.getDataType());
+                vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
+                vo.setEnableRequired(attributeColumnVo.getEnableRequired());
+                vo.setSortWieght(attributeColumnVo.getSortWieght());
+                vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
+                areaColumnList.add(vo);
+                attributeColumnVo.setDisplayName(attributeColumnVo.getDisplayName() + "_编码");
+                attributeColumnVo.setName(attributeColumnVo.getName() + "_code");
                 continue;
             }
             list.add(attributeColumnVo.getName());
         }
+        attributeColumnVoList.addAll(areaColumnList);
         String businessColumnName = StringUtils.join(list, ",");
         //准备主数据集合
         List<Map<String,Object>> data = new ArrayList<>();
