@@ -81,7 +81,7 @@ public enum ResultEnum {
     DATAACCESS_APPNAME_ERROR(5007, "应用名称已存在"),
     DATAACCESS_APPABBREVIATION_SUCCESS(5008, "应用简称有效"),
     DATAACCESS_APPABBREVIATION_ERROR(5009, "应用简称已存在"),
-    TABLE_NOT_EXIST(5010, "当前物理表已删除"),
+    TABLE_NOT_EXIST(5010, "当前物理表不存在or已删除"),
     TABLE_IS_EXIST(5011, "物理表名已存在"),
     TASK_EXEC_FAILURE(5012, "task模块publishBuildAtlasTableTask方法执行失败"),
     SQL_EXCEPT_CLEAR(5013, "当前SQL异常清除"),
@@ -101,14 +101,17 @@ public enum ResultEnum {
     PUSH_TABLEID_NULL(5027, "推送的api_id不可为空"),
     APP_NOT_EXIST(5028, "当前API所属应用已删除"),
     CREATE_PG_CONNECTION(5029, "创建pgsql连接驱动失败"),
-    API_NOT_EXIST(5030, "创建pgsql连接驱动失败"),
+    API_NOT_EXIST(5030, "当前推送的api不存在"),
     STG_TO_ODS_ERROR(5031, "stg同步数据到ods报错"),
     DATASOURCE_INFORMATION_ISNULL(5032, "数据源信息不存在"),
     APICONFIG_ISNULL(5033, "api不存在"),
     DATASOURCE_ISNULL(5034, "当前api的身份验证信息已缺失,请检查当前api所属的应用参数"),
-    GET_JWT_TOKEN_ERROR(5035, "当前api,获取token失败,请检查api的配置信息"),
+    GET_JWT_TOKEN_ERROR(5035, "当前api获取token失败,请检查api的配置信息"),
     COPY_API_ISNULL(5036, "当前复制的api不存在,请重新选择"),
     APINAME_ISEXIST(5037, "api名称重复,请重新设置"),
+    EXECUTE_HTTP_REQUEST_ERROR(5038, "调用第三方接口报错,请重新检查api的配置信息"),
+    SEND_POST_REQUEST_ERROR(5039, "发送post请求失败,请检查参数"),
+    SEND_GET_REQUEST_ERROR(5040, "发送get请求失败,请检查参数"),
 
 
     /**

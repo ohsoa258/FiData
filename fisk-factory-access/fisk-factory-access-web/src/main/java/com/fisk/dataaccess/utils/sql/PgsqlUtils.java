@@ -80,7 +80,7 @@ public class PgsqlUtils {
      * @params sqlList sql集合
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    public void stgToOds(List<String> sqlList, int flag) throws SQLException {
+    public ResultEnum stgToOds(List<String> sqlList, int flag) throws SQLException {
         Connection pgConn = getPgConn();
         Statement statement = pgConn.createStatement();
         try {
@@ -95,8 +95,10 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             pgConn.close();
-            throw new FkException(ResultEnum.STG_TO_ODS_ERROR);
+            return ResultEnum.STG_TO_ODS_ERROR;
         }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -110,7 +112,7 @@ public class PgsqlUtils {
      * @params jsonStr json字符串
      * @params tablePrefixName pg中的物理表前缀名
      */
-    public void executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
+    public ResultEnum executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
@@ -155,8 +157,10 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             con.close();
-            throw new FkException(ResultEnum.PUSH_DATA_ERROR);
+            return ResultEnum.PUSH_DATA_ERROR;
         }
+
+        return ResultEnum.SUCCESS;
     }
 
 }

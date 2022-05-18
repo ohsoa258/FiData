@@ -142,7 +142,7 @@ public class DataSynchronizationUtils {
         List<Map<String, Object>> dateList = this.dataProcessing(mdmResultList, resultList, attributeList);
 
         // 4.数据导入
-        return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,codes,batchCode);
+        return this.dataImport(mdmTableName,stgTableName,dto,attributeList,dateList,batchCode);
     }
 
     /**
@@ -152,7 +152,6 @@ public class DataSynchronizationUtils {
             ,DataSourceConDTO dto
             ,List<AttributeInfoDTO> attributeList
             ,List<Map<String, Object>> listMap
-            ,String codes
             ,String batchCode){
         AbstractDbHelper dbHelper = new AbstractDbHelper();
         Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
@@ -248,7 +247,7 @@ public class DataSynchronizationUtils {
         } catch (SQLException ex) {
             log.error("stg表数据同步失败,异常信息:" + ex);
             String errorMessage = ResultEnum.DATA_SYNCHRONIZATION_FAILED.getMsg() + "【原因】:" + ex.getMessage();
-            this.errorMessageProcess(stgTableName,errorMessage,codes,connection);
+            this.errorMessageProcess(stgTableName,errorMessage,batchCode,connection);
 
             // 回调失败同步状态
             this.callbackFailedStatus(stgTableName,batchCode,connection);
@@ -283,16 +282,15 @@ public class DataSynchronizationUtils {
      * stg表插入失败信息
      * @param stgTableName
      * @param errorMessage
-     * @param codes
+     * @param batchCode
      * @param connection
      */
-    public void errorMessageProcess(String stgTableName,String errorMessage,String codes
+    public void errorMessageProcess(String stgTableName,String errorMessage,String batchCode
                       ,Connection connection){
         StringBuilder str = new StringBuilder();
         str.append("UPDATE " + stgTableName);
         str.append(" SET fidata_error_msg = '" + errorMessage).append("'");
-        str.append(" WHERE code IN(" + codes + ")");
-        str.append(" AND fidata_del_flag = 1 ");
+        str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
 
         PreparedStatement statement = null;
         try {
@@ -356,7 +354,6 @@ public class DataSynchronizationUtils {
         str.append(" SET fidata_status = '" + SyncStatusTypeEnum.SUBMITTED_SUCCESSFULLY.getValue()).append("'");
         str.append(",fidata_error_msg = null");
         str.append(" WHERE fidata_batch_code ='" + batchCode + "'");
-        str.append(" AND fidata_del_flag = 1 ");
 
         PreparedStatement statement = null;
         try {
