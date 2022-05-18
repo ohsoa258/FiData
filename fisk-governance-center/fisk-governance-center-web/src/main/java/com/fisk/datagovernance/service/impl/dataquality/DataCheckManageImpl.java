@@ -545,8 +545,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\tSELECT\n" +
                                     "\t\t'%s' AS checkDataBase,\n" +
                                     "\t\t'%s' AS checkTable,\n" +
-                                    "\t\t'%s' AS checkDataBase,\n" +
-                                    "\t\t'%s' AS checkTable,\n" +
                                     "\t\t'%s' AS checkField,\n" +
                                     "\t\t'%s' AS checkType,\n" +
                                     "\t\t'%s' AS checkDesc,\n" +
