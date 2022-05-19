@@ -12,8 +12,6 @@ import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
-import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
-import com.fisk.mdm.utils.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateMdmTableName;
 import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateStgTableName;
 
 /**
@@ -123,11 +122,11 @@ public class DataSynchronizationUtils {
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
                         // 域字段的表名称
-                        String stgTableName1 = generateStgTableName(data.getModelId(), data.getEntityId());
+                        String mdmTableName1 = generateMdmTableName(data.getModelId(), data.getEntityId());
 
                         StringBuilder str = new StringBuilder();
-                        str.append("SELECT fidata_id FROM " + stgTableName1);
-                        str.append(" WHERE code = '" + item.get(key)  +"'");
+                        str.append("SELECT fidata_id FROM " + mdmTableName1);
+                        str.append(" WHERE " + data.getColumnName() + " = '" + item.get(key)  +"'");
                         // 查询域字段数据
                         List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class);
 
