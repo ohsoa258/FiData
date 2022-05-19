@@ -84,8 +84,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildUpdateImportData(Map<String, Object> jsonObject,
-                                        String tableName) {
+    public String buildUpdateImportData(Map<String, Object> jsonObject, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("update " + tableName);
         str.append(" set fidata_import_type=" + jsonObject.get("fidata_import_type"));
@@ -113,6 +112,26 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
         str.append(" order by fidata_create_time,fidata_id desc ");
         str.append(" limit " + dto.getPageSize() + " offset " + offset);
+        return str.toString();
+    }
+
+    @Override
+    public String buildVerifyRepeatCode(String tableName, String batchCode) {
+        StringBuilder str = new StringBuilder();
+        //更改重复的code上传状态和错误描述
+        str.append("update " + tableName);
+        str.append(" set fidata_status=3,fidata_error_msg='" + "编码重复" + "'");
+        str.append(" where fidata_batch_code='" + batchCode + "' and code in");
+        str.append("(select code from " + tableName);
+        str.append(" where fidata_batch_code='" + batchCode + "'");
+        str.append("and code <>'' and code is not null GROUP BY code HAVING count(*)>1);");
+        //更改没有重复code上传状态和错误描述
+        str.append("update " + tableName);
+        str.append(" set fidata_status=0,fidata_error_msg=null");
+        str.append(" where fidata_batch_code='" + batchCode + "' and code in");
+        str.append("(select code from " + tableName);
+        str.append(" where fidata_batch_code='" + batchCode + "'");
+        str.append("and code <>'' and code is not null and fidata_error_msg='编码重复' GROUP BY code HAVING count(*)=1)");
         return str.toString();
     }
 

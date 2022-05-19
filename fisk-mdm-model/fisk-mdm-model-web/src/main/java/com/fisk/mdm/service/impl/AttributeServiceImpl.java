@@ -22,7 +22,6 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityMsgVO;
-import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -420,11 +419,26 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         }
         //若状态为新增待发布，则直接逻辑删除
         //若为修改待发布、发布、删除待发布，说明后台表已生成该字段，删除需等待发布
-        if(attributePo.getStatus() == AttributeStatusEnum.INSERT){
+        if (attributePo.getStatus() == AttributeStatusEnum.INSERT) {
             return this.deleteDataById(id);
-        }else{
+        } else {
             return this.deleteAttribute(id);
         }
+    }
+
+    /**
+     * 获取实体下已发布状态的所有属性
+     *
+     * @param entityId
+     * @return
+     */
+    public List<AttributeInfoDTO> listPublishedAttribute(int entityId) {
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(AttributePO::getEntityId, entityId)
+                .eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
+                .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS);
+        List<AttributePO> list = baseMapper.selectList(queryWrapper);
+        return AttributeMap.INSTANCES.poToDtoList(list);
     }
 
 }

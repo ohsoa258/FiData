@@ -54,4 +54,13 @@ public interface IBuildSqlCommand {
      */
     String buildMasterDataPage(MasterDataPageDTO dto);
 
+    /**
+     * 主数据维护--验证重复code生成update语句
+     *
+     * @param tableName
+     * @param batchCode
+     * @return
+     */
+    String buildVerifyRepeatCode(String tableName, String batchCode);
+
 }

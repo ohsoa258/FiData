@@ -88,5 +88,17 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         return "";
     }
 
+    @Override
+    public String buildVerifyRepeatCode(String tableName, String batchCode) {
+        StringBuilder str = new StringBuilder();
+        str.append("update " + tableName);
+        str.append(" set fidata_status=3,fidata_error_msg='" + "编码重复" + "'");
+        str.append(" where fidata_batch_code='" + batchCode + "' and code in");
+        str.append("(select code from " + tableName);
+        str.append(" where fidata_batch_code='" + batchCode + "'");
+        str.append("and code <>'' and code is not null GROUP BY code HAVING count(*)>1)");
+        return str.toString();
+    }
+
 
 }
