@@ -42,6 +42,7 @@ import static ch.qos.logback.core.db.DBHelper.closeConnection;
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.rollbackConnection;
 import static com.fisk.mdm.enums.AttributeStatusEnum.*;
 import static com.fisk.mdm.enums.MdmStatusTypeEnum.*;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
 import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.*;
 
 /**
@@ -195,7 +196,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
         try{
             // 1.删除视图
             AttributeInfoDTO dto = noSubmitAttributeList.get(0);
-            String viwTableName = sqlBuilder.generateViwTableName(dto.getModelId(), dto.getEntityId());
+            String viwTableName = generateViwTableName(dto.getModelId(), dto.getEntityId());
             sql = this.dropViwTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList,viwTableName);
             if (StringUtils.isNotBlank(sql)){
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -203,7 +204,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
             }
 
             // 2.删除stg
-            String stgTableName = sqlBuilder.generateStgTableName(dto.getModelId(), dto.getEntityId());
+            String stgTableName = generateStgTableName(dto.getModelId(), dto.getEntityId());
             sql = this.dropStgTable(abstractDbHelper, connection, sqlBuilder, noSubmitAttributeList,stgTableName);
             if (StringUtils.isNotBlank(sql)){
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -304,7 +305,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
                                IBuildSqlCommand sqlBuilder, List<AttributeInfoDTO> attributeList) {
         // 表名
         AttributeInfoDTO dto = attributeList.get(0);
-        String tableName = sqlBuilder.generateMdmTableName(dto.getModelId(),dto.getEntityId());
+        String tableName = generateMdmTableName(dto.getModelId(),dto.getEntityId());
 
         List<AttributeStatusDTO> dtoList = new ArrayList<>();
         for (AttributeInfoDTO infoDto : attributeList) {
@@ -453,13 +454,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
             connection.setAutoCommit(false);
 
             // 1.创建Stg表
-            String stgTableName = sqlBuilder.generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
             sql = this.createStgTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,stgTableName);
             PreparedStatement stemStg = connection.prepareStatement(sql);
             stemStg.execute();
 
             // 2.创建mdm表
-            String mdmTableName = sqlBuilder.generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            String mdmTableName = generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
             sql = this.createMdmTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo,mdmTableName);
             PreparedStatement stemMdm = connection.prepareStatement(sql);
             stemMdm.execute();
@@ -738,8 +739,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
      * @return
      */
     public String buildViewTable(EntityInfoVO entityInfoVo,IBuildSqlCommand sqlBuilder) {
-        String viwTableName = sqlBuilder.generateViwTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
-        String mdmTableName = sqlBuilder.generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String viwTableName = generateViwTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String mdmTableName = generateMdmTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
 
         StringBuilder str = new StringBuilder();
         str.append("CREATE VIEW " + PUBLIC + ".");
