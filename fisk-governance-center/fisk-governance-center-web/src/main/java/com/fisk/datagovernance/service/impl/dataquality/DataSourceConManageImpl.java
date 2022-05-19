@@ -175,7 +175,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     conn.close();
                 }
             } catch (SQLException e) {
-                return  ResultEnum.DS_DATASOURCE_CON_ERROR;
+                return ResultEnum.DS_DATASOURCE_CON_ERROR;
             }
         }
     }
@@ -241,7 +241,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             try {
                 DataSourceVO dataSource = new DataSourceVO();
                 List<TablePyhNameDTO> tablePyhNameDTOS = new ArrayList<>();
-                Map<String, String> tableNames = new IdentityHashMap<>();
                 List<String> tables = null;
                 switch (DataSourceTypeEnum.values()[conPo.conType]) {
                     case MYSQL:
@@ -250,43 +249,45 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         tables = mysqlConUtils.getTables(connection);
                         if (CollectionUtils.isNotEmpty(tables)) {
                             for (String e : tables) {
-                                tableNames.put(e, "");
+                                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                                tablePyhNameDTO.tableName = e;
+                                tablePyhNameDTOS.add(tablePyhNameDTO);
                             }
                         }
                         break;
                     case SQLSERVER:
                         // 表结构
                         connection = getStatement(DataSourceTypeEnum.SQLSERVER.getDriverName(), conPo.conStr, conPo.conAccount, conPo.conPassword);
-                        tableNames = sqlServerPlusUtils.getTablesPlus(connection, conPo.getConDbname());
+                        Map<String, String> tablesPlus = sqlServerPlusUtils.getTablesPlus(connection, conPo.getConDbname());
+                        for (Map.Entry<String, String> entry : tablesPlus.entrySet()) {
+                            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                            tablePyhNameDTO.tableName = entry.getKey();
+                            tablePyhNameDTO.tableFramework = entry.getValue();
+                            tablePyhNameDTOS.add(tablePyhNameDTO);
+                        }
                         break;
                     case POSTGRE:
                         // 表结构
                         tables = postgresConUtils.getTableList(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRE.getDriverName());
                         if (CollectionUtils.isNotEmpty(tables)) {
                             for (String e : tables) {
-                                tableNames.put(e, "");
+                                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                                tablePyhNameDTO.tableName = e;
+                                tablePyhNameDTOS.add(tablePyhNameDTO);
                             }
                         }
                         break;
                 }
-                if (CollectionUtils.isNotEmpty(tableNames)) {
-                    for (Map.Entry t : tableNames.entrySet()) {
-                        TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                        tablePyhNameDTO.setTableName(t.getKey().toString());
-                        tablePyhNameDTO.setTableFramework(t.getValue().toString());
-                        tablePyhNameDTOS.add(tablePyhNameDTO);
-                    }
-                    if (CollectionUtils.isNotEmpty(tablePyhNameDTOS)) {
-                        dataSource.tableDtoList = tablePyhNameDTOS;
-                        dataSource.id = (int) conPo.id;
-                        dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
-                        dataSource.name = conPo.name;
-                        dataSource.conDbname = conPo.conDbname;
-                        dataSource.conIp = conPo.conIp;
-                        dataSource.conPort = conPo.conPort;
-                        dataSource.datasourceType = SourceTypeEnum.getEnum(conPo.datasourceType);
-                        dataSources.add(dataSource);
-                    }
+                if (CollectionUtils.isNotEmpty(tablePyhNameDTOS)) {
+                    dataSource.tableDtoList = tablePyhNameDTOS;
+                    dataSource.id = (int) conPo.id;
+                    dataSource.conType = DataSourceTypeEnum.values()[conPo.conType];
+                    dataSource.name = conPo.name;
+                    dataSource.conDbname = conPo.conDbname;
+                    dataSource.conIp = conPo.conIp;
+                    dataSource.conPort = conPo.conPort;
+                    dataSource.datasourceType = SourceTypeEnum.getEnum(conPo.datasourceType);
+                    dataSources.add(dataSource);
                 }
             } catch (Exception ex) {
                 continue;
@@ -367,7 +368,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             dataSourceVO.conDbname = conPo.conDbname;
             dataSourceVO.conIp = conPo.conIp;
             dataSourceVO.conPort = conPo.conPort;
-            dataSourceVO.datasourceType=SourceTypeEnum.getEnum(conPo.datasourceType);
+            dataSourceVO.datasourceType = SourceTypeEnum.getEnum(conPo.datasourceType);
         }
         return dataSourceVO;
     }
