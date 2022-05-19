@@ -175,7 +175,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     conn.close();
                 }
             } catch (SQLException e) {
-                throw new FkException(ResultEnum.DS_DATASOURCE_CON_ERROR);
+                return  ResultEnum.DS_DATASOURCE_CON_ERROR;
             }
         }
     }
