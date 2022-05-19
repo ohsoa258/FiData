@@ -337,6 +337,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return ResultEnum.API_NOT_EXIST;
             }
 
+            // flag=false: 第三方调用,需要验证账号是否属于当前api
+            if (!dto.flag) {
+                AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+                if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
+                    return ResultEnum.ACCOUNT_CANNOT_OPERATION_API;
+                }
+            }
+
             // json解析的根节点
             String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
             log.info("json解析的根节点参数为: " + jsonKey);
@@ -565,6 +573,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
+            receiveDataDTO.flag = true;
 
             // 推送数据
             pushData(receiveDataDTO);
@@ -600,7 +609,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
-
+            receiveDataDTO.flag = true;
             // 推送数据
             pushData(receiveDataDTO);
 
@@ -637,6 +646,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
+            receiveDataDTO.flag = true;
 
             // 推送数据
             pushData(receiveDataDTO);

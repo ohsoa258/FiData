@@ -112,6 +112,7 @@ public enum ResultEnum {
     EXECUTE_HTTP_REQUEST_ERROR(5038, "调用第三方接口报错,请重新检查api的配置信息"),
     SEND_POST_REQUEST_ERROR(5039, "发送post请求失败,请检查参数"),
     SEND_GET_REQUEST_ERROR(5040, "发送get请求失败,请检查参数"),
+    ACCOUNT_CANNOT_OPERATION_API(5041, "该账号无权操作当前api,请检查账号"),
 
 
     /**
