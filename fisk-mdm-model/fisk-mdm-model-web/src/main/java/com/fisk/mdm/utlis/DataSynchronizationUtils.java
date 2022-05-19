@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.service.mdmBEBuild.AbstractDbHelper.execQueryResultList;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateStgTableName;
 
 /**
  * @Author WangYan
@@ -67,8 +68,7 @@ public class DataSynchronizationUtils {
         String mdmTableName = entityInfoVo.getTableName();
 
         // 获取stg表名
-        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
-        String stgTableName = sqlBuilder.generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+        String stgTableName = generateStgTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
 
         // 2.查询需要同步的数据
         String sql = "SELECT * FROM " + stgTableName + " WHERE fidata_batch_code = '" + batchCode +"'";
@@ -123,7 +123,7 @@ public class DataSynchronizationUtils {
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
 
                         // 域字段的表名称
-                        String stgTableName1 = sqlBuilder.generateStgTableName(data.getModelId(), data.getEntityId());
+                        String stgTableName1 = generateStgTableName(data.getModelId(), data.getEntityId());
 
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT fidata_id FROM " + stgTableName1);
