@@ -264,7 +264,8 @@ public enum ResultEnum {
     EXISTS_INCORRECT_DATA(151018, "数据格式有问题，请修改数据后重新提交"),
     SUBMIT_FAILURE(151019, "提交失败"),
     CHECK_TEMPLATE_IMPORT_FAILURE(151020, "导入失败，请检查模板是否正确"),
-    EMPTY_FORM(151021, "空白xlsx文件");
+    EMPTY_FORM(151021, "空白xlsx文件"),
+    CODE_NOT_EXIST(151022, "编码列不存在");
 
     ResultEnum(int code, String msg) {
         this.code = code;

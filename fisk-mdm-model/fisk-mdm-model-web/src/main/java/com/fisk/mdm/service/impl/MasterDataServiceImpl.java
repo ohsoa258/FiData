@@ -391,7 +391,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         result.entityName = po.getDisplayName();
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
         //获取mdm表code数据列表
-        List<String> codeList = getCodeList(tableName);
+        Optional<AttributePO> codeColumn = list.stream().filter(e -> e.getName().equals("code")).findFirst();
+        if (!codeColumn.isPresent()) {
+            throw new FkException(ResultEnum.CODE_NOT_EXIST);
+        }
+        List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), codeColumn.get().getColumnName());
         String batchNumber = UUID.randomUUID().toString();
         //解析Excel数据集合
         CopyOnWriteArrayList<JSONObject> objectArrayList = new CopyOnWriteArrayList<>();
@@ -695,6 +699,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             //验证code
             ImportDataVerifyDTO verifyDTO = verifyCode(dto.getData());
+            dto.getData().put("fidata_status", SyncStatusTypeEnum.UPLOADED_FAILED.getValue());
             dto.getData().put("fidata_error_msg", verifyDTO.getErrorMsg());
             if (verifyDTO.getSuccess()) {
                 dto.getData().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
@@ -704,8 +709,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     dto.getData().put("code", buildCodeCommand.createCode());
                 }
             }
+            QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(AttributePO::getEntityId, dto.getEntityId())
+                    .eq(AttributePO::getName, "code");
+            AttributePO attributePO = attributeMapper.selectOne(queryWrapper);
+            if (attributePO == null) {
+                throw new FkException(ResultEnum.CODE_NOT_EXIST);
+            }
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId()));
+            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(entityPO.getModelId(), dto.getEntityId()), attributePO.getColumnName());
             //判断上传逻辑
             dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
             if (codeList.contains(dto.getData().get("code"))) {
@@ -918,13 +930,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     /**
      * 获取stg表code数据集合
+     *
      * @param tableName
      * @return
      */
-    public List<String> getCodeList(String tableName) {
-        List<String> codeList=new ArrayList<>();
+    public List<String> getCodeList(String tableName, String codeColumnName) {
+        List<String> codeList = new ArrayList<>();
         try {
-            String sql = "select distinct code  from " + tableName;
+            String sql = "select distinct " + codeColumnName + " as code from " + tableName;
             Connection conn = getConnection();
             ResultSet rs = executeSelectSql(sql, conn);
             ResultSetMetaData metaData = rs.getMetaData();
