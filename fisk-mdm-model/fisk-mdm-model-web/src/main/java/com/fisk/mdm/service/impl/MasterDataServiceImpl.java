@@ -31,6 +31,7 @@ import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.entity.EntityVO;
@@ -261,7 +262,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //获得主数据表名
-        String tableName = "viw_"+entityVo.getModelId()+"_"+dto.getEntityId();
+        String tableName = TableNameGenerateUtils.generateViwTableName(entityVo.getModelId(), dto.getEntityId());
         //查询该实体下发布的属性
         QueryWrapper<AttributePO> attributeColumnWrapper = new QueryWrapper<>();
         attributeColumnWrapper.lambda().eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
@@ -289,19 +290,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
         for (AttributeColumnVO attributeColumnVo:attributeColumnVoList){
             //域字段添加表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                list.add(attributeColumnVo.getName() + "_code");
-                list.add(attributeColumnVo.getName() + "_name");
+                list.add(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
+                list.add(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
                 AttributeColumnVO vo = new AttributeColumnVO();
-                vo.setDisplayName(attributeColumnVo.getDisplayName() + "_名称");
-                vo.setName(attributeColumnVo.getName() + "_name");
+                vo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
+                vo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
                 vo.setDataType(attributeColumnVo.getDataType());
                 vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
                 vo.setEnableRequired(attributeColumnVo.getEnableRequired());
                 vo.setSortWieght(attributeColumnVo.getSortWieght());
                 vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
                 areaColumnList.add(vo);
-                attributeColumnVo.setDisplayName(attributeColumnVo.getDisplayName() + "_编码");
-                attributeColumnVo.setName(attributeColumnVo.getName() + "_code");
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
                 continue;
             }
             list.add(attributeColumnVo.getName());
@@ -388,7 +389,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         result.versionId = dto.getVersionId();
         result.entityId = dto.getEntityId();
         result.entityName = po.getDisplayName();
-        String tableName = po.getTableName().replace("mdm", "stg");
+        String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
         //获取mdm表code数据列表
         List<String> codeList = getCodeList(tableName);
         String batchNumber = UUID.randomUUID().toString();
@@ -580,7 +581,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             Connection connection = getConnection();
             Statement st = connection.createStatement();
-            String tableName = entityPO.getTableName().replace("mdm", "stg");
+            String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
             String sql = "SELECT COUNT(*) AS totalNum FROM " + tableName + " WHERE fidata_batch_code ='"
                     + dto.key + "' and fidata_status=" + SyncStatusTypeEnum.UPLOADED_FAILED.getValue();
             ResultSet rSet = st.executeQuery(sql);
@@ -614,11 +615,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (CollectionUtils.isEmpty(list)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
         try {
             Connection connection = getConnection();
             Statement st = connection.createStatement();
-            String tableName = entityPO.getTableName().replace("mdm", "stg");
+            String tableName = TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId());
             //获取总条数、新增条数、编辑条数、成功条数、失败条数
             StringBuilder getTotalSql = new StringBuilder();
             getTotalSql.append("select count(*) as totalNum");
@@ -652,7 +652,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             pageDataDTO.setBatchCode(dto.getKey());
             pageDataDTO.setStatus(dto.getStatus());
             pageDataDTO.setSyncType(dto.getSyncType());
-            pageDataDTO.setTableName(entityPO.getTableName().replace("mdm", "stg"));
+            pageDataDTO.setTableName(TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId()));
             //调用生成分页语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildImportDataPage(pageDataDTO);
@@ -705,15 +705,16 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 }
             }
             //获取mdm表code数据列表
-            List<String> codeList = getCodeList(entityPO.getTableName().replace("mdm", "stg"));
+            List<String> codeList = getCodeList(TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId()));
             //判断上传逻辑
+            dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
             if (codeList.contains(dto.getData().get("code"))) {
                 dto.getData().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
             }
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
             String updateSql = sqlBuilder.buildUpdateImportData(dto.getData(),
-                    entityPO.getTableName().replace("mdm", "stg"));
+                    TableNameGenerateUtils.generateStgTableName(entityPO.getModelId(), dto.getEntityId()));
             if (StringUtils.isEmpty(updateSql)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
@@ -857,7 +858,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     dto.setValue(value);
                 } else {
                     //数字格式
-                    if (DataTypeEnum.FLOAT.getName().equals(dataType)) {
+                    if (DataTypeEnum.FLOAT.getName().equals(dataType) || DataTypeEnum.MONEY.getName().equals(dataType)) {
                         dto.setValue(String.valueOf(cell.getNumericCellValue()));
                     } else {
                         DecimalFormat df = new DecimalFormat("#");

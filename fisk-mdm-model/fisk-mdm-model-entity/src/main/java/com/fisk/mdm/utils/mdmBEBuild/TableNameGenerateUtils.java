@@ -25,4 +25,21 @@ public class TableNameGenerateUtils {
         str.append("viw_" + modelId + "_" + entityId);
         return str.toString();
     }
+
+    public static String generateDomainCode(String domainName) {
+        return domainName + "_code";
+    }
+
+    public static String generateDomainName(String domainName) {
+        return domainName + "_name";
+    }
+
+    public static String generateDomainCodeDisplayName(String domainDisplayName) {
+        return domainDisplayName + "_编码";
+    }
+
+    public static String generateDomainNameDisplayName(String domainDisplayName) {
+        return domainDisplayName + "_名称";
+    }
+
 }
