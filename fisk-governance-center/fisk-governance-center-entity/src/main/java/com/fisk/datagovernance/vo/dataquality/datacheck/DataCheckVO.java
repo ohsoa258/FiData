@@ -54,8 +54,8 @@ public class DataCheckVO {
     /**
      * 校验规则：1、强规则 2、弱规则
      */
-    @ApiModelProperty(value = "校验规则：1、强规则 2、弱规则")
-    public String checkRule;
+    @ApiModelProperty(value = "校验规则")
+    public CheckRuleEnum checkRule;
 
     /**
      * 生成规则
