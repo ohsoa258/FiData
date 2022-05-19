@@ -89,6 +89,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append("update " + tableName);
         str.append(" set fidata_import_type=" + jsonObject.get("fidata_import_type"));
+        jsonObject.remove("fidata_import_type");
         Iterator iter = jsonObject.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
