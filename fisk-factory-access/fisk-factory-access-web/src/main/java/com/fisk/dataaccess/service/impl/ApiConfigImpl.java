@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
@@ -483,6 +484,31 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 4.调用apiConfig/addApiDetail接口
 
         return null;
+    }
+
+    @Override
+    public List<ApiSelectDTO> getAppAndApiList() {
+
+        // 查询所有app_id和app_name
+        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
+                .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName, AppRegistrationPO::getAppType)
+                .orderByDesc(AppRegistrationPO::getCreateTime));
+
+        List<AppRegistrationPO> appRegistrationPoList = new ArrayList<>();
+        // 只需要RestfulAPI和api类型
+        list.forEach(e -> {
+            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).one();
+            if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(appDataSourcePo.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+                appRegistrationPoList.add(e);
+            }
+        });
+
+        // po -> dto
+        List<ApiSelectDTO> apiSelectDtos = ApiConfigMap.INSTANCES.listPoToApiSelectDto(appRegistrationPoList);
+
+        apiSelectDtos.forEach(e -> e.apiSelectChildren = ApiConfigMap.INSTANCES.listPoToApiSelectChildDto(this.query().eq("app_id", e.id).list()));
+
+        return apiSelectDtos;
     }
 
     /**

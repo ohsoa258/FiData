@@ -128,8 +128,14 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.importData(dto));
     }
 
-    @PostMapping("/copyApi")
-    @ApiOperation(value = "api复制功能")
+    @GetMapping("/getAppAndApiList")
+    @ApiOperation(value = "api复制功能: 获取下拉列表数据")
+    public ResultEntity<List<ApiSelectDTO>> getAppAndApiList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppAndApiList());
+    }
+
+    //    @PostMapping("/copyApi")
+    @ApiOperation(value = "api复制功能: 保存")
     public ResultEntity<Object> copyApi(@NotNull @RequestBody CopyApiDTO dto) {
         return ResultEntityBuild.build(service.copyApi(dto));
     }
