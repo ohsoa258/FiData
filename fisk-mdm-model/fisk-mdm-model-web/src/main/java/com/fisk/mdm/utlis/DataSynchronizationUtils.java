@@ -131,7 +131,9 @@ public class DataSynchronizationUtils {
                         // 查询域字段数据
                         List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class);
 
-                        item.put(key,ids.get(0).getFidata_id());
+                        if (CollectionUtils.isNotEmpty(ids)){
+                            item.put(key,ids.get(0).getFidata_id());
+                        }
                     }
                 }
             });
