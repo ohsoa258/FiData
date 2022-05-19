@@ -229,27 +229,6 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
-    @Override
-    public String generateStgTableName(Integer modelId, Integer entityId) {
-        StringBuilder str = new StringBuilder();
-        str.append("stg_" + modelId + "_" + entityId);
-        return str.toString();
-    }
-
-    @Override
-    public String generateMdmTableName(Integer modelId, Integer entityId) {
-        StringBuilder str = new StringBuilder();
-        str.append("mdm_" + modelId + "_" + entityId);
-        return str.toString();
-    }
-
-    @Override
-    public String generateViwTableName(Integer modelId, Integer entityId) {
-        StringBuilder str = new StringBuilder();
-        str.append("viw_" + modelId + "_" + entityId);
-        return str.toString();
-    }
-
     /**
      * stg表基础字段拼接
      * @return

@@ -104,28 +104,4 @@ public interface IBuildSqlCommand {
      * @return
      */
     String queryData(String tableName);
-
-    /**
-     * 生成stg表名
-     * @param modelId
-     * @param entityId
-     * @return
-     */
-    String generateStgTableName(Integer modelId,Integer entityId);
-
-    /**
-     * 生成mdm表名
-     * @param modelId
-     * @param entityId
-     * @return
-     */
-    String generateMdmTableName(Integer modelId,Integer entityId);
-
-    /**
-     * 生成viw表名
-     * @param modelId
-     * @param entityId
-     * @return
-     */
-    String generateViwTableName(Integer modelId,Integer entityId);
 }

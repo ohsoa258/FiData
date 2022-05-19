@@ -82,19 +82,4 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String queryData(String tableName) {
         return null;
     }
-
-    @Override
-    public String generateStgTableName(Integer modelId, Integer entityId) {
-        return null;
-    }
-
-    @Override
-    public String generateMdmTableName(Integer modelId, Integer entityId) {
-        return null;
-    }
-
-    @Override
-    public String generateViwTableName(Integer modelId, Integer entityId) {
-        return null;
-    }
 }
