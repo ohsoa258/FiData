@@ -5,7 +5,6 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -67,23 +66,20 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
-    public String buildUpdateImportData(Map<String, Object> jsonObject, String tableName, int importType) {
+    public String buildUpdateImportData(Map<String, Object> jsonObject, String tableName) {
         StringBuilder str = new StringBuilder();
         str.append("update " + tableName);
-        str.append(" set fidata_import_type=" + importType);
+        str.append(" set fidata_import_type=" + jsonObject.get("fidata_import_type"));
         Iterator iter = jsonObject.entrySet().iterator();
-        String primaryKey = null;
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
-            if ("fidata_id".equals(entry.getKey().toString())) {
-                primaryKey = entry.getValue().toString();
+            if (entry.getValue() == null || entry.getValue() == "") {
+                str.append("," + entry.getKey().toString() + "=null");
+                continue;
             }
             str.append("," + entry.getKey().toString() + "='" + entry.getValue().toString() + "'");
         }
-        if (StringUtils.isEmpty(primaryKey)) {
-            return "";
-        }
-        str.append(" where fidata_id=" + primaryKey);
+        str.append(" where fidata_id=" + jsonObject.get("fidata_id"));
         return str.toString();
     }
 

@@ -408,10 +408,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
         Workbook workbook;
         try {
             workbook = WorkbookFactory.create(file.getInputStream());
-            //获取sheet数量
-            ////int numberOfSheets = workbook.getNumberOfSheets();
-            //for (int i = 0; i < numberOfSheets; i++) {
-            //获取当前工作表
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet.getRow(0) == null) {
                 throw new FkException(ResultEnum.EMPTY_FORM);
@@ -510,9 +506,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
                         }
                     }).start();
                 }
-                //等待所有线程执行完毕
-                countDownLatch.await();
-            //}
+            //等待所有线程执行完毕
+            countDownLatch.await();
             int flatCount = 0;
             if (!CollectionUtils.isEmpty(objectArrayList)) {
                 flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId);
@@ -698,8 +693,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (entityPO == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
-            Connection conn = getConnection();
-            Statement stat = conn.createStatement();
             //验证code
             ImportDataVerifyDTO verifyDTO = verifyCode(dto.getData());
             dto.getData().put("fidata_error_msg", verifyDTO.getErrorMsg());
@@ -720,11 +713,12 @@ public class MasterDataServiceImpl implements IMasterDataService {
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             //生成update语句
             String updateSql = sqlBuilder.buildUpdateImportData(dto.getData(),
-                    entityPO.getTableName().replace("mdm", "stg"),
-                    ImportTypeEnum.EXCEL_IMPORT.getValue());
+                    entityPO.getTableName().replace("mdm", "stg"));
             if (StringUtils.isEmpty(updateSql)) {
                 return ResultEnum.PARAMTER_ERROR;
             }
+            Connection conn = getConnection();
+            Statement stat = conn.createStatement();
             int flat = stat.executeUpdate(updateSql);
             //关闭连接
             AbstractDbHelper.closeStatement(stat);

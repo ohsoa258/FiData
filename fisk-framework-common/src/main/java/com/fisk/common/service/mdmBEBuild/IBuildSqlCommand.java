@@ -42,10 +42,9 @@ public interface IBuildSqlCommand {
      *
      * @param jsonObject
      * @param tableName
-     * @param importType
      * @return
      */
-    String buildUpdateImportData(Map<String, Object> jsonObject, String tableName, int importType);
+    String buildUpdateImportData(Map<String, Object> jsonObject, String tableName);
 
     /**
      * 主数据维护-首页列表
