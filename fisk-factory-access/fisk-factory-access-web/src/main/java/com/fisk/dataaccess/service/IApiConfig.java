@@ -135,6 +135,6 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      *
      * @return list
      */
-    List<ApiSelectDTO> getAppAndApiList();
+    List<ApiSelectDTO> getAppAndApiList(int appType);
 }
 

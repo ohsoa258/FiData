@@ -3,8 +3,6 @@ package com.fisk.dataaccess.dto.api;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * @author Lock
  * @version 1.3
@@ -21,5 +19,5 @@ public class ApiSelectDTO {
     @ApiModelProperty(value = "应用类型  (0:实时应用  1:非实时应用)")
     public int appType;
 
-    public List<ApiSelectChildDTO> apiSelectChildren;
+//    public List<ApiSelectChildDTO> apiSelectChildren;
 }

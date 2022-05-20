@@ -128,10 +128,10 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.importData(dto));
     }
 
-    @GetMapping("/getAppAndApiList")
-    @ApiOperation(value = "api复制功能: 获取下拉列表数据")
-    public ResultEntity<List<ApiSelectDTO>> getAppAndApiList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppAndApiList());
+    @GetMapping("/getAppListByAppType/{appType}")
+    @ApiOperation(value = "api复制功能: 根据应用类型获取下拉的应用列表")
+    public ResultEntity<List<ApiSelectDTO>> getAppAndApiList(@PathVariable("appType") int appType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppAndApiList(appType));
     }
 
     //    @PostMapping("/copyApi")

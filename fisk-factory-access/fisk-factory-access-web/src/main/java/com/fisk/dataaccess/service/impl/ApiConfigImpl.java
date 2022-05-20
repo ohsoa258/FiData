@@ -477,7 +477,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         this.addData(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
 
         // 2.查询出当前api实时还是非实时
-//        appDataSourceImpl
+//        appDataSourceImpl.query().eq()
         // 2-1.实时不需要保存请求参数表tb_api_parameter
         // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
         // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
@@ -487,10 +487,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public List<ApiSelectDTO> getAppAndApiList() {
+    public List<ApiSelectDTO> getAppAndApiList(int appType) {
 
         // 查询所有app_id和app_name
         List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
+                .eq(AppRegistrationPO::getAppType, appType)
                 .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName, AppRegistrationPO::getAppType)
                 .orderByDesc(AppRegistrationPO::getCreateTime));
 
@@ -503,12 +504,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
         });
 
-        // po -> dto
-        List<ApiSelectDTO> apiSelectDtos = ApiConfigMap.INSTANCES.listPoToApiSelectDto(appRegistrationPoList);
-
-        apiSelectDtos.forEach(e -> e.apiSelectChildren = ApiConfigMap.INSTANCES.listPoToApiSelectChildDto(this.query().eq("app_id", e.id).list()));
-
-        return apiSelectDtos;
+        return ApiConfigMap.INSTANCES.listPoToApiSelectDto(appRegistrationPoList);
     }
 
     /**
