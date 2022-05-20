@@ -18,4 +18,6 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      */
     private Integer pageSize;
 
+    //private Boolean export;
+
 }

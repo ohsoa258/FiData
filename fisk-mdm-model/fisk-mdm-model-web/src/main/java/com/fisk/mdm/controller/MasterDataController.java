@@ -46,7 +46,7 @@ public class MasterDataController {
     @ApiOperation("分页查询实体数据")
     @PostMapping("/list")
     public ResultEntity<ResultObjectVO> getAll(@Validated @RequestBody MasterDataQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getMasterDataPage(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMasterDataPage(dto, response));
     }
 
     @ApiOperation("获取模型、实体、版本下拉列表")

@@ -1,9 +1,9 @@
 package com.fisk.mdm.vo.masterdata;
 
-import com.alibaba.fastjson.JSONArray;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -15,14 +15,16 @@ public class ExportResultVO {
     /**
      * 导出文件名
      */
-    public String fileName;
+    private String fileName;
     /**
      * 查询数据集
      */
-    public JSONArray dataArray;
+    private List<Map<String, Object>> dataArray;
     /**
-     * 标头集合
+     * 表头集合
      */
-    public List<String> headerList;
+    private List<String> headerList;
+
+    private List<String> headerDisplayList;
 
 }

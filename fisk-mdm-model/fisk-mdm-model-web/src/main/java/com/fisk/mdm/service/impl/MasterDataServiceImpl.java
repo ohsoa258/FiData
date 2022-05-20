@@ -223,9 +223,10 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .eq(AttributePO::getEntityId, entityId)
                 .eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED.getValue())
                 .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS.getValue());
-        vo.headerList = (List) attributeMapper.selectObjs(queryWrapper);
-        vo.headerList.add(1, "新编码");
-        vo.fileName = entityPo.getDisplayName();
+        List<String> columnList = (List) attributeMapper.selectObjs(queryWrapper);
+        columnList.add(1, "新编码");
+        vo.setHeaderList(columnList);
+        vo.setFileName(entityPo.getDisplayName());
         return exportExcel(vo, response);
     }
 
@@ -235,11 +236,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param dto 实体id
      */
     @Override
-    public ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto) {
+    public ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         EntityVO entityVo = entityService.getDataById(dto.getEntityId());
-        if(entityVo == null){
+        if (entityVo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         //获得主数据表名
@@ -312,6 +313,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setPageIndex(dto.getPageIndex());
             dataPageDTO.setPageSize(dto.getPageSize());
             dataPageDTO.setTableName(tableName);
+            //dataPageDTO.setExport(dto.getExport());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -338,10 +340,23 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             //创建人/更新人id替换为名称
             ReplenishUserInfo.replenishFiDataUserName(data, client, UserFieldEnum.USER_NAME);
-            //将主数据集合添加装入结果对象
-            resultObjectVO.setResultData(data);
             //释放资源
             release(resultSet, statement, connection);
+            //是否导出
+           /* if (dto.getExport())
+            {
+                ExportResultVO vo=new ExportResultVO();
+                List<String> nameList = attributeColumnVoList.stream().map(e -> e.getName()).collect(Collectors.toList());
+                List<String> nameDisplayList = attributeColumnVoList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
+                vo.setHeaderList(nameList);
+                vo.setDataArray(data);
+                vo.setHeaderDisplayList(nameDisplayList);
+                vo.setFileName(entityVo.getTableName());
+                exportExcel(vo,response);
+                return resultObjectVO;
+            }*/
+            //将主数据集合添加装入结果对象
+            resultObjectVO.setResultData(data);
         } catch (Exception e) {
             e.printStackTrace();
             log.error("getMasterDataPage:", e);
@@ -782,18 +797,24 @@ public class MasterDataServiceImpl implements IMasterDataService {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("sheet1");
         XSSFRow row1 = sheet.createRow(0);
-        if (CollectionUtils.isEmpty(vo.headerList)) {
+        if (CollectionUtils.isEmpty(vo.getHeaderList())) {
             ResultEntityBuild.build(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        for (int i = 0; i < vo.headerList.size(); i++) {
-            row1.createCell(i).setCellValue(vo.headerList.get(i));
+        if (!CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
+            for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
+                row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
+            }
+        } else {
+            for (int i = 0; i < vo.getHeaderList().size(); i++) {
+                row1.createCell(i).setCellValue(vo.getHeaderList().get(i));
+            }
         }
-        if (!CollectionUtils.isEmpty(vo.dataArray)) {
-            for (int i = 0; i < vo.dataArray.size(); i++) {
+        if (!CollectionUtils.isEmpty(vo.getDataArray())) {
+            for (int i = 0; i < vo.getDataArray().size(); i++) {
                 XSSFRow row = sheet.createRow(i + 1);
-                JSONObject jsonObject = JSONObject.parseObject(vo.dataArray.get(i).toString());
-                for (int j = 0; j < vo.headerList.size(); j++) {
-                    row.createCell(j).setCellValue(jsonObject.get(vo.headerList.get(j)).toString());
+                Map<String, Object> jsonObject = vo.getDataArray().get(i);
+                for (int j = 0; j < vo.getHeaderList().size(); j++) {
+                    row.createCell(j).setCellValue(jsonObject.get(vo.getHeaderList().get(j)) == null ? "" : jsonObject.get(vo.getHeaderList().get(j)).toString());
                 }
             }
         }
