@@ -178,6 +178,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckWebDTO dto) {
         List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 第一步：查询数据源信息
             DataSourceConPO dataSourceInfo = dataSourceConManageImpl.getDataSourceInfo(dto.getIp(), dto.getDbName());
@@ -237,15 +238,19 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         break;
                 }
                 if (CollectionUtils.isNotEmpty(dataCheckResult)) {
-                    dataCheckResult.forEach(t -> {
-                        dataCheckResults.add(t);
-                    });
+                    for (DataCheckResultVO dataCheckResultVO : dataCheckResult) {
+                        if (resultEnum == ResultEnum.SUCCESS &&
+                                dataCheckResultVO.getCheckResult().toString().equals("fail")) {
+                            resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_WEBCHECK_NOPASS;
+                        }
+                        dataCheckResults.add(dataCheckResultVO);
+                    }
                 }
             }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
+        return ResultEntityBuild.buildData(resultEnum, dataCheckResults);
     }
 
     @Override

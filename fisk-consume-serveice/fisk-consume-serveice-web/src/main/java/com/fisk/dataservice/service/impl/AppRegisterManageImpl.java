@@ -418,7 +418,6 @@ public class AppRegisterManageImpl extends ServiceImpl<AppRegisterMapper, AppCon
                                    List<BuiltinParmPO> builtinParmList,
                                    List<FieldConfigPO> fieldList) {
         ApiDocDTO apiDocDTO = new ApiDocDTO();
-
         // API文档基础信息
         String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address);
         // log.info("createDocDTO jsonInfo："+jsonResult);

@@ -208,6 +208,7 @@ public enum ResultEnum {
     DATA_QUALITY_SCHEDULE_TASK_FAIL(11007, "调度任务执行失败"),
     DATA_QUALITY_DATACHECK_RULE_ERROR(11008, "数据校验规则异常"),
     DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR(11009, "数据校验规则执行异常"),
+    DATA_QUALITY_DATACHECK_WEBCHECK_NOPASS(11010, "校验不通过"),
 
     /**
      * 数据安全
