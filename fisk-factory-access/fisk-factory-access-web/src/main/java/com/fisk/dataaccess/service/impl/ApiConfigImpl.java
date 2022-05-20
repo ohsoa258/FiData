@@ -25,9 +25,12 @@ import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.ApiConfigMap;
+import com.fisk.dataaccess.map.ApiParameterMap;
+import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
@@ -36,6 +39,7 @@ import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
+import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
@@ -105,6 +109,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private String pdf_uat_address;
     @Value("${dataservice.pdf.prd_address}")
     private String pdf_prd_address;
+    @Resource
+    private DataQualityClient dataQualityClient;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -327,7 +333,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum pushData(ReceiveDataDTO dto) {
-        ResultEnum resultEnum;
+        ResultEnum resultEnum = null;
         try {
             if (dto.apiCode == null) {
                 return ResultEnum.PUSH_TABLEID_NULL;
@@ -462,28 +468,87 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum copyApi(CopyApiDTO dto) {
 
         // TODO 复制api功能,仅保存配置,关于是否发布,后面再讨论
-        // 1.根据apiId查询当前api信息tb_api_config: 调用/apiConfig/add接口,保存tb_api_config主表信息
-        ApiConfigPO apiConfigPo = this.query().eq("id", dto.getApiId()).one();
-        if (apiConfigPo == null) {
-            return ResultEnum.COPY_API_ISNULL;
+        // 1.查询出当前api实时还是非实时
+        AppRegistrationPO appRegistrationPo = appRegistrationImpl.query().eq("id", dto.getAppId()).one();
+        if (appRegistrationPo == null) {
+            return ResultEnum.API_APP_ISNULL;
         }
-        apiConfigPo.id = 0;
-        apiConfigPo.appId = dto.getAppId();
-        apiConfigPo.apiName = apiConfigPo + "_copy";
-        this.addData(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
 
-        // 2.查询出当前api实时还是非实时
-//        appDataSourceImpl.query().eq()
-        // 2-1.实时不需要保存请求参数表tb_api_parameter
-        // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
-        // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
-        // 4.调用apiConfig/addApiDetail接口
+        if (!CollectionUtils.isEmpty(dto.getApiIds())) {
+            for (Long apiId : dto.getApiIds()) {
+                // 2.根据apiId查询当前api信息tb_api_config: 调用/apiConfig/add接口,保存tb_api_config主表信息
+                ApiConfigPO apiConfigPo = this.query().eq("id", apiId).one();
+                if (apiConfigPo == null) {
+                    return ResultEnum.COPY_API_ISNULL;
+                }
+                // 复制功能,重置id
+                apiConfigPo.id = 0;
+                apiConfigPo.appId = dto.getAppId();
+                apiConfigPo.apiName = apiConfigPo.apiName + "_copy";
+                // 重置发布状态
+                apiConfigPo.publish = 0;
+                this.addData(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
 
-        return null;
+                // 2-1.实时不需要保存请求参数表tb_api_parameter
+                // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
+                if (appRegistrationPo.appType == 1) { // 1: 非实时api
+                    List<ApiParameterPO> apiParameterPoList = apiParameterServiceImpl.query().eq("api_id", apiId).list();
+                    if (!CollectionUtils.isEmpty(apiParameterPoList)) {
+                        apiParameterPoList.forEach(e -> {
+                            e.id = 0;
+                            e.apiId = apiConfigPo.id;
+                        });
+                    }
+                    apiParameterServiceImpl.addData(ApiParameterMap.INSTANCES.listPoToDto(apiParameterPoList));
+                }
+
+                // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
+                List<TableAccessNonDTO> list = new ArrayList<>();
+                List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("api_id", apiConfigPo.id).list();
+                if (!CollectionUtils.isEmpty(tableAccessPoList)) {
+                    tableAccessPoList.forEach(e -> {
+                        TbTableAccessDTO tbTableAccessDto = TableAccessMap.INSTANCES.tbPoToDto(e);
+                        tbTableAccessDto.id = 0;
+                        tbTableAccessDto.publish = 0;
+                        tableAccessImpl.addTableAccessData(tbTableAccessDto);
+
+                        TableAccessNonDTO data = tableAccessImpl.getData(e.id);
+                        list.add(data);
+                    });
+                }
+
+                // 4.调用apiConfig/addApiDetail接口
+                ApiConfigDTO apiConfigDto = ApiConfigMap.INSTANCES.poToDto(apiConfigPo);
+                if (!CollectionUtils.isEmpty(list)) {
+                    list.forEach(e -> {
+                        // 组装同步表信息
+                        e.tableSyncmodeDTO.id = e.id;
+                        // 组装业务表信息
+                        e.businessDTO.accessId = e.id;
+                        List<TableFieldsDTO> tableFieldsDtoList = e.list;
+                        if (!CollectionUtils.isEmpty(tableFieldsDtoList)) {
+                            // 组装字段详情表信息
+                            tableFieldsDtoList.forEach(f -> {
+                                f.id = 0;
+                                f.tableAccessId = e.id;
+                            });
+                        }
+                    });
+
+                    apiConfigDto.list = list;
+                }
+
+                this.addApiDetail(apiConfigDto);
+
+            }
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override
@@ -586,7 +651,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 请求头参数
             apiHttpRequestDto.headersParams = params;
 
-            // 调用第三方api返回的数据
+            // TODO 第一步: 查询阶段,调用第三方api返回的数据
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
 
             ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
@@ -737,9 +802,23 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             targetTable.forEach(System.out::println);
 
             // TODO 先去数据质量验证
-            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
-
-
+//            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
+//            if (!CollectionUtils.isEmpty(targetTable)) {
+//                DataCheckWebDTO dto = new DataCheckWebDTO();
+//                dto.ip = "192.168.1.250";
+//                dto.dbName = "dmp_ods";
+//
+//                HashMap<String, JSONArray> body = new HashMap<>();
+//                for (JsonTableData jsonTableData : targetTable) {
+//                    body.put(tablePrefixName + jsonTableData.table, jsonTableData.data);
+//                }
+//
+//                dto.body = body;
+//                ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
+//                log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
+//            }
+//
+//            int a = 1 / 0;
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // ods_abbreviationName_tableName
