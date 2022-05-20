@@ -249,11 +249,11 @@ public class ApiConstants {
             "            \"catalogueIndex\":\"1.2.\",\n" +
             "            \"catalogueName\":\"读者对象\"\n" +
             "        },\n" +
-            "        {\n" +
-            "            \"grade\":3,\n" +
-            "            \"catalogueIndex\":\"1.3.\",\n" +
-            "            \"catalogueName\":\"相关联系人\"\n" +
-            "        },\n" +
+//            "        {\n" +
+//            "            \"grade\":3,\n" +
+//            "            \"catalogueIndex\":\"1.3.\",\n" +
+//            "            \"catalogueName\":\"相关联系人\"\n" +
+//            "        },\n" +
             "        {\n" +
             "            \"grade\":2,\n" +
             "            \"catalogueIndex\":\"2.\",\n" +
