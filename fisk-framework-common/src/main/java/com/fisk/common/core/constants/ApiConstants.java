@@ -45,11 +45,11 @@ public class ApiConstants {
             "            \"catalogueIndex\":\"1.2.\",\n" +
             "            \"catalogueName\":\"读者对象\"\n" +
             "        },\n" +
-            "        {\n" +
-            "            \"grade\":3,\n" +
-            "            \"catalogueIndex\":\"1.3.\",\n" +
-            "            \"catalogueName\":\"相关联系人\"\n" +
-            "        },\n" +
+//            "        {\n" +
+//            "            \"grade\":3,\n" +
+//            "            \"catalogueIndex\":\"1.3.\",\n" +
+//            "            \"catalogueName\":\"相关联系人\"\n" +
+//            "        },\n" +
             "        {\n" +
             "            \"grade\":2,\n" +
             "            \"catalogueIndex\":\"二.\",\n" +
@@ -143,22 +143,22 @@ public class ApiConstants {
             "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
             "        }\n" +
             "    ],\n" +
-            "    \"apiContactsDTOS\":[\n" +
-            "        {\n" +
-            "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"技术部\",\n" +
-            "            \"fullName\":\"徐阳辉\",\n" +
-            "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
-            "            \"trStyle\":\"background-color: #fff\"\n" +
-            "        },\n" +
-            "        {\n" +
-            "            \"category\":\"接口负责人\",\n" +
-            "            \"company\":\"技术部\",\n" +
-            "            \"fullName\":\"赵飞鸿\",\n" +
-            "            \"mailbox\":\"feihongz@fisksoft.com.cn\",\n" +
-            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
-            "        }\n" +
-            "    ],\n" +
+//            "    \"apiContactsDTOS\":[\n" +
+//            "        {\n" +
+//            "            \"category\":\"接口负责人\",\n" +
+//            "            \"company\":\"技术部\",\n" +
+//            "            \"fullName\":\"徐阳辉\",\n" +
+//            "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
+//            "            \"trStyle\":\"background-color: #fff\"\n" +
+//            "        },\n" +
+//            "        {\n" +
+//            "            \"category\":\"接口负责人\",\n" +
+//            "            \"company\":\"技术部\",\n" +
+//            "            \"fullName\":\"赵飞鸿\",\n" +
+//            "            \"mailbox\":\"feihongz@fisksoft.com.cn\",\n" +
+//            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+//            "        }\n" +
+//            "    ],\n" +
             "    \"apiVersionDTOS\":[\n" +
             "        {\n" +
             "            \"version\":\"0.1\",\n" +
