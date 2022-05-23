@@ -109,6 +109,16 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
 
     @Override
     public ResultEnum addAttributeGroup(AttributeGroupDTO dto) {
+        QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupPO::getModelId,dto.getModelId())
+                .eq(AttributeGroupPO::getName,dto.getName())
+                .last("limit 1");
+        AttributeGroupPO groupPo = groupMapper.selectOne(queryWrapper);
+        if (groupPo != null){
+            return ResultEnum.DATA_EXISTS;
+        }
+
         AttributeGroupPO attributeGroupPo = AttributeGroupMap.INSTANCES.groupDtoToPo(dto);
         int res = groupMapper.insert(attributeGroupPo);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
