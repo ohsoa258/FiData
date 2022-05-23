@@ -12,6 +12,7 @@ import com.fisk.mdm.map.AttributeGroupMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeGroupMapper;
 import com.fisk.mdm.service.AttributeGroupService;
+import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -145,12 +146,57 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
      * @param id
      * @return
      */
-    public boolean isExistAttributeGroup(Integer id){
+    public boolean isExistAttributeGroup(Integer id) {
         AttributeGroupPO attributeGroupPo = groupMapper.selectById(id);
-        if (attributeGroupPo == null){
+        if (attributeGroupPo == null) {
             return false;
         }
 
         return true;
     }
+
+    /**
+     * 根据模型id,获取属性组列表
+     *
+     * @param modelId
+     * @return
+     */
+    public List<AttributeGroupDropDownVO> getAttributeGroupByModelId(Integer modelId) {
+        QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(AttributeGroupPO::getModelId, modelId);
+        List<AttributeGroupPO> list = groupMapper.selectList(queryWrapper);
+        return AttributeGroupMap.INSTANCES.groupListPoToVoList(list);
+    }
+
+    /**
+     * 根据属性组id/实体id,获得属性集合
+     *
+     * @param groupId
+     * @param entityId
+     * @return
+     */
+    public List<Integer> getAttributeGroupAttribute(Integer groupId, Integer entityId) {
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").select("attribute_id")
+                .lambda()
+                .eq(AttributeGroupDetailsPO::getGroupId, groupId)
+                .eq(AttributeGroupDetailsPO::getEntityId, entityId);
+        List<Integer> attributeIds = (List) detailsMapper.selectObjs(queryWrapper);
+        return attributeIds;
+    }
+
+    /**
+     * 根据属性组id,获取详情
+     *
+     * @param groupId
+     * @return
+     */
+    public AttributeGroupDTO getAttributeGroup(Integer groupId) {
+        AttributeGroupPO po = groupMapper.selectById(groupId);
+        if (po == null) {
+            return null;
+        }
+        return AttributeGroupMap.INSTANCES.poToDto(po);
+    }
+
 }

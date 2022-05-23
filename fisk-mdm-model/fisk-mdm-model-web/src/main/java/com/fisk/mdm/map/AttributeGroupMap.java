@@ -6,6 +6,7 @@ import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -51,10 +52,28 @@ public interface AttributeGroupMap {
 
     /**
      * po => dto
+     *
      * @param poList
      * @return
      */
     List<AttributeGroupDetailsDTO> detailsPoToVoList(List<AttributeGroupDetailsPO> poList);
+
+    /**
+     * groupListPo==>VoList
+     *
+     * @param list
+     * @return
+     */
+    List<AttributeGroupDropDownVO> groupListPoToVoList(List<AttributeGroupPO> list);
+
+    /**
+     * po==>Dto
+     *
+     * @param po
+     * @return
+     */
+    AttributeGroupDTO poToDto(AttributeGroupPO po);
+
 }
 
 

@@ -14,8 +14,8 @@ public class MasterDataPageDTO extends PageDataDTO {
     private String columnNames;
 
     /**
-     * 导出
+     * 是否导出
      */
-    //private Boolean export;
+    private Boolean export;
 
 }

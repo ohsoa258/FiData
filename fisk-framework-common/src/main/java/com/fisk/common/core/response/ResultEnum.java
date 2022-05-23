@@ -267,7 +267,8 @@ public enum ResultEnum {
     SUBMIT_FAILURE(151019, "提交失败"),
     CHECK_TEMPLATE_IMPORT_FAILURE(151020, "导入失败，请检查模板是否正确"),
     EMPTY_FORM(151021, "空白xlsx文件"),
-    CODE_NOT_EXIST(151022, "编码列不存在");
+    CODE_NOT_EXIST(151022, "编码列不存在"),
+    ATTRIBUTE_GROUP_NOT_EXIST(151023, "属性组不存在");
 
     ResultEnum(int code, String msg) {
         this.code = code;

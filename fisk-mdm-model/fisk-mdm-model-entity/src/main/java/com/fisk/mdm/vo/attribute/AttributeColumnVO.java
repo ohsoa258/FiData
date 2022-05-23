@@ -10,6 +10,8 @@ import lombok.Data;
  */
 @Data
 public class AttributeColumnVO {
+
+    private Integer id;
     /**
      * 名称
      */

@@ -17,6 +17,7 @@ import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.common.service.mdmBEOperate.BuildCodeHelper;
 import com.fisk.common.service.mdmBEOperate.IBuildCodeCommand;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.entity.AttributePO;
@@ -89,6 +90,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     EntityServiceImpl entityServiceImpl;
     @Resource
     AttributeServiceImpl attributeService;
+    @Resource
+    AttributeGroupServiceImpl attributeGroupService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -130,6 +133,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             e.versions = modelVersionServiceImpl.getModelVersionDropDown(e.id);
             e.versions.stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
             e.children = entityServiceImpl.getEntityDropDown(e.id);
+            e.attributeGroups = attributeGroupService.getAttributeGroupByModelId(e.id);
+            e.attributeGroups.stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
         });
         return data;
     }
@@ -199,15 +204,29 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
                 .collect(Collectors.toList());
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
-        ResultAttributeGroupVO attributeGroupVo=new ResultAttributeGroupVO();
-        attributeGroupVo.setName("属性1");
-        attributeGroupVo.setAttributes(attributeColumnVoList);
-        attributeGroupVoList.add(attributeGroupVo);
+        if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
+            List<Integer> attributeIds = new ArrayList<>();
+            attributeGroupVoList = attributeGroupAttribute(dto.getAttributeGroups(), dto.getEntityId(), attributeColumnVoList);
+            //获取所有实体属性id集合
+            attributeGroupVoList.stream().forEach(e ->
+                    attributeIds.addAll(e.getAttributes()
+                            .stream().map(p -> p.getId()).collect(Collectors.toList())));
+            if (!CollectionUtils.isEmpty(attributeIds)) {
+                attributeColumnVoList = attributeColumnVoList.stream()
+                        .filter(e -> attributeIds.contains(e.getId()))
+                        .collect(Collectors.toList());
+            }
+        } else {
+            ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
+            attributeGroupVo.setName("属性组");
+            attributeGroupVo.setAttributes(attributeColumnVoList);
+            attributeGroupVoList.add(attributeGroupVo);
+        }
         resultObjectVO.setAttributes(attributeGroupVoList);
         //获得业务字段名
         List<String> list = new ArrayList<>();
         List<AttributeColumnVO> areaColumnList = new ArrayList<>();
-        for (AttributeColumnVO attributeColumnVo:attributeColumnVoList){
+        for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
                 list.add(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
@@ -241,7 +260,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setPageIndex(dto.getPageIndex());
             dataPageDTO.setPageSize(dto.getPageSize());
             dataPageDTO.setTableName(tableName);
-            //dataPageDTO.setExport(dto.getExport());
+            dataPageDTO.setExport(dto.getExport());
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -255,18 +274,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //创建人/更新人id替换为名称
             ReplenishUserInfo.replenishFiDataUserName(data, client, UserFieldEnum.USER_NAME);
             //是否导出
-           /* if (dto.getExport())
-            {
-                ExportResultVO vo=new ExportResultVO();
+            if (dto.getExport()) {
+                ExportResultVO vo = new ExportResultVO();
                 List<String> nameList = attributeColumnVoList.stream().map(e -> e.getName()).collect(Collectors.toList());
                 List<String> nameDisplayList = attributeColumnVoList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
                 vo.setHeaderList(nameList);
                 vo.setDataArray(data);
                 vo.setHeaderDisplayList(nameDisplayList);
                 vo.setFileName(entityVo.getTableName());
-                exportExcel(vo,response);
+                exportExcel(vo, response);
                 return resultObjectVO;
-            }*/
+            }
             //将主数据集合添加装入结果对象
             resultObjectVO.setResultData(data);
         } catch (Exception e) {
@@ -274,6 +292,35 @@ public class MasterDataServiceImpl implements IMasterDataService {
             resultObjectVO.setErrorMsg(e.getMessage());
         }
         return resultObjectVO;
+    }
+
+    /**
+     * 根据属性组下所有实体属性
+     *
+     * @param attributeGroups       属性组集合
+     * @param entityId              实体id
+     * @param attributeColumnVoList 实体下属性集合
+     * @return
+     */
+    public List<ResultAttributeGroupVO> attributeGroupAttribute(List<Integer> attributeGroups,
+                                                                Integer entityId,
+                                                                List<AttributeColumnVO> attributeColumnVoList) {
+        List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
+        for (Integer id : attributeGroups) {
+            List<Integer> attributes = attributeGroupService.getAttributeGroupAttribute(id, entityId);
+            //获取属性组名称
+            AttributeGroupDTO attributeGroup = attributeGroupService.getAttributeGroup(id);
+            if (CollectionUtils.isEmpty(attributes) || attributeGroup == null) {
+                continue;
+            }
+            ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
+            attributeGroupVo.setName(attributeGroup.getName());
+            List<AttributeColumnVO> collect = attributeColumnVoList.stream()
+                    .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
+            attributeGroupVo.setAttributes(collect);
+            attributeGroupVoList.add(attributeGroupVo);
+        }
+        return attributeGroupVoList;
     }
 
     /**
