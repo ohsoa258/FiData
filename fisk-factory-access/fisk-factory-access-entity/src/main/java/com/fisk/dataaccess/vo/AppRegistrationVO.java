@@ -23,6 +23,9 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "应用名称")
     public String appName;
+
+    @ApiModelProperty(value = "应用简称")
+    public String appAbbreviation;
     /**
      * 应用描述
      */
