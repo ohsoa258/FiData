@@ -1,9 +1,9 @@
 package com.fisk.common.service.mdmBEBuild.dto;
 
-import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -15,7 +15,7 @@ public class InsertImportDataDTO {
     /**
      * 导入模板数据
      */
-    private List<JSONObject> members;
+    private List<Map<String, Object>> members;
 
     private String tableName;
 

@@ -1,6 +1,5 @@
 package com.fisk.common.service.mdmBEBuild;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
@@ -19,7 +18,7 @@ public class CommonMethods {
      * @param type
      * @return
      */
-    public static String getColumnNameAndValue(JSONObject member, int type) {
+    public static String getColumnNameAndValue(Map<String, Object> member, int type) {
         List<String> columnList = new ArrayList<>();
         Iterator iter = member.entrySet().iterator();
         while (iter.hasNext()) {

@@ -1,10 +1,10 @@
 package com.fisk.mdm.vo.masterdata;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -34,6 +34,6 @@ public class BathUploadMemberVO {
 
     public List<AttributeInfoDTO> attribute;
 
-    public List<JSONObject> members;
+    public List<Map<String, Object>> members;
 
 }

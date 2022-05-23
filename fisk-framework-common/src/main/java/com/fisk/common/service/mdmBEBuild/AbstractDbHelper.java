@@ -81,7 +81,7 @@ public class AbstractDbHelper {
      *
      * @param connection 连接对象
      */
-    public void closeConnection(Connection connection) {
+    public static void closeConnection(Connection connection) {
         if (connection != null) {
             try {
                 connection.close();
@@ -125,13 +125,30 @@ public class AbstractDbHelper {
     }
 
     /**
+     * 关闭ResultSet对象
+     *
+     * @param rs
+     */
+    public static void closeResultSet(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            rs = null;
+        }
+    }
+
+    /**
      * 执行sql
+     *
      * @param sql
      * @param connection
      * @return
      */
-    public void executeSql(String sql,Connection connection) throws SQLException {
-        Statement statement =null;
+    public void executeSql(String sql, Connection connection) throws SQLException {
+        Statement statement = null;
         String code = UUID.randomUUID().toString();
         StopWatch stopWatch = new StopWatch();
 
