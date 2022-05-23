@@ -91,8 +91,20 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        AttributeGroupDetailsPO detailsPo = AttributeGroupMap.INSTANCES.detailsDtoToDto(dto);
-        int res = detailsMapper.insert(detailsPo);
+        // 同一个属性组下面数据不能重复
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
+                .eq(AttributeGroupDetailsPO::getEntityId,dto.getEntityId())
+                .eq(AttributeGroupDetailsPO::getAttributeId,dto.getAttributeId())
+                .last("limit 1");
+        AttributeGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+        if (detailsPo != null){
+            return ResultEnum.DATA_EXISTS;
+        }
+
+        AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(dto);
+        int res = detailsMapper.insert(detailsPo1);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -103,7 +115,11 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        int res = detailsMapper.deleteById(dto.getAttributeId());
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
+                .eq(AttributeGroupDetailsPO::getAttributeId,dto.getAttributeId());
+        int res = detailsMapper.delete(queryWrapper);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
