@@ -17,6 +17,7 @@ import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.TableSyncmodeDTO;
 import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.doc.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -28,10 +29,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
-import com.fisk.dataaccess.map.ApiConfigMap;
-import com.fisk.dataaccess.map.ApiParameterMap;
-import com.fisk.dataaccess.map.TableAccessMap;
-import com.fisk.dataaccess.map.TableBusinessMap;
+import com.fisk.dataaccess.map.*;
 import com.fisk.dataaccess.mapper.ApiConfigMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiConfig;
@@ -492,7 +490,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 apiConfigPo.apiName = apiConfigPo.apiName + "_copy";
                 // 重置发布状态
                 apiConfigPo.publish = 0;
-                this.addData(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
+                this.save(apiConfigPo);
 
                 // 2-1.实时不需要保存请求参数表tb_api_parameter
                 // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
@@ -509,36 +507,54 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                 // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
                 List<TableAccessNonDTO> list = new ArrayList<>();
-                List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("api_id", apiConfigPo.id).list();
+                List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("api_id", apiId).list();
                 if (!CollectionUtils.isEmpty(tableAccessPoList)) {
-                    tableAccessPoList.forEach(e -> {
+                    for (TableAccessPO e : tableAccessPoList) {
                         TbTableAccessDTO tbTableAccessDto = TableAccessMap.INSTANCES.tbPoToDto(e);
+                        // 重置id
                         tbTableAccessDto.id = 0;
+                        // 重置发布状态
                         tbTableAccessDto.publish = 0;
-                        tableAccessImpl.addTableAccessData(tbTableAccessDto);
+                        tbTableAccessDto.apiId = apiConfigPo.id;
+                        tbTableAccessDto.appId = dto.getAppId();
+                        ResultEntity<Object> result = tableAccessImpl.addTableAccessData(tbTableAccessDto);
+                        Object tableId = result.getData();
+                        TableAccessNonDTO data = tableAccessImpl.getData((Long) tableId);
 
-                        TableAccessNonDTO data = tableAccessImpl.getData(e.id);
+                        // 组装同步表信息
+                        TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+                        TableSyncmodeDTO tableSyncmodeDto = TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo);
+                        tableSyncmodeDto.id = data.id;
+                        data.tableSyncmodeDTO = tableSyncmodeDto;
+
+                        // 组装业务表信息
+                        TableBusinessPO tableBusinessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                        if (tableBusinessPo != null) {
+                            tableBusinessPo.accessId = data.id;
+                            data.businessDTO = TableBusinessMap.INSTANCES.poToDto(tableBusinessPo);
+                        }
+
+                        // 组装字段详情表数据
+                        List<TableFieldsPO> tableFieldsPoList = tableFieldImpl.query().eq("table_access_id", e.id).list();
+                        List<TableFieldsDTO> tableFieldsDtoList = TableFieldsMap.INSTANCES.listPoToDto(tableFieldsPoList);
+                        if (!CollectionUtils.isEmpty(tableFieldsDtoList)) {
+                            // 组装字段详情表信息
+                            tableFieldsDtoList.forEach(f -> {
+                                f.id = 0;
+                                f.tableAccessId = data.id;
+                            });
+
+                            data.list = tableFieldsDtoList;
+                        }
+
+                        // 封装所有数据
                         list.add(data);
-                    });
+                    }
                 }
 
                 // 4.调用apiConfig/addApiDetail接口
                 ApiConfigDTO apiConfigDto = ApiConfigMap.INSTANCES.poToDto(apiConfigPo);
                 if (!CollectionUtils.isEmpty(list)) {
-                    list.forEach(e -> {
-                        // 组装同步表信息
-                        e.tableSyncmodeDTO.id = e.id;
-                        // 组装业务表信息
-                        e.businessDTO.accessId = e.id;
-                        List<TableFieldsDTO> tableFieldsDtoList = e.list;
-                        if (!CollectionUtils.isEmpty(tableFieldsDtoList)) {
-                            // 组装字段详情表信息
-                            tableFieldsDtoList.forEach(f -> {
-                                f.id = 0;
-                                f.tableAccessId = e.id;
-                            });
-                        }
-                    });
 
                     apiConfigDto.list = list;
                 }
