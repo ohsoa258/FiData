@@ -247,6 +247,26 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEnum.UPDATE_DATA_ERROR;
         }
 
+        // 删除属性组中的属性
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getAttributeId,attributeUpdateDTO.getId());
+        int res = groupDetailsMapper.delete(queryWrapper);
+        if (res <= 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        // 添加到属性组
+        AttributeGroupDetailsPO detailsPo = new AttributeGroupDetailsPO();
+        detailsPo.setEntityId(attributeUpdateDTO.getEntityId());
+        detailsPo.setAttributeId((int)attributePo.getId());
+        attributeUpdateDTO.getAttributeGroupId().stream()
+                .forEach(e -> {
+                    detailsPo.setGroupId(e);
+                    groupDetailsMapper.insert(detailsPo);
+                });
+
+
         // 记录日志
         String desc = "修改一个属性,id:" + attributeUpdateDTO.getId();
         logService.saveEventLog((int) attributePo.getId(), ObjectTypeEnum.ATTRIBUTES, EventTypeEnum.UPDATE, desc);
