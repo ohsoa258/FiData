@@ -1,5 +1,6 @@
 package com.fisk.mdm.map;
 
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
@@ -40,6 +41,13 @@ public interface AttributeGroupMap {
      * @return
      */
     AttributeGroupDetailsPO detailsDtoToDto(AttributeGroupDetailsDTO dto);
+
+    /**
+     * 属性组创建
+     * @param dto
+     * @return
+     */
+    AttributeGroupPO groupDtoToPo(AttributeGroupDTO dto);
 
     /**
      * po => dto

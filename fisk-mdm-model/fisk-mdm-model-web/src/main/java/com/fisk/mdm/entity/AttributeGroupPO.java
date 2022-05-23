@@ -13,6 +13,7 @@ import lombok.Data;
 @Data
 public class AttributeGroupPO extends BasePO {
 
+    private Integer modelId;
     private String name;
     private String details;
 }

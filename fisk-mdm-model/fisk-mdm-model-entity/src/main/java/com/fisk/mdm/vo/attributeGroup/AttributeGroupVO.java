@@ -14,6 +14,7 @@ import java.util.List;
 public class AttributeGroupVO {
 
     private Integer id;
+    private Integer modelId;
     private String name;
     private String details;
     private List<AttributeGroupDetailsDTO> groupDetailsList;
