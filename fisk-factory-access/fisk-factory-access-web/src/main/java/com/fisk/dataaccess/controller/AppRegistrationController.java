@@ -21,6 +21,8 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
@@ -259,4 +261,9 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDataAccessQueryList(query));
     }
 
+    @PostMapping("/logMessageFilter")
+    @ApiOperation(value = "日志分页筛选器")
+    public ResultEntity<Page<PipelineTableLogVO>> logMessageFilter(@RequestBody PipelineTableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.logMessageFilter(dto));
+    }
 }
