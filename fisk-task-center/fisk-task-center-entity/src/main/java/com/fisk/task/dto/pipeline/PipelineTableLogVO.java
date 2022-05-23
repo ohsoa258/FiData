@@ -1,20 +1,22 @@
 package com.fisk.task.dto.pipeline;
 
-import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.util.Date;
 
 /**
  * @author cfk
  */
-public class PipelineTableLogDTO extends BasePO {
+@Data
+public class PipelineTableLogVO {
     @ApiModelProperty(value = "组件id")
     public int componentId;
     @ApiModelProperty(value = "表id")
-    public int tableId;
+    public Long tableId;
     @ApiModelProperty(value = "表类别")
-    public int tableType;
+    public OlapTableEnum tableType;
     @ApiModelProperty(value = "状态")
     public int state;
     @ApiModelProperty(value = "备注")
@@ -28,5 +30,7 @@ public class PipelineTableLogDTO extends BasePO {
     @ApiModelProperty(value = "调用类型")
     public int dispatchType;
     @ApiModelProperty(value = "应用id")
-    public Integer appId;
+    public Long appId;
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
 }

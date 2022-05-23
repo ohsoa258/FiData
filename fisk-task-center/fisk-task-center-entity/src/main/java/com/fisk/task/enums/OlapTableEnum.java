@@ -14,6 +14,7 @@ public enum OlapTableEnum implements BaseEnum {
     FACT(2,"事实表"),
     PHYSICS(3,"物理表"),
     PHYSICS_API(10,"非实时api"),
+    PHYSICS_RESTAPI(11,"实时api"),
     WIDETABLE(9,"宽表"),
     //CustomWork管道服务
     /**
