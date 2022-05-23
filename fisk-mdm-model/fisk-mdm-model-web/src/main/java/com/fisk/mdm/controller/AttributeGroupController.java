@@ -60,7 +60,7 @@ public class AttributeGroupController {
     @ApiOperation("属性组根据属性id删除")
     @DeleteMapping("/deleteAttribute")
     @ResponseBody
-    public ResultEntity<ResultEnum> deleteAttribute(AttributeGroupDetailsDTO dto) {
+    public ResultEntity<ResultEnum> deleteAttribute(@RequestBody AttributeGroupDetailsDTO dto) {
         return ResultEntityBuild.build(groupService.deleteAttribute(dto));
     }
 
