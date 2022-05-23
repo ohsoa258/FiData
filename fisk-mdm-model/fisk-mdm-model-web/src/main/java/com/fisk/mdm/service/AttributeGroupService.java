@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 
@@ -19,7 +20,7 @@ public interface AttributeGroupService {
     AttributeGroupVO getDataByGroupId(Integer id);
 
     /**
-     * 修改属性组
+     * 修改属性组信息
      * @param dto
      * @return
      */
@@ -31,4 +32,18 @@ public interface AttributeGroupService {
      * @return
      */
     ResultEnum deleteGroupById(Integer id);
+
+    /**
+     * 属性组新增属性
+     * @param dto
+     * @return
+     */
+    ResultEnum addAttribute(AttributeGroupDetailsDTO dto);
+
+    /**
+     * 属性组根据属性id删除
+     * @param dto
+     * @return
+     */
+    ResultEnum deleteAttribute(AttributeGroupDetailsDTO dto);
 }

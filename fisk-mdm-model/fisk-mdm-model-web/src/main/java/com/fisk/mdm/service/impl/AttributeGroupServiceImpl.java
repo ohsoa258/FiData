@@ -3,6 +3,7 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
@@ -80,6 +81,29 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum addAttribute(AttributeGroupDetailsDTO dto) {
+        boolean attributeGroup = this.isExistAttributeGroup(dto.getGroupId());
+        if (attributeGroup == false){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        AttributeGroupDetailsPO detailsPo = AttributeGroupMap.INSTANCES.detailsDtoToDto(dto);
+        int res = detailsMapper.insert(detailsPo);
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteAttribute(AttributeGroupDetailsDTO dto) {
+        boolean attributeGroup = this.isExistAttributeGroup(dto.getGroupId());
+        if (attributeGroup == false){
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        int res = detailsMapper.deleteById(dto.getAttributeId());
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
