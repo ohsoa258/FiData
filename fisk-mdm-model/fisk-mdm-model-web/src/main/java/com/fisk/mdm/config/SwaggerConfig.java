@@ -28,6 +28,7 @@ public class SwaggerConfig {
     public static final String TAG_3 = "Attribute-Controller";
     public static final String TAG_4 = "ModelVersion-Controller";
     public static final String TAG_5 = "MasterData-Controller";
+    public static final String TAG_6 = "AttributeGroup-Controller";
 
     @Bean
     public Docket createRestApi() {
@@ -39,6 +40,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TAG_3,"属性管理API"))
                 .tags(new Tag(TAG_4,"模型版本管理API"))
                 .tags(new Tag(TAG_5,"主数据管理API"))
+                .tags(new Tag(TAG_6,"属性组管理API"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
