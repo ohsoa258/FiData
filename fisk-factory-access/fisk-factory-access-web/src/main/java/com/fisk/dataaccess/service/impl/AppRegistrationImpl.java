@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,6 +17,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
@@ -29,6 +31,10 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
+import com.fisk.task.enums.DbTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -601,5 +607,58 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         DataAccessNumDTO dto = new DataAccessNumDTO();
         dto.num = query().list().size();
         return dto;
+    }
+
+    @Override
+    public Page<PipelineTableLogVO> logMessageFilter(PipelineTableQueryDTO dto) {
+
+        AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (appDataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        Page<LogMessageFilterVO> sourcePage = new Page<>();
+
+        // 实时api
+        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword);
+            // 非实时api
+        } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword);
+            // 物理表
+        } else {
+            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword);
+        }
+
+        log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
+
+        Page<PipelineTableLogVO> targetPage = new Page<>();
+        targetPage.setTotal(sourcePage.getTotal());
+        targetPage.setSize(sourcePage.getSize());
+        List<LogMessageFilterVO> records = sourcePage.getRecords();
+        List<PipelineTableLogVO> list = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(records)) {
+            for (LogMessageFilterVO record : records) {
+                PipelineTableLogVO vo = new PipelineTableLogVO();
+                vo.appId = record.appId;
+                vo.tableId = record.tableId == null ? record.apiId : record.tableId;
+                vo.tableName = record.tableName == null ? record.apiName : record.tableName;
+                if (record.appType == 0) {
+                    vo.tableType = OlapTableEnum.PHYSICS_RESTAPI;
+                } else if (record.appType == 1 && record.apiId != null) {
+                    vo.tableType = OlapTableEnum.PHYSICS_API;
+                } else if (record.appType == 1 && record.tableId != null) {
+                    vo.tableType = OlapTableEnum.PHYSICS;
+                }
+                list.add(vo);
+            }
+        }
+
+        log.info("接入组装后的数据: " + JSON.toJSONString(list));
+
+        // TODO 对list进行改造,添加task日志信息
+
+        targetPage.setRecords(list);
+        return targetPage;
     }
 }

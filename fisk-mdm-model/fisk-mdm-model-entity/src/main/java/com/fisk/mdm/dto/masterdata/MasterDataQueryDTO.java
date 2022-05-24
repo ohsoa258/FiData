@@ -2,6 +2,8 @@ package com.fisk.mdm.dto.masterdata;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -17,5 +19,15 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      * 每页条数
      */
     private Integer pageSize;
+
+    /**
+     * 是否导出
+     */
+    private Boolean export;
+
+    /**
+     * 属性组
+     */
+    private List<Integer> attributeGroups;
 
 }

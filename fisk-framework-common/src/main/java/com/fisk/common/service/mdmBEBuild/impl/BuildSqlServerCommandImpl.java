@@ -5,6 +5,7 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -100,5 +101,36 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String buildQueryOneColumn(String tableName, String selectColumnName) {
+        return "select distinct " + selectColumnName + " as columnName from " + tableName;
+    }
+
+    @Override
+    public String buildQueryCount(String tableName, String queryConditions) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT COUNT(*) AS totalNum FROM " + tableName);
+        if (!StringUtils.isEmpty(queryConditions)) {
+            str.append(" WHERE 1=1 " + queryConditions);
+        }
+        return str.toString();
+    }
+
+    @Override
+    public String buildExportDataCount(String tableName, String queryConditions) {
+        StringBuilder str = new StringBuilder();
+        str.append("select count(*) as totalNum");
+        str.append(",sum( case fidata_status when 1 then 1 else 0 end) as submitSuccessCount");
+        str.append(",sum( case fidata_status when 2 then 1 else 0 end) as submitErrorCount");
+        str.append(",sum( case fidata_status when 0 then 1 else 0 end) as successCount");
+        str.append(",sum( case fidata_status when 3 then 1 else 0 end) as errorCount");
+        str.append(",sum( case fidata_syncy_type when 1 then 1 else 0 end) as updateCount");
+        str.append(",sum( case fidata_syncy_type when 2 then 1 else 0 end) as addCount");
+        str.append(" from " + tableName);
+        if (!StringUtils.isEmpty(queryConditions)) {
+            str.append(" where 1=1 " + queryConditions);
+        }
+        return str.toString();
+    }
 
 }

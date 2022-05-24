@@ -22,10 +22,11 @@ public interface IMasterDataService {
 
     /**
      * 分页
+     *
      * @param dto
      * @return
      */
-    ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto);
+    ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response);
 
     /**
      * 获取模型实体版本数据

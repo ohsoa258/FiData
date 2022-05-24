@@ -9,7 +9,6 @@ import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
-import com.fisk.mdm.vo.attribute.AttributeDetailsVO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import org.mapstruct.Mapper;
@@ -156,11 +155,13 @@ public interface AttributeMap {
     List<AttributeVO> poListToVoList(List<AttributePO> po);
 
     /**
-     * poList==>DetailsVoList
-     * @param po
+     * dtoList==>VoList
+     *
+     * @param dtoList
      * @return
      */
-    List<AttributeDetailsVO> poListToDetailsVoList(List<AttributePO> po);
+    List<AttributeColumnVO> dtoListToVoList(List<AttributeInfoDTO> dtoList);
+
 }
 
 

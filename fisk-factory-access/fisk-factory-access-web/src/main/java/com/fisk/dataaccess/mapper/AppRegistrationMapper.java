@@ -2,12 +2,14 @@ package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.dataaccess.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.AppNameDTO;
 import com.fisk.dataaccess.dto.AppRegistrationPageDTO;
 import com.fisk.dataaccess.dto.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.RepeatNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -70,6 +72,37 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      * @return 查询结果
      */
     Page<AppRegistrationVO> filter(Page<AppRegistrationVO> page, @Param("query") AppRegistrationPageDTO query);
+
+    /**
+     * 日志分页筛选器--非实时api
+     *
+     * @param page    分页对象
+     * @param appId   应用id
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    Page<LogMessageFilterVO> logMessageFilterByApi(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+
+    /**
+     * 日志分页筛选器--实时api
+     *
+     * @param page    分页对象
+     * @param appId   应用id
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    Page<LogMessageFilterVO> logMessageFilterByRestApi(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+
+    /**
+     * 日志分页筛选器--物理表
+     *
+     * @param page    分页对象
+     * @param appId   应用id
+     * @param keyword 搜索框
+     * @return 分页结果
+     */
+    Page<LogMessageFilterVO> logMessageFilterByTable(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+
 
     /**
      * 获取应用注册名称和id

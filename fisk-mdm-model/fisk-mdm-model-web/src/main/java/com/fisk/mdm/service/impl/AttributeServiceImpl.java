@@ -10,11 +10,13 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.mdm.dto.attribute.*;
+import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
+import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeService;
@@ -58,6 +60,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     @Resource
     private UserHelper userHelper;
 
+    @Resource
+    AttributeGroupDetailsMapper groupDetailsMapper;
+
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
         AttributeVO attributeVO = AttributeMap.INSTANCES.poToVo(baseMapper.selectById(id));
@@ -93,6 +98,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (baseMapper.selectOne(attributeWrapper) != null) {
             return ResultEnum.NAME_EXISTS;
         }
+
         //转换数据
         AttributePO attributePo = AttributeMap.INSTANCES.dtoToPo(attributeDTO);
 
@@ -139,6 +145,16 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (baseMapper.insert(attributePo) <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+
+        // 添加到属性组
+        AttributeGroupDetailsPO detailsPo = new AttributeGroupDetailsPO();
+        detailsPo.setEntityId(attributeDTO.getEntityId());
+        detailsPo.setAttributeId((int)attributePo.getId());
+        attributeDTO.getAttributeGroupId().stream()
+                        .forEach(e -> {
+                            detailsPo.setGroupId(e);
+                            groupDetailsMapper.insert(detailsPo);
+                        });
 
         // 记录日志
         String desc = "新增一个属性,id:" + attributePo.getId();
@@ -230,6 +246,26 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         if (baseMapper.update(attributePo,updateWrapper) <= 0) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
+
+        // 删除属性组中的属性
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getAttributeId,attributeUpdateDTO.getId());
+        int res = groupDetailsMapper.delete(queryWrapper);
+        if (res <= 0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+        // 添加到属性组
+        AttributeGroupDetailsPO detailsPo = new AttributeGroupDetailsPO();
+        detailsPo.setEntityId(attributeUpdateDTO.getEntityId());
+        detailsPo.setAttributeId((int)attributePo.getId());
+        attributeUpdateDTO.getAttributeGroupId().stream()
+                .forEach(e -> {
+                    detailsPo.setGroupId(e);
+                    groupDetailsMapper.insert(detailsPo);
+                });
+
 
         // 记录日志
         String desc = "修改一个属性,id:" + attributeUpdateDTO.getId();

@@ -270,4 +270,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/pipeline/updateTableTopicByComponentId")
     public void updateTableTopicByComponentId(@RequestBody TableTopicDTO tableTopicDTO);
+
+    /**
+     * saveNifiStage
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/saveNifiStage")
+    public void saveNifiStage(@RequestParam String data);
 }

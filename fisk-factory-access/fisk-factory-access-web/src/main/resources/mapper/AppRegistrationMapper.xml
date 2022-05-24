@@ -6,6 +6,7 @@
         SELECT
         a.id,
         a.app_name,
+        a.app_abbreviation,
         a.app_des,
         a.app_type,
         a.app_principal,
@@ -22,7 +23,66 @@
     </select>
     <insert id="insertAppRegistrationPo" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
             parameterType="com.fisk.dataaccess.entity.AppRegistrationPO">
-        insert into tb_app_registration (app_name,app_des,app_type,del_flag) values
-        (#{appRegistrationPO.appName},#{appRegistrationPO.appDes},#{appRegistrationPO.appType},#{appRegistrationPO.delFlag})
+        insert into tb_app_registration (app_name, app_des, app_type, del_flag)
+        values (#{appRegistrationPO.appName}, #{appRegistrationPO.appDes}, #{appRegistrationPO.appType},
+                #{appRegistrationPO.delFlag})
     </insert>
+
+    <select id="logMessageFilterByApi" resultType="com.fisk.dataaccess.app.LogMessageFilterVO">
+        SELECT
+        app.id AS appId,
+        app.app_type AS appType,
+        api.id AS apiId,
+        api.api_name AS apiName
+        FROM
+        tb_app_registration AS app
+        LEFT JOIN tb_api_config AS api ON api.app_id = app.id
+        WHERE
+        app.del_flag = 1
+        AND api.del_flag = 1
+        AND app.id = #{appId}
+        AND api.publish = 1
+        <if test="keyword !=null and keyword!='' ">
+            AND api.api_name like concat('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <select id="logMessageFilterByRestApi" resultType="com.fisk.dataaccess.app.LogMessageFilterVO">
+        SELECT
+        app.id AS appId,
+        app.app_type AS appType,
+        api.id AS apiId,
+        api.api_name AS apiName
+        FROM
+        tb_app_registration AS app
+        LEFT JOIN tb_api_config AS api ON api.app_id = app.id
+        WHERE
+        app.del_flag = 1
+        AND app.id = #{appId}
+        AND api.del_flag = 1
+        AND api.publish=1
+        <if test="keyword !=null and keyword!='' ">
+            AND api.api_name like concat('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <select id="logMessageFilterByTable" resultType="com.fisk.dataaccess.app.LogMessageFilterVO">
+        SELECT
+        app.id AS appId,
+        app.app_type AS appType,
+        tb.id AS tableId,
+        tb.table_name AS tableName
+        FROM
+        tb_app_registration AS app
+        LEFT JOIN tb_table_access AS tb ON tb.app_id = app.id
+        WHERE
+        app.del_flag = 1
+        AND tb.del_flag = 1
+        AND tb.publish = 1
+        AND app.id = #{appId}
+        <if test="keyword !=null and keyword!='' ">
+            AND tb.table_name like concat('%', #{keyword}, '%')
+        </if>
+    </select>
+
 </mapper>

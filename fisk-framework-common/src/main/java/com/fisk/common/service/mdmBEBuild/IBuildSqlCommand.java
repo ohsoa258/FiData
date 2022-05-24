@@ -63,4 +63,31 @@ public interface IBuildSqlCommand {
      */
     String buildVerifyRepeatCode(String tableName, String batchCode);
 
+    /**
+     * 查询表中某个字段的数据
+     *
+     * @param tableName
+     * @param selectColumnName
+     * @return
+     */
+    String buildQueryOneColumn(String tableName, String selectColumnName);
+
+    /**
+     * 查询条数
+     *
+     * @param tableName
+     * @param queryConditions 查询条件
+     * @return
+     */
+    String buildQueryCount(String tableName, String queryConditions);
+
+    /**
+     * 主数据维度-导入数据成功数量、失败数量、新增数量、编辑数量
+     *
+     * @param tableName
+     * @param queryConditions
+     * @return
+     */
+    String buildExportDataCount(String tableName, String queryConditions);
+
 }
