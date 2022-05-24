@@ -686,19 +686,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             // 校验不通过，根据参数调整表数据
             if ((StringUtils.isNotEmpty(updateField_N) || StringUtils.isNotEmpty(updateField_R) || StringUtils.isNotEmpty(msgField))
                     && CollectionUtils.isNotEmpty(dataCheckResults_N)) {
-                /*
-                 * 1、判断是否存在强规则类型的规则，存在直接以校验失败处理
-                 * 2、强规则类型的规则不存在，都是弱类型规则，则以校验失败但类型为弱类型处理
-                 * 3、如存在强规则类型校验的规则，则无需在进行弱规则类型的规则的校验
-                 * */
                 resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
                 List<DataCheckResultVO> checkList_Rule = new ArrayList<>();
                 List<DataCheckResultVO> strong_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == CheckRuleEnum.STRONG_RULE.getValue())).collect(Collectors.toList());
                 List<DataCheckResultVO> weak_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == CheckRuleEnum.WEAK_RULE.getValue())).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(weak_Rule)) {
+                    checkList_Rule.addAll(weak_Rule);
+                }
                 if (CollectionUtils.isNotEmpty(strong_Rule)) {
                     checkList_Rule.addAll(strong_Rule);
-                } else if (CollectionUtils.isNotEmpty(weak_Rule)) {
-                    checkList_Rule.addAll(weak_Rule);
                 }
                 for (DataCheckResultVO t : checkList_Rule) {
                     DataCheckExtendPO dataCheckExtendPO = dataCheckExtends.stream().filter(item -> item.getRuleId() == t.getRuleId()).findFirst().orElse(null);
