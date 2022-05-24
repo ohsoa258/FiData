@@ -5,9 +5,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
+import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.service.IBusinessArea;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -73,14 +75,26 @@ public class BusinessAreaController {
 
     @PostMapping("/getDataList")
     @ApiOperation(value = "获取业务域数据列表")
-    public ResultEntity<Page<BusinessPageResultDTO>> getDataList(@RequestBody BusinessQueryDTO query){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataList(query));
+    public ResultEntity<Page<BusinessPageResultDTO>> getDataList(@RequestBody BusinessQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataList(query));
     }
 
     @PostMapping("/getBusinessAreaPublicData")
     @ApiOperation(value = "根据事实字段集合,在Doris中创建相关表")
     public ResultEntity<Object> getBusinessAreaPublicData(@RequestBody IndicatorQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaPublicData(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaPublicData(dto));
+    }
+
+    @PostMapping("/getBusinessAreaTable")
+    @ApiOperation(value = "获取业务域下维度/事实表")
+    public ResultEntity<Page<PipelineTableLogVO>> getBusinessAreaTable(@RequestBody PipelineTableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaTable(dto));
+    }
+
+    @PostMapping("/getBusinessAreaTableDetail")
+    @ApiOperation(value = "根据业务id、表类型、表id,获取表详情")
+    public ResultEntity<BusinessAreaTableDetailDTO> getBusinessAreaTableDetail(@RequestBody BusinessAreaQueryTableDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaTableDetail(dto));
     }
 
 }

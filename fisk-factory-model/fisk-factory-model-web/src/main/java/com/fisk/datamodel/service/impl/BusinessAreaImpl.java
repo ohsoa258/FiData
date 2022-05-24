@@ -5,13 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -29,6 +29,8 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -503,12 +505,29 @@ public class BusinessAreaImpl
     }
 
     @Override
-    public WebIndexDTO getBusinessArea()
-    {
-        WebIndexDTO dto=new WebIndexDTO();
-        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
+    public WebIndexDTO getBusinessArea() {
+        WebIndexDTO dto = new WebIndexDTO();
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
         dto.businessAreaCount = mapper.selectCount(queryWrapper);
         return dto;
+    }
+
+    @Override
+    public Page<PipelineTableLogVO> getBusinessAreaTable(PipelineTableQueryDTO dto) {
+        return baseMapper.businessAreaTable(dto.page, dto);
+    }
+
+    @Override
+    public BusinessAreaTableDetailDTO getBusinessAreaTableDetail(BusinessAreaQueryTableDTO dto) {
+        BusinessAreaTableDetailDTO data = new BusinessAreaTableDetailDTO();
+        if (OlapTableEnum.DIMENSION.getValue() == dto.tableEnum.getValue()) {
+            DimensionPO dimensionPO = dimensionMapper.selectById(dto.tableId);
+            data.tableName = dimensionPO == null ? "" : dimensionPO.dimensionTabName;
+        } else {
+            FactPO factPO = factMapper.selectById(dto.tableId);
+            data.tableName = factPO == null ? "" : factPO.factTabName;
+        }
+        return data;
     }
 
 }

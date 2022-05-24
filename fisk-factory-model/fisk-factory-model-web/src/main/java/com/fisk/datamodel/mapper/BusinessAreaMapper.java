@@ -5,6 +5,8 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamodel.dto.businessarea.BusinessPageDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessPageResultDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -40,10 +42,20 @@ public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
 
     /**
      * 获取业务域数据列表--可根据筛选器
+     *
      * @param page
      * @param query
      * @return 查询结果
      */
     Page<BusinessPageResultDTO> queryList(Page<BusinessPageResultDTO> page, @Param("query") BusinessPageDTO query);
+
+    /**
+     * 获取业务域下维度/事实表
+     *
+     * @param page
+     * @param query
+     * @return
+     */
+    Page<PipelineTableLogVO> businessAreaTable(Page<PipelineTableLogVO> page, @Param("query") PipelineTableQueryDTO query);
 
 }
