@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @Author WangYan
@@ -69,5 +70,12 @@ public class AttributeGroupController {
     @ResponseBody
     public ResultEntity<ResultEnum> addAttributeGroup(@RequestBody AttributeGroupDTO dto) {
         return ResultEntityBuild.build(groupService.addAttributeGroup(dto));
+    }
+
+    @ApiOperation("根据模型id查询属性组")
+    @GetMapping("/getDataByModelId")
+    @ResponseBody
+    public ResultEntity<List<AttributeGroupVO>> getDataByModelId(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataByModelId(id));
     }
 }
