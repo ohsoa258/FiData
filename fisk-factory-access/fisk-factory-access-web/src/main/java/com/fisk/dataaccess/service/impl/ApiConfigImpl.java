@@ -197,9 +197,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEnum editData(ApiConfigDTO dto) {
         // 判断名称是否重复
         QueryWrapper<ApiConfigPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(ApiConfigPO::getApiName, dto.apiName);
+        queryWrapper.lambda().eq(ApiConfigPO::getApiName, dto.apiName).eq(ApiConfigPO::getAppId, dto.appId);
         ApiConfigPO po = baseMapper.selectOne(queryWrapper);
-        if (po != null && po.id != dto.id) {
+        if (po != null && po.id != dto.id && !po.appId.equals(dto.appId)) {
             return ResultEnum.WORKFLOWNAME_EXISTS;
         }
 
