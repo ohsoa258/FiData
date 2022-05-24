@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author WangYan
@@ -32,6 +33,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     AttributeGroupMapper groupMapper;
     @Resource
     AttributeGroupDetailsMapper detailsMapper;
+    @Resource
+    AttributeGroupService attributeGroupService;
 
     @Override
     public AttributeGroupVO getDataByGroupId(Integer id) {
@@ -51,6 +54,23 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             attributeGroupVo.setGroupDetailsList(AttributeGroupMap.INSTANCES.detailsPoToVoList(detailsPoList));
         }
         return attributeGroupVo;
+    }
+
+    @Override
+    public List<AttributeGroupVO> getDataByModelId(Integer modelId) {
+        QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupPO::getModelId,modelId);
+        List<AttributeGroupPO> groupPoList = groupMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(groupPoList)){
+            List<AttributeGroupVO> collect = groupPoList.stream().filter(e -> e.getId() != 0).map(e -> {
+                AttributeGroupVO attributeGroupVo = attributeGroupService.getDataByGroupId((int) e.getId());
+                return attributeGroupVo;
+            }).collect(Collectors.toList());
+            return collect;
+        }
+
+        return null;
     }
 
     @Override

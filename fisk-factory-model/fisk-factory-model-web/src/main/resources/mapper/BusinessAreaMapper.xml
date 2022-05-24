@@ -12,14 +12,44 @@
         create_time,
         ((select count(*) from tb_dimension dim where dim.del_flag=1 and dim.business_id=business.id) +
         (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id)) as modelNumber,
-        ((select count(*) from tb_dimension dim where dim.del_flag=1 and dim.business_id=business.id and dim.is_publish=1) +
-        (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id and fact.is_publish=1)) as numberPositionPublishNumber,
+        ((select count(*) from tb_dimension dim where dim.del_flag=1 and dim.business_id=business.id and
+        dim.is_publish=1) +
+        (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id and
+        fact.is_publish=1)) as numberPositionPublishNumber,
         (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id) as analysisNumber,
-        (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id and fact.doris_publish=1) as analysisPublishNumber
+        (select count(*) from tb_fact fact where fact.del_flag=1 and fact.business_id=business.id and
+        fact.doris_publish=1) as analysisPublishNumber
         from tb_area_business as business
         where del_flag=1
         <if test="query.where !=null and query.where.length()>0 ">
             ${query.where}
         </if>
     </select>
+
+    <select id="businessAreaTable" resultType="com.fisk.task.dto.pipeline.PipelineTableLogVO">
+        SELECT
+        id as tableId,
+        business_id as appId,
+        dimension_tab_name AS tableName,
+        del_flag as tableType,
+        create_time
+        FROM
+	    tb_dimension
+        WHERE
+	    is_publish = 1
+	    AND del_flag = 1 and business_id=${query.appId} and dimension_tab_name like CONCAT('%',#{query.keyword},'%')
+        union all
+        SELECT
+        id as tableId,
+        business_id as appId,
+        fact_tab_name AS tableName,
+        del_flag+1 as tableType,
+        create_time
+        FROM
+	    tb_fact
+        WHERE
+	    is_publish = 1
+	    AND del_flag = 1 and business_id=${query.appId} and fact_tab_name like CONCAT('%',#{query.keyword},'%')
+    </select>
+
 </mapper>

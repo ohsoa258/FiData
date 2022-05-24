@@ -6,6 +6,8 @@ import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 
+import java.util.List;
+
 /**
  * @Author WangYan
  * @Date 2022/5/23 8:34
@@ -19,6 +21,13 @@ public interface AttributeGroupService {
      * @return
      */
     AttributeGroupVO getDataByGroupId(Integer id);
+
+    /**
+     * 根据模型id查询属性组
+     * @param modelId
+     * @return
+     */
+    List<AttributeGroupVO> getDataByModelId(Integer modelId);
 
     /**
      * 修改属性组信息

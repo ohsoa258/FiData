@@ -2,12 +2,14 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -84,8 +86,25 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
 
     /**
      * 获取业务域数量
+     *
      * @return
      */
     WebIndexDTO getBusinessArea();
+
+    /**
+     * 获取业务域下已发布维度/事实表
+     *
+     * @param dto
+     * @return
+     */
+    Page<PipelineTableLogVO> getBusinessAreaTable(PipelineTableQueryDTO dto);
+
+    /**
+     * 根据业务id、表类型、表id,获取表详情
+     *
+     * @param dto
+     * @return
+     */
+    BusinessAreaTableDetailDTO getBusinessAreaTableDetail(BusinessAreaQueryTableDTO dto);
 
 }
