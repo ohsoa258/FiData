@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.app.LogMessageFilterVO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -265,5 +266,11 @@ public class AppRegistrationController {
     @ApiOperation(value = "日志分页筛选器")
     public ResultEntity<Page<PipelineTableLogVO>> logMessageFilter(@RequestBody PipelineTableQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.logMessageFilter(dto));
+    }
+
+    @PostMapping("/getTableNameListByAppIdAndApiId")
+    @ApiOperation(value = "通过appId和apiId查询表名集合")
+    public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNameListByAppIdAndApiId(dto));
     }
 }

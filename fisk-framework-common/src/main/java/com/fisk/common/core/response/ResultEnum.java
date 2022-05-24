@@ -114,6 +114,8 @@ public enum ResultEnum {
     SEND_GET_REQUEST_ERROR(5040, "发送get请求失败,请检查参数"),
     ACCOUNT_CANNOT_OPERATION_API(5041, "该账号无权操作当前api,请检查账号"),
     API_APP_ISNULL(5042, "api的应用信息丢失,请重新检查api的应用信息"),
+    FIELD_CKECK_NOPASS(5043, "本次同步的数据中,有字段校验不通过,详情请看msg"),
+    PUSH_DATA_SQL_ERROR(5044, "执行推送数据的sql异常,请联系管理员"),
 
 
     /**

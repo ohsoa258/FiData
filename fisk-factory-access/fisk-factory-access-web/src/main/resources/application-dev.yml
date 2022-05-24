@@ -38,3 +38,8 @@ pgsql-ods:
   url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified
   username: postgres
   password: Password01!
+
+# 数据质量校验的信息(ip: pg数据源的ip地址; dbName: 连接的ods库)
+data-quality-check:
+  ip: 192.168.1.250
+  dbName: dmp_ods

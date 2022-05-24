@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.dataaccess.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.NifiAccessDTO;
 import com.fisk.dataaccess.dto.TableAccessDTO;
@@ -14,6 +15,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -221,4 +223,14 @@ public interface DataAccessClient {
     @PostMapping("/apiConfig/importData")
     @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
     public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto);
+
+    /**
+     * 通过appId和apiId查询表名集合
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/appRegistration/getTableNameListByAppIdAndApiId")
+    @ApiOperation(value = "通过appId和apiId查询表名集合")
+    public ResultEntity<List<LogMessageFilterVO>> getTableNameListByAppIdAndApiId(@RequestBody PipelineTableQueryDTO dto);
 }

@@ -28,6 +28,7 @@
                 #{appRegistrationPO.delFlag})
     </insert>
 
+    <!-- 非实时api -->
     <select id="logMessageFilterByApi" resultType="com.fisk.dataaccess.app.LogMessageFilterVO">
         SELECT
         app.id AS appId,
@@ -40,10 +41,15 @@
         WHERE
         app.del_flag = 1
         AND api.del_flag = 1
-        AND app.id = #{appId}
         AND api.publish = 1
+        <if test="appId !=null and appId!='' ">
+            AND app.id = #{appId}
+        </if>
         <if test="keyword !=null and keyword!='' ">
             AND api.api_name like concat('%', #{keyword}, '%')
+        </if>
+        <if test="apiId !=null and apiId!='' ">
+            AND api.id = #{apiId}
         </if>
     </select>
 
@@ -58,11 +64,16 @@
         LEFT JOIN tb_api_config AS api ON api.app_id = app.id
         WHERE
         app.del_flag = 1
-        AND app.id = #{appId}
         AND api.del_flag = 1
         AND api.publish=1
+        <if test="appId !=null and appId!='' ">
+            AND app.id = #{appId}
+        </if>
         <if test="keyword !=null and keyword!='' ">
             AND api.api_name like concat('%', #{keyword}, '%')
+        </if>
+        <if test="apiId !=null and apiId!='' ">
+            AND api.id = #{apiId}
         </if>
     </select>
 
@@ -79,9 +90,14 @@
         app.del_flag = 1
         AND tb.del_flag = 1
         AND tb.publish = 1
-        AND app.id = #{appId}
+        <if test="appId !=null and appId!='' ">
+            AND app.id = #{appId}
+        </if>
         <if test="keyword !=null and keyword!='' ">
             AND tb.table_name like concat('%', #{keyword}, '%')
+        </if>
+        <if test="apiId !=null and apiId!='' ">
+            AND tb.id = #{apiId}
         </if>
     </select>
 

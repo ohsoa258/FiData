@@ -88,7 +88,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum pushData(ReceiveDataDTO dto);
+    ResultEntity<Object> pushData(ReceiveDataDTO dto);
 
     /**
      * 获取实时api的临时token

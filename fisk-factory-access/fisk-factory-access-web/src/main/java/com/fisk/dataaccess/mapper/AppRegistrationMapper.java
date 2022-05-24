@@ -78,30 +78,36 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      *
      * @param page    分页对象
      * @param appId   应用id
+     * @param apiId   apiId
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByApi(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+    Page<LogMessageFilterVO> logMessageFilterByApi(
+            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
     /**
      * 日志分页筛选器--实时api
      *
      * @param page    分页对象
      * @param appId   应用id
+     * @param apiId   apiId
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByRestApi(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+    Page<LogMessageFilterVO> logMessageFilterByRestApi(
+            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
     /**
      * 日志分页筛选器--物理表
      *
      * @param page    分页对象
      * @param appId   应用id
+     * @param apiId   物理表id
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByTable(Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword);
+    Page<LogMessageFilterVO> logMessageFilterByTable(
+            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
 
     /**

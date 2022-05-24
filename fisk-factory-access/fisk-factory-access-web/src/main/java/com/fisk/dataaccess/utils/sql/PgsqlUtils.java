@@ -157,7 +157,7 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             con.close();
-            return ResultEnum.PUSH_DATA_ERROR;
+            return ResultEnum.PUSH_DATA_SQL_ERROR;
         }
 
         return ResultEnum.SUCCESS;

@@ -621,13 +621,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 实时api
         if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword);
+            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
             // 非实时api
         } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword);
+            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
             // 物理表
         } else {
-            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword);
+            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
         }
 
         log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
@@ -654,11 +654,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
         }
 
+
         log.info("接入组装后的数据: " + JSON.toJSONString(list));
 
         // TODO 对list进行改造,添加task日志信息
 
         targetPage.setRecords(list);
         return targetPage;
+    }
+
+
+    @Override
+    public List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto) {
+
+        AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (appDataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        Page<LogMessageFilterVO> sourcePage = new Page<>();
+
+        // 实时api
+        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            // 非实时api
+        } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            // 物理表
+        } else {
+            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+        }
+
+        log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
+
+        return sourcePage.getRecords();
     }
 }

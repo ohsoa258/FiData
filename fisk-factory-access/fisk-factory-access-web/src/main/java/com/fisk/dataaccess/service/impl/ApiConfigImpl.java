@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -38,6 +39,9 @@ import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.datagovernance.client.DataQualityClient;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
+import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
@@ -58,10 +62,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.constants.ApiConstants.*;
@@ -109,6 +110,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private String pdf_prd_address;
     @Resource
     private DataQualityClient dataQualityClient;
+    @Value("${data-quality-check.ip}")
+    private String dataQualityCheckIp;
+    @Value("${data-quality-check.db-name}")
+    private String dataQualityCheckName;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -330,23 +335,24 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum pushData(ReceiveDataDTO dto) {
+    public ResultEntity<Object> pushData(ReceiveDataDTO dto) {
         ResultEnum resultEnum = null;
+        StringBuilder msg = null;
         try {
             if (dto.apiCode == null) {
-                return ResultEnum.PUSH_TABLEID_NULL;
+                return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
             }
 
             ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
             if (apiConfigPo == null) {
-                return ResultEnum.API_NOT_EXIST;
+                return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
             }
 
             // flag=false: 第三方调用,需要验证账号是否属于当前api
             if (!dto.flag) {
                 AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
                 if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
-                    return ResultEnum.ACCOUNT_CANNOT_OPERATION_API;
+                    return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
                 }
             }
 
@@ -354,13 +360,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
             log.info("json解析的根节点参数为: " + jsonKey);
 
-            // 每次推送数据前,将stg数据删除
-            pushDataStgToOds(dto.apiCode, 0);
-
             // 根据api_id查询所有物理表
             List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiCode).list();
             if (CollectionUtils.isEmpty(accessPoList)) {
-                return ResultEnum.TABLE_NOT_EXIST;
+                return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
             }
             // 获取所有表数据
             List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
@@ -368,19 +371,24 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
             if (modelApp == null) {
-                return ResultEnum.APP_NOT_EXIST;
+                return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
             }
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey);
+            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode, 0);
+            resultEnum = ResultEnum.getEnum(result.code);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg);
 
             // TODO stg同步到ods(联调task)
-            resultEnum = pushDataStgToOds(dto.apiCode, 1);
+            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+                ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                msg.append("数据推送到ods: ").append(resultEnum1.getMsg());
+            }
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
         }
-        return resultEnum;
+        return ResultEntityBuild.build(resultEnum, msg);
     }
 
     @Override
@@ -801,9 +809,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params jsonStr
      * @params apiTableDtoList
      * @params tablePrefixName pg中的物理表名
+     * @params apiId apiId
+     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
-    private ResultEnum pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey) {
+    private ResultEntity<Object> pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
+                                           String tablePrefixName, String jsonKey, Long apiId, int flag) {
         ResultEnum resultEnum;
+        // 初始化数据
+        StringBuilder checkResultMsg = new StringBuilder();
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
@@ -818,33 +831,52 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             targetTable.forEach(System.out::println);
 
             // TODO 先去数据质量验证
-//            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
-//            if (!CollectionUtils.isEmpty(targetTable)) {
-//                DataCheckWebDTO dto = new DataCheckWebDTO();
-//                dto.ip = "192.168.1.250";
-//                dto.dbName = "dmp_ods";
-//
-//                HashMap<String, JSONArray> body = new HashMap<>();
-//                for (JsonTableData jsonTableData : targetTable) {
-//                    body.put(tablePrefixName + jsonTableData.table, jsonTableData.data);
-//                }
-//
-//                dto.body = body;
-//                ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
-//                log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
-//            }
-//
-//            int a = 1 / 0;
+            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
+            if (!CollectionUtils.isEmpty(targetTable)) {
+                DataCheckWebDTO dto = new DataCheckWebDTO();
+                dto.ip = dataQualityCheckIp;
+                dto.dbName = dataQualityCheckName;
+
+                HashMap<String, JSONArray> body = new HashMap<>();
+                for (JsonTableData jsonTableData : targetTable) {
+                    String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
+                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+                }
+
+                dto.body = body;
+                ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
+                log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
+                // 数据校验结果
+                if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
+                    List<DataCheckResultVO> data = result.data;
+                    if (!CollectionUtils.isEmpty(data)) {
+                        for (DataCheckResultVO e : data) {
+                            // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
+                            if (e.checkRule == CheckRuleEnum.STRONG_RULE.getValue()) {
+                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
+                            } else if (e.checkRule == CheckRuleEnum.WEAK_RULE.getValue()) {
+                                checkResultMsg.append(e.checkResultMsg).append("；");
+                            } else {
+                                return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);
+                            }
+                        }
+                    }
+                }
+                // 校验完成后每次推送数据前,将stg数据删除
+                pushDataStgToOds(apiId, 0);
+            }
+
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
-            // ods_abbreviationName_tableName
+            // stg_abbreviationName_tableName
             resultEnum = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+            checkResultMsg.append("数据推送到stg临时表: ").append(resultEnum.getMsg());
 
         } catch (Exception e) {
-            return ResultEnum.PUSH_DATA_ERROR;
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_ERROR);
         }
 
-        return resultEnum;
+        return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
     }
 
     /**

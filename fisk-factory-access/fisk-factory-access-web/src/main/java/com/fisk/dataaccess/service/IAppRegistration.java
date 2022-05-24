@@ -6,6 +6,7 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.dataaccess.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.*;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -170,4 +171,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return 执行结果
      */
     Page<PipelineTableLogVO> logMessageFilter(PipelineTableQueryDTO dto);
+
+    /**
+     * 通过appId和apiId查询表名集合
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    List<LogMessageFilterVO> getTableNameListByAppIdAndApiId(PipelineTableQueryDTO dto);
 }

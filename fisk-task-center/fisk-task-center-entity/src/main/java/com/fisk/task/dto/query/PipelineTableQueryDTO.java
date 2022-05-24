@@ -1,7 +1,6 @@
 package com.fisk.task.dto.query;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,6 +23,10 @@ public class PipelineTableQueryDTO {
      */
     @ApiModelProperty(value = "keyword")
     public String keyword;
+
+    @ApiModelProperty(value = "tableId or apiId")
+    public Long apiId;
+
 
     /*
     * SynchronousTypeEnum
