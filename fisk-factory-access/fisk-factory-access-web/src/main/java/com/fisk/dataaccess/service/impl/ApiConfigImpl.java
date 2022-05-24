@@ -337,7 +337,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Override
     public ResultEntity<Object> pushData(ReceiveDataDTO dto) {
         ResultEnum resultEnum = null;
-        StringBuilder msg = null;
+        StringBuilder msg = new StringBuilder("");
         try {
             if (dto.apiCode == null) {
                 return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
@@ -378,12 +378,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 将数据同步到pgsql
             ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode, 0);
             resultEnum = ResultEnum.getEnum(result.code);
-            msg.append(resultEnum.getMsg()).append(": ").append(result.msg);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
             // TODO stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                msg.append("数据推送到ods: ").append(resultEnum1.getMsg());
+                msg.append("数据推送到ods: ").append(resultEnum1.getMsg()).append(";");
             }
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
@@ -870,7 +870,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // stg_abbreviationName_tableName
             resultEnum = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
-            checkResultMsg.append("数据推送到stg临时表: ").append(resultEnum.getMsg());
+            checkResultMsg.append("数据推送到stg临时表: ").append(resultEnum.getMsg()).append(";");
 
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_ERROR);
