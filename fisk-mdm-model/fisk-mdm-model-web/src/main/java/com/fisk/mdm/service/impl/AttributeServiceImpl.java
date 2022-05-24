@@ -470,7 +470,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      */
     public List<AttributeInfoDTO> listPublishedAttribute(int entityId) {
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(AttributePO::getEntityId, entityId)
+        queryWrapper.orderByAsc("sort_wieght").lambda().eq(AttributePO::getEntityId, entityId)
                 .eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
                 .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS);
         List<AttributePO> list = baseMapper.selectList(queryWrapper);

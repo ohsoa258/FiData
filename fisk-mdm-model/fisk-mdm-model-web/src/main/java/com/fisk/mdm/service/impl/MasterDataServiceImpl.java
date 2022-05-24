@@ -203,6 +203,18 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 .stream()
                 .map(e -> e.dataTypeEnDisplay = DataTypeEnum.getValue(e.getDataType()).name())
                 .collect(Collectors.toList());
+        //获得业务字段名
+        List<AttributeColumnVO> newColumnList = new ArrayList<>();
+        for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
+            //域字段添加编码和名称表头
+            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
+            }
+            newColumnList.add(attributeColumnVo);
+        }
+        attributeColumnVoList = newColumnList;
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
             List<Integer> attributeIds = new ArrayList<>();
@@ -223,23 +235,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
             attributeGroupVoList.add(attributeGroupVo);
         }
         resultObjectVO.setAttributes(attributeGroupVoList);
-        //获得业务字段名
-        List<String> list = new ArrayList<>();
-        List<AttributeColumnVO> areaColumnList = new ArrayList<>();
-        for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
-            //域字段添加编码和名称表头
-            if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                list.add(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
-                list.add(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
-                areaColumnList.add(getCodeAndName(attributeColumnVo));
-                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
-                attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
-                continue;
-            }
-            list.add(attributeColumnVo.getName());
-        }
-        attributeColumnVoList.addAll(areaColumnList);
-        String businessColumnName = StringUtils.join(list, ",");
+        String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
+                .map(e -> e.getName()).collect(Collectors.toList()), ",");
         //准备主数据集合
         List<Map<String, Object>> data;
         try {
