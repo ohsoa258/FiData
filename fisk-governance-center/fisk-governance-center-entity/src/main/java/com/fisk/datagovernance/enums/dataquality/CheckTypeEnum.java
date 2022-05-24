@@ -42,4 +42,12 @@ public enum CheckTypeEnum implements BaseEnum {
         }
         return CheckTypeEnum.NONE;
     }
+
+    public static CheckTypeEnum getEnumByName(String name){
+        for (CheckTypeEnum e: CheckTypeEnum.values()) {
+            if(e.getName().equals(name))
+                return e;
+        }
+        return CheckTypeEnum.NONE;
+    }
 }
