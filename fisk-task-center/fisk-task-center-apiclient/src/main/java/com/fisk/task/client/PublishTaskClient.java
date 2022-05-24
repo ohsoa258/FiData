@@ -208,7 +208,7 @@ public interface PublishTaskClient {
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiStage")
-    public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 
     /**
      * 创建宽表

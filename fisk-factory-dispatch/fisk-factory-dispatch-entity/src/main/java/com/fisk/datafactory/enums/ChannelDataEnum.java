@@ -111,6 +111,14 @@ public enum ChannelDataEnum implements BaseEnum {
                 return OlapTableEnum.KPI;
             case 7:
                 return OlapTableEnum.KPI;
+            case 8:
+                return OlapTableEnum.WIDETABLE;
+            case 9:
+                return OlapTableEnum.PHYSICS;
+            case 10:
+                return OlapTableEnum.PHYSICS_API;
+            case 11:
+                return OlapTableEnum.PHYSICS;
             default:
                 return null;
         }

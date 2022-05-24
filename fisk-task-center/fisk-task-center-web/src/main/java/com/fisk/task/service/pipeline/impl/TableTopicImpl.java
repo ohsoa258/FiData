@@ -54,6 +54,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         if(tableTopicDTO.topicType!=0){
             conditionMap.put("topic_type",tableTopicDTO.topicType);
         }
+        conditionMap.put("table_id",tableTopicDTO.tableId);
+        conditionMap.put("table_type",tableTopicDTO.tableType);
+        conditionMap.put("topic_type",tableTopicDTO.topicType);
         List<TableTopicDTO> dtoList = tableTopicMapper.selectByMap(conditionMap);
         if (dtoList != null && dtoList.size() != 0) {
             tableTopicDTO.id = dtoList.get(0).id;
@@ -70,7 +73,8 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
         for (Integer id : ids) {
             ComponentId += id + " or ";
         }
-        conditionMap.put("nifi_custom_workflow_detail_id", ComponentId);
+        ComponentId=ComponentId.substring(0,ComponentId.length()-3);
+        conditionMap.put("component_id", ComponentId);
         conditionMap.put("del_flag", 1);
         int i = tableTopicMapper.deleteByMap(conditionMap);
         return i;
@@ -88,11 +92,13 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicDTO>
     }
 
     @Override
-    public TableTopicDTO getTableTopicDTOByComponentId(Integer id) {
+    public TableTopicDTO getTableTopicDTOByComponentId(Integer id,Integer tableId,Integer tableType) {
         TableTopicDTO topicDTO = new TableTopicDTO();
         HashMap<String, Object> conditionMap = new HashMap<>();
         conditionMap.put("component_id", id);
         conditionMap.put("del_flag", 1);
+        conditionMap.put("table_id", tableId);
+        conditionMap.put("table_type", tableType);
         conditionMap.put("topic_type", TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue());
         List<TableTopicDTO> tableTopicDTOS = tableTopicMapper.selectByMap(conditionMap);
         if (tableTopicDTOS != null && tableTopicDTOS.size() != 0) {

@@ -56,8 +56,8 @@ public class PipelineSupervisionController {
     }
 
     @PostMapping("/getNifiStage")
-    public ResultEntity<NifiStageDTO> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
-        ResultEntity<NifiStageDTO> objectResultEntity = new ResultEntity<>();
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+        ResultEntity<List<NifiStageDTO>> objectResultEntity = new ResultEntity<>();
         objectResultEntity.data = iNifiStage.getNifiStage(nifiCustomWorkflowDetailDTO);
         objectResultEntity.code = 0;
         return objectResultEntity;

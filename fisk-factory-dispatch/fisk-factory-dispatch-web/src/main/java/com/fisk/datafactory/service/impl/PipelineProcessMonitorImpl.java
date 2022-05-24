@@ -64,9 +64,11 @@ public class PipelineProcessMonitorImpl implements IPipelineProcessMonitor {
         if (nifiCustomWorkflowDetailDTO == null) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
-        ResultEntity<NifiStageDTO> result = publishTaskClient.getNifiStage(nifiCustomWorkflowDetailDTO);
-        if (result.code == ResultEnum.SUCCESS.getCode()) {
-            return result.data;
+        ResultEntity<List<NifiStageDTO>> result = publishTaskClient.getNifiStage(nifiCustomWorkflowDetailDTO);
+        List<NifiStageDTO> data = result.data;
+        if (result.code == ResultEnum.SUCCESS.getCode()&&CollectionUtils.isNotEmpty(data)) {
+            // todo 后续改为list
+            return result.data.get(0);
         } else {
             log.error("远程调用失败，方法名：【task-center:getNifiStage】");
             return null;

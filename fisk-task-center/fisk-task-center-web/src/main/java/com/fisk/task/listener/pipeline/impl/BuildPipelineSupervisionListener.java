@@ -1,6 +1,7 @@
 package com.fisk.task.listener.pipeline.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -12,6 +13,8 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.OlapPO;
+import com.fisk.task.entity.PipelineTableLogPO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
@@ -102,15 +105,20 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                         default:
                             break;
                     }
-
                     ResultEntity<NifiPortsHierarchyDTO> nIfiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchyDTO);
                     NifiPortsHierarchyDTO data = nIfiPortHierarchy.data;
                     //本节点
                     NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
-                    TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id));
+                    TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
+                            Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
                     //能走到最后说明这一批次走成功了
-                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
-                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id));
+                    pipelineTableLogMapper.updateByComponentId(Math.toIntExact(itselfPort.id),Integer.valueOf(nifiGetPortHierarchyDTO.tableId), kafkaReceiveDTO.tableType);
+                    QueryWrapper<PipelineTableLogPO> Wrapper = new QueryWrapper<>();
+                    Wrapper.lambda().eq(PipelineTableLogPO::getComponentId, itselfPort.id)
+                    .eq(PipelineTableLogPO::getTableId,nifiGetPortHierarchyDTO.tableId)
+                    .eq(PipelineTableLogPO::getTableType,kafkaReceiveDTO.tableType);
+                    PipelineTableLogPO pipelineTableLogPO = pipelineTableLogMapper.selectOne(Wrapper);
+                    nifiStageMapper.updateByComponentId(Math.toIntExact(itselfPort.id),pipelineTableLogPO.id);
                     //本节点topic
                     String topicName1 = topicSelf.topicName;
                     //下一级
@@ -121,10 +129,14 @@ public class BuildPipelineSupervisionListener implements IBuildPipelineSupervisi
                     for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNextDTO : nextList) {
                         //下一级本身
                         NifiCustomWorkflowDetailDTO itselfPort1 = nifiPortsHierarchyNextDTO.itselfPort;
+                        ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort1.componentType);
+                        OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
+                        log.info("表类别:",olapTableEnum);
                         //下一级所有的上一级
                         List<NifiCustomWorkflowDetailDTO> upPortList = nifiPortsHierarchyNextDTO.upPortList;
                         //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
-                        TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id));
+                        TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id),
+                                Integer.valueOf(itselfPort1.tableId), olapTableEnum.getValue());
                         String topicKey = "";
                         Object key = redisUtil.get(topicDTO.topicName);
                         if (key == null) {

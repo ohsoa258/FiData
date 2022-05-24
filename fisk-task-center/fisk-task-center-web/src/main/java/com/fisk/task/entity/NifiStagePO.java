@@ -15,4 +15,5 @@ public class NifiStagePO extends BasePO {
     public int transitionPhase;
     public int insertPhase;
     public String comment;
+    public Integer pipelineTableLogId;
 }
