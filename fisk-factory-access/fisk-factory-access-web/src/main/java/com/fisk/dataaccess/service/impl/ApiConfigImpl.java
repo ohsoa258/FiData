@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
+import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -38,15 +39,21 @@ import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datagovernance.client.DataQualityClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datamodel.vo.DataModelTableVO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
+import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
@@ -255,7 +262,45 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 根据api_id查询物理表集合
         List<TableAccessPO> poList = getListTableAccessByApiId(id);
         // 删除api下所有物理表
-        poList.forEach(e -> tableAccessImpl.deleteData(e.id));
+        for (TableAccessPO e : poList) {
+
+            ResultEntity<NifiVO> result = tableAccessImpl.deleteData(e.id);
+
+            log.info("方法返回值,{}", result.data);
+            // TODO 删除pg库中的表和nifi流程
+            NifiVO nifiVO = result.data;
+
+            PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+            pgsqlDelTableDTO.userId = nifiVO.userId;
+            pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
+            pgsqlDelTableDTO.delApp = false;
+            pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
+            if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(nifiVO.tableList)) {
+
+                pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(f -> {
+                    TableListDTO dto = new TableListDTO();
+                    dto.tableAtlasId = f.tableAtlasId;
+                    dto.tableName = f.tableName;
+                    dto.userId = nifiVO.userId;
+                    return dto;
+                }).collect(Collectors.toList());
+            }
+            log.info("删表对象信息: " + JSON.toJSONString(pgsqlDelTableDTO));
+            // 删除pg库对应的表
+            ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+
+            DataModelVO dataModelVO = new DataModelVO();
+            dataModelVO.delBusiness = false;
+            DataModelTableVO dataModelTableVO = new DataModelTableVO();
+            dataModelTableVO.ids = nifiVO.tableIdList;
+            dataModelTableVO.type = OlapTableEnum.PHYSICS;
+            dataModelVO.physicsIdList = dataModelTableVO;
+            dataModelVO.businessId = nifiVO.appId;
+            dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+            dataModelVO.userId = nifiVO.userId;
+            // 删除nifi流程
+            publishTaskClient.deleteNifiFlow(dataModelVO);
+        }
 
         // 删除api
         return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
