@@ -170,7 +170,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
             pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
             pipelineTableLogPO.appId = appId;
-            if (nifiStagePO.componentId == 0) {
+            if (nifiStagePO.componentId == 0||nifiStagePO.componentId ==null) {
                 pipelineTableLogPO.dispatchType = 0;
             } else {
                 pipelineTableLogPO.dispatchType = 1;
