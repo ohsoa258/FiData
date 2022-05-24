@@ -520,7 +520,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -540,7 +540,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\tEND) AS checkResult \n" +
                                     "\t) T1 ",
                             dataCheckExtend.fieldName, CheckTypeEnum.UNIQUE_CHECK.getName(),
-                            dataCheckPO.useTableName, dataCheckExtend.fieldName, CheckTypeEnum.UNIQUE_CHECK.getName(),
+                            dataCheckExtend.fieldName, CheckTypeEnum.UNIQUE_CHECK.getName(),
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.UNIQUE_CHECK.getName(), templatePO.getTemplateDesc(),
@@ -553,7 +553,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -573,7 +573,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\tEND) AS checkResult \n" +
                                     "\t) T2",
                             dataCheckExtend.fieldName, CheckTypeEnum.NONEMPTY_CHECK.getName(),
-                            dataCheckPO.useTableName, dataCheckExtend.fieldName, CheckTypeEnum.NONEMPTY_CHECK.getName(),
+                            dataCheckExtend.fieldName, CheckTypeEnum.NONEMPTY_CHECK.getName(),
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.NONEMPTY_CHECK.getName(), templatePO.getTemplateDesc(),
@@ -586,7 +586,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -606,7 +606,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     "\t\tEND) AS checkResult \n" +
                                     "\t) T3\n",
                             dataCheckExtend.fieldName, CheckTypeEnum.LENGTH_CHECK.getName(),
-                            dataCheckPO.useTableName, dataCheckExtend.fieldName, CheckTypeEnum.LENGTH_CHECK.getName(),
+                            dataCheckExtend.fieldName, CheckTypeEnum.LENGTH_CHECK.getName(),
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.LENGTH_CHECK.getName(), templatePO.getTemplateDesc(),
@@ -793,25 +793,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         ? "[%s]" + "=" + "'%s'" :
                         dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
                                 ? "\"%s\"" + "=" + "'%s'" :
-                                "";
-        return sqlWhereStr;
-    }
-
-    /**
-     * @return java.lang.String
-     * @description 拼接数据库SQL
-     * @author dick
-     * @date 2022/5/24 12:15
-     * @version v1.0
-     * @params dataSourceTypeEnum
-     */
-    public String getSqlFieldKey(DataSourceTypeEnum dataSourceTypeEnum) {
-        String sqlWhereStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
-                ? "`%s`" + "=" + "%s" :
-                dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
-                        ? "[%s]" + "=" + "%s" :
-                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
-                                ? "\"%s\"" + "=" + "%s" :
                                 "";
         return sqlWhereStr;
     }
