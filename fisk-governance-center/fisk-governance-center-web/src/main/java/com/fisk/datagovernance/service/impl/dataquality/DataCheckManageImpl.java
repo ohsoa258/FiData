@@ -200,6 +200,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckPOQueryWrapper.lambda()
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
+                    .eq(DataCheckPO::getRuleState,RuleStateEnum.Enable.getValue())
+                    .orderByAsc(DataCheckPO::getRuleSort)
                     .in(DataCheckPO::getUseTableName, tableNames)
                     .in(DataCheckPO::getTemplateId, templateIds);
             List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
@@ -293,6 +295,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
                     .eq(DataCheckPO::getUseTableName, dto.tableName)
+                    .eq(DataCheckPO::getRuleState,RuleStateEnum.Enable.getValue())
+                    .orderByAsc(DataCheckPO::getRuleSort)
                     .in(DataCheckPO::getTemplateId, templateIds);
             List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
             if (CollectionUtils.isEmpty(dataCheckPOList)) {
@@ -520,7 +524,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：%s，%s已通过' ELSE '字段名：%s，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -553,7 +557,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：%s，%s已通过' ELSE '字段名：%s，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -586,7 +590,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     checkSqlStr.append(String.format("SELECT\n" +
                                     "\t*,(CASE\n" +
                                     "\t\t\tWHEN checkResult='success' THEN\n" +
-                                    "\t\t\t'字段名：【%s】，%s已通过' ELSE '字段名：【%s】，%s未通过' \n" +
+                                    "\t\t\t'字段名：%s，%s已通过' ELSE '字段名：%s，%s未通过' \n" +
                                     "\t\tEND) AS checkResultMsg \n" +
                                     "FROM\n" +
                                     "\t(\n" +
@@ -664,12 +668,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS, dataCheckResults);
             }
 
-            List<DataCheckResultVO> dataCheckResults_Y = dataCheckResults.stream().filter(t -> (t.getCheckResult().toString().equals("success"))).collect(Collectors.toList());
             List<DataCheckResultVO> dataCheckResults_N = dataCheckResults.stream().filter(t -> (t.getCheckResult().toString().equals("fail"))).collect(Collectors.toList());
 
             StringBuilder builder_UpdateSql = new StringBuilder();
-            // 校验通过，根据参数调整表数据
-            if (StringUtils.isNotEmpty(updateField_Y) && CollectionUtils.isNotEmpty(dataCheckResults_Y)) {
+            // 默认校验通过，根据参数调整表数据
+            if (StringUtils.isNotEmpty(updateField_Y)) {
                 String tableName = useTableName;
                 if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                     tableName = "`" + tableName + "`";
@@ -678,7 +681,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
                     tableName = String.format("\"%s\"", tableName);
                 }
-                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; ", tableName, updateField_Y, checkFieldWhere));
+                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n", tableName, updateField_Y, checkFieldWhere));
             }
             // 校验不通过，根据参数调整表数据
             if ((StringUtils.isNotEmpty(updateField_N) || StringUtils.isNotEmpty(updateField_R) || StringUtils.isNotEmpty(msgField))
@@ -710,8 +713,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
                     String tableName = useTableName;
                     String fieldName = dataCheckExtendPO.fieldName;
-                    String fieldLengthFunParm = null;
-                    String updateMsgFieldSql = null;
+                    String fieldLengthFunParm = "";
+                    String updateMsgFieldSql = "";
                     if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         fieldName = "`" + fieldName + "`";
                         tableName = "`" + tableName + "`";
@@ -720,7 +723,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             if (StringUtils.isNotEmpty(updateFieldSql)) {
                                 updateMsgFieldSql = ",";
                             }
-                            updateMsgFieldSql += String.format("`%s`" + "=" + "%s", msgField, "CONCAT_WS(\";\",`" + msgField + "`,'" + t.getCheckResultMsg() + "')");
+                            updateMsgFieldSql += String.format("`%s`" + "=" + "%s ", msgField, "CONCAT_WS(\"；\",`" + msgField + "`,'" + t.getCheckResultMsg() + "')");
                         }
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
                         fieldName = "[" + fieldName + "]";
@@ -730,7 +733,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             if (StringUtils.isNotEmpty(updateFieldSql)) {
                                 updateMsgFieldSql = ",";
                             }
-                            updateMsgFieldSql += String.format("[%s]" + "=" + "%s", msgField, "[" + msgField + "]+" + "';" + t.getCheckResultMsg() + "'");
+                            String caseSql = String.format("CASE \n" +
+                                    "\tWHEN %s='' or %s is null THEN\n" +
+                                    "\t\t%s\n" +
+                                    "\tELSE\n" +
+                                    "\t\t%s\n" +
+                                    "END", "[" + msgField + "]", "[" + msgField + "]", "'" + t.getCheckResultMsg() + "'", "[" + msgField + "]+" + "'；" + t.getCheckResultMsg() + "'");
+                            updateMsgFieldSql += String.format("[%s]" + "=" + "%s ", msgField, caseSql);
                         }
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
                         fieldName = String.format("\"%s\"", fieldName);
@@ -740,7 +749,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             if (StringUtils.isNotEmpty(updateFieldSql)) {
                                 updateMsgFieldSql = ",";
                             }
-                            updateMsgFieldSql += String.format("\"%s\"" + "=" + "%s", msgField, "\"" + msgField + "\"" + " || " + "';" + t.getCheckResultMsg() + "'");
+                            String caseSql = String.format("CASE \n" +
+                                    "\tWHEN %s='' or %s is null THEN\n" +
+                                    "\t\t%s\n" +
+                                    "\tELSE\n" +
+                                    "\t\t%s\n" +
+                                    "END", "\"" + msgField + "\"", "\"" + msgField + "\"", "'" + t.getCheckResultMsg() + "'", "\"" + msgField + "\"" + " || " + "'；" + t.getCheckResultMsg() + "'");
+                            updateMsgFieldSql += String.format("\"%s\"" + "=" + "%s ", msgField, caseSql);
                         }
                     }
 
@@ -750,18 +765,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         if (StringUtils.isNotEmpty(updateMsgFieldSql)) {
                             updateSql += updateMsgFieldSql;
                         }
-                        updateSql += "WHERE 1=1 " + checkFieldWhere;
+                        updateSql += " WHERE 1=1 " + checkFieldWhere;
                         String updateSqlStr = "";
                         switch (checkTypeEnum) {
                             case UNIQUE_CHECK:
                                 updateSqlStr = String.format(" SELECT %s FROM %s GROUP BY %s HAVING COUNT ( %s ) > 1", fieldName, tableName, fieldName, fieldName);
-                                updateSql += String.format(" AND %s IN (%s);", fieldName, updateSqlStr);
+                                updateSql += String.format(" AND %s IN (%s);\n", fieldName, updateSqlStr);
                                 break;
                             case LENGTH_CHECK:
-                                updateSql += String.format(" AND %s( %s )> %s;", fieldLengthFunParm, fieldName, dataCheckExtendPO.fieldLength);
+                                updateSql += String.format(" AND %s( %s )> %s;\n", fieldLengthFunParm, fieldName, dataCheckExtendPO.fieldLength);
                                 break;
                             case NONEMPTY_CHECK:
-                                updateSql += String.format(" AND (%s IS NULL OR %s = '');", fieldName, fieldName);
+                                updateSql += String.format(" AND (%s IS NULL OR %s = '');\n", fieldName, fieldName);
                                 break;
                         }
                         builder_UpdateSql.append(updateSql);
