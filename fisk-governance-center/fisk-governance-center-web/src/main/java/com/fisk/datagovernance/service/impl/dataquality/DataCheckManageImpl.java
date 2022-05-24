@@ -232,16 +232,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 switch (templateType) {
                     case FIELD_RULE_TEMPLATE:
                         // 字段规则模板
-                        dataCheckResult = CheckFieldRule_Web(dataSourceInfo, dataCheckPO, dataCheckExtendFilters.get(0), data);
+                        dataCheckResult = CheckFieldRule_Web(templatePO, dataSourceInfo, dataCheckPO, dataCheckExtendFilters.get(0), data);
                         break;
                 }
                 if (dataCheckResult != null) {
                     if (dataCheckResult.code != ResultEnum.SUCCESS.getCode()) {
                         DataCheckResultVO checkResultVO = new DataCheckResultVO();
+                        checkResultVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                        checkResultVO.setRuleName(dataCheckPO.getRuleName());
                         checkResultVO.setCheckDataBase(dto.getDbName());
                         checkResultVO.setCheckTable(dataCheckPO.getUseTableName());
+                        checkResultVO.setCheckField(dataCheckExtendFilters.get(0).fieldName);
                         checkResultVO.setCheckResult("fail");
                         checkResultVO.setCheckResultMsg(dataCheckResult.getMsg());
+                        checkResultVO.setCheckDesc(templatePO.templateDesc);
+                        checkResultVO.setCheckRule(dataCheckPO.getCheckRule());
                         dataCheckResults.add(checkResultVO);
                         resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
                     } else {
@@ -358,7 +363,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 switch (templateType) {
                     case FIELD_RULE_TEMPLATE:
                         // 获取校验结果
-                        fieldRule_SqlBuilder.append(GetCheckFieldRule_Sql(dataSourceType, dataSourceInfo.conDbname, dataCheckPO,
+                        fieldRule_SqlBuilder.append(GetCheckFieldRule_Sql(templatePO, dataSourceType, dataSourceInfo.conDbname, dataCheckPO,
                                 dataCheckExtendFilters, checkFieldWhere));
                         break;
                 }
@@ -386,7 +391,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckExtendPO  数据校验扩展属性PO
      * @params data 校验的数据
      */
-    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Web(DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Web(TemplatePO templatePO, DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
         List<DataCheckResultVO> dataCheckResult = new ArrayList<>();
         String[] split = dataCheckExtendPO.checkType.split(",");
         if (split == null || split.length == 0) {
@@ -413,7 +418,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckDataBase(dataSourceInfo.getConDbname());
             dataCheckResultVO.setCheckTable(dataCheckPO.getUseTableName());
             dataCheckResultVO.setCheckField(fieldName);
-            dataCheckResultVO.setCheckDesc(TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName());
+            dataCheckResultVO.setCheckDesc(templatePO.getTemplateDesc());
             switch (checkTypeEnum) {
                 case LENGTH_CHECK:
                     dataCheckResultVO.setCheckType(CheckTypeEnum.LENGTH_CHECK.getName());
@@ -477,7 +482,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dataCheckExtendFilters 数据校验扩展属性PO
      * @params checkFieldWhere 校验查询条件字段
      */
-    public String GetCheckFieldRule_Sql(DataSourceTypeEnum dataSourceTypeEnum, String dataBaseName, DataCheckPO dataCheckPO, List<DataCheckExtendPO> dataCheckExtendFilters, String checkFieldWhere) {
+    public String GetCheckFieldRule_Sql(TemplatePO templatePO, DataSourceTypeEnum dataSourceTypeEnum, String dataBaseName, DataCheckPO dataCheckPO, List<DataCheckExtendPO> dataCheckExtendFilters, String checkFieldWhere) {
         StringBuilder checkSqlStr = new StringBuilder();
 
         DataCheckExtendPO dataCheckExtend = dataCheckExtendFilters.get(0);
@@ -532,7 +537,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.UNIQUE_CHECK.getValue(),
-                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            templatePO.getTemplateDesc(),
                             fieldName, tableName, checkFieldWhere, fieldName, fieldName));
                     break;
                 case NONEMPTY_CHECK:
@@ -565,7 +570,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.NONEMPTY_CHECK.getValue(),
-                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            templatePO.getTemplateDesc(),
                             fieldName, tableName, fieldName, fieldName, checkFieldWhere));
                     break;
                 case LENGTH_CHECK:
@@ -598,7 +603,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
                             dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
                             CheckTypeEnum.LENGTH_CHECK.getValue(),
-                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            templatePO.getTemplateDesc(),
                             fieldName, tableName, fieldLengthFunParm, fieldName, dataCheckExtend.fieldLength, checkFieldWhere));
                     break;
             }
