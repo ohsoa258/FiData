@@ -12,15 +12,15 @@ import java.util.Date;
 @Data
 @TableName("tb_pipeline_table_log")
 public class PipelineTableLogPO extends BasePO {
-    public int componentId;
-    public int tableId;
-    public int tableType;
-    public int state;
+    public Integer componentId;
+    public Integer tableId;
+    public Integer tableType;
+    public Integer state;
     public String comment;
     public Date startTime;
     public Date endTime;
-    public int counts;
-    public int appId;
-    public int dispatchType;
+    public Integer counts;
+    public Integer appId;
+    public Integer dispatchType;
 
 }
