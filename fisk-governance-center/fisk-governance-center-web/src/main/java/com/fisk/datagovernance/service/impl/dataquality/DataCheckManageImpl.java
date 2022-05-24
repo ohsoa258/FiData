@@ -23,6 +23,7 @@ import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
+import org.apache.catalina.User;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +34,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -89,7 +87,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataCheckDTO dto) {
-        //第一步：验证模板是否存在
+        //第一步：验证模板是否存在以及表规则是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
@@ -230,20 +228,30 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 if (CollectionUtils.isEmpty(data)) {
                     continue;
                 }
-                List<DataCheckResultVO> dataCheckResult = null;
+                ResultEntity<List<DataCheckResultVO>> dataCheckResult = null;
                 switch (templateType) {
                     case FIELD_RULE_TEMPLATE:
                         // 字段规则模板
                         dataCheckResult = CheckFieldRule_Web(dataSourceInfo, dataCheckPO, dataCheckExtendFilters.get(0), data);
                         break;
                 }
-                if (CollectionUtils.isNotEmpty(dataCheckResult)) {
-                    for (DataCheckResultVO dataCheckResultVO : dataCheckResult) {
-                        if (resultEnum == ResultEnum.SUCCESS &&
-                                dataCheckResultVO.getCheckResult().toString().equals("fail")) {
-                            resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_WEBCHECK_NOPASS;
+                if (dataCheckResult != null) {
+                    if (dataCheckResult.code != ResultEnum.SUCCESS.getCode()) {
+                        DataCheckResultVO checkResultVO = new DataCheckResultVO();
+                        checkResultVO.setCheckDataBase(dto.getDbName());
+                        checkResultVO.setCheckTable(dataCheckPO.getUseTableName());
+                        checkResultVO.setCheckResult("fail");
+                        checkResultVO.setCheckResultMsg(dataCheckResult.getMsg());
+                        dataCheckResults.add(checkResultVO);
+                        resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
+                    } else {
+                        for (DataCheckResultVO dataCheckResultVO : dataCheckResult.getData()) {
+                            if (resultEnum == ResultEnum.SUCCESS &&
+                                    dataCheckResultVO.getCheckResult().toString().equals("fail")) {
+                                resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
+                            }
+                            dataCheckResults.add(dataCheckResultVO);
                         }
-                        dataCheckResults.add(dataCheckResultVO);
                     }
                 }
             }
@@ -255,12 +263,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckSyncDTO dto) {
-        List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
+        ResultEntity<List<DataCheckResultVO>> result = new ResultEntity<>();
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 第一步：查询数据源信息
             DataSourceConPO dataSourceInfo = dataSourceConManageImpl.getDataSourceInfo(dto.getIp(), dto.getDbName());
             if (dataSourceInfo == null) {
-                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, dataCheckResults);
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_EXISTS, null);
             }
             // 第二步：查询数据校验模块下同步校验场景下的模板
             QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
@@ -270,7 +279,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     .eq(TemplatePO::getDelFlag, 1);
             List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
             if (CollectionUtils.isEmpty(templatePOList)) {
-                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, dataCheckResults);
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, null);
             }
             // 第三步：查询配置的表规则信息
             List<Long> templateIds = templatePOList.stream().map(TemplatePO::getId).collect(Collectors.toList());
@@ -278,31 +287,84 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckPOQueryWrapper.lambda()
                     .eq(DataCheckPO::getDatasourceId, dataSourceInfo.getId())
                     .eq(DataCheckPO::getDelFlag, 1)
-                    .in(DataCheckPO::getUseTableName, dto.tables)
+                    .eq(DataCheckPO::getUseTableName, dto.tableName)
                     .in(DataCheckPO::getTemplateId, templateIds);
             List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
             if (CollectionUtils.isEmpty(dataCheckPOList)) {
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
             }
-            // 第四步：循环规则，验证stg数据是否合规
+            // 第四步：查询校验规则的扩展属性
+            List<Long> ruleIds = dataCheckPOList.stream().map(DataCheckPO::getId).collect(Collectors.toList());
+            QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+            dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1).in(DataCheckExtendPO::getRuleId, ruleIds);
+            List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+            if (CollectionUtils.isEmpty(dataCheckExtends)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, null);
+            }
+            // 第五步：循环规则，验证stg数据是否合规
             DataSourceTypeEnum dataSourceType = DataSourceTypeEnum.getEnum(dataSourceInfo.getConType());
-            Connection connection = dataSourceConManageImpl.getStatement(dataSourceType.getDriverName(),
-                    dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
+            Connection connection = dataSourceConManageImpl.getStatement(dataSourceType.getDriverName(), dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
+            // 第六步：根据请求参数规则生成SQL条件与修改语句
+            String checkFieldWhere = "",
+                    updateField_Y = "",
+                    updateField_N = "",
+                    updateField_R = "";
+            if (dto != null) {
+                // 校验/更新依据字段
+                if (CollectionUtils.isNotEmpty(dto.checkByFieldMap)) {
+                    for (Map.Entry<String, Object> entry : dto.checkByFieldMap.entrySet()) {
+                        String sqlWhereStr = getSqlField(dataSourceType);
+                        sqlWhereStr = String.format(sqlWhereStr, entry.getKey(), entry.getValue());
+                        checkFieldWhere += " AND " + sqlWhereStr;
+                    }
+                }
+                // 校验成功修改字段
+                if (CollectionUtils.isNotEmpty(dto.updateFieldMap_Y)) {
+                    for (Map.Entry<String, Object> entry : dto.updateFieldMap_Y.entrySet()) {
+                        String sqlWhereStr = getSqlField(dataSourceType);
+                        sqlWhereStr = String.format(sqlWhereStr, entry.getKey(), entry.getValue());
+                        updateField_Y += sqlWhereStr + ",";
+                    }
+                    updateField_Y = updateField_Y.substring(0, updateField_Y.length() - 1);
+                }
+                // 校验失败修改字段
+                if (CollectionUtils.isNotEmpty(dto.updateFieldMap_N)) {
+                    for (Map.Entry<String, Object> entry : dto.updateFieldMap_N.entrySet()) {
+                        String sqlWhereStr = getSqlField(dataSourceType);
+                        sqlWhereStr = String.format(sqlWhereStr, entry.getKey(), entry.getValue());
+                        updateField_N += sqlWhereStr + ",";
+                    }
+                    updateField_N = updateField_N.substring(0, updateField_N.length() - 1);
+                }
+                // 校验失败但校验规则为弱类型修改字段
+                if (CollectionUtils.isNotEmpty(dto.updateFieldMap_R)) {
+                    for (Map.Entry<String, Object> entry : dto.updateFieldMap_R.entrySet()) {
+                        String sqlWhereStr = getSqlField(dataSourceType);
+                        sqlWhereStr = String.format(sqlWhereStr, entry.getKey(), entry.getValue());
+                        updateField_R += sqlWhereStr + ",";
+                    }
+                    updateField_R = updateField_R.substring(0, updateField_R.length() - 1);
+                }
+            }
+            // 第七步：获取校验结果
+            StringBuilder fieldRule_SqlBuilder = new StringBuilder();
             for (DataCheckPO dataCheckPO : dataCheckPOList) {
                 TemplatePO templatePO = templatePOList.stream().filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                List<DataCheckResultVO> dataCheckResult = null;
+                List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(dataCheckExtendFilters)) {
+                    continue;
+                }
                 switch (templateType) {
                     case FIELD_RULE_TEMPLATE:
-                        // 字段规则模板
-                        dataCheckResult = CheckFieldRule_Sync(connection, dataCheckPO);
+                        // 获取校验结果
+                        fieldRule_SqlBuilder.append(GetCheckFieldRule_Sql(dataSourceType, dataSourceInfo.conDbname, dataCheckPO,
+                                dataCheckExtendFilters, checkFieldWhere));
                         break;
                 }
-                if (CollectionUtils.isNotEmpty(dataCheckResult)) {
-                    dataCheckResult.forEach(t -> {
-                        dataCheckResults.add(t);
-                    });
-                }
+            }
+            if (fieldRule_SqlBuilder != null && fieldRule_SqlBuilder.length() > 0) {
+                result = UpdateFieleData_Sync(connection, fieldRule_SqlBuilder.toString(), dto.tableName, checkFieldWhere, updateField_Y, updateField_N, updateField_R, dto.msgField, dataSourceType, dataCheckExtends);
             }
             if (connection != null) {
                 connection.close();
@@ -310,31 +372,36 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         } catch (Exception ex) {
             throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
         }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
+        return result;
     }
 
     /**
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO>
+     * @return com.fisk.common.core.response.ResultEntity<java.util.List < com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO>>
      * @description 页面校验--字段规则验证
      * @author dick
-     * @date 2022/5/18 15:36
+     * @date 2022/5/24 12:11
      * @version v1.0
-     * @params dataSourceInfo
-     * @params dataCheckPO
-     * @params dataCheckExtendPO
-     * @params data
+     * @params dataSourceInfo 数据源信息
+     * @params dataCheckPO 数据校验PO
+     * @params dataCheckExtendPO  数据校验扩展属性PO
+     * @params data 校验的数据
      */
-    public List<DataCheckResultVO> CheckFieldRule_Web(DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public ResultEntity<List<DataCheckResultVO>> CheckFieldRule_Web(DataSourceConPO dataSourceInfo, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
         List<DataCheckResultVO> dataCheckResult = new ArrayList<>();
         String[] split = dataCheckExtendPO.checkType.split(",");
         if (split == null || split.length == 0) {
-            return dataCheckResult;
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, null);
         }
         String fieldName = dataCheckExtendPO.fieldName;
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fieldName)) {
+                fieldValues.add(jsonObject.getString(fieldName));
+            }
+        }
+        if (fieldValues.size() != data.size()) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_REQUESTJSON_ERROR, null);
         }
         for (String x : split) {
             CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(x));
@@ -342,7 +409,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             DataCheckResultVO dataCheckResultVO = new DataCheckResultVO();
             dataCheckResultVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
             dataCheckResultVO.setRuleName(dataCheckPO.getRuleName());
-            dataCheckResultVO.setCheckRule(CheckRuleEnum.getEnum(dataCheckPO.getCheckRule()));
+            dataCheckResultVO.setCheckRule(dataCheckPO.getCheckRule());
             dataCheckResultVO.setCheckDataBase(dataSourceInfo.getConDbname());
             dataCheckResultVO.setCheckTable(dataCheckPO.getUseTableName());
             dataCheckResultVO.setCheckField(fieldName);
@@ -395,27 +462,177 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     break;
             }
         }
-        return dataCheckResult;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResult);
     }
 
     /**
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO>
+     * @return java.lang.String
      * @description 同步校验--字段规则验证
      * @author dick
-     * @date 2022/5/18 15:37
+     * @date 2022/5/24 12:12
      * @version v1.0
-     * @params conn
-     * @params dataCheckPO
+     * @params dataSourceTypeEnum 数据源类型
+     * @params dataBaseName 库名称
+     * @params dataCheckPO 数据校验PO
+     * @params dataCheckExtendFilters 数据校验扩展属性PO
+     * @params checkFieldWhere 校验查询条件字段
      */
-    public List<DataCheckResultVO> CheckFieldRule_Sync(Connection conn, DataCheckPO dataCheckPO) {
+    public String GetCheckFieldRule_Sql(DataSourceTypeEnum dataSourceTypeEnum, String dataBaseName, DataCheckPO dataCheckPO, List<DataCheckExtendPO> dataCheckExtendFilters, String checkFieldWhere) {
+        StringBuilder checkSqlStr = new StringBuilder();
+
+        DataCheckExtendPO dataCheckExtend = dataCheckExtendFilters.get(0);
+        String tableName = dataCheckPO.useTableName;
+        String fieldName = dataCheckExtend.fieldName;
+        String fieldLengthFunParm = null;
+
+        if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+            fieldName = "`" + fieldName + "`";
+            tableName = "`" + tableName + "`";
+            fieldLengthFunParm = "CHARACTER_LENGTH";
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+            fieldName = "[" + fieldName + "]";
+            tableName = "[" + tableName + "]";
+            fieldLengthFunParm = "LEN";
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+            fieldName = String.format("\"%s\"", fieldName);
+            tableName = String.format("\"%s\"", tableName);
+            fieldLengthFunParm = "CHARACTER_LENGTH";
+        }
+        String[] split = dataCheckExtend.checkType.split(",");
+        for (String x : split) {
+            CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(x));
+            switch (checkTypeEnum) {
+                case UNIQUE_CHECK:
+                    if (checkSqlStr.toString() != null && checkSqlStr.toString().length() > 0) {
+                        checkSqlStr.append(" UNION ALL ");
+                    }
+                    checkSqlStr.append(String.format("SELECT\n" +
+                                    "\t*,(CASE\n" +
+                                    "\t\t\tWHEN checkResult='success' THEN\n" +
+                                    "\t\t\t'表名：【%s】，字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\tEND) AS checkResultMsg \n" +
+                                    "FROM\n" +
+                                    "\t(\n" +
+                                    "\tSELECT\n" +
+                                    "\t\t'%s' AS ruleId,\n" +
+                                    "\t\t'%s' AS ruleName,\n" +
+                                    "\t\t'%s' AS checkRule,\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
+                                    "\t\t\t\n" +
+                                    "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE 1=1 %s GROUP BY %s HAVING count( %s )> 1 ) temp )> 0 THEN\n" +
+                                    "\t\t\t'fail' ELSE 'success' \n" +
+                                    "\t\tEND) AS checkResult \n" +
+                                    "\t) T1 ",
+                            dataCheckPO.useTableName, dataCheckExtend.fieldName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
+                            dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            CheckTypeEnum.UNIQUE_CHECK.getValue(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            fieldName, tableName, checkFieldWhere, fieldName, fieldName));
+                    break;
+                case NONEMPTY_CHECK:
+                    if (checkSqlStr.toString() != null && checkSqlStr.toString().length() > 0) {
+                        checkSqlStr.append(" UNION ALL ");
+                    }
+                    checkSqlStr.append(String.format("SELECT\n" +
+                                    "\t*,(CASE\n" +
+                                    "\t\t\tWHEN checkResult='success' THEN\n" +
+                                    "\t\t\t'表名：【%s】，字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\tEND) AS checkResultMsg \n" +
+                                    "FROM\n" +
+                                    "\t(\n" +
+                                    "\tSELECT\n" +
+                                    "\t\t'%s' AS ruleId,\n" +
+                                    "\t\t'%s' AS ruleName,\n" +
+                                    "\t\t'%s' AS checkRule,\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
+                                    "\t\t\t\n" +
+                                    "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE (%s IS NULL OR %s = '') %s ) temp )> 0 THEN\n" +
+                                    "\t\t\t'fail' ELSE 'success' \n" +
+                                    "\t\tEND) AS checkResult \n" +
+                                    "\t) T2",
+                            dataCheckPO.useTableName, dataCheckExtend.fieldName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
+                            dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            CheckTypeEnum.NONEMPTY_CHECK.getValue(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            fieldName, tableName, fieldName, fieldName, checkFieldWhere));
+                    break;
+                case LENGTH_CHECK:
+                    if (checkSqlStr.toString() != null && checkSqlStr.toString().length() > 0) {
+                        checkSqlStr.append(" UNION ALL ");
+                    }
+                    checkSqlStr.append(String.format("SELECT\n" +
+                                    "\t*,(CASE\n" +
+                                    "\t\t\tWHEN checkResult='success' THEN\n" +
+                                    "\t\t\t'表名：【%s】，字段名：【%s】，%s已通过' ELSE '表名：【%s】，字段名：【%s】，%s未通过' \n" +
+                                    "\t\tEND) AS checkResultMsg \n" +
+                                    "FROM\n" +
+                                    "\t(\n" +
+                                    "\tSELECT\n" +
+                                    "\t\t'%s' AS ruleId,\n" +
+                                    "\t\t'%s' AS ruleName,\n" +
+                                    "\t\t'%s' AS checkRule,\n" +
+                                    "\t\t'%s' AS checkDataBase,\n" +
+                                    "\t\t'%s' AS checkTable,\n" +
+                                    "\t\t'%s' AS checkField,\n" +
+                                    "\t\t'%s' AS checkType,\n" +
+                                    "\t\t'%s' AS checkDesc,\n" +
+                                    "\t(CASE\n" +
+                                    "\t\t\t\n" +
+                                    "\t\t\tWHEN ( SELECT COUNT(*) FROM ( SELECT %s FROM %s WHERE %s( %s )> %s %s ) temp )> 0 THEN\n" +
+                                    "\t\t\t'fail' ELSE 'success' \n" +
+                                    "\t\tEND) AS checkResult \n" +
+                                    "\t) T3\n",
+                            dataCheckPO.useTableName, dataCheckExtend.fieldName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            dataCheckPO.getId(), dataCheckPO.getRuleName(), dataCheckPO.getCheckRule(),
+                            dataBaseName, dataCheckPO.useTableName, dataCheckExtend.fieldName,
+                            CheckTypeEnum.LENGTH_CHECK.getValue(),
+                            TemplateTypeEnum.FIELD_RULE_TEMPLATE.getName(),
+                            fieldName, tableName, fieldLengthFunParm, fieldName, dataCheckExtend.fieldLength, checkFieldWhere));
+                    break;
+            }
+        }
+
+        return checkSqlStr.toString();
+    }
+
+    /**
+     * @return com.fisk.common.core.response.ResultEntity<java.util.List < com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO>>
+     * @description 字段校验--同步校验，修改表数据
+     * @author dick
+     * @date 2022/5/24 12:13
+     * @version v1.0
+     * @params conn 连接
+     * @params checkSql 校验的sql
+     * @params useTableName 表名称
+     * @params checkFieldWhere 校验的字段条件
+     * @params updateField_Y 校验成功修改字段
+     * @params updateField_N 校验失败修改字段
+     * @params updateField_R 校验失败但校验规则为弱类型修改字段
+     * @params msgField 消息字段
+     * @params dataSourceTypeEnum 数据源类型
+     * @params dataCheckExtends 数据校验扩展属性
+     */
+    public ResultEntity<List<DataCheckResultVO>> UpdateFieleData_Sync(Connection conn, String checkSql, String useTableName, String checkFieldWhere, String updateField_Y, String updateField_N, String updateField_R, String msgField, DataSourceTypeEnum dataSourceTypeEnum, List<DataCheckExtendPO> dataCheckExtends) {
         List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
         Statement st = null;
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             JSONArray array = new JSONArray();
-            // JDBC 读取大量数据时的 ResultSet resultSetType 设置TYPE_FORWARD_ONLY
-            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st = conn.createStatement();
             assert st != null;
-            ResultSet rs = st.executeQuery(dataCheckPO.createRule);
+            ResultSet rs = st.executeQuery(checkSql);
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             while (rs.next()) {
@@ -430,23 +647,140 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             rs.close();
             if (array != null && array.size() > 0) {
                 dataCheckResults = array.toJavaList(DataCheckResultVO.class);
-                dataCheckResults.forEach(t -> {
-                    t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-                    t.setRuleName(dataCheckPO.getRuleName());
-                    t.setCheckRule(CheckRuleEnum.getEnum(dataCheckPO.getCheckRule()));
-                    if (t.getCheckResult().toString().equals("fail")) {
-                        t.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过",
-                                t.getCheckTable(), t.getCheckField(), t.getCheckType()));
-                    } else {
-                        t.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s已通过",
-                                t.getCheckTable(), t.getCheckField(), t.getCheckType()));
+            }
+
+            if (CollectionUtils.isEmpty(dataCheckResults)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS, dataCheckResults);
+            }
+
+            List<DataCheckResultVO> dataCheckResults_Y = dataCheckResults.stream().filter(t -> (t.getCheckResult().toString().equals("success"))).collect(Collectors.toList());
+            List<DataCheckResultVO> dataCheckResults_N = dataCheckResults.stream().filter(t -> (t.getCheckResult().toString().equals("fail"))).collect(Collectors.toList());
+
+            StringBuilder builder_UpdateSql = new StringBuilder();
+            // 校验通过，根据参数调整表数据
+            if (StringUtils.isNotEmpty(updateField_Y) && CollectionUtils.isNotEmpty(dataCheckResults_Y)) {
+                String tableName = useTableName;
+                if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+                    tableName = "`" + tableName + "`";
+                } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                    tableName = "[" + tableName + "]";
+                } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+                    tableName = String.format("\"%s\"", tableName);
+                }
+                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s", tableName, updateField_Y, checkFieldWhere));
+            }
+            // 校验不通过，根据参数调整表数据
+            if ((StringUtils.isNotEmpty(updateField_N) || StringUtils.isNotEmpty(updateField_R)) && CollectionUtils.isNotEmpty(dataCheckResults_N)) {
+                /*
+                 * 1、判断是否存在强规则类型的规则，存在直接以校验失败处理
+                 * 2、强规则类型的规则不存在，都是弱类型规则，则以校验失败但类型为弱类型处理
+                 * 3、如存在强规则类型校验的规则，则无需在进行弱规则类型的规则的校验
+                 * */
+                resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
+                List<DataCheckResultVO> checkList_Rule = new ArrayList<>();
+                List<DataCheckResultVO> strong_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == CheckRuleEnum.STRONG_RULE.getValue())).collect(Collectors.toList());
+                List<DataCheckResultVO> weak_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == CheckRuleEnum.WEAK_RULE.getValue())).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(strong_Rule)) {
+                    checkList_Rule.addAll(strong_Rule);
+                } else if (CollectionUtils.isNotEmpty(weak_Rule)) {
+                    checkList_Rule.addAll(weak_Rule);
+                }
+                for (DataCheckResultVO t : checkList_Rule) {
+                    DataCheckExtendPO dataCheckExtendPO = dataCheckExtends.stream().filter(item -> item.getRuleId() == t.getRuleId()).findFirst().orElse(null);
+                    String tableName = useTableName;
+                    String fieldName = dataCheckExtendPO.fieldName;
+                    String fieldLengthFunParm = null;
+                    if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+                        fieldName = "`" + fieldName + "`";
+                        tableName = "`" + tableName + "`";
+                        fieldLengthFunParm = "CHARACTER_LENGTH";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                        fieldName = "[" + fieldName + "]";
+                        tableName = "[" + tableName + "]";
+                        fieldLengthFunParm = "LEN";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE) {
+                        fieldName = String.format("\"%s\"", fieldName);
+                        tableName = String.format("\"%s\"", tableName);
+                        fieldLengthFunParm = "CHARACTER_LENGTH";
                     }
-                });
+                    String updateFieldSql = "";
+                    // 判断是否是弱类型，弱类型则读取弱类型修改字段集合
+                    if (t.checkRule == CheckRuleEnum.WEAK_RULE.getValue()) {
+                        updateFieldSql = updateField_R;
+                    } else if (t.checkRule == CheckRuleEnum.STRONG_RULE.getValue()) {
+                        updateFieldSql = updateField_N;
+                    }
+                    if (StringUtils.isNotEmpty(updateFieldSql)) {
+                        CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(t.checkType));
+                        String updateSql = String.format("UPDATE %s SET %s ", tableName, updateFieldSql);
+                        if (StringUtils.isNotEmpty(msgField)) {
+                            String sqlField = getSqlFieldKey(dataSourceTypeEnum);
+                            updateSql += String.format(sqlField, msgField, msgField + "+';" + t.getCheckResultMsg() + "'");
+                        }
+                        updateSql += "WHERE 1=1 " + checkFieldWhere;
+                        String updateSqlStr = "";
+                        switch (checkTypeEnum) {
+                            case UNIQUE_CHECK:
+                                updateSqlStr = String.format(" SELECT %s FROM %s GROUP BY %s HAVING COUNT ( %s ) > 1", fieldName, tableName, fieldName, fieldName);
+                                updateSql += String.format(" AND %s IN (%s);", fieldName, updateSqlStr);
+                                break;
+                            case LENGTH_CHECK:
+                                updateSql += String.format(" AND %s( %s )> %s;", fieldLengthFunParm, fieldName, dataCheckExtendPO.fieldLength);
+                                break;
+                            case NONEMPTY_CHECK:
+                                updateSql += String.format(" AND (%s IS NULL OR %s = '');", fieldName, fieldName);
+                                break;
+                        }
+                        builder_UpdateSql.append(updateSql);
+                    }
+                }
+            }
+            // 执行修改语句
+            if (builder_UpdateSql != null && builder_UpdateSql.toString().length() > 0) {
+                st.executeUpdate(builder_UpdateSql.toString());
             }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, ex);
         }
-        return dataCheckResults;
+        return ResultEntityBuild.buildData(resultEnum, dataCheckResults);
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 拼接数据库SQL
+     * @author dick
+     * @date 2022/5/24 12:15
+     * @version v1.0
+     * @params dataSourceTypeEnum
+     */
+    public String getSqlField(DataSourceTypeEnum dataSourceTypeEnum) {
+        String sqlWhereStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
+                ? "`%s`" + "=" + "'%s'" :
+                dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
+                        ? "[%s]" + "=" + "'%s'" :
+                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
+                                ? "\"%s\"" + "=" + "'%s'" :
+                                "";
+        return sqlWhereStr;
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 拼接数据库SQL
+     * @author dick
+     * @date 2022/5/24 12:15
+     * @version v1.0
+     * @params dataSourceTypeEnum
+     */
+    public String getSqlFieldKey(DataSourceTypeEnum dataSourceTypeEnum) {
+        String sqlWhereStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
+                ? "`%s`" + "=" + "%s" :
+                dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
+                        ? "[%s]" + "=" + "%s" :
+                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRE
+                                ? "\"%s\"" + "=" + "%s" :
+                                "";
+        return sqlWhereStr;
     }
 
     /**
@@ -472,8 +806,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         switch (templateTypeEnum) {
             case FIELD_RULE_TEMPLATE:
                 //强类型模板规则
-                rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum,
-                        dto.tableName, dto.dataCheckExtends);
+                rule = new ResultEntity<>();
+                rule.setCode(0);
+                //rule = createField_StrongRule(dataSourceConPO.conDbname, dataSourceTypeEnum,dto.tableName, dto.dataCheckExtends);
                 break;
             case FIELD_AGGREGATE_TEMPLATE:
                 //字段聚合波动阈值模板

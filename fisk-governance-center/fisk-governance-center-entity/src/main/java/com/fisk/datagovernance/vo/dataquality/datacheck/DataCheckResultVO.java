@@ -58,7 +58,7 @@ public class DataCheckResultVO
     public String checkResultMsg;
 
     /**
-     * 校验规则
+     * 校验规则 1：强规则，2：若规则
      */
-    public CheckRuleEnum checkRule;
+    public int checkRule;
 }
