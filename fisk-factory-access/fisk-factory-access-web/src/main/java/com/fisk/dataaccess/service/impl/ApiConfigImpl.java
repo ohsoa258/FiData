@@ -531,9 +531,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                         // 组装同步表信息
                         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
-                        TableSyncmodeDTO tableSyncmodeDto = TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo);
-                        tableSyncmodeDto.id = data.id;
-                        data.tableSyncmodeDTO = tableSyncmodeDto;
+                        if (tableSyncmodePo != null) {
+                            TableSyncmodeDTO tableSyncmodeDto = TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo);
+                            tableSyncmodeDto.id = data.id;
+                            data.tableSyncmodeDTO = tableSyncmodeDto;
+                        }
 
                         // 组装业务表信息
                         TableBusinessPO tableBusinessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
