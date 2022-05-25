@@ -51,9 +51,12 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
 import com.fisk.task.dto.daconfig.ProcessorConfig;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
+import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.enums.DataClassifyEnum;
+import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringEscapeUtils;
@@ -432,10 +435,59 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据推送到ods: ").append(resultEnum1.getMsg()).append(";");
             }
+
+            // TODO 保存本次的日志信息
+            savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
         }
         return ResultEntityBuild.build(resultEnum, msg);
+    }
+
+    private void savePushDataLogToTask(ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
+        ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiCode).one();
+        if (apiConfigPo == null) {
+            throw new FkException(ResultEnum.APICONFIG_ISNULL);
+        }
+
+        Date startTime = new Date();
+        NifiStageMessageDTO nifiStageMessageDto = new NifiStageMessageDTO();
+        NifiStageDTO nifiStageDto = new NifiStageDTO();
+        nifiStageDto.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+        nifiStageDto.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+        nifiStageDto.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+        try {
+            Date endTime = new Date();
+//            nifiStageMessageDto.message = msg;
+            nifiStageDto.comment = msg;
+            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
+            nifiStageMessageDto.startTime = startTime;
+            nifiStageMessageDto.endTime = endTime;
+            nifiStageMessageDto.counts = COUNT_SQL;
+            nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+                nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                nifiStageDto.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                nifiStageDto.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+
+            }
+
+            log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
+            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
+        } catch (Exception e) {
+            Date endTime = new Date();
+            nifiStageMessageDto.message = msg == null ? "运行失败" : msg;
+            nifiStageDto.comment = msg == null ? "运行失败" : msg;
+            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
+            nifiStageMessageDto.startTime = startTime;
+            nifiStageMessageDto.endTime = endTime;
+            nifiStageMessageDto.counts = COUNT_SQL;
+            nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+
+            log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
+            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
+        }
     }
 
     @Override
