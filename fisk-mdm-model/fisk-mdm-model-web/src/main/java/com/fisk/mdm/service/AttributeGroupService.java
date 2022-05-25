@@ -63,4 +63,11 @@ public interface AttributeGroupService {
      * @return
      */
     ResultEnum addAttributeGroup(AttributeGroupDTO dto);
+
+    /**
+     * 根据属性id查询属性组
+     * @param attributeId
+     * @return
+     */
+    List<AttributeGroupDTO> getDataByAttributeId(Integer attributeId);
 }

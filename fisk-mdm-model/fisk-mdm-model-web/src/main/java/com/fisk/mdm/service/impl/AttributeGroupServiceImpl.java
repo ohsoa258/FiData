@@ -161,6 +161,24 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    @Override
+    public List<AttributeGroupDTO> getDataByAttributeId(Integer attributeId) {
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getAttributeId,attributeId);
+        List<AttributeGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(detailsPoList)){
+            List<AttributeGroupDTO> collect = detailsPoList.stream().map(e -> {
+                AttributeGroupPO groupPo = groupMapper.selectById(e.getGroupId());
+                AttributeGroupDTO groupDto = AttributeGroupMap.INSTANCES.poToDto(groupPo);
+                return groupDto;
+            }).collect(Collectors.toList());
+            return collect;
+        }
+
+        return null;
+    }
+
     /**
      * 判断属性组是否存在
      * @param id

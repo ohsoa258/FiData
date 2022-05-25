@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -19,6 +20,7 @@ import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.EventLogService;
@@ -56,6 +58,8 @@ public class EntityServiceImpl implements EntityService {
     UserClient userClient;
     @Resource
     AttributeMapper attributeMapper;
+    @Resource
+    AttributeGroupService groupService;
 
     @Override
     public EntityVO getDataById(Integer id) {
@@ -295,6 +299,12 @@ public class EntityServiceImpl implements EntityService {
                         e.setModelId(entityPo.getModelId());
                         return e;
                     }).collect(Collectors.toList());
+
+            // 获取属性组
+            dtoList.stream().filter(e -> e.getId() != null).forEach(e -> {
+                List<AttributeGroupDTO> attributeGroupList = groupService.getDataByAttributeId(e.getId());
+                e.setAttributeGroupList(attributeGroupList);
+            });
 
             // 获取创建人、修改人
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);

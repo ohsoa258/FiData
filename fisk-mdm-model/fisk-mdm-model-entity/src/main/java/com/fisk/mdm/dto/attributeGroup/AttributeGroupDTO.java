@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class AttributeGroupDTO {
 
+    private Integer id;
     private Integer modelId;
     private String name;
     private String details;

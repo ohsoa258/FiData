@@ -2,10 +2,12 @@ package com.fisk.mdm.dto.attribute;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.baseObject.vo.BaseUserInfoVO;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Author WangYan
@@ -135,6 +137,11 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
      * 关联实体id
      */
     private Integer domainEntityId;
+
+    /**
+     * 属性组信息
+     */
+    private List<AttributeGroupDTO> attributeGroupList;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @ApiModelProperty(value = "创建时间",required = true)

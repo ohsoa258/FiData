@@ -24,7 +24,7 @@ import java.util.List;
  */
 @Api(tags = {SwaggerConfig.TAG_6})
 @RestController
-@RequestMapping("/attributeGroup")
+@RequestMapping("/viwGroup")
 public class ViwGroupController {
 
     @Resource
