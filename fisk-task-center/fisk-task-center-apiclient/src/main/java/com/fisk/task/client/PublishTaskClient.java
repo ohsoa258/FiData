@@ -292,6 +292,6 @@ public interface PublishTaskClient {
      *
      * @return
      */
-    @PostMapping("/pipeline/getPipelineTableLogs")
-    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLogs(@RequestParam String data, @RequestParam String pipelineTableQuery);
+    @PostMapping("/pipeline/getPipelineTableLog")
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam String data, @RequestParam String pipelineTableQuery);
 }

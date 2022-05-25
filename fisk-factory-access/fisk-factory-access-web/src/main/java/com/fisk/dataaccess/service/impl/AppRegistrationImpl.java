@@ -657,7 +657,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         log.info("接入组装后的数据: " + JSON.toJSONString(list));
         // 接入日志完善 对list进行改造,添加task日志信息
-        ResultEntity<List<PipelineTableLogVO>> pipelineTableLogs = publishTaskClient.getPipelineTableLogs(JSON.toJSONString(list), JSON.toJSONString(dto));
+        ResultEntity<List<PipelineTableLogVO>> pipelineTableLogs = publishTaskClient.getPipelineTableLog(JSON.toJSONString(list), JSON.toJSONString(dto));
         List<PipelineTableLogVO> data = pipelineTableLogs.data;
         targetPage.setRecords(data);
         targetPage.setTotal(data.size());

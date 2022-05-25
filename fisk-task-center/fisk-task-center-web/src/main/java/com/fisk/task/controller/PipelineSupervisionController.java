@@ -83,8 +83,8 @@ public class PipelineSupervisionController {
      *
      * @return
      */
-    @PostMapping("/getPipelineTableLogs")
-    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLogs(@RequestParam String data, @RequestBody String pipelineTableQuery) {
+    @PostMapping("/getPipelineTableLog")
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam String data, @RequestBody String pipelineTableQuery) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.getPipelineTableLogs(data, pipelineTableQuery));
     }
 
