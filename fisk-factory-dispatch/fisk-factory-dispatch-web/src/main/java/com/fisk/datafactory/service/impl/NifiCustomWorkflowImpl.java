@@ -265,12 +265,12 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         // 参数校验
         NifiCustomWorkflowPO model = this.getById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         // 执行删除
         int i = mapper.deleteByIdWithFill(model);
         if (i <= 0) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query().eq("workflow_id", model.workflowId).list();
@@ -280,7 +280,7 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                 publishTaskClient.deleteTableTopicByComponentId(collect);
             }
         } catch (Exception e) {
-            return ResultEnum.SAVE_DATA_ERROR;
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
 
         return ResultEnum.SUCCESS;
