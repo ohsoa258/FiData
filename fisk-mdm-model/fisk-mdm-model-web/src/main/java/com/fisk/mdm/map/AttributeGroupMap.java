@@ -52,6 +52,13 @@ public interface AttributeGroupMap {
 
     /**
      * po => dto
+     * @param po
+     * @return
+     */
+    AttributeGroupDetailsDTO detailsPoToDto(AttributeGroupDetailsPO po);
+
+    /**
+     * po => dto
      *
      * @param poList
      * @return

@@ -12,8 +12,13 @@ import com.fisk.mdm.map.AttributeGroupMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeGroupMapper;
 import com.fisk.mdm.service.AttributeGroupService;
+import com.fisk.mdm.service.AttributeService;
+import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +40,10 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     AttributeGroupDetailsMapper detailsMapper;
     @Resource
     AttributeGroupService attributeGroupService;
+    @Resource
+    UserClient userClient;
+    @Resource
+    AttributeService attributeService;
 
     @Override
     public AttributeGroupVO getDataByGroupId(Integer id) {
@@ -51,7 +60,20 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
                 .eq(AttributeGroupDetailsPO::getGroupId,id);
         List<AttributeGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(detailsPoList)){
-            attributeGroupVo.setGroupDetailsList(AttributeGroupMap.INSTANCES.detailsPoToVoList(detailsPoList));
+            List<AttributeGroupDetailsDTO> collect = detailsPoList.stream().map(e -> {
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                AttributeGroupDetailsDTO dto = AttributeGroupMap.INSTANCES.detailsPoToDto(e);
+                if (data != null){
+                    dto.setName(data.getName());
+                    dto.setDisplayName(data.getDisplayName());
+                    dto.setDesc(data.getDesc());
+                    dto.setDataType(data.getDataType());
+                    dto.setDataTypeLength(data.getDataTypeLength());
+                    dto.setDataTypeDecimalLength(data.getDataTypeDecimalLength());
+                }
+                return dto;
+            }).collect(Collectors.toList());
+            attributeGroupVo.setGroupDetailsList(collect);
         }
         return attributeGroupVo;
     }
@@ -67,6 +89,9 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
                 AttributeGroupVO attributeGroupVo = attributeGroupService.getDataByGroupId((int) e.getId());
                 return attributeGroupVo;
             }).collect(Collectors.toList());
+
+            // 获取创建人、修改人
+            ReplenishUserInfo.replenishUserName(collect, userClient, UserFieldEnum.USER_ACCOUNT);
             return collect;
         }
 

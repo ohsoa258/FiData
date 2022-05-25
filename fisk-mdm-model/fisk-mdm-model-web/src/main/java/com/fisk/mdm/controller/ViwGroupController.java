@@ -22,7 +22,7 @@ import java.util.List;
  * @Date 2022/5/24 15:29
  * @Version 1.0
  */
-@Api(tags = {SwaggerConfig.TAG_6})
+@Api(tags = {SwaggerConfig.TAG_7})
 @RestController
 @RequestMapping("/viwGroup")
 public class ViwGroupController {
