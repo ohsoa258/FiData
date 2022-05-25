@@ -1,10 +1,12 @@
 package com.fisk.datamodel.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -91,11 +93,10 @@ public class BusinessAreaImpl
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(BusinessAreaDTO businessAreaDTO) {
         //判断名称是否重复
-        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
-        BusinessAreaPO businessAreaPo=mapper.selectOne(queryWrapper);
-        if (businessAreaPo !=null)
-        {
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName, businessAreaDTO.businessName);
+        BusinessAreaPO businessAreaPo = mapper.selectOne(queryWrapper);
+        if (businessAreaPo != null) {
             return ResultEnum.BUSINESS_AREA_EXIST;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
@@ -128,11 +129,10 @@ public class BusinessAreaImpl
             return ResultEnum.DATA_NOTEXISTS;
         }
         //判断名称是否重复
-        QueryWrapper<BusinessAreaPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName,businessAreaDTO.businessName);
-        BusinessAreaPO businessAreaPo=mapper.selectOne(queryWrapper);
-        if (businessAreaPo !=null && businessAreaPo.id !=businessAreaDTO.id)
-        {
+        QueryWrapper<BusinessAreaPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BusinessAreaPO::getBusinessName, businessAreaDTO.businessName);
+        BusinessAreaPO businessAreaPo = mapper.selectOne(queryWrapper);
+        if (businessAreaPo != null && businessAreaPo.id != businessAreaDTO.id) {
             return ResultEnum.BUSINESS_AREA_EXIST;
         }
         BusinessAreaPO po = businessAreaDTO.toEntity(BusinessAreaPO.class);
@@ -178,40 +178,33 @@ public class BusinessAreaImpl
                         }
                     }
                     //删除维度文件夹
-                    QueryWrapper<DimensionFolderPO> queryWrapper1=new QueryWrapper<>();
+                    QueryWrapper<DimensionFolderPO> queryWrapper1 = new QueryWrapper<>();
                     queryWrapper1.select("id")
-                            .notIn("id",folder.stream().distinct().collect(Collectors.toList()))
-                            .lambda().eq(DimensionFolderPO::getBusinessId,id);
-                    List<Integer> ids=(List) dimensionFolderMapper.selectObjs(queryWrapper1);
-                    if (!CollectionUtils.isEmpty(ids))
-                    {
-                        if (dimensionFolderMapper.deleteBatchIds(ids)==0)
-                        {
+                            .notIn("id", folder.stream().distinct().collect(Collectors.toList()))
+                            .lambda().eq(DimensionFolderPO::getBusinessId, id);
+                    List<Integer> ids = (List) dimensionFolderMapper.selectObjs(queryWrapper1);
+                    if (!CollectionUtils.isEmpty(ids)) {
+                        if (dimensionFolderMapper.deleteBatchIds(ids) == 0) {
                             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 //删除所有维度文件夹
-                QueryWrapper<DimensionFolderPO> folderPoQueryWrapper=new QueryWrapper<>();
-                folderPoQueryWrapper.select("id").lambda().eq(DimensionFolderPO::getBusinessId,id);
-                List<Integer> folderIds=(List) dimensionFolderMapper.selectObjs(folderPoQueryWrapper);
-                if (!CollectionUtils.isEmpty(folderIds))
-                {
-                    if (dimensionFolderMapper.deleteBatchIds(folderIds)==0)
-                    {
+                QueryWrapper<DimensionFolderPO> folderPoQueryWrapper = new QueryWrapper<>();
+                folderPoQueryWrapper.select("id").lambda().eq(DimensionFolderPO::getBusinessId, id);
+                List<Integer> folderIds = (List) dimensionFolderMapper.selectObjs(folderPoQueryWrapper);
+                if (!CollectionUtils.isEmpty(folderIds)) {
+                    if (dimensionFolderMapper.deleteBatchIds(folderIds) == 0) {
                         throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                     }
                 }
                 //删除所有维度
-                QueryWrapper<DimensionPO> dimensionPoQueryWrapper=new QueryWrapper<>();
-                dimensionPoQueryWrapper.select("id").lambda().eq(DimensionPO::getBusinessId,id);
-                List<Integer> ids=(List) dimensionMapper.selectObjs(dimensionPoQueryWrapper);
-                if (!CollectionUtils.isEmpty(ids))
-                {
-                    if (dimensionMapper.deleteBatchIds(ids)==0)
-                    {
+                QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
+                dimensionPoQueryWrapper.select("id").lambda().eq(DimensionPO::getBusinessId, id);
+                List<Integer> ids = (List) dimensionMapper.selectObjs(dimensionPoQueryWrapper);
+                if (!CollectionUtils.isEmpty(ids)) {
+                    if (dimensionMapper.deleteBatchIds(ids) == 0) {
                         throw new FkException(ResultEnum.SAVE_DATA_ERROR);
                     }
                 }
@@ -235,11 +228,11 @@ public class BusinessAreaImpl
 
     /**
      * 检查维度表是否与其他业务域维度/事实是否有关联
+     *
      * @param id
      * @return
      */
-    private List<Long> checkIsAssociate(long id)
-    {
+    private List<Long> checkIsAssociate(long id) {
         List<Long> dimensionIds = new ArrayList<>();
         List<Long> idArray = new ArrayList<>();
         QueryWrapper<DimensionFolderPO> queryWrapper = new QueryWrapper<>();
@@ -279,29 +272,25 @@ public class BusinessAreaImpl
 
     /**
      * 根据业务域id,删除所有业务过程/事实
+     *
      * @param id
      */
-    private void delBusinessProcessFact(long id)
-    {
+    private void delBusinessProcessFact(long id) {
         //删除业务域下所有业务过程
-        QueryWrapper<BusinessProcessPO> businessProcessPoQueryWrapper=new QueryWrapper<>();
-        businessProcessPoQueryWrapper.select("id").lambda().eq(BusinessProcessPO::getBusinessId,id);
-        List<Integer> businessProcessPoList=(List)businessProcessMapper.selectObjs(businessProcessPoQueryWrapper);
-        if (!CollectionUtils.isEmpty(businessProcessPoList))
-        {
-            if (businessProcessMapper.deleteBatchIds(businessProcessPoList)==0)
-            {
+        QueryWrapper<BusinessProcessPO> businessProcessPoQueryWrapper = new QueryWrapper<>();
+        businessProcessPoQueryWrapper.select("id").lambda().eq(BusinessProcessPO::getBusinessId, id);
+        List<Integer> businessProcessPoList = (List) businessProcessMapper.selectObjs(businessProcessPoQueryWrapper);
+        if (!CollectionUtils.isEmpty(businessProcessPoList)) {
+            if (businessProcessMapper.deleteBatchIds(businessProcessPoList) == 0) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
         //删除业务域下所有事实表
-        QueryWrapper<FactPO> factPoQueryWrapper1=new QueryWrapper<>();
-        factPoQueryWrapper1.select("id").lambda().eq(FactPO::getBusinessId,id);
-        List<Integer> factIdList=(List)factMapper.selectObjs(factPoQueryWrapper1);
-        if (!CollectionUtils.isEmpty(factIdList))
-        {
-            if (factMapper.deleteBatchIds(factIdList)==0)
-            {
+        QueryWrapper<FactPO> factPoQueryWrapper1 = new QueryWrapper<>();
+        factPoQueryWrapper1.select("id").lambda().eq(FactPO::getBusinessId, id);
+        List<Integer> factIdList = (List) factMapper.selectObjs(factPoQueryWrapper1);
+        if (!CollectionUtils.isEmpty(factIdList)) {
+            if (factMapper.deleteBatchIds(factIdList) == 0) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
         }
@@ -309,10 +298,11 @@ public class BusinessAreaImpl
 
     /**
      * 拼接niFi删除表参数
+     *
      * @param id
      * @return
      */
-    private DataModelVO niFiDelTable(long id){
+    private DataModelVO niFiDelTable(long id) {
         DataModelVO vo = new DataModelVO();
         vo.dataClassifyEnum = DataClassifyEnum.DATAMODELING;
         vo.businessId = String.valueOf(id);
@@ -330,50 +320,44 @@ public class BusinessAreaImpl
         factPoQueryWrapper2.select("id").lambda().eq(FactPO::getBusinessId, id);
         factTable.ids = (List) factMapper.selectObjs(factPoQueryWrapper2).stream().collect(Collectors.toList());
         vo.factIdList = factTable;
-        vo.userId=userHelper.getLoginUserInfo().id;
+        vo.userId = userHelper.getLoginUserInfo().id;
         return vo;
     }
 
-    private PgsqlDelTableDTO delDwDorisTable(List<Long> idArray,long businessAreaId)
-    {
-        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
-        dto.delApp=true;
-        dto.userId=userHelper.getLoginUserInfo().id;
-        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
-        List<TableListDTO> tableList=new ArrayList<>();
+    private PgsqlDelTableDTO delDwDorisTable(List<Long> idArray, long businessAreaId) {
+        PgsqlDelTableDTO dto = new PgsqlDelTableDTO();
+        dto.delApp = true;
+        dto.userId = userHelper.getLoginUserInfo().id;
+        dto.businessTypeEnum = BusinessTypeEnum.DATAMODEL;
+        List<TableListDTO> tableList = new ArrayList<>();
 
         //获取维度表名称集合
-        QueryWrapper<DimensionPO> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("dimension_tab_name").lambda()
-                .eq(DimensionPO::getBusinessId,businessAreaId);
-        if (!CollectionUtils.isEmpty(idArray))
-        {
-            queryWrapper.notIn("id",idArray);
+                .eq(DimensionPO::getBusinessId, businessAreaId);
+        if (!CollectionUtils.isEmpty(idArray)) {
+            queryWrapper.notIn("id", idArray);
         }
-        List<String> dimensionNameList=(List) dimensionMapper.selectObjs(queryWrapper);
-        if (!CollectionUtils.isEmpty(dimensionNameList))
-        {
-            for (String name:dimensionNameList)
-            {
-                TableListDTO table=new TableListDTO();
-                table.tableName=name;
+        List<String> dimensionNameList = (List) dimensionMapper.selectObjs(queryWrapper);
+        if (!CollectionUtils.isEmpty(dimensionNameList)) {
+            for (String name : dimensionNameList) {
+                TableListDTO table = new TableListDTO();
+                table.tableName = name;
                 tableList.add(table);
             }
         }
         //获取事实表名称集合
-        QueryWrapper<FactPO> factPoQueryWrapper=new QueryWrapper<>();
-        factPoQueryWrapper.select("fact_tab_name").lambda().eq(FactPO::getBusinessId,businessAreaId);
-        List<String> factNameList=(List) factMapper.selectObjs(factPoQueryWrapper);
-        if (!CollectionUtils.isEmpty(factNameList))
-        {
-            for (String name:factNameList)
-            {
-                TableListDTO table=new TableListDTO();
-                table.tableName=name;
+        QueryWrapper<FactPO> factPoQueryWrapper = new QueryWrapper<>();
+        factPoQueryWrapper.select("fact_tab_name").lambda().eq(FactPO::getBusinessId, businessAreaId);
+        List<String> factNameList = (List) factMapper.selectObjs(factPoQueryWrapper);
+        if (!CollectionUtils.isEmpty(factNameList)) {
+            for (String name : factNameList) {
+                TableListDTO table = new TableListDTO();
+                table.tableName = name;
                 tableList.add(table);
             }
         }
-        dto.tableList=tableList;
+        dto.tableList = tableList;
         return dto;
     }
 
@@ -387,19 +371,19 @@ public class BusinessAreaImpl
 
     @Override
     public List<FilterFieldDTO> getBusinessAreaColumn() {
-        MetaDataConfigDTO dto=new MetaDataConfigDTO();
-        dto.url= getConfig.url;
-        dto.userName=getConfig.username;
-        dto.password=getConfig.password;
-        dto.tableName="tb_area_business";
-        dto.filterSql=FilterSqlConstants.BUSINESS_AREA_SQL;
+        MetaDataConfigDTO dto = new MetaDataConfigDTO();
+        dto.url = getConfig.url;
+        dto.userName = getConfig.username;
+        dto.password = getConfig.password;
+        dto.tableName = "tb_area_business";
+        dto.filterSql = FilterSqlConstants.BUSINESS_AREA_SQL;
         return getMetadata.getMetadataList(dto);
     }
 
     @Override
     public Page<BusinessPageResultDTO> getDataList(BusinessQueryDTO query) {
         StringBuilder str = new StringBuilder();
-        if (query !=null && StringUtils.isNotEmpty(query.key)) {
+        if (query != null && StringUtils.isNotEmpty(query.key)) {
             str.append(" and business_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
         //筛选器拼接
@@ -412,92 +396,75 @@ public class BusinessAreaImpl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum getBusinessAreaPublicData(IndicatorQueryDTO dto)
-    {
-        BusinessAreaGetDataDTO data=new BusinessAreaGetDataDTO();
+    public ResultEnum getBusinessAreaPublicData(IndicatorQueryDTO dto) {
+        BusinessAreaGetDataDTO data = new BusinessAreaGetDataDTO();
         try {
-            data.userId=userHelper.getLoginUserInfo().id;
-            data.businessAreaId=dto.businessAreaId;
+            data.userId = userHelper.getLoginUserInfo().id;
+            data.businessAreaId = dto.businessAreaId;
             //根据事实表id获取指标
-            data.atomicIndicatorList=atomicIndicators.atomicIndicatorPush(dto.factIds);
+            data.atomicIndicatorList = atomicIndicators.atomicIndicatorPush(dto.factIds);
             //获取事实表关联的维度
-            data.dimensionList=dimensionAttribute.getDimensionMetaDataList(dto.factIds);
+            data.dimensionList = dimensionAttribute.getDimensionMetaDataList(dto.factIds);
             //更改事实表Doris发布状态
-            List<FactPO> factPoList=new ArrayList<>();
-            if (!CollectionUtils.isEmpty(dto.factIds))
-            {
-                QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-                queryWrapper.in("id",dto.factIds);
-                factPoList=factMapper.selectList(queryWrapper);
+            List<FactPO> factPoList = new ArrayList<>();
+            if (!CollectionUtils.isEmpty(dto.factIds)) {
+                QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.in("id", dto.factIds);
+                factPoList = factMapper.selectList(queryWrapper);
             }
-            if (!CollectionUtils.isEmpty(factPoList))
-            {
-                for (FactPO po:factPoList)
-                {
-                    po.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
-                    if (factMapper.updateById(po)==0)
-                    {
+            if (!CollectionUtils.isEmpty(factPoList)) {
+                for (FactPO po : factPoList) {
+                    po.dorisPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+                    if (factMapper.updateById(po) == 0) {
                         throw new FkException(ResultEnum.PUBLISH_FAILURE);
                     }
                 }
             }
             //更改维度表Doris发布状态
-            if (!CollectionUtils.isEmpty(data.dimensionList))
-            {
-                for (ModelMetaDataDTO item:data.dimensionList)
-                {
-                    DimensionPO dimensionPo=dimensionMapper.selectById(item.id);
-                    if (dimensionPo==null)
-                    {
+            if (!CollectionUtils.isEmpty(data.dimensionList)) {
+                for (ModelMetaDataDTO item : data.dimensionList) {
+                    DimensionPO dimensionPo = dimensionMapper.selectById(item.id);
+                    if (dimensionPo == null) {
                         continue;
                     }
-                    dimensionPo.dorisPublish=PublicStatusEnum.PUBLIC_ING.getValue();
-                    if (dimensionMapper.updateById(dimensionPo)==0)
-                    {
+                    dimensionPo.dorisPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+                    if (dimensionMapper.updateById(dimensionPo) == 0) {
                         throw new FkException(ResultEnum.PUBLISH_FAILURE);
                     }
                 }
             }
             //发布历史
             addTableHistory(dto);
-            if (!CollectionUtils.isEmpty(dto.factIds))
-            {
+            if (!CollectionUtils.isEmpty(dto.factIds)) {
                 //消息推送
                 publishTaskClient.publishOlapCreateModel(data);
             }
             //宽表发布
             wideTable.publishWideTable(dto);
-        }
-        catch (Exception e)
-        {
-            log.error("BusinessAreaImpl,getBusinessAreaPublicData："+e.getMessage());
+        } catch (Exception e) {
+            log.error("BusinessAreaImpl,getBusinessAreaPublicData：" + e.getMessage());
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         return ResultEnum.SUCCESS;
     }
 
-    private void addTableHistory(IndicatorQueryDTO dto)
-    {
-        List<TableHistoryDTO> list=new ArrayList<>();
-        if (CollectionUtils.isEmpty(dto.factIds))
-        {
-            for (Integer id:dto.factIds)
-            {
-                TableHistoryDTO data=new TableHistoryDTO();
-                data.remark=dto.remark;
-                data.tableId=id;
-                data.tableType= CreateTypeEnum.CREATE_DORIS.getValue();
+    private void addTableHistory(IndicatorQueryDTO dto) {
+        List<TableHistoryDTO> list = new ArrayList<>();
+        if (CollectionUtils.isEmpty(dto.factIds)) {
+            for (Integer id : dto.factIds) {
+                TableHistoryDTO data = new TableHistoryDTO();
+                data.remark = dto.remark;
+                data.tableId = id;
+                data.tableType = CreateTypeEnum.CREATE_DORIS.getValue();
                 list.add(data);
             }
         }
-        if (CollectionUtils.isEmpty(dto.wideTableIds))
-        {
-            for (Integer id:dto.wideTableIds)
-            {
-                TableHistoryDTO data=new TableHistoryDTO();
-                data.remark=dto.remark;
-                data.tableId=id;
-                data.tableType= CreateTypeEnum.CREATE_WIDE_TABLE.getValue();
+        if (CollectionUtils.isEmpty(dto.wideTableIds)) {
+            for (Integer id : dto.wideTableIds) {
+                TableHistoryDTO data = new TableHistoryDTO();
+                data.remark = dto.remark;
+                data.tableId = id;
+                data.tableType = CreateTypeEnum.CREATE_WIDE_TABLE.getValue();
                 list.add(data);
             }
         }
@@ -514,7 +481,20 @@ public class BusinessAreaImpl
 
     @Override
     public Page<PipelineTableLogVO> getBusinessAreaTable(PipelineTableQueryDTO dto) {
-        return baseMapper.businessAreaTable(dto.page, dto);
+        //建模日志完善
+        log.info("建模日志参数:" + JSON.toJSONString(dto));
+        Page<PipelineTableLogVO> pipelineTableLogVOPage = baseMapper.businessAreaTable(dto.page, dto);
+        List<PipelineTableLogVO> records = pipelineTableLogVOPage.getRecords();
+        ResultEntity<List<PipelineTableLogVO>> pipelineTableLog = publishTaskClient.getPipelineTableLog(JSON.toJSONString(records), JSON.toJSONString(dto));
+        if (pipelineTableLog.code == ResultEnum.SUCCESS.getCode()) {
+            List<PipelineTableLogVO> data = pipelineTableLog.data;
+            pipelineTableLogVOPage.setRecords(data);
+            pipelineTableLogVOPage.setTotal(data.size());
+            return pipelineTableLogVOPage;
+        } else {
+            return baseMapper.businessAreaTable(dto.page, dto);
+        }
+
     }
 
     @Override
