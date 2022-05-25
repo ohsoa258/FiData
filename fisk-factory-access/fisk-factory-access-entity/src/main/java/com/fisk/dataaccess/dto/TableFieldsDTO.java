@@ -73,6 +73,12 @@ public class TableFieldsDTO extends BaseDTO {
     @ApiModelProperty(value = "字段长度", required = true)
     public Long fieldLength;
 
+    @ApiModelProperty(value = "字段推送规则")
+    public String fieldPushRule;
+
+    @ApiModelProperty(value = "字段推送示例")
+    public String fieldPushExample;
+
     /**
      * 1是主键，0非主键
      */

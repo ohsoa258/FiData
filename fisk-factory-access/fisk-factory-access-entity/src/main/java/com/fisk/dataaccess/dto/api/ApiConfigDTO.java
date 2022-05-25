@@ -38,6 +38,9 @@ public class ApiConfigDTO {
     @ApiModelProperty(value = "json解析的根节点")
     public String jsonKey;
 
+    @ApiModelProperty(value = "实时api的json结构示例")
+    public String pushData;
+
     @ApiModelProperty(value = "0: 保存;   1: 保存&发布", required = true)
     public int flag;
 

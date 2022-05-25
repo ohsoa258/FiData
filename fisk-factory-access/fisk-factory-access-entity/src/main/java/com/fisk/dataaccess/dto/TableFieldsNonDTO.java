@@ -2,6 +2,7 @@ package com.fisk.dataaccess.dto;
 
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -49,6 +50,12 @@ public class TableFieldsNonDTO extends BaseDTO {
      * 字段长度
      */
     public long fieldLength;
+
+    @ApiModelProperty(value = "字段推送规则")
+    public String fieldPushRule;
+
+    @ApiModelProperty(value = "字段推送示例")
+    public String fieldPushExample;
 
     /**
      * 1是主键，0非主键

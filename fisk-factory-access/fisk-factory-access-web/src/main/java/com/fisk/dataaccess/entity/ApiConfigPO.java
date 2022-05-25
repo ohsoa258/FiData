@@ -49,4 +49,9 @@ public class ApiConfigPO extends BasePO {
      * json解析的根节点
      */
     public String jsonKey;
+
+    /**
+     * 实时api的json结构示例
+     */
+    public String pushData;
 }

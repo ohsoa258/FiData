@@ -52,6 +52,16 @@ public class TableFieldsPO extends BasePO {
     public Long fieldLength;
 
     /**
+     * 字段推送规则
+     */
+    public String fieldPushRule;
+
+    /**
+     * 字段推送示例
+     */
+    public String fieldPushExample;
+
+    /**
      * 1是主键，0非主键
      */
     public Integer isPrimarykey;
