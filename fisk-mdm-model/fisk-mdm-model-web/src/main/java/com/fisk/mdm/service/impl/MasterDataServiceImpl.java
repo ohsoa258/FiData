@@ -311,9 +311,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             List<Integer> attributes = attributeGroupService.getAttributeGroupAttribute(id, entityId);
             //获取属性组名称
             AttributeGroupDTO attributeGroup = attributeGroupService.getAttributeGroup(id);
-            if (CollectionUtils.isEmpty(attributes) || attributeGroup == null) {
-                continue;
-            }
             ResultAttributeGroupVO attributeGroupVo = new ResultAttributeGroupVO();
             attributeGroupVo.setName(attributeGroup.getName());
             List<AttributeColumnVO> collect = attributeColumnVoList.stream()
