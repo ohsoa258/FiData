@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -9,9 +8,6 @@ import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.nifi.NifiStageMessageDTO;
-import com.fisk.task.dto.pipeline.NifiStageDTO;
-import com.fisk.task.enums.NifiStageTypeEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -20,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
 import java.util.List;
 
 
@@ -115,46 +110,6 @@ public class ApiConfigController {
     @PostMapping("/pushdata")
     @ApiOperation(value = "推送api数据")
     public ResultEntity<Object> pushData(@RequestBody ReceiveDataDTO dto) {
-//        ResultEnum resultEnum = null;
-//        Date startTime = new Date();
-//        NifiStageDTO nifiStageDto = new NifiStageDTO();
-//        NifiStageMessageDTO nifiStageMessageDto = new NifiStageMessageDTO();
-//        nifiStageDto.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-//        nifiStageDto.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-//        nifiStageDto.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-//        try {
-//            resultEnum = service.pushData(dto);
-//            Date endTime = new Date();
-//            nifiStageMessageDto.message = resultEnum.getMsg();
-//            nifiStageDto.comment = resultEnum.getMsg();
-//            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
-//            nifiStageMessageDto.startTime = startTime;
-//            nifiStageMessageDto.endTime = endTime;
-//            nifiStageMessageDto.counts = 10;
-//            nifiStageMessageDto.topic = "dmp.datafactory.nifi.11.887.94";
-//            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-//                nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-//                nifiStageDto.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-//                nifiStageDto.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-//
-//            }
-//            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            Date endTime = new Date();
-//            nifiStageMessageDto.message = resultEnum.getMsg() == null ? "运行失败" : resultEnum.getMsg();
-//            nifiStageDto.comment = resultEnum.getMsg() == null ? "运行失败" : resultEnum.getMsg();
-//            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
-//            nifiStageMessageDto.startTime = startTime;
-//            nifiStageMessageDto.endTime = endTime;
-//            nifiStageMessageDto.counts = 10;
-//            nifiStageMessageDto.topic = "dmp.datafactory.nifi.11.887.94";
-//
-//            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
-//        }
-
-
         return service.pushData(dto);
     }
 
@@ -173,47 +128,7 @@ public class ApiConfigController {
     @PostMapping("/importData")
     @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
     public ResultEntity<Object> importData(@NotNull @RequestBody ApiImportDataDTO dto) {
-
-        ResultEnum resultEnum = null;
-        Date startTime = new Date();
-        NifiStageDTO nifiStageDto = new NifiStageDTO();
-        NifiStageMessageDTO nifiStageMessageDto = new NifiStageMessageDTO();
-        nifiStageDto.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-        nifiStageDto.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-        nifiStageDto.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-        try {
-            resultEnum = service.importData(dto);
-            Date endTime = new Date();
-            nifiStageMessageDto.message = resultEnum.getMsg();
-            nifiStageDto.comment = resultEnum.getMsg();
-            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
-            nifiStageMessageDto.startTime = startTime;
-            nifiStageMessageDto.endTime = endTime;
-            nifiStageMessageDto.counts = 10;
-            nifiStageMessageDto.topic = "dmp.datafactory.nifi.11.887.94";
-            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-                nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                nifiStageDto.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                nifiStageDto.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-
-            }
-            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            Date endTime = new Date();
-            nifiStageMessageDto.message = resultEnum.getMsg() == null ? "运行失败" : resultEnum.getMsg();
-            nifiStageDto.comment = resultEnum.getMsg() == null ? "运行失败" : resultEnum.getMsg();
-            nifiStageMessageDto.nifiStageDTO = nifiStageDto;
-            nifiStageMessageDto.startTime = startTime;
-            nifiStageMessageDto.endTime = endTime;
-            nifiStageMessageDto.counts = 10;
-            nifiStageMessageDto.topic = "dmp.datafactory.nifi.10.896.119";
-
-            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
-        }
-
-        return ResultEntityBuild.build(resultEnum);
+        return ResultEntityBuild.build(service.importData(dto));
     }
 
     @GetMapping("/getAppListByAppType/{appType}")
