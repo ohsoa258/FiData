@@ -543,6 +543,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 apiConfigPo.apiName = apiConfigPo.apiName + "_copy";
                 // 重置发布状态
                 apiConfigPo.publish = 0;
+
+                boolean checkApiName = checkApiName(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
+                if (checkApiName) {
+                    throw new FkException(ResultEnum.APINAME_ISEXIST);
+                }
+
                 this.save(apiConfigPo);
 
                 // 2-1.实时不需要保存请求参数表tb_api_parameter
@@ -554,8 +560,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                             e.id = 0;
                             e.apiId = apiConfigPo.id;
                         });
+                        apiParameterServiceImpl.addData(ApiParameterMap.INSTANCES.listPoToDto(apiParameterPoList));
                     }
-                    apiParameterServiceImpl.addData(ApiParameterMap.INSTANCES.listPoToDto(apiParameterPoList));
                 }
 
                 // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
@@ -572,6 +578,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         tbTableAccessDto.appId = dto.getAppId();
                         ResultEntity<Object> result = tableAccessImpl.addTableAccessData(tbTableAccessDto);
                         Object tableId = result.getData();
+                        if (result.getData() == null) {
+                            log.error("复制api下的表失败: " + result.msg);
+                            throw new FkException(ResultEnum.COPY_API_TABLE_ERROR);
+                        }
                         TableAccessNonDTO data = tableAccessImpl.getData((Long) tableId);
 
                         // 组装同步表信息

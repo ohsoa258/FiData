@@ -108,7 +108,7 @@ public enum ResultEnum {
     DATASOURCE_ISNULL(5034, "当前api的身份验证信息已缺失,请检查当前api所属的应用参数"),
     GET_JWT_TOKEN_ERROR(5035, "当前api获取token失败,请检查api的配置信息"),
     COPY_API_ISNULL(5036, "当前复制的api不存在,请重新选择"),
-    APINAME_ISEXIST(5037, "api名称重复,请重新设置"),
+    APINAME_ISEXIST(5037, "api名称已存在,请重新设置"),
     EXECUTE_HTTP_REQUEST_ERROR(5038, "调用第三方接口报错,请重新检查api的配置信息"),
     SEND_POST_REQUEST_ERROR(5039, "发送post请求失败,请检查参数"),
     SEND_GET_REQUEST_ERROR(5040, "发送get请求失败,请检查参数"),
@@ -116,6 +116,7 @@ public enum ResultEnum {
     API_APP_ISNULL(5042, "api的应用信息丢失,请重新检查api的应用信息"),
     FIELD_CKECK_NOPASS(5043, "本次同步的数据中,有字段校验不通过,详情请看data"),
     PUSH_DATA_SQL_ERROR(5044, "执行推送数据的sql异常,请联系管理员"),
+    COPY_API_TABLE_ERROR(5045, "复制api下的表失败,表名已存在"),
 
 
     /**

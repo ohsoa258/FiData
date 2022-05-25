@@ -1470,6 +1470,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableNameVO> appIdAndTableNameList = this.baseMapper.getAppIdAndTableName();
         // 查询表名对应的应用注册id
         TableNameVO tableNameVO = new TableNameVO();
+        tableNameVO.apiId = dto.apiId == null ? 0 : dto.apiId;
         tableNameVO.appId = dto.appId;
         tableNameVO.tableName = dto.tableName;
         if (appIdAndTableNameList.contains(tableNameVO)) {

@@ -76,7 +76,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return 查询结果
      */
-    @Select("select app_id,table_name from tb_table_access where del_flag=1")
+    @Select("select app_id,api_id,table_name from tb_table_access where del_flag=1")
     List<TableNameVO> getAppIdAndTableName();
 
     /**

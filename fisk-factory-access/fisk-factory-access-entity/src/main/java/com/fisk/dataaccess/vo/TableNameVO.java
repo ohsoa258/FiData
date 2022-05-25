@@ -16,11 +16,15 @@ public class TableNameVO {
      */
     @ApiModelProperty(value = "应用id", required = true)
     public long appId;
+
+    @ApiModelProperty(value = "apiId")
+    public long apiId;
     /**
      * 表名
      */
     @ApiModelProperty(value = "物理表名称", required = true)
     public String tableName;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -30,12 +34,12 @@ public class TableNameVO {
             return false;
         }
         TableNameVO tableNameVO = (TableNameVO) o;
-        return appId == tableNameVO.appId &&
+        return appId == tableNameVO.appId && apiId == tableNameVO.apiId &&
                 Objects.equals(tableName, tableNameVO.tableName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(appId, tableName);
+        return Objects.hash(appId, apiId, tableName);
     }
 }
