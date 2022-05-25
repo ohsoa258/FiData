@@ -18,7 +18,6 @@ import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -204,11 +203,11 @@ public interface PublishTaskClient {
     /**
      * 获取nifi阶段信息
      *
-     * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
+     * @param list list
      * @return 返回值
      */
     @PostMapping("/pipeline/getNifiStage")
-    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list);
 
     /**
      * 创建宽表

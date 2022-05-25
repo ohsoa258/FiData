@@ -1,9 +1,9 @@
 package com.fisk.datafactory.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.map.NifiCustomWorkflowDetailMap;
@@ -61,12 +61,17 @@ public class PipelineProcessMonitorImpl implements IPipelineProcessMonitor {
     @Override
     public NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
 
-        if (nifiCustomWorkflowDetailDTO == null) {
-            throw new FkException(ResultEnum.PARAMTER_ERROR);
+        List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query()
+                .eq("pid", nifiCustomWorkflowDetailDTO.id)
+                .isNotNull("table_id")
+                .list();
+
+        if (CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        ResultEntity<List<NifiStageDTO>> result = publishTaskClient.getNifiStage(nifiCustomWorkflowDetailDTO);
+        ResultEntity<List<NifiStageDTO>> result = publishTaskClient.getNifiStage(NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list));
         List<NifiStageDTO> data = result.data;
-        if (result.code == ResultEnum.SUCCESS.getCode()&&CollectionUtils.isNotEmpty(data)) {
+        if (result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(data)) {
             // todo 后续改为list
             return result.data.get(0);
         } else {
