@@ -73,8 +73,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             Integer appId = 0;
             //分类,长度为6的是普通调度,其他的是管道调度 4 6 7
             if (topic.length == 6) {
-                tableAccessId = Integer.valueOf(topic[3]);
-                type = Integer.parseInt(topic[5]);
+                tableAccessId = Integer.valueOf(topic[5]);
+                type = Integer.parseInt(topic[3]);
                 appId = Integer.valueOf(topic[4]);
             } else if (topic.length == 7) {
                 String pipelineId = topic[3];

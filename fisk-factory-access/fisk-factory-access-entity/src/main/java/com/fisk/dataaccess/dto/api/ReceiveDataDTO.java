@@ -15,6 +15,6 @@ public class ReceiveDataDTO {
     public Long apiCode;
     @ApiModelProperty(value = "本次同步的数据", required = true)
     public String pushData;
-    @ApiModelProperty(value = "true: 系统内部调用; false: 第三方调用", required = true)
+    @ApiModelProperty(value = "true: 系统内部调用(非实时推送); false: 第三方调用(实时推送)", required = true)
     public boolean flag;
 }

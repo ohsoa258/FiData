@@ -437,7 +437,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
 
             // TODO 保存本次的日志信息
-            savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            // 非实时api
+            if (dto.flag) {
+                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                // 实时调用
+            } else {
+                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            }
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
@@ -459,7 +465,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         nifiStageDto.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
         try {
             Date endTime = new Date();
-//            nifiStageMessageDto.message = msg;
+            nifiStageMessageDto.message = msg;
             nifiStageDto.comment = msg;
             nifiStageMessageDto.nifiStageDTO = nifiStageDto;
             nifiStageMessageDto.startTime = startTime;
