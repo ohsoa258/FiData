@@ -7,6 +7,8 @@ import com.fisk.task.entity.PipelineTableLogPO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 /**
  * @author cfk
  */
@@ -29,5 +31,7 @@ public interface PipelineTableLogMapper extends FKBaseMapper<PipelineTableLogPO>
      */
     @Update("update tb_pipeline_table_log set state=3 where component_id=#{componentId} and table_id=#{tableId} and table_type=#{tableType} and del_flag=1")
     Long updateByComponentId(@Param("componentId") Integer componentId, @Param("tableId") Integer tableId, @Param("tableType") Integer tableType);
+
+    List<PipelineTableLogVO> getPipelineTableLogs(@Param("tableId") Integer tableId, @Param("tableType") Integer tableType, @Param("keyword") String keyword);
 
 }

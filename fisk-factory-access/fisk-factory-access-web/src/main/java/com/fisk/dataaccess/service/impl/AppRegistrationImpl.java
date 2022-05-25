@@ -322,9 +322,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             accessList.forEach(po -> tableAccessMapper.deleteByIdWithFill(po));
             // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
             accessList.stream().map(
-                            po -> tableFieldsImpl.query()
-                                    .eq("table_access_id", po.id)
-                                    .eq("del_flag", 1).list())
+                    po -> tableFieldsImpl.query()
+                            .eq("table_access_id", po.id)
+                            .eq("del_flag", 1).list())
                     .flatMap(Collection::stream)
                     .forEachOrdered(po -> tableFieldsMapper.deleteByIdWithFill(po));
         }
@@ -656,10 +656,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
 
         log.info("接入组装后的数据: " + JSON.toJSONString(list));
-
-        // TODO 对list进行改造,添加task日志信息
-
-        targetPage.setRecords(list);
+        // 接入日志完善 对list进行改造,添加task日志信息
+        ResultEntity<List<PipelineTableLogVO>> pipelineTableLogs = publishTaskClient.getPipelineTableLogs(JSON.toJSONString(list), JSON.toJSONString(dto));
+        List<PipelineTableLogVO> data = pipelineTableLogs.data;
+        targetPage.setRecords(data);
+        targetPage.setTotal(data.size());
         return targetPage;
     }
 

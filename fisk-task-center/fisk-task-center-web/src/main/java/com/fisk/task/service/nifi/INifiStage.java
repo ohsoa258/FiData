@@ -16,10 +16,10 @@ public interface INifiStage {
     /**
      * 获取一张表的nifi阶段
      *
-     * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO
+     * @param list
      * @return NifiStagePO
      */
-    List<NifiStageDTO> getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    List<NifiStageDTO> getNifiStage(List<NifiCustomWorkflowDetailDTO> list);
 
     /**
      * 更新一张表nifi流程的运行状态

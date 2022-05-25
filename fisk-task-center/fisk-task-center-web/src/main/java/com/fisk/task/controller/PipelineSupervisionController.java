@@ -56,9 +56,9 @@ public class PipelineSupervisionController {
     }
 
     @PostMapping("/getNifiStage")
-    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+    public ResultEntity<List<NifiStageDTO>> getNifiStage(@RequestBody List<NifiCustomWorkflowDetailDTO> list) {
         ResultEntity<List<NifiStageDTO>> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data = iNifiStage.getNifiStage(nifiCustomWorkflowDetailDTO);
+        objectResultEntity.data = iNifiStage.getNifiStage(list);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
@@ -78,10 +78,14 @@ public class PipelineSupervisionController {
         iNifiStage.saveNifiStage(data, null);
     }
 
-/*    @ApiOperation(value = "筛选器")
-    @PostMapping("/pageFilter")
-    public ResultEntity<Page<PipelineTableLogVO>> pageFilter(@RequestBody PipelineTableQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.pageFilter(dto));
-    }*/
+    /**
+     * 日志数据补全
+     *
+     * @return
+     */
+    @PostMapping("/getPipelineTableLogs")
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLogs(@RequestParam String data, @RequestBody String pipelineTableQuery) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.getPipelineTableLogs(data, pipelineTableQuery));
+    }
 
 }

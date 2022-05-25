@@ -1,5 +1,6 @@
 package com.fisk.task.service.nifi.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.NifiStageTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.map.PipelineTableLogMap;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.IPipelineTableLog;
@@ -18,8 +20,10 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -37,7 +41,7 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
         QueryWrapper<PipelineTableLogPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(PipelineTableLogPO::getComponentId, nifiCustomWorkflowDetailPO.id);
         //
-        List<PipelineTableLogPO> pipelineTableLogs= pipelineTableLogMapper.selectList(queryWrapper);
+        List<PipelineTableLogPO> pipelineTableLogs = pipelineTableLogMapper.selectList(queryWrapper);
         List<PipelineTableLogDTO> pipelineTableLogDtos = PipelineTableLogMap.INSTANCES.listPoToDto(pipelineTableLogs);
         return pipelineTableLogDtos;
     }
@@ -49,7 +53,7 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
             List<PipelineTableLogDTO> pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
             pipelineTableLogPOS.addAll(pipelineTableLog);
         }
-        return pipelineTableLogPOS;
+        return pipelineTableLogPOS.stream().sorted(Comparator.comparing(PipelineTableLogDTO::getCreateTime).reversed()).collect(Collectors.toList());
     }
 
     @Override
@@ -61,7 +65,7 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
             nifiCustomWorkflowDetailDTO.id = id;
             List<PipelineTableLogDTO> pipelineTableLog = this.getPipelineTableLog(nifiCustomWorkflowDetailDTO);
 
-            if (pipelineTableLog != null&&pipelineTableLog.size()!=0) {
+            if (pipelineTableLog != null && pipelineTableLog.size() != 0) {
                 pipelineTableLogs.addAll(pipelineTableLog);
             }
         }
@@ -102,12 +106,29 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
         return nifiCustomWorkflows;
     }
 
-/*
     @Override
-    public Page<PipelineTableLogVO> pageFilter(PipelineTableQueryDTO query) {
-        return baseMapper.filter(query.page, query.appId, query.keyword,query.appType);
+    public List<PipelineTableLogVO> getPipelineTableLogs(String data, String pipelineTableQuery) {
+        PipelineTableQueryDTO pipelineTableQueryDto = JSON.parseObject(pipelineTableQuery, PipelineTableQueryDTO.class);
+        List<PipelineTableLogVO> pipelineTableLogs = JSON.parseArray(data, PipelineTableLogVO.class);
+        List<PipelineTableLogVO> pipelineTableLogVos = new ArrayList<>();
+        for (PipelineTableLogVO pipelineTableLog : pipelineTableLogs) {
+            OlapTableEnum tableType = pipelineTableLog.tableType;
+            Long tableId = pipelineTableLog.tableId;
+            log.info("表类别:{},表id:{}", tableType.getName(), tableId);
+            List<PipelineTableLogVO> pipelineTableLogs1 = pipelineTableLogMapper.getPipelineTableLogs(Math.toIntExact(tableId), tableType.getValue(), pipelineTableQueryDto.keyword);
+            pipelineTableLogs1.stream().map(
+                    e -> {
+                        e.tableName = pipelineTableLog.tableName;
+                        e.tableType = pipelineTableLog.tableType;
+                        e.appId = pipelineTableLog.appId;
+                        return e;
+                    }
+            ).collect(Collectors.toList());
+
+            pipelineTableLogVos.addAll(pipelineTableLogs1);
+        }
+        return pipelineTableLogVos.stream().sorted(Comparator.comparing(PipelineTableLogVO::getStartTime).reversed()).collect(Collectors.toList());
     }
-*/
 
 
 }

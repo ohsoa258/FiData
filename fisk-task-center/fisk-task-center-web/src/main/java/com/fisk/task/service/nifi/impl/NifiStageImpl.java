@@ -2,6 +2,7 @@ package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.ApiException;
 import com.davis.client.model.BulletinEntity;
@@ -29,8 +30,11 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -52,13 +56,19 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 
 
     @Override
-    public List<NifiStageDTO> getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail) {
-        QueryWrapper<NifiStagePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(NifiStagePO::getComponentId, nifiCustomWorkflowDetail.id);
-        List<NifiStagePO> nifiStagePOS = nifiStageMapper.selectList(queryWrapper);
-        List<NifiStageDTO> nifiStageDTOS = NifiStageMap.INSTANCES.listPoToDto(nifiStagePOS);
+    public List<NifiStageDTO> getNifiStage(List<NifiCustomWorkflowDetailDTO> list) {
+        List<NifiStageDTO> nifiStages = new ArrayList<>();
+        for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetail : list) {
+            QueryWrapper<NifiStagePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(NifiStagePO::getComponentId, nifiCustomWorkflowDetail.id);
+            List<NifiStagePO> nifiStagePos = nifiStageMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(nifiStagePos)) {
+                List<NifiStageDTO> nifiStageDTOS1 = NifiStageMap.INSTANCES.listPoToDto(nifiStagePos);
+                nifiStages.addAll(nifiStageDTOS1);
+            }
+        }
         //通过组件id查到nifi阶段
-        return nifiStageDTOS;
+        return nifiStages.stream().sorted(Comparator.comparing(NifiStageDTO::getCreateTime).reversed()).collect(Collectors.toList());
     }
 
     @Override

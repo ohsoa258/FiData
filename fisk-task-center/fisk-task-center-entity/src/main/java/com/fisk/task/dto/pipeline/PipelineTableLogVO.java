@@ -27,7 +27,7 @@ public class PipelineTableLogVO {
     public Date endTime;
     @ApiModelProperty(value = "总条数")
     public int counts;
-    @ApiModelProperty(value = "调用类型")
+    @ApiModelProperty(value = "调用类型,0是手动调度,1是管道调度")
     public int dispatchType;
     @ApiModelProperty(value = "应用id")
     public Long appId;

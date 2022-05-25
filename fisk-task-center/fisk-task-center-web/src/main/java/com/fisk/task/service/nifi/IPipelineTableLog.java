@@ -50,12 +50,12 @@ public interface IPipelineTableLog extends IService<PipelineTableLogPO> {
      */
     List<NifiCustomWorkflowVO> getNifiCustomWorkflowDetails(List<NifiCustomWorkflowVO> nifiCustomWorkflows);
 
-/*    *//**
+    /**
      * 分页查询
      *
      * @return 日志列表
-     *//*
-    Page<PipelineTableLogVO> pageFilter(PipelineTableQueryDTO query);*/
+     */
+    List<PipelineTableLogVO> getPipelineTableLogs(String data, String pipelineTableQuery);
 
 
 }

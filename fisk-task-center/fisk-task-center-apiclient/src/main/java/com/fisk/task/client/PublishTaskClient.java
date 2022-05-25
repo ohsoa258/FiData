@@ -15,6 +15,7 @@ import com.fisk.task.dto.model.ModelDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
+import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -285,4 +286,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/nifi/deleteCustomWorkNifiFlow")
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
+
+    /**
+     * 接入日志完善
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/getPipelineTableLogs")
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLogs(@RequestParam String data, @RequestParam String pipelineTableQuery);
 }
