@@ -3,6 +3,8 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.mdm.dto.attributeGroup.AddAttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
@@ -138,28 +140,32 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         return ResultEnum.SUCCESS;
     }
 
-    @Override
-    public ResultEnum addAttribute(AttributeGroupDetailsDTO dto) {
-        boolean attributeGroup = this.isExistAttributeGroup(dto.getGroupId());
-        if (attributeGroup == false){
-            return ResultEnum.DATA_NOTEXISTS;
-        }
 
-        // 同一个属性组下面数据不能重复
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addAttribute(AddAttributeGroupDetailsDTO dto) {
+
+        // 删除属性组下的实体数据
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributeGroupDetailsPO::getGroupId,dto.getGroupId())
-                .eq(AttributeGroupDetailsPO::getEntityId,dto.getEntityId())
-                .eq(AttributeGroupDetailsPO::getAttributeId,dto.getAttributeId())
-                .last("limit 1");
-        AttributeGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
-        if (detailsPo != null){
-            return ResultEnum.DATA_EXISTS;
-        }
+                .eq(AttributeGroupDetailsPO::getEntityId,dto.getEntityId());
+        detailsMapper.delete(queryWrapper);
 
-        AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(dto);
-        int res = detailsMapper.insert(detailsPo1);
-        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 新增属性
+        AttributeGroupDetailsDTO detailsDto = new AttributeGroupDetailsDTO();
+        detailsDto.setGroupId(dto.getGroupId());
+        detailsDto.setEntityId(dto.getEntityId());
+        dto.getAttributeId().stream().forEach(e -> {
+            detailsDto.setAttributeId(e);
+            AttributeGroupDetailsPO detailsPo1 = AttributeGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
+            int res = detailsMapper.insert(detailsPo1);
+            if (res <= 0){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        });
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override

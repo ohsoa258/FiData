@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attributeGroup.AddAttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
@@ -49,7 +50,7 @@ public interface AttributeGroupService {
      * @param dto
      * @return
      */
-    ResultEnum addAttribute(AttributeGroupDetailsDTO dto);
+    ResultEnum addAttribute(AddAttributeGroupDetailsDTO dto);
 
     /**
      * 属性组根据属性id删除

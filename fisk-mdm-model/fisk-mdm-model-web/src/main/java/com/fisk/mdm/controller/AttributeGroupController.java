@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.attributeGroup.AddAttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
@@ -55,7 +56,7 @@ public class AttributeGroupController {
     @ApiOperation("属性组新增属性")
     @PostMapping("/addAttribute")
     @ResponseBody
-    public ResultEntity<ResultEnum> addAttribute(@RequestBody AttributeGroupDetailsDTO dto) {
+    public ResultEntity<ResultEnum> addAttribute(@RequestBody AddAttributeGroupDetailsDTO dto) {
         return ResultEntityBuild.build(groupService.addAttribute(dto));
     }
 
