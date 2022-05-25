@@ -23,7 +23,6 @@ import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.INifiStage;
-import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.utils.NifiHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
@@ -170,7 +169,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
             pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
             pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
             pipelineTableLogPO.appId = appId;
-            if (nifiStagePO.componentId == 0||nifiStagePO.componentId ==null) {
+            if (nifiStagePO.componentId == null || nifiStagePO.componentId == 0) {
                 pipelineTableLogPO.dispatchType = 0;
             } else {
                 pipelineTableLogPO.dispatchType = 1;
