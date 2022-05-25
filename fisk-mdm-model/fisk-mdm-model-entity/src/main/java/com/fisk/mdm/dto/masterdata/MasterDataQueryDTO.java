@@ -30,4 +30,9 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      */
     private List<Integer> attributeGroups;
 
+    /**
+     * 自定义视图id
+     */
+    private Integer viewId;
+
 }

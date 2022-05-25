@@ -12,6 +12,7 @@ import com.fisk.mdm.map.ViwGroupMap;
 import com.fisk.mdm.mapper.ViwGroupDetailsMapper;
 import com.fisk.mdm.mapper.ViwGroupMapper;
 import com.fisk.mdm.service.ViwGroupService;
+import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,7 +157,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @param id
      * @return
      */
-    public boolean isExistViwGroup(Integer id){
+    public boolean isExistViwGroup(Integer id) {
         ViwGroupPO viwGroupPo = viwGroupMapper.selectById(id);
         if (viwGroupPo == null) {
             return false;
@@ -164,4 +165,18 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         return true;
     }
+
+    /**
+     * 根据实体id,获取自定义视图
+     *
+     * @param entityId
+     * @return
+     */
+    public List<ViewGroupDropDownVO> getViewGroupByEntityId(Integer entityId) {
+        QueryWrapper<ViwGroupPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(ViwGroupPO::getEntityId, entityId);
+        List<ViwGroupPO> poList = viwGroupMapper.selectList(queryWrapper);
+        return ViwGroupMap.INSTANCES.poListToDropDownVo(poList);
+    }
+
 }

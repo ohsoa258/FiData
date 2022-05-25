@@ -6,6 +6,7 @@ import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
 import com.fisk.mdm.entity.ViwGroupPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -51,10 +52,20 @@ public interface ViwGroupMap {
 
     /**
      * po => dto list
+     *
      * @param poList
      * @return
      */
     List<ViwGroupDetailsDTO> detailsPoToDtoList(List<ViwGroupDetailsPO> poList);
+
+    /**
+     * poList==>DropDownVo
+     *
+     * @param poList
+     * @return
+     */
+    List<ViewGroupDropDownVO> poListToDropDownVo(List<ViwGroupPO> poList);
+
 }
 
 

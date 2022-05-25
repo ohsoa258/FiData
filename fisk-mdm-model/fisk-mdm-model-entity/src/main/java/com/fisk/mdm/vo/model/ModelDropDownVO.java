@@ -14,12 +14,12 @@ import java.util.List;
 @Data
 public class ModelDropDownVO extends DropDownBaseVO {
 
-    public String icon;
+    private String icon;
 
-    public List<EntityDropDownVO> children;
+    private List<EntityDropDownVO> entity;
 
-    public List<ModelVersionDropDownVO> versions;
+    private List<ModelVersionDropDownVO> versions;
 
-    public List<AttributeGroupDropDownVO> attributeGroups;
+    private List<AttributeGroupDropDownVO> attributeGroups;
 
 }

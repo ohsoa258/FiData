@@ -20,6 +20,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
@@ -42,6 +43,7 @@ import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultAttributeGroupVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
+import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -92,6 +94,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
     AttributeServiceImpl attributeService;
     @Resource
     AttributeGroupServiceImpl attributeGroupService;
+    @Resource
+    ViwGroupServiceImpl viwGroupService;
 
     @Resource
     AttributeMapper attributeMapper;
@@ -130,11 +134,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<ModelPO> modelPoList = modelMapper.selectList(queryWrapper);
         List<ModelDropDownVO> data = ModelMap.INSTANCES.poListToDropDownVoList(modelPoList);
         data.stream().forEach(e -> {
-            e.versions = modelVersionServiceImpl.getModelVersionDropDown(e.id);
-            e.versions.stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
-            e.children = entityServiceImpl.getEntityDropDown(e.id);
-            e.attributeGroups = attributeGroupService.getAttributeGroupByModelId(e.id);
-            e.attributeGroups.stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
+            e.setVersions(modelVersionServiceImpl.getModelVersionDropDown(e.id));
+            e.getVersions().stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
+            e.setEntity(entityServiceImpl.getEntityDropDown(e.id));
+            e.getEntity().forEach(p -> p.setViewGroups(viwGroupService.getViewGroupByEntityId(p.id)));
+            e.getEntity().forEach(p -> p.getViewGroups().forEach(t -> t.displayName = t.name));
+            e.setAttributeGroups(attributeGroupService.getAttributeGroupByModelId(e.id));
+            e.getAttributeGroups().stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
         });
         return data;
     }
@@ -289,6 +295,35 @@ public class MasterDataServiceImpl implements IMasterDataService {
             resultObjectVO.setErrorMsg(e.getMessage());
         }
         return resultObjectVO;
+    }
+
+    public void vie(MasterDataQueryDTO dto) {
+        //准备返回对象
+        ResultObjectVO resultObjectVO = new ResultObjectVO();
+        ViwGroupVO viwGroupVO = viwGroupService.getDataByGroupId(dto.getViewId());
+        if (viwGroupVO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        List<Integer> attributeIds = viwGroupVO.getGroupDetailsList().stream()
+                .map(e -> e.getAttributeId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(attributeIds)) {
+        }
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("id", attributeIds);
+        List<AttributePO> poList = attributeMapper.selectList(queryWrapper);
+        List<AttributeInfoDTO> attributeInfos = AttributeMap.INSTANCES.poToDtoList(poList);
+        for (AttributeInfoDTO item : attributeInfos) {
+            Optional<ViwGroupDetailsDTO> first = viwGroupVO.getGroupDetailsList()
+                    .stream()
+                    .filter(e -> e.getAttributeId().equals(item.getId()))
+                    .findFirst();
+            if (!first.isPresent() && StringUtils.isEmpty(first.get().getAliasName())) {
+                continue;
+            }
+            item.setName(first.get().getAliasName());
+        }
+
+
     }
 
     /**
