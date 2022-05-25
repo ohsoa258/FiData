@@ -121,6 +121,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private String dataQualityCheckIp;
     @Value("${data-quality-check.db-name}")
     private String dataQualityCheckName;
+    // 实时api同步到stg的条数
+    private Integer COUNT_SQL = 0;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -901,6 +903,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
 
                 dto.body = body;
+                // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
                 ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
                 log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
                 // 数据校验结果
@@ -919,18 +922,20 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         }
                     }
                 }
-                // 校验完成后每次推送数据前,将stg数据删除
+                // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
             }
 
             System.out.println("开始执行sql");
             PgsqlUtils pgsqlUtils = new PgsqlUtils();
             // stg_abbreviationName_tableName
-            resultEnum = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
-            checkResultMsg.append("数据推送到stg临时表: ").append(resultEnum.getMsg()).append(";");
-
+            ResultEntity<Object> excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
+            resultEnum = ResultEnum.getEnum(excuteResult.code);
+            checkResultMsg.append("数据推送到stg临时表: ").append(excuteResult.getMsg()).append(",")
+                    .append("推送的条数为: ").append(excuteResult.data).append(";");
+            COUNT_SQL = excuteResult.data == null ? 0 : (Integer) excuteResult.data;
         } catch (Exception e) {
-            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_ERROR);
+            return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
 
         return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());

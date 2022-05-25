@@ -118,6 +118,7 @@ public enum ResultEnum {
     PUSH_DATA_SQL_ERROR(5044, "执行推送数据的sql异常,请联系管理员"),
     COPY_API_TABLE_ERROR(5045, "复制api下的表失败,表名已存在"),
     COPY_APINAME_ISEXIST(5046, "目标应用下已存在相同名称的api,请重新选择,或者给api重命名"),
+    DATA_QUALITY_FEIGN_ERROR(5047, "数据质量的数据校验feign接口异常"),
 
 
     /**

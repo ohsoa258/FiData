@@ -2,6 +2,8 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -112,7 +114,7 @@ public class PgsqlUtils {
      * @params jsonStr json字符串
      * @params tablePrefixName pg中的物理表前缀名
      */
-    public ResultEnum executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
+    public ResultEntity<Object> executeBatchPgsql(String tablePrefixName, List<JsonTableData> res) throws Exception {
         Connection con = getPgConn();
         Statement statement = con.createStatement();
         //这里必须设置为false，我们手动批量提交
@@ -141,7 +143,7 @@ public class PgsqlUtils {
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
                     inserSql = insertSqlIndex + insertSqlLast;
-                    System.out.println(inserSql);
+                    log.info("数据推送到stg的sql为: " + inserSql);
                     countSql++;
                     statement.addBatch(inserSql);
                 }
@@ -157,10 +159,12 @@ public class PgsqlUtils {
             log.error("批量执行SQL异常: {}", e.getMessage());
             statement.close();
             con.close();
-            return ResultEnum.PUSH_DATA_SQL_ERROR;
+            // 执行sql异常,重置记录的条数
+            countSql = 0;
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, countSql);
         }
 
-        return ResultEnum.SUCCESS;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, countSql);
     }
 
 }
