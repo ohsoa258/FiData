@@ -5,6 +5,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
@@ -25,6 +27,8 @@ public class NifiController {
     INiFiHelper iNiFiHelper;
     @Resource
     TableNifiSettingServiceImpl tableNifiSettingService;
+    @Resource
+    INifiCustomWorkFlow iNifiCustomWorkFlow;
 
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
@@ -52,6 +56,11 @@ public class NifiController {
         SqlForPgOds.data = iNiFiHelper.getSqlForPgOds(configDTO);
         SqlForPgOds.code = 0;
         return SqlForPgOds;
+    }
+
+    @PostMapping("/deleteCustomWorkNifiFlow")
+    public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
+        iNifiCustomWorkFlow.deleteCustomWorkNifiFlow(nifiCustomWorkListDTO);
     }
 
 

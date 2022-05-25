@@ -32,6 +32,7 @@ import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -277,7 +278,12 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         try {
             if (CollectionUtils.isNotEmpty(list)) {
                 List<Integer> collect = list.stream().map(e -> detailMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
+                //删除topic
                 publishTaskClient.deleteTableTopicByComponentId(collect);
+                NifiCustomWorkListDTO nifiCustomWorkList = new NifiCustomWorkListDTO();
+                nifiCustomWorkList.nifiCustomWorkflowId = model.workflowId;
+                //删除nifi组件
+                publishTaskClient.deleteCustomWorkNifiFlow(nifiCustomWorkList);
             }
         } catch (Exception e) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

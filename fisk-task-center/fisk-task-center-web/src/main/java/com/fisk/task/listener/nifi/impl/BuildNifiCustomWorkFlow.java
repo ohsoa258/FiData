@@ -30,6 +30,7 @@ import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
+import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.mapper.OlapMapper;
 import com.fisk.task.po.*;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
@@ -52,7 +53,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class BuildNifiCustomWorkFlow {
+public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
 
     @Resource
@@ -160,7 +161,7 @@ public class BuildNifiCustomWorkFlow {
                 //清空队列
                 ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
                 if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
-                    throw new ApiException("清空队列失败");
+                    throw new Exception("清空队列失败");
                 }
                 //获取大组的控制器服务   includeancestorgroups includedescendantgroups
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
@@ -168,7 +169,7 @@ public class BuildNifiCustomWorkFlow {
             }
 
             //emptyNifiConnectionQueue
-        } catch (ApiException e) {
+        } catch (Exception e) {
             log.info("此组删除失败:" + appComponentId);
             e.printStackTrace();
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
@@ -663,7 +664,7 @@ public class BuildNifiCustomWorkFlow {
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
-        } catch (ApiException e) {
+        } catch (Exception e) {
             log.error("组id:" + groupStructure + "停止失败");
             e.printStackTrace();
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();
@@ -974,7 +975,7 @@ public class BuildNifiCustomWorkFlow {
                     groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 4, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
             buildNifiTaskListener.buildPortConnection(groupId, groupId, pipelineConfigurationPO.outputPortId, ConnectableDTO.TypeEnum.OUTPUT_PORT,
                     groupId, waitProcessor.data.getId(), ConnectableDTO.TypeEnum.PROCESSOR, 3, PortComponentEnum.COMPONENT_OUTPUT_PORT_CONNECTION);
-        } catch (ApiException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -1196,7 +1197,7 @@ public class BuildNifiCustomWorkFlow {
                     }
                 }
             }
-        } catch (ApiException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -1217,4 +1218,38 @@ public class BuildNifiCustomWorkFlow {
         return olapPO;
     }
 
+    @Override
+    public void deleteCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO) {
+        //tb_app_nifi_setting. tb_table_nifi_setting. tb_nifi_scheduling_component. tb_pipeline_configuration
+        //重复发布需要处理这四张表里的老数据
+        //暂停原流程
+        String appComponentId = "";
+        List<AppNifiSettingPO> appNifiSettingPOList = appNifiSettingService.query().eq("app_id", nifiCustomWorkListDTO.nifiCustomWorkflowId).list();
+        for (int i = 0; i < appNifiSettingPOList.size(); i++) {
+            if (appNifiSettingPOList.get(i).nifiCustomWorkflowId != null) {
+                appComponentId = appNifiSettingPOList.get(i).appComponentId;
+            }
+        }
+        try {
+            //停止
+            if (appComponentId != "") {
+                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+                scheduleComponentsEntity.setId(appComponentId);
+                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+                scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
+                NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
+                //清空队列
+                ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
+                if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
+                    throw new Exception("清空队列失败");
+                }
+                //获取大组的控制器服务   includeancestorgroups includedescendantgroups
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
+                NifiHelper.getProcessGroupsApi().removeProcessGroup(appComponentId, String.valueOf(processGroup.getRevision().getVersion()), processGroup.getRevision().getClientId(), false);
+            }
+        } catch (Exception e) {
+            log.info("此组删除失败:" + appComponentId);
+            e.printStackTrace();
+        }
+    }
 }

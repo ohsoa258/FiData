@@ -278,4 +278,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/pipeline/saveNifiStage")
     public void saveNifiStage(@RequestParam String data);
+
+    /**
+     * 删除nifi管道
+     *
+     * @return
+     */
+    @PostMapping("/nifi/deleteCustomWorkNifiFlow")
+    public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO);
 }
