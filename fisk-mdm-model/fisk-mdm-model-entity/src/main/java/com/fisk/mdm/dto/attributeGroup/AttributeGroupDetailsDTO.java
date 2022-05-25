@@ -17,6 +17,7 @@ public class AttributeGroupDetailsDTO {
     private Integer groupId;
     private Integer entityId;
     private Integer attributeId;
+    private String type;
     /**
      * 属性名称
      */

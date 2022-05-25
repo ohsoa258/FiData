@@ -5,6 +5,7 @@ import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
+import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
 
 import java.util.List;
 
@@ -70,4 +71,11 @@ public interface AttributeGroupService {
      * @return
      */
     List<AttributeGroupDTO> getDataByAttributeId(Integer attributeId);
+
+    /**
+     * 根据组id查询属性组(根据实体进行分组)
+     * @param id
+     * @return
+     */
+    List<QueryAttributeGroupVO> getDataGroupById(Integer id);
 }

@@ -8,14 +8,18 @@ import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
+import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.AttributeGroupMap;
 import com.fisk.mdm.mapper.AttributeGroupDetailsMapper;
 import com.fisk.mdm.mapper.AttributeGroupMapper;
+import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
+import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
@@ -23,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +50,8 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     UserClient userClient;
     @Resource
     AttributeService attributeService;
+    @Resource
+    EntityMapper entityMapper;
 
     @Override
     public AttributeGroupVO getDataByGroupId(Integer id) {
@@ -202,6 +210,55 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         }
 
         return null;
+    }
+
+    @Override
+    public List<QueryAttributeGroupVO> getDataGroupById(Integer id) {
+        AttributeGroupPO attributeGroupPo = groupMapper.selectById(id);
+        if (attributeGroupPo == null){
+            return null;
+        }
+
+        // 查询属性组下的属性
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(AttributeGroupDetailsPO::getGroupId,id);
+        List<AttributeGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
+        List<QueryAttributeGroupVO> list = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(detailsPoList)){
+            // 根据实体id进行分组
+            Map<Integer, List<AttributeGroupDetailsPO>> listMap = detailsPoList.stream().collect(Collectors.groupingBy(AttributeGroupDetailsPO::getEntityId));
+            for (Integer key : listMap.keySet()) {
+                // 拼接所需参数
+                List<AttributeGroupDetailsPO> detailsList = listMap.get(key);
+                EntityPO entityPo = entityMapper.selectById(key);
+                List<AttributeGroupDetailsDTO> collect = detailsList.stream().map(e -> {
+                    AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                    AttributeGroupDetailsDTO dto = AttributeGroupMap.INSTANCES.detailsPoToDto(e);
+                    if (data != null){
+                        dto.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+                        dto.setName(data.getName());
+                        dto.setDisplayName(data.getDisplayName());
+                        dto.setDesc(data.getDesc());
+                        dto.setDataType(data.getDataType());
+                        dto.setDataTypeLength(data.getDataTypeLength());
+                        dto.setDataTypeDecimalLength(data.getDataTypeDecimalLength());
+                    }
+                    return dto;
+                }).collect(Collectors.toList());
+
+                // 组装参数
+                QueryAttributeGroupVO attributeGroupVo = new QueryAttributeGroupVO();
+                attributeGroupVo.setId(key);
+                if (entityPo != null){
+                    attributeGroupVo.setName(entityPo.getName());
+                }
+                attributeGroupVo.setType(ObjectTypeEnum.ENTITY.getName());
+                attributeGroupVo.setDetailsDtoList(collect);
+                list.add(attributeGroupVo);
+            }
+        }
+        return list;
     }
 
     /**

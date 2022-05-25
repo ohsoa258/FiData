@@ -9,6 +9,7 @@ import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
+import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -77,5 +78,12 @@ public class AttributeGroupController {
     @ResponseBody
     public ResultEntity<List<AttributeGroupVO>> getDataByModelId(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataByModelId(id));
+    }
+
+    @ApiOperation("根据组id查询属性组(根据实体进行分组)")
+    @GetMapping("/getDataGroupById")
+    @ResponseBody
+    public ResultEntity<List<QueryAttributeGroupVO>> getDataGroupById(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataGroupById(id));
     }
 }
