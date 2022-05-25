@@ -546,7 +546,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                 boolean checkApiName = checkApiName(ApiConfigMap.INSTANCES.poToDto(apiConfigPo));
                 if (checkApiName) {
-                    throw new FkException(ResultEnum.APINAME_ISEXIST);
+                    throw new FkException(ResultEnum.COPY_APINAME_ISEXIST);
                 }
 
                 this.save(apiConfigPo);
