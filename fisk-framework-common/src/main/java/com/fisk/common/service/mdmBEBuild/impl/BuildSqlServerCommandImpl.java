@@ -133,4 +133,13 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String buildQueryOneData(String tableName, String queryConditions) {
+        StringBuilder str = new StringBuilder();
+        str.append(" select *");
+        str.append(" from " + tableName);
+        str.append(" where " + queryConditions);
+        return str.toString();
+    }
+
 }

@@ -90,8 +90,7 @@ public class MasterDataController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateImportData(dto));
     }
 
-
-    /*@ApiOperation("添加主数据")
+    @ApiOperation("添加主数据")
     @PostMapping("/addMasterData")
     @ResponseBody
     public ResultEntity<Object> addMasterData(@Validated @RequestBody MasterDataDTO dto)
@@ -99,7 +98,7 @@ public class MasterDataController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.addMasterData(dto));
     }
 
-    @ApiOperation("删除主数据")
+    /*@ApiOperation("删除主数据")
     @DeleteMapping("/deleteMasterData")
     @ResponseBody
     public ResultEntity<Object> deleteMasterData(@Validated @RequestBody MasterDataDTO dto)

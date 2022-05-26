@@ -76,17 +76,19 @@ public interface IMasterDataService {
 
     /**
      * 主数据新增
+     *
      * @param dto
      * @return
      */
-    //ResultEnum addMasterData(MasterDataDTO dto);
+    ResultEnum addMasterData(MasterDataDTO dto);
 
     /**
      * 主数据删除
+     *
      * @param dto
      * @return
      */
-    //ResultEnum delMasterData(MasterDataDTO dto);
+    ResultEnum delMasterData(MasterDataDTO dto);
 
     /**
      * 主数据更新

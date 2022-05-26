@@ -90,4 +90,13 @@ public interface IBuildSqlCommand {
      */
     String buildExportDataCount(String tableName, String queryConditions);
 
+    /**
+     * 查询一条数据
+     *
+     * @param tableName
+     * @param queryConditions
+     * @return
+     */
+    String buildQueryOneData(String tableName, String queryConditions);
+
 }
