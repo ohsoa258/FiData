@@ -101,7 +101,7 @@ public interface DataModelClient {
      */
     @GetMapping("/tableName/get")
     ResultEntity<TableDataDTO> getTableName(
-            @RequestParam("id")
+            @RequestParam("id") Integer id,
             @RequestParam("type") DataDoFieldTypeEnum type,
             @RequestParam("field") String field);
 
