@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.mdm.dto.attributeGroup.AddAttributeGroupDetailsDTO;
-import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
-import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
-import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
+import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.entity.EntityPO;
@@ -109,7 +106,7 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     @Override
-    public ResultEnum updateData(UpdateAttributeGroupDTO dto) {
+    public ResultEnum updateData(AttributeGroupUpdateDTO dto) {
         AttributeGroupPO attributeGroupPo = AttributeGroupMap.INSTANCES.groupDtoToPo(dto);
         int res = groupMapper.updateById(attributeGroupPo);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -143,7 +140,7 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addAttribute(AddAttributeGroupDetailsDTO dto) {
+    public ResultEnum addAttribute(AttributeGroupDetailsAddDTO dto) {
 
         // 删除属性组下的实体数据
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
@@ -265,6 +262,11 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
             }
         }
         return list;
+    }
+
+    @Override
+    public List<AttributeInfoDTO> getAttributeExists(AttributeInfoQueryDTO dto) {
+        return groupMapper.getAttributeExists(dto.getGroupId(),dto.getEntityId());
     }
 
     /**

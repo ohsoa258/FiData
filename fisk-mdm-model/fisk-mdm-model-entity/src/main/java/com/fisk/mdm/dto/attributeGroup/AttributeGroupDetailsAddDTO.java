@@ -11,7 +11,7 @@ import java.util.List;
  * @Version 1.0
  */
 @Data
-public class AddAttributeGroupDetailsDTO {
+public class AttributeGroupDetailsAddDTO {
 
     @NotNull
     private Integer groupId;

@@ -2,7 +2,7 @@ package com.fisk.mdm.map;
 
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
-import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupUpdateDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
 import com.fisk.mdm.entity.AttributeGroupPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
@@ -34,7 +34,7 @@ public interface AttributeGroupMap {
      * @param dto
      * @return
      */
-    AttributeGroupPO groupDtoToPo(UpdateAttributeGroupDTO dto);
+    AttributeGroupPO groupDtoToPo(AttributeGroupUpdateDTO dto);
 
     /**
      * dto => po

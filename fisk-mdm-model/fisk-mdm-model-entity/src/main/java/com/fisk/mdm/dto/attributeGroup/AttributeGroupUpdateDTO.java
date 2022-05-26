@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
  * @Version 1.0
  */
 @Data
-public class UpdateAttributeGroupDTO {
+public class AttributeGroupUpdateDTO {
 
     @NotNull
     private Integer id;

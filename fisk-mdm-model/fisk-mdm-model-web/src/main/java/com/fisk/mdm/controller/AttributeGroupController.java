@@ -4,10 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.attributeGroup.AddAttributeGroupDetailsDTO;
-import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
-import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
-import com.fisk.mdm.dto.attributeGroup.UpdateAttributeGroupDTO;
+import com.fisk.mdm.dto.attributeGroup.*;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupVO;
 import com.fisk.mdm.vo.attributeGroup.QueryAttributeGroupVO;
@@ -42,7 +39,7 @@ public class AttributeGroupController {
     @ApiOperation("修改属性组信息")
     @PutMapping("/updateData")
     @ResponseBody
-    public ResultEntity<ResultEnum> updateData(@Validated @RequestBody UpdateAttributeGroupDTO dto) {
+    public ResultEntity<ResultEnum> updateData(@Validated @RequestBody AttributeGroupUpdateDTO dto) {
         return ResultEntityBuild.build(groupService.updateData(dto));
     }
 
@@ -56,7 +53,7 @@ public class AttributeGroupController {
     @ApiOperation("属性组新增属性")
     @PostMapping("/addAttribute")
     @ResponseBody
-    public ResultEntity<ResultEnum> addAttribute(@RequestBody AddAttributeGroupDetailsDTO dto) {
+    public ResultEntity<ResultEnum> addAttribute(@RequestBody AttributeGroupDetailsAddDTO dto) {
         return ResultEntityBuild.build(groupService.addAttribute(dto));
     }
 
@@ -86,5 +83,12 @@ public class AttributeGroupController {
     @ResponseBody
     public ResultEntity<List<QueryAttributeGroupVO>> getDataGroupById(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getDataGroupById(id));
+    }
+
+    @ApiOperation("获取出属性组存在的属性")
+    @PostMapping("/getAttributeExists")
+    @ResponseBody
+    public ResultEntity<List<AttributeInfoDTO>> getAttributeExists(@RequestBody AttributeInfoQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,groupService.getAttributeExists(dto));
     }
 }
