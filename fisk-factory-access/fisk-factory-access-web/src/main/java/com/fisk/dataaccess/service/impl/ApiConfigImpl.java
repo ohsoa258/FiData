@@ -426,7 +426,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             // 将数据同步到pgsql
-            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode, 0);
+            ResultEntity<Object> result = pushPgSql(jsonStr, apiTableDtoList, "stg_" + modelApp.appAbbreviation + "_", jsonKey, dto.apiCode);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -545,6 +545,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEnum importData(ApiImportDataDTO dto) {
+        // task根据调度配置调用
         if (dto.workflowIdAppIdApiId != null && dto.workflowIdAppIdApiId != "") {
             String[] split = dto.workflowIdAppIdApiId.split(",");
             for (int i = 0; i < split.length; i++) {
@@ -566,6 +567,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         } else {
             List<String> kafkaReceives = new ArrayList<>();
             KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+            // 接入模块调用
             syncData(dto);
             if (dto.workflowId != null) {
                 kafkaReceiveDTO.tableId = Math.toIntExact(dto.apiId);
@@ -930,10 +932,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
     private ResultEntity<Object> pushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
-                                           String tablePrefixName, String jsonKey, Long apiId, int flag) {
+                                           String tablePrefixName, String jsonKey, Long apiId) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
+        // ods全表名
+        String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
@@ -956,7 +960,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                 HashMap<String, JSONArray> body = new HashMap<>();
                 for (JsonTableData jsonTableData : targetTable) {
-                    String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
                     body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
                 }
 
@@ -989,7 +992,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg_abbreviationName_tableName
             ResultEntity<Object> excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
             resultEnum = ResultEnum.getEnum(excuteResult.code);
-            checkResultMsg.append("数据推送到stg临时表: ").append(excuteResult.getMsg()).append(",")
+            checkResultMsg.append("数据推送到").append(replaceTablePrefixName).append("临时表: ").append(excuteResult.getMsg()).append(",")
                     .append("推送的条数为: ").append(excuteResult.data).append(";");
             COUNT_SQL = excuteResult.data == null ? 0 : (Integer) excuteResult.data;
         } catch (Exception e) {

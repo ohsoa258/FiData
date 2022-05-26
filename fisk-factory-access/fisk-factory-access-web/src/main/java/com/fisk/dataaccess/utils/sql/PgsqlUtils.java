@@ -147,6 +147,8 @@ public class PgsqlUtils {
                     countSql++;
                     statement.addBatch(inserSql);
                 }
+
+
                 statement.executeBatch();
             }
             System.out.println("本次添加的sql个数为: " + countSql);

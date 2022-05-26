@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.app;
+package com.fisk.dataaccess.dto.app;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
