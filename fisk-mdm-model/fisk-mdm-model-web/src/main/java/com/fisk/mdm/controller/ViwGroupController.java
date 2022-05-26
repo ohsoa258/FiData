@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
@@ -77,5 +78,12 @@ public class ViwGroupController {
     @ResponseBody
     public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByEntityId(id));
+    }
+
+    @ApiOperation("根据实体id查询实体关联关系")
+    @GetMapping("/getRelationByEntityId")
+    @ResponseBody
+    public ResultEntity<EntityQueryDTO> getRelationByEntityId(Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(id));
     }
 }

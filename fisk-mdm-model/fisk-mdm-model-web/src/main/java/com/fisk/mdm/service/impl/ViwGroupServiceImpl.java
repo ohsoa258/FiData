@@ -3,22 +3,31 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.entity.EntityQueryDTO;
 import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
 import com.fisk.mdm.entity.ViwGroupPO;
+import com.fisk.mdm.enums.ObjectTypeEnum;
 import com.fisk.mdm.map.ViwGroupMap;
 import com.fisk.mdm.mapper.ViwGroupDetailsMapper;
 import com.fisk.mdm.mapper.ViwGroupMapper;
+import com.fisk.mdm.service.AttributeService;
+import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.ViwGroupService;
+import com.fisk.mdm.vo.attribute.AttributeVO;
+import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +44,10 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     ViwGroupDetailsMapper detailsMapper;
     @Resource
     ViwGroupService viwGroupService;
+    @Resource
+    EntityService entityService;
+    @Resource
+    AttributeService attributeService;
 
     @Override
     public ViwGroupVO getDataByGroupId(Integer id) {
@@ -150,6 +163,50 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         ViwGroupDetailsPO detailsPo1 = ViwGroupMap.INSTANCES.detailsDtoToDto(dtoList);
         int res = detailsMapper.insert(detailsPo1);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public EntityQueryDTO getRelationByEntityId(Integer entityId) {
+        EntityQueryDTO attributeInfo = this.getAttributeInfo(entityId);
+        return attributeInfo;
+    }
+
+    /**
+     * 根据实体id获取属性,拼接成需要返回的参数
+     * @param entityId
+     * @return
+     */
+    public EntityQueryDTO getAttributeInfo(Integer entityId){
+        EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
+        if (entityInfoVo == null){
+            return null;
+        }
+
+        EntityQueryDTO dto = new EntityQueryDTO();
+        dto.setId(entityInfoVo.getId());
+        dto.setName(entityInfoVo.getName());
+        dto.setType(ObjectTypeEnum.ENTITY.getName());
+
+        // 属性信息
+        List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
+        List<EntityQueryDTO> collect = attributeList.stream().map(e -> {
+            EntityQueryDTO dto1 = new EntityQueryDTO();
+            dto1.setId(e.getId());
+            dto1.setName(e.getName());
+            dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+            return dto1;
+        }).collect(Collectors.toList());
+
+        // 域字段递归
+        List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
+            AttributeVO data = attributeService.getById(e.getDomainId()).getData();
+            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId());
+            return attributeInfo;
+        }).collect(Collectors.toList());
+        collect.addAll(doMainList);
+        dto.setChildren(collect);
+
+        return dto;
     }
 
     /**
