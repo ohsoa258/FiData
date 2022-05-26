@@ -1,8 +1,8 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.FieldNameDTO;
-import com.fisk.dataaccess.dto.TableFieldsDTO;
 import com.fisk.dataaccess.dto.datamodel.TableFieldDataDTO;
+import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

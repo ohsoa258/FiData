@@ -1,6 +1,6 @@
 package com.fisk.task.dto.daconfig;
 
-import com.fisk.dataaccess.dto.TableBusinessDTO;
+import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import lombok.Data;
 

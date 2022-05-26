@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.TableSyncmodeDTO;
+import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
 import com.fisk.dataaccess.entity.TableSyncmodePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

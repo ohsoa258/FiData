@@ -1,9 +1,9 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.TableAccessDTO;
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.datafactory.TableIdAndNameDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 import com.fisk.dataaccess.entity.TableAccessPO;

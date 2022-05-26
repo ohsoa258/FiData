@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.AppRegistrationDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;

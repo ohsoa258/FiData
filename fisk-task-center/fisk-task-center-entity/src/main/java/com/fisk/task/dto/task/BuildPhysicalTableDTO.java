@@ -1,6 +1,6 @@
 package com.fisk.task.dto.task;
 
-import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.enums.DbTypeEnum;

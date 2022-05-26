@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.dto.api;
 
-import com.fisk.dataaccess.dto.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

@@ -3,7 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataaccess.dto.TableHistoryDTO;
+import com.fisk.dataaccess.dto.table.TableHistoryDTO;
 import com.fisk.dataaccess.entity.TableHistoryPO;
 import com.fisk.dataaccess.map.TableHistoryMap;
 import com.fisk.dataaccess.mapper.TableHistoryMapper;

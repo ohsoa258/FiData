@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.dto.json;
 
-import com.fisk.dataaccess.dto.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

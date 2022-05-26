@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.dto.pgsqlmetadata;
 
 import com.alibaba.fastjson.JSONArray;
-import com.fisk.dataaccess.dto.FieldNameDTO;
+import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import lombok.Data;
 
 import java.util.List;

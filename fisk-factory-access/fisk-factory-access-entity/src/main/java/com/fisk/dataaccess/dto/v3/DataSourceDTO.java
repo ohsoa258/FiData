@@ -1,7 +1,7 @@
 package com.fisk.dataaccess.dto.v3;
 
-import com.fisk.dataaccess.dto.DataBaseViewDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import lombok.Data;
 
 import java.util.List;

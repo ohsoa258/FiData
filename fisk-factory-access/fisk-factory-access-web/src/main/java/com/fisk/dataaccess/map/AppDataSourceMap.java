@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.map;
 
-import com.fisk.dataaccess.dto.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;

@@ -2,8 +2,8 @@ package com.fisk.dataaccess.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.dataaccess.dto.DataBaseViewDTO;
-import com.fisk.dataaccess.dto.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.table.DataBaseViewDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -127,7 +127,7 @@ public class SqlServerPlusUtils {
     /**
      * 获取sqlserver表详情(表名+字段)
      *
-     * @return java.util.List<com.fisk.dataaccess.dto.TablePyhNameDTO>
+     * @return java.util.List<com.fisk.dataaccess.table.TablePyhNameDTO>
      * @description 获取sqlserver表详情(表名 + 字段)
      * @author Lock
      * @date 2022/4/1 14:56
@@ -176,7 +176,7 @@ public class SqlServerPlusUtils {
     /**
      * 加载视图详情(视图名称 + 字段)
      *
-     * @return java.util.List<com.fisk.dataaccess.dto.DataBaseViewDTO>
+     * @return java.util.List<com.fisk.dataaccess.table.DataBaseViewDTO>
      * @description 加载视图详情(视图名称 + 字段)
      * @author Lock
      * @date 2022/4/1 14:57
