@@ -129,10 +129,7 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(AttributeGroupDetailsPO::getGroupId,id);
-        int res1 = detailsMapper.delete(queryWrapper);
-        if (res1 <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        detailsMapper.delete(queryWrapper);
 
         return ResultEnum.SUCCESS;
     }
