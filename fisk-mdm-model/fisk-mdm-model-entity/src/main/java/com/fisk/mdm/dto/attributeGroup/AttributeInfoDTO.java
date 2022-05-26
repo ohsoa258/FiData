@@ -18,4 +18,8 @@ public class AttributeInfoDTO {
     private Integer dataTypeLength;
     private Integer dataTypeDecimalLength;
     private Integer existsGroup;
+    /**
+     * 关联实体的名称
+     */
+    private String domainName;
 }

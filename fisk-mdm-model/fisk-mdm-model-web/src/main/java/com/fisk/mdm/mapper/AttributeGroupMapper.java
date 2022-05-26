@@ -24,7 +24,7 @@ public interface AttributeGroupMapper extends BaseMapper<AttributeGroupPO> {
      * @param entityId
      * @return
      */
-    @Select("SELECT t1.id,t1.NAME AS `name`,t1.display_name,t1.DESC AS `desc`,t1.data_type,t1.data_type_length,t1.data_type_decimal_length,t2.id AS exists_group FROM "
+    @Select("SELECT t1.id,t1.NAME AS `name`,t1.display_name,t1.DESC AS `desc`,t1.data_type,t1.data_type_length,t1.data_type_decimal_length,t2.id AS exists_group,t1.domain_id AS domainName FROM "
     + " `tb_attribute` t1 LEFT JOIN tb_attribute_group_details t2 ON t1.id = t2.attribute_id AND t2.del_flag = 1 AND t2.group_id = #{groupId} AND t2.entity_id = #{entityId} "
     + " WHERE t1.del_flag = 1 AND t1.entity_id = #{entityId} AND t1.`status` = 2 ")
     List<AttributeInfoDTO> getAttributeExists(@Param("groupId") Integer groupId,@Param("entityId") Integer entityId);
