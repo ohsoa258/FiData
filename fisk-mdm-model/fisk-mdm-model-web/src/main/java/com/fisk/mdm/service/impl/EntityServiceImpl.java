@@ -215,6 +215,7 @@ public class EntityServiceImpl implements EntityService {
     public ResultEnum saveEntity(EntityDTO dto) {
         QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
+                .eq(EntityPO::getModelId,dto.getModelId())
                 .eq(EntityPO::getName,dto.getName())
                 .last("limit 1");
 

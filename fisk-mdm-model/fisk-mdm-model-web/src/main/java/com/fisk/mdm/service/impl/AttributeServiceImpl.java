@@ -29,6 +29,7 @@ import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -172,6 +173,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
      * @param attributeUpdateDTO 属性更新dto
      * @return {@link ResultEnum}
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum editData(AttributeUpdateDTO attributeUpdateDTO) {
         AttributePO attributePo = baseMapper.selectById(attributeUpdateDTO.getId());
@@ -253,10 +255,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(AttributeGroupDetailsPO::getAttributeId,attributeUpdateDTO.getId());
-        int res = groupDetailsMapper.delete(queryWrapper);
-        if (res <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        groupDetailsMapper.delete(queryWrapper);
 
         // 添加到属性组
         AttributeGroupDetailsPO detailsPo = new AttributeGroupDetailsPO();
