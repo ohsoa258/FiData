@@ -201,11 +201,6 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         //把DTO转化到查询出来的PO上
         attributePo = AttributeMap.INSTANCES.updateDtoToPo(attributeUpdateDTO);
 
-        //如果历史的状态是新增,保持状态为新增
-        attributePo.setStatus(attributePo.getStatus() == AttributeStatusEnum.INSERT ?
-                AttributeStatusEnum.INSERT : AttributeStatusEnum.UPDATE);
-
-
         LambdaUpdateWrapper<AttributePO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AttributePO::getId,attributePo.getId());
         //若修改后数据类型不为浮点型，将数据小数点长度修改为null
@@ -245,8 +240,15 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             updateWrapper.set(AttributePO::getDomainId,null);
         }
 
-        //修改数据
-        attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
+        // 判断特殊字符是否有变动
+        boolean fieldChanges = this.isSpecialFieldChanges(attributeUpdateDTO);
+        if (fieldChanges == false){
+            //如果历史的状态是新增,保持状态为新增
+            attributePo.setStatus(attributePo.getStatus() == AttributeStatusEnum.INSERT ?
+                    AttributeStatusEnum.INSERT : AttributeStatusEnum.UPDATE);
+            //修改数据
+            attributePo.setSyncStatus(AttributeSyncStatusEnum.NOT_PUBLISH);
+        }
         if (baseMapper.update(attributePo,updateWrapper) <= 0) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
@@ -276,7 +278,21 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * 判断特殊字符
+     * @param attributeUpdateDTO
+     * @return
+     */
+    public boolean isSpecialFieldChanges(AttributeUpdateDTO attributeUpdateDTO){
+        AttributePO attributePo = baseMapper.selectById(attributeUpdateDTO.getId());
+        AttributeSpecialDTO specialDto = AttributeMap.INSTANCES.specialPoToDto(attributePo);
+        AttributeSpecialDTO attributeSpecialDto = AttributeMap.INSTANCES.specialDtoToDto(attributeUpdateDTO);
+        if (attributeSpecialDto.equals(specialDto)){
+            return true;
+        }
 
+        return false;
+    }
 
     @Override
     public Page<AttributeVO> getAll(AttributeQueryDTO query) {

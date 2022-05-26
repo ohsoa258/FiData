@@ -1,10 +1,7 @@
 package com.fisk.mdm.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.mdm.dto.attribute.AttributeDTO;
-import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.dto.attribute.AttributePageDTO;
-import com.fisk.mdm.dto.attribute.AttributeUpdateDTO;
+import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
@@ -70,6 +67,20 @@ public interface AttributeMap {
             @Mapping(source = "status" ,target = "status")
     })
     AttributePO updateDtoToPo(AttributeUpdateDTO dto);
+
+    /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    AttributeSpecialDTO specialPoToDto(AttributePO po);
+
+    /**
+     * dto => dto
+     * @param dto
+     * @return
+     */
+    AttributeSpecialDTO specialDtoToDto(AttributeUpdateDTO dto);
 
     /**
      * po => dto
