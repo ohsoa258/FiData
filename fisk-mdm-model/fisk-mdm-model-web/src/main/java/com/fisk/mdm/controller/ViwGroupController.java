@@ -5,7 +5,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
-import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupQueryDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.service.ViwGroupService;
@@ -41,7 +42,7 @@ public class ViwGroupController {
     @ApiOperation("修改自定义视图组")
     @PutMapping("/updateData")
     @ResponseBody
-    public ResultEntity<ResultEnum> updateData(@Validated @RequestBody UpdateViwGroupDTO dto) {
+    public ResultEntity<ResultEnum> updateData(@Validated @RequestBody ViwGroupUpdateDTO dto) {
         return ResultEntityBuild.build(viwGroupService.updateData(dto));
     }
 
@@ -81,9 +82,9 @@ public class ViwGroupController {
     }
 
     @ApiOperation("根据实体id查询实体关联关系")
-    @GetMapping("/getRelationByEntityId")
+    @PostMapping("/getRelationByEntityId")
     @ResponseBody
-    public ResultEntity<EntityQueryDTO> getRelationByEntityId(Integer id) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(id));
+    public ResultEntity<EntityQueryDTO> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(dto));
     }
 }

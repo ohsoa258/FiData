@@ -1,6 +1,6 @@
 package com.fisk.mdm.map;
 
-import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
@@ -41,7 +41,7 @@ public interface ViwGroupMap {
      * @param dto
      * @return
      */
-    ViwGroupPO groupUpdateDtoToPo(UpdateViwGroupDTO dto);
+    ViwGroupPO groupUpdateDtoToPo(ViwGroupUpdateDTO dto);
 
     /**
      *

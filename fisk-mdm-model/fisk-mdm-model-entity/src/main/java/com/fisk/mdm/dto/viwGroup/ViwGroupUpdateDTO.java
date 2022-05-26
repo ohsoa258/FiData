@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
  * @Version 1.0
  */
 @Data
-public class UpdateViwGroupDTO {
+public class ViwGroupUpdateDTO {
 
     @NotNull
     private Integer id;

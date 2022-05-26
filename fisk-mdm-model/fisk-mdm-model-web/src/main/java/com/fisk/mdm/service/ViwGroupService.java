@@ -2,7 +2,8 @@ package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
-import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupQueryDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
@@ -42,7 +43,7 @@ public interface ViwGroupService {
      * @param dto
      * @return
      */
-    ResultEnum updateData(UpdateViwGroupDTO dto);
+    ResultEnum updateData(ViwGroupUpdateDTO dto);
 
     /**
      * 根据id删除自定义视图组
@@ -60,8 +61,8 @@ public interface ViwGroupService {
 
     /**
      * 根据实体id查询实体关联关系
-     * @param entityId
+     * @param dto
      * @return
      */
-    EntityQueryDTO getRelationByEntityId(Integer entityId);
+    EntityQueryDTO getRelationByEntityId(ViwGroupQueryDTO dto);
 }

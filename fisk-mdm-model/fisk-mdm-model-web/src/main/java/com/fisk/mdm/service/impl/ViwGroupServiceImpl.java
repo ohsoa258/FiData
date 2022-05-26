@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
-import com.fisk.mdm.dto.viwGroup.UpdateViwGroupDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupQueryDTO;
+import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
@@ -27,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -109,7 +109,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public ResultEnum updateData(UpdateViwGroupDTO dto) {
+    public ResultEnum updateData(ViwGroupUpdateDTO dto) {
         ViwGroupPO viwGroupPo = ViwGroupMap.INSTANCES.groupUpdateDtoToPo(dto);
         int res = viwGroupMapper.updateById(viwGroupPo);
         return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -166,17 +166,27 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public EntityQueryDTO getRelationByEntityId(Integer entityId) {
-        EntityQueryDTO attributeInfo = this.getAttributeInfo(entityId);
+    public EntityQueryDTO getRelationByEntityId(ViwGroupQueryDTO dto) {
+        // 查询出视图组中的属性
+        QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ViwGroupDetailsPO::getGroupId,dto.getGroupId());
+        List<ViwGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
+        // 视图组id集合
+        List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
+
+        // 查询出域字段关联的实体
+        EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds);
         return attributeInfo;
     }
 
     /**
      * 根据实体id获取属性,拼接成需要返回的参数
      * @param entityId
+     * @param attributeIds
      * @return
      */
-    public EntityQueryDTO getAttributeInfo(Integer entityId){
+    public EntityQueryDTO getAttributeInfo(Integer entityId,List<Integer> attributeIds){
         EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
         if (entityInfoVo == null){
             return null;
@@ -189,18 +199,26 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 属性信息
         List<AttributeInfoDTO> attributeList = entityInfoVo.getAttributeList();
-        List<EntityQueryDTO> collect = attributeList.stream().map(e -> {
+        List<EntityQueryDTO> collect = attributeList.stream().filter(e -> e.getDomainId() == null).map(e -> {
             EntityQueryDTO dto1 = new EntityQueryDTO();
             dto1.setId(e.getId());
             dto1.setName(e.getName());
             dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
+
+            // 判断是否在视图组中存在
+            if (attributeIds.contains(e.getId())){
+                dto1.setIsCheck(1);
+            }else {
+                dto1.setIsCheck(0);
+            }
+
             return dto1;
         }).collect(Collectors.toList());
 
         // 域字段递归
         List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
             AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId());
+            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds);
             return attributeInfo;
         }).collect(Collectors.toList());
         collect.addAll(doMainList);

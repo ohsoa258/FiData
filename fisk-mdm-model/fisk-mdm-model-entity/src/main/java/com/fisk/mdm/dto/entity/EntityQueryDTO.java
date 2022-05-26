@@ -18,6 +18,10 @@ public class EntityQueryDTO {
     private String name;
     private String type;
     private String aliasName;
+    /**
+     * 是否选中 0:未选中 1:选中
+     */
+    private Integer isCheck;
     private List<EntityQueryDTO> children;
 
     public EntityQueryDTO(Integer id, String name, String type) {
