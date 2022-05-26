@@ -75,7 +75,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         queryWrapper.lambda()
                 .eq(EntityPO::getId, attributeVO.getEntityId());
         EntityPO entityPO = entityMapper.selectOne(queryWrapper);
-        attributeVO.setModelId(entityPO.getModelId());
+        if (entityPO != null){
+            attributeVO.setModelId(entityPO.getModelId());
+        }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, attributeVO);
     }
 
