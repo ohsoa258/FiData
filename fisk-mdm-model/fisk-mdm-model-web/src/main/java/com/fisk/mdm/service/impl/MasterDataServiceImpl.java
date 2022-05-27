@@ -347,15 +347,18 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获得业务字段名
         List<AttributeColumnVO> newColumnList = new ArrayList<>();
         for (AttributeColumnVO attributeColumnVo : attributeColumnVoList) {
+            newColumnList.add(attributeColumnVo);
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
                 newColumnList.add(getCodeAndName(attributeColumnVo));
                 attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
                 attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
             }
-            newColumnList.add(attributeColumnVo);
         }
         attributeColumnVoList = newColumnList;
+        if (resultObjectVO.getAttributes().size() == 1 && StringUtils.isEmpty(resultObjectVO.getAttributes().get(0).getName())) {
+            resultObjectVO.getAttributes().get(0).setAttributes(attributeColumnVoList);
+        }
         //准备主数据集合
         List<Map<String, Object>> data;
         String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
