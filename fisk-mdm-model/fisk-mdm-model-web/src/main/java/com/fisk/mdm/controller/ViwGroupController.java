@@ -50,7 +50,7 @@ public class ViwGroupController {
         return ResultEntityBuild.build(viwGroupService.deleteGroupById(id));
     }
 
-    @ApiOperation("属性组新增属性")
+    @ApiOperation("视图组新增属性")
     @PostMapping("/addAttribute")
     @ResponseBody
     public ResultEntity<ResultEnum> addAttribute(@RequestBody ViwGroupDetailsAddDTO dto) {

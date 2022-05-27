@@ -1,5 +1,6 @@
 package com.fisk.mdm.map;
 
+import com.fisk.mdm.dto.attributeGroup.AttributeGroupDetailsDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
@@ -49,6 +50,13 @@ public interface ViwGroupMap {
      * @return
      */
     ViwGroupDetailsPO detailsDtoToDto(ViwGroupDetailsDTO dto);
+
+    /**
+     * po => dto
+     * @param po
+     * @return
+     */
+    ViwGroupDetailsDTO detailsPoToDto(ViwGroupDetailsPO po);
 
     /**
      * po => dto list

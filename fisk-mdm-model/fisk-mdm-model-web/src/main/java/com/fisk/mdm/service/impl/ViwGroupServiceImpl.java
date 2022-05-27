@@ -20,6 +20,7 @@ import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
+import com.fisk.system.client.UserClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     EntityService entityService;
     @Resource
     AttributeService attributeService;
+    @Resource
+    UserClient userClient;
 
     @Override
     public ViwGroupVO getDataByGroupId(Integer id) {
@@ -61,7 +64,21 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 .eq(ViwGroupDetailsPO::getGroupId,id);
         List<ViwGroupDetailsPO> detailsPoList = detailsMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(detailsPoList)){
-            viwGroupVo.setGroupDetailsList(ViwGroupMap.INSTANCES.detailsPoToDtoList(detailsPoList));
+            List<ViwGroupDetailsDTO> collect = detailsPoList.stream().map(e -> {
+                AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+                ViwGroupDetailsDTO dto = ViwGroupMap.INSTANCES.detailsPoToDto(e);
+                if (data != null) {
+                    dto.setName(data.getName());
+                    dto.setDisplayName(data.getDisplayName());
+                    dto.setDesc(data.getDesc());
+                    dto.setDataType(data.getDataType());
+                    dto.setDataTypeLength(data.getDataTypeLength());
+                    dto.setDataTypeDecimalLength(data.getDataTypeDecimalLength());
+                }
+                return dto;
+            }).collect(Collectors.toList());
+
+            viwGroupVo.setGroupDetailsList(collect);
         }
 
         return viwGroupVo;
