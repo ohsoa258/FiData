@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.dto.api.doc.doc;
+package com.fisk.dataaccess.dto.api.doc;
 
 import lombok.Data;
 

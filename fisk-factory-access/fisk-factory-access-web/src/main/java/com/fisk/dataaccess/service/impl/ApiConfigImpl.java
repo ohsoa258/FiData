@@ -18,13 +18,14 @@ import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.*;
-import com.fisk.dataaccess.dto.api.doc.doc.*;
+import com.fisk.dataaccess.dto.api.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.pgsqlmetadata.ApiSqlResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableSyncmodeDTO;
@@ -415,9 +416,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (CollectionUtils.isEmpty(accessPoList)) {
                 return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
             }
-            // 获取所有表数据
+            // 获取当前api下的所有表数据
             List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
-            apiTableDtoList.forEach(System.out::println);
+//            apiTableDtoList.forEach(System.out::println);
 
             AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
             if (modelApp == null) {
@@ -430,18 +431,27 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
-            // TODO stg同步到ods(联调task)
+            // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
-                msg.append("数据推送到ods: ").append(resultEnum1.getMsg()).append(";");
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append(";");
             }
 
-            // TODO 保存本次的日志信息
+            // 保存本次的日志信息
             // 非实时api
             if (dto.flag) {
                 savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
+                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+            } else if (dto.executeConfigFlag) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+                }
+                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             } else {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
                 savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             }
 
@@ -803,6 +813,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
+            //系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
 
             // 推送数据
@@ -839,6 +850,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
+            // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
             // 推送数据
             pushData(receiveDataDTO);
@@ -876,6 +888,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             System.out.println("data = " + data);
             receiveDataDTO.pushData = String.valueOf(data);
+            // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
 
             // 推送数据
@@ -927,7 +940,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params jsonStr
      * @params apiTableDtoList
-     * @params tablePrefixName pg中的物理表名
+     * @params tablePrefixName stg_应用简称
      * @params apiId apiId
      * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
      */
@@ -936,17 +949,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
-        // ods全表名
+        // ods_应用简称
         String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
         try {
             JSONObject json = JSON.parseObject(jsonStr);
             List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
             JsonUtils jsonUtils = new JsonUtils();
             List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
-            targetTable.forEach(System.out::println);
+//            targetTable.forEach(System.out::println);
             // 获取Json的schema信息
             List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
-            schemas.forEach(System.out::println);
+//            schemas.forEach(System.out::println);
             // json根节点处理
             jsonUtils.rootNodeHandler(schemas, json, targetTable);
             targetTable.forEach(System.out::println);
@@ -992,9 +1005,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // stg_abbreviationName_tableName
             ResultEntity<Object> excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable);
             resultEnum = ResultEnum.getEnum(excuteResult.code);
-            checkResultMsg.append("数据推送到").append(replaceTablePrefixName).append("临时表: ").append(excuteResult.getMsg()).append(",")
-                    .append("推送的条数为: ").append(excuteResult.data).append(";");
-            COUNT_SQL = excuteResult.data == null ? 0 : (Integer) excuteResult.data;
+
+            List<ApiSqlResultDTO> list = JSONArray.parseArray(excuteResult.msg.toString(), ApiSqlResultDTO.class);
+            if (!CollectionUtils.isEmpty(list)) {
+                for (ApiSqlResultDTO e : list) {
+                    checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
+                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append(";");
+                    COUNT_SQL = e.getCount();
+                    // 推送条数累加值
+                    COUNT_SQL += COUNT_SQL;
+                }
+            }
         } catch (Exception e) {
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
