@@ -662,7 +662,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                     }
                                     //验证code
                                     ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(jsonObj);
-                                    errorMsg += verifyDTO.getErrorMsg();
+                                    errorMsg += verifyDTO.getSuccess() ? "" : verifyDTO.getErrorMsg();
                                     if (StringUtils.isEmpty(jsonObj.get("code").toString())
                                             && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
                                         jsonObj.put("code", buildCodeCommand.createCode());

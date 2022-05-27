@@ -33,6 +33,7 @@ public class MasterDataFormatVerifyUtils {
         try {
             ImportDataVerifyDTO dto = new ImportDataVerifyDTO();
             dto.setSuccess(true);
+            dto.setValue("");
             if (StringUtils.isEmpty(data.get("code") == null ? "" : data.get("code").toString())
                     && !StringUtils.isEmpty(data.get("fidata_new_code") == null ? "" : data.get("fidata_new_code").toString())) {
                 dto.setSuccess(false);
