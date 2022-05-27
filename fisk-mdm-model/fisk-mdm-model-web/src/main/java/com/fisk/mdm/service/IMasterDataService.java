@@ -2,6 +2,7 @@ package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.*;
+import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
@@ -24,18 +25,30 @@ public interface IMasterDataService {
      * 分页
      *
      * @param dto
+     * @param response
      * @return
      */
     ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response);
 
     /**
      * 获取模型实体版本数据
+     *
      * @return
      */
     List<ModelDropDownVO> getModelEntityVersionStruct();
 
     /**
+     * 根据模型id,实体id获取属性组列表
+     *
+     * @param modelId
+     * @param entity
+     * @return
+     */
+    List<AttributeGroupDropDownVO> listAttributeGroup(Integer modelId, Integer entity);
+
+    /**
      * 下载模板
+     *
      * @param entityId
      * @param response
      * @return

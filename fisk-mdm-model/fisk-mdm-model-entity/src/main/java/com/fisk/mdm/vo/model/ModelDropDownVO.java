@@ -1,6 +1,5 @@
 package com.fisk.mdm.vo.model;
 
-import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.entity.EntityDropDownVO;
 import com.fisk.mdm.vo.modelVersion.ModelVersionDropDownVO;
 import com.fisk.mdm.vo.resultObject.DropDownBaseVO;
@@ -19,7 +18,5 @@ public class ModelDropDownVO extends DropDownBaseVO {
     private List<EntityDropDownVO> entity;
 
     private List<ModelVersionDropDownVO> versions;
-
-    private List<AttributeGroupDropDownVO> attributeGroups;
 
 }

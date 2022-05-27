@@ -51,14 +51,20 @@ public class MasterDataController {
 
     @ApiOperation("获取模型、实体、版本下拉列表")
     @GetMapping("/getModelEntityVersionStruct")
-    public ResultEntity<Object> getModelEntityVersionStruct(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getModelEntityVersionStruct());
+    public ResultEntity<Object> getModelEntityVersionStruct() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModelEntityVersionStruct());
+    }
+
+    @ApiOperation("获取属性组下拉列表")
+    @GetMapping("/listAttributeGroup")
+    public ResultEntity<Object> listAttributeGroup(Integer modelId, Integer entityId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listAttributeGroup(modelId, entityId));
     }
 
     @ApiOperation("下载模板")
     @GetMapping("/downloadTemplate")
-    public ResultEntity<Object> downloadTemplate(Integer entityId){
-        return ResultEntityBuild.build(service.downloadTemplate(entityId,response));
+    public ResultEntity<Object> downloadTemplate(Integer entityId) {
+        return ResultEntityBuild.build(service.downloadTemplate(entityId, response));
     }
 
     @ApiOperation("导入模板")

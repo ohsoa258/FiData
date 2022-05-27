@@ -305,16 +305,27 @@ public class AttributeGroupServiceImpl implements AttributeGroupService {
     }
 
     /**
-     * 根据模型id,获取属性组列表
+     * 根据模型id,实体id,获取属性组列表
      *
      * @param modelId
      * @return
      */
-    public List<AttributeGroupDropDownVO> getAttributeGroupByModelId(Integer modelId) {
-        QueryWrapper<AttributeGroupPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(AttributeGroupPO::getModelId, modelId);
-        List<AttributeGroupPO> list = groupMapper.selectList(queryWrapper);
-        return AttributeGroupMap.INSTANCES.groupListPoToVoList(list);
+    public List<AttributeGroupDropDownVO> getAttributeGroupByModelId(Integer modelId, Integer entityId) {
+        QueryWrapper<AttributeGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("group_id").lambda().eq(AttributeGroupDetailsPO::getEntityId, entityId);
+        List<Integer> ids = (List) detailsMapper.selectObjs(queryWrapper);
+        ids.stream().distinct().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(ids)) {
+            return new ArrayList<>();
+        }
+        QueryWrapper<AttributeGroupPO> groupPoQueryWrapper = new QueryWrapper<>();
+        groupPoQueryWrapper.in("id", ids)
+                .orderByDesc("create_time")
+                .lambda().eq(AttributeGroupPO::getModelId, modelId);
+        List<AttributeGroupPO> list = groupMapper.selectList(groupPoQueryWrapper);
+        List<AttributeGroupDropDownVO> dropDowns = AttributeGroupMap.INSTANCES.groupListPoToVoList(list);
+        dropDowns.stream().map(e -> e.displayName = e.name).collect(Collectors.toList());
+        return dropDowns;
     }
 
     /**

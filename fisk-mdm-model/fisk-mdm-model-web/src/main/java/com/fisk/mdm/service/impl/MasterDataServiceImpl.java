@@ -36,6 +36,7 @@ import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
+import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
@@ -139,10 +140,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
             e.setEntity(entityServiceImpl.getEntityDropDown(e.id));
             e.getEntity().forEach(p -> p.setViewGroups(viwGroupService.getViewGroupByEntityId(p.id)));
             e.getEntity().forEach(p -> p.getViewGroups().forEach(t -> t.displayName = t.name));
-            e.setAttributeGroups(attributeGroupService.getAttributeGroupByModelId(e.id));
-            e.getAttributeGroups().stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
         });
         return data;
+    }
+
+    @Override
+    public List<AttributeGroupDropDownVO> listAttributeGroup(Integer modelId, Integer entity) {
+        return attributeGroupService.getAttributeGroupByModelId(modelId, entity);
     }
 
     /**
