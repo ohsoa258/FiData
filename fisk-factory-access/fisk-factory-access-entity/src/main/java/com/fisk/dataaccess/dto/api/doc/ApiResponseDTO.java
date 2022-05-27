@@ -30,6 +30,16 @@ public class ApiResponseDTO {
     public String  parmDesc;
 
     /**
+     * 参数推送规则
+     */
+    public String parmPushRule;
+
+    /**
+     * 参数推送规则
+     */
+    public String parmPushExample;
+
+    /**
      * 行样式
      */
     public String  trStyle;

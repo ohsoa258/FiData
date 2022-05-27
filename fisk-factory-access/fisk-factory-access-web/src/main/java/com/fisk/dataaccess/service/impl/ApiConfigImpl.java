@@ -245,13 +245,27 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEnum.DATASOURCE_ISNULL;
         }
 
-        // 发布之后,按照配置调用一次api
+        // 发布之后,按照配置调用一次非实时api
         if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
             ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
             apiImportDataDTO.appId = dto.appId;
             apiImportDataDTO.apiId = dto.id;
             // 调用api推送数据方法
             importData(apiImportDataDTO);
+
+            // 发布之后,按照配置推送一次实时api
+        } else if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
+            ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
+            receiveDataDto.apiCode = dto.id;
+            receiveDataDto.flag = true;
+            receiveDataDto.executeConfigFlag = true;
+            String pushData = dto.pushData;
+            if (StringUtils.isNotBlank(pushData)) {
+                String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
+                System.out.println("pushDataStr = " + pushDataStr);
+                receiveDataDto.pushData = pushDataStr;
+            }
+            pushData(receiveDataDto);
         }
 
         return ResultEnum.SUCCESS;
@@ -439,16 +453,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 保存本次的日志信息
             // 非实时api
-            if (dto.flag) {
+            if (dto.flag && !dto.executeConfigFlag) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
                 savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
                 // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
-            } else if (dto.executeConfigFlag) {
+            } else if (dto.flag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
                 savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else {
+            } else if (!dto.executeConfigFlag){
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
@@ -815,6 +832,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.pushData = String.valueOf(data);
             //系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
+            receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
             pushData(receiveDataDTO);
@@ -852,6 +870,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.pushData = String.valueOf(data);
             // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
+            receiveDataDTO.executeConfigFlag = false;
+
             // 推送数据
             pushData(receiveDataDTO);
 
@@ -890,6 +910,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.pushData = String.valueOf(data);
             // 系统内部调用(非实时推送)
             receiveDataDTO.flag = true;
+            receiveDataDTO.executeConfigFlag = false;
 
             // 推送数据
             pushData(receiveDataDTO);
@@ -1442,6 +1463,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         apiResponseDTO.parmName = f.fieldName;
                         apiResponseDTO.parmType = f.fieldType;
                         apiResponseDTO.parmDesc = f.fieldDes;
+                        apiResponseDTO.parmPushRule = f.fieldPushRule;
+                        apiResponseDTO.parmPushExample = f.fieldPushExample;
                         apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                         pushDataDtos.add(apiResponseDTO);
                         trIndex[0]++;

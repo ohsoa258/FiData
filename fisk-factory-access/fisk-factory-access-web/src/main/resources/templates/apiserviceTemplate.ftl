@@ -599,6 +599,22 @@
             font-weight: normal;
             text-align: center;">说明
                         </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">推送规则
+                        </th>
+                        <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">推送示例
+                        </th>
                     </tr>
                     </thead>
                     <tbody>
@@ -635,6 +651,22 @@
             font-weight: normal;
             text-align: center;
             word-break: break-all;">${pushDataItem.parmDesc!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmPushRule!}
+                            </td>
+                            <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${pushDataItem.parmPushExample!}
                             </td>
                         </tr>
                     </#list>
