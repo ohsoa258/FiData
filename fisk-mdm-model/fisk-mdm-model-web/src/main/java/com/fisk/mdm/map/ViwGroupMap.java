@@ -44,7 +44,7 @@ public interface ViwGroupMap {
     ViwGroupPO groupUpdateDtoToPo(ViwGroupUpdateDTO dto);
 
     /**
-     *
+     * dto => po
      * @param dto
      * @return
      */

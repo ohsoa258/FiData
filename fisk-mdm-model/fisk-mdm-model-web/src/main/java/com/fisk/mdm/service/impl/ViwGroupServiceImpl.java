@@ -3,12 +3,10 @@ package com.fisk.mdm.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupQueryDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
+import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.entity.ViwGroupDetailsPO;
 import com.fisk.mdm.entity.ViwGroupPO;
 import com.fisk.mdm.enums.ObjectTypeEnum;
@@ -26,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,37 +129,50 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(ViwGroupDetailsPO::getGroupId,id);
-        int res1 = detailsMapper.delete(queryWrapper);
-        if (res1 <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        detailsMapper.delete(queryWrapper);
 
         return ResultEnum.SUCCESS;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
-    public ResultEnum addAttribute(ViwGroupDetailsDTO dtoList) {
-        boolean existViwGroup = this.isExistViwGroup(dtoList.getGroupId());
+    public ResultEnum deleteAttribute(ViwGroupDetailsDTO dto) {
+        boolean existViwGroup = this.isExistViwGroup(dto.getGroupId());
         if (existViwGroup == false){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        // 同一个属性组下面数据不能重复
+        QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda()
+                .eq(ViwGroupDetailsPO::getGroupId,dto.getGroupId())
+                .eq(ViwGroupDetailsPO::getAttributeId,dto.getAttributeId());
+        int res = detailsMapper.delete(queryWrapper);
+        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum addAttribute(ViwGroupDetailsAddDTO dto) {
+
+        // 删除属性组下的实体数据
         QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(ViwGroupDetailsPO::getGroupId,dtoList.getGroupId())
-                .eq(ViwGroupDetailsPO::getAliasName,dtoList.getAliasName())
-                .eq(ViwGroupDetailsPO::getAttributeId,dtoList.getAttributeId())
-                .last("limit 1");
-        ViwGroupDetailsPO viwGroupDetailsPo = detailsMapper.selectOne(queryWrapper);
-        if (viwGroupDetailsPo != null){
-            return ResultEnum.DATA_EXISTS;
-        }
+                .eq(ViwGroupDetailsPO::getGroupId,dto.getGroupId());
+        detailsMapper.delete(queryWrapper);
 
-        ViwGroupDetailsPO detailsPo1 = ViwGroupMap.INSTANCES.detailsDtoToDto(dtoList);
-        int res = detailsMapper.insert(detailsPo1);
-        return res > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 新增视图组数据
+        ViwGroupDetailsDTO detailsDto = new ViwGroupDetailsDTO();
+        detailsDto.setGroupId(dto.getGroupId());
+        dto.getDetailsNameList().stream().forEach(e -> {
+            detailsDto.setAttributeId(e.getAttributeId());
+            detailsDto.setAliasName(e.getAliasName());
+            ViwGroupDetailsPO detailsPo = ViwGroupMap.INSTANCES.detailsDtoToDto(detailsDto);
+            int res = detailsMapper.insert(detailsPo);
+            if (res <= 0){
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        });
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override

@@ -5,10 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.entity.EntityQueryDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupQueryDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupUpdateDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupDTO;
-import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
+import com.fisk.mdm.dto.viwGroup.*;
 import com.fisk.mdm.service.ViwGroupService;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import io.swagger.annotations.Api;
@@ -32,7 +29,7 @@ public class ViwGroupController {
     @Resource
     ViwGroupService viwGroupService;
 
-    @ApiOperation("根据组id查询属性组")
+    @ApiOperation("根据id查询视图组")
     @GetMapping("/getDataByGroupId")
     @ResponseBody
     public ResultEntity<ViwGroupVO> getDataByGroupId(Integer id) {
@@ -56,16 +53,16 @@ public class ViwGroupController {
     @ApiOperation("属性组新增属性")
     @PostMapping("/addAttribute")
     @ResponseBody
-    public ResultEntity<ResultEnum> addAttribute(@RequestBody ViwGroupDetailsDTO dto) {
+    public ResultEntity<ResultEnum> addAttribute(@RequestBody ViwGroupDetailsAddDTO dto) {
         return ResultEntityBuild.build(viwGroupService.addAttribute(dto));
     }
 
-//    @ApiOperation("属性组根据属性id删除")
-//    @DeleteMapping("/deleteAttribute")
-//    @ResponseBody
-//    public ResultEntity<ResultEnum> deleteAttribute(@RequestBody AttributeGroupDetailsDTO dto) {
-//        return ResultEntityBuild.build(viwGroupService.deleteAttribute(dto));
-//    }
+    @ApiOperation("视图组删除属性(根据属性id删除)")
+    @DeleteMapping("/deleteAttribute")
+    @ResponseBody
+    public ResultEntity<ResultEnum> deleteAttribute(@RequestBody ViwGroupDetailsDTO dto) {
+        return ResultEntityBuild.build(viwGroupService.deleteAttribute(dto));
+    }
 
     @ApiOperation("创建自定义视图组")
     @PostMapping("/addViwGroup")
@@ -74,7 +71,7 @@ public class ViwGroupController {
         return ResultEntityBuild.build(viwGroupService.addViwGroup(dto));
     }
 
-    @ApiOperation("根据实体id查询")
+    @ApiOperation("查询视图组(根据实体id)")
     @GetMapping("/getDataByEntityId")
     @ResponseBody
     public ResultEntity<List<ViwGroupVO>> getDataByEntityId(Integer id) {
