@@ -13,7 +13,7 @@
         ptl.end_time,
         ptl.counts,
         ptl.dispatch_type,
-        ptl.appId,
+        ptl.app_id
         from tb_pipeline_table_log ptl
         where ptl.del_flag = 1 and ptl.table_id=#{tableId} and ptl.table_type=#{tableType} and ptl.del_flag =1
         <if test="keyword !=null and keyword!='' ">

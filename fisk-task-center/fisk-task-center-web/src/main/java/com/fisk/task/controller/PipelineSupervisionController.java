@@ -1,6 +1,5 @@
 package com.fisk.task.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -9,13 +8,11 @@ import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
-import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.listener.pipeline.IBuildPipelineSupervisionListener;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.ITableTopicService;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -84,7 +81,7 @@ public class PipelineSupervisionController {
      * @return
      */
     @PostMapping("/getPipelineTableLog")
-    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam String data, @RequestBody String pipelineTableQuery) {
+    public ResultEntity<List<PipelineTableLogVO>> getPipelineTableLog(@RequestParam("data") String data, @RequestParam("pipelineTableQuery") String pipelineTableQuery) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelineTableLog.getPipelineTableLogs(data, pipelineTableQuery));
     }
 
