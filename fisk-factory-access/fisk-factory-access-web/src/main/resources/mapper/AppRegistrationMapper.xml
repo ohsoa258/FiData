@@ -45,9 +45,9 @@
         <if test="appId !=null and appId!='' ">
             AND app.id = #{appId}
         </if>
-        <if test="keyword !=null and keyword!='' ">
-            AND api.api_name like concat('%', #{keyword}, '%')
-        </if>
+<!--        <if test="keyword !=null and keyword!='' ">-->
+<!--            AND api.api_name like concat('%', #{keyword}, '%')-->
+<!--        </if>-->
         <if test="apiId !=null and apiId!='' ">
             AND api.id = #{apiId}
         </if>
@@ -69,9 +69,9 @@
         <if test="appId !=null and appId!='' ">
             AND app.id = #{appId}
         </if>
-        <if test="keyword !=null and keyword!='' ">
-            AND api.api_name like concat('%', #{keyword}, '%')
-        </if>
+<!--        <if test="keyword !=null and keyword!='' ">-->
+<!--            AND api.api_name like concat('%', #{keyword}, '%')-->
+<!--        </if>-->
         <if test="apiId !=null and apiId!='' ">
             AND api.id = #{apiId}
         </if>
@@ -93,9 +93,9 @@
         <if test="appId !=null and appId!='' ">
             AND app.id = #{appId}
         </if>
-        <if test="keyword !=null and keyword!='' ">
-            AND tb.table_name like concat('%', #{keyword}, '%')
-        </if>
+<!--        <if test="keyword !=null and keyword!='' ">-->
+<!--            AND tb.table_name like concat('%', #{keyword}, '%')-->
+<!--        </if>-->
         <if test="apiId !=null and apiId!='' ">
             AND tb.id = #{apiId}
         </if>
