@@ -99,18 +99,29 @@ public class MasterDataController {
     @ApiOperation("添加主数据")
     @PostMapping("/addMasterData")
     @ResponseBody
-    public ResultEntity<Object> addMasterData(@Validated @RequestBody MasterDataDTO dto)
-    {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.addMasterData(dto));
+    public ResultEntity<Object> addMasterData(@Validated @RequestBody MasterDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addMasterData(dto));
     }
 
-    /*@ApiOperation("删除主数据")
+    @ApiOperation("删除主数据")
     @DeleteMapping("/deleteMasterData")
     @ResponseBody
-    public ResultEntity<Object> deleteMasterData(@Validated @RequestBody MasterDataDTO dto)
-    {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.delMasterData(dto));
-    }*/
+    public ResultEntity<Object> deleteMasterData(@Validated @RequestBody MasterDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delMasterData(dto));
+    }
+
+    @ApiOperation("更新主数据")
+    @PutMapping("/updateMasterData")
+    @ResponseBody
+    public ResultEntity<Object> updateMasterData(@Validated @RequestBody MasterDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.updateMasterData(dto));
+    }
+
+    @ApiOperation("获取域字段code和name数据")
+    @GetMapping("/listEntityCodeAndName")
+    public ResultEntity<Object> listEntityCodeAndName(Integer entityId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listEntityCodeAndName(entityId));
+    }
 
 
 }

@@ -2,6 +2,7 @@ package com.fisk.common.core.utils;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import org.apache.commons.lang.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -54,13 +55,13 @@ public class DateTimeUtils {
     }
 
     /**
+     * @return java.lang.String
      * @description 指定日期加多少天
      * @author dick
      * @date 2022/4/21 18:38
      * @version v1.0
      * @params date
      * @params day
-     * @return java.lang.String
      */
     public static String getDateAddDay(String date, int day) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -73,5 +74,31 @@ public class DateTimeUtils {
         cd.add(Calendar.DATE, day);//增加n天
         String format = sdf.format(cd.getTime());
         return format;
+    }
+
+    /**
+     * 判断字符串是否为合法的日期格式
+     *
+     * @param dateStr 待判断的字符串
+     * @return
+     */
+    public static boolean isValidDate(String dateStr, String dateFormat) {
+        boolean judgeresult = true;
+        if (StringUtils.isEmpty(dateStr) || StringUtils.isEmpty(dateFormat)) {
+            return false;
+        }
+        try {
+            // yyyy-MM-dd HH:mm:ss ps：24小时和12小时制无法区分
+            SimpleDateFormat format = new SimpleDateFormat(dateFormat);
+            format.setLenient(false);
+        } catch (Exception e) {
+            judgeresult = false;
+        }
+        //由于上述方法只能验证正常的日期格式，像诸如 0001-01-01、11-01-01，10001-01-01等无法校验，此处再添加校验年份是否合法
+        String yearStr = dateStr.split("-")[0];
+        if (yearStr.startsWith("0") || yearStr.length() != 4) {
+            judgeresult = false;
+        }
+        return judgeresult;
     }
 }

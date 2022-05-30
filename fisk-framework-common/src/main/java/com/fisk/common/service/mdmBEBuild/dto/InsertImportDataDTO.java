@@ -33,4 +33,9 @@ public class InsertImportDataDTO {
      */
     private Integer importType;
 
+    /**
+     * 是否删除
+     */
+    private Boolean delete;
+
 }

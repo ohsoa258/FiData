@@ -38,9 +38,10 @@ import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
 import com.fisk.mdm.vo.attribute.AttributeColumnVO;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.entity.EntityVO;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
+import com.fisk.mdm.vo.masterdata.OperatorVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultAttributeGroupVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -226,6 +227,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return queryMasterData(resultObjectVO, dto, tableName, attributeColumnVoList, response);
     }
 
+    /**
+     * 自定义视图筛选
+     *
+     * @param dto
+     * @param response
+     * @return
+     */
     public ResultObjectVO getViewData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
@@ -286,6 +294,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         return queryMasterData(resultObjectVO, dto, viwGroupVO.getName(), attributeColumnVoList, response);
     }
 
+    /**
+     * 属性组筛选
+     *
+     * @param dto
+     * @param response
+     * @return
+     */
     public ResultObjectVO getAttributeGroupData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
@@ -365,13 +380,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         //准备主数据集合
         List<Map<String, Object>> data;
+        //查询字段
         String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
             //获取总条数
             int rowCount = 0;
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-            //查询提交数据是否存在错误数据
+            //获取总条数sql
             String count = buildSqlCommand.buildQueryCount(tableName, null);
             List<Map<String, Object>> columnCount = AbstractDbHelper.execQueryResultMaps(count, getConnection());
             if (!CollectionUtils.isEmpty(columnCount)) {
@@ -450,7 +466,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      */
     public int templateDataSubmitStg(List<Map<String, Object>> members, String tableName,
                                      String batchCode, int versionId, long userId,
-                                     ImportTypeEnum importTypeEnum) {
+                                     ImportTypeEnum importTypeEnum, boolean delete) {
         try {
             Connection conn = getConnection();
             Statement stat = conn.createStatement();
@@ -461,6 +477,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dto.setUserId(userId);
             dto.setMembers(members);
             dto.setTableName(tableName);
+            dto.setDelete(delete);
             //调用生成批量insert语句方法
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildInsertImportData(dto);
@@ -560,7 +577,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     @Override
-    public BathUploadMemberListVo importTemplateData(ImportParamDTO dto, MultipartFile file) {
+    public BathUploadMemberListVO importTemplateData(ImportParamDTO dto, MultipartFile file) {
         if (!file.getOriginalFilename().contains(".xlsx")) {
             throw new FkException(ResultEnum.FILE_NAME_ERROR);
         }
@@ -573,7 +590,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         if (CollectionUtils.isEmpty(list)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-        BathUploadMemberListVo listVo = new BathUploadMemberListVo();
+        BathUploadMemberListVO listVo = new BathUploadMemberListVO();
         BathUploadMemberVO result = new BathUploadMemberVO();
         result.versionId = dto.getVersionId();
         result.entityId = dto.getEntityId();
@@ -611,22 +628,22 @@ public class MasterDataServiceImpl implements IMasterDataService {
             //获得总行数
             int rowNum = sheet.getPhysicalNumberOfRows();
             Row row1 = sheet.getRow(0);
-                List<AttributeInfoDTO> attributePoList = new ArrayList<>();
-                //获取表头
-                for (int col = 0; col < columnNum; col++) {
-                    Cell cell = row1.getCell(col);
-                    if (cell.getStringCellValue().equals("新编码")) {
-                        AttributeInfoDTO newCode = new AttributeInfoDTO();
-                        newCode.setName("fidata_new_code");
-                        attributePoList.add(newCode);
-                        continue;
-                    }
-                    Optional<AttributeInfoDTO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
-                    if (!data.isPresent()) {
-                        throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
-                    }
-                    attributePoList.add(data.get());
+            List<AttributeInfoDTO> attributePoList = new ArrayList<>();
+            //获取表头
+            for (int col = 0; col < columnNum; col++) {
+                Cell cell = row1.getCell(col);
+                if (cell.getStringCellValue().equals("新编码")) {
+                    AttributeInfoDTO newCode = new AttributeInfoDTO();
+                    newCode.setName("fidata_new_code");
+                    attributePoList.add(newCode);
+                    continue;
                 }
+                Optional<AttributeInfoDTO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
+                if (!data.isPresent()) {
+                    throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
+                }
+                attributePoList.add(data.get());
+            }
             if (list.size() != columnNum - 1) {
                 throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE);
             }
@@ -640,73 +657,73 @@ public class MasterDataServiceImpl implements IMasterDataService {
             final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
             for (int thread = 0; thread < threadCount; thread++) {
                 int start = thread * threadHandleNumber + 1;
-                    int end = (thread + 1) * threadHandleNumber > rowNum ? rowNum : ((thread + 1) * threadHandleNumber) + 1;
-                    new Thread(new Runnable() {
-                        @SneakyThrows
-                        @Override
-                        public void run() {
-                            try {
-                                List<Map<String, Object>> objectList = new ArrayList<>();
-                                for (int row = start; row < end; row++) {
-                                    Map<String, Object> jsonObj = new HashMap<>();
-                                    Row nowRow = sheet.getRow(row);
-                                    String errorMsg = "";
-                                    for (int col = 0; col < columnNum; col++) {
-                                        Cell cell = nowRow.getCell(col);
-                                        String value = "";
-                                        //判断字段类型
-                                        if (cell != null) {
-                                            ImportDataVerifyDTO cellDataDTO = MasterDataFormatVerifyUtils.getCellDataType(cell,
-                                                    attributePoList.get(col).getDisplayName(),
-                                                    attributePoList.get(col).getDataType());
-                                            value = cellDataDTO.getValue();
-                                            errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
-                                        }
-                                        jsonObj.put(attributePoList.get(col).getName(), dto.removeSpace ? value.trim() : value);
+                int end = (thread + 1) * threadHandleNumber > rowNum ? rowNum : ((thread + 1) * threadHandleNumber) + 1;
+                new Thread(new Runnable() {
+                    @SneakyThrows
+                    @Override
+                    public void run() {
+                        try {
+                            List<Map<String, Object>> objectList = new ArrayList<>();
+                            for (int row = start; row < end; row++) {
+                                Map<String, Object> jsonObj = new HashMap<>();
+                                Row nowRow = sheet.getRow(row);
+                                String errorMsg = "";
+                                for (int col = 0; col < columnNum; col++) {
+                                    Cell cell = nowRow.getCell(col);
+                                    String value = "";
+                                    //判断字段类型
+                                    if (cell != null) {
+                                        ImportDataVerifyDTO cellDataDTO = MasterDataFormatVerifyUtils.getCellDataType(cell,
+                                                attributePoList.get(col).getDisplayName(),
+                                                attributePoList.get(col).getDataType());
+                                        value = cellDataDTO.getValue();
+                                        errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
                                     }
-                                    //验证code
-                                    ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(jsonObj);
-                                    errorMsg += verifyDTO.getSuccess() ? "" : verifyDTO.getErrorMsg();
-                                    if (StringUtils.isEmpty(jsonObj.get("code").toString())
-                                            && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
-                                        jsonObj.put("code", buildCodeCommand.createCode());
-                                    }
-                                    //上传逻辑：1 修改 2 新增
-                                    if (codeList.contains(jsonObj.get("code"))) {
-                                        jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
-                                        updateCount.incrementAndGet();
-                                    } else {
-                                        jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-                                        addCount.incrementAndGet();
-                                    }
-                                    jsonObj.put("fidata_error_msg", errorMsg);
-                                    jsonObj.put("internalId", "");
-                                    //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
-                                    if (StringUtils.isEmpty(errorMsg)) {
-                                        jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
-                                        successCount.incrementAndGet();
-                                    } else {
-                                        jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_FAILED.getValue());
-                                        errorCount.incrementAndGet();
-                                    }
-                                    objectList.add(jsonObj);
+                                    jsonObj.put(attributePoList.get(col).getName(), dto.removeSpace ? value.trim() : value);
                                 }
-                                if (!CollectionUtils.isEmpty(objectList)) {
-                                    objectArrayList.addAll(objectList);
+                                //验证code
+                                ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(jsonObj);
+                                errorMsg += verifyDTO.getSuccess() ? "" : verifyDTO.getErrorMsg();
+                                if (StringUtils.isEmpty(jsonObj.get("code").toString())
+                                        && StringUtils.isEmpty(jsonObj.get("fidata_new_code").toString())) {
+                                    jsonObj.put("code", buildCodeCommand.createCode());
                                 }
-                            } catch (Exception e) {
-                                log.error("importTemplateData thread:", e);
-                            } finally {
-                                countDownLatch.countDown();
+                                //上传逻辑：1 修改 2 新增
+                                if (codeList.contains(jsonObj.get("code"))) {
+                                    jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                                    updateCount.incrementAndGet();
+                                } else {
+                                    jsonObj.put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+                                    addCount.incrementAndGet();
+                                }
+                                jsonObj.put("fidata_error_msg", errorMsg);
+                                jsonObj.put("internalId", "");
+                                //0：上传成功（数据进入stg表） 1：提交成功（数据进入mdm表） 2：提交失败（数据进入mdm表失败）
+                                if (StringUtils.isEmpty(errorMsg)) {
+                                    jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+                                    successCount.incrementAndGet();
+                                } else {
+                                    jsonObj.put("fidata_status", SyncStatusTypeEnum.UPLOADED_FAILED.getValue());
+                                    errorCount.incrementAndGet();
+                                }
+                                objectList.add(jsonObj);
                             }
+                            if (!CollectionUtils.isEmpty(objectList)) {
+                                objectArrayList.addAll(objectList);
+                            }
+                        } catch (Exception e) {
+                            log.error("importTemplateData thread:", e);
+                        } finally {
+                            countDownLatch.countDown();
                         }
-                    }).start();
+                    }
+                }).start();
             }
             //等待所有线程执行完毕
             countDownLatch.await();
             int flatCount = 0;
             if (!CollectionUtils.isEmpty(objectArrayList)) {
-                flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT);
+                flatCount = templateDataSubmitStg(objectArrayList, tableName, batchNumber, dto.getVersionId(), userId, ImportTypeEnum.EXCEL_IMPORT,false);
             }
             //添加批次
             setStgBatch(batchNumber, dto.getEntityId(), dto.getVersionId(), result.count, result.count - flatCount, addCount.get(), updateCount.get(), flatCount > 0 ? 0 : 1);
@@ -724,6 +741,34 @@ public class MasterDataServiceImpl implements IMasterDataService {
             log.error("importTemplateData", e);
             throw new FkException(ResultEnum.CHECK_TEMPLATE_IMPORT_FAILURE, e);
         }
+    }
+
+    @Override
+    public List<OperatorVO> getSearchOperator() {
+        return null;
+    }
+
+    @Override
+    public List<Map<String, Object>> listEntityCodeAndName(Integer entityId) {
+        EntityPO entityPo = entityMapper.selectById(entityId);
+        if (entityPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        //查询该实体下发布的属性
+        List<AttributeInfoDTO> attributeInfos = attributeService.listPublishedAttribute(entityId);
+        if (attributeInfos.isEmpty()) {
+            throw new FkException(ResultEnum.ATTRIBUTE_NOT_EXIST);
+        }
+        Optional<AttributeInfoDTO> codeColumn = attributeInfos.stream().filter(e -> MdmTypeEnum.CODE.getName().equals(e.getName())).findFirst();
+        Optional<AttributeInfoDTO> nameColumn = attributeInfos.stream().filter(e -> MdmTypeEnum.NAME.getName().equals(e.getName())).findFirst();
+        if (!codeColumn.isPresent() || !nameColumn.isPresent()) {
+            throw new FkException(ResultEnum.EXIST_INVALID_COLUMN);
+        }
+        String tableName = TableNameGenerateUtils.generateMdmTableName(entityPo.getModelId(), entityId);
+        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+        //生成查询语句
+        String selectSql = sqlBuilder.buildQueryCodeAndName(tableName, codeColumn.get().getColumnName(), nameColumn.get().getColumnName());
+        return AbstractDbHelper.execQueryResultMaps(selectSql, getConnection());
     }
 
     @Override
@@ -783,36 +828,60 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Override
     public ResultEnum addMasterData(MasterDataDTO dto) {
+        return OperateMasterData(dto, EventTypeEnum.SAVE);
+    }
+
+    @Override
+    public ResultEnum delMasterData(MasterDataDTO dto) {
+        return OperateMasterData(dto, EventTypeEnum.DELETE);
+    }
+
+    @Override
+    public ResultEnum updateMasterData(MasterDataDTO dto) {
+        return OperateMasterData(dto, EventTypeEnum.UPDATE);
+    }
+
+    /**
+     * 单条数据维护公共方法
+     *
+     * @param dto
+     * @param eventTypeEnum
+     * @return
+     */
+    public ResultEnum OperateMasterData(MasterDataDTO dto, EventTypeEnum eventTypeEnum) {
         EntityPO entityPO = entityMapper.selectById(dto.getEntityId());
         if (entityPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         String tableName = TableNameGenerateUtils.generateStgTableName(dto.getModelId(), dto.getEntityId());
-        //校验code
-        ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(dto.getMembers());
-        if (!verifyResult.getSuccess()) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR, verifyResult.getErrorMsg());
-        }
-        dto.getMembers().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
-        dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
-        if (StringUtils.isEmpty(dto.getMembers().get("code").toString())) {
-            //code生成规则
-            IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
-            dto.getMembers().put("code", buildCodeCommand.createCode());
-        } else {
-            //获取code列名
-            String columnName = getEntityCodeName(dto.getEntityId());
-            //code是否验证已存在
-            List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
-            if (codeList.contains(dto.getMembers().get("code"))) {
-                dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+        if (eventTypeEnum == EventTypeEnum.SAVE) {
+            //校验code
+            ImportDataVerifyDTO verifyResult = MasterDataFormatVerifyUtils.verifyCode(dto.getMembers());
+            if (!verifyResult.getSuccess()) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR, verifyResult.getErrorMsg());
+            }
+            dto.getMembers().put("fidata_status", SyncStatusTypeEnum.UPLOADED_SUCCESSFULLY.getValue());
+            dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.INSERT.getValue());
+            if (StringUtils.isEmpty(dto.getMembers().get("code").toString())) {
+                //code生成规则
+                IBuildCodeCommand buildCodeCommand = BuildCodeHelper.getCodeCommand();
+                dto.getMembers().put("code", buildCodeCommand.createCode());
+            } else {
+                //获取code列名
+                String columnName = getEntityCodeName(dto.getEntityId());
+                //code是否验证已存在
+                List<String> codeList = getCodeList(TableNameGenerateUtils.generateMdmTableName(dto.getModelId(), dto.getEntityId()), columnName);
+                if (codeList.contains(dto.getMembers().get("code"))) {
+                    dto.getMembers().put("fidata_syncy_type", SyncTypeStatusEnum.UPDATE.getValue());
+                }
             }
         }
         //生成批次号
         String batchNumber = UUID.randomUUID().toString();
         List<Map<String, Object>> members = new ArrayList<>();
         members.add(dto.getMembers());
-        int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(), userHelper.getLoginUserInfo().id, ImportTypeEnum.MANUALLY_ENTER);
+        boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
+        int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(), userHelper.getLoginUserInfo().id, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -825,11 +894,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
             List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, getConnection());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, maps.get(0).get("fidata_error_msg").toString());
         }
-        return ResultEnum.SUCCESS;
-    }
-
-    @Override
-    public ResultEnum delMasterData(MasterDataDTO dto) {
         return ResultEnum.SUCCESS;
     }
 

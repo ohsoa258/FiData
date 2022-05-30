@@ -8,7 +8,7 @@ import java.util.List;
  * @author JianWenYang
  */
 @Data
-public class BathUploadMemberListVo {
+public class BathUploadMemberListVO {
 
     public String key;
 
