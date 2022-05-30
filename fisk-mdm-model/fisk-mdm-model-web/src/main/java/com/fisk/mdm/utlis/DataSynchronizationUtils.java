@@ -19,8 +19,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.JDBCType;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -201,7 +203,8 @@ public class DataSynchronizationUtils {
         str.append(" SET ");
         str.append(MARK + "new_code = " + "excluded." + MARK + "new_code").append(",");
         str.append(MARK + "version_id = " + "excluded." + MARK + "version_id").append(",");
-        str.append(MARK + "lock_tag = " +  "excluded." + MARK + "lock_tag").append(",");
+        str.append(MARK + "lock_tag = " + "excluded." + MARK + "lock_tag").append(",");
+        str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
 
         String code1 = columnName + " = " + "excluded." + MARK + "new_code" + ",";
 

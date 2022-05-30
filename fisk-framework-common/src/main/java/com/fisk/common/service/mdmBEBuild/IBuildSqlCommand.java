@@ -99,4 +99,14 @@ public interface IBuildSqlCommand {
      */
     String buildQueryOneData(String tableName, String queryConditions);
 
+    /**
+     * 查询mdm表code和name数据
+     *
+     * @param tableName
+     * @param code
+     * @param name
+     * @return
+     */
+    String buildQueryCodeAndName(String tableName, String code, String name);
+
 }

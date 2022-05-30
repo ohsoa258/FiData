@@ -42,6 +42,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildInsertImportData(InsertImportDataDTO dto) {
         Date date = new Date();
+        int delFlat = dto.getDelete() ? 0 : 1;
         StringBuilder str = new StringBuilder();
         str.append("insert into " + dto.getTableName());
         str.append("(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), ImportDataEnum.COLUMN_NAME.getValue()));
@@ -51,7 +52,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(" values(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(0), ImportDataEnum.COLUMN_VALUE.getValue()) + ","
                 + dto.getImportType() + ",'" + dto.getBatchCode() + "'," + dto.getVersionId() + ",'");
         str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",'");
-        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + ",1" + ")");
+        str.append(CommonMethods.getFormatDate(date) + "'," + dto.getUserId() + "," + delFlat + ")");
         if (dto.getMembers().size() > 1) {
             for (int i = 1; i < dto.getMembers().size(); i++) {
                 str.append(",(" + CommonMethods.getColumnNameAndValue(dto.getMembers().get(i), ImportDataEnum.COLUMN_VALUE.getValue()) + ","
@@ -175,6 +176,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(" select *");
         str.append(" from " + tableName);
         str.append(" where 1=1 " + queryConditions);
+        return str.toString();
+    }
+
+    @Override
+    public String buildQueryCodeAndName(String tableName, String code, String name) {
+        StringBuilder str = new StringBuilder();
+        str.append("select " + code + " as code,");
+        str.append(name + " as name ");
+        str.append(" from " + tableName);
         return str.toString();
     }
 

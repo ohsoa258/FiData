@@ -142,4 +142,13 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String buildQueryCodeAndName(String tableName, String code, String name) {
+        StringBuilder str = new StringBuilder();
+        str.append("select " + code + " as code,");
+        str.append(name + " as name ");
+        str.append(" from " + tableName);
+        return str.toString();
+    }
+
 }

@@ -3,8 +3,9 @@ package com.fisk.mdm.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
-import com.fisk.mdm.vo.masterdata.BathUploadMemberListVo;
+import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
+import com.fisk.mdm.vo.masterdata.OperatorVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 主数据服务
@@ -57,11 +59,12 @@ public interface IMasterDataService {
 
     /**
      * 导入模板数据
+     *
      * @param dto
      * @param file
      * @return
      */
-    BathUploadMemberListVo importTemplateData(ImportParamDTO dto, MultipartFile file);
+    BathUploadMemberListVO importTemplateData(ImportParamDTO dto, MultipartFile file);
 
     /**
      * 导出数据分页展示
@@ -105,10 +108,11 @@ public interface IMasterDataService {
 
     /**
      * 主数据更新
+     *
      * @param dto
      * @return
      */
-    //ResultEnum updateMasterData(MasterDataDTO dto);
+    ResultEnum updateMasterData(MasterDataDTO dto);
 
     /**
      * 主数据详情
@@ -116,6 +120,21 @@ public interface IMasterDataService {
      * @return
      */
     //MasterDataDetailsVO getMasterData(MasterDataDetailsParamDTO dto);
+
+    /**
+     * 筛选运算符
+     *
+     * @return
+     */
+    List<OperatorVO> getSearchOperator();
+
+    /**
+     * 获取实体表code和name数据
+     *
+     * @param entityId
+     * @return
+     */
+    List<Map<String, Object>> listEntityCodeAndName(Integer entityId);
 
 
 }
