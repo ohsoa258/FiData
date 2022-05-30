@@ -19,6 +19,11 @@ public class ViwGroupDetailsDTO {
     private String aliasName;
 
     /**
+     * 实体id
+     */
+    private Integer entityId;
+
+    /**
      * 属性名称
      */
     private String name;

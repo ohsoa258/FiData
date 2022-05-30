@@ -84,4 +84,11 @@ public class ViwGroupController {
     public ResultEntity<EntityQueryDTO> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(dto));
     }
+
+    @ApiOperation("创建自定义视图")
+    @GetMapping("/createCustomView")
+    @ResponseBody
+    public ResultEntity<ResultEnum> createCustomView(Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,viwGroupService.createCustomView(id));
+    }
 }
