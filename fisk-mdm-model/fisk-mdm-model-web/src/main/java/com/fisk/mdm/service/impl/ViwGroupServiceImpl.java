@@ -74,12 +74,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     public static final String ALIAS_MARK = "a";
 
     @Override
-    public ViwGroupVO getDataByGroupId(Integer id) {
+    public List<ViwGroupVO> getDataByGroupId(Integer id) {
         ViwGroupPO viwGroupPo = viwGroupMapper.selectById(id);
         if (viwGroupPo == null){
             return null;
         }
 
+        List<ViwGroupVO> list = new ArrayList<>();
         ViwGroupVO viwGroupVo = ViwGroupMap.INSTANCES.groupPoToVo(viwGroupPo);
 
         // 查询视图组
@@ -105,7 +106,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             viwGroupVo.setGroupDetailsList(collect);
         }
 
-        return viwGroupVo;
+        list.add(viwGroupVo);
+        return list;
     }
 
     @Override
@@ -120,7 +122,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<ViwGroupPO> viwGroupPoList = viwGroupMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(viwGroupPoList)){
             List<ViwGroupVO> collect = viwGroupPoList.stream().filter(e -> e.getId() != 0).map(e -> {
-                ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId((int) e.getId());
+                ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId((int) e.getId()).get(0);
                 return viwGroupVo;
             }).collect(Collectors.toList());
             return collect;
@@ -217,7 +219,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public EntityQueryDTO getRelationByEntityId(ViwGroupQueryDTO dto) {
+    public List<EntityQueryDTO> getRelationByEntityId(ViwGroupQueryDTO dto) {
         // 查询出视图组中的属性
         QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -227,13 +229,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
 
         // 查询出域字段关联的实体
+        List<EntityQueryDTO> list = new ArrayList<>();
         EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds);
-        return attributeInfo;
+        list.add(attributeInfo);
+        return list;
     }
 
     @Override
     public ResultEnum createCustomView(Integer id) {
-        ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId(id);
+        ViwGroupVO viwGroupVo = viwGroupService.getDataByGroupId(id).get(0);
         if (viwGroupVo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -271,7 +275,6 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
         // 获取主实体下的属性
         List<ViwGroupDetailsDTO> mainDetailsList = new ArrayList<>();
-        List<ViwGroupDetailsDTO> secondaryDetailsList = new ArrayList<>();
         List<ViwGroupDetailsDTO> groupDetailsList = viwGroupVo.getGroupDetailsList();
         EntityInfoVO infoVo = entityService.getAttributeById(viwGroupVo.getEntityId());
         infoVo.getAttributeList().stream().forEach(e -> {
@@ -282,13 +285,11 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             });
         });
 
-        groupDetailsList.stream().forEach(e -> {
-            mainDetailsList.stream().forEach(item -> {
-                if (!e.getAttributeId().equals(item.getAttributeId())){
-                    secondaryDetailsList.add(e);
-                }
-            });
-        });
+        // 获取从表视图中的属性
+        List<ViwGroupDetailsDTO> secondaryDetailsList = groupDetailsList.stream().filter(e -> !mainDetailsList.stream().map(item -> item.getAttributeId())
+                        .collect(Collectors.toList()).contains(e.getAttributeId()))
+                .collect(Collectors.toList());
+
 
         // 从表属性进行分组
         secondaryDetailsList.stream().filter(e -> e.getAttributeId()!=null).forEach(e -> {
@@ -302,9 +303,10 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> secondaryMap = secondaryDetailsList.stream().collect(Collectors.groupingBy(ViwGroupDetailsDTO::getEntityId
                 , LinkedHashMap::new,Collectors.toList()));
 
-        AtomicInteger count = new AtomicInteger(1);
+        AtomicInteger count = new AtomicInteger(0);
+        int secondaryCount = count.incrementAndGet();
         String mainName = mainDetailsList.stream().map(e -> {
-            String name = ALIAS_MARK + count + "." + e.getName() + " AS " + e.getAliasName();
+            String name = ALIAS_MARK + secondaryCount + "." + e.getName() + " AS " + e.getAliasName();
             return name;
         }).collect(Collectors.joining(","));
 
@@ -317,7 +319,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         for (Integer entityIdKey : secondaryMap.keySet()) {
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
-                String name = ALIAS_MARK + count.getAndIncrement() + "." + e.getName() + " AS " + e.getAliasName();
+                String name = ALIAS_MARK + count.incrementAndGet() + "." + e.getName() + " AS " + e.getAliasName();
                 return name;
             }).collect(Collectors.joining(","));
 
@@ -329,13 +331,14 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         str.append(secondaryFields);
 
         // 主表表名称
-        AtomicInteger count1 = new AtomicInteger(1);
+        AtomicInteger count1 = new AtomicInteger(0);
         EntityVO entityVo = entityService.getDataById(viwGroupVo.getEntityId());
-        str.append(" FROM " + entityVo.getTableName() + " ").append(count1);
+        str.append(" FROM " + entityVo.getTableName() + " ").append(ALIAS_MARK + count1.incrementAndGet());
 
         String leftJoinTable = groupDetailsList.stream().map(e -> {
-            String aliasAdd = ALIAS_MARK + "." + count1.getAndIncrement();
-            String aliasReduce = ALIAS_MARK + "." + count1.getAndIncrement();
+            // 别名名称
+            String aliasAdd = ALIAS_MARK + count1.incrementAndGet() + ".";
+            String aliasReduce = ALIAS_MARK + count1.decrementAndGet() + ".";
             AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
             EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
             List<String> columnName = entityVo1.getAttributeList().stream().map(ec -> {
@@ -350,7 +353,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 // 非域字段
                 secondaryStr.append(entityVo1.getTableName() + aliasAdd);
                 secondaryStr.append(" ON ");
-                secondaryStr.append(aliasAdd + "." + "fidata_version_id = " + aliasReduce + "." + "fidata_version_id");
+                secondaryStr.append(aliasReduce + "fidata_version_id = " + aliasAdd + "fidata_version_id");
             }
 
             secondaryStr.append(" AND ");

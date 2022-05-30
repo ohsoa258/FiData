@@ -32,7 +32,7 @@ public class ViwGroupController {
     @ApiOperation("根据id查询视图组")
     @GetMapping("/getDataByGroupId")
     @ResponseBody
-    public ResultEntity<ViwGroupVO> getDataByGroupId(Integer id) {
+    public ResultEntity<List<ViwGroupVO>> getDataByGroupId(Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getDataByGroupId(id));
     }
 
@@ -81,7 +81,7 @@ public class ViwGroupController {
     @ApiOperation("根据实体id查询实体关联关系")
     @PostMapping("/getRelationByEntityId")
     @ResponseBody
-    public ResultEntity<EntityQueryDTO> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
+    public ResultEntity<List<EntityQueryDTO>> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(dto));
     }
 

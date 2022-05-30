@@ -19,7 +19,7 @@ public interface ViwGroupService {
      * @param id
      * @return
      */
-    ViwGroupVO getDataByGroupId(Integer id);
+    List<ViwGroupVO> getDataByGroupId(Integer id);
 
     /**
      * 根据实体id查询视图组
@@ -68,7 +68,7 @@ public interface ViwGroupService {
      * @param dto
      * @return
      */
-    EntityQueryDTO getRelationByEntityId(ViwGroupQueryDTO dto);
+    List<EntityQueryDTO> getRelationByEntityId(ViwGroupQueryDTO dto);
 
     /**
      * 创建自定义视图

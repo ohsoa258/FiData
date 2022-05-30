@@ -229,7 +229,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
     public ResultObjectVO getViewData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
-        ViwGroupVO viwGroupVO = viwGroupService.getDataByGroupId(dto.getViewId());
+        ViwGroupVO viwGroupVO = viwGroupService.getDataByGroupId(dto.getViewId()).get(0);
         if (viwGroupVO == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
