@@ -257,7 +257,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         } else if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
             ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
             receiveDataDto.apiCode = dto.id;
+            // 系统内部调用
             receiveDataDto.flag = true;
+            // 实时推送示例数据
             receiveDataDto.executeConfigFlag = true;
             String pushData = dto.pushData;
             if (StringUtils.isNotBlank(pushData)) {
@@ -453,6 +455,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 保存本次的日志信息
             // 非实时api
+            // 系统内部调用 && 实时推送示例数据
             if (dto.flag && !dto.executeConfigFlag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
@@ -1019,6 +1022,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
                 // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
+
+                Thread.sleep(200);
             }
 
             System.out.println("开始执行sql");

@@ -16,14 +16,14 @@
         ptl.app_id
         from tb_pipeline_table_log ptl
         where ptl.del_flag = 1 and ptl.table_id=#{tableId} and ptl.table_type=#{tableType} and ptl.del_flag =1
-        <if test="keyword !=null and keyword!='' ">
-            <!--调度类型,0是手动调度,1是管道调度-->
-            AND ptl.dispatchType like concat('%', #{keyword}, '%')
-            <!--comment同步日志-->
-            OR ptl.comment like concat('%', #{keyword}, '%')
-            <!--state同步结果-->
-            OR ptl.state like concat('%', #{keyword}, '%')
-        </if>
+<!--        <if test="keyword !=null and keyword!='' ">-->
+<!--            &lt;!&ndash;调度类型,0是手动调度,1是管道调度&ndash;&gt;-->
+<!--            AND ptl.dispatch_type like concat('%', #{keyword}, '%')-->
+<!--            &lt;!&ndash;comment同步日志&ndash;&gt;-->
+<!--            OR ptl.comment like concat('%', #{keyword}, '%')-->
+<!--            &lt;!&ndash;state同步结果&ndash;&gt;-->
+<!--            OR ptl.state like concat('%', #{keyword}, '%')-->
+<!--        </if>-->
     </select>
 
 </mapper>
