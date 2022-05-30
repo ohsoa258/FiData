@@ -271,7 +271,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     public ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckSyncDTO dto) {
         ResultEntity<List<DataCheckResultVO>> result = new ResultEntity<>();
-        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 第一步：查询数据源信息
             DataSourceConPO dataSourceInfo = dataSourceConManageImpl.getDataSourceInfo(dto.getIp(), dto.getDbName());
@@ -310,10 +309,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(dataCheckExtends)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, null);
             }
-            // 第五步：循环规则，验证stg数据是否合规
             DataSourceTypeEnum dataSourceType = DataSourceTypeEnum.getEnum(dataSourceInfo.getConType());
             Connection connection = dataSourceConManageImpl.getStatement(dataSourceType.getDriverName(), dataSourceInfo.getConStr(), dataSourceInfo.getConAccount(), dataSourceInfo.getConPassword());
-            // 第六步：根据请求参数规则生成SQL条件与修改语句
+            // 第五步：根据请求参数规则生成SQL条件与修改语句
             String checkFieldWhere = "",
                     updateField_Y = "",
                     updateField_N = "",
