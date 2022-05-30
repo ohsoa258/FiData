@@ -2,7 +2,7 @@ package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
@@ -16,6 +16,7 @@ import com.fisk.task.map.PipelineTableLogMap;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -110,13 +111,15 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
     public List<PipelineTableLogVO> getPipelineTableLogs(String data, String pipelineTableQuery) {
         PipelineTableQueryDTO pipelineTableQueryDto = JSON.parseObject(pipelineTableQuery, PipelineTableQueryDTO.class);
         List<PipelineTableLogVO> pipelineTableLogs = JSON.parseArray(data, PipelineTableLogVO.class);
+        String key = pipelineTableQueryDto.keyword;
         List<PipelineTableLogVO> pipelineTableLogVos = new ArrayList<>();
         for (PipelineTableLogVO pipelineTableLog : pipelineTableLogs) {
             OlapTableEnum tableType = pipelineTableLog.tableType;
             Long tableId = pipelineTableLog.tableId;
             log.info("表类别:{},表id:{}", tableType.getName(), tableId);
             List<PipelineTableLogVO> pipelineTableLogs1 = pipelineTableLogMapper.getPipelineTableLogs(Math.toIntExact(tableId), tableType.getValue(), pipelineTableQueryDto.keyword);
-            pipelineTableLogs1.stream().map(
+
+            List<PipelineTableLogVO> collect = pipelineTableLogs1.stream().map(
                     e -> {
                         e.tableName = pipelineTableLog.tableName;
                         e.tableType = pipelineTableLog.tableType;
@@ -124,8 +127,50 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
                         return e;
                     }
             ).collect(Collectors.toList());
+//
+//            filter(f -> {
+//                if (StringUtils.isNotBlank(key)) {
+//
+//                    f.tableName.equalsIgnoreCase(key);
+//                    f.comment.equalsIgnoreCase(key);
+//                    (f.dispatchType + "").equalsIgnoreCase(key);
+//                    (f.state + "").equalsIgnoreCase(key);
+//                }
+//                return true;
+//            })
 
-            pipelineTableLogVos.addAll(pipelineTableLogs1);
+            if (StringUtils.isNotBlank(key)) {
+//                collect.stream()
+//                        .filter(e -> e.tableName.contains(key))
+//                        .filter(e -> e.comment.contains(key))
+//                        .filter(e -> (e.dispatchType + "").contains(key))
+//                        .filter(e -> (e.state + "").contains(key)).collect(Collectors.toList());
+
+                List<PipelineTableLogVO> collect1 = collect.stream().filter(e -> e.tableName.contains(key)).collect(Collectors.toList());
+                List<PipelineTableLogVO> collect2 = collect.stream().filter(e -> e.comment.contains(key)).collect(Collectors.toList());
+                List<PipelineTableLogVO> collect3 = collect.stream().filter(e -> (e.dispatchType + "").contains(key)).collect(Collectors.toList());
+                List<PipelineTableLogVO> collect4 = collect.stream().filter(e -> (e.state + "").contains(key)).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(collect1)) {
+
+                    pipelineTableLogVos.addAll(collect1);
+                }
+                if (CollectionUtils.isNotEmpty(collect2)) {
+
+                    pipelineTableLogVos.addAll(collect2);
+                }
+                if (CollectionUtils.isNotEmpty(collect3)) {
+
+                    pipelineTableLogVos.addAll(collect3);
+                }
+                if (CollectionUtils.isNotEmpty(collect4)) {
+
+                    pipelineTableLogVos.addAll(collect4);
+                }
+
+            } else {
+
+                pipelineTableLogVos.addAll(collect);
+            }
         }
         return pipelineTableLogVos.stream().sorted(Comparator.comparing(PipelineTableLogVO::getStartTime).reversed()).collect(Collectors.toList());
     }
