@@ -24,6 +24,11 @@ public class ViwGroupDetailsDTO {
     private Integer entityId;
 
     /**
+     * 域字段id
+     */
+    private Integer domainId;
+
+    /**
      * 属性名称
      */
     private String name;

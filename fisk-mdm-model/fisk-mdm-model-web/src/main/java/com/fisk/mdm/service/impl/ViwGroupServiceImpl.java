@@ -25,6 +25,7 @@ import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -306,7 +307,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         AtomicInteger count = new AtomicInteger(0);
         int secondaryCount = count.incrementAndGet();
         String mainName = mainDetailsList.stream().map(e -> {
-            String name = ALIAS_MARK + secondaryCount + "." + e.getName() + " AS " + e.getAliasName();
+            String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
+            String name = ALIAS_MARK + secondaryCount + "." + columnName + " AS " + e.getAliasName();
             return name;
         }).collect(Collectors.joining(","));
 
@@ -319,7 +321,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         for (Integer entityIdKey : secondaryMap.keySet()) {
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
-                String name = ALIAS_MARK + count.incrementAndGet() + "." + e.getName() + " AS " + e.getAliasName();
+                String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
+                String name = ALIAS_MARK + count.incrementAndGet() + "." + columnName + " AS " + e.getAliasName();
                 return name;
             }).collect(Collectors.joining(","));
 
@@ -335,11 +338,40 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         EntityVO entityVo = entityService.getDataById(viwGroupVo.getEntityId());
         str.append(" FROM " + entityVo.getTableName() + " ").append(ALIAS_MARK + count1.incrementAndGet());
 
-        String leftJoinTable = groupDetailsList.stream().map(e -> {
+        // 不存在域属性的left join
+        String leftJoinNoDoMain = secondaryMap.keySet().stream().map(e -> {
+
+            ViwGroupDetailsDTO detailsDto = secondaryMap.get(e).get(0);
+
             // 别名名称
-            String aliasAdd = ALIAS_MARK + count1.incrementAndGet() + ".";
-            String aliasReduce = ALIAS_MARK + count1.decrementAndGet() + ".";
-            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+            String aliasAdd = ALIAS_MARK + count1.incrementAndGet();
+            int res = count1.get() - 1;
+            String aliasReduce = ALIAS_MARK + res;
+            AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
+            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
+
+            StringBuilder secondaryStr = new StringBuilder();
+            secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
+            secondaryStr.append(" ON ");
+            secondaryStr.append(aliasReduce + "." + "fidata_version_id = " + aliasAdd + "." + "fidata_version_id");
+
+            return secondaryStr.toString();
+        }).collect(Collectors.joining(" LEFT JOIN "));
+
+        // 根据域字段进行分组
+        LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> doMainMap = groupDetailsList.stream().collect(Collectors.groupingBy(ViwGroupDetailsDTO::getDomainId
+                , LinkedHashMap::new, Collectors.toList()));
+
+        // 存在域属性的left join
+        String leftJoinDoMain = doMainMap.keySet().stream().map(e -> {
+
+            ViwGroupDetailsDTO detailsDto = secondaryMap.get(e).get(0);
+
+            // 别名名称
+            String aliasAdd = ALIAS_MARK + count1.incrementAndGet();
+            int res = count1.get() - 1;
+            String aliasReduce = ALIAS_MARK + res;
+            AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
             EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
             List<String> columnName = entityVo1.getAttributeList().stream().map(ec -> {
                 if (ec.getName().equals("code")) {
@@ -349,23 +381,28 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             }).collect(Collectors.toList());
 
             StringBuilder secondaryStr = new StringBuilder();
-            if (data.getDomainId() == null) {
-                // 非域字段
-                secondaryStr.append(entityVo1.getTableName() + aliasAdd);
-                secondaryStr.append(" ON ");
-                secondaryStr.append(aliasReduce + "fidata_version_id = " + aliasAdd + "fidata_version_id");
-            }
+            secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
+            secondaryStr.append(" ON ");
+            secondaryStr.append(aliasReduce + "." + "fidata_version_id = " + aliasAdd + "." + "fidata_version_id");
 
-            secondaryStr.append(" AND ");
-            secondaryStr.append(aliasReduce + "." + data.getName());
-            secondaryStr.append(" = ");
-            secondaryStr.append(aliasAdd + "." + columnName.get(0));
+            if (data.getDomainId() != null) {
+                // 存在域字段
+                secondaryStr.append(" AND ");
+                secondaryStr.append(aliasReduce + "." + data.getColumnName());
+                secondaryStr.append(" = ");
+                secondaryStr.append(aliasAdd + "." + columnName.get(0));
+            }
 
             return secondaryStr.toString();
         }).collect(Collectors.joining(" LEFT JOIN "));
 
         // 从表表名
-        str.append(leftJoinTable);
+        str.append(" LEFT JOIN ");
+        str.append(leftJoinNoDoMain);
+        // 追加域字段表名称
+        if (StringUtils.isNotBlank(leftJoinDoMain)){
+            str.append(leftJoinDoMain);
+        }
         return str.toString();
     }
 
