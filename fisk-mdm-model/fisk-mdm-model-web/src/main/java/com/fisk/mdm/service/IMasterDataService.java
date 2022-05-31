@@ -1,11 +1,11 @@
 package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
-import com.fisk.mdm.vo.masterdata.OperatorVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
 import org.springframework.web.multipart.MultipartFile;

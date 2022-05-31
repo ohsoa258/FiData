@@ -1,17 +1,22 @@
 package com.fisk.common.service.mdmBEBuild.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.mdm.ImportDataEnum;
+import com.fisk.common.core.enums.mdm.OperatorEnum;
 import com.fisk.common.service.mdmBEBuild.CommonMethods;
 import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -111,6 +116,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("select " + dto.getColumnNames());
         str.append(" from " + dto.getTableName() + " view ");
         str.append("where fidata_del_flag = 1 and fidata_version_id = " + dto.getVersionId());
+        str.append(dto.getConditions());
         str.append(" order by fidata_create_time,fidata_id desc ");
         if (!dto.getExport()) {
             str.append(" limit " + dto.getPageSize() + " offset " + offset);
@@ -185,6 +191,119 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
+        str.append(" where fidata_del_flag=1 ");
+        return str.toString();
+    }
+
+    @Override
+    public List<OperatorVO> getOperatorList() {
+        List<OperatorVO> data;
+        String publicUserType = "\"useType\": [\n" +
+                "      \"DATE\",\n" +
+                "      \"TIME\",\n" +
+                "      \"TIMESTAMP\",\n" +
+                "      \"NUMERICAL\",\n" +
+                "      \"TEXT\",\n" +
+                "      \"FLOAT\",\n" +
+                "      \"MONEY\",\n" +
+                "      \"DOMAIN\"\n" +
+                "    ]\n";
+        String jsonStr = "[\n" +
+                "  {\n" +
+                "    \"label\": \"不为NULL\",\n" +
+                "    \"value\": \"不为NULL\",\n" +
+                "    \"operators\": \"IS NOT NULL\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"为NULL\",\n" +
+                "    \"value\": \"为NULL\",\n" +
+                "    \"operators\": \"IS NULL\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"等于\",\n" +
+                "    \"value\": \"等于\",\n" +
+                "    \"operators\": \"=\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"不等于\",\n" +
+                "    \"value\": \"不等于\",\n" +
+                "    \"operators\": \"<>\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"小于\",\n" +
+                "    \"value\": \"小于\",\n" +
+                "    \"operators\": \"<\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"小于或等于\",\n" +
+                "    \"value\": \"小于或等于\",\n" +
+                "    \"operators\": \"<=\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"大于\",\n" +
+                "    \"value\": \"大于\",\n" +
+                "    \"operators\": \">\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"大于或等于\",\n" +
+                "    \"value\": \"大于或等于\",\n" +
+                "    \"operators\": \">=\",\n" +
+                publicUserType +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"类似于\",\n" +
+                "    \"value\": \"类似于\",\n" +
+                "    \"operators\": \"LIKE\",\n" +
+                "    \"useType\": [\n" +
+                "      \"TEXT\"\n" +
+                "    ]\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"label\": \"不类似于\",\n" +
+                "    \"value\": \"不类似于\",\n" +
+                "    \"operators\": \"NOT LIKE\",\n" +
+                "    \"useType\": [\n" +
+                "      \"TEXT\"\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]";
+        data = JSONObject.parseArray(jsonStr, OperatorVO.class);
+        return data;
+    }
+
+    @Override
+    public String buildOperatorCondition(List<FilterQueryDTO> operators) {
+        StringBuilder str = new StringBuilder();
+        for (FilterQueryDTO item : operators) {
+            OperatorEnum operatorEnum = OperatorEnum.getValue(item.getQueryType());
+            switch (operatorEnum) {
+                case IS_NULL:
+                case NOT_NULL:
+                    str.append(" and " + item.columnName + " " + operatorEnum.getValue());
+                    break;
+                case EQUAL:
+                case NOT_EQUAL:
+                case LESS_THAN:
+                case LESS_THAN_EQUAL:
+                case GREATER_THAN:
+                case GREATER_THAN_EQUAL:
+                    str.append(" and " + item.columnName + operatorEnum.getValue() + "'" + item.columnValue + "'");
+                    break;
+                case LIKE:
+                case NOT_LIKE:
+                    str.append(" and " + item.columnName + operatorEnum.getValue() + "'" + item.columnValue + "%'");
+                    break;
+                default:
+                    continue;
+            }
+        }
         return str.toString();
     }
 
