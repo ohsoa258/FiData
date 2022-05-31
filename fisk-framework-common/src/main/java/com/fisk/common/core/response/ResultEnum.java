@@ -42,6 +42,7 @@ public enum ResultEnum {
     API_ISEMPTY(1018, "获取api对象失败"),
     CLIENT_ISEMPTY(1019, "客户端已删除"),
     FILENAME_EXISTS(1020, "文件名称已存在"),
+    SYSTEM_PARAMS_ISEMPTY(1021, "系统参数为空"),
 
     /**
      * 报表可视化服务，错误码从2000开始

@@ -21,7 +21,7 @@ public class FkException extends RuntimeException {
     }
 
     public FkException(ResultEnum resultEnum, String msg) {
-        super(resultEnum.getMsg());
+        super(msg);
         this.resultEnum = resultEnum;
         this.errorMsg = msg;
     }
