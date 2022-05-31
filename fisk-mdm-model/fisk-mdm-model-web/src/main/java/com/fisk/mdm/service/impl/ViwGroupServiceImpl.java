@@ -358,27 +358,29 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             return secondaryStr.toString();
         }).collect(Collectors.joining(" LEFT JOIN "));
 
+        // 查询出属性的域字段
+        groupDetailsList.stream().forEach(e -> {
+            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+            e.setDomainId(data.getDomainId());
+        });
+
         // 根据域字段进行分组
-        LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> doMainMap = groupDetailsList.stream().collect(Collectors.groupingBy(ViwGroupDetailsDTO::getDomainId
-                , LinkedHashMap::new, Collectors.toList()));
+        LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> doMainMap = groupDetailsList.stream().filter(e -> e.getDomainId() != null)
+                .collect(Collectors.groupingBy(ViwGroupDetailsDTO::getDomainId, LinkedHashMap::new, Collectors.toList()));
 
         // 存在域属性的left join
         String leftJoinDoMain = doMainMap.keySet().stream().map(e -> {
 
-            ViwGroupDetailsDTO detailsDto = secondaryMap.get(e).get(0);
+            ViwGroupDetailsDTO detailsDto = doMainMap.get(e).get(0);
 
             // 别名名称
             String aliasAdd = ALIAS_MARK + count1.incrementAndGet();
             int res = count1.get() - 1;
             String aliasReduce = ALIAS_MARK + res;
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
-            EntityInfoVO entityVo1 = entityService.getAttributeById(data.getEntityId());
-            List<String> columnName = entityVo1.getAttributeList().stream().map(ec -> {
-                if (ec.getName().equals("code")) {
-                    return ec.getColumnName();
-                }
-                return null;
-            }).collect(Collectors.toList());
+            AttributeVO doMainData = attributeService.getById(e).getData();
+            // 查询域属性的实体名称
+            EntityInfoVO entityVo1 = entityService.getAttributeById(doMainData.getEntityId());
 
             StringBuilder secondaryStr = new StringBuilder();
             secondaryStr.append(entityVo1.getTableName() + " " + aliasAdd);
@@ -390,7 +392,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
                 secondaryStr.append(" AND ");
                 secondaryStr.append(aliasReduce + "." + data.getColumnName());
                 secondaryStr.append(" = ");
-                secondaryStr.append(aliasAdd + "." + columnName.get(0));
+                secondaryStr.append(aliasAdd + "." + "fidata_id");
             }
 
             return secondaryStr.toString();
