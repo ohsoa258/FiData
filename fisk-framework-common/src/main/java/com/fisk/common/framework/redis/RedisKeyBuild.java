@@ -29,4 +29,14 @@ public class RedisKeyBuild {
     public static String buildDownLoadToken() {
         return RedisKeyEnum.CHARTVISUAL_DOWNLOAD_TOKEN.getName() + ":" + UUID.randomUUID().toString();
     }
+
+    /**
+     * 组装redis的key
+     *
+     * @param appId 应用id
+     * @return redis key
+     */
+    public static String buildDataSoureKey(long appId) {
+        return RedisKeyEnum.DATASOURCE_KEY.getName() + ":" + appId;
+    }
 }

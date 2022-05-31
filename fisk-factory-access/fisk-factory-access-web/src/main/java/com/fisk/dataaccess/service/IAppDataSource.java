@@ -15,4 +15,6 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return dto
      */
     DataSourceDTO getDataSourceMeta(long appId);
+
+    DataSourceDTO setDataSourceMeta(long appId);
 }

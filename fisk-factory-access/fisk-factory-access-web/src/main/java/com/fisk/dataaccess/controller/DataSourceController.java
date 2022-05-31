@@ -29,4 +29,10 @@ public class DataSourceController {
     public ResultEntity<Object> getDataSourceMeta(@PathVariable long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceMeta(appId));
     }
+
+    @ApiOperation(value = "重新加载所有数据源以及数据库、表数据")
+    @GetMapping("/setDataSourceMeta/{appId}")
+    public ResultEntity<Object> setDataSourceMeta(@PathVariable long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataSourceMeta(appId));
+    }
 }
