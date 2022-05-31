@@ -81,7 +81,7 @@ public class ViwGroupController {
     @ApiOperation("根据实体id查询实体关联关系")
     @PostMapping("/getRelationByEntityId")
     @ResponseBody
-    public ResultEntity<List<EntityQueryDTO>> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
+    public ResultEntity<List<ViwGroupQueryRelationDTO>> getRelationByEntityId(@RequestBody ViwGroupQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,viwGroupService.getRelationByEntityId(dto));
     }
 

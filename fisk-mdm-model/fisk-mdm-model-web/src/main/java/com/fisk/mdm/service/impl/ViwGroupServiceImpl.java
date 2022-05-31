@@ -220,7 +220,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public List<EntityQueryDTO> getRelationByEntityId(ViwGroupQueryDTO dto) {
+    public List<ViwGroupQueryRelationDTO> getRelationByEntityId(ViwGroupQueryDTO dto) {
         // 查询出视图组中的属性
         QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -230,10 +230,46 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
 
         // 查询出域字段关联的实体
-        List<EntityQueryDTO> list = new ArrayList<>();
         EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds);
-        list.add(attributeInfo);
+
+        // 获取出选中属性的id
+        List<Integer> checkedIds = new ArrayList<>();
+        for (EntityQueryDTO child : attributeInfo.getChildren()) {
+            List<Integer> ids = this.getCheckedIds(child);
+            checkedIds.addAll(ids);
+        }
+
+        List<ViwGroupQueryRelationDTO> list = new ArrayList<>();
+        ViwGroupQueryRelationDTO dto1 = new ViwGroupQueryRelationDTO();
+        dto1.setDto(attributeInfo);
+        dto1.setCheckedArr(checkedIds);
+        list.add(dto1);
         return list;
+    }
+
+    /**
+     * 获取出选中属性的id
+     * @param child
+     * @return
+     */
+    public List<Integer> getCheckedIds(EntityQueryDTO child){
+        List<Integer> checkIds = new ArrayList<>();
+
+        // 获取同级
+        if (child.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && child.getIsCheck().equals(1)){
+            checkIds.add(child.getId());
+        }
+
+        // 获取子级
+        List<EntityQueryDTO> children = child.getChildren();
+        if (CollectionUtils.isNotEmpty(children)){
+            children.stream().filter(e -> e.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && e.getIsCheck().equals(1))
+                    .forEach(e -> {
+                        checkIds.add(e.getId());
+                    });
+        }
+
+        return checkIds;
     }
 
     @Override
