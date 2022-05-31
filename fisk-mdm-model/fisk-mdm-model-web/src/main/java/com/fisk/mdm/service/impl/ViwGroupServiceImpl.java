@@ -229,13 +229,13 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         List<Integer> attributeIds = detailsPoList.stream().filter(e -> e.getAttributeId() != null).map(e -> e.getAttributeId()).collect(Collectors.toList());
 
         // 查询出域字段关联的实体
-        EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds);
+        EntityQueryDTO attributeInfo = this.getAttributeInfo(dto.getEntityId(),attributeIds,dto.getGroupId());
 
         // 获取出选中属性的id
-        List<Integer> checkedIds = new ArrayList<>();
+        List<ViwGroupCheckDTO> checkedIds = new ArrayList<>();
         for (EntityQueryDTO child : attributeInfo.getChildren()) {
-            List<Integer> ids = this.getCheckedIds(child);
-            checkedIds.addAll(ids);
+            List<ViwGroupCheckDTO> dtoList = this.getCheckedIds(child);
+            checkedIds.addAll(dtoList);
         }
 
         List<EntityQueryDTO> relationList = new ArrayList<>();
@@ -251,12 +251,15 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @param child
      * @return
      */
-    public List<Integer> getCheckedIds(EntityQueryDTO child){
-        List<Integer> checkIds = new ArrayList<>();
+    public List<ViwGroupCheckDTO> getCheckedIds(EntityQueryDTO child){
+        List<ViwGroupCheckDTO> checkIds = new ArrayList<>();
 
         // 获取同级
         if (child.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && child.getIsCheck().equals(1)){
-            checkIds.add(child.getId());
+            ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
+            dto.setId(child.getId());
+            dto.setAliasName(child.getAliasName());
+            checkIds.add(dto);
         }
 
         // 获取子级
@@ -264,7 +267,10 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         if (CollectionUtils.isNotEmpty(children)){
             children.stream().filter(e -> e.getType().equals(ObjectTypeEnum.ATTRIBUTES.getName()) && e.getIsCheck().equals(1))
                     .forEach(e -> {
-                        checkIds.add(e.getId());
+                        ViwGroupCheckDTO dto = new ViwGroupCheckDTO();
+                        dto.setId(e.getId());
+                        dto.setAliasName(e.getAliasName());
+                        checkIds.add(dto);
                     });
         }
 
@@ -472,7 +478,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
      * @param attributeIds
      * @return
      */
-    public EntityQueryDTO getAttributeInfo(Integer entityId,List<Integer> attributeIds){
+    public EntityQueryDTO getAttributeInfo(Integer entityId,List<Integer> attributeIds,Integer groupId){
         EntityInfoVO entityInfoVo = entityService.getAttributeById(entityId);
         if (entityInfoVo == null){
             return null;
@@ -491,6 +497,16 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             dto1.setName(e.getName());
             dto1.setType(ObjectTypeEnum.ATTRIBUTES.getName());
 
+            // 查询别名
+            QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(ViwGroupDetailsPO::getGroupId,groupId)
+                    .eq(ViwGroupDetailsPO::getAttributeId,e.getId());
+            ViwGroupDetailsPO detailsPo = detailsMapper.selectOne(queryWrapper);
+            if (detailsPo != null){
+                dto1.setAliasName(detailsPo.getAliasName());
+            }
+
             // 判断是否在视图组中存在
             if (attributeIds.contains(e.getId())){
                 dto1.setIsCheck(1);
@@ -504,7 +520,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         // 域字段递归
         List<EntityQueryDTO> doMainList = attributeList.stream().filter(e -> e.getDomainId() != null).map(e -> {
             AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds);
+            EntityQueryDTO attributeInfo = this.getAttributeInfo(data.getEntityId(),attributeIds,groupId);
             return attributeInfo;
         }).collect(Collectors.toList());
         collect.addAll(doMainList);

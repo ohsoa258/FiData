@@ -14,5 +14,5 @@ import java.util.List;
 public class ViwGroupQueryRelationDTO {
 
     private List<EntityQueryDTO> relationList;
-    private List<Integer> checkedArr;
+    private List<ViwGroupCheckDTO> checkedArr;
 }
