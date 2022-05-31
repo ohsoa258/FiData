@@ -339,6 +339,7 @@ public class TableFieldsImpl extends ServiceImpl<TableFieldsMapper, TableFieldsP
                     data.apiId = accessPo.apiId;
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
+                    Thread.sleep(500);
                 } else if (registration.appType == 1) {
                     // 非实时物理表发布
                     // 创建表流程
