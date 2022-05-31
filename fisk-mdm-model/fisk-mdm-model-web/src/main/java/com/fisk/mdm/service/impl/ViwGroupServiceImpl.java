@@ -33,10 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.utils.mdmBEBuild.impl.BuildPgCommandImpl.PUBLIC;
@@ -340,11 +339,16 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> secondaryMap = secondaryDetailsList.stream().collect(Collectors.groupingBy(ViwGroupDetailsDTO::getEntityId
                 , LinkedHashMap::new,Collectors.toList()));
 
+        // 存储的是别名对应的字段名
+        Map<String,String> aliasMap = new HashMap<>(16);
+
         AtomicInteger count = new AtomicInteger(0);
         int secondaryCount = count.incrementAndGet();
         String mainName = mainDetailsList.stream().map(e -> {
             String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
-            String name = ALIAS_MARK + secondaryCount + "." + columnName + " AS " + e.getAliasName();
+            String alias = ALIAS_MARK + secondaryCount;
+            String name = alias + "." + columnName + " AS " + e.getAliasName();
+            aliasMap.put(columnName,alias);
             return name;
         }).collect(Collectors.joining(","));
 
@@ -358,7 +362,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(entityIdKey);
             String collect = detailsList.stream().map(e -> {
                 String columnName = attributeService.getById(e.getAttributeId()).getData().getColumnName();
-                String name = ALIAS_MARK + count.incrementAndGet() + "." + columnName + " AS " + e.getAliasName();
+                String alias = ALIAS_MARK + count.incrementAndGet();
+                String name = alias + "." + columnName + " AS " + e.getAliasName();
+                aliasMap.put(columnName,alias);
                 return name;
             }).collect(Collectors.joining(","));
 
@@ -373,6 +379,21 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         AtomicInteger count1 = new AtomicInteger(0);
         EntityVO entityVo = entityService.getDataById(viwGroupVo.getEntityId());
         str.append(" FROM " + entityVo.getTableName() + " ").append(ALIAS_MARK + count1.incrementAndGet());
+
+        // 删除存在域字段的实体,因为后面拼接域字段的表名会重复
+        for (Integer key : secondaryMap.keySet()) {
+            AtomicReference<Boolean> isDomain = null;
+            List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(key);
+            detailsList.stream().forEach(e -> {
+                if (e.getDomainId() != null){
+                    isDomain.set(true);
+                }
+            });
+
+            if (isDomain.get() == true){
+                secondaryMap.remove(key);
+            }
+        }
 
         // 不存在域属性的left join
         String leftJoinNoDoMain = secondaryMap.keySet().stream().map(e -> {
@@ -426,7 +447,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             if (data.getDomainId() != null) {
                 // 存在域字段
                 secondaryStr.append(" AND ");
-                secondaryStr.append(aliasReduce + "." + data.getColumnName());
+                secondaryStr.append(aliasMap.get(data.getColumnName()) + "." + data.getColumnName());
                 secondaryStr.append(" = ");
                 secondaryStr.append(aliasAdd + "." + "fidata_id");
             }
@@ -439,6 +460,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         str.append(leftJoinNoDoMain);
         // 追加域字段表名称
         if (StringUtils.isNotBlank(leftJoinDoMain)){
+            str.append(" LEFT JOIN ");
             str.append(leftJoinDoMain);
         }
         return str.toString();
