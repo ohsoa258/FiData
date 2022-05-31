@@ -220,7 +220,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
     }
 
     @Override
-    public List<ViwGroupQueryRelationDTO> getRelationByEntityId(ViwGroupQueryDTO dto) {
+    public ViwGroupQueryRelationDTO getRelationByEntityId(ViwGroupQueryDTO dto) {
         // 查询出视图组中的属性
         QueryWrapper<ViwGroupDetailsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -239,12 +239,12 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             checkedIds.addAll(ids);
         }
 
-        List<ViwGroupQueryRelationDTO> list = new ArrayList<>();
+        List<EntityQueryDTO> relationList = new ArrayList<>();
+        relationList.add(attributeInfo);
         ViwGroupQueryRelationDTO dto1 = new ViwGroupQueryRelationDTO();
-        dto1.setDto(attributeInfo);
+        dto1.setRelationList(relationList);
         dto1.setCheckedArr(checkedIds);
-        list.add(dto1);
-        return list;
+        return dto1;
     }
 
     /**

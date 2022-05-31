@@ -13,6 +13,6 @@ import java.util.List;
 @Data
 public class ViwGroupQueryRelationDTO {
 
-    private EntityQueryDTO dto;
+    private List<EntityQueryDTO> relationList;
     private List<Integer> checkedArr;
 }

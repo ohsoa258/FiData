@@ -68,7 +68,7 @@ public interface ViwGroupService {
      * @param dto
      * @return
      */
-    List<ViwGroupQueryRelationDTO> getRelationByEntityId(ViwGroupQueryDTO dto);
+    ViwGroupQueryRelationDTO getRelationByEntityId(ViwGroupQueryDTO dto);
 
     /**
      * 创建自定义视图
