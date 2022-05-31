@@ -1023,7 +1023,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
 
-                Thread.sleep(200);
+                Thread.sleep(500);
             }
 
             System.out.println("开始执行sql");
