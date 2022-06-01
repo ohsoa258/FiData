@@ -131,6 +131,7 @@ public interface IBuildSqlCommand {
      * 生成单条insert语句
      *
      * @param data
+     * @param tableName
      * @return
      */
     String buildInsertSingleData(Map<String, Object> data, String tableName);
