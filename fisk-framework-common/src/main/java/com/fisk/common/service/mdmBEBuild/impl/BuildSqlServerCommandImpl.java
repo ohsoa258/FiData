@@ -5,10 +5,13 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -148,7 +151,18 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
+        str.append(" where fidata_del_flag=1 ");
         return str.toString();
+    }
+
+    @Override
+    public List<OperatorVO> getOperatorList() {
+        return null;
+    }
+
+    @Override
+    public String buildOperatorCondition(List<FilterQueryDTO> operators) {
+        return "";
     }
 
 }

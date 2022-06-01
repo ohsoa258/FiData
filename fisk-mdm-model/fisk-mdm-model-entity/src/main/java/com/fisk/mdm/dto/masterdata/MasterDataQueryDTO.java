@@ -1,5 +1,6 @@
 package com.fisk.mdm.dto.masterdata;
 
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -34,5 +35,10 @@ public class MasterDataQueryDTO extends MasterDataBaseDTO {
      * 自定义视图id
      */
     private Integer viewId;
+
+    /**
+     * 自定义筛选条件
+     */
+    private List<FilterQueryDTO> filterQuery;
 
 }

@@ -468,7 +468,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
                 savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else if (!dto.executeConfigFlag){
+            } else if (!dto.executeConfigFlag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
@@ -1022,8 +1022,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
                 // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
-
-                Thread.sleep(500);
             }
 
             System.out.println("开始执行sql");
@@ -1036,7 +1034,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (!CollectionUtils.isEmpty(list)) {
                 for (ApiSqlResultDTO e : list) {
                     checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
-                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append(";");
+                            .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount() / 2).append(";");
                     COUNT_SQL = e.getCount();
                     // 推送条数累加值
                     COUNT_SQL += COUNT_SQL;

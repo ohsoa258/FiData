@@ -1,4 +1,4 @@
-package com.fisk.mdm.vo.masterdata;
+package com.fisk.common.service.pageFilter.dto;
 
 import lombok.Data;
 
@@ -10,18 +10,18 @@ import java.util.List;
 @Data
 public class OperatorVO {
 
-    private String label;
+    public String label;
 
-    private String value;
+    public String value;
 
     /**
      * 操作符
      */
-    private String operators;
+    public String operators;
 
     /**
      * 适用类型
      */
-    private List<String> useType;
+    public List<String> useType;
 
 }

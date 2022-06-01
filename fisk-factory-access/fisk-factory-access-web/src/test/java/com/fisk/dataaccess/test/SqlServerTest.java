@@ -5,6 +5,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
@@ -215,6 +216,18 @@ public class SqlServerTest {
 
     }
 
-
-
+    @Test
+    public void loadDataSourceMeta() {
+        try {
+            List<AppDataSourcePO> dataSourcePoList = appDataSourceImpl.query()
+                    .eq("drive_type", DataSourceTypeEnum.MYSQL.getName())
+                    .or()
+                    .eq("drive_type", DataSourceTypeEnum.SQLSERVER.getName())
+                    .or()
+                    .eq("drive_type", DataSourceTypeEnum.ORACLE.getName())
+                    .list();
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.LOAD_DATASOURCE_META, e);
+        }
+    }
 }

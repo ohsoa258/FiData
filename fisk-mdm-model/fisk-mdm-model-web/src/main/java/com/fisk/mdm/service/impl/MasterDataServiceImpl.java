@@ -16,6 +16,8 @@ import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.common.service.mdmBEOperate.BuildCodeHelper;
 import com.fisk.common.service.mdmBEOperate.IBuildCodeCommand;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.masterdata.*;
@@ -41,7 +43,6 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
-import com.fisk.mdm.vo.masterdata.OperatorVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultAttributeGroupVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -384,11 +385,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         String businessColumnName = StringUtils.join(attributeColumnVoList.stream()
                 .map(e -> e.getName()).collect(Collectors.toList()), ",");
         try {
+            //拼接筛选条件
+            String conditions = getOperatorCondition(dto.getFilterQuery());
             //获取总条数
             int rowCount = 0;
             IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
             //获取总条数sql
-            String count = buildSqlCommand.buildQueryCount(tableName, null);
+            String count = buildSqlCommand.buildQueryCount(tableName, conditions);
             List<Map<String, Object>> columnCount = AbstractDbHelper.execQueryResultMaps(count, getConnection());
             if (!CollectionUtils.isEmpty(columnCount)) {
                 rowCount = Integer.valueOf(columnCount.get(0).get("totalnum").toString()).intValue();
@@ -402,6 +405,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             dataPageDTO.setPageSize(dto.getPageSize());
             dataPageDTO.setTableName(tableName);
             dataPageDTO.setExport(dto.getExport());
+            dataPageDTO.setConditions(conditions);
             IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
             String sql = sqlBuilder.buildMasterDataPage(dataPageDTO);
             //执行sql，获得结果集
@@ -451,6 +455,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
         vo.setSortWieght(attributeColumnVo.getSortWieght());
         vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
         return vo;
+    }
+
+    /**
+     * 拼接筛选条件
+     *
+     * @param operators
+     * @return
+     */
+    public String getOperatorCondition(List<FilterQueryDTO> operators) {
+        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+        return sqlBuilder.buildOperatorCondition(operators);
     }
 
     /**
@@ -745,7 +760,8 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Override
     public List<OperatorVO> getSearchOperator() {
-        return null;
+        IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+        return sqlBuilder.getOperatorList();
     }
 
     @Override

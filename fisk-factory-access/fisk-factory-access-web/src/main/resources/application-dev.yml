@@ -43,12 +43,3 @@ pgsql-ods:
 data-quality-check:
   ip: 192.168.1.250
   dbName: dmp_ods
-
-# 数据源tree
-dataops:
-  # 应用表里的主键id
-  datasourceKey: appId
-  # 执行时间 凌晨12点半
-  schedule: 0 30 0 * * ?
-  # 是否启用
-  enabled: true
