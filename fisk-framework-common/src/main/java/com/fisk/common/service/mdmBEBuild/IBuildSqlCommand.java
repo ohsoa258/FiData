@@ -127,4 +127,12 @@ public interface IBuildSqlCommand {
      */
     String buildOperatorCondition(List<FilterQueryDTO> operators);
 
+    /**
+     * 生成单条insert语句
+     *
+     * @param data
+     * @return
+     */
+    String buildInsertSingleData(Map<String, Object> data, String tableName);
+
 }

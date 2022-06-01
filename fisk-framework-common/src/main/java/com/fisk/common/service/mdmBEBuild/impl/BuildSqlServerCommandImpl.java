@@ -9,10 +9,7 @@ import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author WangYan
@@ -163,6 +160,22 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildOperatorCondition(List<FilterQueryDTO> operators) {
         return "";
+    }
+
+    @Override
+    public String buildInsertSingleData(Map<String, Object> data, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("insert into " + tableName);
+        str.append("(");
+        List<String> columnList = new ArrayList<>();
+        List<String> valueList = new ArrayList<>();
+        for (Map.Entry<String, Object> item : data.entrySet()) {
+            columnList.add(item.getKey());
+            valueList.add(item.getValue().toString());
+        }
+        str.append(String.join(",", columnList) + ") ");
+        str.append("values(" + CommonMethods.convertListToString(valueList) + ")");
+        return str.toString();
     }
 
 }
