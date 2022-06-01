@@ -616,25 +616,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        Page<LogMessageFilterVO> sourcePage = new Page<>();
+        List<LogMessageFilterVO> sourcePage = new ArrayList<>();
 
         // 实时api
         if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
+            sourcePage = baseMapper.logMessageFilterByRestApi(Long.valueOf(dto.appId), dto.keyword, null);
             // 非实时api
         } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
+            sourcePage = baseMapper.logMessageFilterByApi(Long.valueOf(dto.appId), dto.keyword, null);
             // 物理表
         } else {
-            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword, null);
+            sourcePage = baseMapper.logMessageFilterByTable(Long.valueOf(dto.appId), dto.keyword, null);
         }
 
         log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
 
         Page<PipelineTableLogVO> targetPage = new Page<>();
-        targetPage.setTotal(sourcePage.getTotal());
-        targetPage.setSize(sourcePage.getSize());
-        List<LogMessageFilterVO> records = sourcePage.getRecords();
+        List<LogMessageFilterVO> records = sourcePage;
         List<PipelineTableLogVO> list = new ArrayList<>();
         if (!CollectionUtils.isEmpty(records)) {
             for (LogMessageFilterVO record : records) {
@@ -659,8 +657,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         try {
             ResultEntity<List<PipelineTableLogVO>> pipelineTableLogs = publishTaskClient.getPipelineTableLog(JSON.toJSONString(list), JSON.toJSONString(dto));
             List<PipelineTableLogVO> data = pipelineTableLogs.data;
-            targetPage.setRecords(data);
+
+            // 每页条数
+            targetPage.setSize(dto.page.getSize());
+            // 当前页
+            targetPage.setCurrent(dto.page.getCurrent());
+            // 总条数
             targetPage.setTotal(data.size());
+            targetPage.setRecords(data.stream().skip((targetPage.getCurrent() - 1) * targetPage.getSize()).limit(targetPage.getSize()).collect(Collectors.toList()));
         } catch (Exception e) {
             targetPage.setRecords(null);
             targetPage.setTotal(0);
@@ -677,21 +681,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        Page<LogMessageFilterVO> sourcePage = new Page<>();
+        List<LogMessageFilterVO> sourcePage = new ArrayList<>();
 
         // 实时api
         if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+//            sourcePage = baseMapper.logMessageFilterByRestApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
             // 非实时api
         } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
-            sourcePage = baseMapper.logMessageFilterByApi(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            sourcePage = baseMapper.logMessageFilterByApi(Long.valueOf(dto.appId), dto.keyword, dto.apiId);
             // 物理表
         } else {
-            sourcePage = baseMapper.logMessageFilterByTable(dto.page, Long.valueOf(dto.appId), dto.keyword, dto.apiId);
+            sourcePage = baseMapper.logMessageFilterByTable(Long.valueOf(dto.appId), dto.keyword, dto.apiId);
         }
 
         log.info("接入库中的查询数据: " + JSON.toJSONString(sourcePage));
 
-        return sourcePage.getRecords();
+        return sourcePage;
     }
 }
