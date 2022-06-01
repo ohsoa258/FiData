@@ -664,6 +664,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             targetPage.setCurrent(dto.page.getCurrent());
             // 总条数
             targetPage.setTotal(data.size());
+            // steam流给list分页
             targetPage.setRecords(data.stream().skip((targetPage.getCurrent() - 1) * targetPage.getSize()).limit(targetPage.getSize()).collect(Collectors.toList()));
         } catch (Exception e) {
             targetPage.setRecords(null);
