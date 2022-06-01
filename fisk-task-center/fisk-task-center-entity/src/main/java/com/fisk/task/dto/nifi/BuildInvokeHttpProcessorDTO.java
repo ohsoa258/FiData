@@ -26,4 +26,9 @@ public class BuildInvokeHttpProcessorDTO extends BaseProcessorDTO {
      */
     public String attributesToSend;
 
+    /*
+     * nifitoken
+     * */
+    public String nifiToken;
+
 }

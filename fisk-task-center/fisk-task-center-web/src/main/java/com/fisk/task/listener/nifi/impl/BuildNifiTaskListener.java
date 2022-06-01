@@ -101,6 +101,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public String KafkaBrokers;
     @Value("${nifi.pipeline.topicName}")
     public String pipelineTopicName;
+    @Value("${nifi.token}")
+    public String nifiToken;
     @Resource
     INiFiHelper componentsBuild;
     @Resource
@@ -1889,7 +1891,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
-        buildInvokeHttpProcessorDTO.remoteUrl = "http://192.168.11.130:8083/datagovernance/datacheck/syncCheckData?Content-Type=application/json&Authorization=Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJhMmI3Y2VmZmMzYTA0ZjA3OGFlMzYxNDBkYTc2Y2ZhZCIsInVzZXIiOiJ7XCJpZFwiOjYwLFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiNjAifQ.Y8bruU8AnsCUh828VA12V4oCxhGAqmbSzIBMs-aBJZA";
+        buildInvokeHttpProcessorDTO.remoteUrl = "http://192.168.11.130:8083/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
+        buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
