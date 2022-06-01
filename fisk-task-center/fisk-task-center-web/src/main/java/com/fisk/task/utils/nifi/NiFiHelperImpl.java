@@ -279,7 +279,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         Map<String, String> map = new HashMap<>(5);
         map.put("record-reader", buildUpdateRecordDTO.recordReader);
         map.put("record-writer", buildUpdateRecordDTO.recordWriter);
-        map.put("replacement-value-strategy", "record-path-value");
+        map.put("replacement-value-strategy", buildUpdateRecordDTO.replacementValueStrategy);
         if (buildUpdateRecordDTO.filedMap != null && buildUpdateRecordDTO.filedMap.size() > 0) {
             map.putAll(buildUpdateRecordDTO.filedMap);
         }
@@ -374,14 +374,15 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
-    public BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data) {
-        List<String> auto = new ArrayList<>(1);
+    public BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data, List<String> auto) {
+
         //流程分支，是否自动结束
         auto.add(AutoEndBranchTypeEnum.FAILURE.getName());
 
         //组件属性
         Map<String, String> map = new HashMap<>(1);
         map.put("Replacement Value", data.replacementValue);
+        map.put("Evaluation Mode", data.evaluationMode);
 
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
@@ -470,6 +471,65 @@ public class NiFiHelperImpl implements INiFiHelper {
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
         dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd) {
+        //流程分支，是否自动结束
+        autoEnd.add("Failure");
+        autoEnd.add("No Retry");
+        autoEnd.add("Original");
+        autoEnd.add("Retry");
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("Attributes to Send", data.attributesToSend);
+        map.put("Content-Type", data.contentType);
+        map.put("HTTP Method", data.httpMethod);
+        map.put("Remote URL", data.remoteUrl);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(autoEnd);
+        config.setComments(data.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.INVOKEHTTP.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ProcessorEntity> buildGenerateFlowFileProcessor(BuildGenerateFlowFileProcessorDTO data, List<String> autoEnd) {
+        //流程分支，是否自动结束
+        autoEnd.add(AutoEndBranchTypeEnum.FAILURE.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("generate-ff-custom-text", data.generateCustomText);
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(autoEnd);
+        config.setComments(data.details);
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.GENERATEFLOWFILE.getName());
         dto.setPosition(data.getPositionDTO());
 
         //组件传输对象
@@ -1420,6 +1480,8 @@ public class NiFiHelperImpl implements INiFiHelper {
                 controllerServicesIds.add(tableNifiSettingPO.putDatabaseRecordId);
                 controllerServicesIds.add(tableNifiSettingPO.convertAvroRecordSetWriterId);
                 controllerServicesIds.add(tableNifiSettingPO.convertPutDatabaseRecordId);
+                controllerServicesIds.add(tableNifiSettingPO.convertAvroRecordSetWriterForCodeId);
+                controllerServicesIds.add(tableNifiSettingPO.convertPutDatabaseRecordForCodeId);
                 controllerServicesIds.add(tableNifiSettingPO.csvReaderId);
                 controllerServicesIds.add(appNifiSettingPO.targetDbPoolComponentId);
                 controllerServicesIds.add(appNifiSettingPO.sourceDbPoolComponentId);
@@ -1447,7 +1509,10 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.convertExcelToCsvProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertRecordProcessorId);
                 ProcessIds.add(tableNifiSettingPO.updateFieldProcessorId);
+                ProcessIds.add(tableNifiSettingPO.updateFieldForCodeProcessorId);
                 ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
+                ProcessIds.add(tableNifiSettingPO.generateFlowFileProcessorId);
+                ProcessIds.add(tableNifiSettingPO.invokeHttpProcessorId);
                 //ProcessIds.add(tableNifiSettingPO.mergeContentProcessorId);
                 ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);

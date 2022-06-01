@@ -90,7 +90,7 @@ public interface INiFiHelper {
      * @param data dto
      * @return Processor组件
      */
-    BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data);
+    BusinessResult<ProcessorEntity> buildReplaceTextProcess(BuildReplaceTextProcessorDTO data, List<String> auto);
 
     /**
      * 创建PublishMQ组件
@@ -535,6 +535,22 @@ public interface INiFiHelper {
      * @return ProcessorEntity
      */
     BusinessResult<ProcessorEntity> buildFetchFTPProcess(BuildFetchFTPProcessorDTO data);
+
+    /**
+     * buildGenerateFlowFileProcessor
+     *
+     * @param data 调用api参数准备
+     * @return ProcessorEntity
+     */
+    public BusinessResult<ProcessorEntity> buildGenerateFlowFileProcessor(BuildGenerateFlowFileProcessorDTO data, List<String> autoEnd);
+
+    /**
+     * buildInvokeHTTPProcessor
+     *
+     * @param data 发送http请求
+     * @return ProcessorEntity
+     */
+    public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd);
 
 
 }

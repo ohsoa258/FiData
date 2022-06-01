@@ -21,6 +21,8 @@ pgsql-datainput:
   password: PgPassword01!
   url: jdbc:postgresql://192.168.21.13:5432/dmp_ods_UAT?stringtype=unspecified
   username: postgres
+  ip: 192.168.21.13
+  dbName: dmp_ods_UAT
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: PgPassword01!

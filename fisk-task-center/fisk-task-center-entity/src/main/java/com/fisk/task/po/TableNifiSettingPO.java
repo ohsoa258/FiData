@@ -57,5 +57,10 @@ public class TableNifiSettingPO extends BasePO {
     public String getFtpProcessorId;
     public String convertExcelToCsvProcessorId;
     public String convertRecordProcessorId;
+    public String generateFlowFileProcessorId;
+    public String invokeHttpProcessorId;
+    public String updateFieldForCodeProcessorId;
+    public String convertAvroRecordSetWriterForCodeId;
+    public String convertPutDatabaseRecordForCodeId;
 
 }
