@@ -109,7 +109,7 @@ public class FactAttributeImpl
                 }
             }
         }
-        //添加事实字段
+        // TODO 添加事实字段(新增了config_details字段,用于存维度key的json连线配置信息)
         List<FactAttributePO> poList=FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
         poList.stream().map(e->e.factId=dto.factId).collect(Collectors.toList());
         if (!this.saveOrUpdateBatch(poList))
