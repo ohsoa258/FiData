@@ -24,6 +24,8 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -107,6 +109,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         }
 
         list.add(viwGroupVo);
+
+        // 获取创建人、修改人
+        ReplenishUserInfo.replenishUserName(list, userClient, UserFieldEnum.USER_ACCOUNT);
         return list;
     }
 
