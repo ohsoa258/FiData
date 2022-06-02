@@ -1004,6 +1004,7 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
         // 追加复杂类型表名 join
         if (StringUtils.isNotBlank(typeJoin)){
+            str.append(" ").append(PRIMARY_TABLE).append(" ");
             str.append(typeJoin);
         }
         return str.toString();
