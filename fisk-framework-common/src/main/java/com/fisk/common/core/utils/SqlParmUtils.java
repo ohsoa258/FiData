@@ -6,6 +6,7 @@ import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.google.common.base.Joiner;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -86,5 +87,27 @@ public class SqlParmUtils {
             result = Joiner.on(",").join(list);
         }
         return result;
+    }
+
+    /**
+     * @return java.lang.String
+     * @description in 查询，加 ‘’ 号
+     * @author dick
+     * @date 2022/6/2 16:34
+     * @version v1.0
+     * @params string
+     */
+    public static String getInParm(List<String> list) {
+        list = list.stream().distinct().collect(Collectors.toList());
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        for (int i = 0; i < list.size(); i++) {
+            sb.append("'").append(list.get(i)).append("'");//拼接单引号,到数据库后台用in查询.
+            if (i != list.size() - 1) {//前面的元素后面全拼上",",最后一个元素后不拼
+                sb.append(",");
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

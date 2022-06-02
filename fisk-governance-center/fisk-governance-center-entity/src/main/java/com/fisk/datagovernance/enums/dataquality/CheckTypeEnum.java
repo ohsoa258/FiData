@@ -15,7 +15,7 @@ public enum CheckTypeEnum implements BaseEnum {
     NONE(0,"空"),
     UNIQUE_CHECK(1, "唯一校验"),
     NONEMPTY_CHECK(2, "非空校验"),
-    LENGTH_CHECK(3, "长度校验");
+    DATA_CHECK(3, "数据校验");
 
     CheckTypeEnum(int value, String name) {
         this.name = name;

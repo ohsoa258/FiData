@@ -1,7 +1,11 @@
 package com.fisk.common.core.utils;
 
 import com.fisk.common.core.constants.RegexPatterns;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -11,31 +15,51 @@ public class RegexUtils {
 
     /**
      * 是否符合手机格式
+     *
      * @param phone 要校验的手机号
      * @return true:符合，false：不符合
      */
-    public static boolean isPhone(String phone){
+    public static boolean isPhone(String phone) {
         return matches(phone, RegexPatterns.PHONE_REGEX);
     }
+
     /**
      * 是否符合邮箱格式
+     *
      * @param email 要校验的邮箱
      * @return true:符合，false：不符合
      */
-    public static boolean isEmail(String email){
+    public static boolean isEmail(String email) {
         return matches(email, RegexPatterns.EMAIL_REGEX);
     }
 
     /**
      * 是否符合验证码格式
+     *
      * @param code 要校验的验证码
      * @return true:符合，false：不符合
      */
-    public static boolean isCodeValid(String code){
+    public static boolean isCodeValid(String code) {
         return matches(code, RegexPatterns.VERIFY_CODE_REGEX);
     }
 
-    private static boolean matches(String str, String regex){
+    /**
+     * 判断两个数组内容是否一致
+     *
+     * @param list1
+     * @param list2
+     * @return true:符合，false：不符合
+     */
+    public static List<String> subtractValid(List<String> list1, List<String> list2, boolean isDistinct) {
+        if (isDistinct) {
+            list1 = list1.stream().distinct().collect(Collectors.toList());
+            list2 = list2.stream().distinct().collect(Collectors.toList());
+        }
+        List<String> subtract = (List<String>) CollectionUtils.subtract(list1, list2);
+        return subtract;
+    }
+
+    private static boolean matches(String str, String regex) {
         if (StringUtils.isBlank(str)) {
             return false;
         }

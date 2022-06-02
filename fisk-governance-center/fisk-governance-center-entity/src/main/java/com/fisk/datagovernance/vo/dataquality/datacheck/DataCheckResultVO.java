@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
 import lombok.Data;
 
 /**

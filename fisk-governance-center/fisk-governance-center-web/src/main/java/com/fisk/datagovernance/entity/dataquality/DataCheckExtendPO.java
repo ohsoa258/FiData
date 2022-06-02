@@ -24,9 +24,9 @@ public class DataCheckExtendPO extends BasePO {
     public String fieldName;
 
     /**
-     * 字段长度
+     * 字段条件值
      */
-    public int fieldLength;
+    public String fieldWhere;
 
     /**
      * 字段聚合波动阈值模板；
@@ -40,9 +40,17 @@ public class DataCheckExtendPO extends BasePO {
      * 校验类型，多选逗号分割：
      * 1、唯一校验
      * 2、非空校验
-     * 3、长度校验
+     * 3、数据校验
      */
     public String checkType;
+
+    /**
+     * 数据校验类型：
+     * 1、文本长度校验
+     * 2、日期格式校验
+     * 3、序列范围校验
+     */
+    public int dataCheckType;
 
     /**
      * 相似度对比模板；

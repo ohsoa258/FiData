@@ -1,5 +1,6 @@
 package com.fisk.common.core.utils;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import org.apache.commons.lang.StringUtils;
@@ -8,8 +9,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 时间帮助类
@@ -79,26 +83,56 @@ public class DateTimeUtils {
     /**
      * 判断字符串是否为合法的日期格式
      *
-     * @param dateStr 待判断的字符串
      * @return
      */
-    public static boolean isValidDate(String dateStr, String dateFormat) {
-        boolean judgeresult = true;
-        if (StringUtils.isEmpty(dateStr) || StringUtils.isEmpty(dateFormat)) {
+    public static boolean isValidDate(List<String> dateList, String dateFormat) {
+        if (CollectionUtils.isEmpty(dateList) || StringUtils.isEmpty(dateFormat)) {
             return false;
         }
-        try {
-            // yyyy-MM-dd HH:mm:ss ps：24小时和12小时制无法区分
-            SimpleDateFormat format = new SimpleDateFormat(dateFormat);
-            format.setLenient(false);
-        } catch (Exception e) {
-            judgeresult = false;
+        SimpleDateFormat format = new SimpleDateFormat(dateFormat);
+        for (String dateStr : dateList) {
+            try {
+                // yyyy-MM-dd HH:mm:ss ps：24小时和12小时制无法区分
+                Date date = format.parse(dateStr);
+                format.setLenient(false);
+                //由于上述方法只能验证正常的日期格式，像诸如 0001-01-01、11-01-01，10001-01-01等无法校验，此处再添加校验年份是否合法
+                String yearStr = dateStr.split("-")[0];
+                if (yearStr.startsWith("0") || yearStr.length() != 4) {
+                    return false;
+                }
+            } catch (Exception e) {
+                return false;
+            }
         }
-        //由于上述方法只能验证正常的日期格式，像诸如 0001-01-01、11-01-01，10001-01-01等无法校验，此处再添加校验年份是否合法
-        String yearStr = dateStr.split("-")[0];
-        if (yearStr.startsWith("0") || yearStr.length() != 4) {
-            judgeresult = false;
+        return true;
+    }
+
+    /**
+     * 判断字符串是否为合法的日期格式，返回不合法的数据
+     *
+     * @return
+     */
+    public static List<String> ValidDate(List<String> dateList, String dateFormat) {
+        List<String> value = new ArrayList<>();
+        if (CollectionUtils.isEmpty(dateList) || StringUtils.isEmpty(dateFormat)) {
+            return value;
         }
-        return judgeresult;
+        dateList = dateList.stream().distinct().collect(Collectors.toList());
+        SimpleDateFormat format = new SimpleDateFormat(dateFormat);
+        for (String dateStr : dateList) {
+            try {
+                // yyyy-MM-dd HH:mm:ss ps：24小时和12小时制无法区分
+                Date date = format.parse(dateStr);
+                format.setLenient(false);
+                //由于上述方法只能验证正常的日期格式，像诸如 0001-01-01、11-01-01，10001-01-01等无法校验，此处再添加校验年份是否合法
+                String yearStr = dateStr.split("-")[0];
+                if (yearStr.startsWith("0") || yearStr.length() != 4) {
+                    value.add(dateStr);
+                }
+            } catch (Exception e) {
+                value.add(dateStr);
+            }
+        }
+        return value;
     }
 }

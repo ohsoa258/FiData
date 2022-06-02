@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
+import com.fisk.datagovernance.enums.dataquality.DataCheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
@@ -28,10 +29,10 @@ public class DataCheckExtendVO {
     public String fieldName;
 
     /**
-     * 字段长度
+     * 字段条件
      */
-    @ApiModelProperty(value = "字段长度")
-    public int fieldLength;
+    @ApiModelProperty(value = "字段条件")
+    public String fieldWhere;
 
     /**
      * 字段聚合波动阈值模板；
@@ -46,10 +47,19 @@ public class DataCheckExtendVO {
      * 校验类型，多选逗号分割：
      * 1、唯一校验
      * 2、非空校验
-     * 3、长度校验
+     * 3、数据校验
      */
     @ApiModelProperty(value = "校验类型")
     public String checkType;
+
+    /**
+     * 数据校验类型：
+     * 1、文本长度校验
+     * 2、日期格式校验
+     * 3、序列范围校验
+     */
+    @ApiModelProperty(value = "数据校验类型 1、文本长度校验 2、日期格式校验 3、序列范围校验")
+    public int dataCheckType;
 
     /**
      * 权重、比例
