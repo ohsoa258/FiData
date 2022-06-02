@@ -39,3 +39,6 @@ pgsql-mdm:
   url: jdbc:postgresql://100.102.201.107:5433/dmp_mdm?stringtype=unspecified
   username: adminuser
   type: PG
+
+file:
+  uploadurl: /root/nginx/app/file/mdm/

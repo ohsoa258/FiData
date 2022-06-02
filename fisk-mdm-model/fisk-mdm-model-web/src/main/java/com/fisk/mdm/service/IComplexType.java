@@ -1,6 +1,7 @@
 package com.fisk.mdm.service;
 
 import com.fisk.mdm.dto.complextype.GeographyDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author JianWenYang
@@ -15,5 +16,13 @@ public interface IComplexType {
      * @return
      */
     Integer addGeography(GeographyDTO dto);
+
+    /**
+     * 上传文件
+     *
+     * @param file
+     * @return
+     */
+    Integer uploadFile(MultipartFile file);
 
 }
