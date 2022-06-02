@@ -24,9 +24,15 @@ public class DataSourceController {
     @Resource
     IAppDataSource service;
 
-    @ApiOperation(value = "获取所有数据源以及数据库、表数据")
+    @ApiOperation(value = "根据appId获取所有数据源以及数据库、表数据")
     @GetMapping("/getDataSourceMeta/{appId}")
     public ResultEntity<Object> getDataSourceMeta(@PathVariable long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceMeta(appId));
+    }
+
+    @ApiOperation(value = "根据appId重新加载所有数据源以及数据库、表数据")
+    @GetMapping("/setDataSourceMeta/{appId}")
+    public ResultEntity<Object> setDataSourceMeta(@PathVariable long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataSourceMeta(appId));
     }
 }

@@ -123,5 +123,11 @@ public class MasterDataController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listEntityCodeAndName(entityId));
     }
 
+    @ApiOperation("获取筛选条件")
+    @GetMapping("/getSearchOperator")
+    public ResultEntity<Object> getSearchOperator() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSearchOperator());
+    }
+
 
 }

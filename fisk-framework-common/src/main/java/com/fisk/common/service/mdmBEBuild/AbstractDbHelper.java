@@ -158,15 +158,42 @@ public class AbstractDbHelper {
         statement.execute(sql);
     }
 
+    public static Integer executeSqlReturnKey(String sql, Connection connection) {
+        Statement statement = null;
+        String code = UUID.randomUUID().toString();
+        StopWatch stopWatch = new StopWatch();
+        try {
+            stopWatch.start();
+            log.info("【executeSqlReturnKey】【" + code + "】执行sql: 【" + sql + "】");
+            statement = connection.createStatement();
+            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
+            int keyValue = -1;
+            if (rs.next()) {
+                keyValue = rs.getInt(1);
+            }
+            return keyValue;
+        } catch (SQLException ex) {
+            log.error("【executeSqlReturnKey】【" + code + "】执行sql查询报错, ex", ex);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ex.getLocalizedMessage());
+        } finally {
+            closeStatement(statement);
+            stopWatch.stop();
+            log.info("【executeSqlReturnKey】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
+
+    }
+
     /**
      * 数据库连接器
+     *
      * @param sql 创建的sql
      * @return 查询结果
      */
     public static List<Map<String, Object>> execQueryResultList(String sql, DataSourceConDTO dataSource) {
         AbstractDbHelper dbHelper = new AbstractDbHelper();
         Connection connection = dbHelper.connection(dataSource.conStr, dataSource.conAccount,
-                dataSource.conPassword,dataSource.conType);
+                dataSource.conPassword, dataSource.conType);
         List<Map<String, Object>> data = execQueryResultMaps(sql, connection);
         return data;
     }

@@ -59,7 +59,7 @@ public class PipelineProcessMonitorImpl implements IPipelineProcessMonitor {
     }
 
     @Override
-    public NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+    public List<NifiStageDTO> getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
 
         List<NifiCustomWorkflowDetailPO> list = customWorkflowDetailImpl.query()
                 .eq("pid", nifiCustomWorkflowDetailDTO.id)
@@ -73,7 +73,7 @@ public class PipelineProcessMonitorImpl implements IPipelineProcessMonitor {
         List<NifiStageDTO> data = result.data;
         if (result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(data)) {
             // todo 后续改为list
-            return result.data.get(0);
+            return result.data;
         } else {
             log.error("远程调用失败，方法名：【task-center:getNifiStage】");
             return null;

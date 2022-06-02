@@ -5,11 +5,11 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author WangYan
@@ -148,6 +148,33 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
         str.append("select " + code + " as code,");
         str.append(name + " as name ");
         str.append(" from " + tableName);
+        str.append(" where fidata_del_flag=1 ");
+        return str.toString();
+    }
+
+    @Override
+    public List<OperatorVO> getOperatorList() {
+        return null;
+    }
+
+    @Override
+    public String buildOperatorCondition(List<FilterQueryDTO> operators) {
+        return "";
+    }
+
+    @Override
+    public String buildInsertSingleData(Map<String, Object> data, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("insert into " + tableName);
+        str.append("(");
+        List<String> columnList = new ArrayList<>();
+        List<String> valueList = new ArrayList<>();
+        for (Map.Entry<String, Object> item : data.entrySet()) {
+            columnList.add(item.getKey());
+            valueList.add(item.getValue().toString());
+        }
+        str.append(String.join(",", columnList) + ") ");
+        str.append("values(" + CommonMethods.convertListToString(valueList) + ")");
         return str.toString();
     }
 

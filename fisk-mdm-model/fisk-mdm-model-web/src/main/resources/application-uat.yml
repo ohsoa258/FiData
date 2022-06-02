@@ -37,3 +37,7 @@ pgsql-mdm:
   url: jdbc:postgresql://192.168.21.13:5432/dmp_mdm_UAT?stringtype=unspecified
   username: postgres
   type: PG
+
+# 图片上传
+file:
+  uploadurl: /root/nginx/app/file/mdm/

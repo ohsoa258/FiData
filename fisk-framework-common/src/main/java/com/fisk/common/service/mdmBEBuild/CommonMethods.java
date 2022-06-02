@@ -1,5 +1,6 @@
 package com.fisk.common.service.mdmBEBuild;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
@@ -46,6 +47,26 @@ public class CommonMethods {
     public static String getFormatDate(Date date) {
         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return dateTimeFormat.format(date);
+    }
+
+    /**
+     * List<String>转为逗号隔开并加单引号
+     *
+     * @param strList
+     * @return
+     */
+    public static String convertListToString(List<String> strList) {
+        StringBuffer sb = new StringBuffer();
+        if (CollectionUtils.isNotEmpty(strList)) {
+            for (int i = 0; i < strList.size(); i++) {
+                if (i == 0) {
+                    sb.append("'").append(strList.get(i)).append("'");
+                } else {
+                    sb.append(",").append("'").append(strList.get(i)).append("'");
+                }
+            }
+        }
+        return sb.toString();
     }
 
 }

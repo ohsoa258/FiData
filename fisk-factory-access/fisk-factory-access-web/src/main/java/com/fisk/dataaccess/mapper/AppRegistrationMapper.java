@@ -9,7 +9,6 @@ import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.app.RepeatNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
-import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -76,38 +75,32 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     /**
      * 日志分页筛选器--非实时api
      *
-     * @param page    分页对象
      * @param appId   应用id
      * @param apiId   apiId
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByApi(
-            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+    List<LogMessageFilterVO> logMessageFilterByApi(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
     /**
      * 日志分页筛选器--实时api
      *
-     * @param page    分页对象
      * @param appId   应用id
      * @param apiId   apiId
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByRestApi(
-            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+    List<LogMessageFilterVO> logMessageFilterByRestApi(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
     /**
      * 日志分页筛选器--物理表
      *
-     * @param page    分页对象
      * @param appId   应用id
      * @param apiId   物理表id
      * @param keyword 搜索框
      * @return 分页结果
      */
-    Page<LogMessageFilterVO> logMessageFilterByTable(
-            Page<PipelineTableLogVO> page, @Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
+    List<LogMessageFilterVO> logMessageFilterByTable(@Param("appId") Long appId, @Param("keyword") String keyword, @Param("apiId") Long apiId);
 
 
     /**

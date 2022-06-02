@@ -18,4 +18,9 @@ public class MasterDataPageDTO extends PageDataDTO {
      */
     private Boolean export;
 
+    /**
+     * 筛选条件
+     */
+    private String conditions;
+
 }

@@ -27,5 +27,5 @@ public interface IPipelineProcessMonitor {
      * @param nifiCustomWorkflowDetailDTO 组件dto
      * @return 组件运行状态dto
      */
-    NifiStageDTO getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
+    List<NifiStageDTO> getNifiStage(NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO);
 }

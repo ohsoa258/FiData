@@ -9,6 +9,7 @@ external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgre
 
 nifi:
   basePath: http://192.168.11.130:9090/nifi-api
+  token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJkMjc2Mjk3N2U4YjU0YTQ0YjYyZGU2ODlmZTk0OTRjNiIsInVzZXIiOiJ7XCJpZFwiOjE4LFwidXNlckFjY291bnRcIjpcImNma1wifSIsImlkIjoiMTgifQ.SRkIbNgKrvo1TI-WSufy4mZGLst6ed0Y6Fs0QoQ8m_g
   pipeline:
     topicName: my-topic
     waitTime: 20
@@ -21,6 +22,8 @@ pgsql-datainput:
   password: Password01!
   url: jdbc:postgresql://192.168.1.250:5432/dmp_ods?stringtype=unspecified
   username: postgres
+  ip: 192.168.1.250
+  dbName: dmp_ods
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: Password01!

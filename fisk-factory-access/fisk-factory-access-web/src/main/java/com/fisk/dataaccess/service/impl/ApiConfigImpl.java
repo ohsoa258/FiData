@@ -405,6 +405,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEntity<Object> pushData(ReceiveDataDTO dto) {
         ResultEnum resultEnum = null;
         StringBuilder msg = new StringBuilder("");
+        Date startTime = new Date();
         try {
             if (dto.apiCode == null) {
                 return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
@@ -460,19 +461,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
-                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
                 // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
             } else if (dto.flag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
-                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else if (!dto.executeConfigFlag){
+                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            } else if (!dto.executeConfigFlag) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
-                savePushDataLogToTask(dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+                savePushDataLogToTask(startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             }
 
         } catch (Exception e) {
@@ -481,13 +482,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEntityBuild.build(resultEnum, msg);
     }
 
-    private void savePushDataLogToTask(ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
+    private void savePushDataLogToTask(Date startTime, ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
         ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiCode).one();
         if (apiConfigPo == null) {
             throw new FkException(ResultEnum.APICONFIG_ISNULL);
         }
 
-        Date startTime = new Date();
         NifiStageMessageDTO nifiStageMessageDto = new NifiStageMessageDTO();
         NifiStageDTO nifiStageDto = new NifiStageDTO();
         nifiStageDto.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
@@ -500,7 +500,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.nifiStageDTO = nifiStageDto;
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
-            nifiStageMessageDto.counts = COUNT_SQL;
+            nifiStageMessageDto.counts = COUNT_SQL / 2;
             nifiStageMessageDto.topic = "dmp.datafactory.nifi." + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
@@ -1022,8 +1022,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
                 // 校验完成后每次推送数据前,将stg数据删除;解析上游的数据为空,本次也不需要同步数据,stg临时表也不用删
                 pushDataStgToOds(apiId, 0);
-
-                Thread.sleep(500);
             }
 
             System.out.println("开始执行sql");

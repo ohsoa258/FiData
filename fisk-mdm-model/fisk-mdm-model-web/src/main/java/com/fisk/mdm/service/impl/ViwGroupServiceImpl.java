@@ -24,6 +24,8 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.viwGroup.ViewGroupDropDownVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.relenish.ReplenishUserInfo;
+import com.fisk.system.relenish.UserFieldEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -107,6 +109,9 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         }
 
         list.add(viwGroupVo);
+
+        // 获取创建人、修改人
+        ReplenishUserInfo.replenishUserName(list, userClient, UserFieldEnum.USER_ACCOUNT);
         return list;
     }
 
@@ -386,19 +391,33 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         EntityVO entityVo = entityService.getDataById(viwGroupVo.getEntityId());
         str.append(" FROM " + entityVo.getTableName() + " ").append(ALIAS_MARK + count1.incrementAndGet());
 
-        // 删除存在域字段的实体,因为后面拼接域字段的表名会重复
-        for (Integer key : secondaryMap.keySet()) {
-            AtomicReference<Boolean> isDomain = null;
-            List<ViwGroupDetailsDTO> detailsList = secondaryMap.get(key);
-            detailsList.stream().forEach(e -> {
-                if (e.getDomainId() != null){
-                    isDomain.set(true);
+        // 查询出属性的域字段
+        groupDetailsList.stream().forEach(e -> {
+            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
+            e.setDomainId(data.getDomainId());
+        });
+
+        // 根据域字段进行分组
+        LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> doMainMap = groupDetailsList.stream().filter(e -> e.getDomainId() != null)
+                .collect(Collectors.groupingBy(ViwGroupDetailsDTO::getDomainId, LinkedHashMap::new, Collectors.toList()));
+
+        // 从表域字段实体id集合
+        List<Integer> doMainEntityIds = new ArrayList<>();
+        doMainMap.keySet().stream().forEach(e -> {
+            List<ViwGroupDetailsDTO> detailsList = doMainMap.get(e);
+            detailsList.stream().forEach(item -> {
+                AttributeVO data = attributeService.getById(item.getDomainId()).getData();
+                if (data != null){
+                    doMainEntityIds.add(data.getEntityId());
                 }
             });
+        });
 
-            if (isDomain.get() == true){
-                secondaryMap.remove(key);
-            }
+        // 删除存在域字段的实体,因为后面拼接域字段的表名会重复
+        for (Integer key : secondaryMap.keySet()) {
+            if (doMainEntityIds.contains(key)){
+               secondaryMap.remove(key);
+           }
         }
 
         // 不存在域属性的left join
@@ -420,16 +439,6 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             return secondaryStr.toString();
         }).collect(Collectors.joining(" LEFT JOIN "));
-
-        // 查询出属性的域字段
-        groupDetailsList.stream().forEach(e -> {
-            AttributeVO data = attributeService.getById(e.getAttributeId()).getData();
-            e.setDomainId(data.getDomainId());
-        });
-
-        // 根据域字段进行分组
-        LinkedHashMap<Integer, List<ViwGroupDetailsDTO>> doMainMap = groupDetailsList.stream().filter(e -> e.getDomainId() != null)
-                .collect(Collectors.groupingBy(ViwGroupDetailsDTO::getDomainId, LinkedHashMap::new, Collectors.toList()));
 
         // 存在域属性的left join
         String leftJoinDoMain = doMainMap.keySet().stream().map(e -> {
@@ -462,13 +471,17 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         }).collect(Collectors.joining(" LEFT JOIN "));
 
         // 从表表名
-        str.append(" LEFT JOIN ");
-        str.append(leftJoinNoDoMain);
+        if (StringUtils.isNotBlank(leftJoinNoDoMain)){
+            str.append(" LEFT JOIN ");
+            str.append(leftJoinNoDoMain);
+        }
+
         // 追加域字段表名称
         if (StringUtils.isNotBlank(leftJoinDoMain)){
             str.append(" LEFT JOIN ");
             str.append(leftJoinDoMain);
         }
+
         return str.toString();
     }
 

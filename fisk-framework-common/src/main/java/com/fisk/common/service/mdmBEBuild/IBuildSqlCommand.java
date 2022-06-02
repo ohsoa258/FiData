@@ -3,7 +3,10 @@ package com.fisk.common.service.mdmBEBuild;
 import com.fisk.common.service.mdmBEBuild.dto.ImportDataPageDTO;
 import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
+import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
+import com.fisk.common.service.pageFilter.dto.OperatorVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -108,5 +111,29 @@ public interface IBuildSqlCommand {
      * @return
      */
     String buildQueryCodeAndName(String tableName, String code, String name);
+
+    /**
+     * 获取主数据列表筛选条件运算符
+     *
+     * @return
+     */
+    List<OperatorVO> getOperatorList();
+
+    /**
+     * 拼接运算符where条件
+     *
+     * @param operators
+     * @return
+     */
+    String buildOperatorCondition(List<FilterQueryDTO> operators);
+
+    /**
+     * 生成单条insert语句
+     *
+     * @param data
+     * @param tableName
+     * @return
+     */
+    String buildInsertSingleData(Map<String, Object> data, String tableName);
 
 }

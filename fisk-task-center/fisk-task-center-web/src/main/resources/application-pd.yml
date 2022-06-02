@@ -21,6 +21,8 @@ pgsql-datainput:
   password: .FdF_r&tj4)+
   url: jdbc:postgresql://100.102.201.107:5433/dmp_ods?stringtype=unspecified
   username: adminuser
+  ip: 100.102.201.107
+  dbName: dmp_ods
 pgsql-datamodel:
   driverClassName: org.postgresql.Driver
   password: .FdF_r&tj4)+
