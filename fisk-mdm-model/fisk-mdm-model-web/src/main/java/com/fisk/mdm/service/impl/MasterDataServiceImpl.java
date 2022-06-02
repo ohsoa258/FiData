@@ -178,6 +178,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         ExportResultVO vo = new ExportResultVO();
         //获取已发布的实体属性
         List<AttributeInfoDTO> attributeList = attributeService.listPublishedAttribute(entityId);
+        //过滤复杂数据类型
+        attributeList.stream()
+                .filter(e -> !e.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName()))
+                .filter(e -> !e.getDataType().equals(DataTypeEnum.FILE.getName()))
+                .collect(Collectors.toList());
         List<String> columnList = attributeList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(columnList)) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -251,6 +256,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
         List<AttributePO> poList = attributeMapper.selectList(queryWrapper);
         List<AttributeInfoDTO> attributeInfos = AttributeMap.INSTANCES.poToDtoList(poList);
         for (AttributeInfoDTO item : attributeInfos) {
+            EntityPO entityPO = entityMapper.selectById(item.getEntityId());
+            if (entityPO == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            item.setName((entityPO.getName() + "_" + item.getName()).toLowerCase());
             Optional<ViwGroupDetailsDTO> first = viwGroupVO.getGroupDetailsList()
                     .stream()
                     .filter(e -> e.getAttributeId().equals(item.getId()))
@@ -258,7 +268,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             if (first.isPresent() && StringUtils.isEmpty(first.get().getAliasName())) {
                 continue;
             }
-            item.setName(first.get().getAliasName());
+            item.setDisplayName(first.get().getAliasName());
         }
         List<AttributeColumnVO> attributeColumnVoList = AttributeMap.INSTANCES.dtoListToVoList(attributeInfos);
         List<ResultAttributeGroupVO> attributeGroupVoList = new ArrayList<>();
@@ -271,6 +281,14 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 attributeGroupVo.setName(attributeGroup.getName());
                 List<AttributeColumnVO> collect = attributeColumnVoList.stream()
                         .filter(e -> attributes.contains(e.getId())).collect(Collectors.toList());
+                collect.stream().map(e -> {
+                    AttributePO attributePo = attributeMapper.selectById(e.getId());
+                    if (attributePo == null) {
+                        throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                    }
+                    e.setDisplayName(attributePo.getDisplayName());
+                    return e;
+                }).collect(Collectors.toList());
                 attributeGroupVo.setAttributes(collect);
                 attributeGroupVoList.add(attributeGroupVo);
             }
@@ -333,6 +351,11 @@ public class MasterDataServiceImpl implements IMasterDataService {
                 newColumnList.add(attributeColumnVo);
                 //域字段添加编码和名称表头
                 if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
+                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
+                } else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
+                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
+                } else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
+                    newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
                     newColumnList.add(getCodeAndName(attributeColumnVo));
                 }
             }
@@ -370,9 +393,22 @@ public class MasterDataServiceImpl implements IMasterDataService {
             newColumnList.add(attributeColumnVo);
             //域字段添加编码和名称表头
             if (attributeColumnVo.getDataType().equals(DataTypeEnum.DOMAIN.getName())) {
-                newColumnList.add(getCodeAndName(attributeColumnVo));
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.DOMAIN));
                 attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateDomainCodeDisplayName(attributeColumnVo.getDisplayName()));
                 attributeColumnVo.setName(TableNameGenerateUtils.generateDomainCode(attributeColumnVo.getName()));
+            }
+            //文件类型
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.FILE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.FILE));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getDisplayName(), false));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeFileName(attributeColumnVo.getName(), true));
+            }
+            //经纬度
+            else if (attributeColumnVo.getDataType().equals(DataTypeEnum.LATITUDE_COORDINATE.getName())) {
+                newColumnList.add(getCodeAndName(attributeColumnVo, DataTypeEnum.LATITUDE_COORDINATE));
+                attributeColumnVo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getDisplayName(), false));
+                attributeColumnVo.setName(TableNameGenerateUtils.generateComplexTypeLng(attributeColumnVo.getName(), true));
+                newColumnList.add(getCodeAndName(attributeColumnVo));
             }
         }
         attributeColumnVoList = newColumnList;
@@ -445,10 +481,36 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param attributeColumnVo
      * @return
      */
+    public AttributeColumnVO getCodeAndName(AttributeColumnVO attributeColumnVo, DataTypeEnum dataTypeEnum) {
+        AttributeColumnVO vo = new AttributeColumnVO();
+        switch (dataTypeEnum) {
+            case DOMAIN:
+                vo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
+                vo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
+                break;
+            case FILE:
+                vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeFilePath(attributeColumnVo.getDisplayName(), false));
+                vo.setName(TableNameGenerateUtils.generateComplexTypeFilePath(attributeColumnVo.getName(), true));
+                break;
+            case LATITUDE_COORDINATE:
+                vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getDisplayName(), false));
+                vo.setName(TableNameGenerateUtils.generateComplexTypeLat(attributeColumnVo.getName(), true));
+                break;
+            default:
+                break;
+        }
+        vo.setDataType(attributeColumnVo.getDataType());
+        vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
+        vo.setEnableRequired(attributeColumnVo.getEnableRequired());
+        vo.setSortWieght(attributeColumnVo.getSortWieght());
+        vo.setDisplayWidth(attributeColumnVo.getDisplayWidth());
+        return vo;
+    }
+
     public AttributeColumnVO getCodeAndName(AttributeColumnVO attributeColumnVo) {
         AttributeColumnVO vo = new AttributeColumnVO();
-        vo.setDisplayName(TableNameGenerateUtils.generateDomainNameDisplayName(attributeColumnVo.getDisplayName()));
-        vo.setName(TableNameGenerateUtils.generateDomainName(attributeColumnVo.getName()));
+        vo.setDisplayName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getDisplayName(), false));
+        vo.setName(TableNameGenerateUtils.generateComplexTypeMapType(attributeColumnVo.getName(), true));
         vo.setDataType(attributeColumnVo.getDataType());
         vo.setDataTypeEnDisplay(attributeColumnVo.getDataTypeEnDisplay());
         vo.setEnableRequired(attributeColumnVo.getEnableRequired());

@@ -11,6 +11,11 @@ import lombok.Data;
 @Data
 public class AttributeColumnVO {
 
+    /**
+     * 实体id
+     */
+    private Integer entityId;
+
     private Integer id;
     /**
      * 名称
