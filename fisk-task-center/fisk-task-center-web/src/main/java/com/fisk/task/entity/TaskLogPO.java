@@ -19,4 +19,5 @@ public class TaskLogPO extends BasePO {
     public TaskStatusEnum taskStatus;
     public boolean taskSendOk;
     public String taskData;
+    public String traceId;
 }

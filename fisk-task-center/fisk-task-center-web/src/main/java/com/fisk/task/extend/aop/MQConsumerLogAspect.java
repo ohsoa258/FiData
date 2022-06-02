@@ -87,6 +87,7 @@ public class MQConsumerLogAspect {
         if (model != null) {
             model.taskStatus = TaskStatusEnum.PROCESSING;
             model.taskSendOk = true;
+            model.traceId=traceId;
             mapper.updateById(model);
         }
 
@@ -109,6 +110,7 @@ public class MQConsumerLogAspect {
         TaskStatusEnum statusEnum = isSuccess ? TaskStatusEnum.SUCCESS : TaskStatusEnum.FAILURE;
         if (model != null) {
             model.taskStatus = statusEnum;
+            model.traceId=traceId;
             mapper.updateById(model);
         }
 
