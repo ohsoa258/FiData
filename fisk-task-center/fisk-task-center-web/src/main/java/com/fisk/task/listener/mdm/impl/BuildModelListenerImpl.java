@@ -408,6 +408,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
             switch (dataType) {
                 case "域字段":
                 case "数值":
+                case "文件":
+                case "经纬度坐标":
                     filedType = "int4";
                     break;
                 case "时间":
@@ -776,6 +778,15 @@ public class BuildModelListenerImpl implements BuildModelListener {
     public String domainSplicing(List<AttributeInfoDTO> foreignList, List<AttributeInfoDTO> noForeignList) {
         StringBuilder str = new StringBuilder();
 
+        // 复杂数据类型
+        List<AttributeInfoDTO> complexType = noForeignList.stream().filter(e -> e.getDataType().equals("文件")
+                || e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
+
+        // 文件类型
+        List<AttributeInfoDTO> fileList = noForeignList.stream().filter(e -> e.getDataType().equals("文件")).collect(Collectors.toList());
+        // 经纬度类型
+        List<AttributeInfoDTO> longitudeList = noForeignList.stream().filter(e -> e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
+
         // 不存在域字段的属性
         String noForeign = noForeignList.stream().filter(e -> e.getDomainId() == null).map(e -> {
             String str1 = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
@@ -802,11 +813,30 @@ public class BuildModelListenerImpl implements BuildModelListener {
             return stringBuilder;
         }).collect(Collectors.joining(","));
 
+
+        // 复杂数据类型
+        StringBuilder complexTypeField = new StringBuilder();
+        if (CollectionUtils.isNotEmpty(fileList)){
+
+            // 存在文件类型
+            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "file_name").append(",");
+            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "file_path");
+        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+
+            // 存在经纬度类型
+            complexTypeField.append(PRIMARY_TABLE + amount.incrementAndGet() + "."  + "lng").append(",");
+            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "lat").append(",");
+            complexTypeField.append(PRIMARY_TABLE + amount + "."  + "map_type");
+        }
+
         // 获取主表表名
         AttributeInfoDTO dto = noForeignList.get(1);
         str.append(this.splicingViewTable(true));
         str.append(noForeign).append(",");
         str.append(foreign).append(",");
+        if (CollectionUtils.isNotEmpty(complexType)){
+            str.append(complexTypeField).append(",");
+        }
 
         // 追加系统字段
         BuildPgCommandImpl buildPgCommand = new BuildPgCommandImpl();
@@ -831,7 +861,58 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 }).collect(Collectors.joining(" LEFT JOIN "));
 
         str.append(" LEFT JOIN " + leftJoin);
+
+        // 复杂数据类型 left join
+        String typeJoin = this.complexTypeJoin(amount1, fileList, longitudeList);
+
+        // 追加复杂类型表名 join
+        if (StringUtils.isNotBlank(typeJoin)){
+            str.append(typeJoin);
+        }
+
         return str.toString();
+    }
+
+    /**
+     * 复杂数据类型 left join
+     * @param amount1
+     * @param fileList
+     * @param longitudeList
+     */
+    public String complexTypeJoin(AtomicInteger amount1,List<AttributeInfoDTO> fileList,List<AttributeInfoDTO> longitudeList){
+        StringBuilder stringBuilder = new StringBuilder();
+        if (CollectionUtils.isNotEmpty(fileList)){
+            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
+
+            // 文件left join字段
+            String fileField = fileList.stream().map(e -> {
+                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
+            }).collect(Collectors.joining(" OR "));
+
+            stringBuilder.append(" LEFT JOIN ");
+            stringBuilder.append(" tb_file ").append(alias);
+            stringBuilder.append(" ON ");
+            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id");
+            stringBuilder.append(" AND ").append(fileField);
+        }
+
+        if (CollectionUtils.isNotEmpty(longitudeList)){
+            String alias = PRIMARY_TABLE + amount1.incrementAndGet();
+
+            // 经纬度left join字段
+            String longitudes = fileList.stream().map(e -> {
+                return PRIMARY_TABLE + "." + e.getColumnName() + " = " + alias + ".\"id\"";
+            }).collect(Collectors.joining(" OR "));
+
+            stringBuilder.append(" ").append(PRIMARY_TABLE);
+            stringBuilder.append(" LEFT JOIN ");
+            stringBuilder.append(" tb_file ").append(alias);
+            stringBuilder.append(" ON ");
+            stringBuilder.append(PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + "version_id");
+            stringBuilder.append(" AND ").append(longitudes);
+        }
+
+        return stringBuilder.toString();
     }
 
     /**
@@ -857,22 +938,74 @@ public class BuildModelListenerImpl implements BuildModelListener {
      */
     public String noDomainSplicing(List<AttributeInfoDTO> noForeignList) {
         StringBuilder str = new StringBuilder();
-        // 视图基础字段
-        str.append(this.splicingViewTable(false));
 
+        // 复杂数据类型
+        List<AttributeInfoDTO> complexType = noForeignList.stream().filter(e -> e.getDataType().equals("文件")
+                || e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
+
+        // 文件类型
+        List<AttributeInfoDTO> fileList = noForeignList.stream().filter(e -> e.getDataType().equals("文件")).collect(Collectors.toList());
+        // 经纬度类型
+        List<AttributeInfoDTO> longitudeList = noForeignList.stream().filter(e -> e.getDataType().equals("经纬度坐标")).collect(Collectors.toList());
+
+        int count = 0;
+        StringBuilder complexTypeField = new StringBuilder();
+        if (CollectionUtils.isNotEmpty(fileList)){
+
+            // 存在文件类型
+            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "file_name").append(",");
+            complexTypeField.append(PRIMARY_TABLE + count + "."  + "file_path");
+        }else if (CollectionUtils.isNotEmpty(longitudeList)){
+
+            // 存在经纬度类型
+            complexTypeField.append(PRIMARY_TABLE + ++count + "."  + "lng").append(",");
+            complexTypeField.append(PRIMARY_TABLE + count + "."  + "lat").append(",");
+            complexTypeField.append(PRIMARY_TABLE + count + "."  + "map_type");
+        }
+
+        // 如果存在复杂数据类型就需要字段加上别名
+        String splicingViewFiled = null;
+        if (CollectionUtils.isEmpty(complexType)){
+            splicingViewFiled = this.splicingViewTable(false);
+        }else {
+            splicingViewFiled = this.splicingViewTable(true);
+        }
+
+        // 视图基础字段
+        str.append(splicingViewFiled);
+
+        // 业务字段
         String collect = noForeignList.stream().filter(e -> !e.getStatus().equals(AttributeStatusEnum.DELETE.getName())).map(e -> {
-            String str1 = e.getColumnName() + " AS " + e.getName();
+            String str1 = null;
+            if (CollectionUtils.isEmpty(complexType)){
+                str1 = e.getColumnName() + " AS " + e.getName();
+            }else {
+                str1 = PRIMARY_TABLE + "." + e.getColumnName() + " AS " + e.getName();
+            }
+
             return str1;
         }).collect(Collectors.joining(","));
 
         BuildPgCommandImpl buildPgCommand = new BuildPgCommandImpl();
         AttributeInfoDTO infoDto = noForeignList.get(1);
-        // 业务字段
+        // 追加业务字段
         str.append(collect).append(",");
         // 追加基础字段
         str.append(buildPgCommand.createViw());
-        str.deleteCharAt(str.length() - 1);
+        // 追加复杂类型字段
+        if (StringUtils.isNotBlank(complexTypeField)){
+            str.append(complexTypeField);
+        }
         str.append(" FROM " + "mdm_" + infoDto.getModelId() + "_" + infoDto.getEntityId());
+
+        // 复杂数据类型 left join
+        AtomicInteger amount1 = new AtomicInteger(0);
+        String typeJoin = this.complexTypeJoin(amount1, fileList, longitudeList);
+
+        // 追加复杂类型表名 join
+        if (StringUtils.isNotBlank(typeJoin)){
+            str.append(typeJoin);
+        }
         return str.toString();
     }
 

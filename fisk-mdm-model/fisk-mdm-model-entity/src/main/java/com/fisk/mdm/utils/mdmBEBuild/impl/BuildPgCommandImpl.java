@@ -113,6 +113,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
 
                     // 判断数据类型
                     switch (e.getDataType()) {
+                        case "文件":
+                        case "经纬度坐标":
                         case "数值":
                         case "域字段":
                             str1 = name + " int4 " + required;
@@ -311,11 +313,11 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
      */
     public String createViw(){
         StringBuilder str = new StringBuilder();
-        str.append(MARK + "create_time").append(",");
-        str.append(MARK + "create_user").append(",");
-        str.append(MARK + "update_time").append(",");
-        str.append(MARK + "update_user").append(",");
-        str.append(MARK + "del_flag").append(",");
+        str.append(PRIMARY_TABLE + "." + MARK + "create_time").append(",");
+        str.append(PRIMARY_TABLE + "." + MARK + "create_user").append(",");
+        str.append(PRIMARY_TABLE + "." + MARK + "update_time").append(",");
+        str.append(PRIMARY_TABLE + "." + MARK + "update_user").append(",");
+        str.append(PRIMARY_TABLE + "." + MARK + "del_flag").append(",");
         return str.toString();
     }
 }
