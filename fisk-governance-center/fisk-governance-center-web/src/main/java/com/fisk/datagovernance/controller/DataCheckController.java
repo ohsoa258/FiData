@@ -8,6 +8,7 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -66,4 +67,9 @@ public class DataCheckController {
         return service.syncCheckData(dto);
     }
 
+    @ApiOperation("获取校验类型")
+    @GetMapping("/getDataCheckTypeList")
+    public ResultEntity<List<DataCheckTypeV0>> getDataCheckTypeList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckTypeList());
+    }
 }

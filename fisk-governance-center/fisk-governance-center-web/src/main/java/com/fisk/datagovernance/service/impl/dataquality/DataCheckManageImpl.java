@@ -24,6 +24,7 @@ import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO;
 import org.apache.commons.lang.StringUtils;
@@ -159,6 +160,31 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         // 删除数据校验扩展属性
         dataCheckExtendMapper.updateByRuleId(id);
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public List<DataCheckTypeV0> getDataCheckTypeList() {
+        List<DataCheckTypeV0> dataCheckTypeV0s = new ArrayList<>();
+        for (CheckTypeEnum checkTypeEnum : CheckTypeEnum.values()) {
+            if (checkTypeEnum == CheckTypeEnum.NONE)
+                continue;
+            DataCheckTypeV0 dataCheckTypeV0 = new DataCheckTypeV0();
+            dataCheckTypeV0.setText(checkTypeEnum.getName());
+            dataCheckTypeV0.setValue(checkTypeEnum.getValue());
+            dataCheckTypeV0.setGrade(1);
+            dataCheckTypeV0s.add(dataCheckTypeV0);
+        }
+        for (DataCheckTypeEnum dataCheckTypeEnum : DataCheckTypeEnum.values()) {
+            if (dataCheckTypeEnum == DataCheckTypeEnum.NONE)
+                continue;
+            DataCheckTypeV0 dataCheckTypeV0 = new DataCheckTypeV0();
+            dataCheckTypeV0.setText(dataCheckTypeEnum.getName());
+            dataCheckTypeV0.setValue(dataCheckTypeEnum.getValue());
+            dataCheckTypeV0.setParentId(dataCheckTypeEnum.getParentId());
+            dataCheckTypeV0.setGrade(2);
+            dataCheckTypeV0s.add(dataCheckTypeV0);
+        }
+        return dataCheckTypeV0s;
     }
 
     @Override
@@ -531,10 +557,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
      * @params dtoPramsList
      * @params checkResultSqlList
      */
+    @Transactional(rollbackFor = Exception.class)
     public ResultEntity<List<DataCheckResultVO>> UpdateTableData_Sync(Connection connection, DataSourceTypeEnum dataSourceTypeEnum, List<String> dtoPramsList, List<SyncCheckInfoVO> checkResultSqlList) {
         List<DataCheckResultVO> results = new ArrayList<>();
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
+            // @Transactional(rollbackFor = Exception.class) 开启事务，避免部分成功部分失败
             // 第一步：获取需要校验的数据结果集
             JSONArray jsonArray = GetCheckFieldRuleResult_Sync(connection, checkResultSqlList, dtoPramsList.get(0));
             if (jsonArray == null || jsonArray.size() == 0) {
@@ -755,10 +783,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             if (!isValid) {
                 checkInfo.setCheckResult(false);
-                checkInfo.setCheckResultMsg(String.format("%s字段%s未通过",checkInfo.fieldName, checkInfo.getCheckTypeName()));
+                checkInfo.setCheckResultMsg(String.format("%s字段%s未通过", checkInfo.fieldName, checkInfo.getCheckTypeName()));
             } else {
                 checkInfo.setCheckResult(true);
-                checkInfo.setCheckResultMsg(String.format("%s字段%s已通过",checkInfo.fieldName, checkInfo.getCheckTypeName()));
+                checkInfo.setCheckResultMsg(String.format("%s字段%s已通过", checkInfo.fieldName, checkInfo.getCheckTypeName()));
             }
         }
     }
