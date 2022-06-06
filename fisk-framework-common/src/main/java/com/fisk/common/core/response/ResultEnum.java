@@ -220,6 +220,7 @@ public enum ResultEnum {
     DATA_QUALITY_DATACHECK_CHECKRESULT_EXISTS(11011, "校验结果为空"),
     DATA_QUALITY_DATACHECK_REQUESTJSON_ERROR(11012, "待校验的JSON数据格式异常，未包含指定字段key"),
     DATA_QUALITY_SYNCCHECK_NOOPERATION(11013, "请求参数中操作型参数均为空，无需校验"),
+    DATA_QUALITY_UPDATEDATA_ERROR(11014, "数据校验完成，修改表数据触发异常"),
 
     /**
      * 数据安全
