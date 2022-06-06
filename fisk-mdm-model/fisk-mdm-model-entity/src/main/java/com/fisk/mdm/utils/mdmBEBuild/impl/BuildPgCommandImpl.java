@@ -87,6 +87,78 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     }
 
     @Override
+    public String buildLogTable(EntityInfoVO entityInfoVo, String tableName,String code) {
+        StringBuilder str = new StringBuilder();
+        str.append("CREATE TABLE " + PUBLIC + ".");
+        str.append(tableName).append("(");
+
+        // 拼接mdm表基础字段拼接
+        str.append(this.splicingMdmTable(tableName,code));
+        // 拼接日志表基础字段
+        str.append(this.splicingLogTable());
+
+        // 字段sql
+        String fieldSql = entityInfoVo.getAttributeList().stream().filter(e -> e.getStatus().equals(INSERT.getName()))
+                .map(e -> {
+
+                    String str1 = null;
+
+                    // 判断是否必填
+                    String required = null;
+                    if (e.getEnableRequired() == true){
+                        required = " NOT NULL ";
+                    }else {
+                        required = " NULL ";
+                    }
+
+                    String name = e.getName();
+
+                    // 判断数据类型
+                    switch (e.getDataType()) {
+                        case "文件":
+                        case "经纬度坐标":
+                        case "数值":
+                        case "域字段":
+                            str1 = name + " int4 " + required;
+                            break;
+                        case "时间":
+                            str1 = name + " TIME " + required;
+                            break;
+                        case "日期":
+                            str1 = name + " date " + required;
+                            break;
+                        case "日期时间":
+                            str1 = name + " timestamp " + required;
+                            break;
+                        case "浮点型":
+                            str1 = name + " numeric(12,2) " + required;
+                            break;
+                        case "布尔型":
+                            str1 = name + " bool " + required;
+                            break;
+                        case "货币":
+                            str1 = name + " money " + required;
+                            break;
+                        case "文本":
+                        default:
+                            str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
+                            break;
+                    }
+
+                    return str1;
+                }).collect(Collectors.joining(","));
+
+        if (StringUtils.isNotBlank(fieldSql)){
+            str.append(fieldSql);
+        }else {
+            str.deleteCharAt(str.length()-1);
+        }
+
+        str.append(");");
+        return str.toString();
+    }
+
+    @Override
     public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code) {
 
         StringBuilder str = new StringBuilder();
@@ -268,6 +340,17 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append(MARK + "new_code varchar(100) NULL").append(",");
         str.append("constraint pk_"+ tableName + "_code_" + pk +" unique(" + code +")").append(",");
         str.append(this.commonBaseField());
+
+        return str.toString();
+    }
+
+    /**
+     * 日志表基础字段
+     * @return
+     */
+    public String splicingLogTable(){
+        StringBuilder str = new StringBuilder();
+        str.append(MARK + "old_name varchar(100) NULL").append(",");
 
         return str.toString();
     }

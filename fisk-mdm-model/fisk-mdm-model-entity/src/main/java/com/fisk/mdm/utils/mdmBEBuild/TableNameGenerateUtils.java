@@ -26,6 +26,12 @@ public class TableNameGenerateUtils {
         return str.toString();
     }
 
+    public static String generateLogTableName(Integer modelId, Integer entityId) {
+        StringBuilder str = new StringBuilder();
+        str.append("log_" + modelId + "_" + entityId);
+        return str.toString();
+    }
+
     public static String generateDomainCode(String domainName) {
         return domainName + "_code";
     }

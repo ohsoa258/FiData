@@ -25,6 +25,15 @@ public interface IBuildSqlCommand {
     String buildStgTable(EntityInfoVO entityInfoVo,String tableName);
 
     /**
+     * 创建日志表
+     * @param entityInfoVo
+     * @param tableName
+     * @param code
+     * @return
+     */
+    String buildLogTable(EntityInfoVO entityInfoVo,String tableName,String code);
+
+    /**
      * 创建表mdm
      * @param entityInfoVo
      * @param tableName

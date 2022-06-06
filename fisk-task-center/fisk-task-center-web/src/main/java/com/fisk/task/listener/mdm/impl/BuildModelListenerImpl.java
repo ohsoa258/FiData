@@ -467,6 +467,10 @@ public class BuildModelListenerImpl implements BuildModelListener {
             PreparedStatement stemMdm = connection.prepareStatement(sql);
             stemMdm.execute();
 
+            // 3.创建日志表
+            String logTableName = generateLogTableName(entityInfoVo.getModelId(), entityInfoVo.getId());
+            sql = this.createLogTable(sqlBuilder,entityInfoVo,logTableName);
+
             // 3.回写columnName
             this.writableColumnName(entityInfoVo.getAttributeList());
 
@@ -601,6 +605,23 @@ public class BuildModelListenerImpl implements BuildModelListener {
             log.error("创建Stg表失败,异常信息:" + ex);
             throw new FkException(ResultEnum.CREATE_STG_TABLE);
         }
+    }
+
+    /**
+     * 创建日志表
+     * @param sqlBuilder
+     * @param entityInfoVo
+     * @param stgTableName
+     * @return
+     */
+    public String createLogTable(IBuildSqlCommand sqlBuilder,EntityInfoVO entityInfoVo,String stgTableName) {
+
+        // 1.生成Sql
+        List<String> code = entityInfoVo.getAttributeList().stream().filter(e -> e.getName().equals("code")).map(e -> e.getName())
+                .collect(Collectors.toList());
+        String buildLogTableSql = sqlBuilder.buildLogTable(entityInfoVo,stgTableName,code.get(0));
+        // 2.执行sql
+        return buildLogTableSql;
     }
 
     /**
